@@ -27,7 +27,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build & Test
-        run: ./gradlew build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build
 
       - name: Upload test results
         if: always()
