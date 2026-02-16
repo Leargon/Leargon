@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-seed-supported-locales
+      author: leargon
+      changes:
+        - insert:
+            tableName: supported_locales
+            columns:
+              - column:
+                  name: locale_code
+                  value: en
+              - column:
+                  name: display_name
+                  value: English
+              - column:
+                  name: is_default
+                  valueBoolean: true
+              - column:
+                  name: is_active
+                  valueBoolean: true
+              - column:
+                  name: sort_order
+                  valueNumeric: 1
+        - insert:
+            tableName: supported_locales
+            columns:
+              - column:
+                  name: locale_code
+                  value: de
+              - column:
+                  name: display_name
+                  value: German
+              - column:
+                  name: is_default
+                  valueBoolean: false
+              - column:
+                  name: is_active
+                  valueBoolean: true
+              - column:
+                  name: sort_order
+                  valueNumeric: 2

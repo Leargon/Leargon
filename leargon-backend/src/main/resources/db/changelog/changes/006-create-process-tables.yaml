@@ -1,0 +1,291 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-processes-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: processes
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: code
+                  type: VARCHAR(100)
+              - column:
+                  name: process_type
+                  type: VARCHAR(20)
+              - column:
+                  name: names
+                  type: JSON
+              - column:
+                  name: descriptions
+                  type: JSON
+              - column:
+                  name: classification_assignments
+                  type: JSON
+              - column:
+                  name: business_domain_id
+                  type: BIGINT
+              - column:
+                  name: process_owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: processes
+            baseColumnNames: process_owner_id
+            constraintName: fk_processes_process_owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: processes
+            baseColumnNames: created_by_id
+            constraintName: fk_processes_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: processes
+            baseColumnNames: business_domain_id
+            constraintName: fk_processes_business_domain_id
+            referencedTableName: business_domains
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - createIndex:
+            indexName: idx_processes_process_owner
+            tableName: processes
+            columns:
+              - column:
+                  name: process_owner_id
+        - createIndex:
+            indexName: idx_processes_created_by
+            tableName: processes
+            columns:
+              - column:
+                  name: created_by_id
+        - createIndex:
+            indexName: idx_processes_business_domain
+            tableName: processes
+            columns:
+              - column:
+                  name: business_domain_id
+
+  - changeSet:
+      id: 006-create-process-versions-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_versions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: changed_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot_json
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_summary
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: process_versions
+            baseColumnNames: process_id
+            constraintName: fk_process_versions_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: process_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_process_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addUniqueConstraint:
+            tableName: process_versions
+            columnNames: process_id, version_number
+            constraintName: uq_process_version_number
+
+        - createIndex:
+            indexName: idx_process_versions_process
+            tableName: process_versions
+            columns:
+              - column:
+                  name: process_id
+        - createIndex:
+            indexName: idx_process_versions_changed_by
+            tableName: process_versions
+            columns:
+              - column:
+                  name: changed_by_id
+
+  - changeSet:
+      id: 006-create-process-entity-inputs-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_entity_inputs
+            columns:
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: process_entity_inputs
+            columnNames: process_id, business_entity_id
+            constraintName: pk_process_entity_inputs
+
+        - addForeignKeyConstraint:
+            baseTableName: process_entity_inputs
+            baseColumnNames: process_id
+            constraintName: fk_process_inputs_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: process_entity_inputs
+            baseColumnNames: business_entity_id
+            constraintName: fk_process_inputs_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_process_entity_inputs_process
+            tableName: process_entity_inputs
+            columns:
+              - column:
+                  name: process_id
+        - createIndex:
+            indexName: idx_process_entity_inputs_entity
+            tableName: process_entity_inputs
+            columns:
+              - column:
+                  name: business_entity_id
+
+  - changeSet:
+      id: 006-create-process-entity-outputs-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_entity_outputs
+            columns:
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: process_entity_outputs
+            columnNames: process_id, business_entity_id
+            constraintName: pk_process_entity_outputs
+
+        - addForeignKeyConstraint:
+            baseTableName: process_entity_outputs
+            baseColumnNames: process_id
+            constraintName: fk_process_outputs_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: process_entity_outputs
+            baseColumnNames: business_entity_id
+            constraintName: fk_process_outputs_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_process_entity_outputs_process
+            tableName: process_entity_outputs
+            columns:
+              - column:
+                  name: process_id
+        - createIndex:
+            indexName: idx_process_entity_outputs_entity
+            tableName: process_entity_outputs
+            columns:
+              - column:
+                  name: business_entity_id

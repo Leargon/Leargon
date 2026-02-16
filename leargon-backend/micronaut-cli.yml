@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: org.leargon.backend
+testFramework: spock
+sourceLanguage: groovy
+buildTool: gradle
+features: [app-name, gradle, groovy, groovy-application, http-client-test, logback, micronaut-aot, micronaut-build, micronaut-http-validation, netty-server, properties, readme, serialization-jackson, shade, spock, static-resources]

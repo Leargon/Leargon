@@ -1,0 +1,347 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-business-entities-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: data_owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_domain_id
+                  type: BIGINT
+              - column:
+                  name: parent_id
+                  type: BIGINT
+              - column:
+                  name: names
+                  type: JSON
+              - column:
+                  name: descriptions
+                  type: JSON
+              - column:
+                  name: classification_assignments
+                  type: JSON
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: data_owner_id
+            constraintName: fk_business_entities_data_owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: created_by_id
+            constraintName: fk_business_entities_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: business_domain_id
+            constraintName: fk_business_entities_business_domain_id
+            referencedTableName: business_domains
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: parent_id
+            constraintName: fk_business_entities_parent_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - createIndex:
+            indexName: idx_business_entities_data_owner
+            tableName: business_entities
+            columns:
+              - column:
+                  name: data_owner_id
+        - createIndex:
+            indexName: idx_business_entities_created_by
+            tableName: business_entities
+            columns:
+              - column:
+                  name: created_by_id
+        - createIndex:
+            indexName: idx_business_entities_business_domain
+            tableName: business_entities
+            columns:
+              - column:
+                  name: business_domain_id
+        - createIndex:
+            indexName: idx_business_entities_parent
+            tableName: business_entities
+            columns:
+              - column:
+                  name: parent_id
+
+  - changeSet:
+      id: 003-create-business-entity-versions-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_entity_versions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: changed_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot_json
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_summary
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_versions
+            baseColumnNames: business_entity_id
+            constraintName: fk_business_versions_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_business_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addUniqueConstraint:
+            tableName: business_entity_versions
+            columnNames: business_entity_id, version_number
+            constraintName: uq_business_version_entity_number
+
+        - createIndex:
+            indexName: idx_business_versions_entity
+            tableName: business_entity_versions
+            columns:
+              - column:
+                  name: business_entity_id
+        - createIndex:
+            indexName: idx_business_versions_changed_by
+            tableName: business_entity_versions
+            columns:
+              - column:
+                  name: changed_by_id
+
+  - changeSet:
+      id: 003-create-business-entity-interfaces-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_entity_interfaces
+            columns:
+              - column:
+                  name: interface_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: implementation_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: business_entity_interfaces
+            columnNames: interface_id, implementation_id
+            constraintName: pk_business_entity_interfaces
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_interfaces
+            baseColumnNames: interface_id
+            constraintName: fk_entity_interfaces_interface_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_interfaces
+            baseColumnNames: implementation_id
+            constraintName: fk_entity_interfaces_implementation_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_business_entity_interfaces_interface
+            tableName: business_entity_interfaces
+            columns:
+              - column:
+                  name: interface_id
+        - createIndex:
+            indexName: idx_business_entity_interfaces_implementation
+            tableName: business_entity_interfaces
+            columns:
+              - column:
+                  name: implementation_id
+
+  - changeSet:
+      id: 003-create-business-entity-relationships-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_entity_relationships
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: first_business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_cardinality_minimum
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_cardinality_maximum
+                  type: BIGINT
+              - column:
+                  name: second_business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: second_cardinality_minimum
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: second_cardinality_maximum
+                  type: BIGINT
+              - column:
+                  name: descriptions
+                  type: JSON
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_relationships
+            baseColumnNames: first_business_entity_id
+            constraintName: fk_relationships_first_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_relationships
+            baseColumnNames: second_business_entity_id
+            constraintName: fk_relationships_second_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_first_business_entity_id
+            tableName: business_entity_relationships
+            columns:
+              - column:
+                  name: first_business_entity_id
+        - createIndex:
+            indexName: idx_second_business_entity_id
+            tableName: business_entity_relationships
+            columns:
+              - column:
+                  name: second_business_entity_id

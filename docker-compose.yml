@@ -1,0 +1,77 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: leargon-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=leargon
+      - MYSQL_USER=leargon
+      - MYSQL_PASSWORD=leargon
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - leargon-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "leargon", "-pleargon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./leargon-backend
+      dockerfile: Dockerfile
+    container_name: leargon-backend
+    ports:
+      - "8081:8080"
+    environment:
+      - MICRONAUT_ENVIRONMENTS=prod
+      - MICRONAUT_SERVER_PORT=8080
+      - DATASOURCES_DEFAULT_URL=jdbc:mysql://mysql:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - DATASOURCES_DEFAULT_USERNAME=leargon
+      - DATASOURCES_DEFAULT_PASSWORD=leargon
+      - JWT_SECRET=${JWT_SECRET:-changethissecrettosomethingverysecureatleast32characters123456}
+      # Fallback admin user - automatically created on startup if not exists
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@leargon.local}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-ChangeMe123!}
+      - ADMIN_FIRST_NAME=${ADMIN_FIRST_NAME:-System}
+      - ADMIN_LAST_NAME=${ADMIN_LAST_NAME:-Administrator}
+      # Azure Entra ID (optional - leave empty to disable)
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - leargon-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./leargon-frontend
+      dockerfile: Dockerfile
+    container_name: leargon-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - leargon-network
+    environment:
+      - VITE_API_URL=http://localhost:8081
+
+networks:
+  leargon-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

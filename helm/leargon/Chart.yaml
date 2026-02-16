@@ -1,0 +1,12 @@
+apiVersion: v2
+name: leargon
+description: A Helm chart for deploying the Léargon data governance platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - data-governance
+  - leargon
+home: https://github.com/leargon/leargon
+maintainers:
+  - name: Léargon Team

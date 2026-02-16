@@ -1,0 +1,171 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-business-domains-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_domains
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: parent_id
+                  type: BIGINT
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_domain_type
+                  type: VARCHAR(20)
+              - column:
+                  name: names
+                  type: JSON
+              - column:
+                  name: descriptions
+                  type: JSON
+              - column:
+                  name: classification_assignments
+                  type: JSON
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: business_domains
+            baseColumnNames: parent_id
+            constraintName: fk_business_domains_parent_id
+            referencedTableName: business_domains
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: business_domains
+            baseColumnNames: created_by_id
+            constraintName: fk_business_domains_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - createIndex:
+            indexName: idx_business_domains_parent
+            tableName: business_domains
+            columns:
+              - column:
+                  name: parent_id
+        - createIndex:
+            indexName: idx_business_domains_created_by
+            tableName: business_domains
+            columns:
+              - column:
+                  name: created_by_id
+        - createIndex:
+            indexName: idx_business_domain_type
+            tableName: business_domains
+            columns:
+              - column:
+                  name: business_domain_type
+
+  - changeSet:
+      id: 002-create-business-domain-versions-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_domain_versions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: business_domain_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version_number
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: changed_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: snapshot_json
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: change_summary
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: business_domain_versions
+            baseColumnNames: business_domain_id
+            constraintName: fk_domain_versions_domain_id
+            referencedTableName: business_domains
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: business_domain_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_domain_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - addUniqueConstraint:
+            tableName: business_domain_versions
+            columnNames: business_domain_id, version_number
+            constraintName: uq_domain_version_domain_number
+
+        - createIndex:
+            indexName: idx_domain_versions_domain
+            tableName: business_domain_versions
+            columns:
+              - column:
+                  name: business_domain_id
+        - createIndex:
+            indexName: idx_domain_versions_changed_by
+            tableName: business_domain_versions
+            columns:
+              - column:
+                  name: changed_by_id

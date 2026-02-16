@@ -1,0 +1,4165 @@
+openapi: 3.0.3
+info:
+  title: Léargon API
+  description: 'REST API for Léargon data and process governance platform.
+
+
+    ## Authentication
+
+    The API uses JWT (JSON Web Token) based authentication. After logging in or signing up, you will receive an access token
+    that must be included in the `Authorization` header as a Bearer token for protected endpoints.
+
+
+    ## Authorization Roles
+
+    - **ROLE_USER**: Standard user role, assigned to all users by default
+
+    - **ROLE_ADMIN**: Administrative role with full user management capabilities
+
+
+    ## Fallback Administration Protection
+
+    The system includes a fallback admin user that cannot be modified or deleted through the API. Any attempt to modify this
+    user will result in a 403 Forbidden response.
+
+    '
+  version: 1.0.0
+  contact:
+    name: Léargon
+servers:
+- url: http://localhost:8081
+  description: Development server
+- url: http://localhost:8080
+  description: Local container server
+tags:
+- name: Administration
+  description: Administrative user management endpoints (requires ROLE_ADMIN)
+- name: Authentication
+  description: User authentication and registration endpoints
+- name: BusinessDomain
+  description: Business Domain management endpoints
+- name: BusinessEntity
+  description: Business Entity management endpoints
+- name: Classification
+  description: Classification management endpoints
+- name: Locale
+  description: Supported locales management endpoints
+- name: Process
+  description: Business Process management endpoints
+- name: Setup
+  description: First-time setup wizard endpoints
+- name: User
+  description: User profile management endpoints
+paths:
+  /administration/users:
+    get:
+      tags:
+      - Administration
+      summary: Get all users
+      description: Returns a list of all users in the system. Requires ROLE_ADMIN.
+      operationId: getAllUsers
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /administration/users/{id}:
+    get:
+      tags:
+      - Administration
+      summary: Get user by ID
+      description: Returns detailed information about a specific user. Requires ROLE_ADMIN.
+      operationId: getUserById
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    put:
+      tags:
+      - Administration
+      summary: Update user details
+      description: Updates user information including name, email, username, status, and roles. Cannot modify fallback admin
+        user. Requires ROLE_ADMIN.
+      operationId: updateUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Cannot modify fallback admin user
+        '404':
+          description: User not found
+        '409':
+          description: Email or username already exists
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - Administration
+      summary: Soft-delete user
+      description: Disables a user account (soft delete). Cannot delete fallback admin user. Requires ROLE_ADMIN.
+      operationId: deleteUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: User soft-deleted (disabled) successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Cannot delete fallback admin user
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+  /administration/users/{id}/disable:
+    post:
+      tags:
+      - Administration
+      summary: Disable user account
+      description: Disables a user account, preventing login. Cannot disable fallback admin. Requires ROLE_ADMIN.
+      operationId: disableUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Account disabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Cannot disable fallback admin
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+  /administration/users/{id}/enable:
+    post:
+      tags:
+      - Administration
+      summary: Enable user account
+      description: Enables a disabled user account, allowing login. Requires ROLE_ADMIN.
+      operationId: enableUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Account enabled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+  /administration/users/{id}/lock:
+    post:
+      tags:
+      - Administration
+      summary: Lock user account
+      description: Locks a user account, preventing login. Cannot lock fallback admin. Requires ROLE_ADMIN.
+      operationId: lockUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Account locked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Cannot lock fallback admin
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+  /administration/users/{id}/password:
+    put:
+      tags:
+      - Administration
+      summary: Change user password (admin)
+      description: Allows an administration to reset a user's password without knowing the current password. Cannot change
+        fallback admin password. Requires ROLE_ADMIN.
+      operationId: administrationChangePassword
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdministrationChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '403':
+          description: Cannot change fallback admin password
+        '404':
+          description: User not found
+        '400':
+          description: Invalid password (must be at least 8 characters)
+        '401':
+          description: Not authenticated
+  /administration/users/{id}/unlock:
+    post:
+      tags:
+      - Administration
+      summary: Unlock user account
+      description: Unlocks a previously locked user account. Requires ROLE_ADMIN.
+      operationId: unlockUser
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: User ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Account unlocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: User not found
+        '401':
+          description: Not authenticated
+  /authentication/azure-config:
+    get:
+      tags:
+      - Authentication
+      summary: Get Azure Entra ID configuration
+      description: Returns whether Azure login is enabled and the public configuration needed by the frontend.
+      operationId: getAzureConfig
+      responses:
+        '200':
+          description: Azure configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AzureConfigResponse'
+  /authentication/azure-login:
+    post:
+      tags:
+      - Authentication
+      summary: Login with Azure Entra ID
+      description: Authenticates a user using an Azure Entra ID token. Links or creates user by email.
+      operationId: azureLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AzureLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired Azure token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Azure login not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /authentication/login:
+    post:
+      tags:
+      - Authentication
+      summary: Login to user account
+      description: Authenticates a user with email and password, returning a JWT access token.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials or account locked/disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /authentication/signup:
+    post:
+      tags:
+      - Authentication
+      summary: Register a new user account
+      description: Creates a new user account with the provided credentials. All users are assigned ROLE_USER by default.
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email or username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /business-domains:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get all business domains
+      description: Returns a flat list of all business domains with their translations.
+      operationId: getAllBusinessDomains
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of business domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessDomainResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - BusinessDomain
+      summary: Create a business domain
+      description: Creates a new business domain with translations. Requires ROLE_ADMIN.
+      operationId: createBusinessDomain
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessDomainRequest'
+      responses:
+        '201':
+          description: BusinessDomain created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/tree:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get business domain hierarchy
+      description: Returns business domains as a hierarchical tree structure.
+      operationId: getBusinessDomainTree
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Hierarchical domain tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessDomainTreeResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get business domain by key
+      description: Returns detailed information about a specific business domain including children.
+      operationId: getBusinessDomainByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key (e.g., 'sales.retail')
+        schema:
+          type: string
+      responses:
+        '200':
+          description: BusinessDomain details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '404':
+          description: BusinessDomain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - BusinessDomain
+      summary: Delete business domain
+      description: Deletes a business domain. Children become top-level domains. Entities are unassigned. Requires ROLE_ADMIN.
+      operationId: deleteBusinessDomain
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: BusinessDomain deleted successfully
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: BusinessDomain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/classifications:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Assign classifications to business domain
+      description: Replaces all classification assignments on a business domain. Each classification must be assignable to
+        BUSINESS_DOMAIN and only one value per classification is allowed.
+      operationId: assignClassificationsToDomain
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClassificationAssignmentRequest'
+      responses:
+        '200':
+          description: Classifications assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '400':
+          description: Invalid assignment (wrong assignable type, invalid value, duplicate classification)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Domain, classification, or value not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/descriptions:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update business domain descriptions
+      description: Updates the descriptions of a business domain. Requires ROLE_ADMIN.
+      operationId: updateBusinessDomainDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Business Domain descriptions updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/localized:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get localized business domain
+      description: Returns a single-locale view of a business domain. If no locale parameter given, uses the user's preferred
+        language, falling back to the DB default locale.
+      operationId: getLocalizedBusinessDomain
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to user's preferred language.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Localized business domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizedBusinessDomainResponse'
+        '404':
+          description: Business Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/names:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update business domain names
+      description: Updates the names of a business domain. Requires ROLE_ADMIN.
+      operationId: updateBusinessDomainNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Business Domain names updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/parent:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update business domain parent
+      description: Updates the parent of a business domain. Requires ROLE_ADMIN.
+      operationId: updateBusinessDomainParent
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessDomainParentRequest'
+      responses:
+        '200':
+          description: Business Domain parent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '400':
+          description: Invalid request data (e.g., would create cycle)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Domain or parent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/type:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update business domain type
+      description: Updates the type of a business domain. Requires ROLE_ADMIN.
+      operationId: updateBusinessDomainType
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessDomainTypeRequest'
+      responses:
+        '200':
+          description: Business Domain type updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/versions:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get business domain version history
+      description: Returns the version history of a business domain.
+      operationId: getBusinessDomainVersions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Business Domain version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessDomainVersionResponse'
+        '404':
+          description: Business Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/versions/{versionNumber}/diff:
+    get:
+      tags:
+      - BusinessDomain
+      summary: Get diff between domain versions
+      description: Returns the diff between a specific version and the previous version.
+      operationId: getBusinessDomainVersionDiff
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Domain key
+        schema:
+          type: string
+      - name: versionNumber
+        in: path
+        required: true
+        description: Version number to compare (compares with previous version)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Version diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiffResponse'
+        '404':
+          description: Business Domain or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get all entities
+      description: Returns a list of all entities with their translations.
+      operationId: getAllBusinessEntities
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of entities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessEntityResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - BusinessEntity
+      summary: Create an entity
+      description: Creates a new entity with translations. The creator becomes the Data Owner by default.
+      operationId: createBusinessEntity
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessEntityRequest'
+      responses:
+        '201':
+          description: BusinessEntity created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/tree:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get business entity hierarchy
+      description: Returns business entities as a hierarchical tree structure.
+      operationId: getBusinessEntityTree
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Hierarchical business entity tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessEntityTreeResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get business entity by key
+      description: Returns detailed information about a specific business entity including all translations.
+      operationId: getBusinessEntityByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: BusinessEntity key (e.g., 'sales.retail.customer')
+        schema:
+          type: string
+      responses:
+        '200':
+          description: BusinessEntity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '404':
+          description: BusinessEntity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - BusinessEntity
+      summary: Delete business entity
+      description: Permanently deletes an business entity. Only the Data Owner or an Administrator can delete an entity.
+      operationId: deleteBusinessEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Business Entity deleted successfully
+        '403':
+          description: Only the Data Owner or an Administrator can delete this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/classifications:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Assign classifications to business entity
+      description: Replaces all classification assignments on a business entity. Each classification must be assignable to
+        BUSINESS_ENTITY and only one value per classification is allowed.
+      operationId: assignClassificationsToEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClassificationAssignmentRequest'
+      responses:
+        '200':
+          description: Classifications assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid assignment (wrong assignable type, invalid value, duplicate classification)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can assign classifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity, classification, or value not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/data-owner:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity data owner
+      description: Updates the data owner of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityDataOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityDataOwnerRequest'
+      responses:
+        '200':
+          description: Business Entity data owner updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/descriptions:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity descriptions
+      description: Replaces all descriptions of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Business Entity descriptions updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/domain:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Assign business domain to business entity
+      description: Assigns a business domain to an business entity. Only the Data Owner or an Administrator can assign domains.
+      operationId: assignBusinessDomainToBusinessEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignBusinessDomainRequest'
+      responses:
+        '200':
+          description: Business Domain assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can assign domains
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/interfaces:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity interfaces
+      description: Updates the interface entities of a business entity. Only the Data Owner or an Administrator can edit an
+        entity.
+      operationId: updateBusinessEntityInterfaces
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityInterfacesRequest'
+      responses:
+        '200':
+          description: Business Entity interfaces updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or interface entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/localized:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get localized business entity
+      description: Returns a single-locale view of a business entity. If no locale parameter given, uses the user's preferred
+        language, falling back to the DB default locale.
+      operationId: getLocalizedBusinessEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to user's preferred language.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Localized business entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalizedBusinessEntityResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/names:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity names
+      description: Replaces names of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Business Entity names updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/parent:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity parent
+      description: Updates the parent of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityParent
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityParentRequest'
+      responses:
+        '200':
+          description: Business Entity parent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data (e.g., would create cycle)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or parent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/relationships:
+    post:
+      tags:
+      - BusinessEntity
+      summary: Create a relationship
+      description: Creates a relationship between this entity and another entity. Only the Data Owner or an Administrator
+        can create relationships.
+      operationId: createBusinessEntityRelationship
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key (first entity)
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessEntityRelationshipRequest'
+      responses:
+        '201':
+          description: Relationship created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can create relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/relationships/{relationshipId}:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update a relationship
+      description: Updates cardinalities and descriptions of a relationship. Only the Data Owner or an Administrator can update
+        relationships.
+      operationId: updateBusinessEntityRelationship
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      - name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityRelationshipRequest'
+      responses:
+        '200':
+          description: Relationship updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can update relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - BusinessEntity
+      summary: Delete a relationship
+      description: Deletes a relationship between entities. Only the Data Owner or an Administrator can delete relationships.
+      operationId: deleteBusinessEntityRelationship
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      - name: relationshipId
+        in: path
+        required: true
+        description: Relationship ID
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Relationship deleted successfully
+        '403':
+          description: Only the Data Owner or an Administrator can delete relationships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or relationship not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/versions:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get business entity version history
+      description: Returns the version history of an business entity.
+      operationId: getVersions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Business Entity Version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessEntityVersionResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/versions/{versionNumber}/diff:
+    get:
+      tags:
+      - BusinessEntity
+      summary: Get diff between versions
+      description: Returns the diff between a specific version and the previous version.
+      operationId: getVersionDiff
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      - name: versionNumber
+        in: path
+        required: true
+        description: Version number to compare (compares with previous version)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Version diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiffResponse'
+        '404':
+          description: BusinessEntity or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /classifications:
+    get:
+      tags:
+      - Classification
+      summary: Get classifications with filter by type
+      description: Get classifications with filtering by 'assignable to' or none
+      operationId: getClassifications
+      parameters:
+      - in: query
+        name: assignable-to
+        schema:
+          $ref: '#/components/schemas/ClassificationAssignableTo'
+        required: false
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of classifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassificationResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - Classification
+      summary: Create a classification
+      description: Creates a new classification taxonomy. Requires ROLE_ADMIN.
+      operationId: createClassification
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClassificationRequest'
+      responses:
+        '201':
+          description: Classification created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '401':
+          description: Not authenticated
+  /classifications/{key}:
+    get:
+      tags:
+      - Classification
+      summary: Get classification by key
+      description: Returns detailed information about a specific classification including its values.
+      operationId: getClassificationByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key (e.g., 'sensitivity')
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Classification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '404':
+          description: Classification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - Classification
+      summary: Update classification
+      description: Updates a classification's names, descriptions, and optional flag. AssignableTo is immutable. Requires
+        ROLE_ADMIN.
+      operationId: updateClassification
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClassificationRequest'
+      responses:
+        '200':
+          description: Classification updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Classification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - Classification
+      summary: Delete classification
+      description: Permanently deletes a classification and all its values. Removes assignments from entities/domains. Requires
+        ROLE_ADMIN.
+      operationId: deleteClassification
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Classification deleted successfully
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Classification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /classifications/{key}/values:
+    post:
+      tags:
+      - Classification
+      summary: Create a classification value
+      description: Adds a new value to a classification. Requires ROLE_ADMIN.
+      operationId: createClassificationValue
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClassificationValueRequest'
+      responses:
+        '201':
+          description: Classification value created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Classification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /classifications/{key}/values/{valueKey}:
+    put:
+      tags:
+      - Classification
+      summary: Update a classification value
+      description: Updates a classification value's names and descriptions. Requires ROLE_ADMIN.
+      operationId: updateClassificationValue
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key
+        schema:
+          type: string
+      - name: valueKey
+        in: path
+        required: true
+        description: Classification value key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClassificationValueRequest'
+      responses:
+        '200':
+          description: Classification value updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Classification or value not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - Classification
+      summary: Delete a classification value
+      description: Deletes a classification value. Removes assignments referencing this value. Requires ROLE_ADMIN.
+      operationId: deleteClassificationValue
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Classification key
+        schema:
+          type: string
+      - name: valueKey
+        in: path
+        required: true
+        description: Classification value key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Classification value deleted successfully
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Classification or value not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Health check endpoint
+      description: Returns the health status of the application
+      operationId: health
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+  /locales:
+    get:
+      tags:
+      - Locale
+      summary: Get supported locales
+      description: Returns a list of supported locales for translations. By default only active locales are returned. Pass
+        includeInactive=true to return all locales (admin use).
+      operationId: getSupportedLocales
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: include-inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+        description: If true, return all locales including inactive ones
+      responses:
+        '200':
+          description: List of supported locales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportedLocaleResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - Locale
+      summary: Create a supported locale
+      description: Creates a new supported locale. Requires ROLE_ADMIN.
+      operationId: createSupportedLocale
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSupportedLocaleRequest'
+      responses:
+        '201':
+          description: Locale created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedLocaleResponse'
+        '400':
+          description: Invalid request or locale code already exists
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized (requires ROLE_ADMIN)
+  /locales/{id}:
+    put:
+      tags:
+      - Locale
+      summary: Update a supported locale
+      description: Updates an existing supported locale. Requires ROLE_ADMIN.
+      operationId: updateSupportedLocale
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSupportedLocaleRequest'
+      responses:
+        '200':
+          description: Locale updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportedLocaleResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized (requires ROLE_ADMIN)
+        '404':
+          description: Locale not found
+    delete:
+      tags:
+      - Locale
+      summary: Delete a supported locale
+      description: Deletes a supported locale. Cannot delete the default locale or a locale that is in use by any translations.
+        Requires ROLE_ADMIN.
+      operationId: deleteSupportedLocale
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Locale deleted successfully
+        '400':
+          description: Cannot delete locale (is default or in use)
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not authorized (requires ROLE_ADMIN)
+        '404':
+          description: Locale not found
+  /processes:
+    get:
+      tags:
+      - Process
+      summary: Get all processes
+      description: Returns a list of all business processes.
+      operationId: getAllProcesses
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of processes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - Process
+      summary: Create a process
+      description: Creates a new business process. The creator becomes the process owner by default.
+      operationId: createProcess
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProcessRequest'
+      responses:
+        '201':
+          description: Process created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}:
+    get:
+      tags:
+      - Process
+      summary: Get process by key
+      description: Returns detailed information about a specific business process.
+      operationId: getProcessByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - Process
+      summary: Delete process
+      description: Permanently deletes a business process. Only the process owner or an admin can delete.
+      operationId: deleteProcess
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Process deleted successfully
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/classifications:
+    put:
+      tags:
+      - Process
+      summary: Assign classifications to process
+      description: Assigns classification values to a process. Only the process owner or an admin can assign.
+      operationId: assignClassificationsToProcess
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClassificationAssignmentRequest'
+      responses:
+        '200':
+          description: Classifications assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid classification assignment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/code:
+    put:
+      tags:
+      - Process
+      summary: Update process code
+      description: Updates the code of a process and recomputes the key. Only the process owner or an admin can update.
+      operationId: updateProcessCode
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessCodeRequest'
+      responses:
+        '200':
+          description: Process code updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/descriptions:
+    put:
+      tags:
+      - Process
+      summary: Update process descriptions
+      description: Updates the localized descriptions of a process. Only the process owner or an admin can update.
+      operationId: updateProcessDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Process descriptions updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/domain:
+    put:
+      tags:
+      - Process
+      summary: Assign business domain to process
+      description: Assigns a business domain to a process. Only the process owner or an admin can assign.
+      operationId: assignBusinessDomainToProcess
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignBusinessDomainRequest'
+      responses:
+        '200':
+          description: Business domain assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/inputs:
+    post:
+      tags:
+      - Process
+      summary: Add input entity to process
+      description: Adds a business entity as input to a process. Can reference existing entity or create one on-the-fly.
+      operationId: addProcessInput
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProcessEntityRequest'
+      responses:
+        '200':
+          description: Input entity added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/inputs/{entityKey}:
+    delete:
+      tags:
+      - Process
+      summary: Remove input entity from process
+      description: Removes a business entity from the process inputs. Only the process owner or an admin can remove.
+      operationId: removeProcessInput
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      - name: entityKey
+        in: path
+        required: true
+        description: Business entity key to remove
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Input entity removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/names:
+    put:
+      tags:
+      - Process
+      summary: Update process names
+      description: Updates the localized names of a process. Only the process owner or an admin can update.
+      operationId: updateProcessNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Process names updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/outputs:
+    post:
+      tags:
+      - Process
+      summary: Add output entity to process
+      description: Adds a business entity as output to a process. Can reference existing entity or create one on-the-fly.
+      operationId: addProcessOutput
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProcessEntityRequest'
+      responses:
+        '200':
+          description: Output entity added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/outputs/{entityKey}:
+    delete:
+      tags:
+      - Process
+      summary: Remove output entity from process
+      description: Removes a business entity from the process outputs. Only the process owner or an admin can remove.
+      operationId: removeProcessOutput
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      - name: entityKey
+        in: path
+        required: true
+        description: Business entity key to remove
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Output entity removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/owner:
+    put:
+      tags:
+      - Process
+      summary: Update process owner
+      description: Updates the owner of a process. Only the current process owner or an admin can update.
+      operationId: updateProcessOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessOwnerRequest'
+      responses:
+        '200':
+          description: Process owner updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/type:
+    put:
+      tags:
+      - Process
+      summary: Update process type
+      description: Updates the type of a process. Only the process owner or an admin can update.
+      operationId: updateProcessType
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessTypeRequest'
+      responses:
+        '200':
+          description: Process type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/versions:
+    get:
+      tags:
+      - Process
+      summary: Get process version history
+      description: Returns the version history of a process.
+      operationId: getProcessVersions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessVersionResponse'
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/versions/{versionNumber}/diff:
+    get:
+      tags:
+      - Process
+      summary: Get diff between process versions
+      description: Returns the diff between a specific version and the previous version.
+      operationId: getProcessVersionDiff
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      - name: versionNumber
+        in: path
+        required: true
+        description: Version number to compare
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Version diff
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDiffResponse'
+        '404':
+          description: Process or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /setup/complete:
+    post:
+      tags:
+      - Setup
+      summary: Complete first-time setup
+      description: Marks the fallback administrator's first-time setup as completed. Only callable by the fallback admin whose
+        setupCompleted is false.
+      operationId: completeSetup
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '403':
+          description: Not the fallback administrator or setup already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /users/me:
+    get:
+      tags:
+      - User
+      summary: Get current user profile
+      description: Returns the profile information of the currently authenticated user.
+      operationId: getCurrentUser
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/me/password:
+    post:
+      tags:
+      - User
+      summary: Change own password
+      description: Allows a user to change their own password. Requires the current password for verification.
+      operationId: changePassword
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '401':
+          description: Current password is incorrect or not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Invalid new password (must be at least 8 characters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /authentication/login or /authentication/signup
+  schemas:
+    AddProcessEntityRequest:
+      type: object
+      properties:
+        entityKey:
+          type: string
+          nullable: true
+          description: Key of an existing business entity
+        createEntity:
+          $ref: '#/components/schemas/CreateBusinessEntityRequest'
+    AdministrationChangePasswordRequest:
+      type: object
+      required:
+      - newPassword
+      properties:
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          description: New password (minimum 8 characters)
+    AssignBusinessDomainRequest:
+      type: object
+      properties:
+        businessDomainKey:
+          type: string
+          nullable: true
+          description: Business domain key to assign (null to unassign)
+    AuthResponse:
+      type: object
+      required:
+      - accessToken
+      - tokenType
+      - expiresIn
+      - user
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        tokenType:
+          type: string
+          description: Token type (always "Bearer")
+          example: Bearer
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/UserResponse'
+    AzureConfigResponse:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+          description: Whether Azure Entra ID login is configured and available
+          example: false
+        tenantId:
+          type: string
+          nullable: true
+          description: Azure tenant ID (only present when enabled)
+          example: null
+        clientId:
+          type: string
+          nullable: true
+          description: Azure client/application ID (only present when enabled)
+          example: null
+    AzureLoginRequest:
+      type: object
+      required:
+      - idToken
+      properties:
+        idToken:
+          type: string
+          description: Azure Entra ID token obtained from MSAL
+          example: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIs...
+    BusinessDomainResponse:
+      type: object
+      required:
+      - key
+      - createdBy
+      - names
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: BusinessDomain key (hierarchical slug)
+          example: sales
+        parent:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        type:
+          $ref: '#/components/schemas/BusinessDomainType'
+        effectiveType:
+          $ref: '#/components/schemas/BusinessDomainType'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        subdomains:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        assignedEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2024-01-15T10:30:00Z'
+    BusinessDomainSummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: BusinessDomain key
+          example: sales
+        name:
+          type: string
+          description: BusinessDomain name in default locale
+          example: Sales
+    BusinessDomainTreeResponse:
+      type: object
+      required:
+      - key
+      - names
+      - children
+      properties:
+        key:
+          type: string
+          description: BusinessDomain key
+          example: sales
+        parent:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        type:
+          $ref: '#/components/schemas/BusinessDomainType'
+        effectiveType:
+          $ref: '#/components/schemas/BusinessDomainType'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessDomainTreeResponse'
+          description: Child domains
+    BusinessDomainType:
+      type: string
+      enum:
+      - BUSINESS
+      - GENERIC
+      - SUPPORT
+      - CORE
+      - null
+      nullable: true
+      description: Type of business domain (BUSINESS, GENERIC, SUPPORT, or CORE). Null if not set.
+    BusinessDomainVersionResponse:
+      type: object
+      required:
+      - versionNumber
+      - changedBy
+      - changeType
+      - createdAt
+      properties:
+        versionNumber:
+          type: integer
+          description: Version number
+          example: 1
+        changedBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        changeType:
+          type: string
+          enum:
+          - CREATE
+          - UPDATE
+          - PARENT_CHANGE
+          - TYPE_CHANGE
+          description: Type of change
+          example: CREATE
+        changeSummary:
+          type: string
+          nullable: true
+          description: Human-readable summary of changes
+          example: Initial creation
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this version was created
+          example: '2024-01-15T10:30:00Z'
+    BusinessEntityRelationshipResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Relationship ID
+        descriptions:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        cardinality:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: object
+            required:
+            - businessEntity
+            - minimum
+            properties:
+              businessEntity:
+                $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+              minimum:
+                type: integer
+                nullable: false
+                description: Minimum cardinality of first named Business Entity
+              maximum:
+                type: integer
+                nullable: true
+                description: Maximum cardinality of first named Business Entity
+    BusinessEntityResponse:
+      type: object
+      required:
+      - key
+      - dataOwner
+      - createdBy
+      - names
+      - descriptions
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: BusinessEntity key (hierarchical slug)
+          example: sales.retail.customer
+        dataOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        parent:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        businessDomain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        interfacesEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        implementsEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        relationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntityRelationshipResponse'
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2024-01-15T10:30:00Z'
+    BusinessEntitySummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: BusinessEntity key
+          example: customer
+        name:
+          type: string
+          description: BusinessEntity name in default locale
+          example: Customer
+    BusinessEntityTreeResponse:
+      type: object
+      required:
+      - key
+      - names
+      - descriptions
+      - children
+      properties:
+        key:
+          type: string
+          description: BusinessEntity key (hierarchical slug)
+          example: customer
+        parent:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntityTreeResponse'
+          description: Child business entities
+    BusinessEntityVersionResponse:
+      type: object
+      required:
+      - versionNumber
+      - changedBy
+      - changeType
+      - createdAt
+      properties:
+        versionNumber:
+          type: integer
+          description: Version number
+          example: 1
+        changedBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        changeType:
+          type: string
+          enum:
+          - CREATE
+          - UPDATE
+          - OWNER_CHANGE
+          - PARENT_CHANGE
+          - INTERFACE_CHANGE
+          - CLASSIFICATION_CHANGE
+          description: Type of change
+          example: CREATE
+        changeSummary:
+          type: string
+          nullable: true
+          description: Human-readable summary of changes
+          example: Initial creation
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this version was created
+          example: '2024-01-15T10:30:00Z'
+    ChangePasswordRequest:
+      type: object
+      required:
+      - currentPassword
+      - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          description: Current password for verification
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          description: New password (minimum 8 characters)
+    ClassificationAssignableTo:
+      type: string
+      enum:
+      - BUSINESS_DOMAIN
+      - BUSINESS_ENTITY
+      - BUSINESS_PROCESS
+    ClassificationAssignmentRequest:
+      type: object
+      required:
+      - classificationKey
+      - valueKey
+      properties:
+        classificationKey:
+          type: string
+          description: Key of the classification
+        valueKey:
+          type: string
+          description: Key of the value within the classification
+    ClassificationAssignmentResponse:
+      type: object
+      required:
+      - classificationKey
+      - valueKey
+      properties:
+        classificationKey:
+          type: string
+          description: Key of the classification
+        valueKey:
+          type: string
+          description: Key of the value within the classification
+    ClassificationResponse:
+      type: object
+      required:
+      - key
+      - assignableTo
+      - optional
+      - createdBy
+      - names
+      - values
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: Classification key (slug)
+          example: sensitivity
+        assignableTo:
+          $ref: '#/components/schemas/ClassificationAssignableTo'
+        optional:
+          type: boolean
+          description: Whether this classification is optional
+          example: true
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationValueResponse'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2024-01-15T10:30:00Z'
+    ClassificationValueResponse:
+      type: object
+      required:
+      - key
+      - names
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: Classification value key
+          example: high
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+    CreateBusinessDomainRequest:
+      type: object
+      required:
+      - names
+      properties:
+        parentKey:
+          type: string
+          nullable: true
+          description: Parent domain key (null for top-level domain)
+        type:
+          $ref: '#/components/schemas/BusinessDomainType'
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the domain (at least one required)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the domain
+    CreateBusinessEntityRelationshipRequest:
+      type: object
+      required:
+      - secondEntityKey
+      - firstCardinalityMinimum
+      - secondCardinalityMinimum
+      properties:
+        secondEntityKey:
+          type: string
+          description: Key of the second entity in the relationship
+        firstCardinalityMinimum:
+          type: integer
+          description: Minimum cardinality of the first entity
+        firstCardinalityMaximum:
+          type: integer
+          nullable: true
+          description: Maximum cardinality of the first entity (null = unbounded)
+        secondCardinalityMinimum:
+          type: integer
+          description: Minimum cardinality of the second entity
+        secondCardinalityMaximum:
+          type: integer
+          nullable: true
+          description: Maximum cardinality of the second entity (null = unbounded)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the relationship
+    CreateBusinessEntityRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the entity (at least one required)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the entity
+        dataOwnerUsername:
+          type: string
+          nullable: true
+          description: Username of the data owner (defaults to creator if not specified)
+        parentKey:
+          type: string
+          nullable: true
+          description: Parent entity key (null for top-level entity)
+        interfaces:
+          type: array
+          items:
+            type: string
+            nullable: false
+            description: Interface entity key
+    CreateClassificationRequest:
+      type: object
+      required:
+      - names
+      - assignableTo
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the classification
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the classification
+        assignableTo:
+          $ref: '#/components/schemas/ClassificationAssignableTo'
+        optional:
+          type: boolean
+          description: Whether this classification is optional (default true)
+    CreateClassificationValueRequest:
+      type: object
+      required:
+      - key
+      - names
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: Unique key for the value within the classification
+          example: high
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the value
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the value
+    CreateProcessRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the process (at least one required)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the process
+        code:
+          type: string
+          nullable: true
+          description: Process code (used as key if set)
+          example: ORD-FULFILL
+        processType:
+          $ref: '#/components/schemas/ProcessType'
+        processOwnerUsername:
+          type: string
+          nullable: true
+          description: Username of the process owner (defaults to creator if not specified)
+        inputEntityKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of business entities to add as inputs
+        outputEntityKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of business entities to add as outputs
+    CreateSupportedLocaleRequest:
+      type: object
+      required:
+      - localeCode
+      - displayName
+      properties:
+        localeCode:
+          type: string
+          description: Locale code (e.g., 'en', 'de', 'fr')
+          example: fr
+          minLength: 2
+          maxLength: 10
+        displayName:
+          type: string
+          description: Human-readable locale name
+          example: French
+          minLength: 1
+          maxLength: 100
+        isActive:
+          type: boolean
+          description: Whether this locale is active
+          default: true
+        sortOrder:
+          type: integer
+          description: Display order
+          default: 0
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: User not found
+        path:
+          type: string
+          description: Request path
+          example: /administration/users/999
+        status:
+          type: integer
+          description: HTTP status code
+          example: 404
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: '2024-01-15T10:30:00Z'
+    FieldChange:
+      type: object
+      required:
+      - field
+      - oldValue
+      - newValue
+      properties:
+        field:
+          type: string
+          description: Name of the changed field
+          example: name
+        oldValue:
+          type: string
+          nullable: true
+          description: Previous value
+          example: Customer
+        newValue:
+          type: string
+          nullable: true
+          description: New value
+          example: Client
+    LocalizedBusinessDomainResponse:
+      type: object
+      required:
+      - key
+      - name
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: BusinessDomain key
+        name:
+          type: string
+          description: Domain name in the requested locale
+        description:
+          type: string
+          nullable: true
+          description: Domain description in the requested locale
+        parent:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        type:
+          $ref: '#/components/schemas/BusinessDomainType'
+        effectiveType:
+          $ref: '#/components/schemas/BusinessDomainType'
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LocalizedBusinessEntityResponse:
+      type: object
+      required:
+      - key
+      - name
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: BusinessEntity key
+        name:
+          type: string
+          description: Entity name in the requested locale
+        description:
+          type: string
+          nullable: true
+          description: Entity description in the requested locale
+        dataOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        parent:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        businessDomain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    LocalizedText:
+      type: object
+      required:
+      - locale
+      - text
+      properties:
+        locale:
+          type: string
+          description: Locale code (must be an active supported locale)
+          example: en
+        text:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Localized text
+          example: Customer
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: User's password
+          example: password123
+    ProcessResponse:
+      type: object
+      required:
+      - key
+      - processOwner
+      - createdBy
+      - names
+      - descriptions
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: Process key (slug of code or default locale name)
+          example: order-fulfillment
+        code:
+          type: string
+          nullable: true
+          description: Process code
+          example: ORD-FULFILL
+        processType:
+          $ref: '#/components/schemas/ProcessType'
+        processOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        businessDomain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        inputEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        outputEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+    ProcessSummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: Process key
+          example: order-fulfillment
+        name:
+          type: string
+          description: Process name in default locale
+          example: Order Fulfillment
+    ProcessType:
+      type: string
+      enum:
+      - OPERATIONAL_CORE
+      - SUPPORT
+      - MANAGEMENT
+      - INNOVATION
+      - COMPLIANCE
+      - null
+      nullable: true
+      description: Type of business process
+    ProcessVersionResponse:
+      type: object
+      required:
+      - versionNumber
+      - changedBy
+      - changeType
+      - createdAt
+      properties:
+        versionNumber:
+          type: integer
+          description: Version number
+          example: 1
+        changedBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        changeType:
+          type: string
+          enum:
+          - CREATE
+          - UPDATE
+          - OWNER_CHANGE
+          - TYPE_CHANGE
+          - CLASSIFICATION_CHANGE
+          description: Type of change
+          example: CREATE
+        changeSummary:
+          type: string
+          nullable: true
+          description: Human-readable summary of changes
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this version was created
+    SignupRequest:
+      type: object
+      required:
+      - email
+      - username
+      - password
+      - firstName
+      - lastName
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: User's email address (must be unique)
+          example: user@example.com
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Username (must be unique)
+          example: johndoe
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          description: Password (minimum 8 characters)
+          example: password123
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's first name
+          example: John
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User's last name
+          example: Doe
+    SupportedLocaleResponse:
+      type: object
+      required:
+      - id
+      - localeCode
+      - displayName
+      - isDefault
+      - isActive
+      - sortOrder
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Locale ID
+          example: 1
+        localeCode:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
+        displayName:
+          type: string
+          description: Human-readable locale name
+          example: English
+        isDefault:
+          type: boolean
+          description: Whether this is the default fallback locale
+          example: true
+        isActive:
+          type: boolean
+          description: Whether this locale is active
+          example: true
+        sortOrder:
+          type: integer
+          description: Display order
+          example: 1
+    UpdateBusinessDomainDescriptionsRequest:
+      type: object
+      required:
+      - descriptions
+      properties:
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated descriptions (replaces all existing descriptions)
+    UpdateBusinessDomainNamesRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated names (replaces all existing names)
+    UpdateBusinessDomainParentRequest:
+      type: object
+      properties:
+        parentKey:
+          type: string
+          nullable: true
+          description: Parent domain key (null to make top-level)
+    UpdateBusinessDomainTypeRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/BusinessDomainType'
+    UpdateBusinessEntityDataOwnerRequest:
+      type: object
+      required:
+      - dataOwnerUsername
+      properties:
+        dataOwnerUsername:
+          type: string
+          description: Username of the new data owner
+    UpdateBusinessEntityInterfacesRequest:
+      type: object
+      required:
+      - interfaces
+      properties:
+        interfaces:
+          type: array
+          items:
+            type: string
+          description: List of interface entity keys
+    UpdateBusinessEntityParentRequest:
+      type: object
+      properties:
+        parentKey:
+          type: string
+          nullable: true
+          description: Parent entity key (null to make top-level)
+    UpdateBusinessEntityRelationshipRequest:
+      type: object
+      properties:
+        firstCardinalityMinimum:
+          type: integer
+          description: Minimum cardinality of the first entity
+        firstCardinalityMaximum:
+          type: integer
+          nullable: true
+          description: Maximum cardinality of the first entity (null = unbounded)
+        secondCardinalityMinimum:
+          type: integer
+          description: Minimum cardinality of the second entity
+        secondCardinalityMaximum:
+          type: integer
+          nullable: true
+          description: Maximum cardinality of the second entity (null = unbounded)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the relationship
+    UpdateClassificationRequest:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated names
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated descriptions
+        optional:
+          type: boolean
+          description: Whether this classification is optional
+    UpdateClassificationValueRequest:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated names
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated descriptions
+    UpdateProcessCodeRequest:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          description: New process code
+    UpdateProcessOwnerRequest:
+      type: object
+      required:
+      - processOwnerUsername
+      properties:
+        processOwnerUsername:
+          type: string
+          description: Username of the new process owner
+    UpdateProcessTypeRequest:
+      type: object
+      properties:
+        processType:
+          $ref: '#/components/schemas/ProcessType'
+    UpdateSupportedLocaleRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          description: Human-readable locale name
+          example: French
+          minLength: 1
+          maxLength: 100
+        isActive:
+          type: boolean
+          description: Whether this locale is active
+        sortOrder:
+          type: integer
+          description: Display order
+    UpdateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: New email address (must be unique if changed)
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: New username (must be unique if changed)
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: New first name
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: New last name
+        preferredLanguage:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
+        enabled:
+          type: boolean
+          description: Account enabled status
+        accountLocked:
+          type: boolean
+          description: Account locked status
+        accountExpired:
+          type: boolean
+          description: Account expired status
+        passwordExpired:
+          type: boolean
+          description: Password expired status
+        roles:
+          type: array
+          description: User roles
+          items:
+            type: string
+            enum:
+            - ROLE_USER
+            - ROLE_ADMIN
+          example:
+          - ROLE_USER
+          - ROLE_ADMIN
+    UserResponse:
+      type: object
+      required:
+      - id
+      - email
+      - username
+      - firstName
+      - lastName
+      - preferredLanguage
+      - enabled
+      - accountLocked
+      - accountExpired
+      - passwordExpired
+      - isFallbackAdministrator
+      - setupCompleted
+      - roles
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: User ID
+          example: 1
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+        username:
+          type: string
+          description: Username
+          example: johndoe
+        firstName:
+          type: string
+          description: User's first name
+          example: John
+        lastName:
+          type: string
+          description: User's last name
+          example: Doe
+        preferredLanguage:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
+        enabled:
+          type: boolean
+          description: Account enabled status
+          example: true
+        accountLocked:
+          type: boolean
+          description: Account locked status
+          example: false
+        accountExpired:
+          type: boolean
+          description: Account expired status
+          example: false
+        passwordExpired:
+          type: boolean
+          description: Password expired status
+          example: false
+        isFallbackAdministrator:
+          type: boolean
+          description: Whether this is the protected fallback administrator user
+          example: false
+        setupCompleted:
+          type: boolean
+          description: Whether this user has completed the first-time setup wizard
+          example: false
+        roles:
+          type: array
+          description: User roles
+          items:
+            type: string
+          example:
+          - ROLE_USER
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: '2024-01-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2024-01-15T10:30:00Z'
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last login timestamp
+          example: '2024-01-15T14:20:00Z'
+        authProvider:
+          type: string
+          nullable: true
+          description: Authentication provider (e.g., AZURE for Azure Entra ID users)
+          example: null
+    UserSummaryResponse:
+      type: object
+      required:
+      - username
+      - firstName
+      - lastName
+      - preferredLanguage
+      properties:
+        username:
+          type: string
+          description: Username
+          example: jsmith
+        firstName:
+          type: string
+          description: User's first name
+          example: John
+        lastName:
+          type: string
+          description: User's last name
+          example: Smith
+        preferredLanguage:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
+    VersionDiffResponse:
+      type: object
+      required:
+      - versionNumber
+      - previousVersionNumber
+      - changes
+      properties:
+        versionNumber:
+          type: integer
+          description: Current version number
+          example: 2
+        previousVersionNumber:
+          type: integer
+          nullable: true
+          description: Previous version number (null if this is the first version)
+          example: 1
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldChange'
+          description: List of field changes
