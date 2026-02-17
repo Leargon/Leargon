@@ -64,7 +64,7 @@ class LocaleControllerSpec extends Specification {
         if (!localeRepository.existsByLocaleCode("de")) {
             def deLocale = new SupportedLocale()
             deLocale.localeCode = "de"
-            deLocale.displayName = "German"
+            deLocale.displayName = "Deutsch"
             deLocale.isDefault = false
             deLocale.isActive = true
             deLocale.sortOrder = 2
@@ -72,7 +72,7 @@ class LocaleControllerSpec extends Specification {
         } else {
             // Reset de locale state (may have been modified by prior tests)
             def deLocale = localeRepository.findByLocaleCode("de").get()
-            deLocale.displayName = "German"
+            deLocale.displayName = "Deutsch"
             deLocale.isActive = true
             deLocale.sortOrder = 2
             localeRepository.update(deLocale)

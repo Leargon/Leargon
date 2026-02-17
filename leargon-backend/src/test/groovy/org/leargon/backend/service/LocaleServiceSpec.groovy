@@ -28,7 +28,7 @@ class LocaleServiceSpec extends Specification {
 
             def deLocale = new SupportedLocale()
             deLocale.localeCode = "de"
-            deLocale.displayName = "German"
+            deLocale.displayName = "Deutsch"
             deLocale.isDefault = false
             deLocale.isActive = true
             deLocale.sortOrder = 2

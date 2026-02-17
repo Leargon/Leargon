@@ -42,10 +42,7 @@ import type {
   UpdateSupportedLocaleRequest
 } from '.././model';
 
-import getSupportedLocalesMutator from '../../customAxios';
-import createSupportedLocaleMutator from '../../customAxios';
-import updateSupportedLocaleMutator from '../../customAxios';
-import deleteSupportedLocaleMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -60,8 +57,8 @@ export const getSupportedLocales = (
 ) => {
       
       
-      return getSupportedLocalesMutator<SupportedLocaleResponse[]>(
-      {url: `http://localhost:8081/locales`, method: 'GET',
+      return customAxios<SupportedLocaleResponse[]>(
+      {url: `/locales`, method: 'GET',
         params, signal
     },
       );
@@ -72,7 +69,7 @@ export const getSupportedLocales = (
 
 export const getGetSupportedLocalesQueryKey = (params?: GetSupportedLocalesParams,) => {
     return [
-    `http://localhost:8081/locales`, ...(params ? [params]: [])
+    `/locales`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -154,8 +151,8 @@ export const createSupportedLocale = (
 ) => {
       
       
-      return createSupportedLocaleMutator<SupportedLocaleResponse>(
-      {url: `http://localhost:8081/locales`, method: 'POST',
+      return customAxios<SupportedLocaleResponse>(
+      {url: `/locales`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSupportedLocaleRequest, signal
     },
@@ -219,8 +216,8 @@ export const updateSupportedLocale = (
  ) => {
       
       
-      return updateSupportedLocaleMutator<SupportedLocaleResponse>(
-      {url: `http://localhost:8081/locales/${id}`, method: 'PUT',
+      return customAxios<SupportedLocaleResponse>(
+      {url: `/locales/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateSupportedLocaleRequest
     },
@@ -283,8 +280,8 @@ export const deleteSupportedLocale = (
  ) => {
       
       
-      return deleteSupportedLocaleMutator<void>(
-      {url: `http://localhost:8081/locales/${id}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/locales/${id}`, method: 'DELETE'
     },
       );
     }

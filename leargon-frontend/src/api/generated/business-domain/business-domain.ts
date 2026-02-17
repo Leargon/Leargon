@@ -50,89 +50,12 @@ import type {
   VersionDiffResponse
 } from '.././model';
 
-import assignClassificationsToDomainMutator from '../../customAxios';
-import getAllBusinessDomainsMutator from '../../customAxios';
-import createBusinessDomainMutator from '../../customAxios';
-import getBusinessDomainTreeMutator from '../../customAxios';
-import getBusinessDomainByKeyMutator from '../../customAxios';
-import deleteBusinessDomainMutator from '../../customAxios';
-import updateBusinessDomainParentMutator from '../../customAxios';
-import updateBusinessDomainTypeMutator from '../../customAxios';
-import updateBusinessDomainNamesMutator from '../../customAxios';
-import updateBusinessDomainDescriptionsMutator from '../../customAxios';
-import getLocalizedBusinessDomainMutator from '../../customAxios';
-import getBusinessDomainVersionsMutator from '../../customAxios';
-import getBusinessDomainVersionDiffMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
 
 /**
- * Replaces all classification assignments on a business domain. Each classification must be assignable to BUSINESS_DOMAIN and only one value per classification is allowed.
- * @summary Assign classifications to business domain
- */
-export const assignClassificationsToDomain = (
-    key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[],
- ) => {
-      
-      
-      return assignClassificationsToDomainMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/classifications`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: classificationAssignmentRequest
-    },
-      );
-    }
-  
-
-
-export const getAssignClassificationsToDomainMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
-
-const mutationKey = ['assignClassificationsToDomain'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToDomain>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  assignClassificationsToDomain(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignClassificationsToDomainMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToDomain>>>
-    export type AssignClassificationsToDomainMutationBody = ClassificationAssignmentRequest[]
-    export type AssignClassificationsToDomainMutationError = ErrorResponse | void
-
-    /**
- * @summary Assign classifications to business domain
- */
-export const useAssignClassificationsToDomain = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignClassificationsToDomain>>,
-        TError,
-        {key: string;data: ClassificationAssignmentRequest[]},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignClassificationsToDomainMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Returns a flat list of all business domains with their translations.
  * @summary Get all business domains
  */
@@ -142,8 +65,8 @@ export const getAllBusinessDomains = (
 ) => {
       
       
-      return getAllBusinessDomainsMutator<BusinessDomainResponse[]>(
-      {url: `http://localhost:8081/business-domains`, method: 'GET', signal
+      return customAxios<BusinessDomainResponse[]>(
+      {url: `/business-domains`, method: 'GET', signal
     },
       );
     }
@@ -153,7 +76,7 @@ export const getAllBusinessDomains = (
 
 export const getGetAllBusinessDomainsQueryKey = () => {
     return [
-    `http://localhost:8081/business-domains`
+    `/business-domains`
     ] as const;
     }
 
@@ -235,8 +158,8 @@ export const createBusinessDomain = (
 ) => {
       
       
-      return createBusinessDomainMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains`, method: 'POST',
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createBusinessDomainRequest, signal
     },
@@ -300,8 +223,8 @@ export const getBusinessDomainTree = (
 ) => {
       
       
-      return getBusinessDomainTreeMutator<BusinessDomainTreeResponse[]>(
-      {url: `http://localhost:8081/business-domains/tree`, method: 'GET', signal
+      return customAxios<BusinessDomainTreeResponse[]>(
+      {url: `/business-domains/tree`, method: 'GET', signal
     },
       );
     }
@@ -311,7 +234,7 @@ export const getBusinessDomainTree = (
 
 export const getGetBusinessDomainTreeQueryKey = () => {
     return [
-    `http://localhost:8081/business-domains/tree`
+    `/business-domains/tree`
     ] as const;
     }
 
@@ -393,8 +316,8 @@ export const getBusinessDomainByKey = (
 ) => {
       
       
-      return getBusinessDomainByKeyMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}`, method: 'GET', signal
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}`, method: 'GET', signal
     },
       );
     }
@@ -404,7 +327,7 @@ export const getBusinessDomainByKey = (
 
 export const getGetBusinessDomainByKeyQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/business-domains/${key}`
+    `/business-domains/${key}`
     ] as const;
     }
 
@@ -485,8 +408,8 @@ export const deleteBusinessDomain = (
  ) => {
       
       
-      return deleteBusinessDomainMutator<void>(
-      {url: `http://localhost:8081/business-domains/${key}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/business-domains/${key}`, method: 'DELETE'
     },
       );
     }
@@ -539,30 +462,30 @@ export const useDeleteBusinessDomain = <TError = void | ErrorResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Updates the parent of a business domain. Requires ROLE_ADMIN.
- * @summary Update business domain parent
+ * Replaces all classification assignments on a business domain. Each classification must be assignable to BUSINESS_DOMAIN and only one value per classification is allowed.
+ * @summary Assign classifications to business domain
  */
-export const updateBusinessDomainParent = (
+export const assignClassificationsToDomain = (
     key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest,
+    classificationAssignmentRequest: ClassificationAssignmentRequest[],
  ) => {
       
       
-      return updateBusinessDomainParentMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/parent`, method: 'PUT',
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}/classifications`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: updateBusinessDomainParentRequest
+      data: classificationAssignmentRequest
     },
       );
     }
   
 
 
-export const getUpdateBusinessDomainParentMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext> => {
+export const getAssignClassificationsToDomainMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
-const mutationKey = ['updateBusinessDomainParent'];
+const mutationKey = ['assignClassificationsToDomain'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -572,10 +495,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainParent>>, {key: string;data: UpdateBusinessDomainParentRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToDomain>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessDomainParent(key,data,)
+          return  assignClassificationsToDomain(key,data,)
         }
 
         
@@ -583,153 +506,23 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateBusinessDomainParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainParent>>>
-    export type UpdateBusinessDomainParentMutationBody = UpdateBusinessDomainParentRequest
-    export type UpdateBusinessDomainParentMutationError = ErrorResponse | void
+    export type AssignClassificationsToDomainMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToDomain>>>
+    export type AssignClassificationsToDomainMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToDomainMutationError = ErrorResponse | void
 
     /**
- * @summary Update business domain parent
+ * @summary Assign classifications to business domain
  */
-export const useUpdateBusinessDomainParent = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, }
+export const useAssignClassificationsToDomain = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessDomainParent>>,
+        Awaited<ReturnType<typeof assignClassificationsToDomain>>,
         TError,
-        {key: string;data: UpdateBusinessDomainParentRequest},
+        {key: string;data: ClassificationAssignmentRequest[]},
         TContext
       > => {
 
-      const mutationOptions = getUpdateBusinessDomainParentMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the type of a business domain. Requires ROLE_ADMIN.
- * @summary Update business domain type
- */
-export const updateBusinessDomainType = (
-    key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest,
- ) => {
-      
-      
-      return updateBusinessDomainTypeMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/type`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBusinessDomainTypeRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessDomainTypeMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext> => {
-
-const mutationKey = ['updateBusinessDomainType'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainType>>, {key: string;data: UpdateBusinessDomainTypeRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessDomainType(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessDomainTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainType>>>
-    export type UpdateBusinessDomainTypeMutationBody = UpdateBusinessDomainTypeRequest
-    export type UpdateBusinessDomainTypeMutationError = void | ErrorResponse
-
-    /**
- * @summary Update business domain type
- */
-export const useUpdateBusinessDomainType = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessDomainType>>,
-        TError,
-        {key: string;data: UpdateBusinessDomainTypeRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessDomainTypeMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the names of a business domain. Requires ROLE_ADMIN.
- * @summary Update business domain names
- */
-export const updateBusinessDomainNames = (
-    key: string,
-    localizedText: LocalizedText[],
- ) => {
-      
-      
-      return updateBusinessDomainNamesMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/names`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: localizedText
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessDomainNamesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
-
-const mutationKey = ['updateBusinessDomainNames'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainNames>>, {key: string;data: LocalizedText[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessDomainNames(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessDomainNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainNames>>>
-    export type UpdateBusinessDomainNamesMutationBody = LocalizedText[]
-    export type UpdateBusinessDomainNamesMutationError = ErrorResponse | void
-
-    /**
- * @summary Update business domain names
- */
-export const useUpdateBusinessDomainNames = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessDomainNames>>,
-        TError,
-        {key: string;data: LocalizedText[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessDomainNamesMutationOptions(options);
+      const mutationOptions = getAssignClassificationsToDomainMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -743,8 +536,8 @@ export const updateBusinessDomainDescriptions = (
  ) => {
       
       
-      return updateBusinessDomainDescriptionsMutator<BusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/descriptions`, method: 'PUT',
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}/descriptions`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: localizedText
     },
@@ -809,8 +602,8 @@ export const getLocalizedBusinessDomain = (
 ) => {
       
       
-      return getLocalizedBusinessDomainMutator<LocalizedBusinessDomainResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/localized`, method: 'GET',
+      return customAxios<LocalizedBusinessDomainResponse>(
+      {url: `/business-domains/${key}/localized`, method: 'GET',
         params, signal
     },
       );
@@ -822,7 +615,7 @@ export const getLocalizedBusinessDomain = (
 export const getGetLocalizedBusinessDomainQueryKey = (key?: string,
     params?: GetLocalizedBusinessDomainParams,) => {
     return [
-    `http://localhost:8081/business-domains/${key}/localized`, ...(params ? [params]: [])
+    `/business-domains/${key}/localized`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -900,6 +693,201 @@ export function useGetLocalizedBusinessDomain<TData = Awaited<ReturnType<typeof 
 
 
 /**
+ * Updates the names of a business domain. Requires ROLE_ADMIN.
+ * @summary Update business domain names
+ */
+export const updateBusinessDomainNames = (
+    key: string,
+    localizedText: LocalizedText[],
+ ) => {
+      
+      
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}/names`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: localizedText
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessDomainNamesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
+
+const mutationKey = ['updateBusinessDomainNames'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessDomainNames(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainNames>>>
+    export type UpdateBusinessDomainNamesMutationBody = LocalizedText[]
+    export type UpdateBusinessDomainNamesMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business domain names
+ */
+export const useUpdateBusinessDomainNames = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessDomainNamesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the parent of a business domain. Requires ROLE_ADMIN.
+ * @summary Update business domain parent
+ */
+export const updateBusinessDomainParent = (
+    key: string,
+    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}/parent`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessDomainParentRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessDomainParentMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessDomainParent'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainParent>>, {key: string;data: UpdateBusinessDomainParentRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessDomainParent(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainParent>>>
+    export type UpdateBusinessDomainParentMutationBody = UpdateBusinessDomainParentRequest
+    export type UpdateBusinessDomainParentMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business domain parent
+ */
+export const useUpdateBusinessDomainParent = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainParent>>,
+        TError,
+        {key: string;data: UpdateBusinessDomainParentRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessDomainParentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the type of a business domain. Requires ROLE_ADMIN.
+ * @summary Update business domain type
+ */
+export const updateBusinessDomainType = (
+    key: string,
+    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessDomainResponse>(
+      {url: `/business-domains/${key}/type`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessDomainTypeRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessDomainTypeMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessDomainType'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainType>>, {key: string;data: UpdateBusinessDomainTypeRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessDomainType(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainType>>>
+    export type UpdateBusinessDomainTypeMutationBody = UpdateBusinessDomainTypeRequest
+    export type UpdateBusinessDomainTypeMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update business domain type
+ */
+export const useUpdateBusinessDomainType = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainType>>,
+        TError,
+        {key: string;data: UpdateBusinessDomainTypeRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessDomainTypeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns the version history of a business domain.
  * @summary Get business domain version history
  */
@@ -909,8 +897,8 @@ export const getBusinessDomainVersions = (
 ) => {
       
       
-      return getBusinessDomainVersionsMutator<BusinessDomainVersionResponse[]>(
-      {url: `http://localhost:8081/business-domains/${key}/versions`, method: 'GET', signal
+      return customAxios<BusinessDomainVersionResponse[]>(
+      {url: `/business-domains/${key}/versions`, method: 'GET', signal
     },
       );
     }
@@ -920,7 +908,7 @@ export const getBusinessDomainVersions = (
 
 export const getGetBusinessDomainVersionsQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/business-domains/${key}/versions`
+    `/business-domains/${key}/versions`
     ] as const;
     }
 
@@ -1003,8 +991,8 @@ export const getBusinessDomainVersionDiff = (
 ) => {
       
       
-      return getBusinessDomainVersionDiffMutator<VersionDiffResponse>(
-      {url: `http://localhost:8081/business-domains/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
+      return customAxios<VersionDiffResponse>(
+      {url: `/business-domains/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
     },
       );
     }
@@ -1015,7 +1003,7 @@ export const getBusinessDomainVersionDiff = (
 export const getGetBusinessDomainVersionDiffQueryKey = (key?: string,
     versionNumber?: number,) => {
     return [
-    `http://localhost:8081/business-domains/${key}/versions/${versionNumber}/diff`
+    `/business-domains/${key}/versions/${versionNumber}/diff`
     ] as const;
     }
 

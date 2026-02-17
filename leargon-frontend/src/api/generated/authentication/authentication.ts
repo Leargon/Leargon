@@ -44,210 +44,12 @@ import type {
   SignupRequest
 } from '.././model';
 
-import signupMutator from '../../customAxios';
-import loginMutator from '../../customAxios';
-import azureLoginMutator from '../../customAxios';
-import getAzureConfigMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
 
 /**
- * Creates a new user account with the provided credentials. All users are assigned ROLE_USER by default.
- * @summary Register a new user account
- */
-export const signup = (
-    signupRequest: SignupRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return signupMutator<AuthResponse>(
-      {url: `http://localhost:8081/authentication/signup`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: signupRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getSignupMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext> => {
-
-const mutationKey = ['signup'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signup>>, {data: SignupRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  signup(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SignupMutationResult = NonNullable<Awaited<ReturnType<typeof signup>>>
-    export type SignupMutationBody = SignupRequest
-    export type SignupMutationError = ErrorResponse
-
-    /**
- * @summary Register a new user account
- */
-export const useSignup = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof signup>>,
-        TError,
-        {data: SignupRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getSignupMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Authenticates a user with email and password, returning a JWT access token.
- * @summary Login to user account
- */
-export const login = (
-    loginRequest: LoginRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return loginMutator<AuthResponse>(
-      {url: `http://localhost:8081/authentication/login`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: loginRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getLoginMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext> => {
-
-const mutationKey = ['login'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: LoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  login(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
-    export type LoginMutationBody = LoginRequest
-    export type LoginMutationError = ErrorResponse
-
-    /**
- * @summary Login to user account
- */
-export const useLogin = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof login>>,
-        TError,
-        {data: LoginRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getLoginMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Authenticates a user using an Azure Entra ID token. Links or creates user by email.
- * @summary Login with Azure Entra ID
- */
-export const azureLogin = (
-    azureLoginRequest: AzureLoginRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return azureLoginMutator<AuthResponse>(
-      {url: `http://localhost:8081/authentication/azure-login`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: azureLoginRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getAzureLoginMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext> => {
-
-const mutationKey = ['azureLogin'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof azureLogin>>, {data: AzureLoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  azureLogin(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AzureLoginMutationResult = NonNullable<Awaited<ReturnType<typeof azureLogin>>>
-    export type AzureLoginMutationBody = AzureLoginRequest
-    export type AzureLoginMutationError = ErrorResponse
-
-    /**
- * @summary Login with Azure Entra ID
- */
-export const useAzureLogin = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof azureLogin>>,
-        TError,
-        {data: AzureLoginRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAzureLoginMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Returns whether Azure login is enabled and the public configuration needed by the frontend.
  * @summary Get Azure Entra ID configuration
  */
@@ -257,8 +59,8 @@ export const getAzureConfig = (
 ) => {
       
       
-      return getAzureConfigMutator<AzureConfigResponse>(
-      {url: `http://localhost:8081/authentication/azure-config`, method: 'GET', signal
+      return customAxios<AzureConfigResponse>(
+      {url: `/authentication/azure-config`, method: 'GET', signal
     },
       );
     }
@@ -268,7 +70,7 @@ export const getAzureConfig = (
 
 export const getGetAzureConfigQueryKey = () => {
     return [
-    `http://localhost:8081/authentication/azure-config`
+    `/authentication/azure-config`
     ] as const;
     }
 
@@ -340,3 +142,199 @@ export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConf
 
 
 
+/**
+ * Authenticates a user using an Azure Entra ID token. Links or creates user by email.
+ * @summary Login with Azure Entra ID
+ */
+export const azureLogin = (
+    azureLoginRequest: AzureLoginRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<AuthResponse>(
+      {url: `/authentication/azure-login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: azureLoginRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getAzureLoginMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext> => {
+
+const mutationKey = ['azureLogin'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof azureLogin>>, {data: AzureLoginRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  azureLogin(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AzureLoginMutationResult = NonNullable<Awaited<ReturnType<typeof azureLogin>>>
+    export type AzureLoginMutationBody = AzureLoginRequest
+    export type AzureLoginMutationError = ErrorResponse
+
+    /**
+ * @summary Login with Azure Entra ID
+ */
+export const useAzureLogin = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof azureLogin>>,
+        TError,
+        {data: AzureLoginRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAzureLoginMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Authenticates a user with email and password, returning a JWT access token.
+ * @summary Login to user account
+ */
+export const login = (
+    loginRequest: LoginRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<AuthResponse>(
+      {url: `/authentication/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getLoginMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext> => {
+
+const mutationKey = ['login'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: LoginRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  login(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
+    export type LoginMutationBody = LoginRequest
+    export type LoginMutationError = ErrorResponse
+
+    /**
+ * @summary Login to user account
+ */
+export const useLogin = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof login>>,
+        TError,
+        {data: LoginRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getLoginMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Creates a new user account with the provided credentials. All users are assigned ROLE_USER by default.
+ * @summary Register a new user account
+ */
+export const signup = (
+    signupRequest: SignupRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<AuthResponse>(
+      {url: `/authentication/signup`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: signupRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getSignupMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext> => {
+
+const mutationKey = ['signup'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signup>>, {data: SignupRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signup(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignupMutationResult = NonNullable<Awaited<ReturnType<typeof signup>>>
+    export type SignupMutationBody = SignupRequest
+    export type SignupMutationError = ErrorResponse
+
+    /**
+ * @summary Register a new user account
+ */
+export const useSignup = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof signup>>,
+        TError,
+        {data: SignupRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getSignupMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

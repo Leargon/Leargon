@@ -2,7 +2,7 @@
 backend:
   replicaCount: 2
   image:
-    repository: leargon/leargon-backend
+    repository: ghcr.io/leargon/leargon-backend
     tag: "1.0.0"
     pullPolicy: IfNotPresent
   service:
@@ -28,6 +28,9 @@ backend:
     firstName: System
     lastName: Administrator
 
+  ## CORS allowed origins (empty by default — not needed when using frontend nginx proxy)
+  corsAllowedOrigins: ""
+
   ## Azure Entra ID (optional, leave empty to disable)
   azure:
     tenantId: ""
@@ -37,7 +40,7 @@ backend:
 frontend:
   replicaCount: 2
   image:
-    repository: leargon/leargon-frontend
+    repository: ghcr.io/leargon/leargon-frontend
     tag: "1.0.0"
     pullPolicy: IfNotPresent
   service:
@@ -92,9 +95,6 @@ ingress:
   hosts:
     - host: leargon.local
       paths:
-        - path: /api
-          pathType: Prefix
-          service: backend
         - path: /
           pathType: Prefix
           service: frontend

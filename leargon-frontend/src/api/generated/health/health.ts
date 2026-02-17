@@ -35,7 +35,7 @@ import type {
   Health200
 } from '.././model';
 
-import healthMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -50,8 +50,8 @@ export const health = (
 ) => {
       
       
-      return healthMutator<Health200>(
-      {url: `http://localhost:8081/health`, method: 'GET', signal
+      return customAxios<Health200>(
+      {url: `/health`, method: 'GET', signal
     },
       );
     }
@@ -61,7 +61,7 @@ export const health = (
 
 export const getHealthQueryKey = () => {
     return [
-    `http://localhost:8081/health`
+    `/health`
     ] as const;
     }
 

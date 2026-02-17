@@ -3479,10 +3479,10 @@ components:
       properties:
         localeCode:
           type: string
-          description: Locale code (e.g., 'en', 'de', 'fr')
+          description: Locale code (e.g., 'en', 'de', 'fr') from ISO 639-1
           example: fr
           minLength: 2
-          maxLength: 10
+          maxLength: 2
         displayName:
           type: string
           description: Human-readable locale name
@@ -3971,6 +3971,9 @@ components:
         sortOrder:
           type: integer
           description: Display order
+        isDefault:
+          type: boolean
+          description: Set this locale as the default (transfers default from current default)
     UpdateUserRequest:
       type: object
       properties:

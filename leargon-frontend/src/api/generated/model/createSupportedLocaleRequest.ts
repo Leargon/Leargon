@@ -19,9 +19,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
 export interface CreateSupportedLocaleRequest {
   /**
-   * Locale code (e.g., 'en', 'de', 'fr')
+   * Locale code (e.g., 'en', 'de', 'fr') from ISO 639-1
    * @minLength 2
-   * @maxLength 10
+   * @maxLength 2
    */
   localeCode: string;
   /**

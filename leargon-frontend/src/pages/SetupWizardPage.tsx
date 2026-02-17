@@ -54,7 +54,7 @@ const SetupWizardPage: React.FC = () => {
           </Alert>
         )}
 
-        <LocalesTab />
+        <LocalesTab allowSetDefault />
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
           <Button

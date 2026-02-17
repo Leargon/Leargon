@@ -45,14 +45,7 @@ import type {
   UpdateClassificationValueRequest
 } from '.././model';
 
-import getClassificationsMutator from '../../customAxios';
-import createClassificationMutator from '../../customAxios';
-import getClassificationByKeyMutator from '../../customAxios';
-import updateClassificationMutator from '../../customAxios';
-import deleteClassificationMutator from '../../customAxios';
-import createClassificationValueMutator from '../../customAxios';
-import updateClassificationValueMutator from '../../customAxios';
-import deleteClassificationValueMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -67,8 +60,8 @@ export const getClassifications = (
 ) => {
       
       
-      return getClassificationsMutator<ClassificationResponse[]>(
-      {url: `http://localhost:8081/classifications`, method: 'GET',
+      return customAxios<ClassificationResponse[]>(
+      {url: `/classifications`, method: 'GET',
         params, signal
     },
       );
@@ -79,7 +72,7 @@ export const getClassifications = (
 
 export const getGetClassificationsQueryKey = (params?: GetClassificationsParams,) => {
     return [
-    `http://localhost:8081/classifications`, ...(params ? [params]: [])
+    `/classifications`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -161,8 +154,8 @@ export const createClassification = (
 ) => {
       
       
-      return createClassificationMutator<ClassificationResponse>(
-      {url: `http://localhost:8081/classifications`, method: 'POST',
+      return customAxios<ClassificationResponse>(
+      {url: `/classifications`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createClassificationRequest, signal
     },
@@ -226,8 +219,8 @@ export const getClassificationByKey = (
 ) => {
       
       
-      return getClassificationByKeyMutator<ClassificationResponse>(
-      {url: `http://localhost:8081/classifications/${key}`, method: 'GET', signal
+      return customAxios<ClassificationResponse>(
+      {url: `/classifications/${key}`, method: 'GET', signal
     },
       );
     }
@@ -237,7 +230,7 @@ export const getClassificationByKey = (
 
 export const getGetClassificationByKeyQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/classifications/${key}`
+    `/classifications/${key}`
     ] as const;
     }
 
@@ -319,8 +312,8 @@ export const updateClassification = (
  ) => {
       
       
-      return updateClassificationMutator<ClassificationResponse>(
-      {url: `http://localhost:8081/classifications/${key}`, method: 'PUT',
+      return customAxios<ClassificationResponse>(
+      {url: `/classifications/${key}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateClassificationRequest
     },
@@ -383,8 +376,8 @@ export const deleteClassification = (
  ) => {
       
       
-      return deleteClassificationMutator<void>(
-      {url: `http://localhost:8081/classifications/${key}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/classifications/${key}`, method: 'DELETE'
     },
       );
     }
@@ -447,8 +440,8 @@ export const createClassificationValue = (
 ) => {
       
       
-      return createClassificationValueMutator<ClassificationResponse>(
-      {url: `http://localhost:8081/classifications/${key}/values`, method: 'POST',
+      return customAxios<ClassificationResponse>(
+      {url: `/classifications/${key}/values`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createClassificationValueRequest, signal
     },
@@ -513,8 +506,8 @@ export const updateClassificationValue = (
  ) => {
       
       
-      return updateClassificationValueMutator<ClassificationResponse>(
-      {url: `http://localhost:8081/classifications/${key}/values/${valueKey}`, method: 'PUT',
+      return customAxios<ClassificationResponse>(
+      {url: `/classifications/${key}/values/${valueKey}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateClassificationValueRequest
     },
@@ -578,8 +571,8 @@ export const deleteClassificationValue = (
  ) => {
       
       
-      return deleteClassificationValueMutator<void>(
-      {url: `http://localhost:8081/classifications/${key}/values/${valueKey}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/classifications/${key}/values/${valueKey}`, method: 'DELETE'
     },
       );
     }

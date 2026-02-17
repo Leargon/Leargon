@@ -28,4 +28,6 @@ export interface UpdateSupportedLocaleRequest {
   isActive?: boolean;
   /** Display order */
   sortOrder?: number;
+  /** Set this locale as the default (transfers default from current default) */
+  isDefault?: boolean;
 }

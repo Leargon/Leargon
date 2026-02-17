@@ -5,4 +5,4 @@ metadata:
   labels:
     {{- include "leargon.frontend.labels" . | nindent 4 }}
 data:
-  VITE_API_URL: "http://{{ include "leargon.fullname" . }}-backend:{{ .Values.backend.service.port }}"
+  BACKEND_URL: "http://{{ include "leargon.fullname" . }}-backend:{{ .Values.backend.service.port }}"

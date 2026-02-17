@@ -61,7 +61,7 @@ services:
     networks:
       - leargon-network
     environment:
-      - VITE_API_URL=http://localhost:8081
+      - BACKEND_URL=http://backend:8080
 
 networks:
   leargon-network:

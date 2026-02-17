@@ -50,23 +50,7 @@ import type {
   VersionDiffResponse
 } from '.././model';
 
-import getAllProcessesMutator from '../../customAxios';
-import createProcessMutator from '../../customAxios';
-import getProcessByKeyMutator from '../../customAxios';
-import deleteProcessMutator from '../../customAxios';
-import updateProcessNamesMutator from '../../customAxios';
-import updateProcessDescriptionsMutator from '../../customAxios';
-import updateProcessTypeMutator from '../../customAxios';
-import updateProcessOwnerMutator from '../../customAxios';
-import updateProcessCodeMutator from '../../customAxios';
-import assignBusinessDomainToProcessMutator from '../../customAxios';
-import assignClassificationsToProcessMutator from '../../customAxios';
-import getProcessVersionsMutator from '../../customAxios';
-import getProcessVersionDiffMutator from '../../customAxios';
-import addProcessInputMutator from '../../customAxios';
-import removeProcessInputMutator from '../../customAxios';
-import addProcessOutputMutator from '../../customAxios';
-import removeProcessOutputMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -81,8 +65,8 @@ export const getAllProcesses = (
 ) => {
       
       
-      return getAllProcessesMutator<ProcessResponse[]>(
-      {url: `http://localhost:8081/processes`, method: 'GET', signal
+      return customAxios<ProcessResponse[]>(
+      {url: `/processes`, method: 'GET', signal
     },
       );
     }
@@ -92,7 +76,7 @@ export const getAllProcesses = (
 
 export const getGetAllProcessesQueryKey = () => {
     return [
-    `http://localhost:8081/processes`
+    `/processes`
     ] as const;
     }
 
@@ -174,8 +158,8 @@ export const createProcess = (
 ) => {
       
       
-      return createProcessMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes`, method: 'POST',
+      return customAxios<ProcessResponse>(
+      {url: `/processes`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createProcessRequest, signal
     },
@@ -239,8 +223,8 @@ export const getProcessByKey = (
 ) => {
       
       
-      return getProcessByKeyMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}`, method: 'GET', signal
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}`, method: 'GET', signal
     },
       );
     }
@@ -250,7 +234,7 @@ export const getProcessByKey = (
 
 export const getGetProcessByKeyQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/processes/${key}`
+    `/processes/${key}`
     ] as const;
     }
 
@@ -331,8 +315,8 @@ export const deleteProcess = (
  ) => {
       
       
-      return deleteProcessMutator<void>(
-      {url: `http://localhost:8081/processes/${key}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/processes/${key}`, method: 'DELETE'
     },
       );
     }
@@ -385,396 +369,6 @@ export const useDeleteProcess = <TError = void | ErrorResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Updates the localized names of a process. Only the process owner or an admin can update.
- * @summary Update process names
- */
-export const updateProcessNames = (
-    key: string,
-    localizedText: LocalizedText[],
- ) => {
-      
-      
-      return updateProcessNamesMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/names`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: localizedText
-    },
-      );
-    }
-  
-
-
-export const getUpdateProcessNamesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
-
-const mutationKey = ['updateProcessNames'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessNames>>, {key: string;data: LocalizedText[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateProcessNames(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProcessNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessNames>>>
-    export type UpdateProcessNamesMutationBody = LocalizedText[]
-    export type UpdateProcessNamesMutationError = ErrorResponse | void
-
-    /**
- * @summary Update process names
- */
-export const useUpdateProcessNames = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessNames>>,
-        TError,
-        {key: string;data: LocalizedText[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateProcessNamesMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the localized descriptions of a process. Only the process owner or an admin can update.
- * @summary Update process descriptions
- */
-export const updateProcessDescriptions = (
-    key: string,
-    localizedText: LocalizedText[],
- ) => {
-      
-      
-      return updateProcessDescriptionsMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/descriptions`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: localizedText
-    },
-      );
-    }
-  
-
-
-export const getUpdateProcessDescriptionsMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
-
-const mutationKey = ['updateProcessDescriptions'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateProcessDescriptions(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProcessDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessDescriptions>>>
-    export type UpdateProcessDescriptionsMutationBody = LocalizedText[]
-    export type UpdateProcessDescriptionsMutationError = ErrorResponse | void
-
-    /**
- * @summary Update process descriptions
- */
-export const useUpdateProcessDescriptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessDescriptions>>,
-        TError,
-        {key: string;data: LocalizedText[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateProcessDescriptionsMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the type of a process. Only the process owner or an admin can update.
- * @summary Update process type
- */
-export const updateProcessType = (
-    key: string,
-    updateProcessTypeRequest: UpdateProcessTypeRequest,
- ) => {
-      
-      
-      return updateProcessTypeMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/type`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateProcessTypeRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateProcessTypeMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext> => {
-
-const mutationKey = ['updateProcessType'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessType>>, {key: string;data: UpdateProcessTypeRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateProcessType(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProcessTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessType>>>
-    export type UpdateProcessTypeMutationBody = UpdateProcessTypeRequest
-    export type UpdateProcessTypeMutationError = void | ErrorResponse
-
-    /**
- * @summary Update process type
- */
-export const useUpdateProcessType = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessType>>,
-        TError,
-        {key: string;data: UpdateProcessTypeRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateProcessTypeMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the owner of a process. Only the current process owner or an admin can update.
- * @summary Update process owner
- */
-export const updateProcessOwner = (
-    key: string,
-    updateProcessOwnerRequest: UpdateProcessOwnerRequest,
- ) => {
-      
-      
-      return updateProcessOwnerMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/owner`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateProcessOwnerRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateProcessOwnerMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext> => {
-
-const mutationKey = ['updateProcessOwner'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessOwner>>, {key: string;data: UpdateProcessOwnerRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateProcessOwner(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProcessOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessOwner>>>
-    export type UpdateProcessOwnerMutationBody = UpdateProcessOwnerRequest
-    export type UpdateProcessOwnerMutationError = void | ErrorResponse
-
-    /**
- * @summary Update process owner
- */
-export const useUpdateProcessOwner = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessOwner>>,
-        TError,
-        {key: string;data: UpdateProcessOwnerRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateProcessOwnerMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the code of a process and recomputes the key. Only the process owner or an admin can update.
- * @summary Update process code
- */
-export const updateProcessCode = (
-    key: string,
-    updateProcessCodeRequest: UpdateProcessCodeRequest,
- ) => {
-      
-      
-      return updateProcessCodeMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/code`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateProcessCodeRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateProcessCodeMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext> => {
-
-const mutationKey = ['updateProcessCode'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessCode>>, {key: string;data: UpdateProcessCodeRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateProcessCode(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateProcessCodeMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessCode>>>
-    export type UpdateProcessCodeMutationBody = UpdateProcessCodeRequest
-    export type UpdateProcessCodeMutationError = void | ErrorResponse
-
-    /**
- * @summary Update process code
- */
-export const useUpdateProcessCode = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessCode>>,
-        TError,
-        {key: string;data: UpdateProcessCodeRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateProcessCodeMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Assigns a business domain to a process. Only the process owner or an admin can assign.
- * @summary Assign business domain to process
- */
-export const assignBusinessDomainToProcess = (
-    key: string,
-    assignBusinessDomainRequest: AssignBusinessDomainRequest,
- ) => {
-      
-      
-      return assignBusinessDomainToProcessMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/domain`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: assignBusinessDomainRequest
-    },
-      );
-    }
-  
-
-
-export const getAssignBusinessDomainToProcessMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
-
-const mutationKey = ['assignBusinessDomainToProcess'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  assignBusinessDomainToProcess(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignBusinessDomainToProcessMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>>
-    export type AssignBusinessDomainToProcessMutationBody = AssignBusinessDomainRequest
-    export type AssignBusinessDomainToProcessMutationError = void | ErrorResponse
-
-    /**
- * @summary Assign business domain to process
- */
-export const useAssignBusinessDomainToProcess = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignBusinessDomainToProcess>>,
-        TError,
-        {key: string;data: AssignBusinessDomainRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignBusinessDomainToProcessMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Assigns classification values to a process. Only the process owner or an admin can assign.
  * @summary Assign classifications to process
  */
@@ -784,8 +378,8 @@ export const assignClassificationsToProcess = (
  ) => {
       
       
-      return assignClassificationsToProcessMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/classifications`, method: 'PUT',
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/classifications`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: classificationAssignmentRequest
     },
@@ -840,6 +434,654 @@ export const useAssignClassificationsToProcess = <TError = ErrorResponse | void,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Updates the code of a process and recomputes the key. Only the process owner or an admin can update.
+ * @summary Update process code
+ */
+export const updateProcessCode = (
+    key: string,
+    updateProcessCodeRequest: UpdateProcessCodeRequest,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/code`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateProcessCodeRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateProcessCodeMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext> => {
+
+const mutationKey = ['updateProcessCode'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessCode>>, {key: string;data: UpdateProcessCodeRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessCode(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessCodeMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessCode>>>
+    export type UpdateProcessCodeMutationBody = UpdateProcessCodeRequest
+    export type UpdateProcessCodeMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process code
+ */
+export const useUpdateProcessCode = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessCode>>,
+        TError,
+        {key: string;data: UpdateProcessCodeRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProcessCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the localized descriptions of a process. Only the process owner or an admin can update.
+ * @summary Update process descriptions
+ */
+export const updateProcessDescriptions = (
+    key: string,
+    localizedText: LocalizedText[],
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/descriptions`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: localizedText
+    },
+      );
+    }
+  
+
+
+export const getUpdateProcessDescriptionsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
+
+const mutationKey = ['updateProcessDescriptions'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessDescriptions(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessDescriptions>>>
+    export type UpdateProcessDescriptionsMutationBody = LocalizedText[]
+    export type UpdateProcessDescriptionsMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update process descriptions
+ */
+export const useUpdateProcessDescriptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessDescriptions>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProcessDescriptionsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Assigns a business domain to a process. Only the process owner or an admin can assign.
+ * @summary Assign business domain to process
+ */
+export const assignBusinessDomainToProcess = (
+    key: string,
+    assignBusinessDomainRequest: AssignBusinessDomainRequest,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/domain`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: assignBusinessDomainRequest
+    },
+      );
+    }
+  
+
+
+export const getAssignBusinessDomainToProcessMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
+
+const mutationKey = ['assignBusinessDomainToProcess'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignBusinessDomainToProcess(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignBusinessDomainToProcessMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>>
+    export type AssignBusinessDomainToProcessMutationBody = AssignBusinessDomainRequest
+    export type AssignBusinessDomainToProcessMutationError = void | ErrorResponse
+
+    /**
+ * @summary Assign business domain to process
+ */
+export const useAssignBusinessDomainToProcess = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignBusinessDomainToProcess>>,
+        TError,
+        {key: string;data: AssignBusinessDomainRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAssignBusinessDomainToProcessMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Adds a business entity as input to a process. Can reference existing entity or create one on-the-fly.
+ * @summary Add input entity to process
+ */
+export const addProcessInput = (
+    key: string,
+    addProcessEntityRequest: AddProcessEntityRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/inputs`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addProcessEntityRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getAddProcessInputMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
+
+const mutationKey = ['addProcessInput'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessInput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  addProcessInput(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddProcessInputMutationResult = NonNullable<Awaited<ReturnType<typeof addProcessInput>>>
+    export type AddProcessInputMutationBody = AddProcessEntityRequest
+    export type AddProcessInputMutationError = ErrorResponse | void
+
+    /**
+ * @summary Add input entity to process
+ */
+export const useAddProcessInput = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addProcessInput>>,
+        TError,
+        {key: string;data: AddProcessEntityRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAddProcessInputMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Removes a business entity from the process inputs. Only the process owner or an admin can remove.
+ * @summary Remove input entity from process
+ */
+export const removeProcessInput = (
+    key: string,
+    entityKey: string,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/inputs/${entityKey}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getRemoveProcessInputMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext> => {
+
+const mutationKey = ['removeProcessInput'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessInput>>, {key: string;entityKey: string}> = (props) => {
+          const {key,entityKey} = props ?? {};
+
+          return  removeProcessInput(key,entityKey,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveProcessInputMutationResult = NonNullable<Awaited<ReturnType<typeof removeProcessInput>>>
+    
+    export type RemoveProcessInputMutationError = void | ErrorResponse
+
+    /**
+ * @summary Remove input entity from process
+ */
+export const useRemoveProcessInput = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeProcessInput>>,
+        TError,
+        {key: string;entityKey: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRemoveProcessInputMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the localized names of a process. Only the process owner or an admin can update.
+ * @summary Update process names
+ */
+export const updateProcessNames = (
+    key: string,
+    localizedText: LocalizedText[],
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/names`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: localizedText
+    },
+      );
+    }
+  
+
+
+export const getUpdateProcessNamesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
+
+const mutationKey = ['updateProcessNames'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessNames(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessNames>>>
+    export type UpdateProcessNamesMutationBody = LocalizedText[]
+    export type UpdateProcessNamesMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update process names
+ */
+export const useUpdateProcessNames = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProcessNamesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Adds a business entity as output to a process. Can reference existing entity or create one on-the-fly.
+ * @summary Add output entity to process
+ */
+export const addProcessOutput = (
+    key: string,
+    addProcessEntityRequest: AddProcessEntityRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/outputs`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: addProcessEntityRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getAddProcessOutputMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
+
+const mutationKey = ['addProcessOutput'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessOutput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  addProcessOutput(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddProcessOutputMutationResult = NonNullable<Awaited<ReturnType<typeof addProcessOutput>>>
+    export type AddProcessOutputMutationBody = AddProcessEntityRequest
+    export type AddProcessOutputMutationError = ErrorResponse | void
+
+    /**
+ * @summary Add output entity to process
+ */
+export const useAddProcessOutput = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addProcessOutput>>,
+        TError,
+        {key: string;data: AddProcessEntityRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAddProcessOutputMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Removes a business entity from the process outputs. Only the process owner or an admin can remove.
+ * @summary Remove output entity from process
+ */
+export const removeProcessOutput = (
+    key: string,
+    entityKey: string,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/outputs/${entityKey}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getRemoveProcessOutputMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext> => {
+
+const mutationKey = ['removeProcessOutput'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessOutput>>, {key: string;entityKey: string}> = (props) => {
+          const {key,entityKey} = props ?? {};
+
+          return  removeProcessOutput(key,entityKey,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveProcessOutputMutationResult = NonNullable<Awaited<ReturnType<typeof removeProcessOutput>>>
+    
+    export type RemoveProcessOutputMutationError = void | ErrorResponse
+
+    /**
+ * @summary Remove output entity from process
+ */
+export const useRemoveProcessOutput = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeProcessOutput>>,
+        TError,
+        {key: string;entityKey: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRemoveProcessOutputMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the owner of a process. Only the current process owner or an admin can update.
+ * @summary Update process owner
+ */
+export const updateProcessOwner = (
+    key: string,
+    updateProcessOwnerRequest: UpdateProcessOwnerRequest,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/owner`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateProcessOwnerRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateProcessOwnerMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext> => {
+
+const mutationKey = ['updateProcessOwner'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessOwner>>, {key: string;data: UpdateProcessOwnerRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessOwner(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessOwner>>>
+    export type UpdateProcessOwnerMutationBody = UpdateProcessOwnerRequest
+    export type UpdateProcessOwnerMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process owner
+ */
+export const useUpdateProcessOwner = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessOwner>>,
+        TError,
+        {key: string;data: UpdateProcessOwnerRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProcessOwnerMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the type of a process. Only the process owner or an admin can update.
+ * @summary Update process type
+ */
+export const updateProcessType = (
+    key: string,
+    updateProcessTypeRequest: UpdateProcessTypeRequest,
+ ) => {
+      
+      
+      return customAxios<ProcessResponse>(
+      {url: `/processes/${key}/type`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateProcessTypeRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateProcessTypeMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext> => {
+
+const mutationKey = ['updateProcessType'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessType>>, {key: string;data: UpdateProcessTypeRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessType(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessType>>>
+    export type UpdateProcessTypeMutationBody = UpdateProcessTypeRequest
+    export type UpdateProcessTypeMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process type
+ */
+export const useUpdateProcessType = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessType>>,
+        TError,
+        {key: string;data: UpdateProcessTypeRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProcessTypeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns the version history of a process.
  * @summary Get process version history
  */
@@ -849,8 +1091,8 @@ export const getProcessVersions = (
 ) => {
       
       
-      return getProcessVersionsMutator<ProcessVersionResponse[]>(
-      {url: `http://localhost:8081/processes/${key}/versions`, method: 'GET', signal
+      return customAxios<ProcessVersionResponse[]>(
+      {url: `/processes/${key}/versions`, method: 'GET', signal
     },
       );
     }
@@ -860,7 +1102,7 @@ export const getProcessVersions = (
 
 export const getGetProcessVersionsQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/processes/${key}/versions`
+    `/processes/${key}/versions`
     ] as const;
     }
 
@@ -943,8 +1185,8 @@ export const getProcessVersionDiff = (
 ) => {
       
       
-      return getProcessVersionDiffMutator<VersionDiffResponse>(
-      {url: `http://localhost:8081/processes/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
+      return customAxios<VersionDiffResponse>(
+      {url: `/processes/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
     },
       );
     }
@@ -955,7 +1197,7 @@ export const getProcessVersionDiff = (
 export const getGetProcessVersionDiffQueryKey = (key?: string,
     versionNumber?: number,) => {
     return [
-    `http://localhost:8081/processes/${key}/versions/${versionNumber}/diff`
+    `/processes/${key}/versions/${versionNumber}/diff`
     ] as const;
     }
 
@@ -1032,262 +1274,3 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
 
 
 
-/**
- * Adds a business entity as input to a process. Can reference existing entity or create one on-the-fly.
- * @summary Add input entity to process
- */
-export const addProcessInput = (
-    key: string,
-    addProcessEntityRequest: AddProcessEntityRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return addProcessInputMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/inputs`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: addProcessEntityRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getAddProcessInputMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
-
-const mutationKey = ['addProcessInput'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessInput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  addProcessInput(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AddProcessInputMutationResult = NonNullable<Awaited<ReturnType<typeof addProcessInput>>>
-    export type AddProcessInputMutationBody = AddProcessEntityRequest
-    export type AddProcessInputMutationError = ErrorResponse | void
-
-    /**
- * @summary Add input entity to process
- */
-export const useAddProcessInput = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof addProcessInput>>,
-        TError,
-        {key: string;data: AddProcessEntityRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAddProcessInputMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Removes a business entity from the process inputs. Only the process owner or an admin can remove.
- * @summary Remove input entity from process
- */
-export const removeProcessInput = (
-    key: string,
-    entityKey: string,
- ) => {
-      
-      
-      return removeProcessInputMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/inputs/${entityKey}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getRemoveProcessInputMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext> => {
-
-const mutationKey = ['removeProcessInput'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessInput>>, {key: string;entityKey: string}> = (props) => {
-          const {key,entityKey} = props ?? {};
-
-          return  removeProcessInput(key,entityKey,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RemoveProcessInputMutationResult = NonNullable<Awaited<ReturnType<typeof removeProcessInput>>>
-    
-    export type RemoveProcessInputMutationError = void | ErrorResponse
-
-    /**
- * @summary Remove input entity from process
- */
-export const useRemoveProcessInput = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof removeProcessInput>>,
-        TError,
-        {key: string;entityKey: string},
-        TContext
-      > => {
-
-      const mutationOptions = getRemoveProcessInputMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Adds a business entity as output to a process. Can reference existing entity or create one on-the-fly.
- * @summary Add output entity to process
- */
-export const addProcessOutput = (
-    key: string,
-    addProcessEntityRequest: AddProcessEntityRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return addProcessOutputMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/outputs`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: addProcessEntityRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getAddProcessOutputMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
-
-const mutationKey = ['addProcessOutput'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessOutput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  addProcessOutput(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AddProcessOutputMutationResult = NonNullable<Awaited<ReturnType<typeof addProcessOutput>>>
-    export type AddProcessOutputMutationBody = AddProcessEntityRequest
-    export type AddProcessOutputMutationError = ErrorResponse | void
-
-    /**
- * @summary Add output entity to process
- */
-export const useAddProcessOutput = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof addProcessOutput>>,
-        TError,
-        {key: string;data: AddProcessEntityRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAddProcessOutputMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Removes a business entity from the process outputs. Only the process owner or an admin can remove.
- * @summary Remove output entity from process
- */
-export const removeProcessOutput = (
-    key: string,
-    entityKey: string,
- ) => {
-      
-      
-      return removeProcessOutputMutator<ProcessResponse>(
-      {url: `http://localhost:8081/processes/${key}/outputs/${entityKey}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getRemoveProcessOutputMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext> => {
-
-const mutationKey = ['removeProcessOutput'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessOutput>>, {key: string;entityKey: string}> = (props) => {
-          const {key,entityKey} = props ?? {};
-
-          return  removeProcessOutput(key,entityKey,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RemoveProcessOutputMutationResult = NonNullable<Awaited<ReturnType<typeof removeProcessOutput>>>
-    
-    export type RemoveProcessOutputMutationError = void | ErrorResponse
-
-    /**
- * @summary Remove output entity from process
- */
-export const useRemoveProcessOutput = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof removeProcessOutput>>,
-        TError,
-        {key: string;entityKey: string},
-        TContext
-      > => {
-
-      const mutationOptions = getRemoveProcessOutputMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    

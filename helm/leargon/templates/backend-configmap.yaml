@@ -13,6 +13,7 @@ data:
   ADMIN_USERNAME: {{ .Values.backend.admin.username | quote }}
   ADMIN_FIRST_NAME: {{ .Values.backend.admin.firstName | quote }}
   ADMIN_LAST_NAME: {{ .Values.backend.admin.lastName | quote }}
+  CORS_ALLOWED_ORIGINS: {{ .Values.backend.corsAllowedOrigins | default "" | quote }}
   {{- if .Values.backend.azure.tenantId }}
   AZURE_TENANT_ID: {{ .Values.backend.azure.tenantId | quote }}
   {{- end }}

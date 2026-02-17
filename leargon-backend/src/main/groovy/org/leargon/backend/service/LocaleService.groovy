@@ -60,6 +60,11 @@ class LocaleService {
             throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Locale code '${request.localeCode}' already exists")
         }
 
+        def validCodes = Locale.getISOLanguages() as Set
+        if (!validCodes.contains(request.localeCode)) {
+            throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Locale code '${request.localeCode}' is not a valid ISO 639-1 language code")
+        }
+
         def locale = new SupportedLocale()
         locale.localeCode = request.localeCode
         locale.displayName = request.displayName
@@ -86,6 +91,22 @@ class LocaleService {
         }
         if (request.sortOrder != null) {
             locale.sortOrder = request.sortOrder
+        }
+        if (request.isDefault != null) {
+            if (request.isDefault) {
+                if (!locale.isDefault) {
+                    def repo = this.localeRepository
+                    def currentDefault = repo.findByIsDefault(true).orElse(null)
+                    if (currentDefault) {
+                        currentDefault.isDefault = false
+                        repo.update(currentDefault)
+                    }
+                    locale.isDefault = true
+                    locale.isActive = true
+                }
+            } else {
+                throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Cannot unset default — use another locale as default instead")
+            }
         }
 
         locale = localeRepository.update(locale)

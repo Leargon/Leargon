@@ -31,7 +31,7 @@ import type {
   UserResponse
 } from '.././model';
 
-import completeSetupMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -46,8 +46,8 @@ export const completeSetup = (
 ) => {
       
       
-      return completeSetupMutator<UserResponse>(
-      {url: `http://localhost:8081/setup/complete`, method: 'POST', signal
+      return customAxios<UserResponse>(
+      {url: `/setup/complete`, method: 'POST', signal
     },
       );
     }

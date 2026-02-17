@@ -29,7 +29,7 @@ databaseChangeLog:
                   value: de
               - column:
                   name: display_name
-                  value: German
+                  value: Deutsch
               - column:
                   name: is_default
                   valueBoolean: false

@@ -54,94 +54,12 @@ import type {
   VersionDiffResponse
 } from '.././model';
 
-import assignClassificationsToEntityMutator from '../../customAxios';
-import getAllBusinessEntitiesMutator from '../../customAxios';
-import createBusinessEntityMutator from '../../customAxios';
-import getBusinessEntityTreeMutator from '../../customAxios';
-import getBusinessEntityByKeyMutator from '../../customAxios';
-import deleteBusinessEntityMutator from '../../customAxios';
-import getLocalizedBusinessEntityMutator from '../../customAxios';
-import getVersionsMutator from '../../customAxios';
-import getVersionDiffMutator from '../../customAxios';
-import assignBusinessDomainToBusinessEntityMutator from '../../customAxios';
-import updateBusinessEntityParentMutator from '../../customAxios';
-import updateBusinessEntityDataOwnerMutator from '../../customAxios';
-import updateBusinessEntityNamesMutator from '../../customAxios';
-import updateBusinessEntityDescriptionsMutator from '../../customAxios';
-import createBusinessEntityRelationshipMutator from '../../customAxios';
-import updateBusinessEntityRelationshipMutator from '../../customAxios';
-import deleteBusinessEntityRelationshipMutator from '../../customAxios';
-import updateBusinessEntityInterfacesMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
 
 /**
- * Replaces all classification assignments on a business entity. Each classification must be assignable to BUSINESS_ENTITY and only one value per classification is allowed.
- * @summary Assign classifications to business entity
- */
-export const assignClassificationsToEntity = (
-    key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[],
- ) => {
-      
-      
-      return assignClassificationsToEntityMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/classifications`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: classificationAssignmentRequest
-    },
-      );
-    }
-  
-
-
-export const getAssignClassificationsToEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
-
-const mutationKey = ['assignClassificationsToEntity'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToEntity>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  assignClassificationsToEntity(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignClassificationsToEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToEntity>>>
-    export type AssignClassificationsToEntityMutationBody = ClassificationAssignmentRequest[]
-    export type AssignClassificationsToEntityMutationError = ErrorResponse | void
-
-    /**
- * @summary Assign classifications to business entity
- */
-export const useAssignClassificationsToEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignClassificationsToEntity>>,
-        TError,
-        {key: string;data: ClassificationAssignmentRequest[]},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignClassificationsToEntityMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Returns a list of all entities with their translations.
  * @summary Get all entities
  */
@@ -151,8 +69,8 @@ export const getAllBusinessEntities = (
 ) => {
       
       
-      return getAllBusinessEntitiesMutator<BusinessEntityResponse[]>(
-      {url: `http://localhost:8081/business-entities`, method: 'GET', signal
+      return customAxios<BusinessEntityResponse[]>(
+      {url: `/business-entities`, method: 'GET', signal
     },
       );
     }
@@ -162,7 +80,7 @@ export const getAllBusinessEntities = (
 
 export const getGetAllBusinessEntitiesQueryKey = () => {
     return [
-    `http://localhost:8081/business-entities`
+    `/business-entities`
     ] as const;
     }
 
@@ -244,8 +162,8 @@ export const createBusinessEntity = (
 ) => {
       
       
-      return createBusinessEntityMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities`, method: 'POST',
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createBusinessEntityRequest, signal
     },
@@ -309,8 +227,8 @@ export const getBusinessEntityTree = (
 ) => {
       
       
-      return getBusinessEntityTreeMutator<BusinessEntityTreeResponse[]>(
-      {url: `http://localhost:8081/business-entities/tree`, method: 'GET', signal
+      return customAxios<BusinessEntityTreeResponse[]>(
+      {url: `/business-entities/tree`, method: 'GET', signal
     },
       );
     }
@@ -320,7 +238,7 @@ export const getBusinessEntityTree = (
 
 export const getGetBusinessEntityTreeQueryKey = () => {
     return [
-    `http://localhost:8081/business-entities/tree`
+    `/business-entities/tree`
     ] as const;
     }
 
@@ -402,8 +320,8 @@ export const getBusinessEntityByKey = (
 ) => {
       
       
-      return getBusinessEntityByKeyMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}`, method: 'GET', signal
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}`, method: 'GET', signal
     },
       );
     }
@@ -413,7 +331,7 @@ export const getBusinessEntityByKey = (
 
 export const getGetBusinessEntityByKeyQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/business-entities/${key}`
+    `/business-entities/${key}`
     ] as const;
     }
 
@@ -494,8 +412,8 @@ export const deleteBusinessEntity = (
  ) => {
       
       
-      return deleteBusinessEntityMutator<void>(
-      {url: `http://localhost:8081/business-entities/${key}`, method: 'DELETE'
+      return customAxios<void>(
+      {url: `/business-entities/${key}`, method: 'DELETE'
     },
       );
     }
@@ -548,6 +466,331 @@ export const useDeleteBusinessEntity = <TError = void | ErrorResponse,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Replaces all classification assignments on a business entity. Each classification must be assignable to BUSINESS_ENTITY and only one value per classification is allowed.
+ * @summary Assign classifications to business entity
+ */
+export const assignClassificationsToEntity = (
+    key: string,
+    classificationAssignmentRequest: ClassificationAssignmentRequest[],
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/classifications`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: classificationAssignmentRequest
+    },
+      );
+    }
+  
+
+
+export const getAssignClassificationsToEntityMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
+
+const mutationKey = ['assignClassificationsToEntity'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToEntity>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignClassificationsToEntity(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignClassificationsToEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToEntity>>>
+    export type AssignClassificationsToEntityMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToEntityMutationError = ErrorResponse | void
+
+    /**
+ * @summary Assign classifications to business entity
+ */
+export const useAssignClassificationsToEntity = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignClassificationsToEntity>>,
+        TError,
+        {key: string;data: ClassificationAssignmentRequest[]},
+        TContext
+      > => {
+
+      const mutationOptions = getAssignClassificationsToEntityMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the data owner of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity data owner
+ */
+export const updateBusinessEntityDataOwner = (
+    key: string,
+    updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/data-owner`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessEntityDataOwnerRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityDataOwnerMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityDataOwner'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, {key: string;data: UpdateBusinessEntityDataOwnerRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityDataOwner(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityDataOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>>
+    export type UpdateBusinessEntityDataOwnerMutationBody = UpdateBusinessEntityDataOwnerRequest
+    export type UpdateBusinessEntityDataOwnerMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update business entity data owner
+ */
+export const useUpdateBusinessEntityDataOwner = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>,
+        TError,
+        {key: string;data: UpdateBusinessEntityDataOwnerRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityDataOwnerMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Replaces all descriptions of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity descriptions
+ */
+export const updateBusinessEntityDescriptions = (
+    key: string,
+    localizedText: LocalizedText[],
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/descriptions`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: localizedText
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityDescriptionsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityDescriptions'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityDescriptions(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>>
+    export type UpdateBusinessEntityDescriptionsMutationBody = LocalizedText[]
+    export type UpdateBusinessEntityDescriptionsMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business entity descriptions
+ */
+export const useUpdateBusinessEntityDescriptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityDescriptionsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Assigns a business domain to an business entity. Only the Data Owner or an Administrator can assign domains.
+ * @summary Assign business domain to business entity
+ */
+export const assignBusinessDomainToBusinessEntity = (
+    key: string,
+    assignBusinessDomainRequest: AssignBusinessDomainRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/domain`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: assignBusinessDomainRequest
+    },
+      );
+    }
+  
+
+
+export const getAssignBusinessDomainToBusinessEntityMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
+
+const mutationKey = ['assignBusinessDomainToBusinessEntity'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignBusinessDomainToBusinessEntity(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignBusinessDomainToBusinessEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>>
+    export type AssignBusinessDomainToBusinessEntityMutationBody = AssignBusinessDomainRequest
+    export type AssignBusinessDomainToBusinessEntityMutationError = ErrorResponse | void
+
+    /**
+ * @summary Assign business domain to business entity
+ */
+export const useAssignBusinessDomainToBusinessEntity = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>,
+        TError,
+        {key: string;data: AssignBusinessDomainRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAssignBusinessDomainToBusinessEntityMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the interface entities of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity interfaces
+ */
+export const updateBusinessEntityInterfaces = (
+    key: string,
+    updateBusinessEntityInterfacesRequest: UpdateBusinessEntityInterfacesRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/interfaces`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessEntityInterfacesRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityInterfacesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityInterfaces'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, {key: string;data: UpdateBusinessEntityInterfacesRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityInterfaces(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityInterfacesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>>
+    export type UpdateBusinessEntityInterfacesMutationBody = UpdateBusinessEntityInterfacesRequest
+    export type UpdateBusinessEntityInterfacesMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business entity interfaces
+ */
+export const useUpdateBusinessEntityInterfaces = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>,
+        TError,
+        {key: string;data: UpdateBusinessEntityInterfacesRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityInterfacesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns a single-locale view of a business entity. If no locale parameter given, uses the user's preferred language, falling back to the DB default locale.
  * @summary Get localized business entity
  */
@@ -558,8 +801,8 @@ export const getLocalizedBusinessEntity = (
 ) => {
       
       
-      return getLocalizedBusinessEntityMutator<LocalizedBusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/localized`, method: 'GET',
+      return customAxios<LocalizedBusinessEntityResponse>(
+      {url: `/business-entities/${key}/localized`, method: 'GET',
         params, signal
     },
       );
@@ -571,7 +814,7 @@ export const getLocalizedBusinessEntity = (
 export const getGetLocalizedBusinessEntityQueryKey = (key?: string,
     params?: GetLocalizedBusinessEntityParams,) => {
     return [
-    `http://localhost:8081/business-entities/${key}/localized`, ...(params ? [params]: [])
+    `/business-entities/${key}/localized`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -649,6 +892,331 @@ export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof 
 
 
 /**
+ * Replaces names of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity names
+ */
+export const updateBusinessEntityNames = (
+    key: string,
+    localizedText: LocalizedText[],
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/names`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: localizedText
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityNamesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityNames'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityNames(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityNames>>>
+    export type UpdateBusinessEntityNamesMutationBody = LocalizedText[]
+    export type UpdateBusinessEntityNamesMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business entity names
+ */
+export const useUpdateBusinessEntityNames = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityNamesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates the parent of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity parent
+ */
+export const updateBusinessEntityParent = (
+    key: string,
+    updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/parent`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessEntityParentRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityParentMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityParent'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityParent>>, {key: string;data: UpdateBusinessEntityParentRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityParent(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityParent>>>
+    export type UpdateBusinessEntityParentMutationBody = UpdateBusinessEntityParentRequest
+    export type UpdateBusinessEntityParentMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update business entity parent
+ */
+export const useUpdateBusinessEntityParent = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityParent>>,
+        TError,
+        {key: string;data: UpdateBusinessEntityParentRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityParentMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Creates a relationship between this entity and another entity. Only the Data Owner or an Administrator can create relationships.
+ * @summary Create a relationship
+ */
+export const createBusinessEntityRelationship = (
+    key: string,
+    createBusinessEntityRelationshipRequest: CreateBusinessEntityRelationshipRequest,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/relationships`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createBusinessEntityRelationshipRequest, signal
+    },
+      );
+    }
+  
+
+
+export const getCreateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext> => {
+
+const mutationKey = ['createBusinessEntityRelationship'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, {key: string;data: CreateBusinessEntityRelationshipRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  createBusinessEntityRelationship(key,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof createBusinessEntityRelationship>>>
+    export type CreateBusinessEntityRelationshipMutationBody = CreateBusinessEntityRelationshipRequest
+    export type CreateBusinessEntityRelationshipMutationError = ErrorResponse | void
+
+    /**
+ * @summary Create a relationship
+ */
+export const useCreateBusinessEntityRelationship = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBusinessEntityRelationship>>,
+        TError,
+        {key: string;data: CreateBusinessEntityRelationshipRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateBusinessEntityRelationshipMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Updates cardinalities and descriptions of a relationship. Only the Data Owner or an Administrator can update relationships.
+ * @summary Update a relationship
+ */
+export const updateBusinessEntityRelationship = (
+    key: string,
+    relationshipId: number,
+    updateBusinessEntityRelationshipRequest: UpdateBusinessEntityRelationshipRequest,
+ ) => {
+      
+      
+      return customAxios<BusinessEntityResponse>(
+      {url: `/business-entities/${key}/relationships/${relationshipId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateBusinessEntityRelationshipRequest
+    },
+      );
+    }
+  
+
+
+export const getUpdateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityRelationship'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, {key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}> = (props) => {
+          const {key,relationshipId,data} = props ?? {};
+
+          return  updateBusinessEntityRelationship(key,relationshipId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>>
+    export type UpdateBusinessEntityRelationshipMutationBody = UpdateBusinessEntityRelationshipRequest
+    export type UpdateBusinessEntityRelationshipMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update a relationship
+ */
+export const useUpdateBusinessEntityRelationship = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityRelationship>>,
+        TError,
+        {key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateBusinessEntityRelationshipMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Deletes a relationship between entities. Only the Data Owner or an Administrator can delete relationships.
+ * @summary Delete a relationship
+ */
+export const deleteBusinessEntityRelationship = (
+    key: string,
+    relationshipId: number,
+ ) => {
+      
+      
+      return customAxios<void>(
+      {url: `/business-entities/${key}/relationships/${relationshipId}`, method: 'DELETE'
+    },
+      );
+    }
+  
+
+
+export const getDeleteBusinessEntityRelationshipMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext> => {
+
+const mutationKey = ['deleteBusinessEntityRelationship'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, {key: string;relationshipId: number}> = (props) => {
+          const {key,relationshipId} = props ?? {};
+
+          return  deleteBusinessEntityRelationship(key,relationshipId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>>
+    
+    export type DeleteBusinessEntityRelationshipMutationError = void | ErrorResponse
+
+    /**
+ * @summary Delete a relationship
+ */
+export const useDeleteBusinessEntityRelationship = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>,
+        TError,
+        {key: string;relationshipId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteBusinessEntityRelationshipMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Returns the version history of an business entity.
  * @summary Get business entity version history
  */
@@ -658,8 +1226,8 @@ export const getVersions = (
 ) => {
       
       
-      return getVersionsMutator<BusinessEntityVersionResponse[]>(
-      {url: `http://localhost:8081/business-entities/${key}/versions`, method: 'GET', signal
+      return customAxios<BusinessEntityVersionResponse[]>(
+      {url: `/business-entities/${key}/versions`, method: 'GET', signal
     },
       );
     }
@@ -669,7 +1237,7 @@ export const getVersions = (
 
 export const getGetVersionsQueryKey = (key?: string,) => {
     return [
-    `http://localhost:8081/business-entities/${key}/versions`
+    `/business-entities/${key}/versions`
     ] as const;
     }
 
@@ -752,8 +1320,8 @@ export const getVersionDiff = (
 ) => {
       
       
-      return getVersionDiffMutator<VersionDiffResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
+      return customAxios<VersionDiffResponse>(
+      {url: `/business-entities/${key}/versions/${versionNumber}/diff`, method: 'GET', signal
     },
       );
     }
@@ -764,7 +1332,7 @@ export const getVersionDiff = (
 export const getGetVersionDiffQueryKey = (key?: string,
     versionNumber?: number,) => {
     return [
-    `http://localhost:8081/business-entities/${key}/versions/${versionNumber}/diff`
+    `/business-entities/${key}/versions/${versionNumber}/diff`
     ] as const;
     }
 
@@ -841,589 +1409,3 @@ export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDi
 
 
 
-/**
- * Assigns a business domain to an business entity. Only the Data Owner or an Administrator can assign domains.
- * @summary Assign business domain to business entity
- */
-export const assignBusinessDomainToBusinessEntity = (
-    key: string,
-    assignBusinessDomainRequest: AssignBusinessDomainRequest,
- ) => {
-      
-      
-      return assignBusinessDomainToBusinessEntityMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/domain`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: assignBusinessDomainRequest
-    },
-      );
-    }
-  
-
-
-export const getAssignBusinessDomainToBusinessEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
-
-const mutationKey = ['assignBusinessDomainToBusinessEntity'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  assignBusinessDomainToBusinessEntity(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignBusinessDomainToBusinessEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>>
-    export type AssignBusinessDomainToBusinessEntityMutationBody = AssignBusinessDomainRequest
-    export type AssignBusinessDomainToBusinessEntityMutationError = ErrorResponse | void
-
-    /**
- * @summary Assign business domain to business entity
- */
-export const useAssignBusinessDomainToBusinessEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>,
-        TError,
-        {key: string;data: AssignBusinessDomainRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignBusinessDomainToBusinessEntityMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the parent of a business entity. Only the Data Owner or an Administrator can edit an entity.
- * @summary Update business entity parent
- */
-export const updateBusinessEntityParent = (
-    key: string,
-    updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest,
- ) => {
-      
-      
-      return updateBusinessEntityParentMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/parent`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBusinessEntityParentRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityParentMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityParent'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityParent>>, {key: string;data: UpdateBusinessEntityParentRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessEntityParent(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityParent>>>
-    export type UpdateBusinessEntityParentMutationBody = UpdateBusinessEntityParentRequest
-    export type UpdateBusinessEntityParentMutationError = ErrorResponse | void
-
-    /**
- * @summary Update business entity parent
- */
-export const useUpdateBusinessEntityParent = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityParent>>,
-        TError,
-        {key: string;data: UpdateBusinessEntityParentRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityParentMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the data owner of a business entity. Only the Data Owner or an Administrator can edit an entity.
- * @summary Update business entity data owner
- */
-export const updateBusinessEntityDataOwner = (
-    key: string,
-    updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest,
- ) => {
-      
-      
-      return updateBusinessEntityDataOwnerMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/data-owner`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBusinessEntityDataOwnerRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityDataOwnerMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityDataOwner'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, {key: string;data: UpdateBusinessEntityDataOwnerRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessEntityDataOwner(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityDataOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>>
-    export type UpdateBusinessEntityDataOwnerMutationBody = UpdateBusinessEntityDataOwnerRequest
-    export type UpdateBusinessEntityDataOwnerMutationError = void | ErrorResponse
-
-    /**
- * @summary Update business entity data owner
- */
-export const useUpdateBusinessEntityDataOwner = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>,
-        TError,
-        {key: string;data: UpdateBusinessEntityDataOwnerRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityDataOwnerMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Replaces names of a business entity. Only the Data Owner or an Administrator can edit an entity.
- * @summary Update business entity names
- */
-export const updateBusinessEntityNames = (
-    key: string,
-    localizedText: LocalizedText[],
- ) => {
-      
-      
-      return updateBusinessEntityNamesMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/names`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: localizedText
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityNamesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityNames'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityNames>>, {key: string;data: LocalizedText[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessEntityNames(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityNames>>>
-    export type UpdateBusinessEntityNamesMutationBody = LocalizedText[]
-    export type UpdateBusinessEntityNamesMutationError = ErrorResponse | void
-
-    /**
- * @summary Update business entity names
- */
-export const useUpdateBusinessEntityNames = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityNames>>,
-        TError,
-        {key: string;data: LocalizedText[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityNamesMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Replaces all descriptions of a business entity. Only the Data Owner or an Administrator can edit an entity.
- * @summary Update business entity descriptions
- */
-export const updateBusinessEntityDescriptions = (
-    key: string,
-    localizedText: LocalizedText[],
- ) => {
-      
-      
-      return updateBusinessEntityDescriptionsMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/descriptions`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: localizedText
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityDescriptionsMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityDescriptions'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessEntityDescriptions(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>>
-    export type UpdateBusinessEntityDescriptionsMutationBody = LocalizedText[]
-    export type UpdateBusinessEntityDescriptionsMutationError = ErrorResponse | void
-
-    /**
- * @summary Update business entity descriptions
- */
-export const useUpdateBusinessEntityDescriptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>,
-        TError,
-        {key: string;data: LocalizedText[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityDescriptionsMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Creates a relationship between this entity and another entity. Only the Data Owner or an Administrator can create relationships.
- * @summary Create a relationship
- */
-export const createBusinessEntityRelationship = (
-    key: string,
-    createBusinessEntityRelationshipRequest: CreateBusinessEntityRelationshipRequest,
- signal?: AbortSignal
-) => {
-      
-      
-      return createBusinessEntityRelationshipMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/relationships`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createBusinessEntityRelationshipRequest, signal
-    },
-      );
-    }
-  
-
-
-export const getCreateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext> => {
-
-const mutationKey = ['createBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, {key: string;data: CreateBusinessEntityRelationshipRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  createBusinessEntityRelationship(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof createBusinessEntityRelationship>>>
-    export type CreateBusinessEntityRelationshipMutationBody = CreateBusinessEntityRelationshipRequest
-    export type CreateBusinessEntityRelationshipMutationError = ErrorResponse | void
-
-    /**
- * @summary Create a relationship
- */
-export const useCreateBusinessEntityRelationship = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createBusinessEntityRelationship>>,
-        TError,
-        {key: string;data: CreateBusinessEntityRelationshipRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getCreateBusinessEntityRelationshipMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates cardinalities and descriptions of a relationship. Only the Data Owner or an Administrator can update relationships.
- * @summary Update a relationship
- */
-export const updateBusinessEntityRelationship = (
-    key: string,
-    relationshipId: number,
-    updateBusinessEntityRelationshipRequest: UpdateBusinessEntityRelationshipRequest,
- ) => {
-      
-      
-      return updateBusinessEntityRelationshipMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/relationships/${relationshipId}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBusinessEntityRelationshipRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, {key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}> = (props) => {
-          const {key,relationshipId,data} = props ?? {};
-
-          return  updateBusinessEntityRelationship(key,relationshipId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>>
-    export type UpdateBusinessEntityRelationshipMutationBody = UpdateBusinessEntityRelationshipRequest
-    export type UpdateBusinessEntityRelationshipMutationError = ErrorResponse | void
-
-    /**
- * @summary Update a relationship
- */
-export const useUpdateBusinessEntityRelationship = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityRelationship>>,
-        TError,
-        {key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityRelationshipMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Deletes a relationship between entities. Only the Data Owner or an Administrator can delete relationships.
- * @summary Delete a relationship
- */
-export const deleteBusinessEntityRelationship = (
-    key: string,
-    relationshipId: number,
- ) => {
-      
-      
-      return deleteBusinessEntityRelationshipMutator<void>(
-      {url: `http://localhost:8081/business-entities/${key}/relationships/${relationshipId}`, method: 'DELETE'
-    },
-      );
-    }
-  
-
-
-export const getDeleteBusinessEntityRelationshipMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext> => {
-
-const mutationKey = ['deleteBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, {key: string;relationshipId: number}> = (props) => {
-          const {key,relationshipId} = props ?? {};
-
-          return  deleteBusinessEntityRelationship(key,relationshipId,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteBusinessEntityRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>>
-    
-    export type DeleteBusinessEntityRelationshipMutationError = void | ErrorResponse
-
-    /**
- * @summary Delete a relationship
- */
-export const useDeleteBusinessEntityRelationship = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>,
-        TError,
-        {key: string;relationshipId: number},
-        TContext
-      > => {
-
-      const mutationOptions = getDeleteBusinessEntityRelationshipMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Updates the interface entities of a business entity. Only the Data Owner or an Administrator can edit an entity.
- * @summary Update business entity interfaces
- */
-export const updateBusinessEntityInterfaces = (
-    key: string,
-    updateBusinessEntityInterfacesRequest: UpdateBusinessEntityInterfacesRequest,
- ) => {
-      
-      
-      return updateBusinessEntityInterfacesMutator<BusinessEntityResponse>(
-      {url: `http://localhost:8081/business-entities/${key}/interfaces`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateBusinessEntityInterfacesRequest
-    },
-      );
-    }
-  
-
-
-export const getUpdateBusinessEntityInterfacesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext> => {
-
-const mutationKey = ['updateBusinessEntityInterfaces'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, {key: string;data: UpdateBusinessEntityInterfacesRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateBusinessEntityInterfaces(key,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateBusinessEntityInterfacesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>>
-    export type UpdateBusinessEntityInterfacesMutationBody = UpdateBusinessEntityInterfacesRequest
-    export type UpdateBusinessEntityInterfacesMutationError = ErrorResponse | void
-
-    /**
- * @summary Update business entity interfaces
- */
-export const useUpdateBusinessEntityInterfaces = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>,
-        TError,
-        {key: string;data: UpdateBusinessEntityInterfacesRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdateBusinessEntityInterfacesMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    

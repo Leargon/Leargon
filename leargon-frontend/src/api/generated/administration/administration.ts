@@ -41,15 +41,7 @@ import type {
   UserResponse
 } from '.././model';
 
-import getAllUsersMutator from '../../customAxios';
-import getUserByIdMutator from '../../customAxios';
-import updateUserMutator from '../../customAxios';
-import deleteUserMutator from '../../customAxios';
-import administrationChangePasswordMutator from '../../customAxios';
-import lockUserMutator from '../../customAxios';
-import unlockUserMutator from '../../customAxios';
-import enableUserMutator from '../../customAxios';
-import disableUserMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -64,8 +56,8 @@ export const getAllUsers = (
 ) => {
       
       
-      return getAllUsersMutator<UserResponse[]>(
-      {url: `http://localhost:8081/administration/users`, method: 'GET', signal
+      return customAxios<UserResponse[]>(
+      {url: `/administration/users`, method: 'GET', signal
     },
       );
     }
@@ -75,7 +67,7 @@ export const getAllUsers = (
 
 export const getGetAllUsersQueryKey = () => {
     return [
-    `http://localhost:8081/administration/users`
+    `/administration/users`
     ] as const;
     }
 
@@ -157,8 +149,8 @@ export const getUserById = (
 ) => {
       
       
-      return getUserByIdMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}`, method: 'GET', signal
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}`, method: 'GET', signal
     },
       );
     }
@@ -168,7 +160,7 @@ export const getUserById = (
 
 export const getGetUserByIdQueryKey = (id?: number,) => {
     return [
-    `http://localhost:8081/administration/users/${id}`
+    `/administration/users/${id}`
     ] as const;
     }
 
@@ -250,8 +242,8 @@ export const updateUser = (
  ) => {
       
       
-      return updateUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}`, method: 'PUT',
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateUserRequest
     },
@@ -314,8 +306,8 @@ export const deleteUser = (
  ) => {
       
       
-      return deleteUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}`, method: 'DELETE'
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}`, method: 'DELETE'
     },
       );
     }
@@ -368,6 +360,195 @@ export const useDeleteUser = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Disables a user account, preventing login. Cannot disable fallback admin. Requires ROLE_ADMIN.
+ * @summary Disable user account
+ */
+export const disableUser = (
+    id: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}/disable`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getDisableUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['disableUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disableUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  disableUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisableUserMutationResult = NonNullable<Awaited<ReturnType<typeof disableUser>>>
+    
+    export type DisableUserMutationError = void
+
+    /**
+ * @summary Disable user account
+ */
+export const useDisableUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disableUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+
+      const mutationOptions = getDisableUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Enables a disabled user account, allowing login. Requires ROLE_ADMIN.
+ * @summary Enable user account
+ */
+export const enableUser = (
+    id: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}/enable`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getEnableUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['enableUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  enableUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnableUserMutationResult = NonNullable<Awaited<ReturnType<typeof enableUser>>>
+    
+    export type EnableUserMutationError = void
+
+    /**
+ * @summary Enable user account
+ */
+export const useEnableUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof enableUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+
+      const mutationOptions = getEnableUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Locks a user account, preventing login. Cannot lock fallback admin. Requires ROLE_ADMIN.
+ * @summary Lock user account
+ */
+export const lockUser = (
+    id: number,
+ signal?: AbortSignal
+) => {
+      
+      
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}/lock`, method: 'POST', signal
+    },
+      );
+    }
+  
+
+
+export const getLockUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['lockUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lockUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  lockUser(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LockUserMutationResult = NonNullable<Awaited<ReturnType<typeof lockUser>>>
+    
+    export type LockUserMutationError = void
+
+    /**
+ * @summary Lock user account
+ */
+export const useLockUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof lockUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+
+      const mutationOptions = getLockUserMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Allows an administration to reset a user's password without knowing the current password. Cannot change fallback admin password. Requires ROLE_ADMIN.
  * @summary Change user password (admin)
  */
@@ -377,8 +558,8 @@ export const administrationChangePassword = (
  ) => {
       
       
-      return administrationChangePasswordMutator<void>(
-      {url: `http://localhost:8081/administration/users/${id}/password`, method: 'PUT',
+      return customAxios<void>(
+      {url: `/administration/users/${id}/password`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: administrationChangePasswordRequest
     },
@@ -433,69 +614,6 @@ export const useAdministrationChangePassword = <TError = void,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Locks a user account, preventing login. Cannot lock fallback admin. Requires ROLE_ADMIN.
- * @summary Lock user account
- */
-export const lockUser = (
-    id: number,
- signal?: AbortSignal
-) => {
-      
-      
-      return lockUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}/lock`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getLockUserMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['lockUser'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lockUser>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  lockUser(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LockUserMutationResult = NonNullable<Awaited<ReturnType<typeof lockUser>>>
-    
-    export type LockUserMutationError = void
-
-    /**
- * @summary Lock user account
- */
-export const useLockUser = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockUser>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof lockUser>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-
-      const mutationOptions = getLockUserMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Unlocks a previously locked user account. Requires ROLE_ADMIN.
  * @summary Unlock user account
  */
@@ -505,8 +623,8 @@ export const unlockUser = (
 ) => {
       
       
-      return unlockUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}/unlock`, method: 'POST', signal
+      return customAxios<UserResponse>(
+      {url: `/administration/users/${id}/unlock`, method: 'POST', signal
     },
       );
     }
@@ -555,132 +673,6 @@ export const useUnlockUser = <TError = void,
       > => {
 
       const mutationOptions = getUnlockUserMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Enables a disabled user account, allowing login. Requires ROLE_ADMIN.
- * @summary Enable user account
- */
-export const enableUser = (
-    id: number,
- signal?: AbortSignal
-) => {
-      
-      
-      return enableUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}/enable`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getEnableUserMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['enableUser'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableUser>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  enableUser(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EnableUserMutationResult = NonNullable<Awaited<ReturnType<typeof enableUser>>>
-    
-    export type EnableUserMutationError = void
-
-    /**
- * @summary Enable user account
- */
-export const useEnableUser = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof enableUser>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-
-      const mutationOptions = getEnableUserMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
- * Disables a user account, preventing login. Cannot disable fallback admin. Requires ROLE_ADMIN.
- * @summary Disable user account
- */
-export const disableUser = (
-    id: number,
- signal?: AbortSignal
-) => {
-      
-      
-      return disableUserMutator<UserResponse>(
-      {url: `http://localhost:8081/administration/users/${id}/disable`, method: 'POST', signal
-    },
-      );
-    }
-  
-
-
-export const getDisableUserMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['disableUser'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disableUser>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  disableUser(id,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DisableUserMutationResult = NonNullable<Awaited<ReturnType<typeof disableUser>>>
-    
-    export type DisableUserMutationError = void
-
-    /**
- * @summary Disable user account
- */
-export const useDisableUser = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof disableUser>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-
-      const mutationOptions = getDisableUserMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

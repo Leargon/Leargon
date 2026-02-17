@@ -1,10 +1,8 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { tokenStorage } from '../utils/tokenStorage';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
-
 const axiosInstance = axios.create({
-  baseURL,
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },

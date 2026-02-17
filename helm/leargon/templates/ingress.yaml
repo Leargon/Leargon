@@ -28,20 +28,12 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
+          - path: /
+            pathType: Prefix
             backend:
               service:
-                {{- if eq .service "backend" }}
-                name: {{ include "leargon.fullname" $ }}-backend
-                port:
-                  number: {{ $.Values.backend.service.port }}
-                {{- else }}
                 name: {{ include "leargon.fullname" $ }}-frontend
                 port:
                   number: {{ $.Values.frontend.service.port }}
-                {{- end }}
-          {{- end }}
     {{- end }}
 {{- end }}

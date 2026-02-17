@@ -41,8 +41,7 @@ import type {
   UserResponse
 } from '.././model';
 
-import getCurrentUserMutator from '../../customAxios';
-import changePasswordMutator from '../../customAxios';
+import { customAxios } from '../../customAxios';
 
 
 
@@ -57,8 +56,8 @@ export const getCurrentUser = (
 ) => {
       
       
-      return getCurrentUserMutator<UserResponse>(
-      {url: `http://localhost:8081/users/me`, method: 'GET', signal
+      return customAxios<UserResponse>(
+      {url: `/users/me`, method: 'GET', signal
     },
       );
     }
@@ -68,7 +67,7 @@ export const getCurrentUser = (
 
 export const getGetCurrentUserQueryKey = () => {
     return [
-    `http://localhost:8081/users/me`
+    `/users/me`
     ] as const;
     }
 
@@ -150,8 +149,8 @@ export const changePassword = (
 ) => {
       
       
-      return changePasswordMutator<void>(
-      {url: `http://localhost:8081/users/me/password`, method: 'POST',
+      return customAxios<void>(
+      {url: `/users/me/password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: changePasswordRequest, signal
     },
