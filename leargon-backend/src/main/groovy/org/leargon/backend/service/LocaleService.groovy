@@ -95,11 +95,10 @@ class LocaleService {
         if (request.isDefault != null) {
             if (request.isDefault) {
                 if (!locale.isDefault) {
-                    def repo = this.localeRepository
-                    def currentDefault = repo.findByIsDefault(true).orElse(null)
+                    def currentDefault = localeRepository.findByIsDefault(true).orElse(null)
                     if (currentDefault) {
                         currentDefault.isDefault = false
-                        repo.update(currentDefault)
+                        localeRepository.update(currentDefault)
                     }
                     locale.isDefault = true
                     locale.isActive = true
@@ -129,31 +128,10 @@ class LocaleService {
     }
 
     private boolean isLocaleInUse(String localeCode) {
-        // Check business entities
-        for (def entity : entityRepository.findAll()) {
-            if (entity.names?.any { it.locale == localeCode }) return true
-            if (entity.descriptions?.any { it.locale == localeCode }) return true
-        }
-
-        // Check business domains
-        for (def domain : domainRepository.findAll()) {
-            if (domain.names?.any { it.locale == localeCode }) return true
-            if (domain.descriptions?.any { it.locale == localeCode }) return true
-        }
-
-        // Check classifications
-        for (def classification : classificationRepository.findAll()) {
-            if (classification.names?.any { it.locale == localeCode }) return true
-            if (classification.descriptions?.any { it.locale == localeCode }) return true
-        }
-
-        // Check classification values
-        for (def value : classificationValueRepository.findAll()) {
-            if (value.names?.any { it.locale == localeCode }) return true
-            if (value.descriptions?.any { it.locale == localeCode }) return true
-        }
-
-        return false
+        return entityRepository.countByLocaleInTranslations(localeCode) > 0 ||
+                domainRepository.countByLocaleInTranslations(localeCode) > 0 ||
+                classificationRepository.countByLocaleInTranslations(localeCode) > 0 ||
+                classificationValueRepository.countByLocaleInTranslations(localeCode) > 0
     }
 
     SupportedLocaleResponse toResponse(SupportedLocale locale) {
