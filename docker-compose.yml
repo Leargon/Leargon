@@ -27,6 +27,11 @@ services:
     container_name: leargon-backend
     ports:
       - "8081:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     environment:
       - MICRONAUT_ENVIRONMENTS=prod
       - MICRONAUT_SERVER_PORT=8080
