@@ -1,5 +1,6 @@
 package org.leargon.backend.service
 
+import io.micronaut.context.annotation.Value
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.User
 import org.leargon.backend.model.LoginRequest
@@ -15,10 +16,23 @@ class AuthenticationService {
 
     private final UserService userService
     private final PasswordEncoder passwordEncoder
+    private final String azureTenantId
+    private final String azureClientId
 
-    AuthenticationService(UserService userService, PasswordEncoder passwordEncoder) {
+    AuthenticationService(
+            UserService userService,
+            PasswordEncoder passwordEncoder,
+            @Value('${azure.tenant-id:}') String azureTenantId,
+            @Value('${azure.client-id:}') String azureClientId
+    ) {
         this.userService = userService
         this.passwordEncoder = passwordEncoder
+        this.azureTenantId = azureTenantId
+        this.azureClientId = azureClientId
+    }
+
+    private boolean isAzureEnabled() {
+        return azureTenantId && azureClientId
     }
 
     /**
@@ -33,6 +47,11 @@ class AuthenticationService {
         // Find user by email - use generic error message to prevent user enumeration
         User user = userService.findByEmail(request.email)
                 .orElseThrow(() -> new AuthenticationException("Invalid email or password"))
+
+        // When Azure is enabled, only the fallback administrator can use local login
+        if (isAzureEnabled() && !user.isFallbackAdministrator) {
+            throw new AuthenticationException("Please use Azure login")
+        }
 
         // Reject Azure-only users (no password set)
         if (user.authProvider == "AZURE" && !user.passwordHash) {

@@ -56,8 +56,15 @@ class AuthenticationController implements AuthenticationApi {
         this.azureClientId = azureClientId
     }
 
+    private boolean isAzureEnabled() {
+        return azureAuthService != null && azureTenantId && azureClientId
+    }
+
     @Override
     AuthResponse signup(@Valid @Body SignupRequest signupRequest) {
+        if (isAzureEnabled()) {
+            throw new AuthenticationException("Signup is disabled when Azure authentication is configured")
+        }
         User user = userService.createUser(signupRequest)
         return generateAuthResponse(user)
     }

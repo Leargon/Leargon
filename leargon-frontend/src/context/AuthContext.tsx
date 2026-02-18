@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { tokenStorage, StoredUser } from '../utils/tokenStorage';
-import { login as apiLogin, signup as apiSignup } from '../api/generated/authentication/authentication';
+import { login as apiLogin, signup as apiSignup, azureLogin as apiAzureLogin } from '../api/generated/authentication/authentication';
 import type { UserResponse, SignupRequest } from '../api/generated/model';
 
 interface AuthContextType {
   user: UserResponse | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (data: SignupRequest) => Promise<void>;
+  azureLogin: (idToken: string) => Promise<void>;
   logout: () => void;
   updateUser: (user: UserResponse) => void;
   isAuthenticated: boolean;
@@ -64,6 +65,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(authResponse.user);
   };
 
+  const azureLogin = async (idToken: string): Promise<void> => {
+    const response = await apiAzureLogin({ idToken });
+    const authResponse = response.data;
+
+    tokenStorage.setToken(authResponse.accessToken);
+    tokenStorage.setUser(authResponse.user as StoredUser);
+    setUser(authResponse.user);
+  };
+
   const logout = (): void => {
     tokenStorage.clear();
     setUser(null);
@@ -78,6 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     login,
     signup,
+    azureLogin,
     logout,
     updateUser,
     isAuthenticated: !!tokenStorage.getToken(),
