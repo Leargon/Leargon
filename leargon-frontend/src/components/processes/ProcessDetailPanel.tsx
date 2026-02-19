@@ -62,6 +62,11 @@ import type {
   ProcessType,
   ClassificationAssignmentRequest,
   ProcessVersionResponse,
+  ProcessResponse,
+  SupportedLocaleResponse,
+  ClassificationResponse,
+  BusinessDomainResponse,
+  BusinessEntityResponse,
 } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
@@ -85,17 +90,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: processResponse, isLoading, error } = useGetProcessByKey(processKey);
-  const process = processResponse?.data;
+  const process = processResponse?.data as ProcessResponse | undefined;
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetProcessVersions(processKey);
-  const versions = versionsResponse?.data || [];
+  const versions = (versionsResponse?.data as ProcessVersionResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'BUSINESS_PROCESS' });
-  const availableClassifications = classificationsResponse?.data || [];
+  const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: domainsResponse } = useGetAllBusinessDomains();
-  const allDomains = domainsResponse?.data || [];
+  const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
-  const allEntities = allEntitiesResponse?.data || [];
+  const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -127,7 +132,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: processKey, data: val.names });
       await updateDescriptions.mutateAsync({ key: processKey, data: val.descriptions });
-      const newKey = response.data.key;
+      const newKey = (response.data as ProcessResponse).key;
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
         navigate(`/processes/${newKey}`, { replace: true });
@@ -157,7 +162,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const codeEdit = useInlineEdit<string>({
     onSave: async (val) => {
       const response = await updateCode.mutateAsync({ key: processKey, data: { code: val } });
-      const newKey = response.data.key;
+      const newKey = (response.data as ProcessResponse).key;
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
         navigate(`/processes/${newKey}`, { replace: true });

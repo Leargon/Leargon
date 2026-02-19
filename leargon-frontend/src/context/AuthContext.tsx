@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { tokenStorage, StoredUser } from '../utils/tokenStorage';
 import { login as apiLogin, signup as apiSignup, azureLogin as apiAzureLogin } from '../api/generated/authentication/authentication';
-import type { UserResponse, SignupRequest } from '../api/generated/model';
+import type { AuthResponse, UserResponse, SignupRequest } from '../api/generated/model';
 
 interface AuthContextType {
   user: UserResponse | null;
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<void> => {
     const response = await apiLogin({ email, password });
-    const authResponse = response.data;
+    const authResponse = response.data as AuthResponse;
 
     tokenStorage.setToken(authResponse.accessToken);
     tokenStorage.setUser(authResponse.user as StoredUser);
@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = async (data: SignupRequest): Promise<void> => {
     const response = await apiSignup(data);
-    const authResponse = response.data;
+    const authResponse = response.data as AuthResponse;
 
     tokenStorage.setToken(authResponse.accessToken);
     tokenStorage.setUser(authResponse.user as StoredUser);
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const azureLogin = async (idToken: string): Promise<void> => {
     const response = await apiAzureLogin({ idToken });
-    const authResponse = response.data;
+    const authResponse = response.data as AuthResponse;
 
     tokenStorage.setToken(authResponse.accessToken);
     tokenStorage.setUser(authResponse.user as StoredUser);

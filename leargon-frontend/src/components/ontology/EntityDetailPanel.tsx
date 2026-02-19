@@ -63,6 +63,10 @@ import type {
   BusinessEntityVersionResponse,
   BusinessEntityRelationshipResponse,
   BusinessEntityResponse,
+  SupportedLocaleResponse,
+  ClassificationResponse,
+  BusinessDomainResponse,
+  ProcessResponse,
 } from '../../api/generated/model';
 
 interface EntityDetailPanelProps {
@@ -77,19 +81,19 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: entityResponse, isLoading, error } = useGetBusinessEntityByKey(entityKey);
-  const entity = entityResponse?.data;
+  const entity = entityResponse?.data as BusinessEntityResponse | undefined;
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetVersions(entityKey);
-  const versions = versionsResponse?.data || [];
+  const versions = (versionsResponse?.data as BusinessEntityVersionResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'BUSINESS_ENTITY' });
-  const availableClassifications = classificationsResponse?.data || [];
+  const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: domainsResponse } = useGetAllBusinessDomains();
-  const allDomains = domainsResponse?.data || [];
+  const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
-  const allEntities = allEntitiesResponse?.data || [];
+  const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
-  const allProcesses = allProcessesResponse?.data || [];
+  const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
@@ -129,7 +133,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: entityKey, data: val.names });
       await updateDescriptions.mutateAsync({ key: entityKey, data: val.descriptions });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessEntityResponse).key;
       if (newKey !== entityKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
         navigate(`/entities/${newKey}`, { replace: true });
@@ -151,7 +155,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const parentEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
       const response = await updateParent.mutateAsync({ key: entityKey, data: { parentKey: val } });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessEntityResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
       if (newKey !== entityKey) {
         navigate(`/entities/${newKey}`, { replace: true });

@@ -22,7 +22,7 @@ import {
 } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
-import type { LocalizedText, ProcessType } from '../../api/generated/model';
+import type { LocalizedText, ProcessType, ProcessResponse, SupportedLocaleResponse } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 const PROCESS_TYPE_LABELS: Record<string, string> = {
@@ -43,7 +43,7 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
   const queryClient = useQueryClient();
   const createProcess = useCreateProcess();
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const [names, setNames] = useState<LocalizedText[]>([]);
   const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
@@ -71,7 +71,7 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
-      const newKey = response.data.key;
+      const newKey = (response.data as ProcessResponse).key;
       onClose();
       resetForm();
       navigate(`/processes/${newKey}`);

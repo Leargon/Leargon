@@ -18,7 +18,7 @@ import {
 } from '../../api/generated/business-entity/business-entity';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
-import type { LocalizedText } from '../../api/generated/model';
+import type { LocalizedText, BusinessEntityResponse, SupportedLocaleResponse } from '../../api/generated/model';
 
 interface CreateEntityDialogProps {
   open: boolean;
@@ -31,7 +31,7 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
   const queryClient = useQueryClient();
   const createEntity = useCreateBusinessEntity();
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const [names, setNames] = useState<LocalizedText[]>([]);
   const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
@@ -58,7 +58,7 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessEntityResponse).key;
       onClose();
       resetForm();
       navigate(`/entities/${newKey}`);

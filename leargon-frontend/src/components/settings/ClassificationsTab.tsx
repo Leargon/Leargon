@@ -45,15 +45,16 @@ import type {
   ClassificationResponse,
   LocalizedText,
   ClassificationAssignableTo,
+  SupportedLocaleResponse,
 } from '../../api/generated/model';
 
 const ClassificationsTab: React.FC = () => {
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
   const { data: classificationsResponse } = useGetClassifications();
-  const classifications = classificationsResponse?.data || [];
+  const classifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const createClassification = useCreateClassification();
   const deleteClassification = useDeleteClassification();

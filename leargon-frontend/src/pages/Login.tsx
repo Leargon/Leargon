@@ -17,7 +17,7 @@ import { PublicClientApplication } from '@azure/msal-browser';
 import { AxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useGetAzureConfig } from '../api/generated/authentication/authentication';
-import type { ErrorResponse } from '../api/generated/model';
+import type { AzureConfigResponse, ErrorResponse } from '../api/generated/model';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Login: React.FC = () => {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   const { data: azureConfigResponse, isPending: azureConfigPending } = useGetAzureConfig();
-  const azureConfig = azureConfigResponse?.data;
+  const azureConfig = azureConfigResponse?.data as AzureConfigResponse | undefined;
   const azureEnabled = azureConfig?.enabled ?? false;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {

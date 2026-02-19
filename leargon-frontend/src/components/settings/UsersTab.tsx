@@ -52,7 +52,7 @@ const UsersTab: React.FC = () => {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { data: usersResponse, isLoading } = useGetAllUsers();
-  const users = usersResponse?.data || [];
+  const users = (usersResponse?.data as UserResponse[] | undefined) || [];
 
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();

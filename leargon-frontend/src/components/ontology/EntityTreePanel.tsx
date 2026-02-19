@@ -35,7 +35,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: treeResponse, isLoading } = useGetBusinessEntityTree();
-  const tree = treeResponse?.data || [];
+  const tree = (treeResponse?.data as BusinessEntityTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
   const matchesFilter = (entity: BusinessEntityTreeResponse): boolean => {

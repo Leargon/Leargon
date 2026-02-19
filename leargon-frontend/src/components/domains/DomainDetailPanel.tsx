@@ -57,6 +57,10 @@ import type {
   BusinessDomainType,
   ClassificationAssignmentRequest,
   BusinessDomainVersionResponse,
+  BusinessDomainResponse,
+  SupportedLocaleResponse,
+  ClassificationResponse,
+  ProcessResponse,
 } from '../../api/generated/model';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
@@ -73,17 +77,17 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
-  const domain = domainResponse?.data;
+  const domain = domainResponse?.data as BusinessDomainResponse | undefined;
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetBusinessDomainVersions(domainKey);
-  const versions = versionsResponse?.data || [];
+  const versions = (versionsResponse?.data as BusinessDomainVersionResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'BUSINESS_DOMAIN' });
-  const availableClassifications = classificationsResponse?.data || [];
+  const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: allDomainsResponse } = useGetAllBusinessDomains();
-  const allDomains = allDomainsResponse?.data || [];
+  const allDomains = (allDomainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
-  const allProcesses = allProcessesResponse?.data || [];
+  const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
 
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
@@ -109,7 +113,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: domainKey, data: val.names });
       await updateDescriptions.mutateAsync({ key: domainKey, data: val.descriptions });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessDomainResponse).key;
       if (newKey !== domainKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
         navigate(`/domains/${newKey}`, { replace: true });
@@ -131,7 +135,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const parentEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
       const response = await updateParent.mutateAsync({ key: domainKey, data: { parentKey: val } });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessDomainResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
       if (newKey !== domainKey) {
         navigate(`/domains/${newKey}`, { replace: true });

@@ -96,7 +96,7 @@ const Signup: React.FC = () => {
                 autoComplete="username"
               />
               <Grid container spacing={2} sx={{ mt: 0 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="First Name"
@@ -106,7 +106,7 @@ const Signup: React.FC = () => {
                     autoComplete="given-name"
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Last Name"

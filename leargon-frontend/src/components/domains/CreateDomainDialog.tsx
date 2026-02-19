@@ -22,7 +22,7 @@ import {
 } from '../../api/generated/business-domain/business-domain';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
-import type { LocalizedText, BusinessDomainType } from '../../api/generated/model';
+import type { LocalizedText, BusinessDomainType, BusinessDomainResponse, SupportedLocaleResponse } from '../../api/generated/model';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -37,7 +37,7 @@ const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, 
   const queryClient = useQueryClient();
   const createDomain = useCreateBusinessDomain();
   const { data: localesResponse } = useGetSupportedLocales();
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const [names, setNames] = useState<LocalizedText[]>([]);
   const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
@@ -64,7 +64,7 @@ const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, 
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
-      const newKey = response.data.key;
+      const newKey = (response.data as BusinessDomainResponse).key;
       onClose();
       resetForm();
       navigate(`/domains/${newKey}`);

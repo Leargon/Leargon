@@ -37,7 +37,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: treeResponse, isLoading } = useGetBusinessDomainTree();
-  const tree = treeResponse?.data || [];
+  const tree = (treeResponse?.data as BusinessDomainTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
   const matchesFilter = (domain: BusinessDomainTreeResponse): boolean => {

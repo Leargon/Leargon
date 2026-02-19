@@ -233,7 +233,7 @@ interface LocalesTabProps {
 const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales({ 'include-inactive': true });
-  const locales = localesResponse?.data || [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const createLocale = useCreateSupportedLocale();
   const updateLocale = useUpdateSupportedLocale();

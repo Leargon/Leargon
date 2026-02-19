@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCompleteSetup } from '../api/generated/setup/setup';
 import LocalesTab from '../components/settings/LocalesTab';
+import type { UserResponse } from '../api/generated/model';
 
 const SetupWizardPage: React.FC = () => {
   const { user, isAuthenticated, loading, updateUser } = useAuth();
@@ -30,7 +31,7 @@ const SetupWizardPage: React.FC = () => {
   const handleComplete = async () => {
     try {
       const response = await completeSetup.mutateAsync();
-      updateUser(response.data);
+      updateUser(response.data as UserResponse);
       navigate('/domains', { replace: true });
     } catch {
       // error is shown via the Alert below

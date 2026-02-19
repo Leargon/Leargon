@@ -16,6 +16,7 @@ import { Add, Search, Timeline } from '@mui/icons-material';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import type { ProcessResponse } from '../../api/generated/model';
 
 interface ProcessListPanelProps {
   selectedKey?: string;
@@ -28,7 +29,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: processesResponse, isLoading } = useGetAllProcesses();
-  const processes = processesResponse?.data || [];
+  const processes = (processesResponse?.data as ProcessResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
   const filtered = processes.filter((p) => {
