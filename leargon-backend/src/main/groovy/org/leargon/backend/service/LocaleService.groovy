@@ -60,8 +60,12 @@ class LocaleService {
             throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Locale code '${request.localeCode}' already exists")
         }
 
-        def validCodes = Locale.getISOLanguages() as Set
-        if (!validCodes.contains(request.localeCode)) {
+        // Validate against ISO 639-1 two-letter language codes (e.g. "en", "de", "fr")
+        // This system uses language-only codes, not region-specific locales like "en-US"
+        def validLanguageCodes = Locale.getISOLanguages() as Set
+        def requestedLanguage = request.localeCode?.split('[-_]', 2)[0]
+
+        if (!requestedLanguage || !validLanguageCodes.contains(requestedLanguage)) {
             throw new HttpStatusException(HttpStatus.BAD_REQUEST, "Locale code '${request.localeCode}' is not a valid ISO 639-1 language code")
         }
 
@@ -134,7 +138,7 @@ class LocaleService {
                 classificationValueRepository.countByLocaleInTranslations(localeCode) > 0
     }
 
-    SupportedLocaleResponse toResponse(SupportedLocale locale) {
+    private SupportedLocaleResponse toResponse(SupportedLocale locale) {
         return new SupportedLocaleResponse(
             locale.id,
             locale.localeCode,

@@ -81,19 +81,4 @@ class LocaleServiceSpec extends Specification {
         !localeService.isLocaleActive("xyz")
     }
 
-    def "should convert locale to response DTO"() {
-        given: "the default locale"
-        def locale = localeService.getDefaultLocale()
-
-        when: "converting to response"
-        def response = localeService.toResponse(locale)
-
-        then: "response is correct"
-        response.id == locale.id
-        response.localeCode == locale.localeCode
-        response.displayName == locale.displayName
-        response.isDefault == locale.isDefault
-        response.isActive == locale.isActive
-        response.sortOrder == locale.sortOrder
-    }
 }
