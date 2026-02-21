@@ -16,18 +16,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { ProcessElementResponse } from './processElementResponse';
+import type { ProcessFlowResponse } from './processFlowResponse';
 
-/**
- * Type of change
- */
-export type ProcessVersionResponseChangeType = typeof ProcessVersionResponseChangeType[keyof typeof ProcessVersionResponseChangeType];
-
-
-export const ProcessVersionResponseChangeType = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-  OWNER_CHANGE: 'OWNER_CHANGE',
-  TYPE_CHANGE: 'TYPE_CHANGE',
-  CLASSIFICATION_CHANGE: 'CLASSIFICATION_CHANGE',
-  DIAGRAM_UPDATE: 'DIAGRAM_UPDATE',
-} as const;
+export interface ProcessDiagramResponse {
+  elements: ProcessElementResponse[];
+  flows: ProcessFlowResponse[];
+}

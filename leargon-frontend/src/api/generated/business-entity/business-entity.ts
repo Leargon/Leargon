@@ -57,6 +57,8 @@ import type {
 import { customAxios } from '../../customAxios';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 /**
@@ -112,16 +114,16 @@ export const getGetAllBusinessEntitiesQueryKey = () => {
     }
 
     
-export const getGetAllBusinessEntitiesQueryOptions = <TData = Awaited<ReturnType<typeof getAllBusinessEntities>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, }
+export const getGetAllBusinessEntitiesQueryOptions = <TData = Awaited<ReturnType<typeof getAllBusinessEntities>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetAllBusinessEntitiesQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllBusinessEntities>>> = ({ signal }) => getAllBusinessEntities({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllBusinessEntities>>> = ({ signal }) => getAllBusinessEntities({ signal, ...requestOptions });
 
       
 
@@ -141,7 +143,7 @@ export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getA
           TError,
           Awaited<ReturnType<typeof getAllBusinessEntities>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getAllBusinessEntities>>, TError = void>(
@@ -151,11 +153,11 @@ export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getA
           TError,
           Awaited<ReturnType<typeof getAllBusinessEntities>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getAllBusinessEntities>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -163,7 +165,7 @@ export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getA
  */
 
 export function useGetAllBusinessEntities<TData = Awaited<ReturnType<typeof getAllBusinessEntities>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -229,15 +231,15 @@ export const createBusinessEntity = async (createBusinessEntityRequest: CreateBu
 
 
 export const getCreateBusinessEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntity>>, TError,{data: CreateBusinessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntity>>, TError,{data: CreateBusinessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntity>>, TError,{data: CreateBusinessEntityRequest}, TContext> => {
 
 const mutationKey = ['createBusinessEntity'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -245,7 +247,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessEntity>>, {data: CreateBusinessEntityRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createBusinessEntity(data,)
+          return  createBusinessEntity(data,requestOptions)
         }
 
 
@@ -263,7 +265,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create an entity
  */
 export const useCreateBusinessEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntity>>, TError,{data: CreateBusinessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntity>>, TError,{data: CreateBusinessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createBusinessEntity>>,
         TError,
@@ -325,16 +327,16 @@ export const getGetBusinessEntityTreeQueryKey = () => {
     }
 
     
-export const getGetBusinessEntityTreeQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessEntityTree>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, }
+export const getGetBusinessEntityTreeQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessEntityTree>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetBusinessEntityTreeQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessEntityTree>>> = ({ signal }) => getBusinessEntityTree({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessEntityTree>>> = ({ signal }) => getBusinessEntityTree({ signal, ...requestOptions });
 
       
 
@@ -354,7 +356,7 @@ export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBu
           TError,
           Awaited<ReturnType<typeof getBusinessEntityTree>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBusinessEntityTree>>, TError = void>(
@@ -364,11 +366,11 @@ export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBu
           TError,
           Awaited<ReturnType<typeof getBusinessEntityTree>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBusinessEntityTree>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -376,7 +378,7 @@ export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBu
  */
 
 export function useGetBusinessEntityTree<TData = Awaited<ReturnType<typeof getBusinessEntityTree>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -448,16 +450,16 @@ export const getGetBusinessEntityByKeyQueryKey = (key: string,) => {
     }
 
     
-export const getGetBusinessEntityByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, }
+export const getGetBusinessEntityByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetBusinessEntityByKeyQueryKey(key);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessEntityByKey>>> = ({ signal }) => getBusinessEntityByKey(key, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessEntityByKey>>> = ({ signal }) => getBusinessEntityByKey(key, { signal, ...requestOptions });
 
       
 
@@ -477,7 +479,7 @@ export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getB
           TError,
           Awaited<ReturnType<typeof getBusinessEntityByKey>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError = void | ErrorResponse>(
@@ -487,11 +489,11 @@ export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getB
           TError,
           Awaited<ReturnType<typeof getBusinessEntityByKey>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -499,7 +501,7 @@ export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getB
  */
 
 export function useGetBusinessEntityByKey<TData = Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessEntityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -569,15 +571,15 @@ export const deleteBusinessEntity = async (key: string, options?: RequestInit): 
 
 
 export const getDeleteBusinessEntityMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntity>>, TError,{key: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntity>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntity>>, TError,{key: string}, TContext> => {
 
 const mutationKey = ['deleteBusinessEntity'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -585,7 +587,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBusinessEntity>>, {key: string}> = (props) => {
           const {key} = props ?? {};
 
-          return  deleteBusinessEntity(key,)
+          return  deleteBusinessEntity(key,requestOptions)
         }
 
 
@@ -603,7 +605,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Delete business entity
  */
 export const useDeleteBusinessEntity = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntity>>, TError,{key: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntity>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteBusinessEntity>>,
         TError,
@@ -675,15 +677,15 @@ export const assignClassificationsToEntity = async (key: string,
 
 
 export const getAssignClassificationsToEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
 const mutationKey = ['assignClassificationsToEntity'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -691,7 +693,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToEntity>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignClassificationsToEntity(key,data,)
+          return  assignClassificationsToEntity(key,data,requestOptions)
         }
 
 
@@ -709,7 +711,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Assign classifications to business entity
  */
 export const useAssignClassificationsToEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToEntity>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assignClassificationsToEntity>>,
         TError,
@@ -776,15 +778,15 @@ export const updateBusinessEntityDataOwner = async (key: string,
 
 
 export const getUpdateBusinessEntityDataOwnerMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityDataOwner'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -792,7 +794,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, {key: string;data: UpdateBusinessEntityDataOwnerRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessEntityDataOwner(key,data,)
+          return  updateBusinessEntityDataOwner(key,data,requestOptions)
         }
 
 
@@ -810,7 +812,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update business entity data owner
  */
 export const useUpdateBusinessEntityDataOwner = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>, TError,{key: string;data: UpdateBusinessEntityDataOwnerRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityDataOwner>>,
         TError,
@@ -882,15 +884,15 @@ export const updateBusinessEntityDescriptions = async (key: string,
 
 
 export const getUpdateBusinessEntityDescriptionsMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityDescriptions'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -898,7 +900,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessEntityDescriptions(key,data,)
+          return  updateBusinessEntityDescriptions(key,data,requestOptions)
         }
 
 
@@ -916,7 +918,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update business entity descriptions
  */
 export const useUpdateBusinessEntityDescriptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityDescriptions>>,
         TError,
@@ -988,15 +990,15 @@ export const assignBusinessDomainToBusinessEntity = async (key: string,
 
 
 export const getAssignBusinessDomainToBusinessEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
 
 const mutationKey = ['assignBusinessDomainToBusinessEntity'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1004,7 +1006,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignBusinessDomainToBusinessEntity(key,data,)
+          return  assignBusinessDomainToBusinessEntity(key,data,requestOptions)
         }
 
 
@@ -1022,7 +1024,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Assign business domain to business entity
  */
 export const useAssignBusinessDomainToBusinessEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>,
         TError,
@@ -1094,15 +1096,15 @@ export const updateBusinessEntityInterfaces = async (key: string,
 
 
 export const getUpdateBusinessEntityInterfacesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityInterfaces'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1110,7 +1112,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, {key: string;data: UpdateBusinessEntityInterfacesRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessEntityInterfaces(key,data,)
+          return  updateBusinessEntityInterfaces(key,data,requestOptions)
         }
 
 
@@ -1128,7 +1130,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update business entity interfaces
  */
 export const useUpdateBusinessEntityInterfaces = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>, TError,{key: string;data: UpdateBusinessEntityInterfacesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityInterfaces>>,
         TError,
@@ -1206,16 +1208,16 @@ export const getGetLocalizedBusinessEntityQueryKey = (key: string,
 
     
 export const getGetLocalizedBusinessEntityQueryOptions = <TData = Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError = void | ErrorResponse>(key: string,
-    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, }
+    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetLocalizedBusinessEntityQueryKey(key,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>> = ({ signal }) => getLocalizedBusinessEntity(key,params, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>> = ({ signal }) => getLocalizedBusinessEntity(key,params, { signal, ...requestOptions });
 
       
 
@@ -1236,7 +1238,7 @@ export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof 
           TError,
           Awaited<ReturnType<typeof getLocalizedBusinessEntity>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError = void | ErrorResponse>(
@@ -1247,12 +1249,12 @@ export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof 
           TError,
           Awaited<ReturnType<typeof getLocalizedBusinessEntity>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError = void | ErrorResponse>(
  key: string,
-    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, }
+    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1261,7 +1263,7 @@ export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof 
 
 export function useGetLocalizedBusinessEntity<TData = Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError = void | ErrorResponse>(
  key: string,
-    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, }
+    params?: GetLocalizedBusinessEntityParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -1338,15 +1340,15 @@ export const updateBusinessEntityNames = async (key: string,
 
 
 export const getUpdateBusinessEntityNamesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityNames'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1354,7 +1356,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityNames>>, {key: string;data: LocalizedText[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessEntityNames(key,data,)
+          return  updateBusinessEntityNames(key,data,requestOptions)
         }
 
 
@@ -1372,7 +1374,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update business entity names
  */
 export const useUpdateBusinessEntityNames = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityNames>>,
         TError,
@@ -1444,15 +1446,15 @@ export const updateBusinessEntityParent = async (key: string,
 
 
 export const getUpdateBusinessEntityParentMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityParent'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1460,7 +1462,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityParent>>, {key: string;data: UpdateBusinessEntityParentRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateBusinessEntityParent(key,data,)
+          return  updateBusinessEntityParent(key,data,requestOptions)
         }
 
 
@@ -1478,7 +1480,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update business entity parent
  */
 export const useUpdateBusinessEntityParent = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityParent>>, TError,{key: string;data: UpdateBusinessEntityParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityParent>>,
         TError,
@@ -1550,15 +1552,15 @@ export const createBusinessEntityRelationship = async (key: string,
 
 
 export const getCreateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext> => {
 
 const mutationKey = ['createBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1566,7 +1568,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, {key: string;data: CreateBusinessEntityRelationshipRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  createBusinessEntityRelationship(key,data,)
+          return  createBusinessEntityRelationship(key,data,requestOptions)
         }
 
 
@@ -1584,7 +1586,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create a relationship
  */
 export const useCreateBusinessEntityRelationship = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessEntityRelationship>>, TError,{key: string;data: CreateBusinessEntityRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createBusinessEntityRelationship>>,
         TError,
@@ -1658,15 +1660,15 @@ export const updateBusinessEntityRelationship = async (key: string,
 
 
 export const getUpdateBusinessEntityRelationshipMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext> => {
 
 const mutationKey = ['updateBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1674,7 +1676,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, {key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}> = (props) => {
           const {key,relationshipId,data} = props ?? {};
 
-          return  updateBusinessEntityRelationship(key,relationshipId,data,)
+          return  updateBusinessEntityRelationship(key,relationshipId,data,requestOptions)
         }
 
 
@@ -1692,7 +1694,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update a relationship
  */
 export const useUpdateBusinessEntityRelationship = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRelationship>>, TError,{key: string;relationshipId: number;data: UpdateBusinessEntityRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateBusinessEntityRelationship>>,
         TError,
@@ -1759,15 +1761,15 @@ export const deleteBusinessEntityRelationship = async (key: string,
 
 
 export const getDeleteBusinessEntityRelationshipMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext> => {
 
 const mutationKey = ['deleteBusinessEntityRelationship'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1775,7 +1777,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, {key: string;relationshipId: number}> = (props) => {
           const {key,relationshipId} = props ?? {};
 
-          return  deleteBusinessEntityRelationship(key,relationshipId,)
+          return  deleteBusinessEntityRelationship(key,relationshipId,requestOptions)
         }
 
 
@@ -1793,7 +1795,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Delete a relationship
  */
 export const useDeleteBusinessEntityRelationship = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>, TError,{key: string;relationshipId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteBusinessEntityRelationship>>,
         TError,
@@ -1860,16 +1862,16 @@ export const getGetVersionsQueryKey = (key: string,) => {
     }
 
     
-export const getGetVersionsQueryOptions = <TData = Awaited<ReturnType<typeof getVersions>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, }
+export const getGetVersionsQueryOptions = <TData = Awaited<ReturnType<typeof getVersions>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetVersionsQueryKey(key);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVersions>>> = ({ signal }) => getVersions(key, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVersions>>> = ({ signal }) => getVersions(key, { signal, ...requestOptions });
 
       
 
@@ -1889,7 +1891,7 @@ export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, 
           TError,
           Awaited<ReturnType<typeof getVersions>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, TError = void | ErrorResponse>(
@@ -1899,11 +1901,11 @@ export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, 
           TError,
           Awaited<ReturnType<typeof getVersions>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1911,7 +1913,7 @@ export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, 
  */
 
 export function useGetVersions<TData = Awaited<ReturnType<typeof getVersions>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -1987,16 +1989,16 @@ export const getGetVersionDiffQueryKey = (key: string,
 
     
 export const getGetVersionDiffQueryOptions = <TData = Awaited<ReturnType<typeof getVersionDiff>>, TError = void | ErrorResponse>(key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetVersionDiffQueryKey(key,versionNumber);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVersionDiff>>> = ({ signal }) => getVersionDiff(key,versionNumber, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getVersionDiff>>> = ({ signal }) => getVersionDiff(key,versionNumber, { signal, ...requestOptions });
 
       
 
@@ -2017,7 +2019,7 @@ export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDi
           TError,
           Awaited<ReturnType<typeof getVersionDiff>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDiff>>, TError = void | ErrorResponse>(
@@ -2028,12 +2030,12 @@ export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDi
           TError,
           Awaited<ReturnType<typeof getVersionDiff>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDiff>>, TError = void | ErrorResponse>(
  key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -2042,7 +2044,7 @@ export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDi
 
 export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDiff>>, TError = void | ErrorResponse>(
  key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

@@ -10,9 +10,52 @@ permissions:
   packages: write
 
 jobs:
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build backend Docker image
+        run: docker build -t leargon-backend:e2e ./leargon-backend
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: leargon-frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: leargon-frontend
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        working-directory: leargon-frontend
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: leargon-frontend/src/tests/e2e/
+          retention-days: 14
+
   release:
     name: Build, Push & Release
     runs-on: ubuntu-latest
+    needs: [e2e-tests]
 
     steps:
       - uses: actions/checkout@v4

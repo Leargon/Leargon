@@ -47,6 +47,8 @@ import type {
 import { customAxios } from '../../customAxios';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 /**
@@ -95,16 +97,16 @@ export const getGetAzureConfigQueryKey = () => {
     }
 
     
-export const getGetAzureConfigQueryOptions = <TData = Awaited<ReturnType<typeof getAzureConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, }
+export const getGetAzureConfigQueryOptions = <TData = Awaited<ReturnType<typeof getAzureConfig>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetAzureConfigQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAzureConfig>>> = ({ signal }) => getAzureConfig({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAzureConfig>>> = ({ signal }) => getAzureConfig({ signal, ...requestOptions });
 
       
 
@@ -124,7 +126,7 @@ export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConf
           TError,
           Awaited<ReturnType<typeof getAzureConfig>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConfig>>, TError = unknown>(
@@ -134,11 +136,11 @@ export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConf
           TError,
           Awaited<ReturnType<typeof getAzureConfig>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -146,7 +148,7 @@ export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConf
  */
 
 export function useGetAzureConfig<TData = Awaited<ReturnType<typeof getAzureConfig>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAzureConfig>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -212,15 +214,15 @@ export const azureLogin = async (azureLoginRequest: AzureLoginRequest, options?:
 
 
 export const getAzureLoginMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext> => {
 
 const mutationKey = ['azureLogin'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -228,7 +230,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof azureLogin>>, {data: AzureLoginRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  azureLogin(data,)
+          return  azureLogin(data,requestOptions)
         }
 
 
@@ -246,7 +248,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Login with Azure Entra ID
  */
 export const useAzureLogin = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof azureLogin>>, TError,{data: AzureLoginRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof azureLogin>>,
         TError,
@@ -302,15 +304,15 @@ export const login = async (loginRequest: LoginRequest, options?: RequestInit): 
 
 
 export const getLoginMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext> => {
 
 const mutationKey = ['login'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -318,7 +320,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: LoginRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  login(data,)
+          return  login(data,requestOptions)
         }
 
 
@@ -336,7 +338,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Login to user account
  */
 export const useLogin = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof login>>,
         TError,
@@ -397,15 +399,15 @@ export const signup = async (signupRequest: SignupRequest, options?: RequestInit
 
 
 export const getSignupMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext> => {
 
 const mutationKey = ['signup'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -413,7 +415,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof signup>>, {data: SignupRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  signup(data,)
+          return  signup(data,requestOptions)
         }
 
 
@@ -431,7 +433,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Register a new user account
  */
 export const useSignup = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof signup>>,
         TError,

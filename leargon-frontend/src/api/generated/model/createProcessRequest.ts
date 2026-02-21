@@ -42,4 +42,9 @@ export interface CreateProcessRequest {
   inputEntityKeys?: string[];
   /** Keys of business entities to add as outputs */
   outputEntityKeys?: string[];
+  /**
+   * Key of the parent process (for creating child processes from diagram)
+   * @nullable
+   */
+  parentProcessKey?: string | null;
 }

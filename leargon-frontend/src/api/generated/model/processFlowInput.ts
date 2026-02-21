@@ -16,18 +16,14 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText';
 
-/**
- * Type of change
- */
-export type ProcessVersionResponseChangeType = typeof ProcessVersionResponseChangeType[keyof typeof ProcessVersionResponseChangeType];
-
-
-export const ProcessVersionResponseChangeType = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-  OWNER_CHANGE: 'OWNER_CHANGE',
-  TYPE_CHANGE: 'TYPE_CHANGE',
-  CLASSIFICATION_CHANGE: 'CLASSIFICATION_CHANGE',
-  DIAGRAM_UPDATE: 'DIAGRAM_UPDATE',
-} as const;
+export interface ProcessFlowInput {
+  /** Client-generated flow ID */
+  flowId: string;
+  /** Source element ID */
+  sourceElementId: string;
+  /** Target element ID */
+  targetElementId: string;
+  labels?: LocalizedText[];
+}

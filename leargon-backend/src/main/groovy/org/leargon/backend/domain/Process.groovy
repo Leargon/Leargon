@@ -63,8 +63,21 @@ class Process {
     @JoinColumn(name = "business_domain_id")
     BusinessDomain businessDomain
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    Process parent
+
+    @OneToMany(mappedBy = "parent", cascade = [CascadeType.PERSIST, CascadeType.MERGE], fetch = FetchType.LAZY)
+    Set<Process> children = new HashSet<>()
+
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     Set<ProcessVersion> versions = new HashSet<>()
+
+    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    Set<ProcessElement> diagramElements = new HashSet<>()
+
+    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    Set<ProcessFlow> diagramFlows = new HashSet<>()
 
     @ManyToMany
     @JoinTable(

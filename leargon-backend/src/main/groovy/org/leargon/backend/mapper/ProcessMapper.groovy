@@ -5,6 +5,7 @@ import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
@@ -32,6 +33,8 @@ class ProcessMapper {
                 .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
                 .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
                 .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
+                .parentProcess(toProcessSummaryResponse(process.parent))
+                .childProcesses(process.children?.collect { toProcessSummaryResponse(it) } ?: [])
     }
 
     ProcessSummaryResponse toProcessSummaryResponse(Process process) {
@@ -49,6 +52,18 @@ class ProcessMapper {
                 toChangeType(version.changeType),
                 toZonedDateTime(version.createdAt)
         ).changeSummary(version.changeSummary)
+    }
+
+    ProcessTreeResponse toProcessTreeResponse(Process process) {
+        return new ProcessTreeResponse(
+                process.key,
+                LocalizedTextMapper.toModel(process.names),
+                process.children?.collect { toProcessTreeResponse(it) }?.sort { it.key } ?: []
+        ).processType(toProcessType(process.processType))
+    }
+
+    List<ProcessTreeResponse> toProcessTreeResponses(Collection<Process> processes) {
+        return processes.collect { toProcessTreeResponse(it) }.sort { it.key }
     }
 
     static ProcessType toProcessType(String processType) {

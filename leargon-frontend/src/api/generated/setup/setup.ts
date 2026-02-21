@@ -34,6 +34,8 @@ import type {
 import { customAxios } from '../../customAxios';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 /**
@@ -87,15 +89,15 @@ export const completeSetup = async ( options?: RequestInit): Promise<completeSet
 
 
 export const getCompleteSetupMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext> => {
 
 const mutationKey = ['completeSetup'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -103,7 +105,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeSetup>>, void> = () => {
           
 
-          return  completeSetup()
+          return  completeSetup(requestOptions)
         }
 
 
@@ -121,7 +123,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Complete first-time setup
  */
 export const useCompleteSetup = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof completeSetup>>,
         TError,

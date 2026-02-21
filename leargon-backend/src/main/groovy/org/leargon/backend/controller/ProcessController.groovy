@@ -18,13 +18,17 @@ import org.leargon.backend.model.AssignBusinessDomainRequest
 import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateProcessRequest
 import org.leargon.backend.model.LocalizedText
+import org.leargon.backend.model.ProcessDiagramResponse
 import org.leargon.backend.model.ProcessResponse
+import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
+import org.leargon.backend.model.SaveProcessDiagramRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.ProcessDiagramService
 import org.leargon.backend.service.ProcessService
 import org.leargon.backend.service.UserService
 
@@ -33,6 +37,7 @@ import org.leargon.backend.service.UserService
 class ProcessController implements ProcessApi {
 
     private final ProcessService processService
+    private final ProcessDiagramService processDiagramService
     private final ClassificationService classificationService
     private final UserService userService
     private final SecurityService securityService
@@ -40,12 +45,14 @@ class ProcessController implements ProcessApi {
 
     ProcessController(
             ProcessService processService,
+            ProcessDiagramService processDiagramService,
             ClassificationService classificationService,
             UserService userService,
             SecurityService securityService,
             ProcessMapper processMapper
     ) {
         this.processService = processService
+        this.processDiagramService = processDiagramService
         this.classificationService = classificationService
         this.userService = userService
         this.securityService = securityService
@@ -55,6 +62,11 @@ class ProcessController implements ProcessApi {
     @Override
     List<ProcessResponse> getAllProcesses() {
         return processService.getAllProcessesAsResponses()
+    }
+
+    @Override
+    List<ProcessTreeResponse> getProcessTree() {
+        return processService.getProcessTreeAsResponses()
     }
 
     @Override
@@ -158,6 +170,17 @@ class ProcessController implements ProcessApi {
     ProcessResponse removeProcessOutput(String key, String entityKey) {
         User currentUser = getCurrentUser()
         return processService.removeOutput(key, entityKey, currentUser)
+    }
+
+    @Override
+    ProcessDiagramResponse getProcessDiagram(String key) {
+        return processDiagramService.getDiagram(key)
+    }
+
+    @Override
+    ProcessDiagramResponse saveProcessDiagram(String key, @Valid @Body SaveProcessDiagramRequest request) {
+        User currentUser = getCurrentUser()
+        return processDiagramService.saveDiagram(key, request, currentUser)
     }
 
     private User getCurrentUser() {

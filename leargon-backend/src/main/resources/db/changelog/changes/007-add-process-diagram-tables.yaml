@@ -1,0 +1,201 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-add-parent-id-to-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: parent_id
+                  type: BIGINT
+
+        - addForeignKeyConstraint:
+            baseTableName: processes
+            baseColumnNames: parent_id
+            constraintName: fk_processes_parent_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - createIndex:
+            indexName: idx_processes_parent
+            tableName: processes
+            columns:
+              - column:
+                  name: parent_id
+
+  - changeSet:
+      id: 007-create-process-elements-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_elements
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: element_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: element_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: linked_process_id
+                  type: BIGINT
+              - column:
+                  name: linked_entity_id
+                  type: BIGINT
+              - column:
+                  name: labels
+                  type: JSON
+              - column:
+                  name: sort_order
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: process_elements
+            baseColumnNames: process_id
+            constraintName: fk_process_elements_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: process_elements
+            baseColumnNames: linked_process_id
+            constraintName: fk_process_elements_linked_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: process_elements
+            baseColumnNames: linked_entity_id
+            constraintName: fk_process_elements_linked_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addUniqueConstraint:
+            tableName: process_elements
+            columnNames: process_id, element_id
+            constraintName: uq_process_element_id
+
+        - createIndex:
+            indexName: idx_process_elements_process
+            tableName: process_elements
+            columns:
+              - column:
+                  name: process_id
+        - createIndex:
+            indexName: idx_process_elements_linked_process
+            tableName: process_elements
+            columns:
+              - column:
+                  name: linked_process_id
+        - createIndex:
+            indexName: idx_process_elements_linked_entity
+            tableName: process_elements
+            columns:
+              - column:
+                  name: linked_entity_id
+
+  - changeSet:
+      id: 007-create-process-flows-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_flows
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: flow_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_element_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_element_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: labels
+                  type: JSON
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: process_flows
+            baseColumnNames: process_id
+            constraintName: fk_process_flows_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addUniqueConstraint:
+            tableName: process_flows
+            columnNames: process_id, flow_id
+            constraintName: uq_process_flow_id
+
+        - createIndex:
+            indexName: idx_process_flows_process
+            tableName: process_flows
+            columns:
+              - column:
+                  name: process_id

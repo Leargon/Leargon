@@ -20,6 +20,7 @@ import type { BusinessDomainSummaryResponse } from './businessDomainSummaryRespo
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
+import type { ProcessSummaryResponse } from './processSummaryResponse';
 import type { ProcessType } from './processType';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
@@ -40,6 +41,8 @@ export interface ProcessResponse {
   inputEntities?: BusinessEntitySummaryResponse[];
   outputEntities?: BusinessEntitySummaryResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
+  parentProcess?: ProcessSummaryResponse;
+  childProcesses?: ProcessSummaryResponse[];
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

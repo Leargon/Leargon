@@ -38,6 +38,8 @@ import type {
 import { customAxios } from '../../customAxios';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 /**
@@ -86,16 +88,16 @@ export const getHealthQueryKey = () => {
     }
 
     
-export const getHealthQueryOptions = <TData = Awaited<ReturnType<typeof health>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, }
+export const getHealthQueryOptions = <TData = Awaited<ReturnType<typeof health>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getHealthQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof health>>> = ({ signal }) => health({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof health>>> = ({ signal }) => health({ signal, ...requestOptions });
 
       
 
@@ -115,7 +117,7 @@ export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = u
           TError,
           Awaited<ReturnType<typeof health>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
@@ -125,11 +127,11 @@ export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = u
           TError,
           Awaited<ReturnType<typeof health>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -137,7 +139,7 @@ export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = u
  */
 
 export function useHealth<TData = Awaited<ReturnType<typeof health>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof health>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 

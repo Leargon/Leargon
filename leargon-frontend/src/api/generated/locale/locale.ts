@@ -45,6 +45,8 @@ import type {
 import { customAxios } from '../../customAxios';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
 
 /**
@@ -107,16 +109,16 @@ export const getGetSupportedLocalesQueryKey = (params?: GetSupportedLocalesParam
     }
 
     
-export const getGetSupportedLocalesQueryOptions = <TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, }
+export const getGetSupportedLocalesQueryOptions = <TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetSupportedLocalesQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupportedLocales>>> = ({ signal }) => getSupportedLocales(params, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupportedLocales>>> = ({ signal }) => getSupportedLocales(params, { signal, ...requestOptions });
 
       
 
@@ -136,7 +138,7 @@ export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupp
           TError,
           Awaited<ReturnType<typeof getSupportedLocales>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
@@ -146,11 +148,11 @@ export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupp
           TError,
           Awaited<ReturnType<typeof getSupportedLocales>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
- params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, }
+ params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -158,7 +160,7 @@ export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupp
  */
 
 export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
- params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, }
+ params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -229,15 +231,15 @@ export const createSupportedLocale = async (createSupportedLocaleRequest: Create
 
 
 export const getCreateSupportedLocaleMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext> => {
 
 const mutationKey = ['createSupportedLocale'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -245,7 +247,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSupportedLocale>>, {data: CreateSupportedLocaleRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createSupportedLocale(data,)
+          return  createSupportedLocale(data,requestOptions)
         }
 
 
@@ -263,7 +265,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create a supported locale
  */
 export const useCreateSupportedLocale = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createSupportedLocale>>,
         TError,
@@ -335,15 +337,15 @@ export const updateSupportedLocale = async (id: number,
 
 
 export const getUpdateSupportedLocaleMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext> => {
 
 const mutationKey = ['updateSupportedLocale'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -351,7 +353,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportedLocale>>, {id: number;data: UpdateSupportedLocaleRequest}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  updateSupportedLocale(id,data,)
+          return  updateSupportedLocale(id,data,requestOptions)
         }
 
 
@@ -369,7 +371,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update a supported locale
  */
 export const useUpdateSupportedLocale = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateSupportedLocale>>,
         TError,
@@ -439,15 +441,15 @@ export const deleteSupportedLocale = async (id: number, options?: RequestInit): 
 
 
 export const getDeleteSupportedLocaleMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext> => {
 
 const mutationKey = ['deleteSupportedLocale'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -455,7 +457,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSupportedLocale>>, {id: number}> = (props) => {
           const {id} = props ?? {};
 
-          return  deleteSupportedLocale(id,)
+          return  deleteSupportedLocale(id,requestOptions)
         }
 
 
@@ -473,7 +475,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Delete a supported locale
  */
 export const useDeleteSupportedLocale = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteSupportedLocale>>,
         TError,

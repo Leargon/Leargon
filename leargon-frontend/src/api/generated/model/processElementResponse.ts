@@ -16,18 +16,18 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
+import type { LocalizedText } from './localizedText';
+import type { ProcessElementType } from './processElementType';
+import type { ProcessSummaryResponse } from './processSummaryResponse';
 
-/**
- * Type of change
- */
-export type ProcessVersionResponseChangeType = typeof ProcessVersionResponseChangeType[keyof typeof ProcessVersionResponseChangeType];
-
-
-export const ProcessVersionResponseChangeType = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-  OWNER_CHANGE: 'OWNER_CHANGE',
-  TYPE_CHANGE: 'TYPE_CHANGE',
-  CLASSIFICATION_CHANGE: 'CLASSIFICATION_CHANGE',
-  DIAGRAM_UPDATE: 'DIAGRAM_UPDATE',
-} as const;
+export interface ProcessElementResponse {
+  /** Client-generated element ID */
+  elementId: string;
+  elementType: ProcessElementType;
+  linkedProcess?: ProcessSummaryResponse;
+  linkedEntity?: BusinessEntitySummaryResponse;
+  labels?: LocalizedText[];
+  /** Order within the diagram (left-to-right) */
+  sortOrder: number;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -57,6 +57,8 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+
+const ProcessDiagramEditor = lazy(() => import('./diagram/ProcessDiagramEditor'));
 import type {
   LocalizedText,
   ProcessType,
@@ -104,6 +106,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [diagramOpen, setDiagramOpen] = useState(false);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -544,6 +547,59 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           )}
         </Paper>
       )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Parent Process */}
+      {process.parentProcess && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Parent Process</Typography>
+          <Chip
+            label={process.parentProcess.name || process.parentProcess.key}
+            size="small"
+            onClick={() => navigate(`/processes/${process.parentProcess!.key}`)}
+            clickable
+          />
+        </Box>
+      )}
+
+      {/* Child Processes */}
+      {process.childProcesses && process.childProcesses.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Child Processes</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {process.childProcesses.map((child) => (
+              <Chip
+                key={child.key}
+                label={child.name || child.key}
+                size="small"
+                onClick={() => navigate(`/processes/${child.key}`)}
+                clickable
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* Process Diagram */}
+      <Accordion
+        expanded={diagramOpen}
+        onChange={(_, expanded) => setDiagramOpen(expanded)}
+        disableGutters
+        variant="outlined"
+        sx={{ '&:before': { display: 'none' } }}
+      >
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">Process Diagram</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0, height: 500 }}>
+          {diagramOpen && (
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>}>
+              <ProcessDiagramEditor processKey={processKey} canEdit={isOwnerOrAdmin} />
+            </Suspense>
+          )}
+        </AccordionDetails>
+      </Accordion>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

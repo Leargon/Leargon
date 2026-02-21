@@ -18,16 +18,21 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 
 /**
- * Type of change
+ * Type of BPMN diagram element
  */
-export type ProcessVersionResponseChangeType = typeof ProcessVersionResponseChangeType[keyof typeof ProcessVersionResponseChangeType];
+export type ProcessElementType = typeof ProcessElementType[keyof typeof ProcessElementType];
 
 
-export const ProcessVersionResponseChangeType = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-  OWNER_CHANGE: 'OWNER_CHANGE',
-  TYPE_CHANGE: 'TYPE_CHANGE',
-  CLASSIFICATION_CHANGE: 'CLASSIFICATION_CHANGE',
-  DIAGRAM_UPDATE: 'DIAGRAM_UPDATE',
+export const ProcessElementType = {
+  NONE_START_EVENT: 'NONE_START_EVENT',
+  NONE_END_EVENT: 'NONE_END_EVENT',
+  TERMINATE_END_EVENT: 'TERMINATE_END_EVENT',
+  TASK: 'TASK',
+  SUBPROCESS: 'SUBPROCESS',
+  EXCLUSIVE_GATEWAY: 'EXCLUSIVE_GATEWAY',
+  INCLUSIVE_GATEWAY: 'INCLUSIVE_GATEWAY',
+  PARALLEL_GATEWAY: 'PARALLEL_GATEWAY',
+  DATA_INPUT: 'DATA_INPUT',
+  DATA_OUTPUT: 'DATA_OUTPUT',
+  INTERMEDIATE_EVENT: 'INTERMEDIATE_EVENT',
 } as const;

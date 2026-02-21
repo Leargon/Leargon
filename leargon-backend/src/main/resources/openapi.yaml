@@ -2127,6 +2127,26 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /processes/tree:
+    get:
+      tags:
+      - Process
+      summary: Get process hierarchy
+      description: Returns business processes as a hierarchical tree structure.
+      operationId: getProcessTree
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Hierarchical process tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessTreeResponse'
+        '401':
+          description: Not authenticated
   /processes/{key}:
     get:
       tags:
@@ -2715,6 +2735,81 @@ paths:
                 $ref: '#/components/schemas/VersionDiffResponse'
         '404':
           description: Process or version not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/diagram:
+    get:
+      tags:
+      - Process
+      summary: Get process diagram
+      description: Returns the diagram (elements and flows) of a process.
+      operationId: getProcessDiagram
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process diagram
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessDiagramResponse'
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - Process
+      summary: Save process diagram
+      description: Replaces the entire diagram (elements and flows) of a process. Only the process owner or an admin can save.
+      operationId: saveProcessDiagram
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveProcessDiagramRequest'
+      responses:
+        '200':
+          description: Diagram saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessDiagramResponse'
+        '400':
+          description: Invalid diagram data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
           content:
             application/json:
               schema:
@@ -3471,6 +3566,10 @@ components:
           items:
             type: string
           description: Keys of business entities to add as outputs
+        parentProcessKey:
+          type: string
+          nullable: true
+          description: Key of the parent process (for creating child processes from diagram)
     CreateSupportedLocaleRequest:
       type: object
       required:
@@ -3686,6 +3785,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        parentProcess:
+          $ref: '#/components/schemas/ProcessSummaryResponse'
+        childProcesses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
         createdAt:
           type: string
           format: date-time
@@ -3708,6 +3813,28 @@ components:
           type: string
           description: Process name in default locale
           example: Order Fulfillment
+    ProcessTreeResponse:
+      type: object
+      required:
+      - key
+      - names
+      - children
+      properties:
+        key:
+          type: string
+          description: Process key
+          example: order-fulfillment
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        processType:
+          $ref: '#/components/schemas/ProcessType'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessTreeResponse'
+          description: Child processes
     ProcessType:
       type: string
       enum:
@@ -3741,6 +3868,7 @@ components:
           - OWNER_CHANGE
           - TYPE_CHANGE
           - CLASSIFICATION_CHANGE
+          - DIAGRAM_UPDATE
           description: Type of change
           example: CREATE
         changeSummary:
@@ -3751,6 +3879,141 @@ components:
           type: string
           format: date-time
           description: Timestamp when this version was created
+    ProcessElementType:
+      type: string
+      enum:
+      - NONE_START_EVENT
+      - NONE_END_EVENT
+      - TERMINATE_END_EVENT
+      - TASK
+      - SUBPROCESS
+      - EXCLUSIVE_GATEWAY
+      - INCLUSIVE_GATEWAY
+      - PARALLEL_GATEWAY
+      - DATA_INPUT
+      - DATA_OUTPUT
+      - INTERMEDIATE_EVENT
+      description: Type of BPMN diagram element
+    ProcessElementResponse:
+      type: object
+      required:
+      - elementId
+      - elementType
+      - sortOrder
+      properties:
+        elementId:
+          type: string
+          description: Client-generated element ID
+        elementType:
+          $ref: '#/components/schemas/ProcessElementType'
+        linkedProcess:
+          $ref: '#/components/schemas/ProcessSummaryResponse'
+        linkedEntity:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        sortOrder:
+          type: integer
+          description: Order within the diagram (left-to-right)
+    ProcessFlowResponse:
+      type: object
+      required:
+      - flowId
+      - sourceElementId
+      - targetElementId
+      properties:
+        flowId:
+          type: string
+          description: Client-generated flow ID
+        sourceElementId:
+          type: string
+          description: Source element ID
+        targetElementId:
+          type: string
+          description: Target element ID
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    ProcessDiagramResponse:
+      type: object
+      required:
+      - elements
+      - flows
+      properties:
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessElementResponse'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessFlowResponse'
+    ProcessElementInput:
+      type: object
+      required:
+      - elementId
+      - elementType
+      - sortOrder
+      properties:
+        elementId:
+          type: string
+          description: Client-generated element ID
+        elementType:
+          $ref: '#/components/schemas/ProcessElementType'
+        linkedProcessKey:
+          type: string
+          nullable: true
+          description: Key of an existing process to link
+        createLinkedProcess:
+          $ref: '#/components/schemas/CreateProcessRequest'
+        linkedEntityKey:
+          type: string
+          nullable: true
+          description: Key of a business entity to link (for DATA_INPUT/DATA_OUTPUT elements)
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        sortOrder:
+          type: integer
+          description: Order within the diagram (left-to-right)
+    ProcessFlowInput:
+      type: object
+      required:
+      - flowId
+      - sourceElementId
+      - targetElementId
+      properties:
+        flowId:
+          type: string
+          description: Client-generated flow ID
+        sourceElementId:
+          type: string
+          description: Source element ID
+        targetElementId:
+          type: string
+          description: Target element ID
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    SaveProcessDiagramRequest:
+      type: object
+      required:
+      - elements
+      - flows
+      properties:
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessElementInput'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessFlowInput'
     SignupRequest:
       type: object
       required:

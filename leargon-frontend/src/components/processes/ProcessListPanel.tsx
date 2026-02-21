@@ -9,14 +9,21 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Collapse,
   Chip,
   InputAdornment,
 } from '@mui/material';
-import { Add, Search, Timeline } from '@mui/icons-material';
-import { useGetAllProcesses } from '../../api/generated/process/process';
+import {
+  Add,
+  Search,
+  ExpandMore,
+  ChevronRight,
+  Timeline,
+} from '@mui/icons-material';
+import { useGetProcessTree } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import type { ProcessResponse } from '../../api/generated/model';
+import type { ProcessTreeResponse } from '../../api/generated/model';
 
 interface ProcessListPanelProps {
   selectedKey?: string;
@@ -28,15 +35,18 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
-  const { data: processesResponse, isLoading } = useGetAllProcesses();
-  const processes = (processesResponse?.data as ProcessResponse[] | undefined) || [];
+  const { data: treeResponse, isLoading } = useGetProcessTree();
+  const tree = (treeResponse?.data as ProcessTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
-  const filtered = processes.filter((p) => {
+  const matchesFilter = (process: ProcessTreeResponse): boolean => {
     if (!filter) return true;
-    const name = getLocalizedText(p.names).toLowerCase();
-    return name.includes(filter.toLowerCase());
-  });
+    const name = getLocalizedText(process.names).toLowerCase();
+    if (name.includes(filter.toLowerCase())) return true;
+    return process.children?.some(matchesFilter) ?? false;
+  };
+
+  const filteredTree = tree.filter(matchesFilter);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -67,44 +77,113 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
           <Typography sx={{ p: 2 }} color="text.secondary">Loading...</Typography>
-        ) : filtered.length === 0 ? (
+        ) : filteredTree.length === 0 ? (
           <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
             {filter ? 'No matches found.' : 'No processes yet. Create one to get started.'}
           </Typography>
         ) : (
           <List dense disablePadding>
-            {filtered.map((process) => (
-              <ListItemButton
+            {filteredTree.map((process) => (
+              <TreeItem
                 key={process.key}
-                selected={process.key === selectedKey}
-                onClick={() => navigate(`/processes/${process.key}`)}
-              >
-                <ListItemIcon sx={{ minWidth: 28 }}>
-                  <Timeline fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Typography variant="body2" noWrap>
-                        {getLocalizedText(process.names, 'Unnamed')}
-                      </Typography>
-                      {process.processType && (
-                        <Chip
-                          label={process.processType}
-                          size="small"
-                          color="primary"
-                          sx={{ height: 18, fontSize: '0.65rem' }}
-                        />
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItemButton>
+                process={process}
+                level={0}
+                selectedKey={selectedKey}
+                filter={filter}
+                onSelect={(key) => navigate(`/processes/${key}`)}
+                getLocalizedText={getLocalizedText}
+                matchesFilter={matchesFilter}
+              />
             ))}
           </List>
         )}
       </Box>
     </Box>
+  );
+};
+
+interface TreeItemProps {
+  process: ProcessTreeResponse;
+  level: number;
+  selectedKey?: string;
+  filter: string;
+  onSelect: (key: string) => void;
+  getLocalizedText: (translations: any[], fallback?: string) => string;
+  matchesFilter: (process: ProcessTreeResponse) => boolean;
+}
+
+const TreeItem: React.FC<TreeItemProps> = ({
+  process,
+  level,
+  selectedKey,
+  filter,
+  onSelect,
+  getLocalizedText,
+  matchesFilter,
+}) => {
+  const [open, setOpen] = useState(!filter);
+  const hasChildren = process.children && process.children.length > 0;
+  const isSelected = process.key === selectedKey;
+  const filteredChildren = process.children?.filter(matchesFilter) || [];
+
+  return (
+    <>
+      <ListItemButton
+        selected={isSelected}
+        onClick={() => onSelect(process.key)}
+        sx={{ pl: 1 + level * 2 }}
+      >
+        {hasChildren ? (
+          <ListItemIcon
+            sx={{ minWidth: 24, cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+          >
+            {open ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+          </ListItemIcon>
+        ) : (
+          <ListItemIcon sx={{ minWidth: 24 }} />
+        )}
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <Timeline fontSize="small" />
+        </ListItemIcon>
+        <ListItemText
+          primary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography variant="body2" noWrap>
+                {getLocalizedText(process.names, 'Unnamed')}
+              </Typography>
+              {process.processType && (
+                <Chip
+                  label={process.processType}
+                  size="small"
+                  color="primary"
+                  sx={{ height: 18, fontSize: '0.65rem' }}
+                />
+              )}
+            </Box>
+          }
+        />
+      </ListItemButton>
+      {hasChildren && (
+        <Collapse in={open || !!filter}>
+          {filteredChildren.map((child) => (
+            <TreeItem
+              key={child.key}
+              process={child}
+              level={level + 1}
+              selectedKey={selectedKey}
+              filter={filter}
+              onSelect={onSelect}
+              getLocalizedText={getLocalizedText}
+              matchesFilter={matchesFilter}
+            />
+          ))}
+        </Collapse>
+      )}
+    </>
   );
 };
 

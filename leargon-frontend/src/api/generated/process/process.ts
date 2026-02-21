@@ -42,8 +42,11 @@ import type {
   CreateProcessRequest,
   ErrorResponse,
   LocalizedText,
+  ProcessDiagramResponse,
   ProcessResponse,
+  ProcessTreeResponse,
   ProcessVersionResponse,
+  SaveProcessDiagramRequest,
   UpdateProcessCodeRequest,
   UpdateProcessOwnerRequest,
   UpdateProcessTypeRequest,
@@ -52,6 +55,8 @@ import type {
 
 import { customAxios } from '../../customAxios';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -108,16 +113,16 @@ export const getGetAllProcessesQueryKey = () => {
     }
 
     
-export const getGetAllProcessesQueryOptions = <TData = Awaited<ReturnType<typeof getAllProcesses>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, }
+export const getGetAllProcessesQueryOptions = <TData = Awaited<ReturnType<typeof getAllProcesses>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetAllProcessesQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllProcesses>>> = ({ signal }) => getAllProcesses({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllProcesses>>> = ({ signal }) => getAllProcesses({ signal, ...requestOptions });
 
       
 
@@ -137,7 +142,7 @@ export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProce
           TError,
           Awaited<ReturnType<typeof getAllProcesses>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProcesses>>, TError = void>(
@@ -147,11 +152,11 @@ export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProce
           TError,
           Awaited<ReturnType<typeof getAllProcesses>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProcesses>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -159,7 +164,7 @@ export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProce
  */
 
 export function useGetAllProcesses<TData = Awaited<ReturnType<typeof getAllProcesses>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, }
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -225,15 +230,15 @@ export const createProcess = async (createProcessRequest: CreateProcessRequest, 
 
 
 export const getCreateProcessMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,{data: CreateProcessRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,{data: CreateProcessRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,{data: CreateProcessRequest}, TContext> => {
 
 const mutationKey = ['createProcess'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -241,7 +246,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProcess>>, {data: CreateProcessRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createProcess(data,)
+          return  createProcess(data,requestOptions)
         }
 
 
@@ -259,7 +264,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Create a process
  */
 export const useCreateProcess = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,{data: CreateProcessRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProcess>>, TError,{data: CreateProcessRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createProcess>>,
         TError,
@@ -269,6 +274,124 @@ export const useCreateProcess = <TError = ErrorResponse | void,
       return useMutation(getCreateProcessMutationOptions(options), queryClient);
     }
     /**
+ * Returns business processes as a hierarchical tree structure.
+ * @summary Get process hierarchy
+ */
+export type getProcessTreeResponse200 = {
+  data: ProcessTreeResponse[]
+  status: 200
+}
+
+export type getProcessTreeResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getProcessTreeResponseSuccess = (getProcessTreeResponse200) & {
+  headers: Headers;
+};
+export type getProcessTreeResponseError = (getProcessTreeResponse401) & {
+  headers: Headers;
+};
+
+export type getProcessTreeResponse = (getProcessTreeResponseSuccess | getProcessTreeResponseError)
+
+export const getGetProcessTreeUrl = () => {
+
+
+  
+
+  return `/processes/tree`
+}
+
+export const getProcessTree = async ( options?: RequestInit): Promise<getProcessTreeResponse> => {
+  
+  return customAxios<getProcessTreeResponse>(getGetProcessTreeUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetProcessTreeQueryKey = () => {
+    return [
+    `/processes/tree`
+    ] as const;
+    }
+
+    
+export const getGetProcessTreeQueryOptions = <TData = Awaited<ReturnType<typeof getProcessTree>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessTreeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessTree>>> = ({ signal }) => getProcessTree({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProcessTreeQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessTree>>>
+export type GetProcessTreeQueryError = void
+
+
+export function useGetProcessTree<TData = Awaited<ReturnType<typeof getProcessTree>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessTree>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessTree<TData = Awaited<ReturnType<typeof getProcessTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessTree>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessTree<TData = Awaited<ReturnType<typeof getProcessTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get process hierarchy
+ */
+
+export function useGetProcessTree<TData = Awaited<ReturnType<typeof getProcessTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessTreeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * Returns detailed information about a specific business process.
  * @summary Get process by key
  */
@@ -326,16 +449,16 @@ export const getGetProcessByKeyQueryKey = (key: string,) => {
     }
 
     
-export const getGetProcessByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getProcessByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, }
+export const getGetProcessByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getProcessByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetProcessByKeyQueryKey(key);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessByKey>>> = ({ signal }) => getProcessByKey(key, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessByKey>>> = ({ signal }) => getProcessByKey(key, { signal, ...requestOptions });
 
       
 
@@ -355,7 +478,7 @@ export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessB
           TError,
           Awaited<ReturnType<typeof getProcessByKey>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessByKey>>, TError = void | ErrorResponse>(
@@ -365,11 +488,11 @@ export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessB
           TError,
           Awaited<ReturnType<typeof getProcessByKey>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessByKey>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -377,7 +500,7 @@ export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessB
  */
 
 export function useGetProcessByKey<TData = Awaited<ReturnType<typeof getProcessByKey>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -447,15 +570,15 @@ export const deleteProcess = async (key: string, options?: RequestInit): Promise
 
 
 export const getDeleteProcessMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProcess>>, TError,{key: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProcess>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteProcess>>, TError,{key: string}, TContext> => {
 
 const mutationKey = ['deleteProcess'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -463,7 +586,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProcess>>, {key: string}> = (props) => {
           const {key} = props ?? {};
 
-          return  deleteProcess(key,)
+          return  deleteProcess(key,requestOptions)
         }
 
 
@@ -481,7 +604,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Delete process
  */
 export const useDeleteProcess = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProcess>>, TError,{key: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProcess>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteProcess>>,
         TError,
@@ -553,15 +676,15 @@ export const assignClassificationsToProcess = async (key: string,
 
 
 export const getAssignClassificationsToProcessMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToProcess>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToProcess>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToProcess>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
 const mutationKey = ['assignClassificationsToProcess'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -569,7 +692,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToProcess>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignClassificationsToProcess(key,data,)
+          return  assignClassificationsToProcess(key,data,requestOptions)
         }
 
 
@@ -587,7 +710,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Assign classifications to process
  */
 export const useAssignClassificationsToProcess = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToProcess>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToProcess>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assignClassificationsToProcess>>,
         TError,
@@ -654,15 +777,15 @@ export const updateProcessCode = async (key: string,
 
 
 export const getUpdateProcessCodeMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext> => {
 
 const mutationKey = ['updateProcessCode'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -670,7 +793,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessCode>>, {key: string;data: UpdateProcessCodeRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessCode(key,data,)
+          return  updateProcessCode(key,data,requestOptions)
         }
 
 
@@ -688,7 +811,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update process code
  */
 export const useUpdateProcessCode = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessCode>>, TError,{key: string;data: UpdateProcessCodeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProcessCode>>,
         TError,
@@ -760,15 +883,15 @@ export const updateProcessDescriptions = async (key: string,
 
 
 export const getUpdateProcessDescriptionsMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
 const mutationKey = ['updateProcessDescriptions'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -776,7 +899,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessDescriptions(key,data,)
+          return  updateProcessDescriptions(key,data,requestOptions)
         }
 
 
@@ -794,7 +917,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update process descriptions
  */
 export const useUpdateProcessDescriptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProcessDescriptions>>,
         TError,
@@ -861,15 +984,15 @@ export const assignBusinessDomainToProcess = async (key: string,
 
 
 export const getAssignBusinessDomainToProcessMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
 
 const mutationKey = ['assignBusinessDomainToProcess'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -877,7 +1000,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignBusinessDomainToProcess(key,data,)
+          return  assignBusinessDomainToProcess(key,data,requestOptions)
         }
 
 
@@ -895,7 +1018,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Assign business domain to process
  */
 export const useAssignBusinessDomainToProcess = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assignBusinessDomainToProcess>>,
         TError,
@@ -967,15 +1090,15 @@ export const addProcessInput = async (key: string,
 
 
 export const getAddProcessInputMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
 
 const mutationKey = ['addProcessInput'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -983,7 +1106,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessInput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  addProcessInput(key,data,)
+          return  addProcessInput(key,data,requestOptions)
         }
 
 
@@ -1001,7 +1124,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Add input entity to process
  */
 export const useAddProcessInput = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessInput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addProcessInput>>,
         TError,
@@ -1068,15 +1191,15 @@ export const removeProcessInput = async (key: string,
 
 
 export const getRemoveProcessInputMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext> => {
 
 const mutationKey = ['removeProcessInput'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1084,7 +1207,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessInput>>, {key: string;entityKey: string}> = (props) => {
           const {key,entityKey} = props ?? {};
 
-          return  removeProcessInput(key,entityKey,)
+          return  removeProcessInput(key,entityKey,requestOptions)
         }
 
 
@@ -1102,7 +1225,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Remove input entity from process
  */
 export const useRemoveProcessInput = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessInput>>, TError,{key: string;entityKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof removeProcessInput>>,
         TError,
@@ -1174,15 +1297,15 @@ export const updateProcessNames = async (key: string,
 
 
 export const getUpdateProcessNamesMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
 const mutationKey = ['updateProcessNames'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1190,7 +1313,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessNames>>, {key: string;data: LocalizedText[]}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessNames(key,data,)
+          return  updateProcessNames(key,data,requestOptions)
         }
 
 
@@ -1208,7 +1331,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update process names
  */
 export const useUpdateProcessNames = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProcessNames>>,
         TError,
@@ -1280,15 +1403,15 @@ export const addProcessOutput = async (key: string,
 
 
 export const getAddProcessOutputMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext> => {
 
 const mutationKey = ['addProcessOutput'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1296,7 +1419,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProcessOutput>>, {key: string;data: AddProcessEntityRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  addProcessOutput(key,data,)
+          return  addProcessOutput(key,data,requestOptions)
         }
 
 
@@ -1314,7 +1437,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Add output entity to process
  */
 export const useAddProcessOutput = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProcessOutput>>, TError,{key: string;data: AddProcessEntityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addProcessOutput>>,
         TError,
@@ -1381,15 +1504,15 @@ export const removeProcessOutput = async (key: string,
 
 
 export const getRemoveProcessOutputMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext> => {
 
 const mutationKey = ['removeProcessOutput'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1397,7 +1520,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProcessOutput>>, {key: string;entityKey: string}> = (props) => {
           const {key,entityKey} = props ?? {};
 
-          return  removeProcessOutput(key,entityKey,)
+          return  removeProcessOutput(key,entityKey,requestOptions)
         }
 
 
@@ -1415,7 +1538,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Remove output entity from process
  */
 export const useRemoveProcessOutput = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProcessOutput>>, TError,{key: string;entityKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof removeProcessOutput>>,
         TError,
@@ -1482,15 +1605,15 @@ export const updateProcessOwner = async (key: string,
 
 
 export const getUpdateProcessOwnerMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext> => {
 
 const mutationKey = ['updateProcessOwner'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1498,7 +1621,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessOwner>>, {key: string;data: UpdateProcessOwnerRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessOwner(key,data,)
+          return  updateProcessOwner(key,data,requestOptions)
         }
 
 
@@ -1516,7 +1639,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update process owner
  */
 export const useUpdateProcessOwner = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessOwner>>, TError,{key: string;data: UpdateProcessOwnerRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProcessOwner>>,
         TError,
@@ -1583,15 +1706,15 @@ export const updateProcessType = async (key: string,
 
 
 export const getUpdateProcessTypeMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext> => {
 
 const mutationKey = ['updateProcessType'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -1599,7 +1722,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessType>>, {key: string;data: UpdateProcessTypeRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessType(key,data,)
+          return  updateProcessType(key,data,requestOptions)
         }
 
 
@@ -1617,7 +1740,7 @@ const {mutation: mutationOptions} = options ?
  * @summary Update process type
  */
 export const useUpdateProcessType = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessType>>, TError,{key: string;data: UpdateProcessTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateProcessType>>,
         TError,
@@ -1684,16 +1807,16 @@ export const getGetProcessVersionsQueryKey = (key: string,) => {
     }
 
     
-export const getGetProcessVersionsQueryOptions = <TData = Awaited<ReturnType<typeof getProcessVersions>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, }
+export const getGetProcessVersionsQueryOptions = <TData = Awaited<ReturnType<typeof getProcessVersions>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetProcessVersionsQueryKey(key);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessVersions>>> = ({ signal }) => getProcessVersions(key, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessVersions>>> = ({ signal }) => getProcessVersions(key, { signal, ...requestOptions });
 
       
 
@@ -1713,7 +1836,7 @@ export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProce
           TError,
           Awaited<ReturnType<typeof getProcessVersions>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProcessVersions>>, TError = void | ErrorResponse>(
@@ -1723,11 +1846,11 @@ export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProce
           TError,
           Awaited<ReturnType<typeof getProcessVersions>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProcessVersions>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1735,7 +1858,7 @@ export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProce
  */
 
 export function useGetProcessVersions<TData = Awaited<ReturnType<typeof getProcessVersions>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, }
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -1811,16 +1934,16 @@ export const getGetProcessVersionDiffQueryKey = (key: string,
 
     
 export const getGetProcessVersionDiffQueryOptions = <TData = Awaited<ReturnType<typeof getProcessVersionDiff>>, TError = void | ErrorResponse>(key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetProcessVersionDiffQueryKey(key,versionNumber);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessVersionDiff>>> = ({ signal }) => getProcessVersionDiff(key,versionNumber, { signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessVersionDiff>>> = ({ signal }) => getProcessVersionDiff(key,versionNumber, { signal, ...requestOptions });
 
       
 
@@ -1841,7 +1964,7 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
           TError,
           Awaited<ReturnType<typeof getProcessVersionDiff>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getProcessVersionDiff>>, TError = void | ErrorResponse>(
@@ -1852,12 +1975,12 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
           TError,
           Awaited<ReturnType<typeof getProcessVersionDiff>>
         > , 'initialData'
-      >, }
+      >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getProcessVersionDiff>>, TError = void | ErrorResponse>(
  key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -1866,7 +1989,7 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
 
 export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getProcessVersionDiff>>, TError = void | ErrorResponse>(
  key: string,
-    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, }
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -1880,3 +2003,233 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
 
 
 
+/**
+ * Returns the diagram (elements and flows) of a process.
+ * @summary Get process diagram
+ */
+export type getProcessDiagramResponse200 = {
+  data: ProcessDiagramResponse
+  status: 200
+}
+
+export type getProcessDiagramResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getProcessDiagramResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getProcessDiagramResponseSuccess = (getProcessDiagramResponse200) & {
+  headers: Headers;
+};
+export type getProcessDiagramResponseError = (getProcessDiagramResponse401 | getProcessDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type getProcessDiagramResponse = (getProcessDiagramResponseSuccess | getProcessDiagramResponseError)
+
+export const getGetProcessDiagramUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/diagram`
+}
+
+export const getProcessDiagram = async (key: string, options?: RequestInit): Promise<getProcessDiagramResponse> => {
+  
+  return customAxios<getProcessDiagramResponse>(getGetProcessDiagramUrl(key),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetProcessDiagramQueryKey = (key: string,) => {
+    return [
+    `/processes/${key}/diagram`
+    ] as const;
+    }
+
+    
+export const getGetProcessDiagramQueryOptions = <TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessDiagramQueryKey(key);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessDiagram>>> = ({ signal }) => getProcessDiagram(key, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProcessDiagramQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessDiagram>>>
+export type GetProcessDiagramQueryError = void | ErrorResponse
+
+
+export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessDiagram>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessDiagram>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessDiagram>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessDiagram>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get process diagram
+ */
+
+export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDiagram>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessDiagramQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Replaces the entire diagram (elements and flows) of a process. Only the process owner or an admin can save.
+ * @summary Save process diagram
+ */
+export type saveProcessDiagramResponse200 = {
+  data: ProcessDiagramResponse
+  status: 200
+}
+
+export type saveProcessDiagramResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type saveProcessDiagramResponse401 = {
+  data: void
+  status: 401
+}
+
+export type saveProcessDiagramResponse403 = {
+  data: void
+  status: 403
+}
+
+export type saveProcessDiagramResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type saveProcessDiagramResponseSuccess = (saveProcessDiagramResponse200) & {
+  headers: Headers;
+};
+export type saveProcessDiagramResponseError = (saveProcessDiagramResponse400 | saveProcessDiagramResponse401 | saveProcessDiagramResponse403 | saveProcessDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type saveProcessDiagramResponse = (saveProcessDiagramResponseSuccess | saveProcessDiagramResponseError)
+
+export const getSaveProcessDiagramUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/diagram`
+}
+
+export const saveProcessDiagram = async (key: string,
+    saveProcessDiagramRequest: SaveProcessDiagramRequest, options?: RequestInit): Promise<saveProcessDiagramResponse> => {
+  
+  return customAxios<saveProcessDiagramResponse>(getSaveProcessDiagramUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      saveProcessDiagramRequest,)
+  }
+);}
+
+
+
+
+export const getSaveProcessDiagramMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext> => {
+
+const mutationKey = ['saveProcessDiagram'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveProcessDiagram>>, {key: string;data: SaveProcessDiagramRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  saveProcessDiagram(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveProcessDiagramMutationResult = NonNullable<Awaited<ReturnType<typeof saveProcessDiagram>>>
+    export type SaveProcessDiagramMutationBody = SaveProcessDiagramRequest
+    export type SaveProcessDiagramMutationError = ErrorResponse | void
+
+    /**
+ * @summary Save process diagram
+ */
+export const useSaveProcessDiagram = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof saveProcessDiagram>>,
+        TError,
+        {key: string;data: SaveProcessDiagramRequest},
+        TContext
+      > => {
+      return useMutation(getSaveProcessDiagramMutationOptions(options), queryClient);
+    }
+    

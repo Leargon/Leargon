@@ -15,6 +15,7 @@ import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.*
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.ProcessElementRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
 import org.leargon.backend.repository.UserRepository
@@ -27,6 +28,7 @@ class ProcessService {
     private final ProcessVersionRepository processVersionRepository
     private final BusinessEntityRepository businessEntityRepository
     private final BusinessDomainRepository businessDomainRepository
+    private final ProcessElementRepository processElementRepository
     private final UserRepository userRepository
     private final LocaleService localeService
     private final ProcessMapper processMapper
@@ -38,6 +40,7 @@ class ProcessService {
             ProcessVersionRepository processVersionRepository,
             BusinessEntityRepository businessEntityRepository,
             BusinessDomainRepository businessDomainRepository,
+            ProcessElementRepository processElementRepository,
             UserRepository userRepository,
             LocaleService localeService,
             ProcessMapper processMapper,
@@ -47,6 +50,7 @@ class ProcessService {
         this.processVersionRepository = processVersionRepository
         this.businessEntityRepository = businessEntityRepository
         this.businessDomainRepository = businessDomainRepository
+        this.processElementRepository = processElementRepository
         this.userRepository = userRepository
         this.localeService = localeService
         this.processMapper = processMapper
@@ -57,6 +61,13 @@ class ProcessService {
     List<ProcessResponse> getAllProcessesAsResponses() {
         def m = this.processMapper
         return processRepository.findAll().collect { m.toProcessResponse(it) }
+    }
+
+    @Transactional
+    List<ProcessTreeResponse> getProcessTreeAsResponses() {
+        def m = this.processMapper
+        List<Process> roots = processRepository.findByParentIsNull()
+        return m.toProcessTreeResponses(roots)
     }
 
     Process getProcessByKey(String key) {
@@ -115,6 +126,13 @@ class ProcessService {
         } else {
             String defaultName = process.names.find { it.locale == defaultLocale.localeCode }?.text
             process.key = SlugUtil.slugify(defaultName)
+        }
+
+        // Set parent process
+        if (request.parentProcessKey != null) {
+            Process parentProcess = processRepository.findByKey(request.parentProcessKey)
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent process not found: ${request.parentProcessKey}"))
+            process.parent = parentProcess
         }
 
         // Resolve input entities
@@ -326,6 +344,15 @@ class ProcessService {
     void deleteProcess(String key, User currentUser) {
         Process process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
+
+        // Check if this process is referenced in any diagram element
+        def elemRepo = this.processElementRepository
+        List references = elemRepo.findByLinkedProcessId(process.id)
+        if (!references.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cannot delete process: it is referenced in ${references.size()} diagram element(s)")
+        }
+
         processRepository.delete(process)
     }
 
