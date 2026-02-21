@@ -8,7 +8,7 @@ import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import io.micronaut.test.support.TestPropertyProvider
 import jakarta.inject.Inject
 import org.leargon.backend.repository.UserRepository
-import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.mysql.MySQLContainer
 import spock.lang.Shared
 import spock.lang.Specification
 
