@@ -94,6 +94,13 @@ const END_EVENT_TYPES: Set<string> = new Set([
   ProcessElementType.TERMINATE_END_EVENT,
 ]);
 
+const EVENT_TYPES: Set<string> = new Set([
+  ProcessElementType.NONE_START_EVENT,
+  ProcessElementType.NONE_END_EVENT,
+  ProcessElementType.TERMINATE_END_EVENT,
+  ProcessElementType.INTERMEDIATE_EVENT,
+]);
+
 function elementTypeToNodeType(elementType: string): string {
   const map: Record<string, string> = {
     NONE_START_EVENT: 'startEvent',
@@ -178,6 +185,8 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const [localElements, setLocalElements] = useState<LocalElement[] | null>(null);
   const [localFlows, setLocalFlows] = useState<LocalFlow[] | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const isEditing = canEdit && editMode;
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [pendingElementType, setPendingElementType] = useState<AddElementType | null>(null);
@@ -240,10 +249,10 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         data: { label: el.label },
         position: { x: 0, y: 0 },
         draggable: false,
-        deletable: canEdit,
+        deletable: isEditing,
       };
     });
-  }, [elements, allProcesses, canEdit]);
+  }, [elements, allProcesses, isEditing]);
 
   const rfEdges: Edge[] = useMemo(() => {
     return flows.map((fl) => ({
@@ -254,9 +263,9 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       type: 'smoothstep',
       markerEnd: { type: MarkerType.ArrowClosed },
       style: { strokeWidth: 1.5 },
-      deletable: canEdit,
+      deletable: isEditing,
     }));
-  }, [flows, canEdit]);
+  }, [flows, isEditing]);
 
   const layoutedNodes = useMemo(() => layoutDiagram(rfNodes, rfEdges), [rfNodes, rfEdges]);
 
@@ -279,15 +288,15 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const handleNodeDoubleClick = useCallback((_: React.MouseEvent, node: Node) => {
     const el = elements.find((e) => e.elementId === node.id);
     if (!el) return;
-    // If gateway or intermediate event, open edit dialog
-    if (canEdit && (GATEWAY_TYPES.has(el.elementType) || el.elementType === ProcessElementType.INTERMEDIATE_EVENT)) {
+    // If gateway or event, open edit dialog
+    if (isEditing && (GATEWAY_TYPES.has(el.elementType) || EVENT_TYPES.has(el.elementType))) {
       openEditElementDialog(el);
       return;
     }
     if (el.linkedProcessKey) {
       navigate(`/processes/${el.linkedProcessKey}`);
     }
-  }, [elements, navigate, canEdit]);
+  }, [elements, navigate, isEditing]);
 
   // Handle new connections drawn between nodes
   const onConnect = useCallback((connection: Connection) => {
@@ -331,16 +340,16 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   // Context menu handlers
   const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
-    if (!canEdit) return;
+    if (!isEditing) return;
     event.preventDefault();
     setContextMenu({ mouseX: event.clientX, mouseY: event.clientY, nodeId: node.id });
-  }, [canEdit]);
+  }, [isEditing]);
 
   const handleEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
-    if (!canEdit) return;
+    if (!isEditing) return;
     event.preventDefault();
     setContextMenu({ mouseX: event.clientX, mouseY: event.clientY, edgeId: edge.id });
-  }, [canEdit]);
+  }, [isEditing]);
 
   const closeContextMenu = () => setContextMenu(null);
 
@@ -400,7 +409,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   };
 
   const handleEdgeDoubleClick = useCallback((_: React.MouseEvent, edge: Edge) => {
-    if (!canEdit) return;
+    if (!isEditing) return;
     const fl = flows.find((f) => f.flowId === edge.id);
     if (!fl) return;
     // Only allow label edit for edges connected to gateways
@@ -409,7 +418,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     if ((sourceEl && GATEWAY_TYPES.has(sourceEl.elementType)) || (targetEl && GATEWAY_TYPES.has(targetEl.elementType))) {
       openEditFlowDialog(fl);
     }
-  }, [canEdit, flows, elements]);
+  }, [isEditing, flows, elements]);
 
   const confirmEditFlow = () => {
     if (!editingFlow) return;
@@ -425,7 +434,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   // Context menu helper: check if node is a gateway or intermediate event
   const contextNodeElement = contextMenu?.nodeId ? elements.find((e) => e.elementId === contextMenu.nodeId) : null;
   const contextIsGateway = contextNodeElement ? GATEWAY_TYPES.has(contextNodeElement.elementType) : false;
-  const contextIsEditable = contextNodeElement ? (GATEWAY_TYPES.has(contextNodeElement.elementType) || contextNodeElement.elementType === ProcessElementType.INTERMEDIATE_EVENT) : false;
+  const contextIsEditable = contextNodeElement ? (GATEWAY_TYPES.has(contextNodeElement.elementType) || EVENT_TYPES.has(contextNodeElement.elementType)) : false;
 
   // Context menu helper: check if edge is connected to a gateway
   const contextEdgeFlow = contextMenu?.edgeId ? flows.find((f) => f.flowId === contextMenu.edgeId) : null;
@@ -579,7 +588,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         }
         if (el.label && (
           GATEWAY_TYPES.has(el.elementType) ||
-          el.elementType === ProcessElementType.INTERMEDIATE_EVENT
+          EVENT_TYPES.has(el.elementType)
         )) {
           input.labels = [{ locale: 'en', text: el.label }];
         }
@@ -612,6 +621,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       setLocalElements(null);
       setLocalFlows(null);
       setDirty(false);
+      setEditMode(false);
       setSnackbar({ message: 'Diagram saved successfully', severity: 'success' });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to save diagram';
@@ -637,8 +647,22 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   return (
     <Box>
-      {canEdit && (
+      {canEdit && !editMode && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+          <Button size="small" variant="outlined" startIcon={<Edit />} onClick={() => setEditMode(true)}>
+            Edit Diagram
+          </Button>
+        </Box>
+      )}
+      {isEditing && (
         <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => addSimpleElement(ProcessElementType.NONE_START_EVENT, 'start')}
+          >
+            + Start
+          </Button>
           <Button size="small" variant="outlined" onClick={() => startAddElement('process')}>
             + Process
           </Button>
@@ -654,6 +678,9 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
             + Terminate End
           </Button>
           <Box sx={{ flexGrow: 1 }} />
+          <Button size="small" variant="outlined" onClick={() => { if (dirty) handleReset(); setEditMode(false); }}>
+            Exit Edit
+          </Button>
           {dirty && (
             <>
               <Button size="small" variant="contained" startIcon={<Save />} onClick={handleSave} disabled={saveDiagramMutation.isPending}>
@@ -679,10 +706,10 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           onEdgesDelete={onEdgesDelete}
           onNodeContextMenu={handleNodeContextMenu}
           onEdgeContextMenu={handleEdgeContextMenu}
-          deleteKeyCode="Delete"
+          deleteKeyCode={isEditing ? "Delete" : undefined}
           fitView
           nodesDraggable={false}
-          nodesConnectable={canEdit}
+          nodesConnectable={isEditing}
           proOptions={{ hideAttribution: true }}
         >
           <Controls />
@@ -791,7 +818,7 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       {/* Edit Gateway / Intermediate Event Dialog */}
       <Dialog open={editingElement !== null} onClose={() => setEditingElement(null)} maxWidth="xs" fullWidth>
         <DialogTitle>
-          {editingElement && GATEWAY_TYPES.has(editingElement.elementType) ? 'Edit Gateway' : 'Edit Intermediate Event'}
+          {editingElement && GATEWAY_TYPES.has(editingElement.elementType) ? 'Edit Gateway' : 'Edit Event'}
         </DialogTitle>
         <DialogContent>
           {editingElement && GATEWAY_TYPES.has(editingElement.elementType) && (

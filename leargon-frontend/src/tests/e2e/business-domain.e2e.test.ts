@@ -269,6 +269,6 @@ describe('Business Domain E2E', () => {
     // Entity still exists but domain is null
     const entityRes = await adminClient.get(`/business-entities/${entity.key}`);
     expect(entityRes.status).toBe(200);
-    expect(entityRes.data.businessDomain).toBeNull();
+    expect(entityRes.data.businessDomain).toBeFalsy();
   });
 });

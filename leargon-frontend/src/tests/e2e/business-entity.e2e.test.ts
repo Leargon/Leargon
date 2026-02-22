@@ -168,7 +168,7 @@ describe('Business Entity E2E', () => {
     const createRes = await client.post(
       `/business-entities/${entity1.key}/relationships`,
       {
-        secondBusinessEntityKey: entity2.key,
+        secondEntityKey: entity2.key,
         firstCardinalityMinimum: 1,
         firstCardinalityMaximum: 1,
         secondCardinalityMinimum: 0,
@@ -176,7 +176,17 @@ describe('Business Entity E2E', () => {
       },
     );
     expect(createRes.status).toBe(201);
-    const relId = createRes.data.id;
+
+    // Fetch the entity to get the relationship ID
+    const entityRes = await client.get<BusinessEntityResponse>(
+      `/business-entities/${entity1.key}`,
+    );
+    const relationship = entityRes.data.relationships?.find(
+      (r: { cardinality: Array<{ businessEntity: { key: string } }> }) =>
+        r.cardinality.some((c) => c.businessEntity.key === entity2.key),
+    );
+    expect(relationship).toBeTruthy();
+    const relId = relationship!.id;
 
     // Delete relationship — entity survives
     const delRes = await client.delete(
@@ -201,7 +211,7 @@ describe('Business Entity E2E', () => {
 
     const res = await client.put(
       `/business-entities/${implEntity.key}/interfaces`,
-      [{ interfaceEntityKey: ifaceEntity.key }],
+      { interfaces: [ifaceEntity.key] },
     );
     expect(res.status).toBe(200);
   });

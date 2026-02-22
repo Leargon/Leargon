@@ -127,12 +127,29 @@ export async function createClassification(
     names: [{ locale: 'en', text: name }],
     assignableTo,
     optional: true,
-    values,
   };
   const res = await client.post<ClassificationResponse>('/classifications', body);
   if (res.status !== 201) {
     throw new ApiError(res.status, res.data);
   }
+
+  // Values must be added separately via individual POST calls
+  for (const value of values) {
+    const valRes = await client.post(`/classifications/${res.data.key}/values`, value);
+    if (valRes.status !== 201) {
+      throw new ApiError(valRes.status, valRes.data);
+    }
+  }
+
+  // Re-fetch to get the full classification with values
+  if (values.length > 0) {
+    const getRes = await client.get<ClassificationResponse>(`/classifications/${res.data.key}`);
+    if (getRes.status !== 200) {
+      throw new ApiError(getRes.status, getRes.data);
+    }
+    return getRes.data;
+  }
+
   return res.data;
 }
 

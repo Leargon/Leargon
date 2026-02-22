@@ -256,7 +256,7 @@ describe('Process E2E', () => {
 
   it('should include DIAGRAM_UPDATE in version history', async () => {
     const proc = await createProcess(client, 'FE Version Diagram');
-    const linked = await createProcess(client, 'FE Version Linked');
+    const linked = await createProcess(client, 'FE Proc Version Linked');
 
     const diagramReq: SaveProcessDiagramRequest = {
       elements: [
@@ -290,6 +290,135 @@ describe('Process E2E', () => {
     );
     expect(versionsRes.status).toBe(200);
     expect(versionsRes.data.some((v) => v.changeType === 'DIAGRAM_UPDATE')).toBe(true);
+  });
+
+  // =====================
+  // DIAGRAM - MULTIPLE START EVENTS
+  // =====================
+
+  it('should save diagram with multiple start events', async () => {
+    const proc = await createProcess(client, 'FE Multi Start Process');
+    const task1 = await createProcess(client, 'FE Multi Start Task 1');
+    const task2 = await createProcess(client, 'FE Multi Start Task 2');
+
+    const diagramReq: SaveProcessDiagramRequest = {
+      elements: [
+        {
+          elementId: 'start-1',
+          elementType: ProcessElementType.NONE_START_EVENT,
+          labels: [{ locale: 'en', text: 'Normal start' }],
+          sortOrder: 0,
+        },
+        {
+          elementId: 'start-2',
+          elementType: ProcessElementType.NONE_START_EVENT,
+          labels: [{ locale: 'en', text: 'Alternative start' }],
+          sortOrder: 1,
+        },
+        {
+          elementId: 'task-1',
+          elementType: ProcessElementType.TASK,
+          linkedProcessKey: task1.key,
+          sortOrder: 2,
+        },
+        {
+          elementId: 'task-2',
+          elementType: ProcessElementType.TASK,
+          linkedProcessKey: task2.key,
+          sortOrder: 3,
+        },
+        {
+          elementId: 'end-1',
+          elementType: ProcessElementType.NONE_END_EVENT,
+          sortOrder: 4,
+        },
+      ],
+      flows: [
+        { flowId: 'flow-1', sourceElementId: 'start-1', targetElementId: 'task-1' },
+        { flowId: 'flow-2', sourceElementId: 'start-2', targetElementId: 'task-2' },
+        { flowId: 'flow-3', sourceElementId: 'task-1', targetElementId: 'end-1' },
+        { flowId: 'flow-4', sourceElementId: 'task-2', targetElementId: 'end-1' },
+      ],
+    };
+
+    const res = await client.put<ProcessDiagramResponse>(
+      `/processes/${proc.key}/diagram`,
+      diagramReq,
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.elements.length).toBe(5);
+
+    const startEvents = res.data.elements.filter(
+      (e) => e.elementType === ProcessElementType.NONE_START_EVENT,
+    );
+    expect(startEvents.length).toBe(2);
+  });
+
+  // =====================
+  // DIAGRAM - EVENT LABELS
+  // =====================
+
+  it('should save diagram with labels on all event types', async () => {
+    const proc = await createProcess(client, 'FE Event Labels Process');
+    const task = await createProcess(client, 'FE Event Labels Task');
+
+    const diagramReq: SaveProcessDiagramRequest = {
+      elements: [
+        {
+          elementId: 'start-1',
+          elementType: ProcessElementType.NONE_START_EVENT,
+          labels: [{ locale: 'en', text: 'Customer request' }],
+          sortOrder: 0,
+        },
+        {
+          elementId: 'task-1',
+          elementType: ProcessElementType.TASK,
+          linkedProcessKey: task.key,
+          sortOrder: 1,
+        },
+        {
+          elementId: 'ie-1',
+          elementType: ProcessElementType.INTERMEDIATE_EVENT,
+          labels: [{ locale: 'en', text: 'Approval received' }],
+          sortOrder: 2,
+        },
+        {
+          elementId: 'end-1',
+          elementType: ProcessElementType.NONE_END_EVENT,
+          labels: [{ locale: 'en', text: 'Order completed' }],
+          sortOrder: 3,
+        },
+        {
+          elementId: 'end-2',
+          elementType: ProcessElementType.TERMINATE_END_EVENT,
+          labels: [{ locale: 'en', text: 'Order cancelled' }],
+          sortOrder: 4,
+        },
+      ],
+      flows: [
+        { flowId: 'flow-1', sourceElementId: 'start-1', targetElementId: 'task-1' },
+        { flowId: 'flow-2', sourceElementId: 'task-1', targetElementId: 'ie-1' },
+        { flowId: 'flow-3', sourceElementId: 'ie-1', targetElementId: 'end-1' },
+      ],
+    };
+
+    const res = await client.put<ProcessDiagramResponse>(
+      `/processes/${proc.key}/diagram`,
+      diagramReq,
+    );
+    expect(res.status).toBe(200);
+
+    const startEvent = res.data.elements.find((e) => e.elementId === 'start-1');
+    expect(startEvent?.labels?.[0].text).toBe('Customer request');
+
+    const endEvent = res.data.elements.find((e) => e.elementId === 'end-1');
+    expect(endEvent?.labels?.[0].text).toBe('Order completed');
+
+    const terminateEnd = res.data.elements.find((e) => e.elementId === 'end-2');
+    expect(terminateEnd?.labels?.[0].text).toBe('Order cancelled');
+
+    const intermediateEvent = res.data.elements.find((e) => e.elementId === 'ie-1');
+    expect(intermediateEvent?.labels?.[0].text).toBe('Approval received');
   });
 
   // =====================

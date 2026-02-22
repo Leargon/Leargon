@@ -499,57 +499,6 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Metadata */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Table size="small">
-          <TableBody>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
-              <TableCell>{process.createdBy.firstName} {process.createdBy.lastName}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
-              <TableCell>{new Date(process.createdAt).toLocaleString()}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
-              <TableCell>{new Date(process.updatedAt).toLocaleString()}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Paper>
-
-      {/* Version History */}
-      <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mb: 1 }}
-        onClick={() => setVersionsOpen(!versionsOpen)}>
-        {versionsOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
-        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>Version History ({versions.length})</Typography>
-      </Box>
-      {versionsOpen && (
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">No version history</Typography>
-          ) : (
-            <Table size="small">
-              <TableBody>
-                {versions.map((v: ProcessVersionResponse) => (
-                  <TableRow key={v.versionNumber}>
-                    <TableCell>v{v.versionNumber}</TableCell>
-                    <TableCell><Chip label={v.changeType} size="small" variant="outlined" /></TableCell>
-                    <TableCell>{v.changeSummary || '\u2014'}</TableCell>
-                    <TableCell>{v.changedBy.firstName} {v.changedBy.lastName}</TableCell>
-                    <TableCell>{new Date(v.createdAt).toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </Paper>
-      )}
-
-      <Divider sx={{ my: 2 }} />
-
       {/* Parent Process */}
       {process.parentProcess && (
         <Box sx={{ mb: 2 }}>
@@ -600,6 +549,57 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           )}
         </AccordionDetails>
       </Accordion>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Metadata */}
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <Table size="small">
+          <TableBody>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+              <TableCell>{process.createdBy.firstName} {process.createdBy.lastName}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+              <TableCell>{new Date(process.createdAt).toLocaleString()}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+              <TableCell>{new Date(process.updatedAt).toLocaleString()}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
+
+      {/* Version History */}
+      <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mb: 1 }}
+        onClick={() => setVersionsOpen(!versionsOpen)}>
+        {versionsOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>Version History ({versions.length})</Typography>
+      </Box>
+      {versionsOpen && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          {versions.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">No version history</Typography>
+          ) : (
+            <Table size="small">
+              <TableBody>
+                {versions.map((v: ProcessVersionResponse) => (
+                  <TableRow key={v.versionNumber}>
+                    <TableCell>v{v.versionNumber}</TableCell>
+                    <TableCell><Chip label={v.changeType} size="small" variant="outlined" /></TableCell>
+                    <TableCell>{v.changeSummary || '\u2014'}</TableCell>
+                    <TableCell>{v.changedBy.firstName} {v.changedBy.lastName}</TableCell>
+                    <TableCell>{new Date(v.createdAt).toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </Paper>
+      )}
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

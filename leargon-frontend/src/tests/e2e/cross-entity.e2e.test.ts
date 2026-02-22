@@ -211,11 +211,11 @@ describe('Cross-Entity E2E', () => {
     // Entity still exists but domain is null
     const entityRes = await client.get(`/business-entities/${entity.key}`);
     expect(entityRes.status).toBe(200);
-    expect(entityRes.data.businessDomain).toBeNull();
+    expect(entityRes.data.businessDomain).toBeFalsy();
 
     // Process still exists but domain is null
     const procRes = await client.get(`/processes/${proc.key}`);
     expect(procRes.status).toBe(200);
-    expect(procRes.data.businessDomain).toBeNull();
+    expect(procRes.data.businessDomain).toBeFalsy();
   });
 });

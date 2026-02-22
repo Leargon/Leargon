@@ -10,6 +10,10 @@ export default defineConfig({
     hookTimeout: 30_000,
     fileParallelism: false,
     isolate: false,
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: 'test-results/e2e-results.xml',
+    },
   },
   resolve: {
     alias: {
