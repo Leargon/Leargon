@@ -472,10 +472,12 @@ const ProcessDiagramEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       sortOrder: maxSort + 1,
     });
 
-    // Auto-connect from last connectable element
-    const lastEl = findLastConnectableElement(elements, flows);
-    if (lastEl) {
-      newFlows.push({ flowId: nextId('flow'), sourceElementId: lastEl.elementId, targetElementId: newId });
+    // Auto-connect from last connectable element (skip for start events — they are sources, not targets)
+    if (elementType !== ProcessElementType.NONE_START_EVENT) {
+      const lastEl = findLastConnectableElement(elements, flows);
+      if (lastEl) {
+        newFlows.push({ flowId: nextId('flow'), sourceElementId: lastEl.elementId, targetElementId: newId });
+      }
     }
 
     setLocalElements(newElements);

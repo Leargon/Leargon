@@ -5,19 +5,36 @@ import { Box, Typography } from '@mui/material';
 // ========================
 // Start Event (None) — green circle
 // ========================
-export const StartEventNode = memo((_props: NodeProps) => (
-  <Box
-    sx={{
-      width: 40,
-      height: 40,
-      borderRadius: '50%',
-      border: '2px solid #4caf50',
-      backgroundColor: '#e8f5e9',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
+export const StartEventNode = memo(({ data }: NodeProps) => (
+  <Box sx={{ position: 'relative', width: 40, height: 40 }}>
+    <Box
+      sx={{
+        width: 40,
+        height: 40,
+        borderRadius: '50%',
+        border: '2px solid #4caf50',
+        backgroundColor: '#e8f5e9',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    />
+    {(data as { label?: string }).label && (
+      <Typography
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          top: -18,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          color: 'text.secondary',
+          fontSize: 10,
+        }}
+      >
+        {(data as { label?: string }).label}
+      </Typography>
+    )}
     <Handle type="source" position={Position.Right} style={{ background: '#4caf50' }} />
   </Box>
 ));
@@ -26,19 +43,36 @@ StartEventNode.displayName = 'StartEventNode';
 // ========================
 // End Event (None) — red circle thick border
 // ========================
-export const EndEventNode = memo((_props: NodeProps) => (
-  <Box
-    sx={{
-      width: 40,
-      height: 40,
-      borderRadius: '50%',
-      border: '3px solid #f44336',
-      backgroundColor: '#ffebee',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
+export const EndEventNode = memo(({ data }: NodeProps) => (
+  <Box sx={{ position: 'relative', width: 40, height: 40 }}>
+    <Box
+      sx={{
+        width: 40,
+        height: 40,
+        borderRadius: '50%',
+        border: '3px solid #f44336',
+        backgroundColor: '#ffebee',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    />
+    {(data as { label?: string }).label && (
+      <Typography
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          top: -18,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          color: 'text.secondary',
+          fontSize: 10,
+        }}
+      >
+        {(data as { label?: string }).label}
+      </Typography>
+    )}
     <Handle type="target" position={Position.Left} style={{ background: '#f44336' }} />
   </Box>
 ));
@@ -47,27 +81,45 @@ EndEventNode.displayName = 'EndEventNode';
 // ========================
 // Terminate End Event — filled red circle inside thick border
 // ========================
-export const TerminateEndEventNode = memo((_props: NodeProps) => (
-  <Box
-    sx={{
-      width: 40,
-      height: 40,
-      borderRadius: '50%',
-      border: '3px solid #f44336',
-      backgroundColor: '#ffebee',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
+export const TerminateEndEventNode = memo(({ data }: NodeProps) => (
+  <Box sx={{ position: 'relative', width: 40, height: 40 }}>
     <Box
       sx={{
-        width: 22,
-        height: 22,
+        width: 40,
+        height: 40,
         borderRadius: '50%',
-        backgroundColor: '#f44336',
+        border: '3px solid #f44336',
+        backgroundColor: '#ffebee',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
-    />
+    >
+      <Box
+        sx={{
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
+          backgroundColor: '#f44336',
+        }}
+      />
+    </Box>
+    {(data as { label?: string }).label && (
+      <Typography
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          top: -18,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          whiteSpace: 'nowrap',
+          color: 'text.secondary',
+          fontSize: 10,
+        }}
+      >
+        {(data as { label?: string }).label}
+      </Typography>
+    )}
     <Handle type="target" position={Position.Left} style={{ background: '#f44336' }} />
   </Box>
 ));

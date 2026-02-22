@@ -182,8 +182,7 @@ describe('Business Entity E2E', () => {
       `/business-entities/${entity1.key}`,
     );
     const relationship = entityRes.data.relationships?.find(
-      (r: { cardinality: Array<{ businessEntity: { key: string } }> }) =>
-        r.cardinality.some((c) => c.businessEntity.key === entity2.key),
+      (r) => r.cardinality?.some((c) => c.businessEntity?.key === entity2.key),
     );
     expect(relationship).toBeTruthy();
     const relId = relationship!.id;
