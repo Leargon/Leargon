@@ -29,7 +29,7 @@ import {
   AccordionDetails,
   TableHead,
 } from '@mui/material';
-import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add, Remove } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, Remove } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetProcessByKey,
@@ -49,6 +49,7 @@ import {
   useAddProcessOutput,
   useRemoveProcessOutput,
 } from '../../api/generated/process/process';
+import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
@@ -69,6 +70,7 @@ import type {
   ClassificationResponse,
   BusinessDomainResponse,
   BusinessEntityResponse,
+  UserResponse,
 } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
@@ -103,6 +105,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
+  const { data: allUsersResponse } = useGetAllUsers();
+  const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -326,8 +330,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <Box sx={{ mb: 2 }}>
         {ownerEdit.isEditing ? (
           <Box>
-            <TextField size="small" value={ownerEdit.editValue || ''} onChange={(e) => ownerEdit.setEditValue(e.target.value)}
-              placeholder="Username" sx={{ width: 300 }} />
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+              value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
+              onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
+              renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              sx={{ width: 300 }}
+            />
             {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
           </Box>
         ) : (
@@ -633,7 +645,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
     {canEdit && !isEditing && (
-      <IconButton size="small" onClick={onEdit}><Edit fontSize="small" /></IconButton>
+      <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
     )}
     {isEditing && (
       <>

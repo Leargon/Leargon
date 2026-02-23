@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import io.micronaut.retry.annotation.Retryable
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -254,6 +255,7 @@ class ProcessService {
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     ProcessResponse assignBusinessDomain(String key, String domainKey, User currentUser) {
         Process process = getProcessByKey(key)
@@ -278,6 +280,7 @@ class ProcessService {
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     ProcessResponse addInput(String key, AddProcessEntityRequest request, User currentUser) {
         Process process = getProcessByKey(key)
@@ -294,6 +297,7 @@ class ProcessService {
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     ProcessResponse removeInput(String key, String entityKey, User currentUser) {
         Process process = getProcessByKey(key)
@@ -309,6 +313,7 @@ class ProcessService {
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     ProcessResponse addOutput(String key, AddProcessEntityRequest request, User currentUser) {
         Process process = getProcessByKey(key)
@@ -325,6 +330,7 @@ class ProcessService {
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     ProcessResponse removeOutput(String key, String entityKey, User currentUser) {
         Process process = getProcessByKey(key)

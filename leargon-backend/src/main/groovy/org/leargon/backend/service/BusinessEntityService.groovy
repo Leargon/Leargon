@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import io.micronaut.retry.annotation.Retryable
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -274,6 +275,7 @@ class BusinessEntityService {
      * Update the interface entities of a business entity.
      * Only the Data Owner or an Admin can edit an entity.
      */
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     BusinessEntityResponse updateBusinessEntityInterfaces(String entityKey, List<String> interfaceKeys, User currentUser) {
         BusinessEntity entity = getBusinessEntityByKey(entityKey)
@@ -353,6 +355,7 @@ class BusinessEntityService {
 
     // --- Relationship CRUD ---
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     BusinessEntityResponse createRelationship(String entityKey, CreateBusinessEntityRelationshipRequest request, User currentUser) {
         BusinessEntity entity = getBusinessEntityByKey(entityKey)
@@ -384,6 +387,7 @@ class BusinessEntityService {
         return businessEntityMapper.toBusinessEntityResponse(entity)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     BusinessEntityResponse updateRelationship(String entityKey, Long relationshipId, UpdateBusinessEntityRelationshipRequest request, User currentUser) {
         BusinessEntity entity = getBusinessEntityByKey(entityKey)
@@ -508,6 +512,7 @@ class BusinessEntityService {
      * @param currentUser The user making the assignment
      * @return Updated entity
      */
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     BusinessEntityResponse assignBusinessDomain(String entityKey, String domainKey, User currentUser) {
         BusinessEntity entity = getBusinessEntityByKey(entityKey)

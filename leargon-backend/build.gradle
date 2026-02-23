@@ -41,6 +41,9 @@ dependencies {
     // JSON support (for version snapshots)
     implementation("org.apache.groovy:groovy-json:4.0.30")
 
+    // Retry support (for deadlock mitigation)
+    implementation("io.micronaut:micronaut-retry")
+
     // Add Serdeable annotation to generated classes
     annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
 

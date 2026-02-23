@@ -29,7 +29,7 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetBusinessEntityByKey,
@@ -46,8 +46,10 @@ import {
   useGetVersions,
   useDeleteBusinessEntityRelationship,
   useCreateBusinessEntityRelationship,
+  useUpdateBusinessEntityRelationship,
   useGetAllBusinessEntities,
 } from '../../api/generated/business-entity/business-entity';
+import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
@@ -67,6 +69,7 @@ import type {
   ClassificationResponse,
   BusinessDomainResponse,
   ProcessResponse,
+  UserResponse,
 } from '../../api/generated/model';
 
 interface EntityDetailPanelProps {
@@ -94,6 +97,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
+  const { data: allUsersResponse } = useGetAllUsers();
+  const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
@@ -106,7 +111,18 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [relFirstMax, setRelFirstMax] = useState('');
   const [relSecondMin, setRelSecondMin] = useState('0');
   const [relSecondMax, setRelSecondMax] = useState('');
+  const [relDescription, setRelDescription] = useState('');
   const [relError, setRelError] = useState('');
+
+  // Relationship edit dialog
+  const [editRelDialogOpen, setEditRelDialogOpen] = useState(false);
+  const [editRelId, setEditRelId] = useState<number | null>(null);
+  const [editRelDescription, setEditRelDescription] = useState('');
+  const [editRelFirstMin, setEditRelFirstMin] = useState('0');
+  const [editRelFirstMax, setEditRelFirstMax] = useState('');
+  const [editRelSecondMin, setEditRelSecondMin] = useState('0');
+  const [editRelSecondMax, setEditRelSecondMax] = useState('');
+  const [editRelError, setEditRelError] = useState('');
 
   const isOwnerOrAdmin = isAdmin || (user?.username === entity?.dataOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -122,6 +138,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const deleteEntity = useDeleteBusinessEntity();
   const deleteRelationship = useDeleteBusinessEntityRelationship();
   const createRelationship = useCreateBusinessEntityRelationship();
+  const updateRelationship = useUpdateBusinessEntityRelationship();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
@@ -215,6 +232,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           firstCardinalityMaximum: relFirstMax ? parseInt(relFirstMax) : null,
           secondCardinalityMinimum: parseInt(relSecondMin) || 0,
           secondCardinalityMaximum: relSecondMax ? parseInt(relSecondMax) : null,
+          descriptions: relDescription ? [{ locale: 'en', text: relDescription }] : undefined,
         },
       });
       invalidate();
@@ -231,7 +249,43 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     setRelFirstMax('');
     setRelSecondMin('0');
     setRelSecondMax('');
+    setRelDescription('');
     setRelError('');
+  };
+
+  const handleEditRelationship = (r: BusinessEntityRelationshipResponse) => {
+    setEditRelId(r.id!);
+    setEditRelDescription(getLocalizedText(r.descriptions || []) || '');
+    const first = r.cardinality?.[0];
+    const second = r.cardinality?.[1];
+    setEditRelFirstMin(String(first?.minimum ?? 0));
+    setEditRelFirstMax(first?.maximum != null ? String(first.maximum) : '');
+    setEditRelSecondMin(String(second?.minimum ?? 0));
+    setEditRelSecondMax(second?.maximum != null ? String(second.maximum) : '');
+    setEditRelError('');
+    setEditRelDialogOpen(true);
+  };
+
+  const handleSaveEditRelationship = async () => {
+    if (editRelId == null) return;
+    try {
+      setEditRelError('');
+      await updateRelationship.mutateAsync({
+        key: entityKey,
+        relationshipId: editRelId,
+        data: {
+          firstCardinalityMinimum: parseInt(editRelFirstMin) || 0,
+          firstCardinalityMaximum: editRelFirstMax ? parseInt(editRelFirstMax) : null,
+          secondCardinalityMinimum: parseInt(editRelSecondMin) || 0,
+          secondCardinalityMaximum: editRelSecondMax ? parseInt(editRelSecondMax) : null,
+          descriptions: editRelDescription ? [{ locale: 'en', text: editRelDescription }] : [],
+        },
+      });
+      invalidate();
+      setEditRelDialogOpen(false);
+    } catch (err: any) {
+      setEditRelError(err?.response?.data?.message || 'Failed to update relationship');
+    }
   };
 
   if (isLoading) {
@@ -345,8 +399,16 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Box sx={{ mb: 2 }}>
         {ownerEdit.isEditing ? (
           <Box>
-            <TextField size="small" value={ownerEdit.editValue || ''} onChange={(e) => ownerEdit.setEditValue(e.target.value)}
-              placeholder="Username" sx={{ width: 300 }} />
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+              value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
+              onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
+              renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              sx={{ width: 300 }}
+            />
             {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
           </Box>
         ) : (
@@ -478,13 +540,18 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   <TableCell>{getLocalizedText(r.descriptions || []) || '—'}</TableCell>
                   <TableCell align="right">
                     {isOwnerOrAdmin && r.id != null && (
-                      <IconButton size="small" color="error"
-                        onClick={async () => {
-                          await deleteRelationship.mutateAsync({ key: entityKey, relationshipId: r.id! });
-                          invalidate();
-                        }}>
-                        <Delete fontSize="small" />
-                      </IconButton>
+                      <>
+                        <IconButton size="small" onClick={() => handleEditRelationship(r)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error"
+                          onClick={async () => {
+                            await deleteRelationship.mutateAsync({ key: entityKey, relationshipId: r.id! });
+                            invalidate();
+                          }}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -710,6 +777,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
                 placeholder="Empty = unbounded" helperText="Empty = *" />
             </Box>
+            <TextField label="Description" value={relDescription} onChange={(e) => setRelDescription(e.target.value)}
+              size="small" multiline rows={2} fullWidth />
             {relError && <Alert severity="error">{relError}</Alert>}
           </Box>
         </DialogContent>
@@ -717,6 +786,47 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Button onClick={() => setRelDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleCreateRelationship} variant="contained" disabled={createRelationship.isPending}>
             {createRelationship.isPending ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Relationship Dialog */}
+      <Dialog open={editRelDialogOpen} onClose={() => setEditRelDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Relationship</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            {(() => {
+              const rel = entity.relationships?.find((r) => r.id === editRelId);
+              if (!rel?.cardinality) return null;
+              return (
+                <Typography variant="body2" color="text.secondary">
+                  {rel.cardinality[0]?.businessEntity.name} — {rel.cardinality[1]?.businessEntity.name}
+                </Typography>
+              );
+            })()}
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField label="First Min" value={editRelFirstMin} onChange={(e) => setEditRelFirstMin(e.target.value)}
+                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+              <TextField label="First Max" value={editRelFirstMax} onChange={(e) => setEditRelFirstMax(e.target.value)}
+                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
+                placeholder="Empty = unbounded" helperText="Empty = *" />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField label="Second Min" value={editRelSecondMin} onChange={(e) => setEditRelSecondMin(e.target.value)}
+                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+              <TextField label="Second Max" value={editRelSecondMax} onChange={(e) => setEditRelSecondMax(e.target.value)}
+                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
+                placeholder="Empty = unbounded" helperText="Empty = *" />
+            </Box>
+            <TextField label="Description" value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)}
+              size="small" multiline rows={2} fullWidth />
+            {editRelError && <Alert severity="error">{editRelError}</Alert>}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditRelDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSaveEditRelationship} variant="contained" disabled={updateRelationship.isPending}>
+            {updateRelationship.isPending ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -739,7 +849,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
     {canEdit && !isEditing && (
-      <IconButton size="small" onClick={onEdit}><Edit fontSize="small" /></IconButton>
+      <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
     )}
     {isEditing && (
       <>
