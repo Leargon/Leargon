@@ -86,12 +86,6 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
             if (existingUser.isPresent()) {
                 User user = existingUser.get()
 
-                // Check if user has admin role
-                if (user.roles?.contains('ROLE_ADMIN')) {
-                    LOG.info("Admin user already exists: {}", email)
-                    return
-                }
-
                 // User exists but doesn't have admin role - promote them
                 LOG.info("Promoting existing user to admin: {}", email)
                 user.email = email

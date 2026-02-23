@@ -243,4 +243,41 @@ class AdministratorUserBootstrapSpec extends Specification {
         def user = userRepository.findByIsFallbackAdministrator(true).get()
         user.roles == "ROLE_ADMIN"
     }
+
+    def "should update existing user with new values"() {
+        given: "an existing fallback admin user with empty roles"
+        def existingUser = new User(
+                email: "user@test.com",
+                username: "regularuser",
+                passwordHash: passwordEncoder.encode("password123"),
+                firstName: "Regular",
+                lastName: "User",
+                enabled: true,
+                accountLocked: false,
+                accountExpired: false,
+                passwordExpired: false,
+                roles: "",  // Empty roles
+                isFallbackAdministrator: true  // Must be marked as fallback admin to be found by bootstrap
+        )
+        userRepository.save(existingUser)
+
+        and: "new values given"
+        def bootstrap = new AdministratorUserBootstrap(userRepository, passwordEncoder)
+        bootstrap.adminEmail = Optional.of("admin@test.com")
+        bootstrap.adminUsername = Optional.of("admin")
+        bootstrap.adminPassword = Optional.of("123password")
+        bootstrap.adminFirstName = "First"
+        bootstrap.adminLastName = "Last"
+
+        when: "application starts"
+        bootstrap.onApplicationEvent(null)
+
+        then: "user is updated"
+        def user = userRepository.findByIsFallbackAdministrator(true).get()
+        user.email == "admin@test.com"
+        user.username == "admin"
+        passwordEncoder.matches("123password", user.passwordHash)
+        user.firstName == "First"
+        user.lastName == "Last"
+    }
 }

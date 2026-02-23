@@ -1,7 +1,9 @@
 ![LeargonLogo.png](LeargonLogo.png)
 # 🌌 Léargon
 
-> léargas is Irish for sight, insight, enlightment or visibility
+> Pronounced /'lʲeːɾˠɡɒn/
+> 
+> léargas (pronounced: /'lʲeːɾˠɡəsˠ/) is Irish for sight, insight, enlightment or visibility
 
 ### *The Architect of Process Clarity & Guardian of Data Ontology*
 
