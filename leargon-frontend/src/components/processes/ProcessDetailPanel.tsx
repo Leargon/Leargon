@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -35,6 +35,7 @@ import {
   useGetProcessByKey,
   getGetProcessByKeyQueryKey,
   getGetAllProcessesQueryKey,
+  getGetProcessTreeQueryKey,
   useUpdateProcessNames,
   useUpdateProcessDescriptions,
   useUpdateProcessType,
@@ -109,6 +110,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
 
@@ -132,16 +134,18 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
     queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
   };
 
   // Names & descriptions inline edit
   const namesEdit = useInlineEdit<{ names: LocalizedText[]; descriptions: LocalizedText[] }>({
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: processKey, data: val.names });
-      await updateDescriptions.mutateAsync({ key: processKey, data: val.descriptions });
       const newKey = (response.data as ProcessResponse).key;
+      await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
         navigate(`/processes/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -172,6 +176,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       const newKey = (response.data as ProcessResponse).key;
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
         navigate(`/processes/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -195,15 +200,28 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Cancel all edits when navigating to a different process
+  useEffect(() => {
+    namesEdit.cancel();
+    typeEdit.cancel();
+    ownerEdit.cancel();
+    codeEdit.cancel();
+    domainEdit.cancel();
+    classEdit.cancel();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [processKey]);
+
   const handleDelete = async () => {
     try {
+      setDeleteError('');
       await deleteProcess.mutateAsync({ key: processKey });
       queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
       navigate('/processes');
-    } catch {
-      // handled by React Query
+      setDeleteDialogOpen(false);
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.message || 'Failed to delete process');
     }
-    setDeleteDialogOpen(false);
   };
 
   const handleAddInput = async (entityKey: string) => {
@@ -331,7 +349,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         {ownerEdit.isEditing ? (
           <Box>
             <Autocomplete
-              options={allUsers}
+              options={allUsers.filter((u) => u.enabled)}
               getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
               value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
               onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
@@ -614,16 +632,19 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog open={deleteDialogOpen} onClose={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>
         <DialogTitle>Delete Process</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete "{getLocalizedText(process.names)}"?
           </DialogContentText>
+          {deleteError && <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={deleteProcess.isPending}>
+            {deleteProcess.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

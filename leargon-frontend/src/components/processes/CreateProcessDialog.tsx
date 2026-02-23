@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   useCreateProcess,
   getGetAllProcessesQueryKey,
+  getGetProcessTreeQueryKey,
 } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
@@ -71,6 +72,7 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
       const newKey = (response.data as ProcessResponse).key;
       onClose();
       resetForm();

@@ -356,7 +356,13 @@ class ProcessService {
         List references = elemRepo.findByLinkedProcessId(process.id)
         if (!references.isEmpty()) {
             throw new IllegalArgumentException(
-                    "Cannot delete process: it is referenced in ${references.size()} diagram element(s)")
+                    "Cannot delete process: it is referenced in ${references.size()} diagram element(s). Remove the references first.")
+        }
+
+        // Check if this process has child processes
+        if (process.children && !process.children.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cannot delete process: it has ${process.children.size()} child process(es). Delete or reassign them first.")
         }
 
         processRepository.delete(process)

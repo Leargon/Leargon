@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -149,8 +149,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const namesEdit = useInlineEdit<{ names: LocalizedText[]; descriptions: LocalizedText[] }>({
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: entityKey, data: val.names });
-      await updateDescriptions.mutateAsync({ key: entityKey, data: val.descriptions });
       const newKey = (response.data as BusinessEntityResponse).key;
+      await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== entityKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
         navigate(`/entities/${newKey}`, { replace: true });
@@ -205,6 +205,17 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       invalidate();
     },
   });
+
+  // Cancel all edits when navigating to a different entity
+  useEffect(() => {
+    namesEdit.cancel();
+    ownerEdit.cancel();
+    parentEdit.cancel();
+    domainEdit.cancel();
+    classEdit.cancel();
+    interfacesEdit.cancel();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityKey]);
 
   const handleDelete = async () => {
     try {
@@ -400,7 +411,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         {ownerEdit.isEditing ? (
           <Box>
             <Autocomplete
-              options={allUsers}
+              options={allUsers.filter((u) => u.enabled)}
               getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
               value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
               onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}

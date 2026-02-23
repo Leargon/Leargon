@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -112,8 +112,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const namesEdit = useInlineEdit<{ names: LocalizedText[]; descriptions: LocalizedText[] }>({
     onSave: async (val) => {
       const response = await updateNames.mutateAsync({ key: domainKey, data: val.names });
-      await updateDescriptions.mutateAsync({ key: domainKey, data: val.descriptions });
       const newKey = (response.data as BusinessDomainResponse).key;
+      await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== domainKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
         navigate(`/domains/${newKey}`, { replace: true });
@@ -152,6 +152,15 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       invalidate();
     },
   });
+
+  // Cancel all edits when navigating to a different domain
+  useEffect(() => {
+    namesEdit.cancel();
+    typeEdit.cancel();
+    parentEdit.cancel();
+    classEdit.cancel();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domainKey]);
 
   const handleDelete = async () => {
     try {
