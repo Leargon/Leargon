@@ -51,3 +51,8 @@ BACKEND_URL is used for pointing to the backend domain, do not postfix with /api
 
 ### helm
 This is not yet tested, feel free to try, also feedback is appreciated
+
+### Azure Entra ID
+Scopes requested are: ['openid', 'profile', 'email']
+Redirect URL is the URL entered in the browser, which in this case is <yourdomain>/login
+Azure-URL is computed by "https://login.microsoftonline.com/" + tenant-id
