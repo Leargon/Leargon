@@ -49,6 +49,8 @@ JWT_SECRET is used for creating a JWT token. Use a self-generated secret. The se
 #### frontend
 BACKEND_URL is used for pointing to the backend domain, do not postfix with /api, as the application will do that for you.
 
+The frontend container contains a nginx, which acts as webserver for the frontend, but also routes all /api-paths to the backend container. So you only have to expose the frontend as domain, everything can point to the frontend-container. Feel free to also add a domain to the backend, if you need this.
+
 ### helm
 This is not yet tested, feel free to try, also feedback is appreciated
 
