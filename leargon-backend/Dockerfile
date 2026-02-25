@@ -1,5 +1,5 @@
 # Build stage — use Temurin JDK + Gradle wrapper for version consistency
-FROM eclipse-temurin:25-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
 COPY src src
 
 # Build the application (wrapper downloads Gradle 8.14.3 on first run)
-RUN chmod +x gradlew && ./gradlew clean build --no-daemon -x test
+RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew clean build --no-daemon -x test
 
 # Runtime stage
 FROM eclipse-temurin:25-jre-alpine

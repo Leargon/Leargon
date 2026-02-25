@@ -2,28 +2,28 @@
 
 ## Prerequisites
 - Docker and Docker Compose installed
-- OR: Java 21, Gradle, Node.js 18+, MySQL 8
+Is- OR: Java 21, Gradle, Node.js 24+, MySQL 8
 
 ## Option 1: Docker Compose (Easiest)
 
 ### Start Everything
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### Access the Application
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8081
+- **Backend API**: http://localhost:8081 (direct) or http://localhost:3000/api (via nginx proxy)
 - **Health Check**: http://localhost:8081/health
 
 ### Stop Everything
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Clean Up (Remove Database)
 ```bash
-docker-compose down -v
+docker compose down -v
 ```
 
 ---
@@ -33,7 +33,7 @@ docker-compose down -v
 ### Step 1: Start MySQL
 ```bash
 docker run -d \
-  --names leargon-mysql \
+  --name leargon-mysql \
   -p 3306:3306 \
   -e MYSQL_ROOT_PASSWORD=rootpassword \
   -e MYSQL_DATABASE=leargon \
@@ -102,7 +102,7 @@ curl http://localhost:8081/health
 
 ### Sign Up
 ```bash
-curl -X POST http://localhost:8081/auth/signup \
+curl -X POST http://localhost:8081/authentication/signup \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -134,7 +134,7 @@ Expected response:
 
 ### Login
 ```bash
-curl -X POST http://localhost:8081/auth/login \
+curl -X POST http://localhost:8081/authentication/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -230,11 +230,11 @@ DESCRIBE users;
 ### View Logs
 ```bash
 # Docker Compose logs
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service logs
-docker-compose logs -f backend
-docker-compose logs -f mysql
+docker compose logs -f backend
+docker compose logs -f mysql
 
 # Local development
 # Backend logs appear in terminal
@@ -244,11 +244,11 @@ docker-compose logs -f mysql
 ### Reset Database
 ```bash
 # Docker Compose
-docker-compose down -v
-docker-compose up -d mysql
+docker compose down -v
+docker compose up -d mysql
 
 # Wait for MySQL to be ready, then start backend
-docker-compose up backend
+docker compose up backend
 ```
 
 ---
@@ -290,7 +290,7 @@ docker-compose up backend
    # Generate a secure secret
    openssl rand -base64 32
    ```
-   Update in `application.properties` and `docker-compose.yml`
+   Update in `application.properties` and `docker compose.yml`
 
 2. **Change Database Passwords**
    - Use strong, randomly generated passwords

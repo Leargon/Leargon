@@ -116,7 +116,7 @@ micronaut {
 }
 
 tasks.named("dockerfileNative") {
-    jdkVersion = "25"
+    jdkVersion = "21"
 }
 
 // E2E test source set and task
