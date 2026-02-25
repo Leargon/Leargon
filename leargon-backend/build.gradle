@@ -39,7 +39,7 @@ dependencies {
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
     // JSON support (for version snapshots)
-    implementation("org.apache.groovy:groovy-json:4.0.30")
+    implementation("org.apache.groovy:groovy-json")
 
     // Retry support (for deadlock mitigation)
     implementation("io.micronaut:micronaut-retry")

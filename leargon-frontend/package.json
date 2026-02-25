@@ -14,7 +14,8 @@
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.2.0",
+    "@azure/msal-browser": "^5.3.0",
+    "@azure/msal-react": "^5.0.5",
     "@dagrejs/dagre": "^2.0.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",

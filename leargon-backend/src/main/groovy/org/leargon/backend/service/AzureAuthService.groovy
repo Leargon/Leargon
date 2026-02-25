@@ -35,6 +35,13 @@ class AzureAuthService {
         String givenName = claims.givenName
         String familyName = claims.familyName
 
+        // Fall back to splitting the full 'name' claim when given_name/family_name are absent
+        if (!givenName && !familyName && claims.name) {
+            String[] parts = claims.name.trim().split(" ", 2)
+            givenName = parts[0]
+            familyName = parts.length > 1 ? parts[1] : ""
+        }
+
         // 1. Find by Azure OID (returning user)
         def userRepo = this.userRepository
         Optional<User> byOid = userRepo.findByAzureOid(oid)

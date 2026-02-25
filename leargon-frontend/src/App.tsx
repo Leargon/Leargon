@@ -15,6 +15,7 @@ import ProcessesPage from './pages/ProcessesPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
+import MsalCallback from './pages/MsalCallback';
 
 const theme = createTheme({
   palette: {
@@ -50,6 +51,7 @@ const App: React.FC = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/setup" element={<SetupWizardPage />} />
+                <Route path="/callback" element={<MsalCallback />} />
 
                 {/* Protected routes — inside AppShell */}
                 <Route

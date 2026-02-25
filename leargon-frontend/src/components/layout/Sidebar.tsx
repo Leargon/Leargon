@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Domain Model', path: '/domains', icon: <Category /> },
   { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
   { label: 'Process Map', path: '/processes', icon: <Timeline /> },
+  { label: 'Organisation', path: '/organisation', icon: <CorporateFare /> },
 ];
 
 const Sidebar: React.FC = () => {
@@ -27,9 +28,7 @@ const Sidebar: React.FC = () => {
       }}
     >
       <Box sx={{ p: 2, pb: 1 }}>
-        <Typography variant="h6" fontWeight="bold" sx={{ color: 'white' }}>
-          Léargon
-        </Typography>
+        <Box component="img" src="LeargonIcon.png" sx={{ width: '100%', maxWidth: 160, display: 'block', mx: 'auto' }} />
       </Box>
 
       <List component="nav" sx={{ px: 1, flexGrow: 1 }}>

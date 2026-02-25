@@ -82,7 +82,8 @@ class AzureTokenValidator {
                     email     : email,
                     oid       : oid,
                     givenName : claims.getStringClaim("given_name") ?: "",
-                    familyName: claims.getStringClaim("family_name") ?: ""
+                    familyName: claims.getStringClaim("family_name") ?: "",
+                    name      : claims.getStringClaim("name") ?: ""
             ]
         } catch (AuthenticationException e) {
             throw e

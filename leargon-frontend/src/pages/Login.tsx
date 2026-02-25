@@ -21,7 +21,7 @@ import type { AzureConfigResponse, ErrorResponse } from '../api/generated/model'
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, azureLogin } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +31,6 @@ const Login: React.FC = () => {
   const { data: azureConfigResponse, isPending: azureConfigPending } = useGetAzureConfig();
   const azureConfig = azureConfigResponse?.data as AzureConfigResponse | undefined;
   const azureEnabled = azureConfig?.enabled ?? false;
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setLoading(true);
@@ -55,35 +54,34 @@ const Login: React.FC = () => {
     setError('');
 
     try {
+      sessionStorage.setItem('leargon_msal_config', JSON.stringify({
+        clientId: azureConfig.clientId,
+        tenantId: azureConfig.tenantId,
+      }));
+
       const msalInstance = new PublicClientApplication({
         auth: {
           clientId: azureConfig.clientId,
           authority: `https://login.microsoftonline.com/${azureConfig.tenantId}`,
-          redirectUri: window.location.origin,
+          redirectUri: `${window.location.origin}/callback`,
         },
+        cache: { cacheLocation: 'localStorage' },
       });
 
       await msalInstance.initialize();
-
-      const result = await msalInstance.loginPopup({
-        scopes: ['openid', 'profile', 'email'],
-      });
-
-      await azureLogin(result.idToken);
-      navigate('/');
+      await msalInstance.loginRedirect({ scopes: ['openid', 'profile', 'email'] });
+      // loginRedirect navigates the page away — nothing below this runs
     } catch (err) {
       const axiosError = err as AxiosError<ErrorResponse>;
       if (axiosError.response?.data?.message) {
         setError(axiosError.response.data.message);
-      } else if (err instanceof Error && err.message.includes('user_cancelled')) {
-        // User closed the popup, no error needed
       } else {
         setError('Azure login failed. Please try again.');
+        console.error(err);
       }
-    } finally {
       setLoading(false);
     }
-  }, [azureConfig, azureLogin, navigate]);
+  }, [azureConfig]);
 
   const localLoginForm = (
     <form onSubmit={handleSubmit}>
@@ -137,9 +135,7 @@ const Login: React.FC = () => {
       >
         <Card sx={{ width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom align="center">
-              Login
-            </Typography>
+            <Box component="img" src="LeargonLogo.png" sx={{ width: '100%', maxWidth: 400, display: 'block', mx: 'auto', mb: 2 }} />
             <Typography variant="body2" color="text.secondary" align="center" mb={3}>
               Sign in to your Léargon account
             </Typography>
