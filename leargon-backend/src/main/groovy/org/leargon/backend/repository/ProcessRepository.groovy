@@ -13,6 +13,7 @@ interface ProcessRepository extends JpaRepository<Process, Long> {
     @Join(value = "businessDomain", type = Join.Type.LEFT_FETCH)
     @Join(value = "inputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "outputEntities", type = Join.Type.LEFT_FETCH)
+    @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     List<Process> findAll()
@@ -22,6 +23,7 @@ interface ProcessRepository extends JpaRepository<Process, Long> {
     @Join(value = "businessDomain", type = Join.Type.LEFT_FETCH)
     @Join(value = "inputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "outputEntities", type = Join.Type.LEFT_FETCH)
+    @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     Optional<Process> findByKey(String key)
@@ -32,4 +34,8 @@ interface ProcessRepository extends JpaRepository<Process, Long> {
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     List<Process> findByParentIsNull()
+
+    List<Process> findByProcessOwnerId(Long processOwnerId)
+
+    List<Process> findByExecutingUnitsId(Long organisationalUnitId)
 }

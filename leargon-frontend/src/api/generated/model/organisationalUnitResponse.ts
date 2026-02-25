@@ -16,35 +16,27 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse';
-import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
-import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
-import type { ProcessType } from './processType';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
-export interface ProcessResponse {
-  /** Process key (slug of code or default locale name) */
+export interface OrganisationalUnitResponse {
+  /** Organisational unit key */
   key: string;
   /**
-   * Process code
+   * Type of organisational unit (freetext)
    * @nullable
    */
-  code?: string | null;
-  processType?: ProcessType | null;
-  processOwner: UserSummaryResponse;
+  unitType?: string | null;
+  lead?: UserSummaryResponse;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
-  descriptions: LocalizedText[];
-  businessDomain?: BusinessDomainSummaryResponse;
-  inputEntities?: BusinessEntitySummaryResponse[];
-  outputEntities?: BusinessEntitySummaryResponse[];
-  executingUnits?: OrganisationalUnitSummaryResponse[];
-  classificationAssignments?: ClassificationAssignmentResponse[];
-  parentProcess?: ProcessSummaryResponse;
-  childProcesses?: ProcessSummaryResponse[];
+  descriptions?: LocalizedText[];
+  parents?: OrganisationalUnitSummaryResponse[];
+  children?: OrganisationalUnitSummaryResponse[];
+  /** Processes where this unit is set as an executing unit */
+  executingProcesses?: ProcessSummaryResponse[];
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

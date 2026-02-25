@@ -24,6 +24,7 @@ import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessDiagramRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
+import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
@@ -170,6 +171,12 @@ class ProcessController implements ProcessApi {
     ProcessResponse removeProcessOutput(String key, String entityKey) {
         User currentUser = getCurrentUser()
         return processService.removeOutput(key, entityKey, currentUser)
+    }
+
+    @Override
+    ProcessResponse assignExecutingUnits(String key, @Valid @Body UpdateOrgUnitParentsRequest request) {
+        User currentUser = getCurrentUser()
+        return processService.assignExecutingUnits(key, request.keys, currentUser)
     }
 
     @Override

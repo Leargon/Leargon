@@ -1,0 +1,183 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-organisational-units-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: unit_type
+                  type: VARCHAR(20)
+              - column:
+                  name: names
+                  type: JSON
+              - column:
+                  name: descriptions
+                  type: JSON
+              - column:
+                  name: lead_id
+                  type: BIGINT
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: organisational_units
+            baseColumnNames: lead_id
+            constraintName: fk_organisational_units_lead_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            baseTableName: organisational_units
+            baseColumnNames: created_by_id
+            constraintName: fk_organisational_units_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: RESTRICT
+
+        - createIndex:
+            indexName: idx_organisational_units_lead
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: lead_id
+        - createIndex:
+            indexName: idx_organisational_units_created_by
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: created_by_id
+
+  - changeSet:
+      id: 008-create-organisational-unit-parents-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: organisational_unit_parents
+            columns:
+              - column:
+                  name: unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: organisational_unit_parents
+            columnNames: unit_id, parent_id
+            constraintName: pk_organisational_unit_parents
+
+        - addForeignKeyConstraint:
+            baseTableName: organisational_unit_parents
+            baseColumnNames: unit_id
+            constraintName: fk_org_unit_parents_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: organisational_unit_parents
+            baseColumnNames: parent_id
+            constraintName: fk_org_unit_parents_parent_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_org_unit_parents_unit
+            tableName: organisational_unit_parents
+            columns:
+              - column:
+                  name: unit_id
+        - createIndex:
+            indexName: idx_org_unit_parents_parent
+            tableName: organisational_unit_parents
+            columns:
+              - column:
+                  name: parent_id
+
+  - changeSet:
+      id: 008-create-process-executing-units-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_executing_units
+            columns:
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: organisational_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: process_executing_units
+            columnNames: process_id, organisational_unit_id
+            constraintName: pk_process_executing_units
+
+        - addForeignKeyConstraint:
+            baseTableName: process_executing_units
+            baseColumnNames: process_id
+            constraintName: fk_process_exec_units_process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: process_executing_units
+            baseColumnNames: organisational_unit_id
+            constraintName: fk_process_exec_units_org_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            indexName: idx_process_exec_units_process
+            tableName: process_executing_units
+            columns:
+              - column:
+                  name: process_id
+        - createIndex:
+            indexName: idx_process_exec_units_org_unit
+            tableName: process_executing_units
+            columns:
+              - column:
+                  name: organisational_unit_id

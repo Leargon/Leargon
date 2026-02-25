@@ -47,6 +47,7 @@ import type {
   ProcessTreeResponse,
   ProcessVersionResponse,
   SaveProcessDiagramRequest,
+  UpdateOrgUnitParentsRequest,
   UpdateProcessCodeRequest,
   UpdateProcessOwnerRequest,
   UpdateProcessTypeRequest,
@@ -61,6 +62,102 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Replaces the executing organisational units of a process.
+ * @summary Assign executing units to process
+ */
+export type assignExecutingUnitsResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type assignExecutingUnitsResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type assignExecutingUnitsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type assignExecutingUnitsResponseSuccess = (assignExecutingUnitsResponse200) & {
+  headers: Headers;
+};
+export type assignExecutingUnitsResponseError = (assignExecutingUnitsResponse400 | assignExecutingUnitsResponse401) & {
+  headers: Headers;
+};
+
+export type assignExecutingUnitsResponse = (assignExecutingUnitsResponseSuccess | assignExecutingUnitsResponseError)
+
+export const getAssignExecutingUnitsUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/executing-units`
+}
+
+export const assignExecutingUnits = async (key: string,
+    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options?: RequestInit): Promise<assignExecutingUnitsResponse> => {
+  
+  return customAxios<assignExecutingUnitsResponse>(getAssignExecutingUnitsUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitParentsRequest,)
+  }
+);}
+
+
+
+
+export const getAssignExecutingUnitsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignExecutingUnits>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignExecutingUnits>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext> => {
+
+const mutationKey = ['assignExecutingUnits'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignExecutingUnits>>, {key: string;data: UpdateOrgUnitParentsRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignExecutingUnits(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignExecutingUnitsMutationResult = NonNullable<Awaited<ReturnType<typeof assignExecutingUnits>>>
+    export type AssignExecutingUnitsMutationBody = UpdateOrgUnitParentsRequest
+    export type AssignExecutingUnitsMutationError = ErrorResponse | void
+
+    /**
+ * @summary Assign executing units to process
+ */
+export const useAssignExecutingUnits = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignExecutingUnits>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignExecutingUnits>>,
+        TError,
+        {key: string;data: UpdateOrgUnitParentsRequest},
+        TContext
+      > => {
+      return useMutation(getAssignExecutingUnitsMutationOptions(options), queryClient);
+    }
+    /**
  * Returns a list of all business processes.
  * @summary Get all processes
  */

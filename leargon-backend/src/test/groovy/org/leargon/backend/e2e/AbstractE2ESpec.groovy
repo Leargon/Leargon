@@ -108,6 +108,16 @@ abstract class AbstractE2ESpec extends Specification implements TestPropertyProv
         return response.body()
     }
 
+    /** Create an organisational unit and return the response body as Map. */
+    protected Map createOrgUnit(String token, String name, Map extras = [:]) {
+        def body = [names: [[locale: "en", text: name]]] + extras
+        def response = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", body).bearerAuth(token),
+                Map
+        )
+        return response.body()
+    }
+
     /** Create a classification and return the response body as Map. */
     protected Map createClassification(String token, String name, String assignableTo = "BUSINESS_ENTITY",
                                        List<Map> values = []) {

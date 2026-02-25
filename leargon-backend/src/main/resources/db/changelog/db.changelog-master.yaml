@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changes/006-create-process-tables.yaml
   - include:
       file: db/changelog/changes/007-add-process-diagram-tables.yaml
+  - include:
+      file: db/changelog/changes/008-create-organisational-unit-tables.yaml

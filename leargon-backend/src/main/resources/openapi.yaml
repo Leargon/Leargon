@@ -44,6 +44,8 @@ tags:
   description: Classification management endpoints
 - name: Locale
   description: Supported locales management endpoints
+- name: OrganisationalUnit
+  description: Organisational Unit management endpoints
 - name: Process
   description: Business Process management endpoints
 - name: Setup
@@ -2078,6 +2080,360 @@ paths:
           description: Not authorized (requires ROLE_ADMIN)
         '404':
           description: Locale not found
+  /organisational-units:
+    get:
+      tags:
+      - OrganisationalUnit
+      summary: Get all organisational units
+      description: Returns a flat list of all organisational units.
+      operationId: getAllOrganisationalUnits
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of organisational units
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - OrganisationalUnit
+      summary: Create an organisational unit
+      description: Creates a new organisational unit. Requires ROLE_ADMIN.
+      operationId: createOrganisationalUnit
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganisationalUnitRequest'
+      responses:
+        '201':
+          description: Organisational unit created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/tree:
+    get:
+      tags:
+      - OrganisationalUnit
+      summary: Get organisational unit hierarchy
+      description: Returns organisational units as a hierarchical tree structure.
+      operationId: getOrganisationalUnitTree
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Hierarchical organisational unit tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganisationalUnitTreeResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}:
+    get:
+      tags:
+      - OrganisationalUnit
+      summary: Get organisational unit by key
+      description: Returns detailed information about a specific organisational unit.
+      operationId: getOrganisationalUnitByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Organisational unit details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - OrganisationalUnit
+      summary: Delete organisational unit
+      description: Permanently deletes an organisational unit. Requires ROLE_ADMIN.
+      operationId: deleteOrganisationalUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Organisational unit deleted successfully
+        '403':
+          description: Not authorized
+        '404':
+          description: Organisational unit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/names:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit names
+      description: Replaces the names of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Names updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/descriptions:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit descriptions
+      description: Replaces the descriptions of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Descriptions updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/lead:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit lead
+      description: Updates the lead of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitLead
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitLeadRequest'
+      responses:
+        '200':
+          description: Lead updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/type:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit type
+      description: Updates the type of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitType
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitTypeRequest'
+      responses:
+        '200':
+          description: Type updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/parents:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit parents
+      description: Replaces the parent units of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitParents
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitParentsRequest'
+      responses:
+        '200':
+          description: Parents updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/executing-units:
+    put:
+      tags:
+      - Process
+      summary: Assign executing units to process
+      description: Replaces the executing organisational units of a process.
+      operationId: assignExecutingUnits
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitParentsRequest'
+      responses:
+        '200':
+          description: Executing units updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
   /processes:
     get:
       tags:
@@ -3737,6 +4093,147 @@ components:
           format: password
           description: User's password
           example: password123
+    OrganisationalUnitResponse:
+      type: object
+      required:
+      - key
+      - createdBy
+      - names
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: Organisational unit key
+          example: engineering
+        unitType:
+          type: string
+          nullable: true
+          description: Type of organisational unit (freetext)
+        lead:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+        executingProcesses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
+          description: Processes where this unit is set as an executing unit
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+    OrganisationalUnitTreeResponse:
+      type: object
+      required:
+      - key
+      - names
+      - children
+      properties:
+        key:
+          type: string
+          description: Organisational unit key
+          example: engineering
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        unitType:
+          type: string
+          nullable: true
+          description: Type of organisational unit (freetext)
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganisationalUnitTreeResponse'
+          description: Child organisational units
+    OrganisationalUnitSummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: Organisational unit key
+          example: engineering
+        name:
+          type: string
+          description: Organisational unit name in default locale
+          example: Engineering
+    CreateOrganisationalUnitRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the organisational unit (at least one required)
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the organisational unit
+        unitType:
+          type: string
+          nullable: true
+          description: Type of organisational unit (freetext)
+        leadUsername:
+          type: string
+          nullable: true
+          description: Username of the unit lead
+        parentKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of parent organisational units
+    UpdateOrgUnitLeadRequest:
+      type: object
+      properties:
+        leadUsername:
+          type: string
+          nullable: true
+          description: Username of the new lead (null to remove)
+    UpdateOrgUnitTypeRequest:
+      type: object
+      properties:
+        unitType:
+          type: string
+          nullable: true
+          description: Type of organisational unit (freetext)
+    UpdateOrgUnitParentsRequest:
+      type: object
+      required:
+      - keys
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+          description: Keys of parent organisational units (or executing unit keys for process)
     ProcessResponse:
       type: object
       required:
@@ -3781,6 +4278,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        executingUnits:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
         classificationAssignments:
           type: array
           items:

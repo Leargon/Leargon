@@ -86,8 +86,8 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
             if (existingUser.isPresent()) {
                 User user = existingUser.get()
 
-                // User exists but doesn't have admin role - promote them
-                LOG.info("Promoting existing user to admin: {}", email)
+                // User exists update with new values
+                LOG.info("Updating fallback admin: {}", email)
                 user.email = email
                 user.username = username
                 user.passwordHash = passwordEncoder.encode(password)
@@ -100,7 +100,7 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
                 user.roles = 'ROLE_ADMIN'
                 user.isFallbackAdministrator = true
                 userRepository.update(user)
-                LOG.info("Successfully promoted user {} to admin", email)
+                LOG.info("Successfully updated fallback admin {}", email)
                 return
             }
 

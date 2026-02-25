@@ -7,6 +7,7 @@ import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.LocalizedText
+import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.domain.User
@@ -16,6 +17,7 @@ import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.*
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessElementRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
@@ -29,6 +31,7 @@ class ProcessService {
     private final ProcessVersionRepository processVersionRepository
     private final BusinessEntityRepository businessEntityRepository
     private final BusinessDomainRepository businessDomainRepository
+    private final OrganisationalUnitRepository organisationalUnitRepository
     private final ProcessElementRepository processElementRepository
     private final UserRepository userRepository
     private final LocaleService localeService
@@ -41,6 +44,7 @@ class ProcessService {
             ProcessVersionRepository processVersionRepository,
             BusinessEntityRepository businessEntityRepository,
             BusinessDomainRepository businessDomainRepository,
+            OrganisationalUnitRepository organisationalUnitRepository,
             ProcessElementRepository processElementRepository,
             UserRepository userRepository,
             LocaleService localeService,
@@ -51,6 +55,7 @@ class ProcessService {
         this.processVersionRepository = processVersionRepository
         this.businessEntityRepository = businessEntityRepository
         this.businessDomainRepository = businessDomainRepository
+        this.organisationalUnitRepository = organisationalUnitRepository
         this.processElementRepository = processElementRepository
         this.userRepository = userRepository
         this.localeService = localeService
@@ -341,6 +346,31 @@ class ProcessService {
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE",
                 "Removed output entity '${entityKey}'")
+
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    ProcessResponse assignExecutingUnits(String key, List<String> unitKeys, User currentUser) {
+        Process process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.executingUnits.clear()
+
+        if (unitKeys != null) {
+            def orgUnitRepo = this.organisationalUnitRepository
+            for (String unitKey : unitKeys) {
+                OrganisationalUnit unit = orgUnitRepo.findByKey(unitKey)
+                        .orElseThrow(() -> new ResourceNotFoundException("Organisational unit not found: ${unitKey}"))
+                process.executingUnits.add(unit)
+            }
+        }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE",
+                "Updated executing units")
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)

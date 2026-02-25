@@ -49,12 +49,14 @@ import {
   useRemoveProcessInput,
   useAddProcessOutput,
   useRemoveProcessOutput,
+  useAssignExecutingUnits,
 } from '../../api/generated/process/process';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -72,6 +74,7 @@ import type {
   BusinessDomainResponse,
   BusinessEntityResponse,
   UserResponse,
+  OrganisationalUnitResponse,
 } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
@@ -108,6 +111,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: allUsersResponse } = useGetAllUsers();
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: allOrgUnitsResponse } = useGetAllOrganisationalUnits();
+  const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -130,6 +135,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const removeInput = useRemoveProcessInput();
   const addOutput = useAddProcessOutput();
   const removeOutput = useRemoveProcessOutput();
+  const assignExecUnits = useAssignExecutingUnits();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
@@ -208,6 +214,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     codeEdit.cancel();
     domainEdit.cancel();
     classEdit.cancel();
+    execUnitsEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
 
@@ -243,6 +250,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     await removeOutput.mutateAsync({ key: processKey, entityKey });
     invalidate();
   };
+
+  // Inline edit for executing units
+  const execUnitsEdit = useInlineEdit<string[]>({
+    onSave: async (val) => {
+      await assignExecUnits.mutateAsync({ key: processKey, data: { keys: val } });
+      invalidate();
+    },
+  });
 
   if (isLoading) {
     return (
@@ -475,6 +490,50 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         getLocalizedText={getLocalizedText}
         navigate={navigate}
       />
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Executing Units */}
+      <SectionHeader title="Executing Units" canEdit={isOwnerOrAdmin} isEditing={execUnitsEdit.isEditing}
+        onEdit={() => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || [])}
+        onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving} />
+      <Box sx={{ mb: 2 }}>
+        {execUnitsEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              multiple
+              options={allOrgUnits}
+              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+              value={allOrgUnits.filter((u) => execUnitsEdit.editValue?.includes(u.key))}
+              onChange={(_, newVal) => execUnitsEdit.setEditValue(newVal.map((v) => v.key))}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for units..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.key === value.key}
+              size="small"
+            />
+            {execUnitsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{execUnitsEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <>
+            {process.executingUnits && process.executingUnits.length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {process.executingUnits.map((u) => (
+                  <Chip
+                    key={u.key}
+                    label={u.name || u.key}
+                    size="small"
+                    onClick={() => navigate(`/organisation/${u.key}`)}
+                    clickable
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">None</Typography>
+            )}
+          </>
+        )}
+      </Box>
 
       <Divider sx={{ my: 2 }} />
 

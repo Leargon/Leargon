@@ -13,6 +13,9 @@ import org.leargon.backend.exception.DuplicateResourceException
 import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.UserMapper
+import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
+import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.UserRepository
 import org.leargon.backend.security.PasswordEncoder
 
@@ -26,11 +29,22 @@ import java.time.Instant
 class UserService {
 
     private final UserRepository userRepository
+    private final BusinessEntityRepository businessEntityRepository
+    private final ProcessRepository processRepository
+    private final OrganisationalUnitRepository organisationalUnitRepository
     private final PasswordEncoder passwordEncoder
     private final UserMapper userMapper
 
-    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper) {
+    UserService(UserRepository userRepository,
+                BusinessEntityRepository businessEntityRepository,
+                ProcessRepository processRepository,
+                OrganisationalUnitRepository organisationalUnitRepository,
+                PasswordEncoder passwordEncoder,
+                UserMapper userMapper) {
         this.userRepository = userRepository
+        this.businessEntityRepository = businessEntityRepository
+        this.processRepository = processRepository
+        this.organisationalUnitRepository = organisationalUnitRepository
         this.passwordEncoder = passwordEncoder
         this.userMapper = userMapper
     }
@@ -190,6 +204,25 @@ class UserService {
         // Protect fallback admin from deletion
         if (user.isFallbackAdministrator) {
             throw new ForbiddenOperationException("Cannot delete fallback admin user")
+        }
+
+        // Prevent deletion if user is owner/lead of any active resources
+        def ownedEntities = businessEntityRepository.findByDataOwnerId(userId)
+        if (ownedEntities) {
+            throw new ForbiddenOperationException(
+                    "Cannot delete user who is data owner of ${ownedEntities.size()} business entit${ownedEntities.size() == 1 ? 'y' : 'ies'}. Reassign ownership first.")
+        }
+
+        def ownedProcesses = processRepository.findByProcessOwnerId(userId)
+        if (ownedProcesses) {
+            throw new ForbiddenOperationException(
+                    "Cannot delete user who is process owner of ${ownedProcesses.size()} process${ownedProcesses.size() == 1 ? '' : 'es'}. Reassign ownership first.")
+        }
+
+        def ledUnits = organisationalUnitRepository.findByLeadId(userId)
+        if (ledUnits) {
+            throw new ForbiddenOperationException(
+                    "Cannot delete user who is lead of ${ledUnits.size()} organisational unit${ledUnits.size() == 1 ? '' : 's'}. Reassign lead first.")
         }
 
         // Soft delete — disable the account

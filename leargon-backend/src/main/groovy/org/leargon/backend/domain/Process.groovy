@@ -93,6 +93,13 @@ class Process {
             inverseJoinColumns = @JoinColumn(name = "business_entity_id"))
     Set<BusinessEntity> outputEntities = new HashSet<>()
 
+    @ManyToMany
+    @JoinTable(
+            name = "process_executing_units",
+            joinColumns = @JoinColumn(name = "process_id"),
+            inverseJoinColumns = @JoinColumn(name = "organisational_unit_id"))
+    Set<OrganisationalUnit> executingUnits = new HashSet<>()
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     Instant createdAt

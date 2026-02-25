@@ -1,8 +1,10 @@
 package org.leargon.backend.mapper
 
 import jakarta.inject.Singleton
+import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
+import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.model.ProcessTreeResponse
@@ -32,6 +34,7 @@ class ProcessMapper {
                 .businessDomain(BusinessDomainMapper.toBusinessDomainSummary(process.businessDomain))
                 .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
                 .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
+                .executingUnits(toOrgUnitSummaryList(process.executingUnits))
                 .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
                 .parentProcess(toProcessSummaryResponse(process.parent))
                 .childProcesses(process.children?.collect { toProcessSummaryResponse(it) } ?: [])
@@ -64,6 +67,15 @@ class ProcessMapper {
 
     List<ProcessTreeResponse> toProcessTreeResponses(Collection<Process> processes) {
         return processes.collect { toProcessTreeResponse(it) }.sort { it.key }
+    }
+
+    static List<OrganisationalUnitSummaryResponse> toOrgUnitSummaryList(Collection<OrganisationalUnit> units) {
+        if (units == null) {
+            return []
+        }
+        return units.collect { unit ->
+            new OrganisationalUnitSummaryResponse(unit.key, unit.getName("en"))
+        }
     }
 
     static ProcessType toProcessType(String processType) {

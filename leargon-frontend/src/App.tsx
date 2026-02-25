@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import DomainsPage from './pages/DomainsPage';
 import OntologyPage from './pages/OntologyPage';
 import ProcessesPage from './pages/ProcessesPage';
+import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
@@ -68,6 +69,8 @@ const App: React.FC = () => {
                   <Route path="/entities/:key" element={<OntologyPage />} />
                   <Route path="/processes" element={<ProcessesPage />} />
                   <Route path="/processes/:key" element={<ProcessesPage />} />
+                  <Route path="/organisation" element={<OrganisationPage />} />
+                  <Route path="/organisation/:key" element={<OrganisationPage />} />
                   <Route path="/settings/users" element={<SettingsPage />} />
                   <Route path="/settings/locales" element={<SettingsPage />} />
                   <Route path="/settings/classifications" element={<SettingsPage />} />
