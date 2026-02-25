@@ -1,20 +1,20 @@
-# Build stage
-FROM gradle:8.5-jdk21 AS build
+# Build stage — use Temurin JDK + Gradle wrapper for version consistency
+FROM eclipse-temurin:25-jdk-alpine AS build
 
 WORKDIR /app
 
-# Copy gradle files
-COPY build.gradle settings.gradle gradle.properties ./
+# Copy gradle wrapper and build files
 COPY gradle gradle
+COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
 
 # Copy source code
 COPY src src
 
-# Build the application
-RUN gradle clean build --no-daemon -x test
+# Build the application (wrapper downloads Gradle 8.14.3 on first run)
+RUN chmod +x gradlew && ./gradlew clean build --no-daemon -x test
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 RUN apk upgrade --no-cache
 
