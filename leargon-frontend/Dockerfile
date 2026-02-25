@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -16,7 +16,9 @@ COPY . .
 RUN npm run build
 
 # Runtime stage
-FROM nginx:alpine
+FROM nginx:1-alpine3.21
+
+RUN apk upgrade --no-cache
 
 # Default backend URL
 ENV BACKEND_URL=http://localhost:8080

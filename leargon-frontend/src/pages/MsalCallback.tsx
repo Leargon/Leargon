@@ -67,7 +67,10 @@ const MsalCallback: React.FC = () => {
     return () => {
       if (callbackId) msalInstance.removeEventCallback(callbackId);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // azureLogin and navigate are stable refs (from useAuth context and react-router)
+  // This effect must run exactly once on mount to handle the MSAL redirect
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (error) {
     return (

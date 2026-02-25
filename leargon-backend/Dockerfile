@@ -16,6 +16,8 @@ RUN gradle clean build --no-daemon -x test
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Copy the built jar from build stage

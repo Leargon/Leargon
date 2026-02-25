@@ -71,14 +71,13 @@ const Login: React.FC = () => {
       await msalInstance.initialize();
       await msalInstance.loginRedirect({ scopes: ['openid', 'profile', 'email'] });
       // loginRedirect navigates the page away — nothing below this runs
-    } catch (err) {
-      const axiosError = err as AxiosError<ErrorResponse>;
-      if (axiosError.response?.data?.message) {
-        setError(axiosError.response.data.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Azure login failed. Please try again.');
       } else {
         setError('Azure login failed. Please try again.');
-        console.error(err);
       }
+      console.error(err);
       setLoading(false);
     }
   }, [azureConfig]);

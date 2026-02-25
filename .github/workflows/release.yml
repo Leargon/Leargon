@@ -29,10 +29,10 @@ jobs:
       - name: Build backend Docker image
         run: docker build -t leargon-backend:e2e ./leargon-backend
 
-      - name: Set up Node 22
+      - name: Set up Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: leargon-frontend/package-lock.json
 

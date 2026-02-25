@@ -43,18 +43,17 @@ class AzureAuthService {
         }
 
         // 1. Find by Azure OID (returning user)
-        def userRepo = this.userRepository
-        Optional<User> byOid = userRepo.findByAzureOid(oid)
+        Optional<User> byOid = this.userRepository.findByAzureOid(oid)
         if (byOid.isPresent()) {
             User user = byOid.get()
             user.lastLoginAt = Instant.now()
             if (givenName) user.firstName = givenName
             if (familyName) user.lastName = familyName
-            return userRepo.update(user)
+            return this.userRepository.update(user)
         }
 
         // 2. Find by email (link existing user)
-        Optional<User> byEmail = userRepo.findByEmail(email)
+        Optional<User> byEmail = this.userRepository.findByEmail(email)
         if (byEmail.isPresent()) {
             User user = byEmail.get()
             user.azureOid = oid
@@ -62,7 +61,7 @@ class AzureAuthService {
             user.lastLoginAt = Instant.now()
             if (givenName) user.firstName = givenName
             if (familyName) user.lastName = familyName
-            return userRepo.update(user)
+            return this.userRepository.update(user)
         }
 
         // 3. Create new user
@@ -84,7 +83,7 @@ class AzureAuthService {
         user.setupCompleted = false
         user.preferredLanguage = "en"
         user.lastLoginAt = Instant.now()
-        return userRepo.save(user)
+        return this.userRepository.save(user)
     }
 
     private String generateUsername(String email) {
