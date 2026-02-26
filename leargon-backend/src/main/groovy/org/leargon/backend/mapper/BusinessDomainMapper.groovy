@@ -3,7 +3,6 @@ package org.leargon.backend.mapper
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDomain
 import org.leargon.backend.domain.BusinessDomainVersion
-import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.model.BusinessDomainResponse
 import org.leargon.backend.model.BusinessDomainSummaryResponse
 import org.leargon.backend.model.BusinessDomainTreeResponse

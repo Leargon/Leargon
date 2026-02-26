@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-delete-unused-field-optional-from-classification
+      author: leargon
+      changes:
+        - dropColumn:
+            tableName: classifications
+            columns:
+              - column:
+                  name: optional

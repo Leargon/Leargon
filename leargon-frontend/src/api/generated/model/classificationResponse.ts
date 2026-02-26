@@ -25,8 +25,6 @@ export interface ClassificationResponse {
   /** Classification key (slug) */
   key: string;
   assignableTo: ClassificationAssignableTo;
-  /** Whether this classification is optional */
-  optional: boolean;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];

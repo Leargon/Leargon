@@ -25,7 +25,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   TableHead,
+  Select,
+  MenuItem,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Edit, Check, Close, Delete, ExpandMore, Add } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -40,9 +43,11 @@ import {
   useUpdateOrganisationalUnitParents,
   useDeleteOrganisationalUnit,
   useGetAllOrganisationalUnits,
+  useAssignClassificationsToOrgUnit,
 } from '../../api/generated/organisational-unit/organisational-unit';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
+import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -53,6 +58,8 @@ import type {
   OrganisationalUnitResponse,
   SupportedLocaleResponse,
   UserResponse,
+  ClassificationAssignmentRequest,
+  ClassificationResponse,
 } from '../../api/generated/model';
 
 interface OrgUnitDetailPanelProps {
@@ -75,6 +82,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const allUnits = (allUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: usersResponse } = useGetAllUsers();
   const users = (usersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'ORGANISATIONAL_UNIT' });
+  const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
 
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isLeadOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
@@ -87,6 +96,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const updateType = useUpdateOrganisationalUnitType();
   const updateLead = useUpdateOrganisationalUnitLead();
   const updateParents = useUpdateOrganisationalUnitParents();
+  const assignClassifications = useAssignClassificationsToOrgUnit();
   const deleteUnit = useDeleteOrganisationalUnit();
 
   const invalidate = () => {
@@ -134,12 +144,21 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     },
   });
 
+  // Inline edit for classifications
+  const classEdit = useInlineEdit<ClassificationAssignmentRequest[]>({
+    onSave: async (val) => {
+      await assignClassifications.mutateAsync({ key: unitKey, data: val });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different unit
   useEffect(() => {
     namesEdit.cancel();
     typeEdit.cancel();
     leadEdit.cancel();
     parentsEdit.cancel();
+    classEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unitKey]);
 
@@ -437,6 +456,60 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <Divider sx={{ my: 2 }} />
         </>
       )}
+
+      {/* Classifications */}
+      <SectionHeader title="Classifications" canEdit={isLeadOrAdmin} isEditing={classEdit.isEditing}
+        onEdit={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({
+          classificationKey: a.classificationKey, valueKey: a.valueKey,
+        })) || [])}
+        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving} />
+      {classEdit.isEditing && classEdit.editValue ? (
+        <Box sx={{ mb: 2 }}>
+          {availableClassifications.map((c) => {
+            const currentValue = classEdit.editValue!.find((a) => a.classificationKey === c.key)?.valueKey || '';
+            return (
+              <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                <Select value={currentValue} onChange={(e: SelectChangeEvent) => {
+                  const newAssignments = classEdit.editValue!.filter((a) => a.classificationKey !== c.key);
+                  if (e.target.value) newAssignments.push({ classificationKey: c.key, valueKey: e.target.value });
+                  classEdit.setEditValue(newAssignments);
+                }} size="small" displayEmpty sx={{ minWidth: 150 }}>
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  {c.values?.map((v) => (
+                    <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
+                  ))}
+                </Select>
+              </Box>
+            );
+          })}
+          {availableClassifications.length === 0 && (
+            <Typography variant="body2" color="text.secondary">No classifications configured for organisational units</Typography>
+          )}
+          {classEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{classEdit.error}</Alert>}
+        </Box>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          {availableClassifications.length > 0 ? availableClassifications.map((c) => {
+            const assignment = unit.classificationAssignments?.find((a) => a.classificationKey === c.key);
+            const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
+            return (
+              <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                {value ? (
+                  <Chip label={getLocalizedText(value.names, value.key)} size="small" />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">—</Typography>
+                )}
+              </Box>
+            );
+          }) : (
+            <Typography variant="body2" color="text.secondary">No classifications configured</Typography>
+          )}
+        </Box>
+      )}
+
+      <Divider sx={{ my: 2 }} />
 
       {/* Metadata */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>

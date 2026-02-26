@@ -39,9 +39,6 @@ class Classification {
     @Column(name = "descriptions", columnDefinition = "TEXT")
     List<LocalizedText> descriptions = new ArrayList<>()
 
-    @Column(name = "optional")
-    Boolean optional = true
-
     @Column(name = "assignable_to", nullable = false, length = 20)
     String assignableTo
 

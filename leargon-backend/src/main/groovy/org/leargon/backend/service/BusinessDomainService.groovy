@@ -60,11 +60,6 @@ class BusinessDomainService {
         return getBusinessDomainTree().collect { m.toBusinessDomainTreeResponse(it) }
     }
 
-    BusinessDomain getBusinessDomainById(Long id) {
-        return businessDomainRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("BusinessDomain not found"))
-    }
-
     BusinessDomain getBusinessDomainByKey(String key) {
         return businessDomainRepository.findByKey(key)
                 .orElseThrow(() -> new ResourceNotFoundException("BusinessDomain not found"))
@@ -202,7 +197,7 @@ class BusinessDomainService {
     }
 
     @Transactional
-    void deleteBusinessDomain(String domainKey, User currentUser) {
+    void deleteBusinessDomain(String domainKey) {
         BusinessDomain domain = getBusinessDomainByKey(domainKey)
 
         // Detach children — set parent=null and recompute keys

@@ -9,6 +9,11 @@ import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.leargon.backend.domain.SupportedLocale
+import org.leargon.backend.model.ClassificationAssignableTo
+import org.leargon.backend.model.ClassificationAssignmentRequest
+import org.leargon.backend.model.ClassificationResponse
+import org.leargon.backend.model.CreateClassificationRequest
+import org.leargon.backend.model.CreateClassificationValueRequest
 import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
@@ -18,6 +23,8 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
+import org.leargon.backend.repository.ClassificationRepository
+import org.leargon.backend.repository.ClassificationValueRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
@@ -37,6 +44,12 @@ class OrganisationalUnitControllerSpec extends Specification {
     OrganisationalUnitRepository organisationalUnitRepository
 
     @Inject
+    ClassificationRepository classificationRepository
+
+    @Inject
+    ClassificationValueRepository classificationValueRepository
+
+    @Inject
     SupportedLocaleRepository localeRepository
 
     def setup() {
@@ -53,6 +66,8 @@ class OrganisationalUnitControllerSpec extends Specification {
             }
         }
         organisationalUnitRepository.deleteAll()
+        classificationValueRepository.deleteAll()
+        classificationRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -682,5 +697,224 @@ class OrganisationalUnitControllerSpec extends Specification {
         then: "forbidden exception is thrown"
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
+    // CLASSIFICATION TESTS
+    // =====================
+
+    def "PUT /organisational-units/{key}/classifications should assign classifications when admin"() {
+        given: "an admin user, an org unit, and a classification"
+        String adminToken = createAdminToken()
+
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", new CreateOrganisationalUnitRequest([new LocalizedText("en", "Classifiable Unit")]))
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        String unitKey = unitResponse.body().key
+
+        def classifResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Risk Level")],
+                                ClassificationAssignableTo.ORGANISATIONAL_UNIT
+                        )).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+        String classifKey = classifResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classifKey}/values",
+                        new CreateClassificationValueRequest("low", [new LocalizedText("en", "Low")])
+                ).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+
+        when: "assigning classification to org unit"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications",
+                        [new ClassificationAssignmentRequest(classifKey, "low")]
+                ).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then: "assignment is successful"
+        response.status == HttpStatus.OK
+        def body = response.body()
+        body.classificationAssignments != null
+        body.classificationAssignments.size() == 1
+        body.classificationAssignments[0].classificationKey == classifKey
+        body.classificationAssignments[0].valueKey == "low"
+    }
+
+    def "PUT /organisational-units/{key}/classifications should allow lead to assign"() {
+        given: "an admin creates a unit with a lead, and a classification"
+        String adminToken = createAdminToken()
+        def leadData = createUserWithToken("lead@example.com", "leaduser")
+
+        def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Classifiable")])
+        createRequest.leadUsername = "leaduser"
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", createRequest)
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        String unitKey = unitResponse.body().key
+
+        def classifResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Compliance")],
+                                ClassificationAssignableTo.ORGANISATIONAL_UNIT
+                        )).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+        String classifKey = classifResponse.body().key
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classifKey}/values",
+                        new CreateClassificationValueRequest("yes", [new LocalizedText("en", "Yes")])
+                ).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+
+        when: "lead assigns classification"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications",
+                        [new ClassificationAssignmentRequest(classifKey, "yes")]
+                ).bearerAuth(leadData.token),
+                OrganisationalUnitResponse
+        )
+
+        then: "assignment is successful"
+        response.status == HttpStatus.OK
+        response.body().classificationAssignments.size() == 1
+    }
+
+    def "PUT /organisational-units/{key}/classifications should return 403 for non-admin non-lead"() {
+        given: "an admin creates a unit and a classification"
+        String adminToken = createAdminToken()
+        def userData = createUserWithToken("user@example.com", "user")
+
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", new CreateOrganisationalUnitRequest([new LocalizedText("en", "Forbidden Unit")]))
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        String unitKey = unitResponse.body().key
+
+        def classifResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Forbidden Class")],
+                                ClassificationAssignableTo.ORGANISATIONAL_UNIT
+                        )).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+        String classifKey = classifResponse.body().key
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classifKey}/values",
+                        new CreateClassificationValueRequest("v1", [new LocalizedText("en", "V1")])
+                ).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+
+        when: "non-admin non-lead tries to assign"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications",
+                        [new ClassificationAssignmentRequest(classifKey, "v1")]
+                ).bearerAuth(userData.token),
+                OrganisationalUnitResponse
+        )
+
+        then: "forbidden exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /organisational-units/{key}/classifications should return 400 for wrong assignable type"() {
+        given: "an admin creates a unit and a BUSINESS_ENTITY classification"
+        String adminToken = createAdminToken()
+
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", new CreateOrganisationalUnitRequest([new LocalizedText("en", "Type Check Unit")]))
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        String unitKey = unitResponse.body().key
+
+        def classifResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Entity Only Class")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+        String classifKey = classifResponse.body().key
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classifKey}/values",
+                        new CreateClassificationValueRequest("v1", [new LocalizedText("en", "V1")])
+                ).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+
+        when: "trying to assign entity classification to org unit"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications",
+                        [new ClassificationAssignmentRequest(classifKey, "v1")]
+                ).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then: "bad request exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.BAD_REQUEST
+    }
+
+    def "PUT /organisational-units/{key}/classifications should clear assignments when empty list sent"() {
+        given: "an admin creates a unit with an existing classification"
+        String adminToken = createAdminToken()
+
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", new CreateOrganisationalUnitRequest([new LocalizedText("en", "Clear Unit")]))
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        String unitKey = unitResponse.body().key
+
+        def classifResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Clearable Class")],
+                                ClassificationAssignableTo.ORGANISATIONAL_UNIT
+                        )).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+        String classifKey = classifResponse.body().key
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classifKey}/values",
+                        new CreateClassificationValueRequest("v1", [new LocalizedText("en", "V1")])
+                ).bearerAuth(adminToken),
+                ClassificationResponse
+        )
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications",
+                        [new ClassificationAssignmentRequest(classifKey, "v1")]
+                ).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        when: "sending empty classification list"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/classifications", [])
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then: "assignments are cleared"
+        response.status == HttpStatus.OK
+        response.body().classificationAssignments == null || response.body().classificationAssignments.isEmpty()
     }
 }

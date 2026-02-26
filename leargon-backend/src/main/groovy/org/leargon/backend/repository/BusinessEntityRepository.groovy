@@ -44,7 +44,5 @@ interface BusinessEntityRepository extends JpaRepository<BusinessEntity, Long> {
 
     List<BusinessEntity> findByDataOwnerId(Long dataOwnerId)
 
-    List<BusinessEntity> findByBusinessDomainId(Long domainId)
-
     List<BusinessEntity> findByParentIsNull()
 }

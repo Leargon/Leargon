@@ -123,7 +123,7 @@ class ClassificationControllerSpec extends Specification {
         and: "a create request"
         def request = new CreateClassificationRequest(
                 [new LocalizedText("en", "Sensitivity")],
-                ClassificationAssignableTo.ENTITY
+                ClassificationAssignableTo.BUSINESS_ENTITY
         ).descriptions([new LocalizedText("en", "Data sensitivity level")])
 
         when: "creating a classification"
@@ -138,8 +138,7 @@ class ClassificationControllerSpec extends Specification {
         and: "classification is created correctly"
         def body = response.body()
         body.key == "sensitivity"
-        body.assignableTo == ClassificationAssignableTo.ENTITY
-        body.optional == true
+        body.assignableTo == ClassificationAssignableTo.BUSINESS_ENTITY
         body.names.size() == 1
         body.names[0].text == "Sensitivity"
         body.descriptions.size() == 1
@@ -153,7 +152,7 @@ class ClassificationControllerSpec extends Specification {
         and: "a create request"
         def request = new CreateClassificationRequest(
                 [new LocalizedText("en", "Sensitivity")],
-                ClassificationAssignableTo.ENTITY
+                ClassificationAssignableTo.BUSINESS_ENTITY
         )
 
         when: "creating a classification"
@@ -175,7 +174,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -184,7 +183,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Criticality")],
-                                ClassificationAssignableTo.DOMAIN
+                                ClassificationAssignableTo.BUSINESS_DOMAIN
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -207,7 +206,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -216,7 +215,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Criticality")],
-                                ClassificationAssignableTo.DOMAIN
+                                ClassificationAssignableTo.BUSINESS_DOMAIN
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -240,7 +239,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -274,7 +273,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -285,7 +284,6 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.PUT("/classifications/${key}",
                         new UpdateClassificationRequest()
                                 .names([new LocalizedText("en", "Data Sensitivity")])
-                                .optional(false)
                 ).bearerAuth(token),
                 ClassificationResponse
         )
@@ -293,7 +291,6 @@ class ClassificationControllerSpec extends Specification {
         then: "classification is updated"
         def body = updateResponse.body()
         body.key == "data-sensitivity"
-        body.optional == false
         body.names[0].text == "Data Sensitivity"
     }
 
@@ -305,7 +302,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -343,7 +340,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -374,7 +371,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -408,7 +405,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -443,7 +440,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -484,7 +481,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -531,7 +528,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Domain Type")],
-                                ClassificationAssignableTo.DOMAIN
+                                ClassificationAssignableTo.BUSINESS_DOMAIN
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -574,7 +571,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -626,7 +623,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Criticality")],
-                                ClassificationAssignableTo.DOMAIN
+                                ClassificationAssignableTo.BUSINESS_DOMAIN
                         )).bearerAuth(token),
                 ClassificationResponse
         )
@@ -671,7 +668,7 @@ class ClassificationControllerSpec extends Specification {
                 HttpRequest.POST("/classifications",
                         new CreateClassificationRequest(
                                 [new LocalizedText("en", "Sensitivity")],
-                                ClassificationAssignableTo.ENTITY
+                                ClassificationAssignableTo.BUSINESS_ENTITY
                         )).bearerAuth(token),
                 ClassificationResponse
         )

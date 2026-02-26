@@ -50,6 +50,10 @@ class OrganisationalUnit {
     @Column(name = "descriptions", columnDefinition = "TEXT")
     List<LocalizedText> descriptions = new ArrayList<>()
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "classification_assignments", columnDefinition = "TEXT")
+    List<ClassificationAssignment> classificationAssignments = new ArrayList<>()
+
     @ManyToMany
     @JoinTable(
             name = "organisational_unit_parents",

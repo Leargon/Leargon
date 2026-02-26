@@ -356,7 +356,7 @@ class BusinessDomainServiceSpec extends Specification {
         def domain = domainService.createBusinessDomain(request, admin)
 
         when: "deleting BusinessDomain"
-        domainService.deleteBusinessDomain(domain.key, admin)
+        domainService.deleteBusinessDomain(domain.key)
 
         and: "trying to get the BusinessDomain"
         domainService.getBusinessDomainByKey(domain.key)
@@ -375,7 +375,7 @@ class BusinessDomainServiceSpec extends Specification {
         def child = domainService.createBusinessDomain(childRequest, admin)
 
         when: "deleting parent"
-        domainService.deleteBusinessDomain(parent.key, admin)
+        domainService.deleteBusinessDomain(parent.key)
 
         then: "child still exists but has no parent"
         def updatedChild = domainService.getBusinessDomainByKey("child")
@@ -389,7 +389,7 @@ class BusinessDomainServiceSpec extends Specification {
         def admin = createAdminUser("admin@example.com", "admin")
 
         when: "deleting non-existent businessDomain"
-        domainService.deleteBusinessDomain("non-existent-key", admin)
+        domainService.deleteBusinessDomain("non-existent-key")
 
         then: "ResourceNotFoundException is thrown"
         thrown(ResourceNotFoundException)

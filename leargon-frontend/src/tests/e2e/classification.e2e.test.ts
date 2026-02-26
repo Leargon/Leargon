@@ -8,6 +8,7 @@ import {
   createEntity,
   createDomain,
   createProcess,
+  createOrgUnit,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { ClassificationResponse } from '@/api/generated/model/classificationResponse';
@@ -253,6 +254,51 @@ describe('Classification E2E', () => {
     );
     expect(res.status).toBe(200);
     expect(res.data.classificationAssignments.length).toBe(1);
+  });
+
+  it('should create classification (ORGANISATIONAL_UNIT)', async () => {
+    const classif = await createClassification(
+      adminClient,
+      'FE Org Unit Classification',
+      'ORGANISATIONAL_UNIT',
+      [{ key: 'val1', names: [{ locale: 'en', text: 'Value 1' }] }],
+    );
+    expect(classif.assignableTo).toBe('ORGANISATIONAL_UNIT');
+  });
+
+  it('should assign classification to organisational unit', async () => {
+    const classif = await createClassification(
+      adminClient,
+      'FE Assign Org Unit Class',
+      'ORGANISATIONAL_UNIT',
+      [{ key: 'low', names: [{ locale: 'en', text: 'Low' }] }],
+    );
+    const unit = await createOrgUnit(adminClient, 'FE Assignable Org Unit');
+
+    const res = await adminClient.put(
+      `/organisational-units/${unit.key}/classifications`,
+      [{ classificationKey: classif.key, valueKey: 'low' }],
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.classificationAssignments.length).toBe(1);
+    expect(res.data.classificationAssignments[0].classificationKey).toBe(classif.key);
+    expect(res.data.classificationAssignments[0].valueKey).toBe('low');
+  });
+
+  it('should reject assigning entity classification to organisational unit', async () => {
+    const classif = await createClassification(
+      adminClient,
+      'FE Entity-Only Class For Org',
+      'BUSINESS_ENTITY',
+      [{ key: 'v1', names: [{ locale: 'en', text: 'V1' }] }],
+    );
+    const unit = await createOrgUnit(adminClient, 'FE Wrong Type Org Unit');
+
+    const res = await adminClient.put(
+      `/organisational-units/${unit.key}/classifications`,
+      [{ classificationKey: classif.key, valueKey: 'v1' }],
+    );
+    expect(res.status).toBe(400);
   });
 
   // =====================

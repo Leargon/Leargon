@@ -28,6 +28,7 @@ class OrganisationalUnitMapper {
                 .parents(toSummaryList(unit.parents))
                 .children(toSummaryList(unit.children))
                 .executingProcesses(toProcessSummaryList(executingProcesses))
+                .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
     }
 
     static List<ProcessSummaryResponse> toProcessSummaryList(List<Process> processes) {

@@ -36,6 +36,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ClassificationAssignmentRequest,
   CreateOrganisationalUnitRequest,
   ErrorResponse,
   LocalizedText,
@@ -1085,5 +1086,111 @@ export const useUpdateOrganisationalUnitParents = <TError = ErrorResponse | void
         TContext
       > => {
       return useMutation(getUpdateOrganisationalUnitParentsMutationOptions(options), queryClient);
+    }
+    /**
+ * Replaces all classification assignments for an organisational unit. Requires being the unit lead or ROLE_ADMIN.
+ * @summary Assign classifications to organisational unit
+ */
+export type assignClassificationsToOrgUnitResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type assignClassificationsToOrgUnitResponse400 = {
+  data: void
+  status: 400
+}
+
+export type assignClassificationsToOrgUnitResponse401 = {
+  data: void
+  status: 401
+}
+
+export type assignClassificationsToOrgUnitResponse403 = {
+  data: void
+  status: 403
+}
+
+export type assignClassificationsToOrgUnitResponse404 = {
+  data: void
+  status: 404
+}
+
+export type assignClassificationsToOrgUnitResponseSuccess = (assignClassificationsToOrgUnitResponse200) & {
+  headers: Headers;
+};
+export type assignClassificationsToOrgUnitResponseError = (assignClassificationsToOrgUnitResponse400 | assignClassificationsToOrgUnitResponse401 | assignClassificationsToOrgUnitResponse403 | assignClassificationsToOrgUnitResponse404) & {
+  headers: Headers;
+};
+
+export type assignClassificationsToOrgUnitResponse = (assignClassificationsToOrgUnitResponseSuccess | assignClassificationsToOrgUnitResponseError)
+
+export const getAssignClassificationsToOrgUnitUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/classifications`
+}
+
+export const assignClassificationsToOrgUnit = async (key: string,
+    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: RequestInit): Promise<assignClassificationsToOrgUnitResponse> => {
+  
+  return customAxios<assignClassificationsToOrgUnitResponse>(getAssignClassificationsToOrgUnitUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      classificationAssignmentRequest,)
+  }
+);}
+
+
+
+
+export const getAssignClassificationsToOrgUnitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
+
+const mutationKey = ['assignClassificationsToOrgUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignClassificationsToOrgUnit(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignClassificationsToOrgUnitMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>>
+    export type AssignClassificationsToOrgUnitMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToOrgUnitMutationError = void
+
+    /**
+ * @summary Assign classifications to organisational unit
+ */
+export const useAssignClassificationsToOrgUnit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>,
+        TError,
+        {key: string;data: ClassificationAssignmentRequest[]},
+        TContext
+      > => {
+      return useMutation(getAssignClassificationsToOrgUnitMutationOptions(options), queryClient);
     }
     

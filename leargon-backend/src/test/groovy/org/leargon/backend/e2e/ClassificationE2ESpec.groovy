@@ -21,7 +21,6 @@ class ClassificationE2ESpec extends AbstractE2ESpec {
                         names       : [[locale: "en", text: "Data Sensitivity"]],
                         descriptions: [[locale: "en", text: "Data sensitivity levels"]],
                         assignableTo: "BUSINESS_ENTITY",
-                        optional    : true,
                         values      : [
                                 [key: "public", names: [[locale: "en", text: "Public"]]],
                                 [key: "internal", names: [[locale: "en", text: "Internal"]]],
@@ -173,8 +172,7 @@ class ClassificationE2ESpec extends AbstractE2ESpec {
                         ],
                         descriptions: [
                                 [locale: "en", text: "Updated description"]
-                        ],
-                        optional    : false
+                        ]
                 ]).bearerAuth(adminToken),
                 Map
         )
@@ -351,8 +349,7 @@ class ClassificationE2ESpec extends AbstractE2ESpec {
         when: "2. Update classification"
         client.toBlocking().exchange(
                 HttpRequest.PUT("/classifications/${classif.key}", [
-                        names   : [[locale: "en", text: "Updated LC Class"]],
-                        optional: false
+                        names   : [[locale: "en", text: "Updated LC Class"]]
                 ]).bearerAuth(adminToken), Map
         )
 

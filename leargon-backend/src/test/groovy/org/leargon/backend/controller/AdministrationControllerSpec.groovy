@@ -59,6 +59,104 @@ class AdministrationControllerSpec extends Specification {
         return signupResponse.body().accessToken
     }
 
+    def "POST /administration/users should create user and return 201"() {
+        given: "an admin token"
+        String adminToken = createAdminToken()
+
+        and: "a signup request"
+        def signupRequest = new SignupRequest("newuser@example.com", "newuser", "password123", "New", "User")
+
+        when: "creating user"
+        def response = client.toBlocking().exchange(
+                HttpRequest.POST("/administration/users", signupRequest)
+                        .bearerAuth(adminToken),
+                UserResponse
+        )
+
+        then: "response is 201 Created"
+        response.status == HttpStatus.CREATED
+
+        and: "user details are returned"
+        def created = response.body()
+        created.email == "newuser@example.com"
+        created.username == "newuser"
+        created.firstName == "New"
+        created.lastName == "User"
+        created.enabled == true
+    }
+
+    def "POST /administration/users should return 409 for duplicate email"() {
+        given: "an admin token and an existing user"
+        String adminToken = createAdminToken()
+
+        and: "a request with the same email"
+        def signupRequest = new SignupRequest("admin@example.com", "anotherusername", "password123", "Another", "User")
+
+        when: "creating user with duplicate email"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/administration/users", signupRequest)
+                        .bearerAuth(adminToken),
+                UserResponse
+        )
+
+        then: "conflict exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.CONFLICT
+    }
+
+    def "POST /administration/users should return 409 for duplicate username"() {
+        given: "an admin token and an existing user"
+        String adminToken = createAdminToken()
+
+        and: "a request with the same username"
+        def signupRequest = new SignupRequest("different@example.com", "admin", "password123", "Another", "User")
+
+        when: "creating user with duplicate username"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/administration/users", signupRequest)
+                        .bearerAuth(adminToken),
+                UserResponse
+        )
+
+        then: "conflict exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.CONFLICT
+    }
+
+    def "POST /administration/users should return 401 without token"() {
+        given: "a signup request"
+        def signupRequest = new SignupRequest("newuser@example.com", "newuser", "password123", "New", "User")
+
+        when: "creating user without token"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/administration/users", signupRequest),
+                UserResponse
+        )
+
+        then: "unauthorized exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.UNAUTHORIZED
+    }
+
+    def "POST /administration/users should return 403 with regular user token"() {
+        given: "a regular user token"
+        String regularToken = createRegularUserToken()
+
+        and: "a signup request"
+        def signupRequest = new SignupRequest("newuser@example.com", "newuser", "password123", "New", "User")
+
+        when: "creating user with regular token"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/administration/users", signupRequest)
+                        .bearerAuth(regularToken),
+                UserResponse
+        )
+
+        then: "forbidden exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
     def "GET /administration/users should return all users with admin token"() {
         given: "an admin token"
         String adminToken = createAdminToken()

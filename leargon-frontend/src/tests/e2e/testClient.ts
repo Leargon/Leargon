@@ -6,6 +6,7 @@ import type { CreateProcessRequest } from '@/api/generated/model/createProcessRe
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 import type { BusinessDomainResponse } from '@/api/generated/model/businessDomainResponse';
 import type { ClassificationResponse } from '@/api/generated/model/classificationResponse';
+import type { OrganisationalUnitResponse } from '@/api/generated/model/organisationalUnitResponse';
 import type { UserResponse } from '@/api/generated/model/userResponse';
 
 export function createClient(baseURL: string): AxiosInstance {
@@ -126,7 +127,6 @@ export async function createClassification(
   const body = {
     names: [{ locale: 'en', text: name }],
     assignableTo,
-    optional: true,
   };
   const res = await client.post<ClassificationResponse>('/classifications', body);
   if (res.status !== 201) {
@@ -150,6 +150,22 @@ export async function createClassification(
     return getRes.data;
   }
 
+  return res.data;
+}
+
+export async function createOrgUnit(
+  client: AxiosInstance,
+  name: string,
+  extras?: Record<string, unknown>,
+): Promise<OrganisationalUnitResponse> {
+  const body = {
+    names: [{ locale: 'en', text: name }],
+    ...extras,
+  };
+  const res = await client.post<OrganisationalUnitResponse>('/organisational-units', body);
+  if (res.status !== 201) {
+    throw new ApiError(res.status, res.data);
+  }
   return res.data;
 }
 

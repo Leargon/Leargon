@@ -76,18 +76,6 @@ class BusinessEntityService {
         return getAllBusinessEntities().collect { m.toBusinessEntityResponse(it) }
     }
 
-    /**
-     * Get an  entity by ID.
-     *
-     * @param id BusinessEntity ID
-     * @return BusinessEntity
-     * @throws ResourceNotFoundException if entity not found
-     */
-    BusinessEntity getBusinessEntityById(Long id) {
-        return businessEntityRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("BusinessEntity not found"))
-    }
-
     BusinessEntity getBusinessEntityByKey(String key) {
         return businessEntityRepository.findByKey(key)
                 .orElseThrow(() -> new ResourceNotFoundException("BusinessEntity not found"))

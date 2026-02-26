@@ -43,8 +43,8 @@ import {
   useAdministrationChangePassword,
   useLockUser,
   useUnlockUser,
+  useCreateUser,
 } from '../../api/generated/administration/administration';
-import { useSignup } from '../../api/generated/authentication/authentication';
 import type { UserResponse, UpdateUserRequest } from '../../api/generated/model';
 import { useAuth } from '../../context/AuthContext';
 
@@ -59,7 +59,7 @@ const UsersTab: React.FC = () => {
   const changePasswordMutation = useAdministrationChangePassword();
   const lockUserMutation = useLockUser();
   const unlockUserMutation = useUnlockUser();
-  const signupMutation = useSignup();
+  const createUserMutation = useCreateUser();
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -206,7 +206,7 @@ const UsersTab: React.FC = () => {
     }
     try {
       setError('');
-      await signupMutation.mutateAsync({ data: createForm });
+      await createUserMutation.mutateAsync({ data: createForm });
       setSuccess(`User "${createForm.username}" created`);
       setCreateDialogOpen(false);
       setCreateForm({ email: '', username: '', password: '', firstName: '', lastName: '' });
@@ -393,8 +393,8 @@ const UsersTab: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreateUser} variant="contained" disabled={signupMutation.isPending}>
-            {signupMutation.isPending ? 'Creating...' : 'Create'}
+          <Button onClick={handleCreateUser} variant="contained" disabled={createUserMutation.isPending}>
+            {createUserMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>

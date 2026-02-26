@@ -37,6 +37,7 @@ import type {
 
 import type {
   AdministrationChangePasswordRequest,
+  SignupRequest,
   UpdateUserRequest,
   UserResponse
 } from '.././model';
@@ -172,6 +173,106 @@ export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, 
 
 
 /**
+ * Creates a new local user account. Works even when Azure authentication is configured. Requires ROLE_ADMIN.
+ * @summary Create a new user
+ */
+export type createUserResponse201 = {
+  data: UserResponse
+  status: 201
+}
+
+export type createUserResponse401 = {
+  data: void
+  status: 401
+}
+
+export type createUserResponse403 = {
+  data: void
+  status: 403
+}
+
+export type createUserResponse409 = {
+  data: void
+  status: 409
+}
+
+export type createUserResponseSuccess = (createUserResponse201) & {
+  headers: Headers;
+};
+export type createUserResponseError = (createUserResponse401 | createUserResponse403 | createUserResponse409) & {
+  headers: Headers;
+};
+
+export type createUserResponse = (createUserResponseSuccess | createUserResponseError)
+
+export const getCreateUserUrl = () => {
+
+
+  
+
+  return `/administration/users`
+}
+
+export const createUser = async (signupRequest: SignupRequest, options?: RequestInit): Promise<createUserResponse> => {
+  
+  return customAxios<createUserResponse>(getCreateUserUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signupRequest,)
+  }
+);}
+
+
+
+
+export const getCreateUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext> => {
+
+const mutationKey = ['createUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUser>>, {data: SignupRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createUser(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof createUser>>>
+    export type CreateUserMutationBody = SignupRequest
+    export type CreateUserMutationError = void
+
+    /**
+ * @summary Create a new user
+ */
+export const useCreateUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createUser>>,
+        TError,
+        {data: SignupRequest},
+        TContext
+      > => {
+      return useMutation(getCreateUserMutationOptions(options), queryClient);
+    }
+    /**
  * Returns detailed information about a specific user. Requires ROLE_ADMIN.
  * @summary Get user by ID
  */

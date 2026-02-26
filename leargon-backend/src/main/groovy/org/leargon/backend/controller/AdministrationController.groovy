@@ -8,6 +8,7 @@ import jakarta.validation.Valid
 import org.leargon.backend.api.AdministrationApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.model.AdministrationChangePasswordRequest
+import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.service.UserService
@@ -23,6 +24,20 @@ class AdministrationController implements AdministrationApi {
 
     AdministrationController(UserService userService) {
         this.userService = userService
+    }
+
+    /**
+     * Create a new local user account.
+     * Works even when Azure authentication is configured.
+     *
+     * @param signupRequest User creation request
+     * @return Created user details
+     */
+    @Override
+    @Secured("ROLE_ADMIN")
+    HttpResponse<UserResponse> createUser(@Valid @Body SignupRequest signupRequest) {
+        User user = userService.createUser(signupRequest)
+        return HttpResponse.created(userService.toUserResponse(user))
     }
 
     /**

@@ -28,10 +28,6 @@ interface ProcessRepository extends JpaRepository<Process, Long> {
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     Optional<Process> findByKey(String key)
 
-    Optional<Process> findByCode(String code)
-
-    List<Process> findByParentId(Long parentId)
-
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     List<Process> findByParentIsNull()
 

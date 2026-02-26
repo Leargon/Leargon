@@ -28,6 +28,4 @@ export interface CreateClassificationRequest {
   /** Descriptions for the classification */
   descriptions?: LocalizedText[];
   assignableTo: ClassificationAssignableTo;
-  /** Whether this classification is optional (default true) */
-  optional?: boolean;
 }

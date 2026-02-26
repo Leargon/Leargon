@@ -18,8 +18,6 @@ import {
   TextField,
   Select,
   MenuItem,
-  FormControlLabel,
-  Switch,
   Tooltip,
   Divider,
 } from '@mui/material';
@@ -70,7 +68,7 @@ const ClassificationsTab: React.FC = () => {
   const [newNames, setNewNames] = useState<LocalizedText[]>([]);
   const [newDescriptions, setNewDescriptions] = useState<LocalizedText[]>([]);
   const [newAssignableTo, setNewAssignableTo] = useState<ClassificationAssignableTo>('BUSINESS_ENTITY');
-  const [newOptional, setNewOptional] = useState(true);
+
 
   // Create value dialog
   const [createValueOpen, setCreateValueOpen] = useState(false);
@@ -107,7 +105,6 @@ const ClassificationsTab: React.FC = () => {
           names: newNames.filter((n) => n.text.trim()),
           descriptions: newDescriptions.filter((d) => d.text.trim()),
           assignableTo: newAssignableTo,
-          optional: newOptional,
         },
       });
       setSuccess('Classification created');
@@ -123,7 +120,6 @@ const ClassificationsTab: React.FC = () => {
     setNewNames([]);
     setNewDescriptions([]);
     setNewAssignableTo('BUSINESS_ENTITY');
-    setNewOptional(true);
   };
 
   const handleDeleteClassification = async (key: string) => {
@@ -216,7 +212,6 @@ const ClassificationsTab: React.FC = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
                       <Chip label={c.assignableTo.replace('BUSINESS_', '')} size="small" variant="outlined" />
-                      <Chip label={c.optional ? 'Optional' : 'Required'} size="small" color={c.optional ? 'default' : 'warning'} variant="outlined" />
                       <Chip label={`${(c.values ?? []).length} values`} size="small" variant="outlined" />
                     </Box>
                   </Box>
@@ -293,11 +288,9 @@ const ClassificationsTab: React.FC = () => {
             >
               <MenuItem value="BUSINESS_ENTITY">Business Entity</MenuItem>
               <MenuItem value="BUSINESS_DOMAIN">Business Domain</MenuItem>
+              <MenuItem value="BUSINESS_PROCESS">Business Process</MenuItem>
+              <MenuItem value="ORGANISATIONAL_UNIT">Organisational Unit</MenuItem>
             </Select>
-            <FormControlLabel
-              control={<Switch checked={newOptional} onChange={(e) => setNewOptional(e.target.checked)} />}
-              label="Optional"
-            />
           </Box>
         </DialogContent>
         <DialogActions>

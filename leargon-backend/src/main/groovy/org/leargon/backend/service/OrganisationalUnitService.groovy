@@ -109,7 +109,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    OrganisationalUnitResponse updateNames(String key, List<org.leargon.backend.model.LocalizedText> names, User currentUser) {
+    OrganisationalUnitResponse updateNames(String key, List<org.leargon.backend.model.LocalizedText> names) {
         OrganisationalUnit unit = getByKey(key)
 
         validateTranslations(names)
@@ -129,7 +129,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    OrganisationalUnitResponse updateDescriptions(String key, List<org.leargon.backend.model.LocalizedText> descriptions, User currentUser) {
+    OrganisationalUnitResponse updateDescriptions(String key, List<org.leargon.backend.model.LocalizedText> descriptions) {
         OrganisationalUnit unit = getByKey(key)
 
         validateTranslations(descriptions, false)
@@ -143,7 +143,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    OrganisationalUnitResponse updateLead(String key, String leadUsername, User currentUser) {
+    OrganisationalUnitResponse updateLead(String key, String leadUsername) {
         OrganisationalUnit unit = getByKey(key)
 
         if (leadUsername != null) {
@@ -158,7 +158,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    OrganisationalUnitResponse updateType(String key, String unitType, User currentUser) {
+    OrganisationalUnitResponse updateType(String key, String unitType) {
         OrganisationalUnit unit = getByKey(key)
         unit.unitType = unitType
         unit = organisationalUnitRepository.update(unit)
@@ -166,7 +166,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    OrganisationalUnitResponse updateParents(String key, List<String> parentKeys, User currentUser) {
+    OrganisationalUnitResponse updateParents(String key, List<String> parentKeys) {
         OrganisationalUnit unit = getByKey(key)
 
         unit.parents.clear()
@@ -188,7 +188,7 @@ class OrganisationalUnitService {
     }
 
     @Transactional
-    void delete(String key, User currentUser) {
+    void delete(String key) {
         OrganisationalUnit unit = getByKey(key)
         organisationalUnitRepository.delete(unit)
     }

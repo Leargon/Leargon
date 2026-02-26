@@ -20,6 +20,7 @@ import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.ClassificationRepository
 import org.leargon.backend.repository.ClassificationValueRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.util.SlugUtil
 
@@ -31,6 +32,7 @@ class ClassificationService {
     private final BusinessEntityRepository businessEntityRepository
     private final BusinessDomainRepository businessDomainRepository
     private final ProcessRepository processRepository
+    private final OrganisationalUnitRepository organisationalUnitRepository
     private final BusinessEntityService businessEntityService
     private final LocaleService localeService
     private final ClassificationMapper classificationMapper
@@ -41,6 +43,7 @@ class ClassificationService {
             BusinessEntityRepository businessEntityRepository,
             BusinessDomainRepository businessDomainRepository,
             ProcessRepository processRepository,
+            OrganisationalUnitRepository organisationalUnitRepository,
             BusinessEntityService businessEntityService,
             LocaleService localeService,
             ClassificationMapper classificationMapper
@@ -50,6 +53,7 @@ class ClassificationService {
         this.businessEntityRepository = businessEntityRepository
         this.businessDomainRepository = businessDomainRepository
         this.processRepository = processRepository
+        this.organisationalUnitRepository = organisationalUnitRepository
         this.businessEntityService = businessEntityService
         this.localeService = localeService
         this.classificationMapper = classificationMapper
@@ -89,7 +93,6 @@ class ClassificationService {
         Classification classification = new Classification()
         classification.createdBy = currentUser
         classification.assignableTo = request.assignableTo.value
-        classification.optional = request.optional != null ? request.optional : true
 
         classification.names = request.names.collect { input ->
             new LocalizedText(input.locale, input.text)
@@ -135,10 +138,6 @@ class ClassificationService {
             }
         }
 
-        if (request.optional != null) {
-            classification.optional = request.optional
-        }
-
         classification = classificationRepository.update(classification)
         return classificationMapper.toClassificationResponse(classification)
     }
@@ -152,6 +151,7 @@ class ClassificationService {
         def entityRepo = this.businessEntityRepository
         def domainRepo = this.businessDomainRepository
         def processRepo = this.processRepository
+        def orgUnitRepo = this.organisationalUnitRepository
 
         // Remove assignments from entities
         def entities = entityRepo.findAll()
@@ -177,6 +177,15 @@ class ClassificationService {
             if (process.classificationAssignments?.any { it.classificationKey == key }) {
                 process.classificationAssignments = process.classificationAssignments.findAll { it.classificationKey != key }
                 processRepo.update(process)
+            }
+        }
+
+        // Remove assignments from organisational units
+        def orgUnits = orgUnitRepo.findAll()
+        orgUnits.each { unit ->
+            if (unit.classificationAssignments?.any { it.classificationKey == key }) {
+                unit.classificationAssignments = unit.classificationAssignments.findAll { it.classificationKey != key }
+                orgUnitRepo.update(unit)
             }
         }
 
@@ -259,6 +268,7 @@ class ClassificationService {
         def entityRepo = this.businessEntityRepository
         def domainRepo = this.businessDomainRepository
         def processRepo = this.processRepository
+        def orgUnitRepo = this.organisationalUnitRepository
 
         // Remove assignments referencing this value from entities
         def entities = entityRepo.findAll()
@@ -290,6 +300,17 @@ class ClassificationService {
                     !(it.classificationKey == classificationKey && it.valueKey == valueKey)
                 }
                 processRepo.update(process)
+            }
+        }
+
+        // Remove assignments referencing this value from organisational units
+        def orgUnits = orgUnitRepo.findAll()
+        orgUnits.each { unit ->
+            if (unit.classificationAssignments?.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
+                unit.classificationAssignments = unit.classificationAssignments.findAll {
+                    !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                }
+                orgUnitRepo.update(unit)
             }
         }
 
@@ -356,6 +377,27 @@ class ClassificationService {
             new ClassificationAssignment(it.classificationKey, it.valueKey)
         }
         processRepo.update(process)
+    }
+
+    @Transactional
+    void assignClassificationsToOrgUnit(String orgUnitKey, List<ClassificationAssignmentRequest> assignments, User currentUser) {
+        def orgUnitRepo = this.organisationalUnitRepository
+        def unit = orgUnitRepo.findByKey(orgUnitKey)
+                .orElseThrow(() -> new ResourceNotFoundException("OrganisationalUnit not found"))
+
+        // Check permission - lead or admin
+        boolean isLead = unit.lead?.id == currentUser.id
+        boolean isAdmin = currentUser.roles?.contains("ROLE_ADMIN")
+        if (!isLead && !isAdmin) {
+            throw new ForbiddenOperationException("Only the lead or an admin can assign classifications")
+        }
+
+        validateAssignments(assignments, "ORGANISATIONAL_UNIT")
+
+        unit.classificationAssignments = assignments.collect {
+            new org.leargon.backend.domain.ClassificationAssignment(it.classificationKey, it.valueKey)
+        }
+        orgUnitRepo.update(unit)
     }
 
     private void validateAssignments(List<ClassificationAssignmentRequest> assignments, String expectedAssignableTo) {

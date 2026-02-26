@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-add-classification-assignments-to-org-units
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: classification_assignments
+                  type: TEXT

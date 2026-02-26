@@ -130,15 +130,6 @@ class UserService {
     }
 
     /**
-     * Get all users (admin only).
-     *
-     * @return List of all users
-     */
-    List<User> getAllUsers() {
-        return userRepository.findAll() as List<User>
-    }
-
-    /**
      * Get all users as response DTOs (admin only).
      *
      * @return List of all users as UserResponse DTOs
@@ -228,17 +219,6 @@ class UserService {
         // Soft delete — disable the account
         user.enabled = false
         return userRepository.update(user)
-    }
-
-    /**
-     * Check if user has a specific role.
-     *
-     * @param user User to check
-     * @param role Role to check for (e.g., "ROLE_ADMIN")
-     * @return true if user has the role, false otherwise
-     */
-    boolean hasRole(User user, String role) {
-        return user.roles?.split(',')?.contains(role) ?: false
     }
 
     /**

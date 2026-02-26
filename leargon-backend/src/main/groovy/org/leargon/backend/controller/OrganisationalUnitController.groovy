@@ -14,6 +14,7 @@ import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.OrganisationalUnitMapper
+import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.OrganisationalUnitResponse
@@ -21,6 +22,7 @@ import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
+import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
 import org.leargon.backend.service.UserService
 
@@ -29,17 +31,20 @@ import org.leargon.backend.service.UserService
 class OrganisationalUnitController implements OrganisationalUnitApi {
 
     private final OrganisationalUnitService organisationalUnitService
+    private final ClassificationService classificationService
     private final UserService userService
     private final SecurityService securityService
     private final OrganisationalUnitMapper organisationalUnitMapper
 
     OrganisationalUnitController(
             OrganisationalUnitService organisationalUnitService,
+            ClassificationService classificationService,
             UserService userService,
             SecurityService securityService,
             OrganisationalUnitMapper organisationalUnitMapper
     ) {
         this.organisationalUnitService = organisationalUnitService
+        this.classificationService = classificationService
         this.userService = userService
         this.securityService = securityService
         this.organisationalUnitMapper = organisationalUnitMapper
@@ -78,7 +83,7 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
 
-        organisationalUnitService.delete(key, currentUser)
+        organisationalUnitService.delete(key)
         return HttpResponse.noContent()
     }
 
@@ -90,7 +95,7 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         User currentUser = getCurrentUser()
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateNames(key, names, currentUser)
+        return organisationalUnitService.updateNames(key, names)
     }
 
     @Override
@@ -101,7 +106,7 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         User currentUser = getCurrentUser()
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateDescriptions(key, descriptions, currentUser)
+        return organisationalUnitService.updateDescriptions(key, descriptions)
     }
 
     @Override
@@ -112,7 +117,7 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         User currentUser = getCurrentUser()
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateLead(key, request.leadUsername, currentUser)
+        return organisationalUnitService.updateLead(key, request.leadUsername)
     }
 
     @Override
@@ -123,7 +128,7 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         User currentUser = getCurrentUser()
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateType(key, request.unitType, currentUser)
+        return organisationalUnitService.updateType(key, request.unitType)
     }
 
     @Override
@@ -134,7 +139,17 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
         User currentUser = getCurrentUser()
         OrganisationalUnit unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateParents(key, request.keys, currentUser)
+        return organisationalUnitService.updateParents(key, request.keys)
+    }
+
+    @Override
+    OrganisationalUnitResponse assignClassificationsToOrgUnit(
+            String key,
+            @Valid @Body List<ClassificationAssignmentRequest> classificationAssignmentRequest
+    ) {
+        User currentUser = getCurrentUser()
+        classificationService.assignClassificationsToOrgUnit(key, classificationAssignmentRequest, currentUser)
+        return organisationalUnitService.getByKeyAsResponse(key)
     }
 
     private User getCurrentUser() {
@@ -142,12 +157,6 @@ class OrganisationalUnitController implements OrganisationalUnitApi {
                 .orElseThrow(() -> new ResourceNotFoundException("User not authenticated"))
         return userService.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"))
-    }
-
-    private static void checkAdministratorRole(User user) {
-        if (!user.roles?.contains("ROLE_ADMIN")) {
-            throw new ForbiddenOperationException("This operation requires admin privileges")
-        }
     }
 
     private static void checkEditPermission(OrganisationalUnit unit, User currentUser) {

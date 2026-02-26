@@ -23,6 +23,4 @@ export interface UpdateClassificationRequest {
   names?: LocalizedText[];
   /** Updated descriptions */
   descriptions?: LocalizedText[];
-  /** Whether this classification is optional */
-  optional?: boolean;
 }

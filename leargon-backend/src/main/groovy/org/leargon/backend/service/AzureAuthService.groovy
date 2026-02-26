@@ -6,7 +6,6 @@ import jakarta.transaction.Transactional
 import org.leargon.backend.domain.User
 import org.leargon.backend.repository.UserRepository
 import org.leargon.backend.security.AzureTokenValidator
-import org.leargon.backend.security.PasswordEncoder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

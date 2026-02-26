@@ -401,7 +401,7 @@ export function useGetClassificationByKey<TData = Awaited<ReturnType<typeof getC
 
 
 /**
- * Updates a classification's names, descriptions, and optional flag. AssignableTo is immutable. Requires ROLE_ADMIN.
+ * Updates a classification's names, and descriptions. AssignableTo is immutable. Requires ROLE_ADMIN.
  * @summary Update classification
  */
 export type updateClassificationResponse200 = {

@@ -33,8 +33,4 @@ interface BusinessDomainRepository extends JpaRepository<BusinessDomain, Long> {
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "assignedEntities", type = Join.Type.LEFT_FETCH)
     Optional<BusinessDomain> findByKey(String key)
-
-    List<BusinessDomain> findByParentId(Long parentId)
-
-    boolean existsByParentId(Long parentId)
 }

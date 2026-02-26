@@ -20,7 +20,6 @@ class ClassificationMapper {
         return new ClassificationResponse(
                 classification.key,
                 ClassificationAssignableTo.fromValue(classification.assignableTo),
-                classification.optional,
                 UserMapper.toUserSummary(classification.createdBy),
                 LocalizedTextMapper.toModel(classification.names),
                 toClassificationValueResponses(classification.values),

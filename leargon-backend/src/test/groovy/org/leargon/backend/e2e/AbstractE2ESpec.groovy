@@ -124,7 +124,6 @@ abstract class AbstractE2ESpec extends Specification implements TestPropertyProv
         def body = [
                 names       : [[locale: "en", text: name]],
                 assignableTo: assignableTo,
-                optional    : true,
                 values      : values
         ]
         def response = client.toBlocking().exchange(

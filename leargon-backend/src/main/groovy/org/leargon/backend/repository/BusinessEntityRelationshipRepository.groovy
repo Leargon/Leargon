@@ -11,8 +11,4 @@ interface BusinessEntityRelationshipRepository extends JpaRepository<BusinessEnt
     @Join(value = "firstBusinessEntity", type = Join.Type.FETCH)
     @Join(value = "secondBusinessEntity", type = Join.Type.FETCH)
     Optional<BusinessEntityRelationship> findById(Long id)
-
-    @Join(value = "firstBusinessEntity", type = Join.Type.FETCH)
-    @Join(value = "secondBusinessEntity", type = Join.Type.FETCH)
-    List<BusinessEntityRelationship> findByFirstBusinessEntityIdOrSecondBusinessEntityId(Long firstId, Long secondId)
 }

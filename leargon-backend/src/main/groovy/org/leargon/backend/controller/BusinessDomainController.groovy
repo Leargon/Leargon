@@ -92,7 +92,7 @@ class BusinessDomainController implements BusinessDomainApi {
         User currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
 
-        businessDomainService.deleteBusinessDomain(key, currentUser)
+        businessDomainService.deleteBusinessDomain(key)
         return HttpResponse.noContent()
     }
 

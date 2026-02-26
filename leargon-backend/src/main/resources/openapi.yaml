@@ -75,6 +75,33 @@ paths:
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
+    post:
+      tags:
+      - Administration
+      summary: Create a new user
+      description: Creates a new local user account. Works even when Azure authentication is configured. Requires ROLE_ADMIN.
+      operationId: createUser
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+        '409':
+          description: Email or username already exists
   /administration/users/{id}:
     get:
       tags:
@@ -1742,8 +1769,7 @@ paths:
       tags:
       - Classification
       summary: Update classification
-      description: Updates a classification's names, descriptions, and optional flag. AssignableTo is immutable. Requires
-        ROLE_ADMIN.
+      description: Updates a classification's names, and descriptions. AssignableTo is immutable. Requires ROLE_ADMIN.
       operationId: updateClassification
       security:
       - bearerAuth: []
@@ -2395,6 +2421,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/classifications:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Assign classifications to organisational unit
+      description: Replaces all classification assignments for an organisational unit. Requires being the unit lead or ROLE_ADMIN.
+      operationId: assignClassificationsToOrgUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClassificationAssignmentRequest'
+      responses:
+        '200':
+          description: Classifications assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid classification assignment
+        '403':
+          description: Not the unit lead or admin
+        '404':
+          description: Organisational unit not found
         '401':
           description: Not authenticated
   /processes/{key}/executing-units:
@@ -3661,6 +3726,7 @@ components:
       - BUSINESS_DOMAIN
       - BUSINESS_ENTITY
       - BUSINESS_PROCESS
+      - ORGANISATIONAL_UNIT
     ClassificationAssignmentRequest:
       type: object
       required:
@@ -3690,7 +3756,6 @@ components:
       required:
       - key
       - assignableTo
-      - optional
       - createdBy
       - names
       - values
@@ -3703,10 +3768,6 @@ components:
           example: sensitivity
         assignableTo:
           $ref: '#/components/schemas/ClassificationAssignableTo'
-        optional:
-          type: boolean
-          description: Whether this classification is optional
-          example: true
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -3859,9 +3920,6 @@ components:
           description: Descriptions for the classification
         assignableTo:
           $ref: '#/components/schemas/ClassificationAssignableTo'
-        optional:
-          type: boolean
-          description: Whether this classification is optional (default true)
     CreateClassificationValueRequest:
       type: object
       required:
@@ -4135,6 +4193,11 @@ components:
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
           description: Processes where this unit is set as an executing unit
+        classificationAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+          description: Classification assignments for this organisational unit
         createdAt:
           type: string
           format: date-time
@@ -4683,9 +4746,6 @@ components:
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Updated descriptions
-        optional:
-          type: boolean
-          description: Whether this classification is optional
     UpdateClassificationValueRequest:
       type: object
       properties:

@@ -16,6 +16,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
@@ -37,6 +38,8 @@ export interface OrganisationalUnitResponse {
   children?: OrganisationalUnitSummaryResponse[];
   /** Processes where this unit is set as an executing unit */
   executingProcesses?: ProcessSummaryResponse[];
+  /** Classification assignments for this organisational unit */
+  classificationAssignments?: ClassificationAssignmentResponse[];
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */
