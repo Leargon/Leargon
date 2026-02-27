@@ -82,7 +82,7 @@ test.describe('Business Process CRUD — Owner', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete their business process', async ({ page }) => {

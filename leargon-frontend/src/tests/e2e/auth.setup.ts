@@ -22,6 +22,12 @@ setup('authenticate as admin', async ({ page }) => {
 
   const { accessToken, user } = await res.json() as { accessToken: string; user: unknown };
 
+  // Complete first-time setup (the fallback admin starts with setupCompleted=false)
+  await fetch(`${backendUrl}/setup/complete`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
   // Navigate to the app so we can set localStorage on the right origin
   await page.goto('http://localhost:5173/login');
 

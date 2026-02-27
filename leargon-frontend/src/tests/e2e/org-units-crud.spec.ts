@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createOrgUnit, uid, OWNER } from './api-setup';
+import { createOrgUnit, uid, ADMIN, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -65,8 +65,8 @@ test.describe('Organisational Unit CRUD — Lead', () => {
   let unitKey: string;
 
   test.beforeEach(async () => {
-    // Create org unit as OWNER — creator automatically becomes lead
-    const unit = await createOrgUnit(uid('PW Lead OrgUnit'), OWNER);
+    // Root org units require admin. Create as admin with e2eowner as lead.
+    const unit = await createOrgUnit(uid('PW Lead OrgUnit'), ADMIN, 'e2eowner');
     unitKey = unit.key as string;
   });
 
