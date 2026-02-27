@@ -91,66 +91,6 @@ class AuthenticationServiceSpec extends Specification {
         exception.message == "Account is disabled"
     }
 
-    def "should throw exception when account is locked"() {
-        given: "a registered user"
-        def signupRequest = new SignupRequest("locked@example.com", "locked", "password123", "Locked", "User")
-        def user = userService.createUser(signupRequest)
-
-        and: "user account is locked"
-        user.accountLocked = true
-        userRepository.update(user)
-
-        and: "valid login credentials"
-        def loginRequest = new LoginRequest("locked@example.com", "password123")
-
-        when: "attempting to authenticate"
-        authenticationService.authenticate(loginRequest)
-
-        then: "AuthenticationException is thrown"
-        def exception = thrown(AuthenticationException)
-        exception.message == "Account is locked"
-    }
-
-    def "should throw exception when account is expired"() {
-        given: "a registered user"
-        def signupRequest = new SignupRequest("expired@example.com", "expired", "password123", "Expired", "User")
-        def user = userService.createUser(signupRequest)
-
-        and: "user account is expired"
-        user.accountExpired = true
-        userRepository.update(user)
-
-        and: "valid login credentials"
-        def loginRequest = new LoginRequest("expired@example.com", "password123")
-
-        when: "attempting to authenticate"
-        authenticationService.authenticate(loginRequest)
-
-        then: "AuthenticationException is thrown"
-        def exception = thrown(AuthenticationException)
-        exception.message == "Account is expired"
-    }
-
-    def "should throw exception when password is expired"() {
-        given: "a registered user"
-        def signupRequest = new SignupRequest("passexpired@example.com", "passexpired", "password123", "PassExpired", "User")
-        def user = userService.createUser(signupRequest)
-
-        and: "user password is expired"
-        user.passwordExpired = true
-        userRepository.update(user)
-
-        and: "valid login credentials"
-        def loginRequest = new LoginRequest("passexpired@example.com", "password123")
-
-        when: "attempting to authenticate"
-        authenticationService.authenticate(loginRequest)
-
-        then: "AuthenticationException is thrown"
-        def exception = thrown(AuthenticationException)
-        exception.message == "Password is expired"
-    }
-
     def "should authenticate multiple users independently"() {
         given: "multiple registered users"
         def users = [

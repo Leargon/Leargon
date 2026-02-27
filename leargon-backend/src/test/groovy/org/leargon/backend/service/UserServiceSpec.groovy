@@ -45,9 +45,6 @@ class UserServiceSpec extends Specification {
         user.firstName == "John"
         user.lastName == "Doe"
         user.enabled == true
-        user.accountLocked == false
-        user.accountExpired == false
-        user.passwordExpired == false
         user.createdAt != null
         user.updatedAt != null
 

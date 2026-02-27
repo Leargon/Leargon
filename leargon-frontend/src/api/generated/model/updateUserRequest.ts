@@ -46,12 +46,6 @@ export interface UpdateUserRequest {
   preferredLanguage?: string;
   /** Account enabled status */
   enabled?: boolean;
-  /** Account locked status */
-  accountLocked?: boolean;
-  /** Account expired status */
-  accountExpired?: boolean;
-  /** Password expired status */
-  passwordExpired?: boolean;
   /** User roles */
   roles?: UpdateUserRequestRolesItem[];
 }

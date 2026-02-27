@@ -74,9 +74,6 @@ class UserService {
         User user = userMapper.toUser(request)
         user.passwordHash = passwordEncoder.encode(request.password)
         user.enabled = true
-        user.accountLocked = false
-        user.accountExpired = false
-        user.passwordExpired = false
 
         return userRepository.save(user)
     }

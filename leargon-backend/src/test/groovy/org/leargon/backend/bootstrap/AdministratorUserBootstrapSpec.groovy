@@ -44,7 +44,6 @@ class AdministratorUserBootstrapSpec extends Specification {
         user.get().firstName == "Test"
         user.get().lastName == "Admin"
         user.get().enabled == true
-        user.get().accountLocked == false
     }
 
     def "should skip when environment variables are not set"() {
@@ -98,9 +97,6 @@ class AdministratorUserBootstrapSpec extends Specification {
                 firstName: "Existing",
                 lastName: "Admin",
                 enabled: true,
-                accountLocked: false,
-                accountExpired: false,
-                passwordExpired: false,
                 roles: "ROLE_USER,ROLE_ADMIN"
         )
         userRepository.save(existingUser)
@@ -132,9 +128,6 @@ class AdministratorUserBootstrapSpec extends Specification {
                 firstName: "Regular",
                 lastName: "User",
                 enabled: true,
-                accountLocked: false,
-                accountExpired: false,
-                passwordExpired: false,
                 roles: "ROLE_USER",  // No admin role
                 isFallbackAdministrator: true  // Must be marked as fallback admin to be found by bootstrap
         )
@@ -222,9 +215,6 @@ class AdministratorUserBootstrapSpec extends Specification {
                 firstName: "Regular",
                 lastName: "User",
                 enabled: true,
-                accountLocked: false,
-                accountExpired: false,
-                passwordExpired: false,
                 roles: "",  // Empty roles
                 isFallbackAdministrator: true  // Must be marked as fallback admin to be found by bootstrap
         )
@@ -253,9 +243,6 @@ class AdministratorUserBootstrapSpec extends Specification {
                 firstName: "Regular",
                 lastName: "User",
                 enabled: true,
-                accountLocked: false,
-                accountExpired: false,
-                passwordExpired: false,
                 roles: "",  // Empty roles
                 isFallbackAdministrator: true  // Must be marked as fallback admin to be found by bootstrap
         )

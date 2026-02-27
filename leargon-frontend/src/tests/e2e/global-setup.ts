@@ -1,9 +1,27 @@
+import { spawn, type ChildProcess } from 'node:child_process';
 import { GenericContainer, Network, Wait } from 'testcontainers';
 import { MySqlContainer } from '@testcontainers/mysql';
 
-let teardownFn: (() => Promise<void>) | undefined;
+const FRONTEND_URL = 'http://localhost:5173';
+const FRONTEND_STARTUP_TIMEOUT = 60_000;
 
-export async function setup() {
+async function waitForFrontend(): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < FRONTEND_STARTUP_TIMEOUT) {
+    try {
+      const res = await fetch(FRONTEND_URL);
+      if (res.ok || res.status < 500) {
+        return;
+      }
+    } catch {
+      // Not ready yet
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error(`Frontend at ${FRONTEND_URL} did not become ready within ${FRONTEND_STARTUP_TIMEOUT}ms`);
+}
+
+export default async function globalSetup(): Promise<() => Promise<void>> {
   console.log('[E2E] Creating Docker network...');
   const network = await new Network().start();
 
@@ -42,15 +60,36 @@ export async function setup() {
 
   process.env.E2E_BACKEND_URL = backendUrl;
 
-  teardownFn = async () => {
+  console.log('[E2E] Starting Vite dev server...');
+  const viteProcess: ChildProcess = spawn('npm', ['run', 'dev'], {
+    cwd: process.cwd(),
+    shell: true,
+    env: {
+      ...process.env,
+      VITE_BACKEND_URL: backendUrl,
+    },
+    stdio: 'pipe',
+  });
+
+  viteProcess.stdout?.on('data', (data: Buffer) => {
+    process.stdout.write(`[vite] ${data}`);
+  });
+  viteProcess.stderr?.on('data', (data: Buffer) => {
+    process.stderr.write(`[vite] ${data}`);
+  });
+
+  console.log('[E2E] Waiting for frontend to become ready...');
+  await waitForFrontend();
+  console.log('[E2E] Frontend ready at', FRONTEND_URL);
+
+  return async () => {
+    console.log('[E2E] Stopping Vite dev server...');
+    viteProcess.kill('SIGTERM');
+
     console.log('[E2E] Stopping containers...');
     await backend.stop();
     await mysql.stop();
     await network.stop();
     console.log('[E2E] Cleanup complete.');
   };
-}
-
-export async function teardown() {
-  await teardownFn?.();
 }

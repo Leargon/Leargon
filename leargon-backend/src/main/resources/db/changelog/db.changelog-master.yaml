@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changes/009-delete-unused-field-optional-from-classification.yaml
   - include:
       file: db/changelog/changes/010-add-classification-assignments-to-org-units.yaml
+  - include:
+      file: db/changelog/changes/011-remove-account-status-fields-from-users.yaml

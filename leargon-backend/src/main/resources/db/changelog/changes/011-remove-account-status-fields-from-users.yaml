@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-remove-account-status-fields-from-users
+      author: leargon
+      comment: Remove accountLocked, accountExpired and passwordExpired columns from users table — they had no application logic and accountLocked duplicated the enabled flag.
+      changes:
+        - dropColumn:
+            tableName: users
+            columnName: account_locked
+        - dropColumn:
+            tableName: users
+            columnName: account_expired
+        - dropColumn:
+            tableName: users
+            columnName: password_expired

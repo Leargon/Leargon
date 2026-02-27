@@ -355,50 +355,6 @@ class AdministrationControllerSpec extends Specification {
         !disabledUser.enabled
     }
 
-    def "POST /administration/users/{id}/lock should lock user account"() {
-        given: "an admin token and a user"
-        String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
-        def user = userRepository.findByEmail("regular@example.com").get()
-
-        when: "locking user account"
-        def response = client.toBlocking().exchange(
-                HttpRequest.POST("/administration/users/${user.id}/lock", "")
-                        .bearerAuth(adminToken),
-                UserResponse
-        )
-
-        then: "response is successful"
-        response.status == HttpStatus.OK
-
-        and: "account is locked"
-        response.body().accountLocked == true
-    }
-
-    def "POST /administration/users/{id}/unlock should unlock user account"() {
-        given: "an admin token and a locked user"
-        String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
-        def user = userRepository.findByEmail("regular@example.com").get()
-
-        // Lock the user first
-        user.accountLocked = true
-        userRepository.update(user)
-
-        when: "unlocking user account"
-        def response = client.toBlocking().exchange(
-                HttpRequest.POST("/administration/users/${user.id}/unlock", "")
-                        .bearerAuth(adminToken),
-                UserResponse
-        )
-
-        then: "response is successful"
-        response.status == HttpStatus.OK
-
-        and: "account is unlocked"
-        response.body().accountLocked == false
-    }
-
     def "POST /administration/users/{id}/disable should disable user account"() {
         given: "an admin token and a user"
         String adminToken = createAdminToken()
@@ -573,27 +529,6 @@ class AdministrationControllerSpec extends Specification {
         client.toBlocking().exchange(
                 HttpRequest.DELETE("/administration/users/${fallbackAdmin.id}")
                         .bearerAuth(adminToken)
-        )
-
-        then: "forbidden exception is thrown"
-        def exception = thrown(HttpClientResponseException)
-        exception.status == HttpStatus.FORBIDDEN
-    }
-
-    def "POST /administration/users/{id}/lock should return 403 for fallback admin"() {
-        given: "an admin token and a fallback admin user"
-        String adminToken = createAdminToken()
-        def fallbackAdmin = userRepository.findByEmail("admin@example.com").get()
-
-        // Mark as fallback admin
-        fallbackAdmin.isFallbackAdministrator = true
-        userRepository.update(fallbackAdmin)
-
-        when: "attempting to lock fallback admin"
-        client.toBlocking().exchange(
-                HttpRequest.POST("/administration/users/${fallbackAdmin.id}/lock", "")
-                        .bearerAuth(adminToken),
-                UserResponse
         )
 
         then: "forbidden exception is thrown"

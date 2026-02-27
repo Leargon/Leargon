@@ -27,8 +27,6 @@ import {
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Lock as LockIcon,
-  LockOpen as LockOpenIcon,
   PersonAdd as PersonAddIcon,
   PersonRemove as PersonRemoveIcon,
   Refresh as RefreshIcon,
@@ -41,8 +39,6 @@ import {
   useUpdateUser,
   useDeleteUser,
   useAdministrationChangePassword,
-  useLockUser,
-  useUnlockUser,
   useCreateUser,
 } from '../../api/generated/administration/administration';
 import type { UserResponse, UpdateUserRequest } from '../../api/generated/model';
@@ -57,8 +53,6 @@ const UsersTab: React.FC = () => {
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
   const changePasswordMutation = useAdministrationChangePassword();
-  const lockUserMutation = useLockUser();
-  const unlockUserMutation = useUnlockUser();
   const createUserMutation = useCreateUser();
 
   const [error, setError] = useState('');
@@ -73,7 +67,6 @@ const UsersTab: React.FC = () => {
     firstName: '',
     lastName: '',
     enabled: true,
-    accountLocked: false,
   });
 
   // Delete dialog
@@ -101,7 +94,6 @@ const UsersTab: React.FC = () => {
       firstName: user.firstName,
       lastName: user.lastName,
       enabled: user.enabled,
-      accountLocked: user.accountLocked,
     });
     setEditDialogOpen(true);
   };
@@ -116,7 +108,6 @@ const UsersTab: React.FC = () => {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         enabled: editForm.enabled,
-        accountLocked: editForm.accountLocked,
       };
       await updateUserMutation.mutateAsync({ id: editingUser.id, data: request });
       setSuccess('User updated successfully');
@@ -137,22 +128,6 @@ const UsersTab: React.FC = () => {
       invalidate();
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to delete user');
-    }
-  };
-
-  const handleLockToggle = async (user: UserResponse) => {
-    try {
-      setError('');
-      if (user.accountLocked) {
-        await unlockUserMutation.mutateAsync({ id: user.id });
-        setSuccess(`Account ${user.username} unlocked`);
-      } else {
-        await lockUserMutation.mutateAsync({ id: user.id });
-        setSuccess(`Account ${user.username} locked`);
-      }
-      invalidate();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to update lock status');
     }
   };
 
@@ -269,7 +244,6 @@ const UsersTab: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <Chip label={user.enabled ? 'Enabled' : 'Disabled'} color={user.enabled ? 'success' : 'error'} size="small" />
-                  {user.accountLocked && <Chip label="Locked" color="warning" size="small" sx={{ ml: 0.5 }} />}
                 </TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -284,13 +258,6 @@ const UsersTab: React.FC = () => {
                       <span>
                         <IconButton size="small" onClick={() => { setPasswordUser(user); setNewPassword(''); setPasswordDialogOpen(true); }} color="info" disabled={user.isFallbackAdministrator}>
                           <VpnKeyIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Tooltip title={user.isFallbackAdministrator ? 'Protected' : user.accountLocked ? 'Unlock' : 'Lock'}>
-                      <span>
-                        <IconButton size="small" onClick={() => handleLockToggle(user)} color="warning" disabled={user.isFallbackAdministrator || user.id === currentUser?.id}>
-                          {user.accountLocked ? <LockOpenIcon fontSize="small" /> : <LockIcon fontSize="small" />}
                         </IconButton>
                       </span>
                     </Tooltip>
@@ -328,10 +295,6 @@ const UsersTab: React.FC = () => {
             <FormControlLabel
               control={<Switch checked={editForm.enabled} onChange={(e) => setEditForm({ ...editForm, enabled: e.target.checked })} disabled={editingUser?.id === currentUser?.id} />}
               label="Account Enabled"
-            />
-            <FormControlLabel
-              control={<Switch checked={editForm.accountLocked} onChange={(e) => setEditForm({ ...editForm, accountLocked: e.target.checked })} disabled={editingUser?.id === currentUser?.id} />}
-              label="Account Locked"
             />
           </Box>
         </DialogContent>

@@ -9,9 +9,6 @@ export interface StoredUser {
   lastName: string;
   roles: string[];
   enabled: boolean;
-  accountLocked: boolean;
-  accountExpired: boolean;
-  passwordExpired: boolean;
   isFallbackAdministrator: boolean;
   setupCompleted: boolean;
   createdAt: string;

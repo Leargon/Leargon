@@ -42,15 +42,6 @@ class User {
     @Column(nullable = false)
     Boolean enabled = true
 
-    @Column(name = "account_locked", nullable = false)
-    Boolean accountLocked = false
-
-    @Column(name = "account_expired", nullable = false)
-    Boolean accountExpired = false
-
-    @Column(name = "password_expired", nullable = false)
-    Boolean passwordExpired = false
-
     @Column(nullable = false, length = 255)
     String roles = "ROLE_USER"
 

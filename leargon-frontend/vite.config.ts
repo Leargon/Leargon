@@ -12,5 +12,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: process.env.VITE_BACKEND_URL ? {
+      '/api': {
+        target: process.env.VITE_BACKEND_URL,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    } : undefined,
   },
 });

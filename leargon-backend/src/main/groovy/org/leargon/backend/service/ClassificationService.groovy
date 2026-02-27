@@ -395,7 +395,7 @@ class ClassificationService {
         validateAssignments(assignments, "ORGANISATIONAL_UNIT")
 
         unit.classificationAssignments = assignments.collect {
-            new org.leargon.backend.domain.ClassificationAssignment(it.classificationKey, it.valueKey)
+            new ClassificationAssignment(it.classificationKey, it.valueKey)
         }
         orgUnitRepo.update(unit)
     }

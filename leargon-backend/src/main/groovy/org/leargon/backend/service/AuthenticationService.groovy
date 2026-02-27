@@ -80,16 +80,5 @@ class AuthenticationService {
             throw new AuthenticationException("Account is disabled")
         }
 
-        if (user.accountLocked) {
-            throw new AuthenticationException("Account is locked")
-        }
-
-        if (user.accountExpired) {
-            throw new AuthenticationException("Account is expired")
-        }
-
-        if (user.passwordExpired) {
-            throw new AuthenticationException("Password is expired")
-        }
     }
 }

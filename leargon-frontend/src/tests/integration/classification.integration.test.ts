@@ -130,7 +130,7 @@ describe('Classification E2E', () => {
     await createClassification(adminClient, 'FE Filter Domain', 'BUSINESS_DOMAIN');
 
     const res = await adminClient.get<ClassificationResponse[]>(
-      '/classifications?assignable-to=ENTITY',
+      '/classifications?assignable-to=BUSINESS_ENTITY',
     );
     expect(res.status).toBe(200);
     expect(

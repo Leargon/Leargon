@@ -32,12 +32,6 @@ export interface UserResponse {
   preferredLanguage: string;
   /** Account enabled status */
   enabled: boolean;
-  /** Account locked status */
-  accountLocked: boolean;
-  /** Account expired status */
-  accountExpired: boolean;
-  /** Password expired status */
-  passwordExpired: boolean;
   /** Whether this is the protected fallback administrator user */
   isFallbackAdministrator: boolean;
   /** Whether this user has completed the first-time setup wizard */

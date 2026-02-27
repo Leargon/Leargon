@@ -75,9 +75,6 @@ class AzureAuthService {
         user.authProvider = "AZURE"
         user.roles = "ROLE_USER"
         user.enabled = true
-        user.accountLocked = false
-        user.accountExpired = false
-        user.passwordExpired = false
         user.isFallbackAdministrator = false
         user.setupCompleted = false
         user.preferredLanguage = "en"

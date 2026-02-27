@@ -257,36 +257,6 @@ paths:
           description: User not found
         '401':
           description: Not authenticated
-  /administration/users/{id}/lock:
-    post:
-      tags:
-      - Administration
-      summary: Lock user account
-      description: Locks a user account, preventing login. Cannot lock fallback admin. Requires ROLE_ADMIN.
-      operationId: lockUser
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: id
-        in: path
-        required: true
-        description: User ID
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Account locked successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '403':
-          description: Cannot lock fallback admin
-        '404':
-          description: User not found
-        '401':
-          description: Not authenticated
   /administration/users/{id}/password:
     put:
       tags:
@@ -320,34 +290,6 @@ paths:
           description: User not found
         '400':
           description: Invalid password (must be at least 8 characters)
-        '401':
-          description: Not authenticated
-  /administration/users/{id}/unlock:
-    post:
-      tags:
-      - Administration
-      summary: Unlock user account
-      description: Unlocks a previously locked user account. Requires ROLE_ADMIN.
-      operationId: unlockUser
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: id
-        in: path
-        required: true
-        description: User ID
-        schema:
-          type: integer
-          format: int64
-      responses:
-        '200':
-          description: Account unlocked successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
-        '404':
-          description: User not found
         '401':
           description: Not authenticated
   /authentication/azure-config:
@@ -4828,15 +4770,6 @@ components:
         enabled:
           type: boolean
           description: Account enabled status
-        accountLocked:
-          type: boolean
-          description: Account locked status
-        accountExpired:
-          type: boolean
-          description: Account expired status
-        passwordExpired:
-          type: boolean
-          description: Password expired status
         roles:
           type: array
           description: User roles
@@ -4858,9 +4791,6 @@ components:
       - lastName
       - preferredLanguage
       - enabled
-      - accountLocked
-      - accountExpired
-      - passwordExpired
       - isFallbackAdministrator
       - setupCompleted
       - roles
@@ -4897,18 +4827,6 @@ components:
           type: boolean
           description: Account enabled status
           example: true
-        accountLocked:
-          type: boolean
-          description: Account locked status
-          example: false
-        accountExpired:
-          type: boolean
-          description: Account expired status
-          example: false
-        passwordExpired:
-          type: boolean
-          description: Password expired status
-          example: false
         isFallbackAdministrator:
           type: boolean
           description: Whether this is the protected fallback administrator user

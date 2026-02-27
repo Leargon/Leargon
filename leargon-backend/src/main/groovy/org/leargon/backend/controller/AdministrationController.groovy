@@ -93,34 +93,6 @@ class AdministrationController implements AdministrationApi {
     }
 
     /**
-     * Lock a user account.
-     *
-     * @param id User ID
-     * @return Updated user details
-     */
-    @Override
-    @Secured("ROLE_ADMIN")
-    UserResponse lockUser(Long id) {
-        UpdateUserRequest request = new UpdateUserRequest(accountLocked: true)
-        User user = userService.updateUser(id, request)
-        return userService.toUserResponse(user)
-    }
-
-    /**
-     * Unlock a user account.
-     *
-     * @param id User ID
-     * @return Updated user details
-     */
-    @Override
-    @Secured("ROLE_ADMIN")
-    UserResponse unlockUser(Long id) {
-        UpdateUserRequest request = new UpdateUserRequest(accountLocked: false)
-        User user = userService.updateUser(id, request)
-        return userService.toUserResponse(user)
-    }
-
-    /**
      * Enable a user account.
      *
      * @param id User ID

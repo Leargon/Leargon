@@ -23,9 +23,6 @@ class UserMapper {
         user.lastName = request.lastName
         user.roles = "ROLE_USER"
         user.enabled = true
-        user.accountLocked = false
-        user.accountExpired = false
-        user.passwordExpired = false
         user.isFallbackAdministrator = false
         user.setupCompleted = false
         user.preferredLanguage = "en"
@@ -41,9 +38,6 @@ class UserMapper {
                 user.lastName,
                 user.preferredLanguage,
                 user.enabled,
-                user.accountLocked,
-                user.accountExpired,
-                user.passwordExpired,
                 user.isFallbackAdministrator,
                 user.setupCompleted,
                 parseRoles(user.roles),
@@ -60,9 +54,6 @@ class UserMapper {
         if (request.lastName != null) user.lastName = request.lastName
         if (request.preferredLanguage != null) user.preferredLanguage = request.preferredLanguage
         if (request.enabled != null) user.enabled = request.enabled
-        if (request.accountLocked != null) user.accountLocked = request.accountLocked
-        if (request.accountExpired != null) user.accountExpired = request.accountExpired
-        if (request.passwordExpired != null) user.passwordExpired = request.passwordExpired
         user.roles = mapRoles(request.roles, user)
     }
 

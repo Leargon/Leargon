@@ -94,9 +94,6 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
                 user.firstName = adminFirstName
                 user.lastName = adminLastName
                 user.enabled = true
-                user.accountLocked = false
-                user.accountExpired = false
-                user.passwordExpired = false
                 user.roles = 'ROLE_ADMIN'
                 user.isFallbackAdministrator = true
                 userRepository.update(user)
@@ -114,9 +111,6 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
                 firstName: adminFirstName,
                 lastName: adminLastName,
                 enabled: true,
-                accountLocked: false,
-                accountExpired: false,
-                passwordExpired: false,
                 roles: 'ROLE_ADMIN',
                 isFallbackAdministrator: true
             )
