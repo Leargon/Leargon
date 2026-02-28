@@ -2,14 +2,19 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
   signup,
+  signupAdmin,
   withToken,
   createProcess,
+  createDomain,
+  createOrgUnit,
+  createClassification,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { SaveProcessDiagramRequest } from '@/api/generated/model/saveProcessDiagramRequest';
 import type { ProcessDiagramResponse } from '@/api/generated/model/processDiagramResponse';
 import type { ProcessVersionResponse } from '@/api/generated/model/processVersionResponse';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
+import type { VersionDiffResponse } from '@/api/generated/model/versionDiffResponse';
 import { ProcessElementType } from '@/api/generated/model/processElementType';
 
 function getBackendUrl(): string {
@@ -433,5 +438,206 @@ describe('Process E2E', () => {
 
     const getRes = await client.get(`/processes/${proc.key}`);
     expect(getRes.status).toBe(404);
+  });
+
+  // =====================
+  // UPDATE OWNER
+  // =====================
+
+  it('should change process owner', async () => {
+    const newOwnerAuth = await signup(createClient(getBackendUrl()), {
+      email: 'fe-proc-newowner@example.com',
+      username: 'feprocnewowner',
+      password: 'password123',
+      firstName: 'New',
+      lastName: 'Owner',
+    });
+
+    const proc = await createProcess(client, 'FE Ownership Process');
+
+    const res = await client.put(`/processes/${proc.key}/owner`, {
+      processOwnerUsername: 'feprocnewowner',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.processOwner.username).toBe('feprocnewowner');
+
+    // Verify new owner can edit
+    const ownerClient = createClient(getBackendUrl());
+    withToken(ownerClient, newOwnerAuth.accessToken);
+    const editRes = await ownerClient.put(
+      `/processes/${res.data.key}/descriptions`,
+      [{ locale: 'en', text: 'Owner edited this' }],
+    );
+    expect(editRes.status).toBe(200);
+
+    // Verify old owner gets 403
+    const forbiddenRes = await client.put(
+      `/processes/${res.data.key}/descriptions`,
+      [{ locale: 'en', text: 'Should fail' }],
+    );
+    expect(forbiddenRes.status).toBe(403);
+  });
+
+  // =====================
+  // UPDATE CODE
+  // =====================
+
+  it('should update process code and recompute key', async () => {
+    const proc = await createProcess(client, 'FE Code Update Process');
+
+    const res = await client.put(`/processes/${proc.key}/code`, {
+      code: 'FE-NEW-CODE',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.code).toBe('FE-NEW-CODE');
+    expect(res.data.key).toBe('fe-new-code');
+  });
+
+  // =====================
+  // UPDATE TYPE
+  // =====================
+
+  it('should update process type', async () => {
+    const proc = await createProcess(client, 'FE Typed Process');
+
+    const res = await client.put(`/processes/${proc.key}/type`, {
+      processType: 'OPERATIONAL_CORE',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.processType).toBe('OPERATIONAL_CORE');
+  });
+
+  it('should clear process type when set to null', async () => {
+    const proc = await createProcess(client, 'FE Nullable Type Process', {
+      processType: 'SUPPORT',
+    });
+
+    const res = await client.put(`/processes/${proc.key}/type`, {
+      processType: null,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.processType ?? null).toBeNull();
+  });
+
+  // =====================
+  // ASSIGN DOMAIN
+  // =====================
+
+  it('should assign business domain to process', async () => {
+    const adminClient = createClient(getBackendUrl());
+    const adminAuth = await signupAdmin(adminClient, {
+      email: 'fe-proc-domain@example.com',
+      username: 'feprocdomain',
+      password: 'password123',
+      firstName: 'Domain',
+      lastName: 'Admin',
+    });
+    withToken(adminClient, adminAuth.accessToken);
+
+    const domain = await createDomain(adminClient, 'FE Process Sales Domain');
+    const proc = await createProcess(client, 'FE Domain Process');
+
+    const res = await client.put(`/processes/${proc.key}/domain`, {
+      businessDomainKey: domain.key,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.businessDomain.key).toBe(domain.key);
+  });
+
+  // =====================
+  // ASSIGN EXECUTING UNITS
+  // =====================
+
+  it('should assign executing organisational units to process', async () => {
+    const unit = await createOrgUnit(client, 'FE Executing Unit');
+    const proc = await createProcess(client, 'FE Executing Units Process');
+
+    const res = await client.put(`/processes/${proc.key}/executing-units`, {
+      keys: [unit.key],
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.executingUnits?.some((u: { key: string }) => u.key === unit.key)).toBe(true);
+  });
+
+  it('should clear executing units when set to empty array', async () => {
+    const unit = await createOrgUnit(client, 'FE Detach Executing Unit');
+    const proc = await createProcess(client, 'FE Clear Executing Units Process');
+
+    await client.put(`/processes/${proc.key}/executing-units`, {
+      keys: [unit.key],
+    });
+
+    const res = await client.put(`/processes/${proc.key}/executing-units`, {
+      keys: [],
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.executingUnits?.length ?? 0).toBe(0);
+  });
+
+  // =====================
+  // ASSIGN CLASSIFICATIONS
+  // =====================
+
+  it('should assign classification to process', async () => {
+    const adminClient = createClient(getBackendUrl());
+    const adminAuth = await signupAdmin(adminClient, {
+      email: 'fe-proc-classif@example.com',
+      username: 'feprocclassif',
+      password: 'password123',
+      firstName: 'Classif',
+      lastName: 'Admin',
+    });
+    withToken(adminClient, adminAuth.accessToken);
+
+    const classif = await createClassification(
+      adminClient,
+      'FE Process Priority',
+      'BUSINESS_PROCESS',
+      [
+        { key: 'critical', names: [{ locale: 'en', text: 'Critical' }] },
+        { key: 'low', names: [{ locale: 'en', text: 'Low' }] },
+      ],
+    );
+    const proc = await createProcess(client, 'FE Classified Process');
+
+    const res = await client.put(
+      `/processes/${proc.key}/classifications`,
+      [{ classificationKey: classif.key, valueKey: 'critical' }],
+    );
+    expect(res.status).toBe(200);
+    expect(res.data.classificationAssignments.length).toBe(1);
+    expect(res.data.classificationAssignments[0].classificationKey).toBe(classif.key);
+    expect(res.data.classificationAssignments[0].valueKey).toBe('critical');
+  });
+
+  // =====================
+  // VERSION DIFF
+  // =====================
+
+  it('should return version diff between versions', async () => {
+    const proc = await createProcess(client, 'FE Diff Process');
+
+    // Update names to create version 2
+    const updateRes = await client.put(`/processes/${proc.key}/names`, [
+      { locale: 'en', text: 'FE Diff Process Updated' },
+    ]);
+    const updatedKey = updateRes.data.key;
+
+    const diffRes = await client.get<VersionDiffResponse>(
+      `/processes/${updatedKey}/versions/2/diff`,
+    );
+    expect(diffRes.status).toBe(200);
+    expect(diffRes.data.versionNumber).toBe(2);
+    expect(diffRes.data.previousVersionNumber).toBe(1);
+    expect(diffRes.data.changes.length).toBeGreaterThan(0);
+    const nameChange = diffRes.data.changes.find((c) => c.field.includes('name'));
+    expect(nameChange).toBeTruthy();
+  });
+
+  it('should return 404 for diff of non-existent version', async () => {
+    const proc = await createProcess(client, 'FE Diff 404 Process');
+
+    const res = await client.get(`/processes/${proc.key}/versions/999/diff`);
+    expect(res.status).toBe(404);
   });
 });

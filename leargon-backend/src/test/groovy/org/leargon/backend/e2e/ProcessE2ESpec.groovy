@@ -335,6 +335,67 @@ class ProcessE2ESpec extends AbstractE2ESpec {
     }
 
     // =====================
+    // EXECUTING UNITS
+    // =====================
+
+    def "should assign executing organisational units to process"() {
+        given:
+        def token = signup("proc-execunit@example.com", "procexecunit")
+        def proc = createProcess(token, "Executing Unit Process")
+        def unit = createOrgUnit(token, "Sales Team")
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(token), Map
+        )
+
+        then:
+        response.body().executingUnits.size() == 1
+        response.body().executingUnits[0].key == unit.key
+    }
+
+    def "should clear executing units when assigned empty list"() {
+        given:
+        def token = signup("proc-clearexec@example.com", "procclearexec")
+        def proc = createProcess(token, "Clear Executing Process")
+        def unit = createOrgUnit(token, "Ops Team")
+
+        and: "assign a unit first"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(token), Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: []])
+                        .bearerAuth(token), Map
+        )
+
+        then:
+        (response.body().executingUnits ?: []).size() == 0
+    }
+
+    def "should reject assigning executing units by non-owner"() {
+        given:
+        def ownerToken = signup("proc-execown@example.com", "procexecown")
+        def otherToken = signup("proc-execoth@example.com", "procexecoth")
+        def proc = createProcess(ownerToken, "Protected Exec Process")
+        def unit = createOrgUnit(ownerToken, "Dev Team")
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(otherToken), Map
+        )
+
+        then:
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
     // CLASSIFICATIONS
     // =====================
 

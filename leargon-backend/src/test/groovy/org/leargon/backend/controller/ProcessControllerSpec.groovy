@@ -17,6 +17,7 @@ import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
@@ -46,6 +47,9 @@ class ProcessControllerSpec extends Specification {
     BusinessEntityVersionRepository businessEntityVersionRepository
 
     @Inject
+    OrganisationalUnitRepository organisationalUnitRepository
+
+    @Inject
     SupportedLocaleRepository localeRepository
 
     def setup() {
@@ -71,6 +75,7 @@ class ProcessControllerSpec extends Specification {
     def cleanup() {
         processVersionRepository.deleteAll()
         processRepository.findAll().each { processRepository.delete(it) }
+        organisationalUnitRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
         businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
         userRepository.deleteAll()
@@ -543,6 +548,93 @@ class ProcessControllerSpec extends Specification {
         when:
         client.toBlocking().exchange(
                 HttpRequest.DELETE("/processes/${created.key}").bearerAuth(otherData.token)
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
+    // EXECUTING UNIT TESTS
+    // =====================
+
+    def "PUT /processes/{key}/executing-units should assign organisational units"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and: "create a process"
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Exec Unit Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        and: "create an org unit"
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Sales Team"]]])
+                        .bearerAuth(token), Map).body()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().executingUnits.size() == 1
+        response.body().executingUnits[0].key == unit.key
+    }
+
+    def "PUT /processes/{key}/executing-units should clear executing units with empty list"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Clear Exec Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Ops Team"]]])
+                        .bearerAuth(token), Map).body()
+
+        and: "assign a unit first"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(token), ProcessResponse)
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: []])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        (response.body().executingUnits ?: []).size() == 0
+    }
+
+    def "PUT /processes/{key}/executing-units should return 403 for non-owner"() {
+        given:
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Protected Process")]))
+                        .bearerAuth(creatorData.token), ProcessResponse).body()
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Dev Team"]]])
+                        .bearerAuth(creatorData.token), Map).body()
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/executing-units", [keys: [unit.key]])
+                        .bearerAuth(otherData.token),
+                ProcessResponse
         )
 
         then:

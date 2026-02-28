@@ -10,6 +10,7 @@ import {
 import type { AxiosInstance } from 'axios';
 import type { BusinessDomainResponse } from '@/api/generated/model/businessDomainResponse';
 import type { BusinessDomainVersionResponse } from '@/api/generated/model/businessDomainVersionResponse';
+import type { VersionDiffResponse } from '@/api/generated/model/versionDiffResponse';
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
@@ -216,6 +217,34 @@ describe('Business Domain E2E', () => {
     expect(versionsRes.data.length).toBe(2);
     expect(versionsRes.data.some((v) => v.changeType === 'CREATE')).toBe(true);
     expect(versionsRes.data.some((v) => v.changeType === 'UPDATE')).toBe(true);
+  });
+
+  it('should return version diff between versions', async () => {
+    const domain = await createDomain(adminClient, 'FE Domain Diff');
+
+    // Update names to create version 2
+    const updateRes = await adminClient.put(
+      `/business-domains/${domain.key}/names`,
+      [{ locale: 'en', text: 'FE Domain Diff Updated' }],
+    );
+    const updatedKey = updateRes.data.key;
+
+    const diffRes = await adminClient.get<VersionDiffResponse>(
+      `/business-domains/${updatedKey}/versions/2/diff`,
+    );
+    expect(diffRes.status).toBe(200);
+    expect(diffRes.data.versionNumber).toBe(2);
+    expect(diffRes.data.previousVersionNumber).toBe(1);
+    expect(diffRes.data.changes.length).toBeGreaterThan(0);
+    const nameChange = diffRes.data.changes.find((c) => c.field.includes('name'));
+    expect(nameChange).toBeTruthy();
+  });
+
+  it('should return 404 for diff of non-existent domain version', async () => {
+    const domain = await createDomain(adminClient, 'FE Domain Diff 404');
+
+    const res = await adminClient.get(`/business-domains/${domain.key}/versions/999/diff`);
+    expect(res.status).toBe(404);
   });
 
   // =====================

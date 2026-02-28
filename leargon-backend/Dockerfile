@@ -1,5 +1,5 @@
-# Build stage — use Temurin JDK + Gradle wrapper for version consistency
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Build stage — Liberica NIK (GraalVM-based JDK 21 with native-image on musl/Alpine)
+FROM bellsoft/liberica-native-image-kit-container:jdk-21-nik-23-musl AS build
 
 WORKDIR /app
 
@@ -10,24 +10,21 @@ COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
 # Copy source code
 COPY src src
 
-# Build the application (wrapper downloads Gradle 8.14.3 on first run)
-RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew build --no-daemon -x test
+# Compile to native binary using Micronaut AOT-optimized native image
+RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew nativeOptimizedCompile --no-daemon -x test
 
-# Runtime stage
-FROM eclipse-temurin:25-jre-alpine
+# Runtime stage — minimal Alpine image (no JVM required)
+FROM alpine:3.21
 
-RUN apk upgrade --no-cache
+RUN apk upgrade --no-cache && apk add --no-cache libstdc++
 
 WORKDIR /app
 
-# Copy the built jar from build stage
-COPY --from=build /app/build/libs/*-all.jar app.jar
+# Copy the native binary from build stage
+COPY --from=build /app/build/native/nativeOptimizedCompile/leargon-backend .
 
 # Expose the default Micronaut port
 EXPOSE 8080
 
-# Run the application
-# -Xms64m: start with small heap (reduces startup time)
-# -Xmx256m: cap heap to reduce memory footprint
-# -XX:MaxMetaspaceSize=192m: cap Groovy/Micronaut metaspace
-ENTRYPOINT ["java", "-Xms64m", "-Xmx256m", "-XX:MaxMetaspaceSize=192m", "-jar", "app.jar"]
+# Run the native binary directly — no JVM flags needed
+ENTRYPOINT ["./leargon-backend"]
