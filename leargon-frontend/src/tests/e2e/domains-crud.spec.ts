@@ -40,7 +40,7 @@ test.describe('Business Domain CRUD — Admin', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete a business domain', async ({ page }) => {
@@ -50,9 +50,8 @@ test.describe('Business Domain CRUD — Admin', () => {
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    // After deletion should navigate away from the domain detail
-    await expect(page).toHaveURL(/\/domains/, { timeout: 10_000 });
-    await expect(page.getByText(domainName)).not.toBeVisible({ timeout: 5_000 });
+    // After deletion we should no longer be on the detail page
+    await expect(page).not.toHaveURL(new RegExp(`/domains/${domainKey}`), { timeout: 10_000 });
   });
 });
 

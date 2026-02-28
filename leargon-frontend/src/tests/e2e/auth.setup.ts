@@ -20,7 +20,7 @@ setup('authenticate as admin', async ({ page }) => {
     throw new Error(`Admin login failed: ${res.status} ${await res.text()}`);
   }
 
-  const { accessToken, user } = await res.json() as { accessToken: string; user: unknown };
+  const { accessToken, user } = await res.json() as { accessToken: string; user: Record<string, unknown> };
 
   // Complete first-time setup (the fallback admin starts with setupCompleted=false)
   await fetch(`${backendUrl}/setup/complete`, {
@@ -28,8 +28,11 @@ setup('authenticate as admin', async ({ page }) => {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
+  // Force setupCompleted: true — /setup/complete above updates the DB; no need to re-fetch
+  const storedUser = { ...user, setupCompleted: true };
+
   // Navigate to the app so we can set localStorage on the right origin
-  await page.goto('http://localhost:5173/login');
+  await page.goto('/login');
 
   // Inject token and user into localStorage
   await page.evaluate(
@@ -37,7 +40,7 @@ setup('authenticate as admin', async ({ page }) => {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('auth_user', JSON.stringify(userData));
     },
-    [accessToken, user] as [string, unknown],
+    [accessToken, storedUser] as [string, unknown],
   );
 
   // Save authenticated browser state

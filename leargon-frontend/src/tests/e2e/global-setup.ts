@@ -84,7 +84,14 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
 
   return async () => {
     console.log('[E2E] Stopping Vite dev server...');
-    viteProcess.kill('SIGTERM');
+    // On Windows, kill('SIGTERM') only kills cmd.exe but not the child npm/node/vite tree.
+    // Use taskkill /T to kill the whole process tree on Windows.
+    if (process.platform === 'win32' && viteProcess.pid) {
+      const { execSync } = await import('node:child_process');
+      try { execSync(`taskkill /PID ${viteProcess.pid} /T /F`); } catch { /* already dead */ }
+    } else {
+      viteProcess.kill('SIGTERM');
+    }
 
     console.log('[E2E] Stopping containers...');
     await backend.stop();

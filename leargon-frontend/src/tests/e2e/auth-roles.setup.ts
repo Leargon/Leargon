@@ -49,7 +49,7 @@ for (const u of USERS) {
     const { accessToken, user } = (await res.json()) as { accessToken: string; user: unknown };
 
     // Navigate to the app so we can set localStorage on the right origin
-    await page.goto('http://localhost:5173/login');
+    await page.goto('/login');
 
     // Inject token and user into localStorage
     await page.evaluate(
