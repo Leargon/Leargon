@@ -5,7 +5,7 @@ import fs from 'node:fs';
 const authFile = path.join(process.cwd(), '.auth/admin.json');
 const tokenFile = path.join(process.cwd(), '.auth/admin-token.txt');
 
-setup('authenticate as admin', async ({ page }) => {
+setup('authenticate as admin', async () => {
   const backendUrl = process.env.E2E_BACKEND_URL;
   if (!backendUrl) throw new Error('E2E_BACKEND_URL not set — is global-setup running?');
 
@@ -31,22 +31,21 @@ setup('authenticate as admin', async ({ page }) => {
   // Force setupCompleted: true — /setup/complete above updates the DB; no need to re-fetch
   const storedUser = { ...user, setupCompleted: true };
 
-  // Navigate to the app so we can set localStorage on the right origin
-  await page.goto('/login');
+  // Write Playwright storage state directly — no browser page needed just to set localStorage
+  const storageState = {
+    cookies: [],
+    origins: [
+      {
+        origin: 'http://localhost:5173',
+        localStorage: [
+          { name: 'auth_token', value: accessToken },
+          { name: 'auth_user', value: JSON.stringify(storedUser) },
+        ],
+      },
+    ],
+  };
 
-  // Inject token and user into localStorage
-  await page.evaluate(
-    ([token, userData]) => {
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('auth_user', JSON.stringify(userData));
-    },
-    [accessToken, storedUser] as [string, unknown],
-  );
-
-  // Save authenticated browser state
-  await page.context().storageState({ path: authFile });
-
-  // Save raw token for use in API setup utilities
   fs.mkdirSync(path.join(process.cwd(), '.auth'), { recursive: true });
+  fs.writeFileSync(authFile, JSON.stringify(storageState), 'utf8');
   fs.writeFileSync(tokenFile, accessToken, 'utf8');
 });

@@ -86,11 +86,13 @@ class AdministratorUserBootstrap implements ApplicationEventListener<StartupEven
             if (existingUser.isPresent()) {
                 User user = existingUser.get()
 
-                // User exists update with new values
+                // User exists — update with new values, but skip BCrypt if password unchanged
                 LOG.info("Updating fallback admin: {}", email)
                 user.email = email
                 user.username = username
-                user.passwordHash = passwordEncoder.encode(password)
+                if (!passwordEncoder.matches(password, user.passwordHash)) {
+                    user.passwordHash = passwordEncoder.encode(password)
+                }
                 user.firstName = adminFirstName
                 user.lastName = adminLastName
                 user.enabled = true

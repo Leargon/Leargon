@@ -8,7 +8,7 @@ test('domains page loads without an error alert', async ({ page }) => {
   await expect(page.getByRole('alert')).not.toBeVisible();
 });
 
-test('can navigate to a domain URL if domains exist (or page is in empty state)', async ({ page }) => {
+test('domains list page stays error-free after network idle', async ({ page }) => {
   await page.goto('/domains');
 
   // The page should load without an error regardless of whether domains exist

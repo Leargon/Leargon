@@ -11,7 +11,7 @@ COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
 COPY src src
 
 # Build the application (wrapper downloads Gradle 8.14.3 on first run)
-RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew clean build --no-daemon -x test
+RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew build --no-daemon -x test
 
 # Runtime stage
 FROM eclipse-temurin:25-jre-alpine
@@ -27,4 +27,7 @@ COPY --from=build /app/build/libs/*-all.jar app.jar
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# -Xms64m: start with small heap (reduces startup time)
+# -Xmx256m: cap heap to reduce memory footprint
+# -XX:MaxMetaspaceSize=192m: cap Groovy/Micronaut metaspace
+ENTRYPOINT ["java", "-Xms64m", "-Xmx256m", "-XX:MaxMetaspaceSize=192m", "-jar", "app.jar"]

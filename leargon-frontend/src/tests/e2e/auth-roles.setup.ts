@@ -18,7 +18,7 @@ const USERS = [
 ];
 
 for (const u of USERS) {
-  setup(`create ${u.username}`, async ({ page }) => {
+  setup(`create ${u.username}`, async () => {
     const backendUrl = process.env.E2E_BACKEND_URL;
     if (!backendUrl) throw new Error('E2E_BACKEND_URL not set — is global-setup running?');
 
@@ -48,20 +48,21 @@ for (const u of USERS) {
 
     const { accessToken, user } = (await res.json()) as { accessToken: string; user: unknown };
 
-    // Navigate to the app so we can set localStorage on the right origin
-    await page.goto('/login');
+    // Write Playwright storage state directly — no browser page needed just to set localStorage
+    const storageState = {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://localhost:5173',
+          localStorage: [
+            { name: 'auth_token', value: accessToken },
+            { name: 'auth_user', value: JSON.stringify(user) },
+          ],
+        },
+      ],
+    };
 
-    // Inject token and user into localStorage
-    await page.evaluate(
-      ([token, userData]) => {
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-      },
-      [accessToken, user] as [string, unknown],
-    );
-
-    // Save authenticated browser state
     fs.mkdirSync(path.join(process.cwd(), '.auth'), { recursive: true });
-    await page.context().storageState({ path: path.join(process.cwd(), u.state) });
+    fs.writeFileSync(path.join(process.cwd(), u.state), JSON.stringify(storageState), 'utf8');
   });
 }
