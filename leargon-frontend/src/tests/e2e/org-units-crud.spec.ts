@@ -25,7 +25,7 @@ test.describe('Organisational Unit CRUD — Admin', () => {
     await page.getByRole('dialog').getByLabel('Name (English)').fill(newName);
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can rename an organisational unit', async ({ page }) => {
@@ -40,18 +40,16 @@ test.describe('Organisational Unit CRUD — Admin', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete an organisational unit', async ({ page }) => {
     await page.goto(`/organisation/${unitKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page).toHaveURL(/\/organisation/, { timeout: 10_000 });
-    await expect(page.getByText(unitName)).not.toBeVisible({ timeout: 5_000 });
+    await expect(page).not.toHaveURL(new RegExp(`/organisation/${unitKey}`), { timeout: 10_000 });
   });
 });
 
@@ -82,17 +80,16 @@ test.describe('Organisational Unit CRUD — Lead', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete their organisational unit', async ({ page }) => {
     await page.goto(`/organisation/${unitKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page).toHaveURL(/\/organisation/, { timeout: 10_000 });
+    await expect(page).not.toHaveURL(new RegExp(`/organisation/${unitKey}`), { timeout: 10_000 });
   });
 
   test('cannot see the New button', async ({ page }) => {

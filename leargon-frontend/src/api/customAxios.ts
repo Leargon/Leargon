@@ -24,7 +24,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Only redirect to /login on 401 from non-auth endpoints (session expired).
+    // A 401 from the login/signup endpoints themselves means bad credentials — let the
+    // component handle the error instead of triggering a full page reload.
+    const url = error.config?.url ?? '';
+    if (error.response?.status === 401 && !url.includes('/authentication/')) {
       tokenStorage.clear();
       window.location.href = '/login';
     }

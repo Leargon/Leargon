@@ -25,7 +25,7 @@ test.describe('Business Domain CRUD — Admin', () => {
     await page.getByRole('dialog').getByLabel('Name (English)').fill(newName);
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can rename a business domain', async ({ page }) => {
@@ -45,7 +45,6 @@ test.describe('Business Domain CRUD — Admin', () => {
 
   test('can delete a business domain', async ({ page }) => {
     await page.goto(`/domains/${domainKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();

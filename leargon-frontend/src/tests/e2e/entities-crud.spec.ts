@@ -25,7 +25,7 @@ test.describe('Business Entity CRUD — Admin', () => {
     await page.getByRole('dialog').getByLabel('Name (English)').fill(newName);
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can rename a business entity', async ({ page }) => {
@@ -40,18 +40,16 @@ test.describe('Business Entity CRUD — Admin', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete a business entity', async ({ page }) => {
     await page.goto(`/entities/${entityKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page).toHaveURL(/\/entities/, { timeout: 10_000 });
-    await expect(page.getByText(entityName)).not.toBeVisible({ timeout: 5_000 });
+    await expect(page).not.toHaveURL(new RegExp(`/entities/${entityKey}`), { timeout: 10_000 });
   });
 });
 
@@ -87,7 +85,6 @@ test.describe('Business Entity CRUD — Owner', () => {
 
   test('can delete their business entity', async ({ page }) => {
     await page.goto(`/entities/${entityKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();

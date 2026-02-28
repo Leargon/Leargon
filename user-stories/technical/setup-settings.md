@@ -46,7 +46,7 @@
 **I WANT** to see all registered users with their roles and status\
 **SO THAT** I can verify the users
 
-#### USER STORY 'Add user'
+#### USER STORY 'Add user (Léargon user management)'
 **AS AN** admin\
 **IF** Azure Entra ID is not configured\
 **I WANT** to add a user, providing an e-mail-address, username, firstname, lastname and initial password\
@@ -64,7 +64,7 @@
 **I WANT** to enable a registered user\
 **SO THAT** this user is able to login again
 
-#### USER STORY 'Change password of a registered user'
+#### USER STORY 'Change password of a registered user (Léargon user management)'
 **AS AN** admin\
 **IF** Azure Entra ID is not configured\
 **I WANT** to change the password without knowing the current password\
@@ -88,13 +88,13 @@
 **I WANT** to change my password by entering my old password for verification and set a new password (with double check)\
 **SO THAT** I can log in with a new password
 
-#### USER STORY 'Login'
+#### USER STORY 'Login (Léargon user management)'
 **AS A** registered user\
 **IF** Azure Entra ID is not configured\
 **I WANT** to login with e-mail and password\
 **SO THAT** I can use Léargon
 
-#### USER STORY 'Sign up'
+#### USER STORY 'Sign up (Léargon user management)'
 **AS A** non-registered user\
 **IF** Azure Entra ID is not configured\
 **I WANT** to sign up to Léargon using my e-mail-address, firstname, lastname and password\
@@ -106,19 +106,19 @@
 **I WANT** to log out of Léargon\
 **SO THAT** I need to login again
 
-#### USER STORY 'Add user'
+#### USER STORY 'Add user (Azure user management)'
 **AS AN** admin\
 **IF** Azure Entra ID is configured\
 **I WANT** to add a user, providing an e-mail-address, firstname and lastname\
 **SO THAT** this user can login
 
-#### USER STORY 'Login'
+#### USER STORY 'Login (Azure user management)'
 **AS A** registered user\
 **IF** Azure Entra ID is configured\
 **I WANT** to login with my Microsoft login credentials\
 **SO THAT** I can use Léargon
 
-#### USER STORY 'Sign up'
+#### USER STORY 'Sign up (Azure user management)'
 **AS A** non-registered user\
 **IF** Azure Entra ID is configured\
 **I WANT** to login with my Microsoft login credentials and create a registered user on-the-way\

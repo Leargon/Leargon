@@ -65,5 +65,11 @@ export const createProcess = (
 export const createOrgUnit = (
   name: string,
   as = ADMIN,
+  leadUsername?: string,
 ): Promise<Record<string, unknown>> =>
-  apiFetch('/organisational-units', 'POST', { names: [{ locale: 'en', text: name }] }, as);
+  apiFetch(
+    '/organisational-units',
+    'POST',
+    { names: [{ locale: 'en', text: name }], ...(leadUsername ? { leadUsername } : {}) },
+    as,
+  );

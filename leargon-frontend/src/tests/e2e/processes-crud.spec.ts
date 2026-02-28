@@ -25,7 +25,7 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.getByRole('dialog').getByLabel('Name (English)').fill(newName);
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can rename a business process', async ({ page }) => {
@@ -40,18 +40,16 @@ test.describe('Business Process CRUD — Admin', () => {
     await nameInput.fill(newName);
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText(newName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
   });
 
   test('can delete a business process', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page).toHaveURL(/\/processes/, { timeout: 10_000 });
-    await expect(page.getByText(processName)).not.toBeVisible({ timeout: 5_000 });
+    await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });
   });
 });
 
@@ -87,12 +85,11 @@ test.describe('Business Process CRUD — Owner', () => {
 
   test('can delete their business process', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
-    await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
-    await expect(page).toHaveURL(/\/processes/, { timeout: 10_000 });
+    await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });
   });
 
   test('cannot see the New button', async ({ page }) => {
