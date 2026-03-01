@@ -54,8 +54,9 @@ services:
     container_name: leargon-frontend
     ports:
       - "3000:80"
-    leargon-backend:
-      condition: service_healthy
+    depends_on:
+      leargon-backend:
+        condition: service_healthy
     networks:
       - leargon-network
     environment:
