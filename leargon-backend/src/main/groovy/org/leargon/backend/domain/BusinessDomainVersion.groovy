@@ -1,5 +1,7 @@
 package org.leargon.backend.domain
 
+import groovy.transform.CompileStatic
+import io.micronaut.core.annotation.Introspected
 import io.micronaut.data.annotation.DateCreated
 import io.micronaut.serde.annotation.Serdeable
 import jakarta.persistence.Column
@@ -15,6 +17,8 @@ import jakarta.persistence.UniqueConstraint
 
 import java.time.Instant
 
+@Introspected
+@CompileStatic
 @Serdeable
 @Entity
 @Table(name = "business_domain_versions",

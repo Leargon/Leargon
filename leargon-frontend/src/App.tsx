@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { LocaleProvider } from './context/LocaleContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import AppShell from './components/layout/AppShell';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Login from './pages/Login';
@@ -17,6 +18,7 @@ import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
+import NotFoundPage from './pages/NotFoundPage';
 
 const theme = createTheme({
   palette: {
@@ -44,6 +46,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <ErrorBoundary>
         <BrowserRouter>
           <AuthProvider>
             <LocaleProvider>
@@ -77,12 +80,13 @@ const App: React.FC = () => {
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 
-                {/* Catch-all redirect */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                {/* Catch-all — 404 page */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </LocaleProvider>
           </AuthProvider>
         </BrowserRouter>
+        </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>
   );

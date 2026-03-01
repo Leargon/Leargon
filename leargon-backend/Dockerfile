@@ -1,30 +1,29 @@
-# Build stage — Liberica NIK (GraalVM-based JDK 21 with native-image on musl/Alpine)
-FROM bellsoft/liberica-native-image-kit-container:jdk-21-nik-23-musl AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
-# Copy gradle wrapper and build files
 COPY gradle gradle
 COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
-
-# Copy source code
 COPY src src
 
-# Compile to native binary using Micronaut AOT-optimized native image
-RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew nativeOptimizedCompile --no-daemon -x test
+RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew shadowJar --no-daemon -x test
 
-# Runtime stage — minimal Alpine image (no JVM required)
-FROM alpine:3.21
+FROM eclipse-temurin:21-jre-alpine
 
-RUN apk upgrade --no-cache && apk add --no-cache libstdc++
+RUN apk upgrade --no-cache && apk add --no-cache wget
 
 WORKDIR /app
 
-# Copy the native binary from build stage
-COPY --from=build /app/build/native/nativeOptimizedCompile/leargon-backend .
+COPY --from=build /app/build/libs/leargon-backend-*-all.jar app.jar
 
-# Expose the default Micronaut port
+RUN addgroup -S leargon && adduser -S leargon -G leargon && \
+    mkdir -p /app/logs && chown -R leargon:leargon /app
+
+USER leargon
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget -qO- http://localhost:8080/health || exit 1
+
 EXPOSE 8080
 
-# Run the native binary directly — no JVM flags needed
-ENTRYPOINT ["./leargon-backend"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

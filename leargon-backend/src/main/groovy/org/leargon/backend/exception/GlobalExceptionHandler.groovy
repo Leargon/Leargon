@@ -1,5 +1,6 @@
 package org.leargon.backend.exception
 
+import groovy.util.logging.Slf4j
 import io.micronaut.context.annotation.Requires
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
@@ -88,5 +89,18 @@ class IllegalArgumentExceptionHandler implements ExceptionHandler<IllegalArgumen
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
         return HttpResponse.status(HttpStatus.BAD_REQUEST).body(error)
+    }
+}
+
+@Slf4j
+@Produces
+@Singleton
+@Requires(classes = [Exception.class, ExceptionHandler.class])
+class GenericExceptionHandler implements ExceptionHandler<Exception, HttpResponse<?>> {
+
+    @Override
+    HttpResponse<?> handle(HttpRequest request, Exception exception) {
+        log.error("Unhandled exception on {} {}: {}", request.method, request.uri, exception.message, exception)
+        return HttpResponse.serverError([message: 'An internal server error occurred'])
     }
 }

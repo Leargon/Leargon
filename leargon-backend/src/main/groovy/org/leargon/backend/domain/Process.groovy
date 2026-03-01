@@ -1,5 +1,7 @@
 package org.leargon.backend.domain
 
+import groovy.transform.CompileStatic
+import io.micronaut.core.annotation.Introspected
 import io.micronaut.data.annotation.DateCreated
 import io.micronaut.data.annotation.DateUpdated
 import io.micronaut.serde.annotation.Serdeable
@@ -21,6 +23,8 @@ import org.hibernate.type.SqlTypes
 
 import java.time.Instant
 
+@Introspected
+@CompileStatic
 @Serdeable
 @Entity
 @Table(name = "processes")

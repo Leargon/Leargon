@@ -1,0 +1,9 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "org/hibernate/bytecode/enhance/internal/bytebuddy/.*\\.class"},
+      {"pattern": "org/hibernate/bytecode/internal/bytebuddy/.*\\.class"},
+      {"pattern": "org/hibernate/proxy/.*\\.class"}
+    ]
+  }
+}

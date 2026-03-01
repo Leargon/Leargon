@@ -6,7 +6,7 @@ plugins {
     id("io.micronaut.openapi") version "4.6.2"
 }
 
-version = "0.1"
+version = "1.0.0"
 group = "org.leargon.backend"
 
 repositories {
@@ -61,6 +61,7 @@ dependencies {
     compileOnly("io.micronaut:micronaut-http-validation")
     compileOnly("io.micronaut.serde:micronaut-serde-processor")
     runtimeOnly("ch.qos.logback:logback-classic:1.5.28")
+    runtimeOnly("com.mysql:mysql-connector-j:9.3.0")
 
     // Test dependencies
     testImplementation("io.micronaut:micronaut-http-client")
@@ -96,7 +97,7 @@ micronaut {
         // Please review carefully the optimizations enabled below
         // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
         optimizeServiceLoading = false
-        convertYamlToJava = false
+        convertYamlToJava = true
         precomputeOperations = true
         cacheEnvironment = true
         optimizeClassLoading = true

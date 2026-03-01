@@ -1,10 +1,12 @@
 package org.leargon.backend.repository
 
+import groovy.transform.CompileStatic
 import io.micronaut.data.annotation.Join
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import org.leargon.backend.domain.ProcessVersion
 
+@CompileStatic
 @Repository
 interface ProcessVersionRepository extends JpaRepository<ProcessVersion, Long> {
 

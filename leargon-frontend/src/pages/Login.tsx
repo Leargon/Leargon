@@ -12,6 +12,7 @@ import {
   Link,
   Collapse,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import { PublicClientApplication } from '@azure/msal-browser';
 import { AxiosError } from 'axios';
@@ -119,7 +120,11 @@ const Login: React.FC = () => {
   );
 
   if (azureConfigPending) {
-    return null;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (

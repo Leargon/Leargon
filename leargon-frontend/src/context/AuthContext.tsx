@@ -14,6 +14,15 @@ interface AuthContextType {
   loading: boolean;
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
@@ -36,9 +45,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = () => {
       const token = tokenStorage.getToken();
       if (token) {
-        const storedUser = tokenStorage.getUser();
-        if (storedUser) {
-          setUser(storedUser as UserResponse);
+        if (isTokenExpired(token)) {
+          tokenStorage.clear();
+        } else {
+          const storedUser = tokenStorage.getUser();
+          if (storedUser) {
+            setUser(storedUser as UserResponse);
+          }
         }
       }
       setLoading(false);
@@ -91,7 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     azureLogin,
     logout,
     updateUser,
-    isAuthenticated: !!tokenStorage.getToken(),
+    isAuthenticated: !!tokenStorage.getToken() && !isTokenExpired(tokenStorage.getToken()!),
     loading,
   };
 

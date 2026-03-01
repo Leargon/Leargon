@@ -1,9 +1,7 @@
 services:
-  mysql:
+  leargon-mysql:
     image: mysql:8.4
     container_name: leargon-mysql
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootpassword
       - MYSQL_DATABASE=leargon
@@ -20,7 +18,7 @@ services:
       retries: 5
       start_period: 30s
 
-  backend:
+  leargon-backend:
     build:
       context: ./leargon-backend
       dockerfile: Dockerfile
@@ -35,7 +33,7 @@ services:
     environment:
       - MICRONAUT_ENVIRONMENTS=prod
       - MICRONAUT_SERVER_PORT=8080
-      - DATASOURCES_DEFAULT_URL=jdbc:mysql://mysql:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - DATASOURCES_DEFAULT_URL=jdbc:mysql://leargon-mysql:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       - DATASOURCES_DEFAULT_USERNAME=leargon
       - DATASOURCES_DEFAULT_PASSWORD=leargon
       - JWT_SECRET=${JWT_SECRET:-changethissecrettosomethingverysecureatleast32characters123456}
@@ -49,7 +47,7 @@ services:
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
     depends_on:
-      mysql:
+      leargon-mysql:
         condition: service_healthy
     networks:
       - leargon-network
@@ -60,7 +58,7 @@ services:
       retries: 3
       start_period: 40s
 
-  frontend:
+  leargon-frontend:
     build:
       context: ./leargon-frontend
       dockerfile: Dockerfile
@@ -68,11 +66,12 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      leargon-backend:
+        condition: service_healthy
     networks:
       - leargon-network
     environment:
-      - BACKEND_URL=http://backend:8080
+      - BACKEND_URL=http://leargon-backend:8080
 
 networks:
   leargon-network:
