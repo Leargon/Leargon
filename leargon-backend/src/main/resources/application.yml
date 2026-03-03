@@ -1,0 +1,104 @@
+micronaut:
+  application:
+    name: leargon-backend
+  server:
+    port: 8082
+    context-path: /
+    cors:
+      enabled: true
+      configurations:
+        web:
+          allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+          allowedMethods: [GET, POST, PUT, DELETE, OPTIONS]
+          allowedHeaders: [Content-Type, Authorization]
+          allowCredentials: true
+    netty:
+      access-logger:
+        enabled: true
+        logger-name: HTTP_ACCESS_LOG
+    thread-selection: AUTO
+    max-request-size: 10MB
+  security:
+    authentication: bearer
+    token:
+      jwt:
+        signatures:
+          secret:
+            generator:
+              # REQUIRED: set JWT_SECRET env var (minimum 32 characters)
+              # Generate with: openssl rand -base64 32
+              secret: ${JWT_SECRET}
+        generator:
+          access-token:
+            expiration: 3600
+    intercept-url-map:
+      - pattern: /swagger/**
+        access: isAnonymous()
+      - pattern: /swagger-ui/**
+        access: isAnonymous()
+  router:
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
+  openapi:
+    enabled: true
+    server:
+      context:
+        path: /
+    application:
+      names: Léargon API
+      descriptions: REST API for user authentication and management
+      version: 1.0.0
+  http:
+    client:
+      read-timeout: 30s
+      connect-timeout: 5s
+
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
+
+datasources:
+  default:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:leargon}
+    password: ${DB_PASSWORD:leargon}
+    dialect: MYSQL
+    maximum-pool-size: 5
+    minimum-idle: 2
+    connection-timeout: 20000
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: none
+        show_sql: false
+        format_sql: true
+
+liquibase:
+  datasources:
+    default:
+      change-log: classpath:db/changelog/db.changelog-master.yaml
+  enabled: true
+  async: false
+
+# Fallback admin user — created/updated at startup if env vars are set
+admin:
+  email: ${ADMIN_EMAIL:}
+  username: ${ADMIN_USERNAME:}
+  password: ${ADMIN_PASSWORD:}
+  firstName: ${ADMIN_FIRST_NAME:System}
+  lastName: ${ADMIN_LAST_NAME:Administrator}
+
+# Azure Entra ID (optional — leave empty to disable)
+azure:
+  tenant-id: ${AZURE_TENANT_ID:}
+  client-id: ${AZURE_CLIENT_ID:}

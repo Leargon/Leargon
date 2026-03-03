@@ -139,7 +139,7 @@ const Login: React.FC = () => {
       >
         <Card sx={{ width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
-            <Box component="img" src="LeargonLogo.png" sx={{ width: '100%', maxWidth: 400, display: 'block', mx: 'auto', mb: 2 }} />
+            <Box component="img" src="/LeargonLogo.png" sx={{ width: '100%', maxWidth: 400, display: 'block', mx: 'auto', mb: 2 }} />
             <Typography variant="body2" color="text.secondary" align="center" mb={3}>
               Sign in to your Léargon account
             </Typography>

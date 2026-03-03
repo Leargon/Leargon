@@ -569,10 +569,11 @@ class ProcessControllerSpec extends Specification {
                 HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Exec Unit Process")]))
                         .bearerAuth(token), ProcessResponse).body()
 
-        and: "create an org unit"
+        and: "create an org unit (requires admin)"
+        String adminToken = createAdminToken()
         def unit = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Sales Team"]]])
-                        .bearerAuth(token), Map).body()
+                        .bearerAuth(adminToken), Map).body()
 
         when:
         def response = client.toBlocking().exchange(
@@ -596,9 +597,10 @@ class ProcessControllerSpec extends Specification {
         def proc = client.toBlocking().exchange(
                 HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Clear Exec Process")]))
                         .bearerAuth(token), ProcessResponse).body()
+        String adminToken = createAdminToken()
         def unit = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Ops Team"]]])
-                        .bearerAuth(token), Map).body()
+                        .bearerAuth(adminToken), Map).body()
 
         and: "assign a unit first"
         client.toBlocking().exchange(
@@ -626,9 +628,10 @@ class ProcessControllerSpec extends Specification {
         def proc = client.toBlocking().exchange(
                 HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Protected Process")]))
                         .bearerAuth(creatorData.token), ProcessResponse).body()
+        String adminToken = createAdminToken()
         def unit = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Dev Team"]]])
-                        .bearerAuth(creatorData.token), Map).body()
+                        .bearerAuth(adminToken), Map).body()
 
         when:
         client.toBlocking().exchange(

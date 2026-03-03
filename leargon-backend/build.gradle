@@ -1,8 +1,11 @@
 plugins {
-    id("groovy")
+    id("org.jetbrains.kotlin.jvm") version "2.1.10"
+    id("com.google.devtools.ksp") version "2.1.10-1.0.29"
+    id("org.jetbrains.kotlin.plugin.allopen") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.1.10"
+    id("groovy")                              // keep — needed for Spock tests
     id("io.micronaut.application") version "4.6.2"
     id("com.gradleup.shadow") version "8.3.9"
-    id("io.micronaut.aot") version "4.6.2"
     id("io.micronaut.openapi") version "4.6.2"
 }
 
@@ -11,10 +14,14 @@ group = "org.leargon.backend"
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
-    implementation("io.micronaut.groovy:micronaut-runtime-groovy")
+    // Kotlin
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     implementation("io.micronaut:micronaut-management")
 
@@ -25,6 +32,7 @@ dependencies {
     // Database
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("io.micronaut.sql:micronaut-hibernate-jpa")
     runtimeOnly("com.mysql:mysql-connector-j:9.3.0")
 
     // Database migrations
@@ -37,14 +45,8 @@ dependencies {
     // OpenAPI Generator dependencies
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
-    // JSON support (for version snapshots)
-    implementation("org.apache.groovy:groovy-json")
-
     // Retry support (for deadlock mitigation)
     implementation("io.micronaut:micronaut-retry")
-
-    // Add Serdeable annotation to generated classes
-    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
 
     // OpenAPI Documentation
     implementation("io.micronaut.openapi:micronaut-openapi")
@@ -58,10 +60,15 @@ dependencies {
     implementation('commons-logging:commons-logging:1.3.5')
 
     compileOnly("io.micronaut:micronaut-http-client")
-    compileOnly("io.micronaut:micronaut-http-validation")
-    compileOnly("io.micronaut.serde:micronaut-serde-processor")
-    runtimeOnly("ch.qos.logback:logback-classic:1.5.28")
+    runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.mysql:mysql-connector-j:9.3.0")
+
+    // Annotation processors via KSP — processes both Kotlin AND Java sources (unlike KAPT)
+    // micronaut-serde-processor generates @Serdeable introspections for generated Java model classes
+    ksp("io.micronaut.serde:micronaut-serde-processor")
+    ksp("io.micronaut:micronaut-http-validation")
+    ksp("io.micronaut.data:micronaut-data-processor")
+
 
     // Test dependencies
     testImplementation("io.micronaut:micronaut-http-client")
@@ -74,53 +81,41 @@ dependencies {
     testRuntimeOnly("com.mysql:mysql-connector-j:9.3.0")
 }
 
-
 application {
-    mainClass = "org.leargon.backend.Application"
+    mainClass = "org.leargon.backend.ApplicationKt"
 }
 
-// Handle duplicate entries in jars (e.g., swagger files from Java and Groovy compilation)
-tasks.withType(Jar).configureEach {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
-graalvmNative.toolchainDetection = false
-
-micronaut {
-    runtime("netty")
-    testRuntime("spock2")
-    processing {
-        incremental(true)
-        annotations("org.leargon.backend.*")
-    }
-    aot {
-        // Please review carefully the optimizations enabled below
-        // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
-        optimizeServiceLoading = false
-        convertYamlToJava = true
-        precomputeOperations = true
-        cacheEnvironment = true
-        optimizeClassLoading = true
-        deduceEnvironment = true
-        optimizeNetty = true
-        replaceLogbackXml = true
-    }
-    openapi {
-        server(file("src/main/resources/openapi.yaml")) {
-            apiPackageName = "org.leargon.backend.api"
-            modelPackageName = "org.leargon.backend.model"
-            useReactive = false
-            useAuth = true
-        }
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
 
-tasks.named("dockerfileNative") {
-    jdkVersion = "21"
+allOpen {
+    annotation("jakarta.inject.Singleton")
+    annotation("jakarta.transaction.Transactional")
+    annotation("io.micronaut.http.annotation.Controller")
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
 }
 
-// E2E test source set and task
 sourceSets {
+    main {
+        kotlin.srcDirs = ["src/main/kotlin"]
+        // Include generated OpenAPI Java sources so compileJava sees them for joint compilation.
+        // Kotlin/KAPT references them via compileGeneratedOpenApiSources pre-compilation.
+        java.srcDir("build/generated/openapi/generateServerOpenApiApis/src/main/java")
+        java.srcDir("build/generated/openapi/generateServerOpenApiModels/src/main/java")
+    }
+    test {
+        groovy.srcDirs = ["src/test/groovy"]
+    }
     e2eTest {
         groovy {
             srcDir 'src/test/groovy'
@@ -137,6 +132,11 @@ sourceSets {
 configurations {
     e2eTestImplementation.extendsFrom testImplementation
     e2eTestRuntimeOnly.extendsFrom testRuntimeOnly
+    // Classpath for pre-compiling OpenAPI-generated Java sources — extends implementation
+    // (not compileClasspath, to avoid circular dependency via the compileOnly generatedOpenApi files).
+    openApiPrecompile {
+        extendsFrom(configurations.implementation)
+    }
 }
 
 tasks.register('e2eTest', Test) {
@@ -152,4 +152,66 @@ tasks.named('test') {
     exclude 'org/leargon/backend/e2e/**'
 }
 
+// KSP processes all Java sources in the main source set (including generated OpenAPI files).
+// Ensure the OpenAPI generation tasks run before KSP so the Java files exist.
+afterEvaluate {
+    tasks.named("kspKotlin").configure {
+        dependsOn("generateServerOpenApiApis", "generateServerOpenApiModels")
+    }
+}
 
+// Pre-compile OpenAPI-generated Java sources (they have no Kotlin deps) so Kotlin/KAPT can reference them.
+// The generated Java API/model files only depend on framework jars (Micronaut, Jakarta), not on our Kotlin code.
+// compileJava will also compile them as part of the normal build; this pre-compilation step
+// only serves to put them on compileClasspath before Kotlin compilation starts.
+def generatedOpenApiClassesDir = layout.buildDirectory.dir("classes/java/generatedOpenApi")
+
+tasks.register("compileGeneratedOpenApiSources", JavaCompile) {
+    description = "Pre-compiles OpenAPI-generated Java sources for Kotlin compilation"
+    dependsOn("generateServerOpenApiApis", "generateServerOpenApiModels")
+    source(layout.buildDirectory.dir("generated/openapi/generateServerOpenApiApis/src/main/java"))
+    source(layout.buildDirectory.dir("generated/openapi/generateServerOpenApiModels/src/main/java"))
+    // micronaut-serde-jackson (impl) is on runtimeClasspath which includes micronaut-serde-api,
+    // so @Serdeable resolves; filter out compiled class dirs to avoid circular dependencies.
+    classpath = configurations.runtimeClasspath
+        .filter { !it.path.contains("classes${File.separator}kotlin") && !it.path.contains("classes${File.separator}java") }
+    destinationDirectory = generatedOpenApiClassesDir
+    options.release = 21
+}
+
+// Add pre-compiled generated classes to the compile classpath so Kotlin tasks see them
+dependencies {
+    compileOnly(files(generatedOpenApiClassesDir) { builtBy("compileGeneratedOpenApiSources") })
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// micronaut-serde-bom:2.11.0 (bundled with micronaut-platform:4.6.2) pulls micronaut-http-netty:4.10.13,
+// but the platform BOM pins micronaut-json-core to 4.6.5 — binary incompatible because
+// NettyJsonHandler:4.10.13 calls JsonMessageHandler.write(ByteBodyFactory,...) which only exists in 4.10.x.
+// Force json-core to 4.10.13 to match the already-upgraded Netty version.
+configurations.all {
+    resolutionStrategy {
+        force("io.micronaut:micronaut-json-core:4.10.13")
+    }
+}
+
+micronaut {
+    version = "4.6.2"
+    runtime("netty")
+    testRuntime("spock2")
+    processing {
+        incremental(true)
+        annotations("org.leargon.backend.*")
+    }
+    openapi {
+        server(file("src/main/resources/openapi.yaml")) {
+            apiPackageName = "org.leargon.backend.api"
+            modelPackageName = "org.leargon.backend.model"
+            useReactive = false
+            useAuth = true
+        }
+    }
+}

@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
       }}
     >
       <Box sx={{ p: 2, pb: 1 }}>
-        <Box component="img" src="LeargonIcon.png" sx={{ width: '100%', maxWidth: 160, display: 'block', mx: 'auto' }} />
+        <Box component="img" src="/LeargonIcon.png" sx={{ width: '100%', maxWidth: 160, display: 'block', mx: 'auto' }} />
       </Box>
 
       <List component="nav" sx={{ px: 1, flexGrow: 1 }}>
