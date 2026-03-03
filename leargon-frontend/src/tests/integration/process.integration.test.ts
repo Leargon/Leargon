@@ -549,7 +549,16 @@ describe('Process E2E', () => {
   // =====================
 
   it('should assign executing organisational units to process', async () => {
-    const unit = await createOrgUnit(client, 'FE Executing Unit');
+    const adminClient = createClient(getBackendUrl());
+    const adminAuth = await signupAdmin(adminClient, {
+      email: 'fe-proc-execunits@example.com',
+      username: 'feprocexecunits',
+      password: 'password123',
+      firstName: 'Exec',
+      lastName: 'Admin',
+    });
+    withToken(adminClient, adminAuth.accessToken);
+    const unit = await createOrgUnit(adminClient, 'FE Executing Unit');
     const proc = await createProcess(client, 'FE Executing Units Process');
 
     const res = await client.put(`/processes/${proc.key}/executing-units`, {
@@ -560,7 +569,16 @@ describe('Process E2E', () => {
   });
 
   it('should clear executing units when set to empty array', async () => {
-    const unit = await createOrgUnit(client, 'FE Detach Executing Unit');
+    const adminClient = createClient(getBackendUrl());
+    const adminAuth = await signupAdmin(adminClient, {
+      email: 'fe-proc-clearunits@example.com',
+      username: 'feprocclearunits',
+      password: 'password123',
+      firstName: 'Clear',
+      lastName: 'Admin',
+    });
+    withToken(adminClient, adminAuth.accessToken);
+    const unit = await createOrgUnit(adminClient, 'FE Detach Executing Unit');
     const proc = await createProcess(client, 'FE Clear Executing Units Process');
 
     await client.put(`/processes/${proc.key}/executing-units`, {

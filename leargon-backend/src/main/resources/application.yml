@@ -63,6 +63,9 @@ endpoints:
     enabled: true
     sensitive: false
 
+jackson:
+  serialization-inclusion: ALWAYS
+
 datasources:
   default:
     url: ${DB_URL:jdbc:mysql://localhost:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}

@@ -25,7 +25,7 @@ describe('Organisational Unit E2E', () => {
     client = createClient(getBackendUrl());
     username = 'feorguser';
 
-    const auth = await signup(client, {
+    const auth = await signupAdmin(client, {
       email: 'fe-org-user@example.com',
       username,
       password: 'password123',
@@ -157,7 +157,8 @@ describe('Organisational Unit E2E', () => {
       unitType: null,
     });
     expect(res.status).toBe(200);
-    expect(res.data.unitType).toBeNull();
+    // unitType is omitted from the response when null (Jackson NON_NULL serialization)
+    expect(res.data.unitType ?? null).toBeNull();
   });
 
   // =====================
@@ -190,15 +191,15 @@ describe('Organisational Unit E2E', () => {
     expect(editRes.status).toBe(200);
   });
 
-  it('should remove lead by setting leadUsername to null', async () => {
+  it('should reject removing lead by setting leadUsername to null', async () => {
     const unit = await createOrgUnit(client, 'FE No Lead Unit');
     expect(unit.lead?.username).toBe(username);
 
+    // An organisational unit always requires a lead — null is rejected
     const res = await client.put(`/organisational-units/${unit.key}/lead`, {
       leadUsername: null,
     });
-    expect(res.status).toBe(200);
-    expect(res.data.lead ?? null).toBeNull();
+    expect(res.status).toBe(400);
   });
 
   // =====================

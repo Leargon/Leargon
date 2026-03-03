@@ -281,7 +281,7 @@ describe('Authentication E2E', () => {
     const userId = targetUser!.id;
 
     // Disable
-    const disableRes = await adminClient.put(`/administration/users/${userId}/disable`);
+    const disableRes = await adminClient.post(`/administration/users/${userId}/disable`);
     expect(disableRes.status).toBe(200);
     expect(disableRes.data.enabled).toBe(false);
 
@@ -295,7 +295,7 @@ describe('Authentication E2E', () => {
     }
 
     // Re-enable
-    const enableRes = await adminClient.put(`/administration/users/${userId}/enable`);
+    const enableRes = await adminClient.post(`/administration/users/${userId}/enable`);
     expect(enableRes.status).toBe(200);
     expect(enableRes.data.enabled).toBe(true);
 

@@ -1,3 +1,13 @@
+# Entity inheritence in processes
+**AS A** parent entity
+**I WANT** to inherit the input and output entites from my linked processes
+**SO THAT** a user can see dynamically, which entities are used in the process
+
+# Hard delete user with no ownership
+**AS AN** admin
+**I WANT** to delete users, which are not used anymore, and not just disable them
+**SO THAT** I can clean up users list
+
 # Retention rule
 **AS A** data owner or admin\
 **I WANT** to define a retention rule for a business entity\
@@ -13,7 +23,7 @@
 **I WANT** to define statistical metrics, which are calculated repeatedly\
 **SO THAT** I can check for completeness or compliance
 
-# Optionals
+# Field configuration (optional, mandatory)
 **AS AN** admin\
 **I WANT** to define, which fields (also locales) are mandatory\
 **SO THAT** I can configure to the needs of the company
