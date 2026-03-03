@@ -231,7 +231,8 @@ C4Deployment
   Deployment_Node(azureCloud, "Azure Cloud", "External SaaS") {
     System_Ext(azureAD, "Azure Entra ID", "JWKS endpoint — queried at login time for RS256 key validation")
   }
-
+  
+  Rel(nginxProxy, nginxSpa, "Proxied non-API requests", "HTTP, port 8080, internal network")
   Rel(nginxProxy, backendApp, "Proxied API requests", "HTTP, port 8080, internal network")
   Rel(backendApp, mysqlDb, "JDBC reads/writes", "MySQL protocol, port 3306")
   Rel(backendApp, azureAD, "HTTPS JWKS key fetch", "HTTPS / TLS")
