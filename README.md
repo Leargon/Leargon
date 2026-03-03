@@ -28,33 +28,5 @@ In a world of siloed information, seeing the "Big Picture" is a monumental chall
 *   🏛️ **Immutable Governance:** Define policies as enduring as stone, yet as adaptable as light.
 
 ## 🚀 Awakening the Guardian
-
-Bring Léargon to life within your infrastructure:
-`` docker compose up ``
-
-## Installation details
-Frontend-container is exposing per default on port 3000. Backend-container is exposing per default port 8081
-Backend is configured to listen to everything starting with /api.
-
-### docker compose details
-Use docker-compose.prod.yml for production use
-There are some sample values in the variables, but passwords needs to be set.
-
-#### backend
-All properties starting with DATASOURCES_DEFAULT_ are the database-connection details.
-All properties starting with ADMIN_ are used for the fallback admin, so you have the opportunity to log in all the time, even you misconfigured something in the UI. The fallback admin will get overwritten on every startup with the current configuration.
-All properties starting with AZURE_ are used for enabling and configuring Azure Entra ID, if left empty, built-in Sign-Up and Login are used. Preferably use Azure Entra ID.
-JWT_SECRET is used for creating a JWT token. Use a self-generated secret. The secret length must be at least 256 bits.
-
-#### frontend
-BACKEND_URL is used for pointing to the backend domain, do not postfix with /api, as the application will do that for you.
-
-The frontend container contains a nginx, which acts as webserver for the frontend, but also routes all /api-paths to the backend container. So you only have to expose the frontend as domain, everything can point to the frontend-container. Feel free to also add a domain to the backend, if you need this.
-
-### helm
-This is not yet tested, feel free to try, also feedback is appreciated
-
-### Azure Entra ID
-Scopes requested are: ['openid', 'profile', 'email']
-Redirect URI is the base URL, which the user has to enter in the browser + /callback (<yourdomain>/callback)
-Azure-URL is computed by "https://login.microsoftonline.com/" + tenant-id
+* Check out [DEPLOYMENT.md](https://github.com/Leargon/Leargon/blob/main/DEPLOYMENT.md) for deployment instructions
+* Check out [ARCHITECTURE.md](https://github.com/Leargon/Leargon/blob/main/ARCHITECTURE.md) for architecture diagrams
