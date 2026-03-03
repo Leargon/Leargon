@@ -12,16 +12,18 @@ Who uses Léargon and what external systems does it interact with?
 C4Context
   title "Léargon — System Context"
 
-  Person(steward, "Data Steward", "Manages business entities, domains, processes, and classifications")
-  Person(admin, "Administrator", "Manages users, locales, system setup, and organisational units")
+  Person(owner, "Owner/Lead", "Manages business entities, business processes, and organisational units")
+  Person(user, "User", "Views business entities, business processes, domains, and organisational units")
+  Person(admin, "Administrator", "Manages users, locales, system setup, business entities, business processes, domains, and organisational units")
 
-  System(leargon, "Léargon", "Data governance platform — catalogs business entities, domains, processes, org units, and classifications with multilingual support")
+  System(leargon, "Léargon", "Data/Process/Organisation governance platform — catalogs business entities, business processes, domains, and organisational units with multilingual support")
 
   System_Ext(azure, "Azure Entra ID", "Enterprise identity provider — authenticates users via OpenID Connect / MSAL and issues ID tokens (optional)")
   System_Ext(db, "MySQL 8.4", "Relational database — persists all platform data and Liquibase migration state")
 
-  Rel(steward, leargon, "Browses & edits data catalogue", "HTTPS / Browser")
-  Rel(admin, leargon, "Configures users, locales, classifications", "HTTPS / Browser")
+  Rel(user, leargon, "Browses & edits business entities, processes, domains, and organisational units", "HTTPS / Browser")
+  Rel(user, leargon, "Browses business entities, processes, domains, and organisational units", "HTTPS / Browser")
+  Rel(admin, leargon, "Configures users, locales, classifications, business entities, business processes, domains, and organisational units", "HTTPS / Browser")
   Rel(leargon, azure, "Validates Azure ID tokens via JWKS", "HTTPS")
   Rel(leargon, db, "Reads & writes all persistent data", "JDBC / MySQL protocol")
 ```
@@ -36,6 +38,7 @@ What deployable units make up the system?
 C4Container
   title "Léargon — Containers"
 
+  Person(owner, "Owner/Lead")
   Person(user, "User")
   Person(admin, "Administrator")
 
@@ -47,6 +50,7 @@ C4Container
 
   System_Ext(azure, "Azure Entra ID", "JWKS endpoint for RS256 token validation")
 
+  Rel(owner, frontend, "Uses", "HTTPS, port 3000")
   Rel(user, frontend, "Uses", "HTTPS, port 3000")
   Rel(admin, frontend, "Uses", "HTTPS, port 3000")
   Rel(frontend, backend, "API calls (JSON)", "HTTP / port 8081, Bearer JWT")
@@ -100,7 +104,7 @@ C4Component
 C4Dynamic
   title "Local Login — JWT issuance"
 
-  Person(user, "User")
+  Person(user, "User, Admin, or Owner/Lead")
   Container(fe, "Web App", "React 19 SPA")
   Container(api, "REST API", "Micronaut / Kotlin")
   Component(authProv, "UserPasswordAuthenticationProvider", "Micronaut Security")
@@ -128,7 +132,7 @@ C4Dynamic
 C4Dynamic
   title "Azure Login — MSAL redirect + ID token exchange"
 
-  Person(user, "User")
+  Person(user, "User, admin, or owner/lead")
   Container(fe, "Web App", "React 19 / MSAL Browser")
   System_Ext(azure, "Azure Entra ID", "MSAL / OIDC")
   Container(api, "REST API", "Micronaut / Kotlin")
@@ -163,7 +167,7 @@ C4Dynamic
 C4Dynamic
   title "Create Business Entity — representing logged in user interacting with the system"
 
-  Person(steward, "Data Steward")
+  Person(owner, "Data Owner, or admin")
   Container(fe, "Web App", "React 19 SPA")
   Container(api, "REST API", "Micronaut / Kotlin")
   Component(ctrl, "BusinessEntityController", "Micronaut @Controller")
@@ -173,7 +177,7 @@ C4Dynamic
   Component(verRepo, "BusinessEntityVersionRepository", "Micronaut Data JPA")
   ContainerDb(db, "MySQL 8.4")
 
-  RelIndex(1, steward, fe, "Fill in entity form, click Save")
+  RelIndex(1, owner, fe, "Fill in business entity form, click Save")
   RelIndex(2, fe, api, "POST /business-entities {name, description, ...}")
   RelIndex(3, api, ctrl, "createBusinessEntity(request)")
   RelIndex(4, ctrl, svc, "createBusinessEntity(request, user)")
@@ -188,7 +192,7 @@ C4Dynamic
   RelIndex(13, mapper, ctrl, "BusinessEntityResponse DTO")
   RelIndex(14, ctrl, api, "201 Created")
   RelIndex(15, api, fe, "BusinessEntityResponse JSON")
-  RelIndex(16, fe, steward, "Entity shown in catalogue")
+  RelIndex(16, fe, owner, "Entity shown in catalogue")
 ```
 
 ---
@@ -203,21 +207,21 @@ C4Deployment
 
   Deployment_Node(host, "Docker Host", "Linux / Windows / macOS") {
 
-    Deployment_Node(network, "Docker network: leargon-net", "bridge") {
+    Deployment_Node(network, "Docker network: leargon-network", "bridge — containers communicate by service name") {
 
-      Deployment_Node(mysqlNode, "mysql", "Docker container — mysql:8.4") {
-        ContainerDb(mysqlDb, "MySQL 8.4", "MySQL", "Stores all platform data. Volume-mounted for persistence. Exposed on host port 3306.")
+      Deployment_Node(mysqlNode, "leargon-mysql", "mysql:8.4 — internal only, no host port binding") {
+        ContainerDb(mysqlDb, "MySQL 8.4", "MySQL · internal port 3306", "Stores all platform data. Volume-mounted (mysql-data). Reachable inside the network as leargon-mysql:3306.")
       }
 
-      Deployment_Node(backendNode, "leargon-backend", "Docker container — eclipse-temurin:21-jre-alpine") {
-        Container(backendApp, "Léargon REST API", "Kotlin / Micronaut 4.6 / JVM 21", "Shadow JAR. Liquibase runs migrations on startup. Listens on internal port 8080, exposed as 8081.")
+      Deployment_Node(backendNode, "leargon-backend", "eclipse-temurin:21-jre-alpine · host 8081 → container 8080") {
+        Container(backendApp, "Léargon REST API", "Kotlin / Micronaut 4.6 / JVM 21 · listens :8080", "Shadow JAR. Liquibase runs migrations at startup.")
       }
 
-      Deployment_Node(frontendNode, "leargon-frontend", "Docker container — nginx:alpine") {
+      Deployment_Node(frontendNode, "leargon-frontend", "nginx:alpine · host 3000 → container 80") {
 
-        Deployment_Node(nginxNode, "nginx", "nginx:alpine — reverse proxy & static file server") {
+        Deployment_Node(nginxNode, "nginx", "nginx:alpine — reverse proxy & static file server · listens :80") {
           Container(nginxSpa, "React SPA", "Static files (JS/CSS/HTML)", "Built with Vite, served from /usr/share/nginx/html. SPA fallback: all non-file routes return index.html.")
-          Container(nginxProxy, "API Proxy", "nginx location /api/", "Forwards /api/* → backend:8080. Strips /api prefix. Sets X-Real-IP, X-Forwarded-For, X-Forwarded-Proto headers.")
+          Container(nginxProxy, "API Proxy", "nginx location /api/", "Forwards /api/* → leargon-backend:8080. Strips /api prefix.")
         }
 
       }
@@ -235,11 +239,11 @@ C4Deployment
 
 ### nginx configuration summary (`nginx.conf.template`)
 
-| Concern | Detail |
-|---------|--------|
-| **API proxy** | `location /api/` → `proxy_pass ${BACKEND_URL}/` — strips `/api` prefix before forwarding |
-| **SPA routing** | `location /` → `try_files $uri $uri/ /index.html` — all unknown paths serve the React app |
-| **Static asset caching** | `*.js, *.css, *.png, ...` → `Cache-Control: public, max-age=31536000, immutable` (1 year) |
-| **Gzip** | Enabled for text, CSS, JS, JSON, XML |
-| **Security headers** | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `HSTS`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` |
-| **CSP** | `default-src 'self'`; allows `connect-src` to `login.microsoftonline.com` and `sts.windows.net` for MSAL |
+| **Concern**              | **Detail**                                                                                                                                                       |
+|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **API proxy**            | `location /api/` → `proxy_pass ${BACKEND_URL}/` — strips `/api` prefix before forwarding                                                                         |
+| **SPA routing**          | `location /` → `try_files $uri $uri/ /index.html` — all unknown paths serve the React app                                                                        |
+| **Static asset caching** | `*.js, *.css, *.png, ...` → `Cache-Control: public, max-age=31536000, immutable` (1 year)                                                                        |
+| **Gzip**                 | Enabled for text, CSS, JS, JSON, XML                                                                                                                             |
+| **Security headers**     | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `HSTS`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` |
+| **CSP**                  | `default-src 'self'`; allows `connect-src` to `login.microsoftonline.com` and `sts.windows.net` for MSAL                                                         |
