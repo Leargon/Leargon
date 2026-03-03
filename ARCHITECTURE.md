@@ -21,7 +21,7 @@ C4Context
   System_Ext(azure, "Azure Entra ID", "Enterprise identity provider — authenticates users via OpenID Connect / MSAL and issues ID tokens (optional)")
   System_Ext(db, "MySQL 8.4", "Relational database — persists all platform data and Liquibase migration state")
 
-  Rel(user, leargon, "Browses & edits business entities, processes, domains, and organisational units", "HTTPS / Browser")
+  Rel(owner, leargon, "Browses & edits business entities, processes, domains, and organisational units", "HTTPS / Browser")
   Rel(user, leargon, "Browses business entities, processes, domains, and organisational units", "HTTPS / Browser")
   Rel(admin, leargon, "Configures users, locales, classifications, business entities, business processes, domains, and organisational units", "HTTPS / Browser")
   Rel(leargon, azure, "Validates Azure ID tokens via JWKS", "HTTPS")
