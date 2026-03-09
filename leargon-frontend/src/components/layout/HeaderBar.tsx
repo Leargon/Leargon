@@ -13,9 +13,10 @@ import {
   Tooltip,
   SelectChangeEvent,
 } from '@mui/material';
-import { Settings, Person, Logout } from '@mui/icons-material';
+import { Settings, Person, Logout, LightMode, DarkMode } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
+import { useThemeMode } from '../../context/ThemeContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 
@@ -23,6 +24,7 @@ const HeaderBar: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
+  const { effectiveMode, toggleMode } = useThemeMode();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
@@ -80,6 +82,13 @@ const HeaderBar: React.FC = () => {
           <MenuItem value="en">English</MenuItem>
         )}
       </Select>
+
+      {/* Dark mode toggle */}
+      <Tooltip title={effectiveMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+        <IconButton size="small" onClick={toggleMode}>
+          {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
+        </IconButton>
+      </Tooltip>
 
       {/* Settings (admin only) */}
       {isAdmin && (

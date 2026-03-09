@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { LocaleProvider } from './context/LocaleContext';
+import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import AppShell from './components/layout/AppShell';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -20,18 +21,6 @@ import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
 import NotFoundPage from './pages/NotFoundPage';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -41,12 +30,24 @@ const queryClient = new QueryClient({
   },
 });
 
-const App: React.FC = () => {
+const ThemedRoutes: React.FC = () => {
+  const { effectiveMode } = useThemeMode();
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: effectiveMode,
+          primary: { main: '#1976d2' },
+          secondary: { main: '#dc004e' },
+        },
+      }),
+    [effectiveMode],
+  );
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ErrorBoundary>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ErrorBoundary>
         <BrowserRouter>
           <AuthProvider>
             <LocaleProvider>
@@ -86,8 +87,17 @@ const App: React.FC = () => {
             </LocaleProvider>
           </AuthProvider>
         </BrowserRouter>
-        </ErrorBoundary>
-      </ThemeProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeModeProvider>
+        <ThemedRoutes />
+      </ThemeModeProvider>
     </QueryClientProvider>
   );
 };

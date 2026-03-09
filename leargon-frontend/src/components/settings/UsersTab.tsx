@@ -48,7 +48,7 @@ const UsersTab: React.FC = () => {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { data: usersResponse, isLoading } = useGetAllUsers();
-  const users = (usersResponse?.data as UserResponse[] | undefined) || [];
+  const users = [...((usersResponse?.data as UserResponse[] | undefined) || [])].sort((a, b) => (a.username || '').localeCompare(b.username || ''));
 
   const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();

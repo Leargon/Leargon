@@ -98,6 +98,12 @@ open class BusinessEntityService(
     }
 
     @Transactional
+    open fun createBusinessEntityAsResponse(request: CreateBusinessEntityRequest, currentUser: User): BusinessEntityResponse {
+        val entity = createBusinessEntity(request, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+    }
+
+    @Transactional
     open fun updateBusinessEntityParent(entityKey: String, parentKey: String?, currentUser: User): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
@@ -124,6 +130,12 @@ open class BusinessEntityService(
     }
 
     @Transactional
+    open fun updateBusinessEntityParentAsResponse(entityKey: String, parentKey: String?, currentUser: User): BusinessEntityResponse {
+        val entity = updateBusinessEntityParent(entityKey, parentKey, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+    }
+
+    @Transactional
     open fun updateBusinessEntityDataOwner(entityKey: String, dataOwnerUsername: String, currentUser: User): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
@@ -136,6 +148,12 @@ open class BusinessEntityService(
         createBusinessEntityVersion(entity, currentUser, "OWNER_CHANGE",
             "Changed data owner to ${newOwner.username}")
         return entity
+    }
+
+    @Transactional
+    open fun updateBusinessEntityDataOwnerAsResponse(entityKey: String, dataOwnerUsername: String, currentUser: User): BusinessEntityResponse {
+        val entity = updateBusinessEntityDataOwner(entityKey, dataOwnerUsername, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
     }
 
     @Transactional
@@ -161,6 +179,12 @@ open class BusinessEntityService(
     }
 
     @Transactional
+    open fun updateBusinessEntityNamesAsResponse(entityKey: String, names: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntityResponse {
+        val entity = updateBusinessEntityNames(entityKey, names, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+    }
+
+    @Transactional
     open fun updateBusinessEntityDescriptions(entityKey: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
@@ -171,6 +195,12 @@ open class BusinessEntityService(
         entity = businessEntityRepository.update(entity)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated descriptions")
         return entity
+    }
+
+    @Transactional
+    open fun updateBusinessEntityDescriptionsAsResponse(entityKey: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntityResponse {
+        val entity = updateBusinessEntityDescriptions(entityKey, descriptions, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
     }
 
     @Retryable(attempts = "3", delay = "100ms")

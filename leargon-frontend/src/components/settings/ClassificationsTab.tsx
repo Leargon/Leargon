@@ -50,7 +50,7 @@ const ClassificationsTab: React.FC = () => {
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
   const { data: classificationsResponse } = useGetClassifications();
-  const classifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
+  const classifications = [...((classificationsResponse?.data as ClassificationResponse[] | undefined) || [])].sort((a, b) => a.key.localeCompare(b.key));
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 

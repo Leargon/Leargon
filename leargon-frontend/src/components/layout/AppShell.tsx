@@ -15,7 +15,7 @@ const AppShell: React.FC = () => {
           sx={{
             flexGrow: 1,
             overflow: 'auto',
-            bgcolor: 'grey.50',
+            bgcolor: 'background.default',
           }}
         >
           <Outlet />

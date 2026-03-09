@@ -11,7 +11,6 @@ import jakarta.validation.Valid
 import org.leargon.backend.api.BusinessEntityApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
-import org.leargon.backend.mapper.BusinessEntityMapper
 import org.leargon.backend.model.AssignBusinessDomainRequest
 import org.leargon.backend.model.BusinessEntityResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
@@ -36,8 +35,7 @@ open class BusinessEntityController(
     private val businessEntityService: BusinessEntityService,
     private val classificationService: ClassificationService,
     private val userService: UserService,
-    private val securityService: SecurityService,
-    private val businessEntityMapper: BusinessEntityMapper
+    private val securityService: SecurityService
 ) : BusinessEntityApi {
 
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> =
@@ -56,8 +54,7 @@ open class BusinessEntityController(
 
     override fun createBusinessEntity(@Valid @Body createBusinessEntityRequest: CreateBusinessEntityRequest): HttpResponse<BusinessEntityResponse> {
         val currentUser = getCurrentUser()
-        val entity = businessEntityService.createBusinessEntity(createBusinessEntityRequest, currentUser)
-        val response = businessEntityMapper.toBusinessEntityResponse(entity)
+        val response = businessEntityService.createBusinessEntityAsResponse(createBusinessEntityRequest, currentUser)
         return HttpResponse.status<BusinessEntityResponse>(HttpStatus.CREATED).body(response)
     }
 
@@ -80,26 +77,22 @@ open class BusinessEntityController(
 
     override fun updateBusinessEntityParent(key: String, @Valid @Body updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        val entity = businessEntityService.updateBusinessEntityParent(key, updateBusinessEntityParentRequest.parentKey, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(entity)
+        return businessEntityService.updateBusinessEntityParentAsResponse(key, updateBusinessEntityParentRequest.parentKey, currentUser)
     }
 
     override fun updateBusinessEntityDataOwner(key: String, @Valid @Body updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        val entity = businessEntityService.updateBusinessEntityDataOwner(key, updateBusinessEntityDataOwnerRequest.dataOwnerUsername, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(entity)
+        return businessEntityService.updateBusinessEntityDataOwnerAsResponse(key, updateBusinessEntityDataOwnerRequest.dataOwnerUsername, currentUser)
     }
 
     override fun updateBusinessEntityNames(key: String, @Valid @Body names: List<LocalizedText>): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        val entity = businessEntityService.updateBusinessEntityNames(key, names, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(entity)
+        return businessEntityService.updateBusinessEntityNamesAsResponse(key, names, currentUser)
     }
 
     override fun updateBusinessEntityDescriptions(key: String, @Valid @Body descriptions: List<LocalizedText>): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        val entity = businessEntityService.updateBusinessEntityDescriptions(key, descriptions, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(entity)
+        return businessEntityService.updateBusinessEntityDescriptionsAsResponse(key, descriptions, currentUser)
     }
 
     override fun updateBusinessEntityInterfaces(key: String, @Valid @Body updateBusinessEntityInterfacesRequest: UpdateBusinessEntityInterfacesRequest): BusinessEntityResponse {
