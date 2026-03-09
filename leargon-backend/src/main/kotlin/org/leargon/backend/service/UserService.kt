@@ -83,7 +83,7 @@ open class UserService(
     }
 
     @Transactional
-    open fun deleteUser(userId: Long): User {
+    open fun deleteUser(userId: Long) {
         val user = getUserById(userId)
         if (user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Cannot delete fallback admin user")
@@ -103,8 +103,7 @@ open class UserService(
             val suffix = if (ledUnits.size == 1) "" else "s"
             throw ForbiddenOperationException("Cannot delete user who is lead of ${ledUnits.size} organisational unit$suffix. Reassign lead first.")
         }
-        user.enabled = false
-        return userRepository.update(user)
+        userRepository.delete(user)
     }
 
     open fun getUserRoles(user: User): List<String> =

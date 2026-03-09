@@ -36,7 +36,7 @@ class BusinessDomain {
     var children: MutableSet<BusinessDomain> = mutableSetOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_id", nullable = false)
+    @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
 
     @JdbcTypeCode(SqlTypes.JSON)

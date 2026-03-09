@@ -1,11 +1,6 @@
-# Hard delete user with no ownership
-**AS AN** admin
-**I WANT** to delete users, which are not used anymore, and not just disable them
-**SO THAT** I can clean up users list
-
 # Entity inheritence in processes
-**AS A** parent entity
-**I WANT** to inherit the input and output entites from my linked processes
+**AS A** parent entity\
+**I WANT** to inherit the input and output entites from my linked processes\
 **SO THAT** a user can see dynamically, which entities are used in the process
 
 # Retention rule
@@ -20,7 +15,7 @@
 
 # Statistics
 **AS AN** admin\
-**I WANT** to define statistical metrics, which are calculated repeatedly\
+**I WANT** to define statistical metrics, which are calculated repeatedly (with a cronjob-application)\
 **SO THAT** I can check for completeness or compliance
 
 # Field configuration (optional, mandatory)

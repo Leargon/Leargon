@@ -173,8 +173,8 @@ paths:
     delete:
       tags:
       - Administration
-      summary: Soft-delete user
-      description: Disables a user account (soft delete). Cannot delete fallback admin user. Requires ROLE_ADMIN.
+      summary: Hard-delete user
+      description: Permanently deletes a user account. Only allowed if the user has no data ownership, process ownership, or organisational unit lead assignments. Cannot delete fallback admin user. Requires ROLE_ADMIN.
       operationId: deleteUser
       security:
       - bearerAuth: []
@@ -187,14 +187,10 @@ paths:
           type: integer
           format: int64
       responses:
-        '200':
-          description: User soft-deleted (disabled) successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserResponse'
+        '204':
+          description: User permanently deleted
         '403':
-          description: Cannot delete fallback admin user
+          description: Cannot delete user — either fallback admin or user still has ownership/lead assignments
         '404':
           description: User not found
         '401':

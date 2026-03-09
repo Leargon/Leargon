@@ -1,0 +1,140 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-make-user-references-nullable-business-domains
+      author: leargon
+      comment: Make created_by_id nullable in business_domains with ON DELETE SET NULL to support hard-deleting users with no ownership.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: business_domains
+            constraintName: fk_business_domains_created_by_id
+        - dropNotNullConstraint:
+            tableName: business_domains
+            columnName: created_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: business_domains
+            baseColumnNames: created_by_id
+            constraintName: fk_business_domains_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-business-domain-versions
+      author: leargon
+      comment: Make changed_by_id nullable in business_domain_versions with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: business_domain_versions
+            constraintName: fk_domain_versions_changed_by_id
+        - dropNotNullConstraint:
+            tableName: business_domain_versions
+            columnName: changed_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: business_domain_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_domain_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-business-entities
+      author: leargon
+      comment: Make created_by_id nullable in business_entities with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: business_entities
+            constraintName: fk_business_entities_created_by_id
+        - dropNotNullConstraint:
+            tableName: business_entities
+            columnName: created_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: created_by_id
+            constraintName: fk_business_entities_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-business-entity-versions
+      author: leargon
+      comment: Make changed_by_id nullable in business_entity_versions with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: business_entity_versions
+            constraintName: fk_business_versions_changed_by_id
+        - dropNotNullConstraint:
+            tableName: business_entity_versions
+            columnName: changed_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: business_entity_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_business_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-processes
+      author: leargon
+      comment: Make created_by_id nullable in processes with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: processes
+            constraintName: fk_processes_created_by_id
+        - dropNotNullConstraint:
+            tableName: processes
+            columnName: created_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: processes
+            baseColumnNames: created_by_id
+            constraintName: fk_processes_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-process-versions
+      author: leargon
+      comment: Make changed_by_id nullable in process_versions with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: process_versions
+            constraintName: fk_process_versions_changed_by_id
+        - dropNotNullConstraint:
+            tableName: process_versions
+            columnName: changed_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: process_versions
+            baseColumnNames: changed_by_id
+            constraintName: fk_process_versions_changed_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+  - changeSet:
+      id: 012-make-user-references-nullable-organisational-units
+      author: leargon
+      comment: Make created_by_id nullable in organisational_units with ON DELETE SET NULL.
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: organisational_units
+            constraintName: fk_organisational_units_created_by_id
+        - dropNotNullConstraint:
+            tableName: organisational_units
+            columnName: created_by_id
+            columnDataType: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: organisational_units
+            baseColumnNames: created_by_id
+            constraintName: fk_organisational_units_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL

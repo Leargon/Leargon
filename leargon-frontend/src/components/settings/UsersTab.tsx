@@ -309,7 +309,7 @@ const UsersTab: React.FC = () => {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete user <strong>{userToDelete?.username}</strong>? This action cannot be undone.
+            Permanently delete user <strong>{userToDelete?.username}</strong>? This cannot be undone. The user must have no data ownership, process ownership, or organisational unit lead assignments.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

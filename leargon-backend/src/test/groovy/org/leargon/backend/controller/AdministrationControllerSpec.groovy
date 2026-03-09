@@ -8,12 +8,23 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.AdministrationChangePasswordRequest
+import org.leargon.backend.model.CreateBusinessEntityRequest
+import org.leargon.backend.model.CreateOrganisationalUnitRequest
+import org.leargon.backend.model.CreateProcessRequest
+import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UpdateUserRequestRolesInner
 import org.leargon.backend.model.UserResponse
+import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
+import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.ProcessVersionRepository
+import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
 import spock.lang.Specification
 
@@ -27,7 +38,39 @@ class AdministrationControllerSpec extends Specification {
     @Inject
     UserRepository userRepository
 
+    @Inject
+    BusinessEntityVersionRepository businessEntityVersionRepository
+
+    @Inject
+    BusinessEntityRepository businessEntityRepository
+
+    @Inject
+    ProcessVersionRepository processVersionRepository
+
+    @Inject
+    ProcessRepository processRepository
+
+    @Inject
+    OrganisationalUnitRepository organisationalUnitRepository
+
+    @Inject
+    SupportedLocaleRepository localeRepository
+
+    def setup() {
+        if (localeRepository.count() == 0) {
+            def en = new SupportedLocale()
+            en.localeCode = "en"; en.displayName = "English"
+            en.isDefault = true; en.isActive = true; en.sortOrder = 1
+            localeRepository.save(en)
+        }
+    }
+
     def cleanup() {
+        businessEntityVersionRepository.deleteAll()
+        businessEntityRepository.deleteAll()
+        processVersionRepository.deleteAll()
+        processRepository.deleteAll()
+        organisationalUnitRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -332,27 +375,113 @@ class AdministrationControllerSpec extends Specification {
         exception.status == HttpStatus.CONFLICT
     }
 
-    def "DELETE /administration/users/{id} should soft-delete user"() {
-        given: "an admin token and a user to delete"
+    def "DELETE /administration/users/{id} should hard-delete user with no ownership"() {
+        given: "an admin token and a plain user to delete"
         String adminToken = createAdminToken()
-
-        def userToDelete = new SignupRequest("todelete@example.com", "todelete", "password123", "To", "Delete")
-        client.toBlocking().exchange(HttpRequest.POST("/authentication/signup", userToDelete))
+        client.toBlocking().exchange(HttpRequest.POST("/authentication/signup",
+                new SignupRequest("todelete@example.com", "todelete", "password123", "To", "Delete")))
         def user = userRepository.findByEmail("todelete@example.com").get()
 
-        when: "deleting user"
+        when: "hard-deleting the user"
         def response = client.toBlocking().exchange(
-                HttpRequest.DELETE("/administration/users/${user.id}")
-                        .bearerAuth(adminToken),
-                UserResponse
+                HttpRequest.DELETE("/administration/users/${user.id}").bearerAuth(adminToken)
         )
 
-        then: "response is successful with user data"
-        response.status == HttpStatus.OK
+        then: "204 No Content is returned"
+        response.status == HttpStatus.NO_CONTENT
 
-        and: "user is soft-deleted (disabled)"
-        def disabledUser = userRepository.findByEmail("todelete@example.com").get()
-        !disabledUser.enabled
+        and: "user is permanently removed from the database"
+        userRepository.findByEmail("todelete@example.com").isEmpty()
+    }
+
+    def "DELETE /administration/users/{id} should return 403 when user is data owner of a business entity"() {
+        given: "a user who owns a business entity"
+        String adminToken = createAdminToken()
+        def ownerResp = client.toBlocking().exchange(
+                HttpRequest.POST("/authentication/signup",
+                        new SignupRequest("owner@example.com", "owner", "password123", "Owner", "User")),
+                Map)
+        String ownerToken = ownerResp.body().accessToken
+        def owner = userRepository.findByEmail("owner@example.com").get()
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Owned Entity")]))
+                        .bearerAuth(ownerToken), Map)
+
+        when: "attempting to delete the owner"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/administration/users/${owner.id}").bearerAuth(adminToken))
+
+        then: "403 Forbidden is returned"
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /administration/users/{id} should return 403 when user is process owner"() {
+        given: "a user who owns a process"
+        String adminToken = createAdminToken()
+        def ownerResp = client.toBlocking().exchange(
+                HttpRequest.POST("/authentication/signup",
+                        new SignupRequest("procowner@example.com", "procowner", "password123", "Proc", "Owner")),
+                Map)
+        String ownerToken = ownerResp.body().accessToken
+        def owner = userRepository.findByEmail("procowner@example.com").get()
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/processes",
+                        new CreateProcessRequest([new LocalizedText("en", "Owned Process")]))
+                        .bearerAuth(ownerToken), Map)
+
+        when: "attempting to delete the process owner"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/administration/users/${owner.id}").bearerAuth(adminToken))
+
+        then: "403 Forbidden is returned"
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /administration/users/{id} should return 403 when user is lead of an organisational unit"() {
+        given: "a user who leads an organisational unit"
+        String adminToken = createAdminToken()
+        client.toBlocking().exchange(HttpRequest.POST("/authentication/signup",
+                new SignupRequest("leader@example.com", "leader", "password123", "Lead", "User")))
+        def leader = userRepository.findByEmail("leader@example.com").get()
+
+        def unitReq = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Unit")])
+        unitReq.leadUsername = "leader"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", unitReq).bearerAuth(adminToken), Map)
+
+        when: "attempting to delete the leader"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/administration/users/${leader.id}").bearerAuth(adminToken))
+
+        then: "403 Forbidden is returned"
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /administration/users/{id} should return 403 for fallback admin user"() {
+        given: "an admin token and the fallback admin user"
+        String adminToken = createAdminToken()
+        def fallbackAdmin = userRepository.findAll().find { it.isFallbackAdministrator }
+        // If no fallback admin exists in test environment, mark the admin itself
+        if (!fallbackAdmin) {
+            def admin = userRepository.findByEmail("admin@example.com").get()
+            admin.isFallbackAdministrator = true
+            userRepository.update(admin)
+            fallbackAdmin = admin
+        }
+
+        when: "attempting to delete the fallback admin"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/administration/users/${fallbackAdmin.id}").bearerAuth(adminToken))
+
+        then: "403 Forbidden is returned"
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
     }
 
     def "POST /administration/users/{id}/disable should disable user account"() {

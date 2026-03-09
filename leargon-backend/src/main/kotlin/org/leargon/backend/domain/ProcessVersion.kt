@@ -32,7 +32,7 @@ class ProcessVersion {
     var versionNumber: Int = 0
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by_id", nullable = false)
+    @JoinColumn(name = "changed_by_id")
     var changedBy: User? = null
 
     @Column(name = "change_type", nullable = false, length = 30)

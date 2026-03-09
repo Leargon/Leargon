@@ -1,6 +1,7 @@
 package org.leargon.backend.controller
 
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.security.annotation.Secured
@@ -40,9 +41,9 @@ open class AdministrationController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun deleteUser(id: Long): UserResponse {
-        val user = userService.deleteUser(id)
-        return userService.toUserResponse(user)
+    override fun deleteUser(id: Long): HttpResponse<Void> {
+        userService.deleteUser(id)
+        return HttpResponse.status(HttpStatus.NO_CONTENT)
     }
 
     @Secured("ROLE_ADMIN")

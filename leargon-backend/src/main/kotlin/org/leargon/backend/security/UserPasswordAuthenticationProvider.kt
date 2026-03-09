@@ -1,10 +1,9 @@
 package org.leargon.backend.security
 
-import io.micronaut.core.annotation.Nullable
 import io.micronaut.http.HttpRequest
-import io.micronaut.security.authentication.AuthenticationProvider
 import io.micronaut.security.authentication.AuthenticationRequest
 import io.micronaut.security.authentication.AuthenticationResponse
+import io.micronaut.security.authentication.provider.ReactiveAuthenticationProvider
 import jakarta.inject.Singleton
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.service.AuthenticationService
@@ -12,22 +11,21 @@ import org.leargon.backend.service.UserService
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-@Suppress("DEPRECATION")
 @Singleton
 open class UserPasswordAuthenticationProvider(
     private val authenticationService: AuthenticationService,
     private val userService: UserService
-) : AuthenticationProvider<HttpRequest<*>> {
+) : ReactiveAuthenticationProvider<HttpRequest<*>, String, String> {
 
     override fun authenticate(
-        @Nullable httpRequest: HttpRequest<*>?,
-        authenticationRequest: AuthenticationRequest<*, *>
+        requestContext: HttpRequest<*>?,
+        authenticationRequest: AuthenticationRequest<String, String>
     ): Publisher<AuthenticationResponse> {
         return Mono.create { emitter ->
             try {
                 val loginRequest = LoginRequest(
-                    authenticationRequest.identity as String,
-                    authenticationRequest.secret as String
+                    authenticationRequest.identity,
+                    authenticationRequest.secret
                 )
 
                 val user = authenticationService.authenticate(loginRequest)
