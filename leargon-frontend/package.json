@@ -29,6 +29,9 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.3.0"
   },
+  "overrides": {
+    "rollup": ">=4.59.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@testcontainers/mysql": "^11.12.0",
