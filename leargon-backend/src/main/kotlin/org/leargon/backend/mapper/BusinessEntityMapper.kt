@@ -12,14 +12,38 @@ import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.BusinessEntityVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
+import org.leargon.backend.service.FieldConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 @Singleton
-open class BusinessEntityMapper {
+open class BusinessEntityMapper(
+    private val fieldConfigurationService: FieldConfigurationService
+) {
 
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
+        val fc = fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
+            when {
+                fieldName == "names" -> businessEntity.names.isNotEmpty()
+                fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
+                fieldName == "businessDomain" -> businessEntity.businessDomain != null
+                fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    businessEntity.classificationAssignments.any { it.classificationKey == classKey }
+                }
+                else -> true
+            }
+        }
         return BusinessEntityResponse(
             businessEntity.key,
             UserMapper.toUserSummary(businessEntity.dataOwner),
@@ -36,6 +60,9 @@ open class BusinessEntityMapper {
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(businessEntity.classificationAssignments))
+            .retentionPeriod(businessEntity.retentionPeriod)
+            .missingMandatoryFields(fc.missing)
+            .mandatoryFields(fc.mandatory)
     }
 
     fun toLocalizedBusinessEntityResponse(entity: BusinessEntity, locale: String): LocalizedBusinessEntityResponse {

@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-create-field-configuration-tables
+      author: leargon
+      changes:
+        - createTable:
+            tableName: field_configurations
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: field_name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: field_configurations
+            columnNames: entity_type, field_name
+            constraintName: uq_field_configuration_entity_type_field_name

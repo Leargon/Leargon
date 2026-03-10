@@ -183,3 +183,21 @@
 **IF** \
 **I WANT** to delete the classification value, automatically removing all assignments of this value from entities, domains, processes and organisational units\
 **SO THAT** the value cannot be used anymore
+
+#### USER STORY 'Configure mandatory fields'
+**AS AN** admin\
+**IF** \
+**I WANT** to configure which fields are mandatory for each entity type (business entity, business domain, business process, organisational unit), choosing from standard fields (e.g. retention period, business domain, process owner, lead) as well as locale-specific name/description fields and specific classification assignments\
+**SO THAT** data owners and process owners are made aware of missing information and the catalogue data quality is maintained
+
+#### USER STORY 'View mandatory field indicators'
+**AS A** logged in user\
+**IF** one or more fields are configured as mandatory for an entity type\
+**I WANT** to see a * marker next to every section header that contains a mandatory field on the entity detail page, with individual classification rows also marked when a specific classification is mandatory\
+**SO THAT** I can immediately see which sections require attention without having to check the settings
+
+#### USER STORY 'View missing mandatory fields warning'
+**AS A** data owner, process owner, lead, or admin\
+**IF** one or more mandatory fields are not filled in for an entity I am responsible for\
+**I WANT** to see a warning on the entity detail page listing the specific fields that are missing\
+**SO THAT** I know exactly what needs to be filled in to meet the data quality requirements

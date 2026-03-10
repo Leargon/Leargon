@@ -11,14 +11,39 @@ import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
+import org.leargon.backend.service.FieldConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 @Singleton
-open class ProcessMapper {
+open class ProcessMapper(
+    private val fieldConfigurationService: FieldConfigurationService
+) {
 
     fun toProcessResponse(process: Process): ProcessResponse {
+        val fc = fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
+            when {
+                fieldName == "names" -> process.names.isNotEmpty()
+                fieldName == "descriptions" -> process.descriptions.isNotEmpty()
+                fieldName == "businessDomain" -> process.businessDomain != null
+                fieldName == "processOwner" -> process.processOwner != null
+                fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    process.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    process.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    process.classificationAssignments.any { it.classificationKey == classKey }
+                }
+                else -> true
+            }
+        }
         return ProcessResponse(
             process.key,
             UserMapper.toUserSummary(process.processOwner),
@@ -37,6 +62,8 @@ open class ProcessMapper {
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
+            .missingMandatoryFields(fc.missing)
+            .mandatoryFields(fc.mandatory)
     }
 
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {

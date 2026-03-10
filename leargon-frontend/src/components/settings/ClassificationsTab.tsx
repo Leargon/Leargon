@@ -20,6 +20,8 @@ import {
   MenuItem,
   Tooltip,
   Divider,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -68,6 +70,7 @@ const ClassificationsTab: React.FC = () => {
   const [newNames, setNewNames] = useState<LocalizedText[]>([]);
   const [newDescriptions, setNewDescriptions] = useState<LocalizedText[]>([]);
   const [newAssignableTo, setNewAssignableTo] = useState<ClassificationAssignableTo>('BUSINESS_ENTITY');
+  const [newMultiValue, setNewMultiValue] = useState(false);
 
 
   // Create value dialog
@@ -105,6 +108,7 @@ const ClassificationsTab: React.FC = () => {
           names: newNames.filter((n) => n.text.trim()),
           descriptions: newDescriptions.filter((d) => d.text.trim()),
           assignableTo: newAssignableTo,
+          multiValue: newMultiValue,
         },
       });
       setSuccess('Classification created');
@@ -120,6 +124,7 @@ const ClassificationsTab: React.FC = () => {
     setNewNames([]);
     setNewDescriptions([]);
     setNewAssignableTo('BUSINESS_ENTITY');
+    setNewMultiValue(false);
   };
 
   const handleDeleteClassification = async (key: string) => {
@@ -213,6 +218,7 @@ const ClassificationsTab: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
                       <Chip label={c.assignableTo.replace('BUSINESS_', '')} size="small" variant="outlined" />
                       <Chip label={`${(c.values ?? []).length} values`} size="small" variant="outlined" />
+                      {c.multiValue && <Chip label="multi-value" size="small" color="primary" variant="outlined" />}
                     </Box>
                   </Box>
                   <Tooltip title="Delete classification">
@@ -291,6 +297,10 @@ const ClassificationsTab: React.FC = () => {
               <MenuItem value="BUSINESS_PROCESS">Business Process</MenuItem>
               <MenuItem value="ORGANISATIONAL_UNIT">Organisational Unit</MenuItem>
             </Select>
+            <FormControlLabel
+              control={<Switch checked={newMultiValue} onChange={(e) => setNewMultiValue(e.target.checked)} />}
+              label="Allow multiple values per entity"
+            />
           </Box>
         </DialogContent>
         <DialogActions>

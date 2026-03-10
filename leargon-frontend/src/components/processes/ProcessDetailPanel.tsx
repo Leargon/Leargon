@@ -123,6 +123,21 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isOwnerOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
+  // Mandatory field helpers
+  const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
+  const mandatoryList = [
+    `names.${defaultLocale}`,
+    ...(process?.mandatoryFields ?? []),
+  ];
+  const isMandatory = (...fieldNames: string[]) =>
+    fieldNames.some((f) =>
+      mandatoryList.includes(f) ||
+      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
+      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+    );
+  const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
+  const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
+
   const updateNames = useUpdateProcessNames();
   const updateDescriptions = useUpdateProcessDescriptions();
   const updateType = useUpdateProcessType();
@@ -295,10 +310,18 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         )}
       </Box>
 
+      {/* Missing mandatory fields warning — only visible to owner/admin */}
+      {isOwnerOrAdmin && process.missingMandatoryFields && process.missingMandatoryFields.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Missing mandatory fields: {process.missingMandatoryFields.join(', ')}
+        </Alert>
+      )}
+
       {/* Names & Descriptions */}
       <SectionHeader title="Names & Descriptions" canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...process.names], descriptions: [...(process.descriptions || [])] })}
-        onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
+        onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving}
+        isMandatory={isMandatory('names')} />
       {namesEdit.isEditing && namesEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           <TranslationEditor locales={locales} names={namesEdit.editValue.names} descriptions={namesEdit.editValue.descriptions}
@@ -359,7 +382,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Process Owner */}
       <SectionHeader title="Process Owner" canEdit={isAdmin} isEditing={ownerEdit.isEditing}
         onEdit={() => ownerEdit.startEdit(process.processOwner.username)} onSave={ownerEdit.save}
-        onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving} />
+        onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}
+        isMandatory={isMandatory('processOwner')} />
       <Box sx={{ mb: 2 }}>
         {ownerEdit.isEditing ? (
           <Box>
@@ -439,7 +463,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Business Domain */}
       <SectionHeader title="Business Domain" canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
         onEdit={() => domainEdit.startEdit(process.businessDomain?.key || null)} onSave={domainEdit.save}
-        onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving} />
+        onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving}
+        isMandatory={isMandatory('businessDomain')} />
       <Box sx={{ mb: 2 }}>
         {domainEdit.isEditing ? (
           <Box>
@@ -496,7 +521,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Executing Units */}
       <SectionHeader title="Executing Units" canEdit={isOwnerOrAdmin} isEditing={execUnitsEdit.isEditing}
         onEdit={() => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || [])}
-        onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving} />
+        onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving}
+        isMandatory={isMandatory('executingUnits')} />
       <Box sx={{ mb: 2 }}>
         {execUnitsEdit.isEditing ? (
           <Box>
@@ -542,7 +568,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         onEdit={() => classEdit.startEdit(process.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
         })) || [])}
-        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving} />
+        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving}
+        isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.map((c) => {
@@ -572,7 +599,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                <Typography variant="body2" sx={{ minWidth: 120 }}>
+                  {getLocalizedText(c.names, c.key)}
+                  {isClassificationMandatory(c.key) && (
+                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                  )}:
+                </Typography>
                 {value ? (
                   <Chip label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
                 ) : (
@@ -719,11 +751,15 @@ interface SectionHeaderProps {
   onSave: () => void;
   onCancel: () => void;
   isSaving: boolean;
+  isMandatory?: boolean;
 }
 
-const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing, onEdit, onSave, onCancel, isSaving }) => (
+const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing, onEdit, onSave, onCancel, isSaving, isMandatory }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
+    {isMandatory && (
+      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+    )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
     )}

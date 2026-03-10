@@ -28,4 +28,6 @@ export interface CreateClassificationRequest {
   /** Descriptions for the classification */
   descriptions?: LocalizedText[];
   assignableTo: ClassificationAssignableTo;
+  /** Whether multiple values of this classification can be assigned to a single entity */
+  multiValue?: boolean;
 }

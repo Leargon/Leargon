@@ -69,6 +69,8 @@ open class ClassificationService(
         classification.createdBy = currentUser
         classification.assignableTo = request.assignableTo.value
 
+        classification.multiValue = request.multiValue ?: false
+
         classification.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         if (request.descriptions != null) {
             classification.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -101,6 +103,10 @@ open class ClassificationService(
                 validateTranslations(request.descriptions, false)
             }
             classification.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
+        }
+
+        if (request.multiValue != null) {
+            classification.multiValue = request.multiValue!!
         }
 
         classification = classificationRepository.update(classification)
@@ -326,24 +332,26 @@ open class ClassificationService(
     }
 
     private fun validateAssignments(assignments: List<ClassificationAssignmentRequest>, expectedAssignableTo: String) {
-        val classificationKeys = assignments.map { it.classificationKey }
-        if (classificationKeys.size != classificationKeys.toSet().size) {
-            throw IllegalArgumentException("Duplicate classification keys: only one value per classification is allowed")
-        }
-
-        assignments.forEach { assignment ->
-            val classification = classificationRepository.findByKey(assignment.classificationKey)
-                .orElseThrow { ResourceNotFoundException("Classification not found: ${assignment.classificationKey}") }
+        assignments.groupBy { it.classificationKey }.forEach { (classKey, group) ->
+            val classification = classificationRepository.findByKey(classKey)
+                .orElseThrow { ResourceNotFoundException("Classification not found: $classKey") }
 
             if (classification.assignableTo != expectedAssignableTo) {
                 throw IllegalArgumentException(
-                    "Classification '${assignment.classificationKey}' is not assignable to $expectedAssignableTo")
+                    "Classification '$classKey' is not assignable to $expectedAssignableTo")
             }
 
-            val value = classification.values.find { it.key == assignment.valueKey }
-            if (value == null) {
-                throw ResourceNotFoundException(
-                    "Classification value '${assignment.valueKey}' not found in classification '${assignment.classificationKey}'")
+            if (group.size > 1 && !classification.multiValue) {
+                throw IllegalArgumentException(
+                    "Classification '$classKey' is single-value: only one value can be assigned")
+            }
+
+            group.forEach { assignment ->
+                val value = classification.values.find { it.key == assignment.valueKey }
+                if (value == null) {
+                    throw ResourceNotFoundException(
+                        "Classification value '${assignment.valueKey}' not found in classification '$classKey'")
+                }
             }
         }
     }

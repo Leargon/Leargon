@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-add-classification-multi-value
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: classifications
+            columns:
+              - column:
+                  name: multi_value
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

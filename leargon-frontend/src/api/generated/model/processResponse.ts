@@ -45,6 +45,16 @@ export interface ProcessResponse {
   classificationAssignments?: ClassificationAssignmentResponse[];
   parentProcess?: ProcessSummaryResponse;
   childProcesses?: ProcessSummaryResponse[];
+  /**
+   * List of mandatory fields that are currently missing values
+   * @nullable
+   */
+  missingMandatoryFields?: string[] | null;
+  /**
+   * List of fields configured as mandatory for this entity type
+   * @nullable
+   */
+  mandatoryFields?: string[] | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

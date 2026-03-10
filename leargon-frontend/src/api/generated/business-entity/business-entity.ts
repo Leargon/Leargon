@@ -51,6 +51,7 @@ import type {
   UpdateBusinessEntityInterfacesRequest,
   UpdateBusinessEntityParentRequest,
   UpdateBusinessEntityRelationshipRequest,
+  UpdateRetentionPeriodRequest,
   VersionDiffResponse
 } from '../model';
 
@@ -2058,3 +2059,105 @@ export function useGetVersionDiff<TData = Awaited<ReturnType<typeof getVersionDi
 
 
 
+/**
+ * Sets or clears the retention period for a business entity. Requires data owner or admin.
+ * @summary Update retention period
+ */
+export type updateBusinessEntityRetentionPeriodResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type updateBusinessEntityRetentionPeriodResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityRetentionPeriodResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBusinessEntityRetentionPeriodResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBusinessEntityRetentionPeriodResponseSuccess = (updateBusinessEntityRetentionPeriodResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessEntityRetentionPeriodResponseError = (updateBusinessEntityRetentionPeriodResponse401 | updateBusinessEntityRetentionPeriodResponse403 | updateBusinessEntityRetentionPeriodResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityRetentionPeriodResponse = (updateBusinessEntityRetentionPeriodResponseSuccess | updateBusinessEntityRetentionPeriodResponseError)
+
+export const getUpdateBusinessEntityRetentionPeriodUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/retention-period`
+}
+
+export const updateBusinessEntityRetentionPeriod = async (key: string,
+    updateRetentionPeriodRequest: UpdateRetentionPeriodRequest, options?: RequestInit): Promise<updateBusinessEntityRetentionPeriodResponse> => {
+  
+  return customAxios<updateBusinessEntityRetentionPeriodResponse>(getUpdateBusinessEntityRetentionPeriodUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateRetentionPeriodRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessEntityRetentionPeriodMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>, TError,{key: string;data: UpdateRetentionPeriodRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>, TError,{key: string;data: UpdateRetentionPeriodRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityRetentionPeriod'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>, {key: string;data: UpdateRetentionPeriodRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityRetentionPeriod(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityRetentionPeriodMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>>
+    export type UpdateBusinessEntityRetentionPeriodMutationBody = UpdateRetentionPeriodRequest
+    export type UpdateBusinessEntityRetentionPeriodMutationError = void
+
+    /**
+ * @summary Update retention period
+ */
+export const useUpdateBusinessEntityRetentionPeriod = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>, TError,{key: string;data: UpdateRetentionPeriodRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityRetentionPeriod>>,
+        TError,
+        {key: string;data: UpdateRetentionPeriodRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityRetentionPeriodMutationOptions(options), queryClient);
+    }
+    

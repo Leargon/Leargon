@@ -709,4 +709,195 @@ class ClassificationControllerSpec extends Specification {
         def assignments = entityGetResponse.body().classificationAssignments
         assignments == null || assignments.size() == 0
     }
+
+    // =====================
+    // MULTI-VALUE CARDINALITY TESTS
+    // =====================
+
+    def "POST /classifications with multiValue=true should allow multiple assignments"() {
+        given: "a multi-value classification with two values"
+        String token = createAdminToken()
+
+        def classResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Tags")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        ).multiValue(true)).bearerAuth(token),
+                ClassificationResponse
+        )
+        String classKey = classResponse.body().key
+
+        and: "verify multiValue is returned in response"
+        classResponse.body().multiValue == true
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classKey}/values",
+                        new CreateClassificationValueRequest("pii", [new LocalizedText("en", "PII")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classKey}/values",
+                        new CreateClassificationValueRequest("financial", [new LocalizedText("en", "Financial")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        and: "an entity exists"
+        def entityResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                Map
+        )
+        String entityKey = entityResponse.body().key
+
+        when: "assigning two values from the same multi-value classification"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/classifications",
+                        [
+                                new ClassificationAssignmentRequest(classKey, "pii"),
+                                new ClassificationAssignmentRequest(classKey, "financial")
+                        ]
+                ).bearerAuth(token),
+                Map
+        )
+
+        then: "assignment is successful"
+        response.status == HttpStatus.OK
+        response.body().classificationAssignments.size() == 2
+    }
+
+    def "PUT /business-entities/{key}/classifications should reject duplicate keys on single-value classification"() {
+        given: "a single-value (default) classification with two values"
+        String token = createAdminToken()
+
+        def classResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Sensitivity Single")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String classKey = classResponse.body().key
+
+        and: "verify multiValue defaults to false"
+        classResponse.body().multiValue == false
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classKey}/values",
+                        new CreateClassificationValueRequest("high", [new LocalizedText("en", "High")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classKey}/values",
+                        new CreateClassificationValueRequest("low", [new LocalizedText("en", "Low")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        and: "an entity exists"
+        def entityResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                Map
+        )
+        String entityKey = entityResponse.body().key
+
+        when: "assigning two values from single-value classification"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/classifications",
+                        [
+                                new ClassificationAssignmentRequest(classKey, "high"),
+                                new ClassificationAssignmentRequest(classKey, "low")
+                        ]
+                ).bearerAuth(token),
+                Map
+        )
+
+        then: "400 bad request - single-value constraint violated"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.BAD_REQUEST
+    }
+
+    def "PUT /classifications/{key} should update multiValue flag"() {
+        given: "a single-value classification"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Sensitivity")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        when: "updating multiValue to true"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/classifications/${key}",
+                        new UpdateClassificationRequest().multiValue(true)
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        then: "multiValue is updated"
+        response.body().multiValue == true
+    }
+
+    def "DELETE /classifications/{key} should cascade-remove assignments (cascade delete test)"() {
+        given: "a classification assigned to an entity"
+        String token = createAdminToken()
+
+        def classResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "SensitivityCascade")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String classKey = classResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${classKey}/values",
+                        new CreateClassificationValueRequest("high", [new LocalizedText("en", "High")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        def entityResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "CustomerForCascade")])
+                ).bearerAuth(token),
+                Map
+        )
+        String entityKey = entityResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/classifications",
+                        [new ClassificationAssignmentRequest(classKey, "high")]
+                ).bearerAuth(token),
+                Map
+        )
+
+        when: "deleting the classification"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/classifications/${classKey}").bearerAuth(token)
+        )
+
+        then: "entity's assignments are cleaned up"
+        def entityGetResponse = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                Map
+        )
+        def assignments = entityGetResponse.body().classificationAssignments
+        assignments == null || assignments.size() == 0
+    }
+
 }

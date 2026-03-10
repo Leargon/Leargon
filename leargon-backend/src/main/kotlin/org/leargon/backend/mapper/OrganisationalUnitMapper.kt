@@ -7,14 +7,38 @@ import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.service.FieldConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 @Singleton
-open class OrganisationalUnitMapper {
+open class OrganisationalUnitMapper(
+    private val fieldConfigurationService: FieldConfigurationService
+) {
 
     fun toResponse(unit: OrganisationalUnit, executingProcesses: List<Process> = emptyList()): OrganisationalUnitResponse {
+        val fc = fieldConfigurationService.compute("ORGANISATIONAL_UNIT") { fieldName ->
+            when {
+                fieldName == "names" -> unit.names.isNotEmpty()
+                fieldName == "descriptions" -> unit.descriptions.isNotEmpty()
+                fieldName == "unitType" -> !unit.unitType.isNullOrBlank()
+                fieldName == "lead" -> unit.lead != null
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    unit.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    unit.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    unit.classificationAssignments.any { it.classificationKey == classKey }
+                }
+                else -> true
+            }
+        }
         return OrganisationalUnitResponse(
             unit.key,
             UserMapper.toUserSummary(unit.createdBy),
@@ -29,6 +53,8 @@ open class OrganisationalUnitMapper {
             .children(toSummaryList(unit.children))
             .executingProcesses(toProcessSummaryList(executingProcesses))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
+            .missingMandatoryFields(fc.missing)
+            .mandatoryFields(fc.mandatory)
     }
 
     fun toTreeResponse(unit: OrganisationalUnit): OrganisationalUnitTreeResponse {

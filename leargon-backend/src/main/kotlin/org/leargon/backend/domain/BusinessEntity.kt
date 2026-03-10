@@ -81,6 +81,9 @@ class BusinessEntity {
     @Column(name = "classification_assignments", columnDefinition = "TEXT")
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
+    @Column(name = "retention_period", length = 100)
+    var retentionPeriod: String? = null
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

@@ -23,4 +23,6 @@ export interface UpdateClassificationRequest {
   names?: LocalizedText[];
   /** Updated descriptions */
   descriptions?: LocalizedText[];
+  /** Whether multiple values of this classification can be assigned to a single entity */
+  multiValue?: boolean;
 }

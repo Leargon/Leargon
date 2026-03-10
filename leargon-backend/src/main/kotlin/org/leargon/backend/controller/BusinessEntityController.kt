@@ -24,6 +24,7 @@ import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
 import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
+import org.leargon.backend.model.UpdateRetentionPeriodRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessEntityService
 import org.leargon.backend.service.ClassificationService
@@ -121,6 +122,11 @@ open class BusinessEntityController(
         val currentUser = getCurrentUser()
         classificationService.assignClassificationsToEntity(key, classificationAssignmentRequest, currentUser)
         return businessEntityService.getBusinessEntityByKeyAsResponse(key)
+    }
+
+    override fun updateBusinessEntityRetentionPeriod(key: String, @Valid @Body updateRetentionPeriodRequest: UpdateRetentionPeriodRequest): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updateRetentionPeriod(key, updateRetentionPeriodRequest.retentionPeriod, currentUser)
     }
 
     private fun getCurrentUser(): User {

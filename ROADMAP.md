@@ -1,40 +1,5 @@
-# Tier 1 — Foundation
-*These stories establish the governance model and the core compliance metadata that all other stories depend on.*
-
-## Field configuration (optional, mandatory)
-**AS AN** admin\
-**I WANT** to define which fields (including locale-specific fields) are mandatory\
-**SO THAT** I can configure catalogue quality requirements to the needs of the company
-
-## Classification cardinality (single-value vs multi-value)
-**AS AN** admin\
-**I WANT** to configure each classification as either single-value (only one value may be assigned at a time) or multi-value (multiple values may be assigned simultaneously)\
-**SO THAT** I can model classifications where exactly one answer applies (e.g. legal basis) separately from classifications where multiple categories may apply at once (e.g. sensitive data categories)
-
-## Legal basis and consent mechanism (Art. 6 + Art. 12 lit. b + Art. 6 para. 6–7 revDSG)
-**AS AN** admin\
-**I WANT** to create classifications assignable to processes that capture legal basis (e.g. consent, contract, legal obligation, legitimate interest, public task) and, for consent-based processing, the consent type (implicit/explicit), collection method, and withdrawal method\
-**SO THAT** process owners can tag each process with the required values using the existing classification system, satisfying Art. 6 para. 1, Art. 12 para. 2 lit. b, and Art. 6 para. 6–7 revDSG — enforcement of completeness relies on the field configuration story to make the legal basis classification mandatory
-
-## Sensitive personal data classification (Art. 5 lit. c revDSG)
-**AS AN** admin\
-**I WANT** to create a multi-value classification assignable to business entities with the sensitive data categories defined in Art. 5 lit. c revDSG (health, genetic, biometric, racial/ethnic origin, political/religious/trade-union views, criminal proceedings, social assistance)\
-**SO THAT** data owners can tag entities with one or more sensitive categories using the existing classification system — the stricter governance consequences (mandatory DPIA suggestion, explicit consent requirement) are enforced by the DPIA workflow story and the field configuration story respectively
-
-## Retention rule and purpose limitation (Art. 6 para. 3–4 + Art. 7 revDSG)
-**AS A** data owner or admin\
-**I WANT** to define the purpose and retention period for each business entity and process, and to see a flag when data is retained beyond its declared purpose or retention period\
-**SO THAT** everyone can check the retention requirement, and the principles of purpose limitation (Art. 6 para. 3 revDSG) and storage limitation — anonymise or delete when no longer needed (Art. 6 para. 4 revDSG) — are operationally enforced through the governance catalogue
-
----
-
 # Tier 2 — Compliance readiness
 *These stories produce the actual revDSG compliance outputs and require Tier 1 metadata to be meaningful.*
-
-## Data Protection Officer (DPO) role (Art. 10 revDSG)
-**AS AN** admin\
-**I WANT** to designate a user as Data Protection Officer and make their contact details visible within the system\
-**SO THAT** data subjects and the FDPIC can identify the DPO contact as required by Art. 10 para. 2 revDSG, and the DPO can review processing activities, DPIAs, and incident records within Léargon
 
 ## Data processor and third-party management (Art. 9 revDSG)
 **AS AN** admin\
@@ -46,21 +11,16 @@
 **I WANT** to document for each business entity and process whether personal data is transferred to a country outside Switzerland, and if so, which country and which safeguard applies (Federal Council adequacy decision, standard contractual clauses, binding corporate rules, or an exception under Art. 17 revDSG)\
 **SO THAT** the transfer is traceable in the processing register as required by Art. 12 para. 2 lit. g revDSG and compliant with Art. 16 revDSG
 
-## Processing register export (Art. 12 revDSG)
+## Catalogue export with templates (Art. 12 revDSG)
 **AS AN** admin\
-**I WANT** to export the complete register of processing activities as a structured document (PDF, CSV or Excel)\
-**SO THAT** I can present a compliant record of processing activities to the FDPIC or an auditor on request, containing all mandatory fields from Art. 12 para. 2 revDSG: controller identity, purpose, data subject categories, data categories, recipients, retention periods, security measures and cross-border transfers
+**I WANT** to export catalogue data using a configurable export dashboard — selecting entity types, fields, filters, and output format (PDF, CSV, or Excel) — with a preloaded template for the processing register that pre-selects all mandatory fields from Art. 12 para. 2 revDSG (controller identity, purpose, data subject categories, data categories, recipients, retention periods, security measures, and cross-border transfers)\
+**SO THAT** I can present a compliant processing register to the FDPIC or an auditor on request, and reuse the same export framework for other catalogue views such as DPIA lists or incident registers
 
 ## Data Protection Impact Assessment (DPIA) workflow (Art. 22–23 revDSG)
 **AS A** data owner or admin\
 **I WANT** to trigger a DPIA for a process or entity, document the risk description, the planned measures, and the residual risk assessment, and record whether prior consultation with the FDPIC was required\
 **SO THAT** high-risk processing activities are identified and formally assessed before going live, as required by Art. 22 revDSG, and the consultation obligation under Art. 23 revDSG is tracked and fulfilled\
 **AND** the system automatically suggests a DPIA when I mark an entity as containing sensitive personal data processed on a large scale or a process involving systematic large-scale monitoring
-
-## Data subject access request (DSAR) management (Art. 25–32 revDSG)
-**AS AN** admin\
-**I WANT** to register incoming data subject requests (right of access, rectification, erasure, portability, objection to processing), link them to the relevant business entities and processes, and see at a glance which requests are approaching or past the 30-day statutory deadline\
-**SO THAT** I know which data assets are in scope for each request and can demonstrate compliance with data subject rights under Art. 25–32 revDSG — the actual response to the data subject is handled outside Léargon, but its progress and deadline are tracked here
 
 ---
 
@@ -76,11 +36,6 @@
 **AS** Léargon\
 **I WANT** to be able to send e-mails or Teams-webhook messages to notify owners or teams about upcoming governance checkpoints or changes in contents\
 **SO THAT** owners are notified at governance checkpoints and users are notified on watched items
-
-## Security incident register (Art. 24 revDSG)
-**AS AN** admin\
-**I WANT** to log a data security breach, link it to the affected business entities and processes, record the nature of the breach, its consequences, and the measures taken, and track whether the FDPIC was notified\
-**SO THAT** I comply with the notification obligation in Art. 24 revDSG and have a complete audit trail of security incidents and their resolution
 
 ## Entity inheritance in processes
 **AS A** parent entity\

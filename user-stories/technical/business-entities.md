@@ -105,3 +105,9 @@
 **IF** at least two versions of the business entity exist\
 **I WANT** to see the diff between a specific version and its preceding version, highlighting which fields changed and how\
 **SO THAT** I can understand exactly what was changed and by whom at any given point
+
+#### USER STORY 'Set retention period for business entity'
+**AS A** data owner or admin\
+**IF** \
+**I WANT** to set a retention period string on a business entity (e.g. "7 years")\
+**SO THAT** the data lifecycle requirements for that entity are documented and visible to all users

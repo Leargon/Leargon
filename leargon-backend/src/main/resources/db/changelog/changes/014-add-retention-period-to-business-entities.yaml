@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-add-retention-period-to-business-entities
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: retention_period
+                  type: varchar(100)
+                  constraints:
+                    nullable: true

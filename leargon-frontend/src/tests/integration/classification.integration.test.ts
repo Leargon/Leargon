@@ -340,4 +340,83 @@ describe('Classification E2E', () => {
     const res = await userClient.delete(`/classifications/${classif.key}`);
     expect(res.status).toBe(403);
   });
+
+  // =====================
+  // MULTI-VALUE CARDINALITY
+  // =====================
+
+  it('should create classification with multiValue=true', async () => {
+    const res = await adminClient.post<ClassificationResponse>('/classifications', {
+      names: [{ locale: 'en', text: 'FE Multi Classification' }],
+      assignableTo: 'BUSINESS_ENTITY',
+      multiValue: true,
+    });
+    expect(res.status).toBe(201);
+    expect(res.data.multiValue).toBe(true);
+  });
+
+  it('should default multiValue to false', async () => {
+    const res = await adminClient.post<ClassificationResponse>('/classifications', {
+      names: [{ locale: 'en', text: 'FE Single Classification Default' }],
+      assignableTo: 'BUSINESS_ENTITY',
+    });
+    expect(res.status).toBe(201);
+    expect(res.data.multiValue).toBe(false);
+  });
+
+  it('multi-value classification allows multiple assignments to same entity', async () => {
+    const classif = await createClassification(
+      adminClient,
+      'FE Tags Classification',
+      'BUSINESS_ENTITY',
+      [
+        { key: 'tag-a', names: [{ locale: 'en', text: 'Tag A' }] },
+        { key: 'tag-b', names: [{ locale: 'en', text: 'Tag B' }] },
+      ],
+    );
+    // Patch multiValue on the classification (update it)
+    await adminClient.put(`/classifications/${classif.key}`, {
+      names: classif.names,
+      assignableTo: classif.assignableTo,
+      multiValue: true,
+    });
+
+    // Create an entity
+    const entityRes = await adminClient.post('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Multi Assignment Entity' }],
+    });
+    const entityKey = entityRes.data.key;
+
+    // Assign two values from the same multi-value classification
+    const assignRes = await adminClient.put(`/business-entities/${entityKey}/classifications`, [
+      { classificationKey: classif.key, valueKey: 'tag-a' },
+      { classificationKey: classif.key, valueKey: 'tag-b' },
+    ]);
+    expect(assignRes.status).toBe(200);
+  });
+
+  it('single-value classification rejects duplicate assignments', async () => {
+    const classif = await createClassification(
+      adminClient,
+      'FE Single Enforcement Classification',
+      'BUSINESS_ENTITY',
+      [
+        { key: 'sv-a', names: [{ locale: 'en', text: 'SV A' }] },
+        { key: 'sv-b', names: [{ locale: 'en', text: 'SV B' }] },
+      ],
+    );
+    // Ensure multiValue = false (default)
+
+    const entityRes = await adminClient.post('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Single Enforcement Entity' }],
+    });
+    const entityKey = entityRes.data.key;
+
+    // Attempt to assign two values from the same single-value classification
+    const assignRes = await adminClient.put(`/business-entities/${entityKey}/classifications`, [
+      { classificationKey: classif.key, valueKey: 'sv-a' },
+      { classificationKey: classif.key, valueKey: 'sv-b' },
+    ]);
+    expect(assignRes.status).toBe(400);
+  });
 });

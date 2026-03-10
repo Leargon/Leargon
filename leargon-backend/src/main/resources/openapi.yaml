@@ -253,6 +253,57 @@ paths:
           description: User not found
         '401':
           description: Not authenticated
+  /administration/field-configurations:
+    get:
+      tags:
+      - Administration
+      summary: Get all field configurations
+      description: Returns the list of mandatory field configurations per entity type. Requires ROLE_ADMIN.
+      operationId: getFieldConfigurations
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of field configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldConfigurationEntry'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    put:
+      tags:
+      - Administration
+      summary: Replace all field configurations
+      description: Replaces the complete list of mandatory field configurations. Requires ROLE_ADMIN.
+      operationId: replaceFieldConfigurations
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FieldConfigurationEntry'
+      responses:
+        '200':
+          description: Updated list of field configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldConfigurationEntry'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /administration/users/{id}/password:
     put:
       tags:
@@ -1613,6 +1664,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/retention-period:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update retention period
+      description: Sets or clears the retention period for a business entity. Requires data owner or admin.
+      operationId: updateBusinessEntityRetentionPeriod
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRetentionPeriodRequest'
+      responses:
+        '200':
+          description: Updated business entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Forbidden (not data owner or admin)
+        '404':
+          description: Business entity not found
         '401':
           description: Not authenticated
   /classifications:
@@ -3377,6 +3463,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        missingMandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of mandatory fields that are currently missing values
+        mandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as mandatory for this entity type
         createdAt:
           type: string
           format: date-time
@@ -3557,6 +3655,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        retentionPeriod:
+          type: string
+          nullable: true
+          description: Retention period description for the entity
+          example: 7 years
+        missingMandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of mandatory fields that are currently missing values
+        mandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as mandatory for this entity type
         createdAt:
           type: string
           format: date-time
@@ -3697,6 +3812,7 @@ components:
       - createdBy
       - names
       - values
+      - multiValue
       - createdAt
       - updatedAt
       properties:
@@ -3706,6 +3822,10 @@ components:
           example: sensitivity
         assignableTo:
           $ref: '#/components/schemas/ClassificationAssignableTo'
+        multiValue:
+          type: boolean
+          description: Whether multiple values of this classification can be assigned to a single entity
+          default: false
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -3839,6 +3959,10 @@ components:
             type: string
             nullable: false
             description: Interface entity key
+        retentionPeriod:
+          type: string
+          nullable: true
+          description: Retention period description for the entity
     CreateClassificationRequest:
       type: object
       required:
@@ -3858,6 +3982,10 @@ components:
           description: Descriptions for the classification
         assignableTo:
           $ref: '#/components/schemas/ClassificationAssignableTo'
+        multiValue:
+          type: boolean
+          description: Whether multiple values of this classification can be assigned to a single entity
+          default: false
     CreateClassificationValueRequest:
       type: object
       required:
@@ -4136,6 +4264,18 @@ components:
           items:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
           description: Classification assignments for this organisational unit
+        missingMandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of mandatory fields that are currently missing values
+        mandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as mandatory for this entity type
         createdAt:
           type: string
           format: date-time
@@ -4293,6 +4433,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
+        missingMandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of mandatory fields that are currently missing values
+        mandatoryFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as mandatory for this entity type
         createdAt:
           type: string
           format: date-time
@@ -4684,6 +4836,9 @@ components:
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Updated descriptions
+        multiValue:
+          type: boolean
+          description: Whether multiple values of this classification can be assigned to a single entity
     UpdateClassificationValueRequest:
       type: object
       properties:
@@ -4883,6 +5038,28 @@ components:
           type: string
           description: Locale code (e.g., 'en', 'de')
           example: en
+    FieldConfigurationEntry:
+      type: object
+      required:
+      - entityType
+      - fieldName
+      properties:
+        entityType:
+          type: string
+          description: Entity type (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT)
+          example: BUSINESS_ENTITY
+        fieldName:
+          type: string
+          description: Field name that is mandatory (e.g. retentionPeriod, businessDomain, descriptions)
+          example: retentionPeriod
+    UpdateRetentionPeriodRequest:
+      type: object
+      properties:
+        retentionPeriod:
+          type: string
+          nullable: true
+          description: Retention period description (null to clear)
+          example: 7 years
     VersionDiffResponse:
       type: object
       required:

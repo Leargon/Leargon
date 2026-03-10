@@ -23,3 +23,9 @@ databaseChangeLog:
       file: db/changelog/changes/011-remove-account-status-fields-from-users.yaml
   - include:
       file: db/changelog/changes/012-make-user-references-nullable.yaml
+  - include:
+      file: db/changelog/changes/013-add-classification-multi-value.yaml
+  - include:
+      file: db/changelog/changes/014-add-retention-period-to-business-entities.yaml
+  - include:
+      file: db/changelog/changes/015-create-field-configuration-tables.yaml

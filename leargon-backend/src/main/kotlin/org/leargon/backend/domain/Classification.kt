@@ -39,6 +39,9 @@ class Classification {
     @Column(name = "assignable_to", nullable = false, length = 20)
     var assignableTo: String = ""
 
+    @Column(name = "multi_value", nullable = false)
+    var multiValue: Boolean = false
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id", nullable = false)
     var createdBy: User? = null

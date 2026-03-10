@@ -78,6 +78,7 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/settings/users" element={<SettingsPage />} />
                   <Route path="/settings/locales" element={<SettingsPage />} />
                   <Route path="/settings/classifications" element={<SettingsPage />} />
+                  <Route path="/settings/field-configurations" element={<SettingsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

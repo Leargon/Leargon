@@ -4,11 +4,13 @@ import { Box, Tabs, Tab, Typography } from '@mui/material';
 import UsersTab from '../components/settings/UsersTab';
 import LocalesTab from '../components/settings/LocalesTab';
 import ClassificationsTab from '../components/settings/ClassificationsTab';
+import FieldConfigurationTab from '../components/settings/FieldConfigurationTab';
 
 const tabs = [
   { label: 'Users', path: '/settings/users' },
   { label: 'Locales', path: '/settings/locales' },
   { label: 'Classifications', path: '/settings/classifications' },
+  { label: 'Field Configuration', path: '/settings/field-configurations' },
 ];
 
 const SettingsPage: React.FC = () => {
@@ -32,6 +34,7 @@ const SettingsPage: React.FC = () => {
         {tabIndex === 0 && <UsersTab />}
         {tabIndex === 1 && <LocalesTab />}
         {tabIndex === 2 && <ClassificationsTab />}
+        {tabIndex === 3 && <FieldConfigurationTab />}
       </Box>
     </Box>
   );

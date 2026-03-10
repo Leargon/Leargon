@@ -92,6 +92,21 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
+  // Mandatory field helpers
+  const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
+  const mandatoryList = [
+    `names.${defaultLocale}`,
+    ...(domain?.mandatoryFields ?? []),
+  ];
+  const isMandatory = (...fieldNames: string[]) =>
+    fieldNames.some((f) =>
+      mandatoryList.includes(f) ||
+      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
+      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+    );
+  const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
+  const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createSubdomainOpen, setCreateSubdomainOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -225,6 +240,13 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </Box>
       </Box>
 
+      {/* Missing mandatory fields warning — only visible to admin */}
+      {isAdmin && domain.missingMandatoryFields && domain.missingMandatoryFields.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Missing mandatory fields: {domain.missingMandatoryFields.join(', ')}
+        </Alert>
+      )}
+
       {/* Names & Descriptions */}
       <SectionHeader
         title="Names & Descriptions"
@@ -234,6 +256,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         onSave={namesEdit.save}
         onCancel={namesEdit.cancel}
         isSaving={namesEdit.isSaving}
+        isMandatory={isMandatory('names')}
       />
       {namesEdit.isEditing && namesEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
@@ -305,6 +328,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         onSave={typeEdit.save}
         onCancel={typeEdit.cancel}
         isSaving={typeEdit.isSaving}
+        isMandatory={isMandatory('type')}
       />
       {typeEdit.isEditing ? (
         <Box sx={{ mb: 2 }}>
@@ -464,6 +488,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         onSave={classEdit.save}
         onCancel={classEdit.cancel}
         isSaving={classEdit.isSaving}
+        isMandatory={anyClassificationMandatory}
       />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
@@ -508,7 +533,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                <Typography variant="body2" sx={{ minWidth: 120 }}>
+                  {getLocalizedText(c.names, c.key)}
+                  {isClassificationMandatory(c.key) && (
+                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                  )}:
+                </Typography>
                 {value ? (
                   <Chip label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
                 ) : (
@@ -613,6 +643,7 @@ interface SectionHeaderProps {
   onSave: () => void;
   onCancel: () => void;
   isSaving: boolean;
+  isMandatory?: boolean;
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({
@@ -623,9 +654,13 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   onSave,
   onCancel,
   isSaving,
+  isMandatory,
 }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
+    {isMandatory && (
+      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+    )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}>
         <Edit fontSize="small" />

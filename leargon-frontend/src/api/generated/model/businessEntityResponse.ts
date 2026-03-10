@@ -37,6 +37,21 @@ export interface BusinessEntityResponse {
   implementsEntities?: BusinessEntitySummaryResponse[];
   relationships?: BusinessEntityRelationshipResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
+  /**
+   * Retention period description for the entity
+   * @nullable
+   */
+  retentionPeriod?: string | null;
+  /**
+   * List of mandatory fields that are currently missing values
+   * @nullable
+   */
+  missingMandatoryFields?: string[] | null;
+  /**
+   * List of fields configured as mandatory for this entity type
+   * @nullable
+   */
+  mandatoryFields?: string[] | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

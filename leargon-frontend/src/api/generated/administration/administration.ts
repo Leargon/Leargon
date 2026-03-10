@@ -37,6 +37,7 @@ import type {
 
 import type {
   AdministrationChangePasswordRequest,
+  FieldConfigurationEntry,
   SignupRequest,
   UpdateUserRequest,
   UserResponse
@@ -797,6 +798,224 @@ export const useEnableUser = <TError = void,
         TContext
       > => {
       return useMutation(getEnableUserMutationOptions(options), queryClient);
+    }
+    /**
+ * Returns the list of mandatory field configurations per entity type. Requires ROLE_ADMIN.
+ * @summary Get all field configurations
+ */
+export type getFieldConfigurationsResponse200 = {
+  data: FieldConfigurationEntry[]
+  status: 200
+}
+
+export type getFieldConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getFieldConfigurationsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type getFieldConfigurationsResponseSuccess = (getFieldConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type getFieldConfigurationsResponseError = (getFieldConfigurationsResponse401 | getFieldConfigurationsResponse403) & {
+  headers: Headers;
+};
+
+export type getFieldConfigurationsResponse = (getFieldConfigurationsResponseSuccess | getFieldConfigurationsResponseError)
+
+export const getGetFieldConfigurationsUrl = () => {
+
+
+  
+
+  return `/administration/field-configurations`
+}
+
+export const getFieldConfigurations = async ( options?: RequestInit): Promise<getFieldConfigurationsResponse> => {
+  
+  return customAxios<getFieldConfigurationsResponse>(getGetFieldConfigurationsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetFieldConfigurationsQueryKey = () => {
+    return [
+    `/administration/field-configurations`
+    ] as const;
+    }
+
+    
+export const getGetFieldConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFieldConfigurationsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFieldConfigurations>>> = ({ signal }) => getFieldConfigurations({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFieldConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurations>>>
+export type GetFieldConfigurationsQueryError = void
+
+
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all field configurations
+ */
+
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFieldConfigurationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Replaces the complete list of mandatory field configurations. Requires ROLE_ADMIN.
+ * @summary Replace all field configurations
+ */
+export type replaceFieldConfigurationsResponse200 = {
+  data: FieldConfigurationEntry[]
+  status: 200
+}
+
+export type replaceFieldConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type replaceFieldConfigurationsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type replaceFieldConfigurationsResponseSuccess = (replaceFieldConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type replaceFieldConfigurationsResponseError = (replaceFieldConfigurationsResponse401 | replaceFieldConfigurationsResponse403) & {
+  headers: Headers;
+};
+
+export type replaceFieldConfigurationsResponse = (replaceFieldConfigurationsResponseSuccess | replaceFieldConfigurationsResponseError)
+
+export const getReplaceFieldConfigurationsUrl = () => {
+
+
+  
+
+  return `/administration/field-configurations`
+}
+
+export const replaceFieldConfigurations = async (fieldConfigurationEntry: FieldConfigurationEntry[], options?: RequestInit): Promise<replaceFieldConfigurationsResponse> => {
+  
+  return customAxios<replaceFieldConfigurationsResponse>(getReplaceFieldConfigurationsUrl(),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      fieldConfigurationEntry,)
+  }
+);}
+  
+
+
+
+export const getReplaceFieldConfigurationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext> => {
+
+const mutationKey = ['replaceFieldConfigurations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceFieldConfigurations>>, {data: FieldConfigurationEntry[]}> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceFieldConfigurations(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceFieldConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceFieldConfigurations>>>
+    export type ReplaceFieldConfigurationsMutationBody = FieldConfigurationEntry[]
+    export type ReplaceFieldConfigurationsMutationError = void
+
+    /**
+ * @summary Replace all field configurations
+ */
+export const useReplaceFieldConfigurations = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceFieldConfigurations>>,
+        TError,
+        {data: FieldConfigurationEntry[]},
+        TContext
+      > => {
+      return useMutation(getReplaceFieldConfigurationsMutationOptions(options), queryClient);
     }
     /**
  * Allows an administration to reset a user's password without knowing the current password. Cannot change fallback admin password. Requires ROLE_ADMIN.

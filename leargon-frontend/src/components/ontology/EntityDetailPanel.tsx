@@ -48,6 +48,7 @@ import {
   useCreateBusinessEntityRelationship,
   useUpdateBusinessEntityRelationship,
   useGetAllBusinessEntities,
+  useUpdateBusinessEntityRetentionPeriod,
 } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -126,6 +127,21 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
   const isOwnerOrAdmin = isAdmin || (user?.username === entity?.dataOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
+
+  // Mandatory field helpers
+  const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
+  const mandatoryList = [
+    `names.${defaultLocale}`,
+    ...(entity?.mandatoryFields ?? []),
+  ];
+  const isMandatory = (...fieldNames: string[]) =>
+    fieldNames.some((f) =>
+      mandatoryList.includes(f) ||
+      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
+      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+    );
+  const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
+  const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
   const descriptionLocales = isOwnerOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   const updateNames = useUpdateBusinessEntityNames();
@@ -139,6 +155,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const deleteRelationship = useDeleteBusinessEntityRelationship();
   const createRelationship = useCreateBusinessEntityRelationship();
   const updateRelationship = useUpdateBusinessEntityRelationship();
+  const updateRetentionPeriod = useUpdateBusinessEntityRetentionPeriod();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
@@ -206,6 +223,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     },
   });
 
+  // Retention period inline edit
+  const retentionEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      await updateRetentionPeriod.mutateAsync({ key: entityKey, data: { retentionPeriod: val || null } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different entity
   useEffect(() => {
     namesEdit.cancel();
@@ -214,6 +239,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     domainEdit.cancel();
     classEdit.cancel();
     interfacesEdit.cancel();
+    retentionEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityKey]);
 
@@ -342,10 +368,18 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </Box>
       </Box>
 
+      {/* Missing mandatory fields warning — only visible to owner and admin */}
+      {isOwnerOrAdmin && entity.missingMandatoryFields && entity.missingMandatoryFields.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Missing mandatory fields: {entity.missingMandatoryFields.join(', ')}
+        </Alert>
+      )}
+
       {/* Names & Descriptions */}
       <SectionHeader title="Names & Descriptions" canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...entity.names], descriptions: [...(entity.descriptions || [])] })}
-        onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
+        onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving}
+        isMandatory={isMandatory('names')} />
       {namesEdit.isEditing && namesEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           <TranslationEditor locales={locales} names={namesEdit.editValue.names} descriptions={namesEdit.editValue.descriptions}
@@ -461,7 +495,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {/* Business Domain */}
       <SectionHeader title="Business Domain" canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
         onEdit={() => domainEdit.startEdit(entity.businessDomain?.key || null)} onSave={domainEdit.save}
-        onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving} />
+        onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving}
+        isMandatory={isMandatory('businessDomain')} />
       <Box sx={{ mb: 2 }}>
         {domainEdit.isEditing ? (
           <Box>
@@ -482,6 +517,32 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Chip label={entity.businessDomain.name} size="small" onClick={() => navigate(`/domains/${entity.businessDomain!.key}`)} clickable />
         ) : (
           <Typography variant="body2" color="text.secondary">Not assigned</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Retention Period */}
+      <SectionHeader title="Retention Period" canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
+        onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
+        onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
+        isMandatory={isMandatory('retentionPeriod')} />
+      <Box sx={{ mb: 2 }}>
+        {retentionEdit.isEditing ? (
+          <Box>
+            <TextField
+              value={retentionEdit.editValue ?? ''}
+              onChange={(e) => retentionEdit.setEditValue(e.target.value)}
+              size="small"
+              placeholder="e.g. 7 years"
+              sx={{ width: 300 }}
+            />
+            {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
+          </Box>
+        ) : entity.retentionPeriod ? (
+          <Typography variant="body2">{entity.retentionPeriod}</Typography>
+        ) : (
+          <Typography variant="body2" color="text.secondary">Not set</Typography>
         )}
       </Box>
 
@@ -639,10 +700,44 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         onEdit={() => classEdit.startEdit(entity.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
         })) || [])}
-        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving} />
+        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving}
+        isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.map((c) => {
+            if (c.multiValue) {
+              const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
+              return (
+                <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                  <Select<string[]>
+                    multiple
+                    value={currentValues}
+                    onChange={(e) => {
+                      const selected = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                      const otherAssignments = classEdit.editValue!.filter((a) => a.classificationKey !== c.key);
+                      const newAssignments = [...otherAssignments, ...selected.map((v) => ({ classificationKey: c.key, valueKey: v }))];
+                      classEdit.setEditValue(newAssignments);
+                    }}
+                    size="small"
+                    displayEmpty
+                    sx={{ minWidth: 200 }}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((v) => {
+                          const val = c.values?.find((cv) => cv.key === v);
+                          return <Chip key={v} label={val ? getLocalizedText(val.names, v) : v} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {c.values?.map((v) => (
+                      <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              );
+            }
             const currentValue = classEdit.editValue!.find((a) => a.classificationKey === c.key)?.valueKey || '';
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -665,13 +760,24 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       ) : (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.length > 0 ? availableClassifications.map((c) => {
-            const assignment = entity.classificationAssignments?.find((a) => a.classificationKey === c.key);
-            const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
+            const assignments = entity.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
-                {value ? (
-                  <Chip label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
+                <Typography variant="body2" sx={{ minWidth: 120 }}>
+                  {getLocalizedText(c.names, c.key)}
+                  {isClassificationMandatory(c.key) && (
+                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                  )}:
+                </Typography>
+                {assignments.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {assignments.map((a) => {
+                      const value = c.values?.find((v) => v.key === a.valueKey);
+                      return value ? (
+                        <Chip key={a.valueKey} label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
+                      ) : null;
+                    })}
+                  </Box>
                 ) : (
                   <Typography variant="body2" color="text.secondary">Not set</Typography>
                 )}
@@ -854,11 +960,15 @@ interface SectionHeaderProps {
   onSave: () => void;
   onCancel: () => void;
   isSaving: boolean;
+  isMandatory?: boolean;
 }
 
-const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing, onEdit, onSave, onCancel, isSaving }) => (
+const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing, onEdit, onSave, onCancel, isSaving, isMandatory }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
+    {isMandatory && (
+      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+    )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
     )}

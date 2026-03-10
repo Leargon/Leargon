@@ -86,6 +86,7 @@ open class BusinessEntityService(
         if (request.descriptions != null) {
             entity.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
+        entity.retentionPeriod = request.retentionPeriod
 
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = entity.names.find { it.locale == defaultLocale?.localeCode }?.text
@@ -200,6 +201,16 @@ open class BusinessEntityService(
     @Transactional
     open fun updateBusinessEntityDescriptionsAsResponse(entityKey: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntityResponse {
         val entity = updateBusinessEntityDescriptions(entityKey, descriptions, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
+    open fun updateRetentionPeriod(entityKey: String, retentionPeriod: String?, currentUser: User): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+        entity.retentionPeriod = retentionPeriod
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated retention period")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 

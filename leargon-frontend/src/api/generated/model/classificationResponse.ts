@@ -25,6 +25,8 @@ export interface ClassificationResponse {
   /** Classification key (slug) */
   key: string;
   assignableTo: ClassificationAssignableTo;
+  /** Whether multiple values of this classification can be assigned to a single entity */
+  multiValue: boolean;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];

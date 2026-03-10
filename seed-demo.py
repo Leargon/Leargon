@@ -8,7 +8,7 @@ Phase 2 (SEED): Creates fresh e-commerce demo data:
   locales · users · classifications · org units (+ hierarchy + leads) · domains
   (+ types) · entities (+ domains + data owners + interfaces) ·
   processes (+ hierarchy + domains + owners + executing units) ·
-  relationships · classification assignments
+  relationships · classification assignments · field configurations (mandatory fields)
 
 Usage:
   python3 seed-demo.py
@@ -198,11 +198,11 @@ print('\n[2/9] Users...')
 
 # (username, firstName, lastName, email, role)
 user_defs = [
-    ('sarah.mitchell', 'Sarah',  'Mitchell',  'sarah.mitchell@demo-shop.com',  'Head of Sales & Marketing'),
-    ('tom.wagner',     'Tom',    'Wagner',    'tom.wagner@demo-shop.com',       'Finance Manager'),
-    ('lisa.chen',      'Lisa',   'Chen',      'lisa.chen@demo-shop.com',        'Customer Care Manager'),
-    ('marco.rossi',    'Marco',  'Rossi',     'marco.rossi@demo-shop.com',      'Logistics Manager'),
-    ('anna.schneider', 'Anna',   'Schneider', 'anna.schneider@demo-shop.com',   'HR Manager'),
+    ('sarah.mitchell', 'Sarah',  'Mitchell',  'sarah.mitchell@leargon.local',  'Head of Sales & Marketing'),
+    ('tom.wagner',     'Tom',    'Wagner',    'tom.wagner@leargon.local',       'Finance Manager'),
+    ('lisa.chen',      'Lisa',   'Chen',      'lisa.chen@leargon.local',        'Customer Care Manager'),
+    ('marco.rossi',    'Marco',  'Rossi',     'marco.rossi@leargon.local',      'Logistics Manager'),
+    ('anna.schneider', 'Anna',   'Schneider', 'anna.schneider@leargon.local',   'HR Manager'),
 ]
 
 user_keys = {}
@@ -226,19 +226,19 @@ classif_defs = [
         'assignableTo': 'BUSINESS_ENTITY',
         'names': n4('Sensitivity', 'Vertraulichkeit', 'Sensibilite', 'Riservatezza', 'Sensibilidad'),
         'values': [
-            {'key': 'C1', 'names': n4('Public',       'Oeffentlich',    'Public',        'Pubblico',   'Público')},
+            {'key': 'C1', 'names': n4('Public',       'Öffentlich',    'Public',        'Pubblico',   'Público')},
             {'key': 'C2', 'names': n4('Internal',     'Intern',         'Interne',       'Interno',    'Interno')},
             {'key': 'C3', 'names': n4('Confidential', 'Vertraulich',    'Confidentiel',  'Riservato',  'Confidencial')},
-            {'key': 'C4', 'names': n4('Restricted',   'Eingeschraenkt', 'Restreint',     'Limitato',   'Restringido')},
+            {'key': 'C4', 'names': n4('Restricted',   'Eingeschränkt', 'Restreint',     'Limitato',   'Restringido')},
         ],
     },
     {
         'assignableTo': 'BUSINESS_ENTITY',
-        'names': n4('Data Criticality', 'Datenkritikalitaet', 'Criticite des donnees', 'Criticita dei dati', 'Criticidad de datos'),
+        'names': n4('Data Criticality', 'Datenkritikalität', 'Criticite des données', 'Criticita dei dati', 'Criticidad de datos'),
         'values': [
-            {'key': 'critical',   'names': n4('Business Critical', 'Geschaeftskritisch', 'Critique metier',   'Critico per il business', 'Crítico para el negocio')},
+            {'key': 'critical',   'names': n4('Business Critical', 'Geschäftskritisch', 'Critique metier',   'Critico per il business', 'Crítico para el negocio')},
             {'key': 'important',  'names': n4('Important',         'Wichtig',            'Important',         'Importante',              'Importante')},
-            {'key': 'supporting', 'names': n4('Supporting',        'Unterstuetzend',     'Support',           'Di supporto',             'De apoyo')},
+            {'key': 'supporting', 'names': n4('Supporting',        'Unterstützend',     'Support',           'Di supporto',             'De apoyo')},
         ],
     },
     {
@@ -246,20 +246,14 @@ classif_defs = [
         'names': n4('Personal Data', 'Personenbezogene Daten', 'Donnees personnelles', 'Dati personali', 'Datos personales'),
         'values': [
             {'key': 'PD', 'names': n4('Personal Data', 'Personenbezogene Daten', 'Donnees personnelles', 'Dati personali', 'Datos personales')},
-        ],
-    },
-    {
-        'assignableTo': 'BUSINESS_ENTITY',
-        'names': n4('Special Category Personal Data', 'Besondere Kategorien pers. Daten', 'Donnees sensibles', 'Categorie speciali pers.', 'Categorías especiales de datos pers.'),
-        'values': [
             {'key': 'SPD', 'names': n4('Special Category', 'Besondere Kategorie', 'Categorie speciale', 'Categoria speciale', 'Categoría especial')},
         ],
     },
     {
         'assignableTo': 'BUSINESS_PROCESS',
-        'names': n4('Process Priority', 'Prozessprioritat', 'Priorite du processus', 'Priorita del processo', 'Prioridad del proceso'),
+        'names': n4('Process Priority', 'Prozesspriorität', 'Priorite du processus', 'Priorita del processo', 'Prioridad del proceso'),
         'values': [
-            {'key': 'critical', 'names': n4('Business Critical', 'Geschaeftskritisch', 'Critique metier', 'Critico per il business', 'Crítico para el negocio')},
+            {'key': 'critical', 'names': n4('Business Critical', 'Geschäftskritisch', 'Critique metier', 'Critico per il business', 'Crítico para el negocio')},
             {'key': 'high',     'names': n4('High',   'Hoch',   'Haute',   'Alta',  'Alta')},
             {'key': 'medium',   'names': n4('Medium', 'Mittel', 'Moyenne', 'Media', 'Media')},
             {'key': 'low',      'names': n4('Low',    'Niedrig','Faible',  'Bassa', 'Baja')},
@@ -285,7 +279,6 @@ for cd in classif_defs:
 S   = classif_keys.get('Sensitivity',                    'sensitivity')
 DC  = classif_keys.get('Data Criticality',               'data-criticality')
 PD  = classif_keys.get('Personal Data',                  'personal-data')
-SPD = classif_keys.get('Special Category Personal Data', 'special-category-personal-data')
 PP  = classif_keys.get('Process Priority',               'process-priority')
 
 
@@ -306,7 +299,7 @@ ou_data = [
     ('Finance', 'shared-service',
      n4('Finance', 'Finanzen', 'Finance', 'Finanze', 'Finanzas'),
      n4('Responsible for invoicing, payments, accounting and financial reporting.',
-        'Verantwortlich fuer Rechnungsstellung, Zahlungen, Buchhaltung und Finanzberichte.',
+        'Verantwortlich für Rechnungsstellung, Zahlungen, Buchhaltung und Finanzberichte.',
         'Responsable de la facturation, des paiements et des reportings financiers.',
         'Responsabile di fatturazione, pagamenti, contabilita e rendicontazione finanziaria.',
         'Responsable de la facturación, los pagos, la contabilidad y los informes financieros.'),
@@ -324,7 +317,7 @@ ou_data = [
     ('Human Resources', 'support-function',
      n4('Human Resources', 'Personalwesen', 'Ressources humaines', 'Risorse umane', 'Recursos humanos'),
      n4('Handles recruitment, employee management and HR processes.',
-        'Verantwortlich fuer Rekrutierung, Mitarbeiterverwaltung und HR-Prozesse.',
+        'Verantwortlich für Rekrutierung, Mitarbeiterverwaltung und HR-Prozesse.',
         'Gere le recrutement, la gestion des employes et les processus RH.',
         'Gestisce reclutamento, gestione dei dipendenti e processi HR.',
         'Gestiona el reclutamiento, la administración de empleados y los procesos de RRHH.'),
@@ -343,7 +336,7 @@ ou_data = [
     ('Marketing', 'business-unit',
      n4('Marketing', 'Marketing', 'Marketing', 'Marketing', 'Marketing'),
      n4('Runs campaigns, manages product reviews and drives customer acquisition.',
-        'Fuehrt Kampagnen durch, verwaltet Produktbewertungen und treibt Kundengewinnung voran.',
+        'Führt Kampagnen durch, verwaltet Produktbewertungen und treibt Kundengewinnung voran.',
         "Gere les campagnes, les avis produits et l'acquisition client.",
         'Gestisce campagne, recensioni prodotti e acquisizione clienti.',
         'Gestiona campañas, reseñas de productos y la captación de clientes.'),
@@ -352,7 +345,7 @@ ou_data = [
     ('Operations', 'business-unit',
      n4('Operations', 'Betrieb', 'Operations', 'Operazioni', 'Operaciones'),
      n4('Oversees day-to-day order processing and customer service operations.',
-        'Ueberwacht die taegliche Auftragsabwicklung und den Kundendienst.',
+        'Überwacht die tägliche Auftragsabwicklung und den Kundendienst.',
         'Supervise le traitement quotidien des commandes et le service client.',
         "Supervisiona l'elaborazione giornaliera degli ordini e il servizio clienti.",
         'Supervisa el procesamiento diario de pedidos y las operaciones de atención al cliente.'),
@@ -415,7 +408,7 @@ domain_data = [
     ('E-Commerce', None, 'BUSINESS',
      n4('E-Commerce', 'E-Commerce', 'Commerce en ligne', 'E-Commerce', 'Comercio electrónico'),
      n4('Top-level domain encompassing all digital commerce capabilities.',
-        'Oberstes Domaingebiet aller digitalen Handelsfaehigkeiten.',
+        'Oberstes Domaingebiet aller digitalen Handelsfähigkeiten.',
         'Domaine de premier niveau englobant toutes les capacites du commerce numerique.',
         'Dominio di primo livello che comprende tutte le capacita del commercio digitale.',
         'Dominio de nivel superior que abarca todas las capacidades del comercio digital.')),
@@ -423,7 +416,7 @@ domain_data = [
     ('Sales', 'E-Commerce', 'CORE',
      n4('Sales', 'Vertrieb', 'Ventes', 'Vendite', 'Ventas'),
      n4('Covers products, orders, shopping carts, reviews and the sales funnel.',
-        'Umfasst Produkte, Bestellungen, Warenkoerbe, Bewertungen und den Vertriebstrichter.',
+        'Umfasst Produkte, Bestellungen, Warenkörbe, Bewertungen und den Vertriebstrichter.',
         'Couvre les produits, commandes, paniers, avis et le tunnel de vente.',
         'Copre prodotti, ordini, carrelli, recensioni e il funnel di vendita.',
         'Cubre productos, pedidos, carritos de compra, reseñas y el embudo de ventas.')),
@@ -447,7 +440,7 @@ domain_data = [
     ('Shipping', 'Warehouse', 'GENERIC',
      n4('Shipping', 'Versand', 'Expedition', 'Spedizione', 'Envíos'),
      n4('Last-mile delivery and carrier integration.',
-        'Letzte-Meile-Lieferung und Traegerintegration.',
+        'Letzte-Meile-Lieferung und Trägerintegration.',
         "Livraison du dernier kilometre et integration des transporteurs.",
         "Consegna dell'ultimo miglio e integrazione dei corrieri.",
         'Entrega de última milla e integración con transportistas.')),
@@ -463,7 +456,7 @@ domain_data = [
     ('Customer Care', 'E-Commerce', 'GENERIC',
      n4('Customer Care', 'Kundenbetreuung', 'Service client', 'Assistenza clienti', 'Atención al cliente'),
      n4('Customer data management, support processes and natural person registry.',
-        'Kundendatenverwaltung, Supportprozesse und natuerliches Personenregister.',
+        'Kundendatenverwaltung, Supportprozesse und natürliches Personenregister.',
         'Gestion des donnees clients, processus de support et registre des personnes physiques.',
         'Gestione dei dati clienti, processi di supporto e registro delle persone fisiche.',
         'Gestión de datos de clientes, procesos de soporte y registro de personas físicas.')),
@@ -501,9 +494,9 @@ print('\n[6/9] Business entities...')
 # (en_name, parent_en, domain_en, names, descriptions, data_owner_username)
 entity_data = [
     ('Natural Person', None, 'Customer Care',
-     n4('Natural Person', 'Natuerliche Person', 'Personne physique', 'Persona fisica', 'Persona física'),
+     n4('Natural Person', 'Natürliche Person', 'Personne physique', 'Persona fisica', 'Persona física'),
      n4('A human individual with legal capacity. Acts as the shared base identity for customers and employees.',
-        'Eine natuerliche Person mit Rechtshandlungsfaehigkeit. Gemeinsame Basisidentitaet fuer Kunden und Mitarbeiter.',
+        'Eine natürliche Person mit Rechtshandlungsfähigkeit. Gemeinsame Basisidentität für Kunden und Mitarbeiter.',
         'Personne physique avec capacite juridique. Identite de base partagee entre clients et employes.',
         'Persona fisica con capacita giuridica. Identita base condivisa tra clienti e dipendenti.',
         'Persona física con capacidad jurídica. Identidad base compartida entre clientes y empleados.'),
@@ -530,7 +523,7 @@ entity_data = [
     ('Customer', None, 'Customer Care',
      n4('Customer', 'Kunde', 'Client', 'Cliente', 'Cliente'),
      n4('A registered user who can browse products, place orders and manage personal account data.',
-        'Ein registrierter Nutzer, der Produkte suchen, Bestellungen aufgeben und persoenliche Kontodaten verwalten kann.',
+        'Ein registrierter Nutzer, der Produkte suchen, Bestellungen aufgeben und persönliche Kontodaten verwalten kann.',
         'Un utilisateur enregistre qui peut parcourir les produits, passer des commandes et gerer ses donnees.',
         'Un utente registrato che puo sfogliare prodotti, effettuare ordini e gestire i propri dati account.',
         'Un usuario registrado que puede explorar productos, realizar pedidos y gestionar sus datos de cuenta.'),
@@ -593,7 +586,7 @@ entity_data = [
     ('Shopping Cart', None, 'Sales',
      n4('Shopping Cart', 'Warenkorb', 'Panier', 'Carrello', 'Carrito de compras'),
      n4('A temporary collection of products a customer intends to purchase before finalising the order.',
-        'Eine temporaere Produktsammlung, die ein Kunde kaufen moechte, bevor er die Bestellung abschliesst.',
+        'Eine temporäre Produktsammlung, die ein Kunde kaufen möchte, bevor er die Bestellung abschliesst.',
         "Une collection temporaire de produits qu'un client souhaite acheter avant de finaliser la commande.",
         'Una raccolta temporanea di prodotti che un cliente intende acquistare prima di finalizzare l\'ordine.',
         'Una colección temporal de productos que un cliente desea comprar antes de finalizar el pedido.'),
@@ -602,7 +595,7 @@ entity_data = [
     ('Payment Transaction', None, 'Billing',
      n4('Payment Transaction', 'Zahlungstransaktion', 'Transaction de paiement', 'Transazione di pagamento', 'Transacción de pago'),
      n4('A record of a payment attempt or confirmation exchanged with the payment provider.',
-        'Ein Datensatz eines Zahlungsversuchs oder einer Zahlungsbestaetigung beim Zahlungsanbieter.',
+        'Ein Datensatz eines Zahlungsversuchs oder einer Zahlungsbestätigung beim Zahlungsanbieter.',
         'Un enregistrement d\'une tentative ou confirmation de paiement echangee avec le prestataire.',
         'Un registro di un tentativo o conferma di pagamento scambiato con il provider di pagamento.',
         'Un registro de un intento o confirmación de pago intercambiado con el proveedor de pago.'),
@@ -636,9 +629,9 @@ entity_data = [
      'lisa.chen'),
 
     ('Full Name', 'Customer', 'Customer Care',
-     n4('Full Name', 'Vollstaendiger Name', 'Nom complet', 'Nome completo', 'Nombre completo'),
+     n4('Full Name', 'Vollständiger Name', 'Nom complet', 'Nome completo', 'Nombre completo'),
      n4("The customer's full legal name as provided during registration. Classified as personal data.",
-        'Der vollstaendige rechtliche Name des Kunden bei der Registrierung. Personenbezogenes Datum.',
+        'Der vollständige rechtliche Name des Kunden bei der Registrierung. Personenbezogenes Datum.',
         'Le nom complet legal du client fourni lors de la registration. Classifie comme donnee personnelle.',
         'Il nome completo legale del cliente fornito durante la registrazione. Dato personale.',
         'El nombre legal completo del cliente tal como se proporcionó durante el registro. Dato personal.'),
@@ -647,7 +640,7 @@ entity_data = [
     ('Date of Birth', 'Customer', 'Customer Care',
      n4('Date of Birth', 'Geburtsdatum', 'Date de naissance', 'Data di nascita', 'Fecha de nacimiento'),
      n4("The customer's date of birth. Special category personal data under GDPR.",
-        'Das Geburtsdatum des Kunden. Besondere Kategorie personenbezogener Daten gemaess DSGVO.',
+        'Das Geburtsdatum des Kunden. Besondere Kategorie personenbezogener Daten gemäss DSGVO.',
         'La date de naissance du client. Donnee sensible selon le RGPD.',
         'La data di nascita del cliente. Categoria speciale di dati personali ai sensi del GDPR.',
         'La fecha de nacimiento del cliente. Categoría especial de datos personales según el RGPD.'),
@@ -704,16 +697,16 @@ process_data = [
     ('Validate Customer Data', 'Customer Registration', 'Customer Care',
      n4('Validate Customer Data', 'Kundendaten validieren', 'Valider les donnees client', 'Validare i dati cliente', 'Validar datos del cliente'),
      n4('Checks completeness and accuracy of customer profile data against defined business rules.',
-        'Prueft Vollstaendigkeit und Richtigkeit von Kundenprofildaten anhand definierter Geschaeftsregeln.',
+        'Prueft Vollständigkeit und Richtigkeit von Kundenprofildaten anhand definierter Geschäftsregeln.',
         'Verifie la completude et les donnees du profil client selon les regles metier.',
         'Verifica completezza e accuratezza dei dati del profilo cliente secondo le regole di business.',
         'Verifica la integridad y exactitud de los datos del perfil del cliente según las reglas de negocio.'),
      ['operations'], 'lisa.chen'),
 
     ('Confirm Email Address', 'Customer Registration', 'Customer Care',
-     n4('Confirm Email Address', 'E-Mail-Adresse bestaetigen', "Confirmer l'adresse e-mail", "Confermare l'indirizzo e-mail", 'Confirmar dirección de correo'),
+     n4('Confirm Email Address', 'E-Mail-Adresse bestätigen', "Confirmer l'adresse e-mail", "Confermare l'indirizzo e-mail", 'Confirmar dirección de correo'),
      n4("Sends a verification email and confirms the customer's address via a one-time token.",
-        'Sendet eine Verifikations-E-Mail und bestaetigt die E-Mail-Adresse des Kunden per Einmaltoken.',
+        'Sendet eine Verifikations-E-Mail und bestätigt die E-Mail-Adresse des Kunden per Einmaltoken.',
         "Envoie un e-mail de verification et confirme l'adresse e-mail du client via un jeton unique.",
         "Invia un'e-mail di verifica e conferma l'indirizzo e-mail del cliente tramite token monouso.",
         'Envía un correo de verificación y confirma la dirección del cliente mediante un token de un solo uso.'),
@@ -722,7 +715,7 @@ process_data = [
     ('Place an Order', None, 'Sales',
      n4('Place an Order', 'Bestellung aufgeben', 'Passer une commande', 'Effettuare un ordine', 'Realizar un pedido'),
      n4('End-to-end process covering product search, cart management, checkout and payment confirmation.',
-        'End-to-End-Prozess von der Produktsuche ueber den Warenkorb bis zur Zahlungsbestaetigung.',
+        'End-to-End-Prozess von der Produktsuche ueber den Warenkorb bis zur Zahlungsbestätigung.',
         'Processus de bout en bout couvrant la recherche produit, le panier, le paiement et la confirmation.',
         'Processo end-to-end che copre ricerca prodotto, gestione carrello, checkout e conferma pagamento.',
         'Proceso de extremo a extremo que abarca la búsqueda de productos, el carrito, el pago y la confirmación.'),
@@ -731,7 +724,7 @@ process_data = [
     ('Search for Product', 'Place an Order', 'Sales',
      n4('Search for Product', 'Produkt suchen', 'Rechercher un produit', 'Cercare un prodotto', 'Buscar un producto'),
      n4('Allows customers to search, filter and browse the product catalogue.',
-        'Ermoeglicht Kunden das Suchen, Filtern und Durchsuchen des Produktkatalogs.',
+        'Ermöglicht Kunden das Suchen, Filtern und Durchsuchen des Produktkatalogs.',
         'Permet aux clients de rechercher, filtrer et parcourir le catalogue produits.',
         'Permette ai clienti di cercare, filtrare e navigare nel catalogo prodotti.',
         'Permite a los clientes buscar, filtrar y explorar el catálogo de productos.'),
@@ -740,7 +733,7 @@ process_data = [
     ('Add to Cart', 'Place an Order', 'Sales',
      n4('Add to Cart', 'In den Warenkorb legen', 'Ajouter au panier', 'Aggiungere al carrello', 'Añadir al carrito'),
      n4("Adds a selected product with a given quantity to the customer's active shopping cart.",
-        'Fuegt ein ausgewaehltes Produkt mit einer bestimmten Menge zum aktiven Warenkorb hinzu.',
+        'Fügt ein ausgewähltes Produkt mit einer bestimmten Menge zum aktiven Warenkorb hinzu.',
         "Ajoute un produit selectionne avec une quantite donnee au panier actif du client.",
         'Aggiunge un prodotto selezionato con una quantita specificata al carrello attivo del cliente.',
         'Añade un producto seleccionado con una cantidad determinada al carrito activo del cliente.'),
@@ -749,7 +742,7 @@ process_data = [
     ('Checkout', 'Place an Order', 'Sales',
      n4('Checkout', 'Kasse', 'Passer en caisse', 'Concludi acquisto', 'Finalizar compra'),
      n4('Converts the shopping cart into a confirmed order after verifying address and payment details.',
-        'Wandelt den Warenkorb in eine bestaetigte Bestellung um nach Pruefen von Adresse und Zahlung.',
+        'Wandelt den Warenkorb in eine bestätigte Bestellung um nach Prüfen von Adresse und Zahlung.',
         "Convertit le panier en commande confirmee apres verification de l'adresse et du paiement.",
         "Converte il carrello in un ordine confermato dopo la verifica dell'indirizzo e del pagamento.",
         'Convierte el carrito en un pedido confirmado tras verificar la dirección y los datos de pago.'),
@@ -758,7 +751,7 @@ process_data = [
     ('Validate Shipping Address', 'Checkout', 'Shipping',
      n4('Validate Shipping Address', 'Lieferadresse validieren', "Valider l'adresse de livraison", "Validare l'indirizzo di spedizione", 'Validar dirección de entrega'),
      n4('Verifies that the provided shipping address is complete, correctly formatted and deliverable.',
-        'Prueft, ob die angegebene Lieferadresse vollstaendig, korrekt formatiert und zustellbar ist.',
+        'Prüft, ob die angegebene Lieferadresse vollständig, korrekt formatiert und zustellbar ist.',
         "Verifie que l'adresse de livraison est complete, correctement formatee et livrable.",
         "Verifica che l'indirizzo di spedizione sia completo, correttamente formattato e raggiungibile.",
         'Verifica que la dirección de entrega sea completa, esté correctamente formateada y sea entregable.'),
@@ -767,7 +760,7 @@ process_data = [
     ('Process Payment', 'Checkout', 'Billing',
      n4('Process Payment', 'Zahlung verarbeiten', 'Traiter le paiement', 'Elaborare il pagamento', 'Procesar pago'),
      n4('Initiates and confirms a payment transaction with the payment provider to settle the order amount.',
-        'Initiiert und bestaetigt eine Zahlungstransaktion mit dem Zahlungsanbieter fuer den Bestellbetrag.',
+        'Initiiert und bestätigt eine Zahlungstransaktion mit dem Zahlungsanbieter für den Bestellbetrag.',
         'Lance et confirme une transaction de paiement avec le prestataire pour regler le montant.',
         "Avvia e conferma una transazione di pagamento con il provider per saldare l'importo dell'ordine.",
         'Inicia y confirma una transacción de pago con el proveedor para liquidar el importe del pedido.'),
@@ -776,7 +769,7 @@ process_data = [
     ('Send Invoice', 'Checkout', 'Billing',
      n4('Send Invoice', 'Rechnung senden', 'Envoyer la facture', 'Inviare la fattura', 'Enviar factura'),
      n4('Generates an invoice for a confirmed order and delivers it to the customer via email.',
-        'Generiert eine Rechnung fuer eine bestaetigte Bestellung und sendet sie per E-Mail an den Kunden.',
+        'Generiert eine Rechnung für eine bestätigte Bestellung und sendet sie per E-Mail an den Kunden.',
         'Genere une facture pour une commande confirmee et la livre au client par e-mail.',
         "Genera una fattura per un ordine confermato e la consegna al cliente via e-mail.",
         'Genera una factura para un pedido confirmado y la entrega al cliente por correo electrónico.'),
@@ -785,7 +778,7 @@ process_data = [
     ('Ship Order', None, 'Shipping',
      n4('Ship Order', 'Bestellung versenden', 'Expedier la commande', "Spedire l'ordine", 'Enviar pedido'),
      n4('Coordinates warehouse preparation and carrier handover to deliver the order to the customer.',
-        'Koordiniert die Lagervorbereitung und Traegeruebergabe fuer die Lieferung beim Kunden.',
+        'Koordiniert die Lagervorbereitung und Trägerübergabe für die Lieferung beim Kunden.',
         'Coordonne la preparation en entrepot et la remise au transporteur pour livrer la commande.',
         'Coordina la preparazione in magazzino e la consegna al corriere per recapitare l\'ordine.',
         'Coordina la preparación en almacén y la entrega al transportista para llevar el pedido al cliente.'),
@@ -794,7 +787,7 @@ process_data = [
     ('Pick and Pack', 'Ship Order', 'Warehouse',
      n4('Pick and Pack', 'Kommissionierung und Verpackung', 'Preparation et emballage', 'Prelievo e imballaggio', 'Preparar y empacar'),
      n4('Warehouse staff pick ordered items from stock and pack them into parcels for dispatch.',
-        'Lagermitarbeiter entnehmen bestellte Artikel aus dem Lager und verpacken sie fuer den Versand.',
+        'Lagermitarbeiter entnehmen bestellte Artikel aus dem Lager und verpacken sie für den Versand.',
         'Le personnel d\'entrepot prepare les articles commandes et les emballe en colis pour expedition.',
         'Il personale del magazzino preleva gli articoli ordinati e li imballa in colli per la spedizione.',
         'El personal del almacén recoge los artículos pedidos del stock y los empaca en paquetes para su envío.'),
@@ -851,7 +844,7 @@ def add_rel(first_en, second_en, fmin, fmax, smin, smax, en, de, fr, it, es):
 print('  Relationships:')
 add_rel('Order', 'Order Line Item', 1, None, 1, 1,
         'An Order contains one or more Order Line Items.',
-        'Eine Bestellung enthaelt eine oder mehrere Bestellpositionen.',
+        'Eine Bestellung enthält eine oder mehrere Bestellpositionen.',
         'Une Commande contient une ou plusieurs Lignes de commande.',
         "Un Ordine contiene una o piu Voci d'ordine.",
         'Un Pedido contiene una o más Líneas de pedido.')
@@ -869,13 +862,13 @@ add_rel('Order', 'Customer', 1, 1, 0, None,
         'Cada Pedido es realizado por un Cliente; un Cliente puede tener cero o más Pedidos.')
 add_rel('Order', 'Invoice', 1, 1, 0, 1,
         'Each Order generates at most one Invoice; an Invoice corresponds to exactly one Order.',
-        'Jede Bestellung erzeugt hoechstens eine Rechnung; eine Rechnung entspricht genau einer Bestellung.',
+        'Jede Bestellung erzeugt höchstens eine Rechnung; eine Rechnung entspricht genau einer Bestellung.',
         'Chaque Commande genere une Facture; une Facture correspond a une Commande.',
         "Ogni Ordine genera al massimo una Fattura; una Fattura corrisponde a un Ordine.",
         'Cada Pedido genera como máximo una Factura; una Factura corresponde a un Pedido.')
 add_rel('Order', 'Parcel', 1, None, 1, 1,
         'An Order is fulfilled by one or more Parcels; each Parcel ships exactly one Order.',
-        'Eine Bestellung wird durch ein oder mehrere Pakete erfuellt; jedes Paket versendet genau eine Bestellung.',
+        'Eine Bestellung wird durch ein oder mehrere Pakete erfüllt; jedes Paket versendet genau eine Bestellung.',
         'Une Commande est expediee en un ou plusieurs Colis; chaque Colis correspond a une Commande.',
         "Un Ordine e evaso da uno o piu Colli; ogni Collo spedisce un Ordine.",
         'Un Pedido se entrega en uno o más Paquetes; cada Paquete corresponde a un Pedido.')
@@ -887,37 +880,37 @@ add_rel('Invoice', 'Customer', 1, 1, 0, None,
         'Una Factura está dirigida a un Cliente; un Cliente puede recibir muchas Facturas.')
 add_rel('Invoice', 'Payment Transaction', 1, 1, 0, 1,
         'An Invoice is settled by at most one Payment Transaction.',
-        'Eine Rechnung wird durch hoechstens eine Zahlungstransaktion beglichen.',
+        'Eine Rechnung wird durch höchstens eine Zahlungstransaktion beglichen.',
         'Une Facture est reglee par une Transaction de paiement.',
         'Una Fattura viene saldata da una Transazione di pagamento.',
         'Una Factura se liquida con como máximo una Transacción de pago.')
 add_rel('Payment Transaction', 'Order', 1, 1, 1, 1,
         'A Payment Transaction is linked to exactly one Order.',
-        'Eine Zahlungstransaktion ist mit genau einer Bestellung verknuepft.',
+        'Eine Zahlungstransaktion ist mit genau einer Bestellung verknüpft.',
         'Une Transaction de paiement est liee a une Commande.',
         "Una Transazione di pagamento e collegata a un Ordine.",
         'Una Transacción de pago está vinculada a exactamente un Pedido.')
 add_rel('Shopping Cart', 'Customer', 1, 1, 0, 1,
         'A Shopping Cart belongs to exactly one Customer; a Customer has at most one active Cart.',
-        'Ein Warenkorb gehoert genau einem Kunden; ein Kunde hat hoechstens einen aktiven Warenkorb.',
+        'Ein Warenkorb gehört genau einem Kunden; ein Kunde hat höchstens einen aktiven Warenkorb.',
         "Un Panier appartient a un Client; un Client a au plus un Panier actif.",
         "Un Carrello appartiene a un Cliente; un Cliente ha al massimo un Carrello attivo.",
         'Un Carrito pertenece a un Cliente; un Cliente tiene como máximo un Carrito activo.')
 add_rel('Shopping Cart', 'Product', 0, None, 0, None,
         'A Shopping Cart may contain zero or many Products; a Product may appear in many Carts.',
-        'Ein Warenkorb kann mehrere Produkte enthalten; ein Produkt kann in vielen Warenkoerben liegen.',
+        'Ein Warenkorb kann mehrere Produkte enthalten; ein Produkt kann in vielen Warenkörben liegen.',
         "Un Panier peut contenir plusieurs Produits; un Produit peut figurer dans plusieurs Paniers.",
         "Un Carrello puo contenere piu Prodotti; un Prodotto puo essere in piu Carrelli.",
         'Un Carrito puede contener varios Productos; un Producto puede aparecer en muchos Carritos.')
 add_rel('Product', 'Product Category', 0, None, 1, 1,
         'A Product belongs to exactly one Product Category; a Category groups zero or many Products.',
-        'Ein Produkt gehoert zu genau einer Produktkategorie; eine Kategorie gruppiert mehrere Produkte.',
+        'Ein Produkt gehört zu genau einer Produktkategorie; eine Kategorie gruppiert mehrere Produkte.',
         "Un Produit appartient a une Categorie de produit; une Categorie regroupe plusieurs Produits.",
         "Un Prodotto appartiene a una Categoria prodotto; una Categoria raggruppa piu Prodotti.",
         'Un Producto pertenece a una Categoría de producto; una Categoría agrupa cero o más Productos.')
 add_rel('Product Review', 'Product', 1, 1, 0, None,
         'A Product Review is written for exactly one Product; a Product may have many Reviews.',
-        'Eine Produktbewertung ist fuer genau ein Produkt; ein Produkt kann viele Bewertungen haben.',
+        'Eine Produktbewertung ist für genau ein Produkt; ein Produkt kann viele Bewertungen haben.',
         "Un Avis produit porte sur un Produit; un Produit peut avoir plusieurs Avis.",
         "Una Recensione prodotto e scritta per un Prodotto; un Prodotto puo avere piu Recensioni.",
         'Una Reseña de producto se escribe para un Producto; un Producto puede tener muchas Reseñas.')
@@ -929,7 +922,7 @@ add_rel('Product Review', 'Customer', 1, 1, 0, None,
         'Una Reseña de producto es escrita por exactamente un Cliente.')
 add_rel('Customer', 'Billing Address', 0, None, 1, 1,
         'A Customer has one Billing Address; a Billing Address belongs to one Customer.',
-        'Ein Kunde hat eine Rechnungsadresse; eine Rechnungsadresse gehoert zu einem Kunden.',
+        'Ein Kunde hat eine Rechnungsadresse; eine Rechnungsadresse gehört zu einem Kunden.',
         "Un Client a une Adresse de facturation; une Adresse de facturation appartient a un Client.",
         "Un Cliente ha un Indirizzo di fatturazione; un Indirizzo appartiene a un Cliente.",
         'Un Cliente tiene una Dirección de facturación; una Dirección de facturación pertenece a un Cliente.')
@@ -970,7 +963,7 @@ assign('business-entities', ek('Shipping Address'),  [(S, 'C3'), (DC, 'important
 assign('business-entities', ek('Full Name'),         [(S, 'C3'), (DC, 'important'), (PD, 'PD')])
 assign('business-entities', ek('Employee'),          [(S, 'C4'), (DC, 'important')])
 assign('business-entities', ek('Payment Transaction'),[(S, 'C4'), (DC, 'critical')])
-assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important'), (SPD, 'SPD')])
+assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important'), (PD, 'SPD')])
 
 print('  Process classifications:')
 for proc_en, prio in [
@@ -988,6 +981,27 @@ for proc_en, prio in [
     ('Add to Cart',            'medium'),
 ]:
     assign('processes', pk(proc_en), [(PP, prio)])
+
+
+# ── Field Configurations (Mandatory Fields) ─────────────────────────────────────
+print('\n[14] Field configurations (mandatory fields)...')
+
+field_configs = [
+    # Business Entity — data quality essentials
+    {'entityType': 'BUSINESS_ENTITY', 'fieldName': 'businessDomain'},
+    {'entityType': 'BUSINESS_ENTITY', 'fieldName': 'retentionPeriod'},
+    {'entityType': 'BUSINESS_ENTITY', 'fieldName': f'classification.{DC}'},
+    {'entityType': 'BUSINESS_ENTITY', 'fieldName': f'classification.{S}'},
+    # Business Domain — type is always meaningful
+    {'entityType': 'BUSINESS_DOMAIN', 'fieldName': 'type'},
+    # Business Process — ownership and domain context required
+    {'entityType': 'BUSINESS_PROCESS', 'fieldName': 'processOwner'},
+    {'entityType': 'BUSINESS_PROCESS', 'fieldName': 'businessDomain'},
+    # Organisational Unit — lead accountability required
+    {'entityType': 'ORGANISATIONAL_UNIT', 'fieldName': 'lead'},
+]
+
+ok('field configurations', api('PUT', '/administration/field-configurations', field_configs, T))
 
 
 # ── Summary ─────────────────────────────────────────────────────────────────────
