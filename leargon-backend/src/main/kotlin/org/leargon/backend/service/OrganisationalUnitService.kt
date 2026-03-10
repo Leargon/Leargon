@@ -94,7 +94,7 @@ open class OrganisationalUnitService(
         unit.key = SlugUtil.slugify(defaultName)
 
         unit = organisationalUnitRepository.update(unit)
-        return organisationalUnitMapper.toResponse(getByKey(unit.key!!))
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional
@@ -105,7 +105,7 @@ open class OrganisationalUnitService(
 
         unit.descriptions = descriptions.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         unit = organisationalUnitRepository.update(unit)
-        return organisationalUnitMapper.toResponse(getByKey(unit.key!!))
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional
@@ -120,7 +120,7 @@ open class OrganisationalUnitService(
         }
 
         unit = organisationalUnitRepository.update(unit)
-        return organisationalUnitMapper.toResponse(getByKey(unit.key!!))
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional
@@ -128,7 +128,7 @@ open class OrganisationalUnitService(
         var unit = getByKey(key)
         unit.unitType = unitType
         unit = organisationalUnitRepository.update(unit)
-        return organisationalUnitMapper.toResponse(getByKey(unit.key!!))
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional
@@ -149,7 +149,7 @@ open class OrganisationalUnitService(
         }
 
         unit = organisationalUnitRepository.update(unit)
-        return organisationalUnitMapper.toResponse(getByKey(unit.key!!))
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional

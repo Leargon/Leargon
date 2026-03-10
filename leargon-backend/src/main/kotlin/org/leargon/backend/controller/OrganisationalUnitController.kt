@@ -111,7 +111,7 @@ open class OrganisationalUnitController(
     }
 
     private fun checkCreatePermission(currentUser: User, parentKeys: List<String>?) {
-        val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (isAdmin) return
 
         if (parentKeys.isNullOrEmpty()) {
@@ -131,7 +131,7 @@ open class OrganisationalUnitController(
     companion object {
         @JvmStatic
         private fun checkEditPermission(unit: OrganisationalUnit, currentUser: User) {
-            val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             val isLead = unit.lead?.id == currentUser.id
             if (!isAdmin && !isLead) {
                 throw ForbiddenOperationException("Only the lead or an admin can edit this unit")

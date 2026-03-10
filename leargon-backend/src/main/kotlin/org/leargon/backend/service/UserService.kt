@@ -107,7 +107,7 @@ open class UserService(
     }
 
     open fun getUserRoles(user: User): List<String> =
-        user.roles?.split(',')?.toList() ?: listOf("ROLE_USER")
+        user.roles.split(',').toList()
 
     @Transactional
     open fun changePassword(userId: Long, request: ChangePasswordRequest) {

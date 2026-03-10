@@ -94,8 +94,8 @@ class PasswordEncoderSpec extends Specification {
         encodedPassword != null
         encodedPassword != ""
 
-        and: "empty password matches"
-        passwordEncoder.matches("", encodedPassword)
+        and: "empty password does not match (Spring Security 7.x rejects empty raw passwords)"
+        !passwordEncoder.matches("", encodedPassword)
 
         and: "non-empty password does not match"
         !passwordEncoder.matches("anything", encodedPassword)

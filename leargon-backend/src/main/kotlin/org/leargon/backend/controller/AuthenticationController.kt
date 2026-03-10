@@ -29,9 +29,9 @@ open class AuthenticationController(
     private val authenticationService: AuthenticationService,
     private val tokenGenerator: TokenGenerator,
     private val userMapper: UserMapper,
-    @Nullable private val azureAuthService: AzureAuthService?,
-    @Value("\${azure.tenant-id:}") private val azureTenantId: String,
-    @Value("\${azure.client-id:}") private val azureClientId: String
+    @param:Nullable private val azureAuthService: AzureAuthService?,
+    @param:Value("\${azure.tenant-id:}") private val azureTenantId: String,
+    @param:Value("\${azure.client-id:}") private val azureClientId: String
 ) : AuthenticationApi {
 
     companion object {

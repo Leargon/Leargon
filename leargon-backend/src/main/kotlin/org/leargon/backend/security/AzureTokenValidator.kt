@@ -17,8 +17,8 @@ import java.net.URI
 @Singleton
 @Requires(property = "azure.tenant-id", notEquals = "")
 open class AzureTokenValidator(
-    @Value("\${azure.tenant-id}") private val tenantId: String,
-    @Value("\${azure.client-id}") private val clientId: String
+    @param:Value("\${azure.tenant-id}") private val tenantId: String,
+    @param:Value("\${azure.client-id}") private val clientId: String
 ) {
 
     companion object {

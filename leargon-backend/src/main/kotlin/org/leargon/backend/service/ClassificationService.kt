@@ -256,7 +256,7 @@ open class ClassificationService(
             .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
         val isOwner = entity.dataOwner!!.id == currentUser.id
-        val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isOwner && !isAdmin) {
             throw ForbiddenOperationException("Only the data owner or an admin can assign classifications")
         }
@@ -293,7 +293,7 @@ open class ClassificationService(
             .orElseThrow { ResourceNotFoundException("Process not found") }
 
         val isOwner = process.processOwner!!.id == currentUser.id
-        val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isOwner && !isAdmin) {
             throw ForbiddenOperationException("Only the process owner or an admin can assign classifications")
         }
@@ -312,7 +312,7 @@ open class ClassificationService(
             .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
 
         val isLead = unit.lead?.id == currentUser.id
-        val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isLead && !isAdmin) {
             throw ForbiddenOperationException("Only the lead or an admin can assign classifications")
         }
@@ -380,7 +380,7 @@ open class ClassificationService(
     companion object {
         @JvmStatic
         private fun checkAdminRole(user: User) {
-            if (user.roles?.contains("ROLE_ADMIN") != true) {
+            if (!user.roles.contains("ROLE_ADMIN")) {
                 throw ForbiddenOperationException("This operation requires admin privileges")
             }
         }

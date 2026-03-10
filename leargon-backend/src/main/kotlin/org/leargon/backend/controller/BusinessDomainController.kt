@@ -122,7 +122,7 @@ open class BusinessDomainController(
     companion object {
         @JvmStatic
         private fun checkAdministratorRole(user: User) {
-            if (user.roles?.contains("ROLE_ADMIN") != true) {
+            if (!user.roles.contains("ROLE_ADMIN")) {
                 throw ForbiddenOperationException("This operation requires admin privileges")
             }
         }

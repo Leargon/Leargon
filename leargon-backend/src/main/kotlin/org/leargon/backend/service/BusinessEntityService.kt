@@ -100,7 +100,7 @@ open class BusinessEntityService(
     @Transactional
     open fun createBusinessEntityAsResponse(request: CreateBusinessEntityRequest, currentUser: User): BusinessEntityResponse {
         val entity = createBusinessEntity(request, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
     @Transactional
@@ -132,7 +132,7 @@ open class BusinessEntityService(
     @Transactional
     open fun updateBusinessEntityParentAsResponse(entityKey: String, parentKey: String?, currentUser: User): BusinessEntityResponse {
         val entity = updateBusinessEntityParent(entityKey, parentKey, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
     @Transactional
@@ -153,7 +153,7 @@ open class BusinessEntityService(
     @Transactional
     open fun updateBusinessEntityDataOwnerAsResponse(entityKey: String, dataOwnerUsername: String, currentUser: User): BusinessEntityResponse {
         val entity = updateBusinessEntityDataOwner(entityKey, dataOwnerUsername, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
     @Transactional
@@ -181,7 +181,7 @@ open class BusinessEntityService(
     @Transactional
     open fun updateBusinessEntityNamesAsResponse(entityKey: String, names: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntityResponse {
         val entity = updateBusinessEntityNames(entityKey, names, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
     @Transactional
@@ -200,7 +200,7 @@ open class BusinessEntityService(
     @Transactional
     open fun updateBusinessEntityDescriptionsAsResponse(entityKey: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessEntityResponse {
         val entity = updateBusinessEntityDescriptions(entityKey, descriptions, currentUser)
-        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key!!))
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
     @Retryable(attempts = "3", delay = "100ms")
@@ -253,7 +253,7 @@ open class BusinessEntityService(
     private fun resolveLocale(locale: String?, currentUser: User): String {
         if (!locale.isNullOrEmpty()) return locale
         if (!currentUser.preferredLanguage.isNullOrEmpty()) return currentUser.preferredLanguage!!
-        return localeService.getDefaultLocale()!!.localeCode!!
+        return localeService.getDefaultLocale()!!.localeCode
     }
 
     // --- Relationship CRUD ---
@@ -364,8 +364,8 @@ open class BusinessEntityService(
                 .orElse(null)
         } else null
 
-        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson!!)
-        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson!!) else emptyMap()
+        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson)
+        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson) else emptyMap()
 
         val changes = calculateDiff(previousSnapshot, currentSnapshot)
 
@@ -453,7 +453,7 @@ open class BusinessEntityService(
     private fun createBusinessEntityVersion(entity: BusinessEntity, changedBy: User, changeType: String, changeSummary: String) {
         val nextVersion = businessEntityVersionRepository
             .findFirstByBusinessEntityIdOrderByVersionNumberDesc(entity.id!!)
-            .map { it.versionNumber!! + 1 }
+            .map { it.versionNumber + 1 }
             .orElse(1)
 
         val snapshot = mapOf(
@@ -487,7 +487,7 @@ open class BusinessEntityService(
         @JvmStatic
         fun checkEditPermission(entity: BusinessEntity, currentUser: User) {
             val isOwner = entity.dataOwner!!.id == currentUser.id
-            val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the data owner or an admin can edit this entity")
             }
@@ -496,7 +496,7 @@ open class BusinessEntityService(
         @JvmStatic
         fun canEdit(entity: BusinessEntity, currentUser: User): Boolean {
             val isOwner = entity.dataOwner!!.id == currentUser.id
-            val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             return isOwner || isAdmin
         }
 

@@ -11,8 +11,8 @@ import org.leargon.backend.security.PasswordEncoder
 open class AuthenticationService(
     private val userService: UserService,
     private val passwordEncoder: PasswordEncoder,
-    @Value("\${azure.tenant-id:}") private val azureTenantId: String,
-    @Value("\${azure.client-id:}") private val azureClientId: String
+    @param:Value("\${azure.tenant-id:}") private val azureTenantId: String,
+    @param:Value("\${azure.client-id:}") private val azureClientId: String
 ) {
 
     private fun isAzureEnabled(): Boolean = azureTenantId.isNotEmpty() && azureClientId.isNotEmpty()

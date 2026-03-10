@@ -63,7 +63,7 @@ open class BusinessDomainService(
     private fun resolveLocale(locale: String?, currentUser: User): String {
         if (!locale.isNullOrEmpty()) return locale
         if (!currentUser.preferredLanguage.isNullOrEmpty()) return currentUser.preferredLanguage!!
-        return localeService.getDefaultLocale()!!.localeCode!!
+        return localeService.getDefaultLocale()!!.localeCode
     }
 
     @Transactional
@@ -204,8 +204,8 @@ open class BusinessDomainService(
                 .orElse(null)
         } else null
 
-        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson!!)
-        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson!!) else emptyMap()
+        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson)
+        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson) else emptyMap()
 
         val changes = calculateDiff(previousSnapshot, currentSnapshot)
 
@@ -217,7 +217,7 @@ open class BusinessDomainService(
     private fun createBusinessDomainVersion(domain: BusinessDomain, changedBy: User, changeType: String, changeSummary: String) {
         val nextVersion = businessDomainVersionRepository
             .findFirstByBusinessDomainIdOrderByVersionNumberDesc(domain.id!!)
-            .map { it.versionNumber!! + 1 }
+            .map { it.versionNumber + 1 }
             .orElse(1)
 
         val snapshot = mapOf(

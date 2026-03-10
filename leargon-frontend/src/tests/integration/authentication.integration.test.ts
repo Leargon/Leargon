@@ -342,7 +342,7 @@ describe('Authentication E2E', () => {
     expect(newAuth.accessToken).toBeTruthy();
   });
 
-  it('should soft-delete a user as admin', async () => {
+  it('should hard-delete a user with no ownership as admin', async () => {
     const adminClient = createClient(getBackendUrl());
     const adminAuth = await signupAdmin(adminClient, {
       email: 'fe-auth-deladmin@example.com',
@@ -366,10 +366,13 @@ describe('Authentication E2E', () => {
     const targetUser = usersRes.data.find((u) => u.email === 'fe-auth-deluser@example.com');
     const userId = targetUser!.id;
 
-    // Soft-delete returns 200 with disabled user
+    // Hard-delete returns 204 with no body
     const delRes = await adminClient.delete(`/administration/users/${userId}`);
-    expect(delRes.status).toBe(200);
-    expect(delRes.data.enabled).toBe(false);
+    expect(delRes.status).toBe(204);
+
+    // User is permanently removed — no longer appears in the list
+    const afterRes = await adminClient.get<UserResponse[]>('/administration/users');
+    expect(afterRes.data.find((u) => u.id === userId)).toBeUndefined();
   });
 
   // =====================

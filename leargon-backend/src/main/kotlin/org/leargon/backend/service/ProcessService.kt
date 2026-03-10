@@ -145,7 +145,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated names")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -160,7 +160,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated descriptions")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -176,7 +176,7 @@ open class ProcessService(
         createProcessVersion(process, currentUser, "TYPE_CHANGE",
             "Changed process type from '$oldType' to '${processType ?: "none"}'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -193,7 +193,7 @@ open class ProcessService(
         createProcessVersion(process, currentUser, "OWNER_CHANGE",
             "Changed process owner to ${newOwner.username}")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -208,7 +208,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated code to '$code'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -231,7 +231,7 @@ open class ProcessService(
         createProcessVersion(process, currentUser, "UPDATE",
             "Domain assignment changed from '$oldDomainName' to '$newDomainName'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -247,7 +247,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Added input entity '${entity.key}'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -262,7 +262,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Removed input entity '$entityKey'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -278,7 +278,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Added output entity '${entity.key}'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -293,7 +293,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Removed output entity '$entityKey'")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -316,7 +316,7 @@ open class ProcessService(
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated executing units")
 
-        process = getProcessByKey(process.key!!)
+        process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
@@ -360,8 +360,8 @@ open class ProcessService(
                 .orElse(null)
         } else null
 
-        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson!!)
-        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson!!) else emptyMap()
+        val currentSnapshot = parseSnapshot(currentVersion.snapshotJson)
+        val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson) else emptyMap()
 
         val changes = calculateDiff(previousSnapshot, currentSnapshot)
 
@@ -413,7 +413,7 @@ open class ProcessService(
     private fun createProcessVersion(process: Process, changedBy: User, changeType: String, changeSummary: String) {
         val nextVersion = processVersionRepository
             .findFirstByProcessIdOrderByVersionNumberDesc(process.id!!)
-            .map { it.versionNumber!! + 1 }
+            .map { it.versionNumber + 1 }
             .orElse(1)
 
         val snapshot = mapOf(
@@ -449,7 +449,7 @@ open class ProcessService(
         @JvmStatic
         fun checkEditPermission(process: Process, currentUser: User) {
             val isOwner = process.processOwner!!.id == currentUser.id
-            val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the process owner or an admin can edit this process")
             }
