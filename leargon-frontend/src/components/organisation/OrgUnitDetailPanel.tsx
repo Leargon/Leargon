@@ -360,7 +360,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         onSave={leadEdit.save}
         onCancel={leadEdit.cancel}
         isSaving={leadEdit.isSaving}
-        isMandatory={isMandatory('lead')}
       />
       <Box sx={{ mb: 2 }}>
         {leadEdit.isEditing ? (

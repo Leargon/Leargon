@@ -382,8 +382,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Process Owner */}
       <SectionHeader title="Process Owner" canEdit={isAdmin} isEditing={ownerEdit.isEditing}
         onEdit={() => ownerEdit.startEdit(process.processOwner.username)} onSave={ownerEdit.save}
-        onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}
-        isMandatory={isMandatory('processOwner')} />
+        onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving} />
       <Box sx={{ mb: 2 }}>
         {ownerEdit.isEditing ? (
           <Box>

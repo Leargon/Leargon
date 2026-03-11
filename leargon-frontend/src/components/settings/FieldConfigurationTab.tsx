@@ -7,12 +7,12 @@ import {
   Chip,
   Paper,
   Divider,
-  TextField,
   Select,
   MenuItem,
   CircularProgress,
   Tooltip,
 } from '@mui/material';
+
 import { Add as AddIcon, Delete as DeleteIcon, Save as SaveIcon, Lock as LockIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -43,13 +43,9 @@ const ENTITY_TYPE_TO_ASSIGNABLE: Record<string, ClassificationAssignableTo> = {
 const FIELD_LABELS: Record<string, string> = {
   retentionPeriod: 'Retention Period',
   businessDomain: 'Business Domain',
-  descriptions: 'Descriptions (any locale)',
-  names: 'Names (any locale)',
   type: 'Type',
-  processOwner: 'Process Owner',
   executingUnits: 'Executing Units',
   unitType: 'Unit Type',
-  lead: 'Lead',
 };
 
 const BASE_FIELDS: Record<string, Array<{ value: string; label: string }>> = {
@@ -62,12 +58,10 @@ const BASE_FIELDS: Record<string, Array<{ value: string; label: string }>> = {
   ],
   BUSINESS_PROCESS: [
     { value: 'businessDomain', label: 'Business Domain' },
-    { value: 'processOwner', label: 'Process Owner' },
     { value: 'executingUnits', label: 'Executing Units' },
   ],
   ORGANISATIONAL_UNIT: [
     { value: 'unitType', label: 'Unit Type' },
-    { value: 'lead', label: 'Lead' },
   ],
 };
 
@@ -121,7 +115,6 @@ const FieldConfigurationTab: React.FC = () => {
 
   const [entries, setEntries] = useState<FieldConfigurationEntry[]>([]);
   const [newFieldName, setNewFieldName] = useState('');
-  const [customFieldName, setCustomFieldName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -136,7 +129,6 @@ const FieldConfigurationTab: React.FC = () => {
   // Reset field selection when entity type changes
   useEffect(() => {
     setNewFieldName('');
-    setCustomFieldName('');
   }, [newEntityType]);
 
   // Built-in always-required field for the currently selected entity type
@@ -145,20 +137,17 @@ const FieldConfigurationTab: React.FC = () => {
   // Dynamic field options for the selected entity type
   const fieldOptions = [
     ...(BASE_FIELDS[newEntityType] ?? []),
-    { value: 'names', label: 'Names (any locale)' },
     ...activeLocales
       .filter((l) => `names.${l.localeCode}` !== builtinField)
       .map((l) => ({ value: `names.${l.localeCode}`, label: `Name (${l.displayName})` })),
-    { value: 'descriptions', label: 'Descriptions (any locale)' },
     ...activeLocales.map((l) => ({ value: `descriptions.${l.localeCode}`, label: `Description (${l.displayName})` })),
     ...classificationsForType.map((c) => ({
       value: `classification.${c.key}`,
       label: `Classification: ${getLocalizedText(c.names, c.key)}`,
     })),
-    { value: '__custom__', label: 'Custom...' },
   ];
 
-  const effectiveFieldName = newFieldName === '__custom__' ? customFieldName.trim() : newFieldName;
+  const effectiveFieldName = newFieldName;
 
   const handleAdd = () => {
     const fn = effectiveFieldName;
@@ -177,7 +166,6 @@ const FieldConfigurationTab: React.FC = () => {
     }
     setEntries((prev) => [...prev, { entityType: newEntityType, fieldName: fn }]);
     setNewFieldName('');
-    setCustomFieldName('');
     setDirty(true);
     setError('');
   };
@@ -252,7 +240,7 @@ const FieldConfigurationTab: React.FC = () => {
           </Select>
           <Select
             value={newFieldName}
-            onChange={(e) => { setNewFieldName(e.target.value); setCustomFieldName(''); }}
+            onChange={(e) => setNewFieldName(e.target.value)}
             size="small"
             displayEmpty
             sx={{ minWidth: 220 }}
@@ -262,15 +250,6 @@ const FieldConfigurationTab: React.FC = () => {
               <MenuItem key={f.value} value={f.value}>{f.label}</MenuItem>
             ))}
           </Select>
-          {newFieldName === '__custom__' && (
-            <TextField
-              value={customFieldName}
-              onChange={(e) => setCustomFieldName(e.target.value)}
-              size="small"
-              placeholder="field name"
-              sx={{ minWidth: 160 }}
-            />
-          )}
           <Button
             variant="outlined"
             size="small"
