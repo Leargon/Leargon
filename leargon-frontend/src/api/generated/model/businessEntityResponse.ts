@@ -20,6 +20,8 @@ import type { BusinessDomainSummaryResponse } from './businessDomainSummaryRespo
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
+import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
+import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
@@ -42,6 +44,16 @@ export interface BusinessEntityResponse {
    * @nullable
    */
   retentionPeriod?: string | null;
+  /**
+   * List of cross-border data transfers for this entity
+   * @nullable
+   */
+  crossBorderTransfers?: CrossBorderTransferEntry[] | null;
+  /**
+   * Data processors linked to this entity
+   * @nullable
+   */
+  dataProcessors?: DataProcessorSummaryResponse[] | null;
   /**
    * List of mandatory fields that are currently missing values
    * @nullable

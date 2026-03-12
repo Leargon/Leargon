@@ -73,3 +73,43 @@ export const createOrgUnit = (
     { names: [{ locale: 'en', text: name }], ...(leadUsername ? { leadUsername } : {}) },
     as,
   );
+
+export const createDataProcessor = (
+  name: string,
+  processingCountries: string[] = ['DE'],
+): Promise<Record<string, unknown>> =>
+  apiFetch(
+    '/data-processors',
+    'POST',
+    {
+      names: [{ locale: 'en', text: name }],
+      processingCountries,
+      processorAgreementInPlace: true,
+      subProcessorsApproved: false,
+    },
+    ADMIN,
+  );
+
+export const linkDataProcessorEntities = (
+  processorKey: string,
+  entityKeys: string[],
+): Promise<Record<string, unknown>> =>
+  apiFetch(
+    `/data-processors/${processorKey}/linked-entities`,
+    'PUT',
+    { businessEntityKeys: entityKeys },
+    ADMIN,
+  );
+
+export const updateCrossBorderTransfers = (
+  entityKey: string,
+  transfers: Array<{ destinationCountry: string; safeguard: string; notes?: string }>,
+  resourceType: 'business-entities' | 'processes' = 'business-entities',
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(
+    `/${resourceType}/${entityKey}/cross-border-transfers`,
+    'PUT',
+    { transfers },
+    as,
+  );

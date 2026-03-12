@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
-import { AccountTree, Category, CorporateFare, Timeline } from '@mui/icons-material';
+import { AccountTree, Category, CorporateFare, Timeline, Handshake } from '@mui/icons-material';
 
 const SIDEBAR_WIDTH = 220;
 
@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
   { label: 'Process Map', path: '/processes', icon: <Timeline /> },
   { label: 'Organisational structure', path: '/organisation', icon: <CorporateFare /> },
+  { label: 'Data Processors', path: '/data-processors', icon: <Handshake /> },
 ];
 
 const Sidebar: React.FC = () => {

@@ -5,7 +5,6 @@ import UsersTab from '../components/settings/UsersTab';
 import LocalesTab from '../components/settings/LocalesTab';
 import ClassificationsTab from '../components/settings/ClassificationsTab';
 import FieldConfigurationTab from '../components/settings/FieldConfigurationTab';
-
 const tabs = [
   { label: 'Users', path: '/settings/users' },
   { label: 'Locales', path: '/settings/locales' },

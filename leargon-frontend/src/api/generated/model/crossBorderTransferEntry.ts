@@ -16,15 +16,15 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FieldChange } from './fieldChange';
+import type { CrossBorderTransferSafeguard } from './crossBorderTransferSafeguard';
 
-export interface VersionDiffResponse {
-  /** Current version number */
-  versionNumber: number;
+export interface CrossBorderTransferEntry {
+  /** ISO 3166-1 alpha-2 country code */
+  destinationCountry: string;
+  safeguard: CrossBorderTransferSafeguard;
   /**
-   * Previous version number (null if this is the first version)
+   * Additional notes (required for EXCEPTION safeguard)
    * @nullable
    */
-  previousVersionNumber: number | null;
-  changes: FieldChange[];
+  notes?: string | null;
 }

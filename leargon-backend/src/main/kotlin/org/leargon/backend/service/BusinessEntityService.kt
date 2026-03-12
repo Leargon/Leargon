@@ -214,6 +214,22 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Transactional
+    open fun updateCrossBorderTransfers(
+        entityKey: String,
+        transfers: List<org.leargon.backend.model.CrossBorderTransferEntry>,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+        entity.crossBorderTransfers = transfers
+            .map { org.leargon.backend.mapper.DataProcessorMapper.fromCrossBorderTransferEntry(it) }
+            .toMutableList()
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated cross-border transfers")
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityInterfaces(entityKey: String, interfaceKeys: List<String>, currentUser: User): BusinessEntityResponse {

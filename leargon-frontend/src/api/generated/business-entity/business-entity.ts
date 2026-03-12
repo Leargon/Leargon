@@ -51,6 +51,8 @@ import type {
   UpdateBusinessEntityInterfacesRequest,
   UpdateBusinessEntityParentRequest,
   UpdateBusinessEntityRelationshipRequest,
+  UpdateCrossBorderTransfersRequest,
+  UpdateLinkedDataProcessorsRequest,
   UpdateRetentionPeriodRequest,
   VersionDiffResponse
 } from '../model';
@@ -2159,5 +2161,207 @@ export const useUpdateBusinessEntityRetentionPeriod = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateBusinessEntityRetentionPeriodMutationOptions(options), queryClient);
+    }
+    /**
+ * Sets the list of cross-border transfers for a business entity. Requires data owner or admin.
+ * @summary Update cross-border transfers
+ */
+export type updateBusinessEntityCrossBorderTransfersResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type updateBusinessEntityCrossBorderTransfersResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityCrossBorderTransfersResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBusinessEntityCrossBorderTransfersResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBusinessEntityCrossBorderTransfersResponseSuccess = (updateBusinessEntityCrossBorderTransfersResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessEntityCrossBorderTransfersResponseError = (updateBusinessEntityCrossBorderTransfersResponse401 | updateBusinessEntityCrossBorderTransfersResponse403 | updateBusinessEntityCrossBorderTransfersResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityCrossBorderTransfersResponse = (updateBusinessEntityCrossBorderTransfersResponseSuccess | updateBusinessEntityCrossBorderTransfersResponseError)
+
+export const getUpdateBusinessEntityCrossBorderTransfersUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/cross-border-transfers`
+}
+
+export const updateBusinessEntityCrossBorderTransfers = async (key: string,
+    updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest, options?: RequestInit): Promise<updateBusinessEntityCrossBorderTransfersResponse> => {
+  
+  return customAxios<updateBusinessEntityCrossBorderTransfersResponse>(getUpdateBusinessEntityCrossBorderTransfersUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateCrossBorderTransfersRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessEntityCrossBorderTransfersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>, TError,{key: string;data: UpdateCrossBorderTransfersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>, TError,{key: string;data: UpdateCrossBorderTransfersRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityCrossBorderTransfers'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>, {key: string;data: UpdateCrossBorderTransfersRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityCrossBorderTransfers(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityCrossBorderTransfersMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>>
+    export type UpdateBusinessEntityCrossBorderTransfersMutationBody = UpdateCrossBorderTransfersRequest
+    export type UpdateBusinessEntityCrossBorderTransfersMutationError = void
+
+    /**
+ * @summary Update cross-border transfers
+ */
+export const useUpdateBusinessEntityCrossBorderTransfers = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>, TError,{key: string;data: UpdateCrossBorderTransfersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityCrossBorderTransfers>>,
+        TError,
+        {key: string;data: UpdateCrossBorderTransfersRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityCrossBorderTransfersMutationOptions(options), queryClient);
+    }
+    /**
+ * Replaces the set of data processors linked to a business entity. Admin only.
+ * @summary Update linked data processors
+ */
+export type updateBusinessEntityDataProcessorsResponse204 = {
+  data: void
+  status: 204
+}
+
+export type updateBusinessEntityDataProcessorsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityDataProcessorsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBusinessEntityDataProcessorsResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBusinessEntityDataProcessorsResponseSuccess = (updateBusinessEntityDataProcessorsResponse204) & {
+  headers: Headers;
+};
+export type updateBusinessEntityDataProcessorsResponseError = (updateBusinessEntityDataProcessorsResponse401 | updateBusinessEntityDataProcessorsResponse403 | updateBusinessEntityDataProcessorsResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityDataProcessorsResponse = (updateBusinessEntityDataProcessorsResponseSuccess | updateBusinessEntityDataProcessorsResponseError)
+
+export const getUpdateBusinessEntityDataProcessorsUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/data-processors`
+}
+
+export const updateBusinessEntityDataProcessors = async (key: string,
+    updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest, options?: RequestInit): Promise<updateBusinessEntityDataProcessorsResponse> => {
+  
+  return customAxios<updateBusinessEntityDataProcessorsResponse>(getUpdateBusinessEntityDataProcessorsUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateLinkedDataProcessorsRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessEntityDataProcessorsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityDataProcessors'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>, {key: string;data: UpdateLinkedDataProcessorsRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityDataProcessors(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityDataProcessorsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>>
+    export type UpdateBusinessEntityDataProcessorsMutationBody = UpdateLinkedDataProcessorsRequest
+    export type UpdateBusinessEntityDataProcessorsMutationError = void
+
+    /**
+ * @summary Update linked data processors
+ */
+export const useUpdateBusinessEntityDataProcessors = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityDataProcessors>>,
+        TError,
+        {key: string;data: UpdateLinkedDataProcessorsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityDataProcessorsMutationOptions(options), queryClient);
     }
     

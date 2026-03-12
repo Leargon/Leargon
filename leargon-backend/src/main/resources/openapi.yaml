@@ -48,6 +48,8 @@ tags:
   description: Organisational Unit management endpoints
 - name: Process
   description: Business Process management endpoints
+- name: DataProcessor
+  description: Data Processor management endpoints (Art. 9 revDSG)
 - name: Setup
   description: First-time setup wizard endpoints
 - name: User
@@ -1701,6 +1703,41 @@ paths:
           description: Business entity not found
         '401':
           description: Not authenticated
+  /business-entities/{key}/cross-border-transfers:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update cross-border transfers
+      description: Sets the list of cross-border transfers for a business entity. Requires data owner or admin.
+      operationId: updateBusinessEntityCrossBorderTransfers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCrossBorderTransfersRequest'
+      responses:
+        '200':
+          description: Updated business entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Forbidden (not data owner or admin)
+        '404':
+          description: Business entity not found
+        '401':
+          description: Not authenticated
   /classifications:
     get:
       tags:
@@ -3261,6 +3298,295 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /business-entities/{key}/data-processors:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update linked data processors
+      description: Replaces the set of data processors linked to a business entity. Admin only.
+      operationId: updateBusinessEntityDataProcessors
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
+      responses:
+        '204':
+          description: Updated
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /processes/{key}/cross-border-transfers:
+    put:
+      tags:
+      - Process
+      summary: Update cross-border transfers
+      description: Sets the list of cross-border transfers for a process. Requires process owner or admin.
+      operationId: updateProcessCrossBorderTransfers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCrossBorderTransfersRequest'
+      responses:
+        '200':
+          description: Updated process
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Forbidden (not process owner or admin)
+        '404':
+          description: Process not found
+        '401':
+          description: Not authenticated
+  /processes/{key}/data-processors:
+    put:
+      tags:
+      - Process
+      summary: Update linked data processors
+      description: Replaces the set of data processors linked to a process. Admin only.
+      operationId: updateProcessDataProcessors
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
+      responses:
+        '204':
+          description: Updated
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /data-processors:
+    get:
+      tags:
+      - DataProcessor
+      summary: Get all data processors
+      description: Returns a list of all data processors. Requires authentication.
+      operationId: getAllDataProcessors
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of data processors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataProcessorResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - DataProcessor
+      summary: Create a data processor
+      description: Creates a new data processor entry. Requires ROLE_ADMIN.
+      operationId: createDataProcessor
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataProcessorRequest'
+      responses:
+        '201':
+          description: Data processor created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataProcessorResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /data-processors/{key}:
+    get:
+      tags:
+      - DataProcessor
+      summary: Get a data processor by key
+      description: Returns a single data processor. Requires authentication.
+      operationId: getDataProcessor
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Data processor key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Data processor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataProcessorResponse'
+        '404':
+          description: Data processor not found
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - DataProcessor
+      summary: Update a data processor
+      description: Updates a data processor. Requires ROLE_ADMIN.
+      operationId: updateDataProcessor
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Data processor key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDataProcessorRequest'
+      responses:
+        '200':
+          description: Updated data processor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataProcessorResponse'
+        '404':
+          description: Data processor not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    delete:
+      tags:
+      - DataProcessor
+      summary: Delete a data processor
+      description: Deletes a data processor. Requires ROLE_ADMIN.
+      operationId: deleteDataProcessor
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Data processor key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Data processor deleted
+        '404':
+          description: Data processor not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /data-processors/{key}/linked-entities:
+    put:
+      tags:
+      - DataProcessor
+      summary: Update linked business entities
+      description: Replaces the list of linked business entities for a data processor. Requires ROLE_ADMIN.
+      operationId: updateDataProcessorLinkedEntities
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Data processor key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDataProcessorEntityLinksRequest'
+      responses:
+        '204':
+          description: Linked entities updated
+        '404':
+          description: Data processor not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /data-processors/{key}/linked-processes:
+    put:
+      tags:
+      - DataProcessor
+      summary: Update linked processes
+      description: Replaces the list of linked processes for a data processor. Requires ROLE_ADMIN.
+      operationId: updateDataProcessorLinkedProcesses
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Data processor key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDataProcessorProcessLinksRequest'
+      responses:
+        '204':
+          description: Linked processes updated
+        '404':
+          description: Data processor not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /setup/complete:
     post:
       tags:
@@ -3660,6 +3986,18 @@ components:
           nullable: true
           description: Retention period description for the entity
           example: 7 years
+        crossBorderTransfers:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CrossBorderTransferEntry'
+          description: List of cross-border data transfers for this entity
+        dataProcessors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/DataProcessorSummaryResponse'
+          description: Data processors linked to this entity
         missingMandatoryFields:
           type: array
           nullable: true
@@ -4433,6 +4771,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
+        crossBorderTransfers:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CrossBorderTransferEntry'
+          description: List of cross-border data transfers for this process
+        dataProcessors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/DataProcessorSummaryResponse'
+          description: Data processors linked to this process
         missingMandatoryFields:
           type: array
           nullable: true
@@ -5080,4 +5430,169 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FieldChange'
-          description: List of field changes
+    CrossBorderTransferSafeguard:
+      type: string
+      enum:
+      - ADEQUACY_DECISION
+      - STANDARD_CONTRACTUAL_CLAUSES
+      - BINDING_CORPORATE_RULES
+      - EXCEPTION
+    CrossBorderTransferEntry:
+      type: object
+      required:
+      - destinationCountry
+      - safeguard
+      properties:
+        destinationCountry:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          example: DE
+        safeguard:
+          $ref: '#/components/schemas/CrossBorderTransferSafeguard'
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes (required for EXCEPTION safeguard)
+    UpdateCrossBorderTransfersRequest:
+      type: object
+      required:
+      - transfers
+      properties:
+        transfers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CrossBorderTransferEntry'
+    DataProcessorSummaryResponse:
+      type: object
+      required:
+      - key
+      - names
+      - processorAgreementInPlace
+      - subProcessorsApproved
+      properties:
+        key:
+          type: string
+          description: Data processor key
+          example: aws-eu-west-1
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        processorAgreementInPlace:
+          type: boolean
+          description: Whether a data processing agreement is in place
+        subProcessorsApproved:
+          type: boolean
+          description: Whether sub-processors have been approved
+    DataProcessorResponse:
+      type: object
+      required:
+      - key
+      - names
+      - processingCountries
+      - processorAgreementInPlace
+      - subProcessorsApproved
+      - createdAt
+      properties:
+        key:
+          type: string
+          description: Data processor key
+          example: aws-eu-west-1
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        processingCountries:
+          type: array
+          items:
+            type: string
+          description: List of ISO 3166-1 alpha-2 country codes where data is processed
+        processorAgreementInPlace:
+          type: boolean
+          description: Whether a data processing agreement is in place
+        subProcessorsApproved:
+          type: boolean
+          description: Whether sub-processors have been approved
+        linkedBusinessEntities:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+          description: Business entities linked to this processor
+        linkedProcesses:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
+          description: Processes linked to this processor
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last update timestamp
+    CreateDataProcessorRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        processingCountries:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes
+        processorAgreementInPlace:
+          type: boolean
+        subProcessorsApproved:
+          type: boolean
+    UpdateDataProcessorRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        processingCountries:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes
+        processorAgreementInPlace:
+          type: boolean
+        subProcessorsApproved:
+          type: boolean
+    UpdateLinkedDataProcessorsRequest:
+      type: object
+      required:
+      - dataProcessorKeys
+      properties:
+        dataProcessorKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of data processors to link
+    UpdateDataProcessorEntityLinksRequest:
+      type: object
+      properties:
+        businessEntityKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of business entities to link
+    UpdateDataProcessorProcessLinksRequest:
+      type: object
+      properties:
+        processKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of processes to link

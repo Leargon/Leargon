@@ -8,6 +8,7 @@ import type { BusinessDomainResponse } from '@/api/generated/model/businessDomai
 import type { ClassificationResponse } from '@/api/generated/model/classificationResponse';
 import type { OrganisationalUnitResponse } from '@/api/generated/model/organisationalUnitResponse';
 import type { UserResponse } from '@/api/generated/model/userResponse';
+import type { DataProcessorResponse } from '@/api/generated/model/dataProcessorResponse';
 
 export function createClient(baseURL: string): AxiosInstance {
   return axios.create({
@@ -163,6 +164,24 @@ export async function createOrgUnit(
     ...extras,
   };
   const res = await client.post<OrganisationalUnitResponse>('/organisational-units', body);
+  if (res.status !== 201) {
+    throw new ApiError(res.status, res.data);
+  }
+  return res.data;
+}
+
+export async function createDataProcessor(
+  client: AxiosInstance,
+  name: string,
+  processingCountries: string[] = ['DE'],
+): Promise<DataProcessorResponse> {
+  const body = {
+    names: [{ locale: 'en', text: name }],
+    processingCountries,
+    processorAgreementInPlace: true,
+    subProcessorsApproved: false,
+  };
+  const res = await client.post<DataProcessorResponse>('/data-processors', body);
   if (res.status !== 201) {
     throw new ApiError(res.status, res.data);
   }

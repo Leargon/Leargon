@@ -16,6 +16,7 @@ import OntologyPage from './pages/OntologyPage';
 import ProcessesPage from './pages/ProcessesPage';
 import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
+import DataProcessorsPage from './pages/DataProcessorsPage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
@@ -79,6 +80,8 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/settings/locales" element={<SettingsPage />} />
                   <Route path="/settings/classifications" element={<SettingsPage />} />
                   <Route path="/settings/field-configurations" element={<SettingsPage />} />
+                  <Route path="/data-processors" element={<DataProcessorsPage />} />
+                  <Route path="/data-processors/:key" element={<DataProcessorsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

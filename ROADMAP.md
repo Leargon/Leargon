@@ -1,16 +1,6 @@
 # Tier 2 — Compliance readiness
 *These stories produce the actual revDSG compliance outputs and require Tier 1 metadata to be meaningful.*
 
-## Data processor and third-party management (Art. 9 revDSG)
-**AS AN** admin\
-**I WANT** to define external data processors as catalogue entries and link them to the business entities and processes for which they process data on our behalf, recording for each processor whether a processor agreement is in place and whether sub-processors have been approved\
-**SO THAT** the processor relationships required by Art. 9 revDSG are documented in the governance catalogue and traceable in the processing register — the management of the actual contracts happens outside Léargon, but their existence is recorded here
-
-## Cross-border data transfer documentation (Art. 16–17 revDSG)
-**AS A** data owner or admin\
-**I WANT** to document for each business entity and process whether personal data is transferred to a country outside Switzerland, and if so, which country and which safeguard applies (Federal Council adequacy decision, standard contractual clauses, binding corporate rules, or an exception under Art. 17 revDSG)\
-**SO THAT** the transfer is traceable in the processing register as required by Art. 12 para. 2 lit. g revDSG and compliant with Art. 16 revDSG
-
 ## Catalogue export with templates (Art. 12 revDSG)
 **AS AN** admin\
 **I WANT** to export catalogue data using a configurable export dashboard — selecting entity types, fields, filters, and output format (PDF, CSV, or Excel) — with a preloaded template for the processing register that pre-selects all mandatory fields from Art. 12 para. 2 revDSG (controller identity, purpose, data subject categories, data categories, recipients, retention periods, security measures, and cross-border transfers)\

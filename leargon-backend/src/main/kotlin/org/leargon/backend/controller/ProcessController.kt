@@ -22,12 +22,15 @@ import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessDiagramRequest
+import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
+import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.DataProcessorService
 import org.leargon.backend.service.ProcessDiagramService
 import org.leargon.backend.service.ProcessService
 import org.leargon.backend.service.UserService
@@ -40,7 +43,8 @@ open class ProcessController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val processMapper: ProcessMapper
+    private val processMapper: ProcessMapper,
+    private val dataProcessorService: DataProcessorService
 ) : ProcessApi {
 
     override fun getAllProcesses(): List<ProcessResponse> =
@@ -130,6 +134,17 @@ open class ProcessController(
     override fun assignExecutingUnits(key: String, @Valid @Body request: UpdateOrgUnitParentsRequest): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.assignExecutingUnits(key, request.keys, currentUser)
+    }
+
+    override fun updateProcessCrossBorderTransfers(key: String, @Valid @Body updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateCrossBorderTransfers(key, updateCrossBorderTransfersRequest.transfers, currentUser)
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateProcessDataProcessors(key: String, @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest): HttpResponse<Void> {
+        dataProcessorService.updateProcessDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
+        return HttpResponse.noContent()
     }
 
     override fun getProcessDiagram(key: String): ProcessDiagramResponse =

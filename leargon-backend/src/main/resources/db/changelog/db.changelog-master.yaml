@@ -29,3 +29,7 @@ databaseChangeLog:
       file: db/changelog/changes/014-add-retention-period-to-business-entities.yaml
   - include:
       file: db/changelog/changes/015-create-field-configuration-tables.yaml
+  - include:
+      file: db/changelog/changes/016-create-data-processor-tables.yaml
+  - include:
+      file: db/changelog/changes/017-add-cross-border-transfers.yaml

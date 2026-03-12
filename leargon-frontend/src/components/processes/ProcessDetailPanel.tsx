@@ -29,7 +29,7 @@ import {
   AccordionDetails,
   TableHead,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, Remove } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, Remove, CheckCircle as CheckCircleIcon, Warning as WarningIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetProcessByKey,
@@ -50,6 +50,7 @@ import {
   useAddProcessOutput,
   useRemoveProcessOutput,
   useAssignExecutingUnits,
+  useUpdateProcessCrossBorderTransfers,
 } from '../../api/generated/process/process';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -75,7 +76,9 @@ import type {
   BusinessEntityResponse,
   UserResponse,
   OrganisationalUnitResponse,
+  CrossBorderTransferEntry,
 } from '../../api/generated/model';
+import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 const PROCESS_TYPE_LABELS: Record<string, string> = {
@@ -84,6 +87,24 @@ const PROCESS_TYPE_LABELS: Record<string, string> = {
   MANAGEMENT: 'Management',
   INNOVATION: 'Innovation',
   COMPLIANCE: 'Compliance',
+};
+
+const COUNTRY_NAMES: Record<string, string> = {
+  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
+  CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
+  FI: 'Finland', FR: 'France', GB: 'United Kingdom', IE: 'Ireland', IN: 'India',
+  IT: 'Italy', JP: 'Japan', LI: 'Liechtenstein', LU: 'Luxembourg', NL: 'Netherlands',
+  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', SE: 'Sweden',
+  SG: 'Singapore', US: 'United States',
+};
+
+const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
+
+const SAFEGUARD_LABELS: Record<string, string> = {
+  ADEQUACY_DECISION: 'Adequacy Decision',
+  STANDARD_CONTRACTUAL_CLAUSES: 'Standard Contractual Clauses',
+  BINDING_CORPORATE_RULES: 'Binding Corporate Rules',
+  EXCEPTION: 'Art. 17 Exception',
 };
 
 interface ProcessDetailPanelProps {
@@ -151,6 +172,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const addOutput = useAddProcessOutput();
   const removeOutput = useRemoveProcessOutput();
   const assignExecUnits = useAssignExecutingUnits();
+  const updateCrossBorderTransfers = useUpdateProcessCrossBorderTransfers();
+
+  // Cross-border transfers dialog state
+  const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
+  const [editTransfers, setEditTransfers] = useState<CrossBorderTransferEntry[]>([]);
+  const [transfersError, setTransfersError] = useState('');
+  const [newTransferCountry, setNewTransferCountry] = useState<{ code: string; name: string } | null>(null);
+  const [newTransferSafeguard, setNewTransferSafeguard] = useState('');
+  const [newTransferNotes, setNewTransferNotes] = useState('');
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
@@ -562,6 +592,66 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       <Divider sx={{ my: 2 }} />
 
+      {/* Data Processors */}
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>Data Processors</Typography>
+      <Box sx={{ mb: 2 }}>
+        {process.dataProcessors && process.dataProcessors.length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {process.dataProcessors.map((dp) => (
+              <Chip
+                key={dp.key}
+                label={getLocalizedText(dp.names, dp.key)}
+                icon={dp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
+                size="small"
+                variant="outlined"
+              />
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">No data processors linked</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Cross-border Transfers */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">Cross-border Transfers</Typography>
+        {isOwnerOrAdmin && (
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => {
+              setEditTransfers(process.crossBorderTransfers || []);
+              setTransfersError('');
+              setNewTransferCountry(null);
+              setNewTransferSafeguard('');
+              setNewTransferNotes('');
+              setTransfersDialogOpen(true);
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {process.crossBorderTransfers.map((t, i) => (
+              <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Chip label={COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} size="small" />
+                <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
+                {t.notes && <Typography variant="caption" color="text.secondary">{t.notes}</Typography>}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">No cross-border transfers recorded</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
       {/* Classifications */}
       <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(process.classificationAssignments?.map((a) => ({
@@ -734,6 +824,100 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           <Button onClick={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>Cancel</Button>
           <Button onClick={handleDelete} color="error" variant="contained" disabled={deleteProcess.isPending}>
             {deleteProcess.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Cross-border Transfers Dialog */}
+      <Dialog open={transfersDialogOpen} onClose={() => setTransfersDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Cross-border Transfers</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            {editTransfers.length > 0 && (
+              <Box>
+                {editTransfers.map((t, i) => (
+                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Typography variant="body2" sx={{ flex: 1 }}>
+                      {COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
+                      {t.notes && ` (${t.notes})`}
+                    </Typography>
+                    <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )}
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'flex-start', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>Add transfer</Typography>
+              <Autocomplete
+                options={COUNTRY_OPTIONS}
+                getOptionLabel={(o) => `${o.name} (${o.code})`}
+                value={newTransferCountry}
+                onChange={(_, v) => setNewTransferCountry(v)}
+                renderInput={(params) => <TextField {...params} size="small" label="Country" sx={{ width: 250 }} />}
+                size="small"
+                isOptionEqualToValue={(o, v) => o.code === v.code}
+              />
+              <Select
+                value={newTransferSafeguard}
+                onChange={(e: SelectChangeEvent) => setNewTransferSafeguard(e.target.value)}
+                size="small"
+                displayEmpty
+                sx={{ minWidth: 240 }}
+              >
+                <MenuItem value=""><em>Select safeguard</em></MenuItem>
+                {Object.entries(SAFEGUARD_LABELS).map(([value, label]) => (
+                  <MenuItem key={value} value={value}>{label}</MenuItem>
+                ))}
+              </Select>
+              <TextField
+                value={newTransferNotes}
+                onChange={(e) => setNewTransferNotes(e.target.value)}
+                size="small"
+                placeholder="Notes (optional)"
+                sx={{ flex: 1, minWidth: 150 }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  if (newTransferCountry && newTransferSafeguard) {
+                    setEditTransfers((prev) => [...prev, {
+                      destinationCountry: newTransferCountry.code,
+                      safeguard: newTransferSafeguard as CrossBorderTransferSafeguard,
+                      notes: newTransferNotes || undefined,
+                    }]);
+                    setNewTransferCountry(null);
+                    setNewTransferSafeguard('');
+                    setNewTransferNotes('');
+                  }
+                }}
+                disabled={!newTransferCountry || !newTransferSafeguard}
+              >
+                Add
+              </Button>
+            </Box>
+            {transfersError && <Alert severity="error">{transfersError}</Alert>}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTransfersDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            disabled={updateCrossBorderTransfers.isPending}
+            onClick={async () => {
+              setTransfersError('');
+              try {
+                await updateCrossBorderTransfers.mutateAsync({ key: processKey, data: { transfers: editTransfers } });
+                invalidate();
+                setTransfersDialogOpen(false);
+              } catch {
+                setTransfersError('Failed to save cross-border transfers');
+              }
+            }}
+          >
+            {updateCrossBorderTransfers.isPending ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

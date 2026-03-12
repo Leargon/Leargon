@@ -8,7 +8,8 @@ Phase 2 (SEED): Creates fresh e-commerce demo data:
   locales · users · classifications · org units (+ hierarchy + leads) · domains
   (+ types) · entities (+ domains + data owners + interfaces) ·
   processes (+ hierarchy + domains + owners + executing units) ·
-  relationships · classification assignments · field configurations (mandatory fields)
+  relationships · classification assignments · field configurations (mandatory fields) ·
+  data processors (Art. 9 revDSG) · cross-border transfers (Art. 16-17 revDSG)
 
 Usage:
   python3 seed-demo.py
@@ -111,6 +112,9 @@ def wipe(label, list_path, delete_path_fn, sort_key=None):
         api('DELETE', delete_path_fn(k), token=T)
     print(f'  deleted {len(items)} {label}')
 
+
+print('\n[0/6] Data processors...')
+wipe('data processors', '/data-processors', lambda k: f'/data-processors/{k}')
 
 print('\n[1/6] Classifications...')
 wipe('classifications', '/classifications',
@@ -1002,6 +1006,105 @@ field_configs = [
 ]
 
 ok('field configurations', api('PUT', '/administration/field-configurations', field_configs, T))
+
+
+# ── Data Processors & Cross-border Transfers ─────────────────────────────────────
+print('\n[15] Data processors & cross-border transfers...')
+
+stripe = api('POST', '/data-processors', {
+    'names': n4('Stripe', 'Stripe', 'Stripe', 'Stripe', 'Stripe'),
+    'processingCountries': ['US', 'IE'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': True,
+}, T)
+ok('data processor: Stripe', stripe)
+
+klaviyo = api('POST', '/data-processors', {
+    'names': n4('Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo'),
+    'processingCountries': ['US'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': False,
+}, T)
+ok('data processor: Klaviyo', klaviyo)
+
+dhl = api('POST', '/data-processors', {
+    'names': n4('DHL Express', 'DHL Express', 'DHL Express', 'DHL Express', 'DHL Express'),
+    'processingCountries': ['DE', 'NL'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': True,
+}, T)
+ok('data processor: DHL Express', dhl)
+
+# Link entities to processors
+if '_error' not in stripe:
+    ok('link Payment Transaction → Stripe',
+       api('PUT', f'/data-processors/{stripe["key"]}/linked-entities',
+           {'businessEntityKeys': [ek('Payment Transaction')]}, T))
+
+if '_error' not in klaviyo:
+    ok('link Customer → Klaviyo',
+       api('PUT', f'/data-processors/{klaviyo["key"]}/linked-entities',
+           {'businessEntityKeys': [ek('Customer')]}, T))
+
+if '_error' not in dhl:
+    ok('link Parcel → DHL Express',
+       api('PUT', f'/data-processors/{dhl["key"]}/linked-entities',
+           {'businessEntityKeys': [ek('Parcel')]}, T))
+
+# Link processes to processors
+if '_error' not in stripe:
+    ok('link Process Payment → Stripe',
+       api('PUT', f'/data-processors/{stripe["key"]}/linked-processes',
+           {'processKeys': [pk('Process Payment')]}, T))
+
+if '_error' not in klaviyo:
+    ok('link Customer Registration + Confirm Email → Klaviyo',
+       api('PUT', f'/data-processors/{klaviyo["key"]}/linked-processes',
+           {'processKeys': [pk('Customer Registration'), pk('Confirm Email Address')]}, T))
+
+if '_error' not in dhl:
+    ok('link Ship Order → DHL Express',
+       api('PUT', f'/data-processors/{dhl["key"]}/linked-processes',
+           {'processKeys': [pk('Ship Order')]}, T))
+
+# Cross-border transfers on entities (Art. 16-17 revDSG)
+ok('cross-border transfers: Customer',
+   api('PUT', f'/business-entities/{ek("Customer")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Email marketing service via Klaviyo (US-based)'},
+       ]}, T))
+
+ok('cross-border transfers: Payment Transaction',
+   api('PUT', f'/business-entities/{ek("Payment Transaction")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Payment processing via Stripe (US-based)'},
+           {'destinationCountry': 'IE', 'safeguard': 'ADEQUACY_DECISION',
+            'notes': 'Stripe European operations (Ireland, EU adequacy)'},
+       ]}, T))
+
+ok('cross-border transfers: Parcel',
+   api('PUT', f'/business-entities/{ek("Parcel")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'DE', 'safeguard': 'ADEQUACY_DECISION',
+            'notes': 'DHL Express logistics operations (Germany, EU adequacy)'},
+       ]}, T))
+
+# Cross-border transfers on processes (Art. 16-17 revDSG)
+ok('cross-border transfers: Process Payment',
+   api('PUT', f'/processes/{pk("Process Payment")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Payment gateway operated by Stripe (US)'},
+       ]}, T))
+
+ok('cross-border transfers: Customer Registration',
+   api('PUT', f'/processes/{pk("Customer Registration")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Email verification service via Klaviyo (US)'},
+       ]}, T))
 
 
 # ── Summary ─────────────────────────────────────────────────────────────────────

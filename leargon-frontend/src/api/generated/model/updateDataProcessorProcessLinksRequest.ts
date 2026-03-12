@@ -16,15 +16,8 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FieldChange } from './fieldChange';
 
-export interface VersionDiffResponse {
-  /** Current version number */
-  versionNumber: number;
-  /**
-   * Previous version number (null if this is the first version)
-   * @nullable
-   */
-  previousVersionNumber: number | null;
-  changes: FieldChange[];
+export interface UpdateDataProcessorProcessLinksRequest {
+  /** Keys of processes to link */
+  processKeys?: string[];
 }

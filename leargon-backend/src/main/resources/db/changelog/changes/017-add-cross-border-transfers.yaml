@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-add-cross-border-transfers-to-business-entities
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: cross_border_transfers
+                  type: JSON
+
+  - changeSet:
+      id: 017-add-cross-border-transfers-to-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: cross_border_transfers
+                  type: JSON

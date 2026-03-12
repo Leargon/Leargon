@@ -100,6 +100,13 @@ class Process {
     )
     var executingUnits: MutableSet<OrganisationalUnit> = mutableSetOf()
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "cross_border_transfers", columnDefinition = "JSON")
+    var crossBorderTransfers: MutableList<CrossBorderTransfer>? = null
+
+    @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
+    var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

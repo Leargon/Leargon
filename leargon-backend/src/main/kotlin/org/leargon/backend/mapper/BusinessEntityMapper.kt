@@ -19,7 +19,8 @@ import java.time.ZonedDateTime
 
 @Singleton
 open class BusinessEntityMapper(
-    private val fieldConfigurationService: FieldConfigurationService
+    private val fieldConfigurationService: FieldConfigurationService,
+    private val dataProcessorMapper: DataProcessorMapper
 ) {
 
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
@@ -61,6 +62,8 @@ open class BusinessEntityMapper(
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(businessEntity.classificationAssignments))
             .retentionPeriod(businessEntity.retentionPeriod)
+            .crossBorderTransfers(businessEntity.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
+            .dataProcessors(businessEntity.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
     }

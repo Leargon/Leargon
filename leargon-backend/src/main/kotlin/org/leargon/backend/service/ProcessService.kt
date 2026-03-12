@@ -212,6 +212,23 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Transactional
+    open fun updateCrossBorderTransfers(
+        processKey: String,
+        transfers: List<org.leargon.backend.model.CrossBorderTransferEntry>,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(processKey)
+        checkEditPermission(process, currentUser)
+        process.crossBorderTransfers = transfers
+            .map { org.leargon.backend.mapper.DataProcessorMapper.fromCrossBorderTransferEntry(it) }
+            .toMutableList()
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated cross-border transfers")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun assignBusinessDomain(key: String, domainKey: String?, currentUser: User): ProcessResponse {
