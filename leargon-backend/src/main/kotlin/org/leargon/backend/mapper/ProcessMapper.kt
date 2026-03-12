@@ -8,6 +8,7 @@ import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.model.ProcessTreeResponse
+import org.leargon.backend.model.LegalBasis
 import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
@@ -30,6 +31,7 @@ open class ProcessMapper(
                 fieldName == "businessDomain" -> process.businessDomain != null
                 fieldName == "processOwner" -> process.processOwner != null
                 fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
+                fieldName == "legalBasis" -> process.legalBasis != null
                 fieldName.startsWith("names.") -> {
                     val locale = fieldName.removePrefix("names.")
                     process.names.any { it.locale == locale && !it.text.isNullOrBlank() }
@@ -63,6 +65,7 @@ open class ProcessMapper(
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
+            .legalBasis(toLegalBasis(process.legalBasis))
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
             .dataProcessors(process.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
             .missingMandatoryFields(fc.missing)
@@ -112,6 +115,12 @@ open class ProcessMapper(
         fun toChangeType(changeType: String?): ProcessVersionResponseChangeType? {
             if (changeType == null) return null
             return ProcessVersionResponseChangeType.fromValue(changeType)
+        }
+
+        @JvmStatic
+        fun toLegalBasis(legalBasis: String?): LegalBasis? {
+            if (legalBasis == null) return null
+            return LegalBasis.fromValue(legalBasis)
         }
 
         @JvmStatic

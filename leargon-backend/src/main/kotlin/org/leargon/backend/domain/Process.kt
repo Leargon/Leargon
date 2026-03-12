@@ -36,6 +36,9 @@ class Process {
     @Column(name = "process_type", length = 20)
     var processType: String? = null
 
+    @Column(name = "legal_basis", length = 50)
+    var legalBasis: String? = null
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_owner_id", nullable = false)
     var processOwner: User? = null

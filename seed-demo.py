@@ -798,6 +798,22 @@ process_data = [
      ['logistics'], 'marco.rossi'),
 ]
 
+# Legal basis per process (Art. 6 GDPR / Art. 31 revDSG)
+process_legal_basis = {
+    'Customer Registration':    'CONTRACT',
+    'Validate Customer Data':   'CONTRACT',
+    'Confirm Email Address':    'CONTRACT',
+    'Place an Order':           'CONTRACT',
+    'Search for Product':       'CONTRACT',
+    'Add to Cart':              'CONTRACT',
+    'Checkout':                 'CONTRACT',
+    'Validate Shipping Address':'CONTRACT',
+    'Process Payment':          'CONTRACT',
+    'Send Invoice':             'LEGAL_OBLIGATION',
+    'Ship Order':               'CONTRACT',
+    'Pick and Pack':            'CONTRACT',
+}
+
 process_keys = {}
 for (en_name, parent_en, domain_en, nms, descs, ou_slugs, proc_owner) in process_data:
     payload = {'names': nms, 'descriptions': descs}
@@ -815,6 +831,9 @@ for (en_name, parent_en, domain_en, nms, descs, ou_slugs, proc_owner) in process
         if domain_en:
             api('PUT', f'/processes/{pkey}/domain',
                 {'businessDomainKey': dk(domain_en)}, T)
+        legal_basis = process_legal_basis.get(en_name)
+        if legal_basis:
+            api('PUT', f'/processes/{pkey}/legal-basis', {'legalBasis': legal_basis}, T)
         parent_label = f', parent={parent_en}' if parent_en else ''
         ok(f'{en_name} (units={resolved}, owner={proc_owner}{parent_label})', result)
     else:

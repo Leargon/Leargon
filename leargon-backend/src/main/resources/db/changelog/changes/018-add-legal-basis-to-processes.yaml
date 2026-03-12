@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-add-legal-basis-to-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: legal_basis
+                  type: varchar(50)
+                  constraints:
+                    nullable: true

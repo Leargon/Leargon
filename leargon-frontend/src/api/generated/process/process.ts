@@ -51,6 +51,7 @@ import type {
   UpdateLinkedDataProcessorsRequest,
   UpdateOrgUnitParentsRequest,
   UpdateProcessCodeRequest,
+  UpdateProcessLegalBasisRequest,
   UpdateProcessOwnerRequest,
   UpdateProcessTypeRequest,
   VersionDiffResponse
@@ -1847,6 +1848,107 @@ export const useUpdateProcessType = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateProcessTypeMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the legal basis of a process. Only the process owner or an admin can update.
+ * @summary Update process legal basis
+ */
+export type updateProcessLegalBasisResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessLegalBasisResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessLegalBasisResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessLegalBasisResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessLegalBasisResponseSuccess = (updateProcessLegalBasisResponse200) & {
+  headers: Headers;
+};
+export type updateProcessLegalBasisResponseError = (updateProcessLegalBasisResponse401 | updateProcessLegalBasisResponse403 | updateProcessLegalBasisResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessLegalBasisResponse = (updateProcessLegalBasisResponseSuccess | updateProcessLegalBasisResponseError)
+
+export const getUpdateProcessLegalBasisUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/legal-basis`
+}
+
+export const updateProcessLegalBasis = async (key: string,
+    updateProcessLegalBasisRequest: UpdateProcessLegalBasisRequest, options?: RequestInit): Promise<updateProcessLegalBasisResponse> => {
+  
+  return customAxios<updateProcessLegalBasisResponse>(getUpdateProcessLegalBasisUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessLegalBasisRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessLegalBasisMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessLegalBasis>>, TError,{key: string;data: UpdateProcessLegalBasisRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessLegalBasis>>, TError,{key: string;data: UpdateProcessLegalBasisRequest}, TContext> => {
+
+const mutationKey = ['updateProcessLegalBasis'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessLegalBasis>>, {key: string;data: UpdateProcessLegalBasisRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessLegalBasis(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessLegalBasisMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessLegalBasis>>>
+    export type UpdateProcessLegalBasisMutationBody = UpdateProcessLegalBasisRequest
+    export type UpdateProcessLegalBasisMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process legal basis
+ */
+export const useUpdateProcessLegalBasis = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessLegalBasis>>, TError,{key: string;data: UpdateProcessLegalBasisRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessLegalBasis>>,
+        TError,
+        {key: string;data: UpdateProcessLegalBasisRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessLegalBasisMutationOptions(options), queryClient);
     }
     /**
  * Returns the version history of a process.

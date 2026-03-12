@@ -27,6 +27,7 @@ import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
+import org.leargon.backend.model.UpdateProcessLegalBasisRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
@@ -82,6 +83,11 @@ open class ProcessController(
     override fun updateProcessType(key: String, @Valid @Body request: UpdateProcessTypeRequest): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.updateProcessType(key, request.processType?.value, currentUser)
+    }
+
+    override fun updateProcessLegalBasis(key: String, @Valid @Body request: UpdateProcessLegalBasisRequest): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateLegalBasis(key, request.legalBasis?.value, currentUser)
     }
 
     override fun updateProcessOwner(key: String, @Valid @Body request: UpdateProcessOwnerRequest): ProcessResponse {

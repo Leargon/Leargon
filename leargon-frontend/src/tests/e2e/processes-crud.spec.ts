@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, uid, OWNER } from './api-setup';
+import { createProcess, setProcessLegalBasis, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -50,6 +50,44 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
     await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });
+  });
+});
+
+  test('admin can set legal basis via UI', async ({ page }) => {
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // Find the Legal Basis section and click its edit button
+    const legalBasisSection = page.getByText('Legal Basis', { exact: true });
+    await legalBasisSection.locator('..').getByRole('button', { name: '' }).first().click();
+
+    // Select "Contract" from the dropdown
+    await page.getByRole('combobox').last().click();
+    await page.getByRole('option', { name: 'Contract' }).click();
+
+    // Save
+    await page.locator('button:has([data-testid="CheckIcon"])').last().click();
+
+    await expect(page.getByText('Contract', { exact: false })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('legal basis chip is visible when set', async ({ page }) => {
+    await setProcessLegalBasis(processKey, 'LEGAL_OBLIGATION');
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Legal Obligation', { exact: false })).toBeVisible();
+  });
+
+  test('legal basis shows "Not set" when not set', async ({ page }) => {
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    const legalBasisSection = page.getByText('Legal Basis', { exact: true });
+    await expect(legalBasisSection).toBeVisible();
+    // The Not set text is within the same section
+    await expect(page.getByText('Not set').first()).toBeVisible();
   });
 });
 
@@ -130,6 +168,16 @@ test.describe('Business Process CRUD — Viewer', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
+    await expect(page.locator('button:has([data-testid="EditIcon"])')).not.toBeVisible();
+  });
+
+  test('can see legal basis chip but not edit it', async ({ page }) => {
+    await setProcessLegalBasis(processKey, 'CONSENT');
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Consent', { exact: false })).toBeVisible();
     await expect(page.locator('button:has([data-testid="EditIcon"])')).not.toBeVisible();
   });
 

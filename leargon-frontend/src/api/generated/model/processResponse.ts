@@ -21,6 +21,7 @@ import type { BusinessEntitySummaryResponse } from './businessEntitySummaryRespo
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
 import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
+import type { LegalBasis } from './legalBasis';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
@@ -36,6 +37,7 @@ export interface ProcessResponse {
    */
   code?: string | null;
   processType?: ProcessType | null;
+  legalBasis?: LegalBasis | null;
   processOwner: UserSummaryResponse;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];

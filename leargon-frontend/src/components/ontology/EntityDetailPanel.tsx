@@ -94,7 +94,7 @@ const SAFEGUARD_LABELS: Record<string, string> = {
   ADEQUACY_DECISION: 'Adequacy Decision',
   STANDARD_CONTRACTUAL_CLAUSES: 'Standard Contractual Clauses',
   BINDING_CORPORATE_RULES: 'Binding Corporate Rules',
-  EXCEPTION: 'Art. 17 Exception',
+  EXCEPTION: 'Exception',
 };
 
 interface EntityDetailPanelProps {

@@ -39,6 +39,7 @@ import {
   useUpdateProcessNames,
   useUpdateProcessDescriptions,
   useUpdateProcessType,
+  useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
   useUpdateProcessCode,
   useAssignBusinessDomainToProcess,
@@ -66,6 +67,7 @@ import TranslationEditor from '../common/TranslationEditor';
 const ProcessDiagramEditor = lazy(() => import('./diagram/ProcessDiagramEditor'));
 import type {
   LocalizedText,
+  LegalBasis,
   ProcessType,
   ClassificationAssignmentRequest,
   ProcessVersionResponse,
@@ -87,6 +89,16 @@ const PROCESS_TYPE_LABELS: Record<string, string> = {
   MANAGEMENT: 'Management',
   INNOVATION: 'Innovation',
   COMPLIANCE: 'Compliance',
+};
+
+const LEGAL_BASIS_VALUES = ['CONSENT', 'CONTRACT', 'LEGAL_OBLIGATION', 'VITAL_INTEREST', 'PUBLIC_TASK', 'LEGITIMATE_INTEREST'] as const;
+const LEGAL_BASIS_LABELS: Record<string, string> = {
+  CONSENT: 'Consent',
+  CONTRACT: 'Contract',
+  LEGAL_OBLIGATION: 'Legal Obligation',
+  VITAL_INTEREST: 'Vital Interests',
+  PUBLIC_TASK: 'Public Task',
+  LEGITIMATE_INTEREST: 'Legitimate Interests',
 };
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -162,6 +174,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateNames = useUpdateProcessNames();
   const updateDescriptions = useUpdateProcessDescriptions();
   const updateType = useUpdateProcessType();
+  const updateLegalBasis = useUpdateProcessLegalBasis();
   const updateOwner = useUpdateProcessOwner();
   const updateCode = useUpdateProcessCode();
   const assignDomain = useAssignBusinessDomainToProcess();
@@ -212,6 +225,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Legal basis inline edit
+  const legalBasisEdit = useInlineEdit<LegalBasis | ''>({
+    onSave: async (val) => {
+      await updateLegalBasis.mutateAsync({ key: processKey, data: { legalBasis: (val || undefined) as LegalBasis | undefined } });
+      invalidate();
+    },
+  });
+
   // Process owner inline edit
   const ownerEdit = useInlineEdit<string>({
     onSave: async (val) => {
@@ -255,6 +276,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   useEffect(() => {
     namesEdit.cancel();
     typeEdit.cancel();
+    legalBasisEdit.cancel();
     ownerEdit.cancel();
     codeEdit.cancel();
     domainEdit.cancel();
@@ -481,6 +503,40 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <Box sx={{ mb: 2 }}>
           {process.processType ? (
             <Chip label={PROCESS_TYPE_LABELS[process.processType] || process.processType} color="primary" size="small" />
+          ) : (
+            <Typography variant="body2" color="text.secondary">Not set</Typography>
+          )}
+        </Box>
+      )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Legal Basis */}
+      <SectionHeader title="Legal Basis" canEdit={isOwnerOrAdmin} isEditing={legalBasisEdit.isEditing}
+        onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
+        onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving} />
+      {legalBasisEdit.isEditing ? (
+        <Box sx={{ mb: 2 }}>
+          <Select<string>
+            value={legalBasisEdit.editValue || ''}
+            onChange={(e: SelectChangeEvent) => legalBasisEdit.setEditValue((e.target.value || '') as LegalBasis | '')}
+            size="small"
+            displayEmpty
+            sx={{ minWidth: 300 }}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {LEGAL_BASIS_VALUES.map((v) => (
+              <MenuItem key={v} value={v}>{LEGAL_BASIS_LABELS[v]}</MenuItem>
+            ))}
+          </Select>
+          {legalBasisEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{legalBasisEdit.error}</Alert>}
+        </Box>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          {process.legalBasis ? (
+            <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} color="secondary" size="small" />
           ) : (
             <Typography variant="body2" color="text.secondary">Not set</Typography>
           )}

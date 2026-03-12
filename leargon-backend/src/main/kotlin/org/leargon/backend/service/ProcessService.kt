@@ -165,6 +165,22 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun updateLegalBasis(key: String, legalBasis: String?, currentUser: User): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        val oldBasis = process.legalBasis ?: "none"
+        process.legalBasis = legalBasis
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE",
+            "Changed legal basis from '$oldBasis' to '${legalBasis ?: "none"}'")
+
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessType(key: String, processType: String?, currentUser: User): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
@@ -437,6 +453,7 @@ open class ProcessService(
             "key" to process.key,
             "code" to process.code,
             "processType" to process.processType,
+            "legalBasis" to process.legalBasis,
             "processOwnerUsername" to process.processOwner!!.username,
             "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
             "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
@@ -493,6 +510,12 @@ open class ProcessService(
             val currType = current["processType"]
             if (prevType != currType) {
                 changes.add(FieldChange("processType", prevType?.toString(), currType?.toString()))
+            }
+
+            val prevBasis = previous["legalBasis"]
+            val currBasis = current["legalBasis"]
+            if (prevBasis != currBasis) {
+                changes.add(FieldChange("legalBasis", prevBasis?.toString(), currBasis?.toString()))
             }
 
             val prevNames = (previous["names"] as? List<Map<*, *>>) ?: emptyList()

@@ -301,6 +301,119 @@ class ProcessControllerSpec extends Specification {
         response.body().processType.toString() == "MANAGEMENT"
     }
 
+    def "PUT /processes/{key}/legal-basis should set legal basis"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/legal-basis", [legalBasis: "LEGITIMATE_INTEREST"])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().legalBasis.toString() == "LEGITIMATE_INTEREST"
+    }
+
+    def "PUT /processes/{key}/legal-basis should clear legal basis when null"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/legal-basis", [legalBasis: "CONSENT"])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/legal-basis", [legalBasis: null])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().legalBasis == null
+    }
+
+    def "PUT /processes/{key}/legal-basis should return 403 for non-owner"() {
+        given:
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Process")]))
+                        .bearerAuth(creatorData.token), ProcessResponse).body()
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/legal-basis", [legalBasis: "CONSENT"])
+                        .bearerAuth(otherData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /processes/{key}/legal-basis should return 404 for unknown process"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/non-existent/legal-basis", [legalBasis: "CONSENT"])
+                        .bearerAuth(userData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.NOT_FOUND
+    }
+
+    def "PUT /processes/{key}/legal-basis should record version with change summary"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/legal-basis", [legalBasis: "CONTRACT"])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+        def versions = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${created.key}/versions").bearerAuth(token),
+                String
+        )
+
+        then:
+        versions.status == HttpStatus.OK
+        versions.body().contains("CONTRACT")
+    }
+
     def "PUT /processes/{key}/owner should update process owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")

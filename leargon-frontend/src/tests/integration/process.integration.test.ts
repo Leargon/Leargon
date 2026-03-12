@@ -658,4 +658,87 @@ describe('Process E2E', () => {
     const res = await client.get(`/processes/${proc.key}/versions/999/diff`);
     expect(res.status).toBe(404);
   });
+
+  // =====================
+  // LEGAL BASIS
+  // =====================
+
+  it('should set legal basis on a process', async () => {
+    const proc = await createProcess(client, 'FE Legal Basis Process');
+
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/legal-basis`, {
+      legalBasis: 'CONTRACT',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.legalBasis).toBe('CONTRACT');
+  });
+
+  it('should update legal basis to a different value', async () => {
+    const proc = await createProcess(client, 'FE Update Legal Basis Process');
+
+    await client.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'CONSENT' });
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/legal-basis`, {
+      legalBasis: 'LEGITIMATE_INTEREST',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.legalBasis).toBe('LEGITIMATE_INTEREST');
+  });
+
+  it('should clear legal basis when set to null', async () => {
+    const proc = await createProcess(client, 'FE Clear Legal Basis Process');
+
+    await client.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'CONTRACT' });
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/legal-basis`, {
+      legalBasis: null,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.legalBasis ?? null).toBeNull();
+  });
+
+  it('should return legal basis in GET process response', async () => {
+    const proc = await createProcess(client, 'FE Get Legal Basis Process');
+
+    await client.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'LEGAL_OBLIGATION' });
+    const res = await client.get<ProcessResponse>(`/processes/${proc.key}`);
+    expect(res.status).toBe(200);
+    expect(res.data.legalBasis).toBe('LEGAL_OBLIGATION');
+  });
+
+  it('should return 403 when non-owner sets legal basis', async () => {
+    const proc = await createProcess(client, 'FE Legal Basis Forbidden Process');
+
+    const otherClient = createClient(getBackendUrl());
+    const otherAuth = await signup(otherClient, {
+      email: 'fe-legal-other@example.com',
+      username: 'felegalother',
+      password: 'password123',
+      firstName: 'Other',
+      lastName: 'User',
+    });
+    withToken(otherClient, otherAuth.accessToken);
+
+    const res = await otherClient.put(`/processes/${proc.key}/legal-basis`, {
+      legalBasis: 'CONSENT',
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it('should return 404 when setting legal basis on unknown process', async () => {
+    const res = await client.put(`/processes/non-existent-proc/legal-basis`, {
+      legalBasis: 'CONSENT',
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it('should record version entry when legal basis is set', async () => {
+    const proc = await createProcess(client, 'FE Legal Basis Version Process');
+
+    await client.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'PUBLIC_TASK' });
+    const versionsRes = await client.get<ProcessVersionResponse[]>(
+      `/processes/${proc.key}/versions`,
+    );
+    expect(versionsRes.status).toBe(200);
+    expect(versionsRes.data.length).toBe(2);
+    expect(versionsRes.data[1].changeSummary).toContain('PUBLIC_TASK');
+  });
 });

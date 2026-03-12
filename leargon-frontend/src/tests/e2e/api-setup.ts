@@ -101,6 +101,13 @@ export const linkDataProcessorEntities = (
     ADMIN,
   );
 
+export const setProcessLegalBasis = (
+  processKey: string,
+  legalBasis: string | null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/legal-basis`, 'PUT', { legalBasis }, as);
+
 export const updateCrossBorderTransfers = (
   entityKey: string,
   transfers: Array<{ destinationCountry: string; safeguard: string; notes?: string }>,
