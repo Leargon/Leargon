@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -28,6 +29,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, CheckCircle as CheckCircleIcon, Warning as WarningIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
@@ -63,6 +66,7 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import PropRow from '../common/PropRow';
 import CreateEntityDialog from './CreateEntityDialog';
 import type {
   LocalizedText,
@@ -103,6 +107,7 @@ interface EntityDetailPanelProps {
 
 const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
@@ -128,6 +133,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   // Relationship create dialog
   const [relDialogOpen, setRelDialogOpen] = useState(false);
@@ -418,7 +424,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       {/* Names & Descriptions */}
-      <SectionHeader title="Names & Descriptions" canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
+      <SectionHeader title={t('entity.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...entity.names], descriptions: [...(entity.descriptions || [])] })}
         onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving}
         isMandatory={isMandatory('names')} />
@@ -479,116 +485,108 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Data Owner */}
-      <SectionHeader title="Data Owner" canEdit={isAdmin} isEditing={ownerEdit.isEditing}
-        onEdit={() => ownerEdit.startEdit(entity.dataOwner.username)} onSave={ownerEdit.save}
-        onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving} />
-      <Box sx={{ mb: 2 }}>
-        {ownerEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={allUsers.filter((u) => u.enabled)}
-              getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
-              value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
-              onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
-              renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
-              isOptionEqualToValue={(o, v) => o.username === v.username}
-              size="small"
-              sx={{ width: 300 }}
-            />
-            {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
-          </Box>
-        ) : (
-          <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
-        )}
-      </Box>
+      {/* Compact scalar properties */}
+      <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
+        <PropRow label={t('entity.dataOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
+          onEdit={() => ownerEdit.startEdit(entity.dataOwner.username)} onSave={ownerEdit.save}
+          onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
+          {ownerEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
+                onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
+                renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
+          onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
+          onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
+          {parentEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={parentCandidates}
+                getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                value={parentCandidates.find((e) => e.key === parentEdit.editValue) || null}
+                onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
+                renderInput={(params) => (
+                  <TextField {...params} size="small" placeholder="Search for parent entity..." sx={{ width: 350 }} />
+                )}
+                isOptionEqualToValue={(option, value) => option.key === value.key}
+                size="small"
+              />
+              {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
+            </Box>
+          ) : entity.parent ? (
+            <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
+          ) : (
+            <Typography variant="body2" color="text.secondary">{t('entity.topLevel')}</Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('entity.businessDomain')} canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
+          onEdit={() => domainEdit.startEdit(entity.businessDomain?.key || null)} onSave={domainEdit.save}
+          onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving} isMandatory={isMandatory('businessDomain')}>
+          {domainEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allDomains}
+                getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                value={allDomains.find((d) => d.key === domainEdit.editValue) || null}
+                onChange={(_, newVal) => domainEdit.setEditValue(newVal?.key || null)}
+                renderInput={(params) => (
+                  <TextField {...params} size="small" placeholder="Search for domain..." sx={{ width: 350 }} />
+                )}
+                isOptionEqualToValue={(option, value) => option.key === value.key}
+                size="small"
+              />
+              {domainEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{domainEdit.error}</Alert>}
+            </Box>
+          ) : entity.businessDomain ? (
+            <Chip label={entity.businessDomain.name} size="small" onClick={() => navigate(`/domains/${entity.businessDomain!.key}`)} clickable />
+          ) : (
+            <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('entity.retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
+          onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
+          onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
+          isMandatory={isMandatory('retentionPeriod')}>
+          {retentionEdit.isEditing ? (
+            <Box>
+              <TextField
+                value={retentionEdit.editValue ?? ''}
+                onChange={(e) => retentionEdit.setEditValue(e.target.value)}
+                size="small"
+                placeholder="e.g. 7 years"
+                sx={{ width: 300 }}
+              />
+              {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
+            </Box>
+          ) : entity.retentionPeriod ? (
+            <Typography variant="body2">{entity.retentionPeriod}</Typography>
+          ) : (
+            <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+          )}
+        </PropRow>
+      </Paper>
 
-      <Divider sx={{ my: 2 }} />
+      {/* Tabs */}
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Tab label={t('tabs.compliance')} />
+        <Tab label={t('tabs.relationships')} />
+        <Tab label={t('tabs.governance')} />
+      </Tabs>
 
-      {/* Parent */}
-      <SectionHeader title="Parent Entity" canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
-        onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
-        onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving} />
-      <Box sx={{ mb: 2 }}>
-        {parentEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={parentCandidates}
-              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-              value={parentCandidates.find((e) => e.key === parentEdit.editValue) || null}
-              onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
-              renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for parent entity..." sx={{ width: 350 }} />
-              )}
-              isOptionEqualToValue={(option, value) => option.key === value.key}
-              size="small"
-            />
-            {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
-          </Box>
-        ) : entity.parent ? (
-          <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
-        ) : (
-          <Typography variant="body2" color="text.secondary">Top-level entity</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Business Domain */}
-      <SectionHeader title="Business Domain" canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
-        onEdit={() => domainEdit.startEdit(entity.businessDomain?.key || null)} onSave={domainEdit.save}
-        onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving}
-        isMandatory={isMandatory('businessDomain')} />
-      <Box sx={{ mb: 2 }}>
-        {domainEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={allDomains}
-              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-              value={allDomains.find((d) => d.key === domainEdit.editValue) || null}
-              onChange={(_, newVal) => domainEdit.setEditValue(newVal?.key || null)}
-              renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for domain..." sx={{ width: 350 }} />
-              )}
-              isOptionEqualToValue={(option, value) => option.key === value.key}
-              size="small"
-            />
-            {domainEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{domainEdit.error}</Alert>}
-          </Box>
-        ) : entity.businessDomain ? (
-          <Chip label={entity.businessDomain.name} size="small" onClick={() => navigate(`/domains/${entity.businessDomain!.key}`)} clickable />
-        ) : (
-          <Typography variant="body2" color="text.secondary">Not assigned</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Retention Period */}
-      <SectionHeader title="Retention Period" canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
-        onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
-        onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
-        isMandatory={isMandatory('retentionPeriod')} />
-      <Box sx={{ mb: 2 }}>
-        {retentionEdit.isEditing ? (
-          <Box>
-            <TextField
-              value={retentionEdit.editValue ?? ''}
-              onChange={(e) => retentionEdit.setEditValue(e.target.value)}
-              size="small"
-              placeholder="e.g. 7 years"
-              sx={{ width: 300 }}
-            />
-            {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
-          </Box>
-        ) : entity.retentionPeriod ? (
-          <Typography variant="body2">{entity.retentionPeriod}</Typography>
-        ) : (
-          <Typography variant="body2" color="text.secondary">Not set</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
+      {activeTab === 0 && <>
 
       {/* Data Processors */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -663,7 +661,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         )}
       </Box>
 
-      <Divider sx={{ my: 2 }} />
+      </>}
+
+      {activeTab === 1 && <>
 
       {/* Interfaces */}
       <SectionHeader title="Interfaces" canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
@@ -812,6 +812,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         );
       })()}
 
+      </>}
+
+      {activeTab === 2 && <>
+
       {/* Classifications */}
       <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(entity.classificationAssignments?.map((a) => ({
@@ -896,7 +900,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     })}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">Not set</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
                 )}
               </Box>
             );
@@ -956,6 +960,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           )}
         </Paper>
       )}
+
+      </>}
 
       {/* Create Child Entity Dialog */}
       <CreateEntityDialog

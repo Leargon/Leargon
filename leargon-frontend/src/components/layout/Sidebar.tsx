@@ -1,19 +1,23 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Box, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
-import { AccountTree, Category, CorporateFare, Timeline, Handshake } from '@mui/icons-material';
+import { AccountTree, Category, CorporateFare, Timeline, Handshake, FactCheck } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 const SIDEBAR_WIDTH = 220;
 
-const navItems = [
-  { label: 'Domain Model', path: '/domains', icon: <Category /> },
-  { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
-  { label: 'Process Map', path: '/processes', icon: <Timeline /> },
-  { label: 'Organisational structure', path: '/organisation', icon: <CorporateFare /> },
-  { label: 'Data Processors', path: '/data-processors', icon: <Handshake /> },
-];
-
 const Sidebar: React.FC = () => {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { label: t('nav.domainModel'), path: '/domains', icon: <Category /> },
+    { label: t('nav.dataOntology'), path: '/entities', icon: <AccountTree /> },
+    { label: t('nav.processMap'), path: '/processes', icon: <Timeline /> },
+    { label: t('nav.orgStructure'), path: '/organisation', icon: <CorporateFare /> },
+    { label: t('nav.dataProcessors'), path: '/data-processors', icon: <Handshake /> },
+    { label: t('nav.processingRegister'), path: '/compliance', icon: <FactCheck /> },
+  ];
+
   return (
     <Box
       sx={{

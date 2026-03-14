@@ -1,3 +1,4 @@
+import './i18n';
 import React, { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -17,6 +18,7 @@ import ProcessesPage from './pages/ProcessesPage';
 import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
 import DataProcessorsPage from './pages/DataProcessorsPage';
+import CompliancePage from './pages/CompliancePage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
@@ -82,6 +84,7 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/settings/field-configurations" element={<SettingsPage />} />
                   <Route path="/data-processors" element={<DataProcessorsPage />} />
                   <Route path="/data-processors/:key" element={<DataProcessorsPage />} />
+                  <Route path="/compliance" element={<CompliancePage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

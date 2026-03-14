@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import type { LocalizedText } from '../api/generated/model';
+import i18n from '../i18n';
 
 interface LocaleContextType {
   preferredLocale: string;
@@ -31,6 +32,7 @@ export const LocaleProvider: React.FC<LocaleProviderProps> = ({ children }) => {
   const setPreferredLocale = useCallback((locale: string) => {
     setPreferredLocaleState(locale);
     localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    void i18n.changeLanguage(locale);
   }, []);
 
   const getLocalizedText = useCallback((translations: LocalizedText[] | undefined, fallback = ''): string => {
