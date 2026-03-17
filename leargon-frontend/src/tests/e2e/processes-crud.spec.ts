@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, setProcessLegalBasis, uid, OWNER } from './api-setup';
+import { createProcess, setProcessLegalBasis, setProcessPurpose, setProcessSecurityMeasures, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -88,6 +88,38 @@ test.describe('Business Process CRUD — Admin', () => {
     await expect(legalBasisSection).toBeVisible();
     // The Not set text is within the same section
     await expect(page.getByText('Not set').first()).toBeVisible();
+  });
+
+  test('purpose is visible in Compliance tab when set', async ({ page }) => {
+    await setProcessPurpose(processKey, 'E2E purpose: manage billing data');
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // Navigate to Compliance tab
+    await page.getByRole('tab', { name: /compliance/i }).click();
+
+    await expect(page.getByText('E2E purpose: manage billing data')).toBeVisible();
+  });
+
+  test('security measures are visible in Compliance tab when set', async ({ page }) => {
+    await setProcessSecurityMeasures(processKey, 'E2E TOM: encryption, access control');
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('tab', { name: /compliance/i }).click();
+
+    await expect(page.getByText('E2E TOM: encryption, access control')).toBeVisible();
+  });
+
+  test('purpose appears in CompliancePage table', async ({ page }) => {
+    await setProcessPurpose(processKey, 'E2E compliance page purpose');
+
+    await page.goto('/compliance');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('E2E compliance page purpose', { exact: false })).toBeVisible();
   });
 });
 

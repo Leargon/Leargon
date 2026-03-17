@@ -18,7 +18,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 
 /**
- * Legal basis for processing personal data (Art. 6 GDPR / Art. 31 revDSG)
+ * Legal basis for processing personal data
  * @nullable
  */
 export type LegalBasis = typeof LegalBasis[keyof typeof LegalBasis] | null;

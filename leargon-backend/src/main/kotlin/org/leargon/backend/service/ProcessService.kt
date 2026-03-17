@@ -181,6 +181,28 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun updatePurpose(key: String, purpose: String?, currentUser: User): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+        process.purpose = purpose
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated purpose")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
+    open fun updateSecurityMeasures(key: String, securityMeasures: String?, currentUser: User): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+        process.securityMeasures = securityMeasures
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated security measures")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessType(key: String, processType: String?, currentUser: User): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)

@@ -66,6 +66,8 @@ open class ProcessMapper(
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
             .legalBasis(toLegalBasis(process.legalBasis))
+            .purpose(process.purpose)
+            .securityMeasures(process.securityMeasures)
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
             .dataProcessors(process.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
             .missingMandatoryFields(fc.missing)

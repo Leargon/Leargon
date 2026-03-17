@@ -757,4 +757,127 @@ class ProcessControllerSpec extends Specification {
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.FORBIDDEN
     }
+
+    // =====================
+    // Purpose
+    // =====================
+
+    def "PUT /processes/{key}/purpose should set purpose"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Purpose Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "To manage customer data for billing purposes"])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().purpose == "To manage customer data for billing purposes"
+    }
+
+    def "PUT /processes/{key}/purpose should clear purpose when null"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Clear Purpose Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        and: "set a purpose first"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "Some purpose"])
+                        .bearerAuth(token), ProcessResponse)
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: null])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().purpose == null
+    }
+
+    def "PUT /processes/{key}/purpose should return 403 for non-owner"() {
+        given:
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Protected Purpose Process")]))
+                        .bearerAuth(creatorData.token), ProcessResponse).body()
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "Unauthorized purpose"])
+                        .bearerAuth(otherData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
+    // Security Measures
+    // =====================
+
+    def "PUT /processes/{key}/security-measures should set security measures"() {
+        given:
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String token = userData.token
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Security Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: "Encryption at rest and in transit, access control"])
+                        .bearerAuth(token),
+                ProcessResponse
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().securityMeasures == "Encryption at rest and in transit, access control"
+    }
+
+    def "PUT /processes/{key}/security-measures should return 403 for non-owner"() {
+        given:
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+
+        and:
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Protected Security Process")]))
+                        .bearerAuth(creatorData.token), ProcessResponse).body()
+
+        when:
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: "Unauthorized measures"])
+                        .bearerAuth(otherData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
 }

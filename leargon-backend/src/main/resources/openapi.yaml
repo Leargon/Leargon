@@ -50,6 +50,10 @@ tags:
   description: Business Process management endpoints
 - name: DataProcessor
   description: Data Processor management endpoints
+- name: Dpia
+  description: Data Protection Impact Assessment management endpoints
+- name: Export
+  description: Compliance export endpoints (requires ROLE_ADMIN)
 - name: Setup
   description: First-time setup wizard endpoints
 - name: User
@@ -3192,6 +3196,82 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /processes/{key}/purpose:
+    put:
+      tags:
+      - Process
+      summary: Update process purpose
+      description: Updates the purpose (Zweck) of a process. Only the process owner or an admin can update.
+      operationId: updateProcessPurpose
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessPurposeRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/security-measures:
+    put:
+      tags:
+      - Process
+      summary: Update process security measures (TOM)
+      description: Updates the technical and organisational security measures of a process. Only the process owner or an admin can update.
+      operationId: updateProcessSecurityMeasures
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessSecurityMeasuresRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
   /processes/{key}/versions:
     get:
       tags:
@@ -3337,6 +3417,65 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /business-entities/{key}/dpia:
+    get:
+      tags:
+        - BusinessEntity
+      summary: Get DPIA for a business entity
+      operationId: getEntityDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: DPIA found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "404":
+          description: No DPIA found for this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - BusinessEntity
+      summary: Trigger a DPIA for a business entity
+      operationId: triggerEntityDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: DPIA triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "404":
+          description: Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: DPIA already exists for this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /business-entities/{key}/data-processors:
     put:
       tags:
@@ -3368,6 +3507,65 @@ paths:
           description: Not found
         '401':
           description: Not authenticated
+  /processes/{key}/dpia:
+    get:
+      tags:
+        - Process
+      summary: Get DPIA for a process
+      operationId: getProcessDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: DPIA found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "404":
+          description: No DPIA found for this process
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Process
+      summary: Trigger a DPIA for a process
+      operationId: triggerProcessDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: DPIA triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "404":
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "409":
+          description: DPIA already exists for this process
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /processes/{key}/cross-border-transfers:
     put:
       tags:
@@ -3651,6 +3849,322 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /dpia:
+    get:
+      tags:
+        - Dpia
+      summary: List all DPIAs
+      operationId: getAllDpias
+      security:
+      - bearerAuth: []
+      responses:
+        "200":
+          description: List of all DPIAs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DpiaListItemResponse'
+  /dpia/{key}/risk-description:
+    put:
+      tags:
+        - Dpia
+      summary: Update DPIA risk description
+      operationId: updateDpiaRiskDescription
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDpiaRiskDescriptionRequest'
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /dpia/{key}/measures:
+    put:
+      tags:
+        - Dpia
+      summary: Update DPIA measures
+      operationId: updateDpiaMeasures
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDpiaMeasuresRequest'
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /dpia/{key}/residual-risk:
+    put:
+      tags:
+        - Dpia
+      summary: Update DPIA residual risk and optionally mark as completed
+      operationId: updateDpiaResidualRisk
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDpiaResidualRiskRequest'
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /dpia/{key}/complete:
+    put:
+      tags:
+        - Dpia
+      summary: Mark DPIA as completed
+      operationId: completeDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /dpia/{key}/reopen:
+    put:
+      tags:
+        - Dpia
+      summary: Re-open a completed DPIA
+      description: Sets the DPIA status back to IN_PROGRESS, allowing edits again. Only the triggering user or an admin can re-open.
+      operationId: reopenDpia
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Re-opened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /dpia/{key}/fdpic-consultation:
+    put:
+      tags:
+        - Dpia
+      summary: Update FDPIC consultation details
+      operationId: updateDpiaFdpicConsultation
+      security:
+      - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDpiaFdpicConsultationRequest'
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DpiaResponse'
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: DPIA not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /export/processing-register:
+    get:
+      tags:
+      - Export
+      summary: Export Datenbearbeitungsverzeichnis (Art. 12 revDSG / Art. 30 GDPR)
+      description: Returns a CSV export of all business processes with their mandatory compliance fields. Requires ROLE_ADMIN.
+      operationId: exportProcessingRegister
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        schema:
+          type: string
+          default: en
+        description: Locale code for localised names
+      responses:
+        '200':
+          description: CSV file content
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Not authenticated
+        '403':
+          description: Requires ROLE_ADMIN
+  /export/data-processors:
+    get:
+      tags:
+      - Export
+      summary: Export sub-processor register (Auftragsverarbeiter)
+      description: Returns a CSV export of all data processors with linked processes and entities. Requires ROLE_ADMIN.
+      operationId: exportDataProcessors
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        schema:
+          type: string
+          default: en
+        description: Locale code for localised names
+      responses:
+        '200':
+          description: CSV file content
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Not authenticated
+        '403':
+          description: Requires ROLE_ADMIN
+  /export/dpia-register:
+    get:
+      tags:
+      - Export
+      summary: Export DPIA register
+      description: Returns a CSV export of all triggered DPIAs with status, residual risk, and FDPIC consultation data. Requires ROLE_ADMIN.
+      operationId: exportDpiaRegister
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: CSV file content
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Not authenticated
+        '403':
+          description: Requires ROLE_ADMIN
   /users/me:
     get:
       tags:
@@ -4073,6 +4587,26 @@ components:
           type: string
           description: BusinessEntity name in default locale
           example: Customer
+        parentKey:
+          type: string
+          nullable: true
+          description: Key of the parent entity, null if this is a top-level entity
+          example: sales
+        parentName:
+          type: string
+          nullable: true
+          description: Name of the parent entity in default locale, null if top-level
+          example: Sales
+        rootKey:
+          type: string
+          nullable: true
+          description: Key of the root (top-level) ancestor entity, null if this entity is itself top-level
+          example: sales
+        rootName:
+          type: string
+          nullable: true
+          description: Name of the root ancestor entity in default locale, null if this entity is itself top-level
+          example: Sales
     BusinessEntityTreeResponse:
       type: object
       required:
@@ -4776,6 +5310,14 @@ components:
           $ref: '#/components/schemas/ProcessType'
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
+        purpose:
+          type: string
+          nullable: true
+          description: Purpose of processing (Zweck der Bearbeitung)
+        securityMeasures:
+          type: string
+          nullable: true
+          description: Technical and organisational security measures (TOM)
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
         createdBy:
@@ -5276,6 +5818,18 @@ components:
       properties:
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
+    UpdateProcessPurposeRequest:
+      type: object
+      properties:
+        purpose:
+          type: string
+          nullable: true
+    UpdateProcessSecurityMeasuresRequest:
+      type: object
+      properties:
+        securityMeasures:
+          type: string
+          nullable: true
     UpdateProcessTypeRequest:
       type: object
       properties:
@@ -5654,3 +6208,136 @@ components:
           items:
             type: string
           description: Keys of processes to link
+    DpiaStatus:
+      type: string
+      enum:
+        - IN_PROGRESS
+        - COMPLETED
+      description: Current status of a Data Protection Impact Assessment
+    ResidualRisk:
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+      nullable: true
+      description: Residual risk level after mitigation measures
+    DpiaListItemResponse:
+      type: object
+      required:
+        - key
+        - status
+        - triggeredBy
+        - createdAt
+      properties:
+        key:
+          type: string
+        status:
+          $ref: '#/components/schemas/DpiaStatus'
+        residualRisk:
+          $ref: '#/components/schemas/ResidualRisk'
+        linkedResourceType:
+          type: string
+          enum:
+            - PROCESS
+            - BUSINESS_ENTITY
+          nullable: true
+        linkedResourceKey:
+          type: string
+          nullable: true
+        linkedResourceName:
+          type: string
+          nullable: true
+        riskDescription:
+          type: string
+          nullable: true
+        measures:
+          type: string
+          nullable: true
+        fdpicConsultationRequired:
+          type: boolean
+          nullable: true
+        triggeredBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    DpiaResponse:
+      type: object
+      required:
+        - key
+        - status
+        - triggeredBy
+        - createdAt
+      properties:
+        key:
+          type: string
+        status:
+          $ref: '#/components/schemas/DpiaStatus'
+        riskDescription:
+          type: string
+          nullable: true
+        measures:
+          type: string
+          nullable: true
+        residualRisk:
+          $ref: '#/components/schemas/ResidualRisk'
+        fdpicConsultationRequired:
+          type: boolean
+          nullable: true
+        fdpicConsultationCompleted:
+          type: boolean
+          nullable: true
+        fdpicConsultationDate:
+          type: string
+          format: date
+          nullable: true
+        fdpicConsultationOutcome:
+          type: string
+          nullable: true
+        triggeredBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    UpdateDpiaRiskDescriptionRequest:
+      type: object
+      properties:
+        riskDescription:
+          type: string
+          nullable: true
+    UpdateDpiaMeasuresRequest:
+      type: object
+      properties:
+        measures:
+          type: string
+          nullable: true
+    UpdateDpiaResidualRiskRequest:
+      type: object
+      properties:
+        residualRisk:
+          $ref: '#/components/schemas/ResidualRisk'
+        fdpicConsultationRequired:
+          type: boolean
+          nullable: true
+    UpdateDpiaFdpicConsultationRequest:
+      type: object
+      properties:
+        fdpicConsultationCompleted:
+          type: boolean
+          nullable: true
+        fdpicConsultationDate:
+          type: string
+          format: date
+          nullable: true
+        fdpicConsultationOutcome:
+          type: string
+          nullable: true

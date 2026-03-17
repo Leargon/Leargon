@@ -38,6 +38,16 @@ export interface ProcessResponse {
   code?: string | null;
   processType?: ProcessType | null;
   legalBasis?: LegalBasis | null;
+  /**
+   * Purpose of processing (Zweck der Bearbeitung)
+   * @nullable
+   */
+  purpose?: string | null;
+  /**
+   * Technical and organisational security measures (TOM)
+   * @nullable
+   */
+  securityMeasures?: string | null;
   processOwner: UserSummaryResponse;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];

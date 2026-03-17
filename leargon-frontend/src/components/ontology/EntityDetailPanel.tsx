@@ -54,6 +54,9 @@ import {
   useUpdateBusinessEntityRetentionPeriod,
   useUpdateBusinessEntityCrossBorderTransfers,
   useUpdateBusinessEntityDataProcessors,
+  useGetEntityDpia,
+  useTriggerEntityDpia,
+  getGetEntityDpiaQueryKey,
 } from '../../api/generated/business-entity/business-entity';
 import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
 import type { DataProcessorResponse } from '../../api/generated/model';
@@ -67,6 +70,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
+import DpiaSection from '../compliance/DpiaSection';
 import CreateEntityDialog from './CreateEntityDialog';
 import type {
   LocalizedText,
@@ -129,6 +133,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
   const { data: allUsersResponse } = useGetAllUsers();
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetEntityDpia(entityKey, {
+    query: { retry: false },
+  });
+  const dpia = dpiaResponse?.status === 200 ? dpiaResponse.data : undefined;
+  const { mutateAsync: triggerDpia, isPending: isTriggeringDpia } = useTriggerEntityDpia();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
@@ -660,6 +669,19 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Typography variant="body2" color="text.secondary">No cross-border transfers recorded</Typography>
         )}
       </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      <DpiaSection
+        resourceKey={entityKey}
+        resourceType="entity"
+        dpia={dpia}
+        isLoading={isDpiaLoading}
+        canEdit={isOwnerOrAdmin}
+        onTrigger={async () => { await triggerDpia({ key: entityKey }); await queryClient.invalidateQueries({ queryKey: getGetEntityDpiaQueryKey(entityKey) }); }}
+        isTriggeringDpia={isTriggeringDpia}
+        invalidateKey={getGetEntityDpiaQueryKey(entityKey) as readonly unknown[]}
+      />
 
       </>}
 

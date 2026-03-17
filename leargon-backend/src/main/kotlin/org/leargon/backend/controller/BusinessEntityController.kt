@@ -13,6 +13,7 @@ import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.AssignBusinessDomainRequest
 import org.leargon.backend.model.BusinessEntityResponse
+import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.ClassificationAssignmentRequest
@@ -31,6 +32,7 @@ import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessEntityService
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.DataProcessorService
+import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -40,7 +42,8 @@ open class BusinessEntityController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val dataProcessorService: DataProcessorService
+    private val dataProcessorService: DataProcessorService,
+    private val dpiaService: DpiaService
 ) : BusinessEntityApi {
 
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> =
@@ -142,6 +145,15 @@ open class BusinessEntityController(
     override fun updateBusinessEntityDataProcessors(key: String, @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest): HttpResponse<Void> {
         dataProcessorService.updateEntityDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
         return HttpResponse.noContent()
+    }
+
+    override fun getEntityDpia(key: String): DpiaResponse =
+        dpiaService.getDpiaForEntity(key)
+
+    override fun triggerEntityDpia(key: String): HttpResponse<DpiaResponse> {
+        val currentUser = getCurrentUser()
+        val response = dpiaService.triggerForEntity(key, currentUser)
+        return HttpResponse.status<DpiaResponse>(HttpStatus.CREATED).body(response)
     }
 
     private fun getCurrentUser(): User {

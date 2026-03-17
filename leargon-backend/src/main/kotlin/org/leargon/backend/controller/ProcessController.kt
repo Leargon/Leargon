@@ -22,16 +22,20 @@ import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessDiagramRequest
+import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
 import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessLegalBasisRequest
+import org.leargon.backend.model.UpdateProcessPurposeRequest
+import org.leargon.backend.model.UpdateProcessSecurityMeasuresRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.DataProcessorService
+import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.ProcessDiagramService
 import org.leargon.backend.service.ProcessService
 import org.leargon.backend.service.UserService
@@ -45,7 +49,8 @@ open class ProcessController(
     private val userService: UserService,
     private val securityService: SecurityService,
     private val processMapper: ProcessMapper,
-    private val dataProcessorService: DataProcessorService
+    private val dataProcessorService: DataProcessorService,
+    private val dpiaService: DpiaService
 ) : ProcessApi {
 
     override fun getAllProcesses(): List<ProcessResponse> =
@@ -88,6 +93,16 @@ open class ProcessController(
     override fun updateProcessLegalBasis(key: String, @Valid @Body request: UpdateProcessLegalBasisRequest): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.updateLegalBasis(key, request.legalBasis?.value, currentUser)
+    }
+
+    override fun updateProcessPurpose(key: String, @Valid @Body request: UpdateProcessPurposeRequest): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updatePurpose(key, request.purpose, currentUser)
+    }
+
+    override fun updateProcessSecurityMeasures(key: String, @Valid @Body request: UpdateProcessSecurityMeasuresRequest): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateSecurityMeasures(key, request.securityMeasures, currentUser)
     }
 
     override fun updateProcessOwner(key: String, @Valid @Body request: UpdateProcessOwnerRequest): ProcessResponse {
@@ -151,6 +166,15 @@ open class ProcessController(
     override fun updateProcessDataProcessors(key: String, @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest): HttpResponse<Void> {
         dataProcessorService.updateProcessDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
         return HttpResponse.noContent()
+    }
+
+    override fun getProcessDpia(key: String): DpiaResponse =
+        dpiaService.getDpiaForProcess(key)
+
+    override fun triggerProcessDpia(key: String): HttpResponse<DpiaResponse> {
+        val currentUser = getCurrentUser()
+        val response = dpiaService.triggerForProcess(key, currentUser)
+        return HttpResponse.status<DpiaResponse>(HttpStatus.CREATED).body(response)
     }
 
     override fun getProcessDiagram(key: String): ProcessDiagramResponse =

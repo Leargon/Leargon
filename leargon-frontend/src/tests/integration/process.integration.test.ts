@@ -741,4 +741,92 @@ describe('Process E2E', () => {
     expect(versionsRes.data.length).toBe(2);
     expect(versionsRes.data[1].changeSummary).toContain('PUBLIC_TASK');
   });
+
+  // =====================
+  // PURPOSE
+  // =====================
+
+  it('should set purpose on a process', async () => {
+    const proc = await createProcess(client, 'FE Purpose Set Process');
+
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/purpose`, {
+      purpose: 'To manage billing data for corporate clients',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.purpose).toBe('To manage billing data for corporate clients');
+  });
+
+  it('should clear purpose when set to null', async () => {
+    const proc = await createProcess(client, 'FE Purpose Clear Process');
+
+    await client.put(`/processes/${proc.key}/purpose`, { purpose: 'Initial purpose' });
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/purpose`, {
+      purpose: null,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.purpose).toBeNull();
+  });
+
+  it('should return 403 when non-owner sets purpose', async () => {
+    const proc = await createProcess(client, 'FE Purpose Forbidden Process');
+
+    const otherClient = createClient(getBackendUrl());
+    const otherAuth = await signup(otherClient, {
+      email: 'fe-purpose-other@example.com',
+      username: 'fepurposeother',
+      password: 'password123',
+      firstName: 'Other',
+      lastName: 'User',
+    });
+    withToken(otherClient, otherAuth.accessToken);
+
+    const res = await otherClient.put(`/processes/${proc.key}/purpose`, { purpose: 'Unauthorized' });
+    expect(res.status).toBe(403);
+  });
+
+  // =====================
+  // SECURITY MEASURES
+  // =====================
+
+  it('should set security measures on a process', async () => {
+    const proc = await createProcess(client, 'FE Security Measures Set Process');
+
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/security-measures`, {
+      securityMeasures: 'Encryption at rest, access control lists, audit logging',
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.securityMeasures).toBe('Encryption at rest, access control lists, audit logging');
+  });
+
+  it('should clear security measures when set to null', async () => {
+    const proc = await createProcess(client, 'FE Security Measures Clear Process');
+
+    await client.put(`/processes/${proc.key}/security-measures`, {
+      securityMeasures: 'Initial measures',
+    });
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/security-measures`, {
+      securityMeasures: null,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.securityMeasures).toBeNull();
+  });
+
+  it('should return 403 when non-owner sets security measures', async () => {
+    const proc = await createProcess(client, 'FE Security Measures Forbidden Process');
+
+    const otherClient = createClient(getBackendUrl());
+    const otherAuth = await signup(otherClient, {
+      email: 'fe-security-other@example.com',
+      username: 'fesecurityother',
+      password: 'password123',
+      firstName: 'Other',
+      lastName: 'User',
+    });
+    withToken(otherClient, otherAuth.accessToken);
+
+    const res = await otherClient.put(`/processes/${proc.key}/security-measures`, {
+      securityMeasures: 'Unauthorized measures',
+    });
+    expect(res.status).toBe(403);
+  });
 });

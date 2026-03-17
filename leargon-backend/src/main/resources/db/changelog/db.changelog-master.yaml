@@ -35,3 +35,7 @@ databaseChangeLog:
       file: db/changelog/changes/017-add-cross-border-transfers.yaml
   - include:
       file: db/changelog/changes/018-add-legal-basis-to-processes.yaml
+  - include:
+      file: db/changelog/changes/019-create-dpia-table.yaml
+  - include:
+      file: db/changelog/changes/020-add-compliance-fields-to-processes.yaml

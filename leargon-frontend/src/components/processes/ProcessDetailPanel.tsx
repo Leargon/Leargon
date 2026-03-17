@@ -55,6 +55,11 @@ import {
   useRemoveProcessOutput,
   useAssignExecutingUnits,
   useUpdateProcessCrossBorderTransfers,
+  useUpdateProcessPurpose,
+  useUpdateProcessSecurityMeasures,
+  useGetProcessDpia,
+  useTriggerProcessDpia,
+  getGetProcessDpiaQueryKey,
 } from '../../api/generated/process/process';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -67,6 +72,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
+import DpiaSection from '../compliance/DpiaSection';
 
 const ProcessDiagramEditor = lazy(() => import('./diagram/ProcessDiagramEditor'));
 import type {
@@ -151,6 +157,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
   const { data: allOrgUnitsResponse } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
+  const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetProcessDpia(processKey, {
+    query: { retry: false },
+  });
+  const dpia = dpiaResponse?.status === 200 ? dpiaResponse.data : undefined;
+  const { mutateAsync: triggerDpia, isPending: isTriggeringDpia } = useTriggerProcessDpia();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -192,6 +203,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const removeOutput = useRemoveProcessOutput();
   const assignExecUnits = useAssignExecutingUnits();
   const updateCrossBorderTransfers = useUpdateProcessCrossBorderTransfers();
+  const updatePurpose = useUpdateProcessPurpose();
+  const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
 
   // Cross-border transfers dialog state
   const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
@@ -278,6 +291,22 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Purpose inline edit
+  const purposeEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val || undefined } });
+      invalidate();
+    },
+  });
+
+  // Security measures inline edit
+  const securityMeasuresEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      await updateSecurityMeasures.mutateAsync({ key: processKey, data: { securityMeasures: val || undefined } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different process
   useEffect(() => {
     namesEdit.cancel();
@@ -288,6 +317,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     domainEdit.cancel();
     classEdit.cancel();
     execUnitsEdit.cancel();
+    purposeEdit.cancel();
+    securityMeasuresEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
 
@@ -574,6 +605,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         onRemove={handleRemoveInput}
         getLocalizedText={getLocalizedText}
         navigate={navigate}
+        t={t as (key: string) => string}
       />
 
       <Divider sx={{ my: 2 }} />
@@ -588,6 +620,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         onRemove={handleRemoveOutput}
         getLocalizedText={getLocalizedText}
         navigate={navigate}
+        t={t as (key: string) => string}
       />
 
       <Divider sx={{ my: 2 }} />
@@ -638,6 +671,54 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </>}
 
       {activeTab === 1 && <>
+
+      {/* Purpose & Security Measures */}
+      <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
+        <PropRow label={t('process.purpose')} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
+          onEdit={() => purposeEdit.startEdit(process.purpose || '')} onSave={purposeEdit.save}
+          onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
+          {purposeEdit.isEditing ? (
+            <Box>
+              <TextField
+                size="small" multiline rows={4}
+                value={purposeEdit.editValue || ''}
+                onChange={(e) => purposeEdit.setEditValue(e.target.value)}
+                placeholder={t('process.purposePlaceholder')}
+                sx={{ width: '100%' }}
+              />
+              {purposeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{purposeEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.purpose ? 'text.primary' : 'text.secondary'}
+              sx={{ whiteSpace: 'pre-wrap' }}>
+              {process.purpose || t('common.notSet')}
+            </Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('process.securityMeasures')} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
+          onEdit={() => securityMeasuresEdit.startEdit(process.securityMeasures || '')} onSave={securityMeasuresEdit.save}
+          onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
+          {securityMeasuresEdit.isEditing ? (
+            <Box>
+              <TextField
+                size="small" multiline rows={4}
+                value={securityMeasuresEdit.editValue || ''}
+                onChange={(e) => securityMeasuresEdit.setEditValue(e.target.value)}
+                placeholder={t('process.securityMeasuresPlaceholder')}
+                sx={{ width: '100%' }}
+              />
+              {securityMeasuresEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{securityMeasuresEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.securityMeasures ? 'text.primary' : 'text.secondary'}
+              sx={{ whiteSpace: 'pre-wrap' }}>
+              {process.securityMeasures || t('common.notSet')}
+            </Typography>
+          )}
+        </PropRow>
+      </Paper>
+
+      <Divider sx={{ my: 2 }} />
 
       {/* Data Processors */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>Data Processors</Typography>
@@ -696,6 +777,19 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           <Typography variant="body2" color="text.secondary">No cross-border transfers recorded</Typography>
         )}
       </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      <DpiaSection
+        resourceKey={processKey}
+        resourceType="process"
+        dpia={dpia}
+        isLoading={isDpiaLoading}
+        canEdit={isOwnerOrAdmin}
+        onTrigger={async () => { await triggerDpia({ key: processKey }); await queryClient.invalidateQueries({ queryKey: getGetProcessDpiaQueryKey(processKey) }); }}
+        isTriggeringDpia={isTriggeringDpia}
+        invalidateKey={getGetProcessDpiaQueryKey(processKey) as readonly unknown[]}
+      />
 
       </>}
 
@@ -1011,19 +1105,21 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
 // Reusable entity list section for inputs/outputs
 interface EntityListSectionProps {
   title: string;
-  entities: { key: string; name?: string }[];
+  entities: { key: string; name?: string; parentKey?: string | null }[];
   candidates: { key: string; names?: LocalizedText[] }[];
   canEdit: boolean;
   onAdd: (entityKey: string) => Promise<void>;
   onRemove: (entityKey: string) => Promise<void>;
   getLocalizedText: (texts?: LocalizedText[], fallback?: string) => string;
   navigate: (path: string) => void;
+  t: (key: string) => string;
 }
 
 const EntityListSection: React.FC<EntityListSectionProps> = ({
-  title, entities, candidates, canEdit, onAdd, onRemove, getLocalizedText, navigate,
+  title, entities, candidates, canEdit, onAdd, onRemove, getLocalizedText, navigate, t,
 }) => {
   const [adding, setAdding] = useState(false);
+  const hasRootEntities = entities.some((e) => !e.parentKey);
 
   return (
     <>
@@ -1076,6 +1172,11 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">None</Typography>
+        )}
+        {hasRootEntities && entities.length > 0 && (
+          <Alert severity="info" sx={{ mt: 1, py: 0, fontSize: '0.75rem' }}>
+            {t('process.rootEntityHint')}
+          </Alert>
         )}
       </Box>
     </>

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-add-compliance-fields-to-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: purpose
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: security_measures
+                  type: text
+                  constraints:
+                    nullable: true

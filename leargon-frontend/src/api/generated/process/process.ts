@@ -40,6 +40,7 @@ import type {
   AssignBusinessDomainRequest,
   ClassificationAssignmentRequest,
   CreateProcessRequest,
+  DpiaResponse,
   ErrorResponse,
   LocalizedText,
   ProcessDiagramResponse,
@@ -53,6 +54,8 @@ import type {
   UpdateProcessCodeRequest,
   UpdateProcessLegalBasisRequest,
   UpdateProcessOwnerRequest,
+  UpdateProcessPurposeRequest,
+  UpdateProcessSecurityMeasuresRequest,
   UpdateProcessTypeRequest,
   VersionDiffResponse
 } from '../model';
@@ -1951,6 +1954,208 @@ export const useUpdateProcessLegalBasis = <TError = void | ErrorResponse,
       return useMutation(getUpdateProcessLegalBasisMutationOptions(options), queryClient);
     }
     /**
+ * Updates the purpose (Zweck) of a process. Only the process owner or an admin can update.
+ * @summary Update process purpose
+ */
+export type updateProcessPurposeResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessPurposeResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessPurposeResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessPurposeResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessPurposeResponseSuccess = (updateProcessPurposeResponse200) & {
+  headers: Headers;
+};
+export type updateProcessPurposeResponseError = (updateProcessPurposeResponse401 | updateProcessPurposeResponse403 | updateProcessPurposeResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessPurposeResponse = (updateProcessPurposeResponseSuccess | updateProcessPurposeResponseError)
+
+export const getUpdateProcessPurposeUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/purpose`
+}
+
+export const updateProcessPurpose = async (key: string,
+    updateProcessPurposeRequest: UpdateProcessPurposeRequest, options?: RequestInit): Promise<updateProcessPurposeResponse> => {
+  
+  return customAxios<updateProcessPurposeResponse>(getUpdateProcessPurposeUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessPurposeRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessPurposeMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessPurpose>>, TError,{key: string;data: UpdateProcessPurposeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessPurpose>>, TError,{key: string;data: UpdateProcessPurposeRequest}, TContext> => {
+
+const mutationKey = ['updateProcessPurpose'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessPurpose>>, {key: string;data: UpdateProcessPurposeRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessPurpose(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessPurposeMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessPurpose>>>
+    export type UpdateProcessPurposeMutationBody = UpdateProcessPurposeRequest
+    export type UpdateProcessPurposeMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process purpose
+ */
+export const useUpdateProcessPurpose = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessPurpose>>, TError,{key: string;data: UpdateProcessPurposeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessPurpose>>,
+        TError,
+        {key: string;data: UpdateProcessPurposeRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessPurposeMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the technical and organisational security measures of a process. Only the process owner or an admin can update.
+ * @summary Update process security measures (TOM)
+ */
+export type updateProcessSecurityMeasuresResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessSecurityMeasuresResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessSecurityMeasuresResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessSecurityMeasuresResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessSecurityMeasuresResponseSuccess = (updateProcessSecurityMeasuresResponse200) & {
+  headers: Headers;
+};
+export type updateProcessSecurityMeasuresResponseError = (updateProcessSecurityMeasuresResponse401 | updateProcessSecurityMeasuresResponse403 | updateProcessSecurityMeasuresResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessSecurityMeasuresResponse = (updateProcessSecurityMeasuresResponseSuccess | updateProcessSecurityMeasuresResponseError)
+
+export const getUpdateProcessSecurityMeasuresUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/security-measures`
+}
+
+export const updateProcessSecurityMeasures = async (key: string,
+    updateProcessSecurityMeasuresRequest: UpdateProcessSecurityMeasuresRequest, options?: RequestInit): Promise<updateProcessSecurityMeasuresResponse> => {
+  
+  return customAxios<updateProcessSecurityMeasuresResponse>(getUpdateProcessSecurityMeasuresUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessSecurityMeasuresRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessSecurityMeasuresMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSecurityMeasures>>, TError,{key: string;data: UpdateProcessSecurityMeasuresRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessSecurityMeasures>>, TError,{key: string;data: UpdateProcessSecurityMeasuresRequest}, TContext> => {
+
+const mutationKey = ['updateProcessSecurityMeasures'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessSecurityMeasures>>, {key: string;data: UpdateProcessSecurityMeasuresRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessSecurityMeasures(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessSecurityMeasuresMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessSecurityMeasures>>>
+    export type UpdateProcessSecurityMeasuresMutationBody = UpdateProcessSecurityMeasuresRequest
+    export type UpdateProcessSecurityMeasuresMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process security measures (TOM)
+ */
+export const useUpdateProcessSecurityMeasures = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSecurityMeasures>>, TError,{key: string;data: UpdateProcessSecurityMeasuresRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessSecurityMeasures>>,
+        TError,
+        {key: string;data: UpdateProcessSecurityMeasuresRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessSecurityMeasuresMutationOptions(options), queryClient);
+    }
+    /**
  * Returns the version history of a process.
  * @summary Get process version history
  */
@@ -2432,6 +2637,216 @@ export const useSaveProcessDiagram = <TError = ErrorResponse | void,
         TContext
       > => {
       return useMutation(getSaveProcessDiagramMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Get DPIA for a process
+ */
+export type getProcessDpiaResponse200 = {
+  data: DpiaResponse
+  status: 200
+}
+
+export type getProcessDpiaResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getProcessDpiaResponseSuccess = (getProcessDpiaResponse200) & {
+  headers: Headers;
+};
+export type getProcessDpiaResponseError = (getProcessDpiaResponse404) & {
+  headers: Headers;
+};
+
+export type getProcessDpiaResponse = (getProcessDpiaResponseSuccess | getProcessDpiaResponseError)
+
+export const getGetProcessDpiaUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/dpia`
+}
+
+export const getProcessDpia = async (key: string, options?: RequestInit): Promise<getProcessDpiaResponse> => {
+  
+  return customAxios<getProcessDpiaResponse>(getGetProcessDpiaUrl(key),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetProcessDpiaQueryKey = (key: string,) => {
+    return [
+    `/processes/${key}/dpia`
+    ] as const;
+    }
+
+    
+export const getGetProcessDpiaQueryOptions = <TData = Awaited<ReturnType<typeof getProcessDpia>>, TError = ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessDpiaQueryKey(key);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessDpia>>> = ({ signal }) => getProcessDpia(key, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProcessDpiaQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessDpia>>>
+export type GetProcessDpiaQueryError = ErrorResponse
+
+
+export function useGetProcessDpia<TData = Awaited<ReturnType<typeof getProcessDpia>>, TError = ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessDpia>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessDpia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessDpia<TData = Awaited<ReturnType<typeof getProcessDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessDpia>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessDpia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessDpia<TData = Awaited<ReturnType<typeof getProcessDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get DPIA for a process
+ */
+
+export function useGetProcessDpia<TData = Awaited<ReturnType<typeof getProcessDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessDpiaQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Trigger a DPIA for a process
+ */
+export type triggerProcessDpiaResponse201 = {
+  data: DpiaResponse
+  status: 201
+}
+
+export type triggerProcessDpiaResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type triggerProcessDpiaResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type triggerProcessDpiaResponseSuccess = (triggerProcessDpiaResponse201) & {
+  headers: Headers;
+};
+export type triggerProcessDpiaResponseError = (triggerProcessDpiaResponse404 | triggerProcessDpiaResponse409) & {
+  headers: Headers;
+};
+
+export type triggerProcessDpiaResponse = (triggerProcessDpiaResponseSuccess | triggerProcessDpiaResponseError)
+
+export const getTriggerProcessDpiaUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/dpia`
+}
+
+export const triggerProcessDpia = async (key: string, options?: RequestInit): Promise<triggerProcessDpiaResponse> => {
+  
+  return customAxios<triggerProcessDpiaResponse>(getTriggerProcessDpiaUrl(key),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+  
+
+
+
+export const getTriggerProcessDpiaMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerProcessDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof triggerProcessDpia>>, TError,{key: string}, TContext> => {
+
+const mutationKey = ['triggerProcessDpia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof triggerProcessDpia>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
+
+          return  triggerProcessDpia(key,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TriggerProcessDpiaMutationResult = NonNullable<Awaited<ReturnType<typeof triggerProcessDpia>>>
+    
+    export type TriggerProcessDpiaMutationError = ErrorResponse
+
+    /**
+ * @summary Trigger a DPIA for a process
+ */
+export const useTriggerProcessDpia = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerProcessDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof triggerProcessDpia>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getTriggerProcessDpiaMutationOptions(options), queryClient);
     }
     /**
  * Sets the list of cross-border transfers for a process. Requires process owner or admin.

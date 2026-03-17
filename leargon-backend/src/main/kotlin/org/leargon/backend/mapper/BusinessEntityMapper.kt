@@ -139,9 +139,17 @@ open class BusinessEntityMapper(
         }
 
         @JvmStatic
+        fun rootOf(entity: BusinessEntity): BusinessEntity = if (entity.parent == null) entity else rootOf(entity.parent!!)
+
+        @JvmStatic
         fun toBusinessEntitySummaryResponse(entity: BusinessEntity?): BusinessEntitySummaryResponse? {
             if (entity == null) return null
+            val root = if (entity.parent == null) null else rootOf(entity.parent!!)
             return BusinessEntitySummaryResponse(entity.key, entity.getName("en"))
+                .parentKey(entity.parent?.key)
+                .parentName(entity.parent?.getName("en"))
+                .rootKey(root?.key)
+                .rootName(root?.getName("en"))
         }
 
         @JvmStatic

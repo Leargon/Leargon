@@ -22,4 +22,24 @@ export interface BusinessEntitySummaryResponse {
   key: string;
   /** BusinessEntity name in default locale */
   name: string;
+  /**
+   * Key of the parent entity, null if this is a top-level entity
+   * @nullable
+   */
+  parentKey?: string | null;
+  /**
+   * Name of the parent entity in default locale, null if top-level
+   * @nullable
+   */
+  parentName?: string | null;
+  /**
+   * Key of the root (top-level) ancestor entity, null if this entity is itself top-level
+   * @nullable
+   */
+  rootKey?: string | null;
+  /**
+   * Name of the root ancestor entity in default locale, null if this entity is itself top-level
+   * @nullable
+   */
+  rootName?: string | null;
 }

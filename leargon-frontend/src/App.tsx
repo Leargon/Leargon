@@ -18,7 +18,8 @@ import ProcessesPage from './pages/ProcessesPage';
 import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
 import DataProcessorsPage from './pages/DataProcessorsPage';
-import CompliancePage from './pages/CompliancePage';
+import ProcessingRegisterPage from './pages/ProcessingRegisterPage';
+import DpiaListPage from './pages/DpiaListPage';
 import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
@@ -69,7 +70,7 @@ const ThemedRoutes: React.FC = () => {
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<Navigate to="/domains" replace />} />
+                  <Route index element={<Navigate to="/entities" replace />} />
                   <Route path="/domains" element={<DomainsPage />} />
                   <Route path="/domains/:key" element={<DomainsPage />} />
                   <Route path="/entities" element={<OntologyPage />} />
@@ -84,7 +85,8 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/settings/field-configurations" element={<SettingsPage />} />
                   <Route path="/data-processors" element={<DataProcessorsPage />} />
                   <Route path="/data-processors/:key" element={<DataProcessorsPage />} />
-                  <Route path="/compliance" element={<CompliancePage />} />
+                  <Route path="/compliance" element={<ProcessingRegisterPage />} />
+                  <Route path="/dpia" element={<DpiaListPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

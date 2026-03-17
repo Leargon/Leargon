@@ -43,6 +43,7 @@ import type {
   ClassificationAssignmentRequest,
   CreateBusinessEntityRelationshipRequest,
   CreateBusinessEntityRequest,
+  DpiaResponse,
   ErrorResponse,
   GetLocalizedBusinessEntityParams,
   LocalizedBusinessEntityResponse,
@@ -2262,6 +2263,216 @@ export const useUpdateBusinessEntityCrossBorderTransfers = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateBusinessEntityCrossBorderTransfersMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Get DPIA for a business entity
+ */
+export type getEntityDpiaResponse200 = {
+  data: DpiaResponse
+  status: 200
+}
+
+export type getEntityDpiaResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getEntityDpiaResponseSuccess = (getEntityDpiaResponse200) & {
+  headers: Headers;
+};
+export type getEntityDpiaResponseError = (getEntityDpiaResponse404) & {
+  headers: Headers;
+};
+
+export type getEntityDpiaResponse = (getEntityDpiaResponseSuccess | getEntityDpiaResponseError)
+
+export const getGetEntityDpiaUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/dpia`
+}
+
+export const getEntityDpia = async (key: string, options?: RequestInit): Promise<getEntityDpiaResponse> => {
+  
+  return customAxios<getEntityDpiaResponse>(getGetEntityDpiaUrl(key),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetEntityDpiaQueryKey = (key: string,) => {
+    return [
+    `/business-entities/${key}/dpia`
+    ] as const;
+    }
+
+    
+export const getGetEntityDpiaQueryOptions = <TData = Awaited<ReturnType<typeof getEntityDpia>>, TError = ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEntityDpiaQueryKey(key);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntityDpia>>> = ({ signal }) => getEntityDpia(key, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetEntityDpiaQueryResult = NonNullable<Awaited<ReturnType<typeof getEntityDpia>>>
+export type GetEntityDpiaQueryError = ErrorResponse
+
+
+export function useGetEntityDpia<TData = Awaited<ReturnType<typeof getEntityDpia>>, TError = ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityDpia>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityDpia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityDpia<TData = Awaited<ReturnType<typeof getEntityDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityDpia>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityDpia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityDpia<TData = Awaited<ReturnType<typeof getEntityDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get DPIA for a business entity
+ */
+
+export function useGetEntityDpia<TData = Awaited<ReturnType<typeof getEntityDpia>>, TError = ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEntityDpiaQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * @summary Trigger a DPIA for a business entity
+ */
+export type triggerEntityDpiaResponse201 = {
+  data: DpiaResponse
+  status: 201
+}
+
+export type triggerEntityDpiaResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type triggerEntityDpiaResponse409 = {
+  data: ErrorResponse
+  status: 409
+}
+
+export type triggerEntityDpiaResponseSuccess = (triggerEntityDpiaResponse201) & {
+  headers: Headers;
+};
+export type triggerEntityDpiaResponseError = (triggerEntityDpiaResponse404 | triggerEntityDpiaResponse409) & {
+  headers: Headers;
+};
+
+export type triggerEntityDpiaResponse = (triggerEntityDpiaResponseSuccess | triggerEntityDpiaResponseError)
+
+export const getTriggerEntityDpiaUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/dpia`
+}
+
+export const triggerEntityDpia = async (key: string, options?: RequestInit): Promise<triggerEntityDpiaResponse> => {
+  
+  return customAxios<triggerEntityDpiaResponse>(getTriggerEntityDpiaUrl(key),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+  
+
+
+
+export const getTriggerEntityDpiaMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerEntityDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof triggerEntityDpia>>, TError,{key: string}, TContext> => {
+
+const mutationKey = ['triggerEntityDpia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof triggerEntityDpia>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
+
+          return  triggerEntityDpia(key,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TriggerEntityDpiaMutationResult = NonNullable<Awaited<ReturnType<typeof triggerEntityDpia>>>
+    
+    export type TriggerEntityDpiaMutationError = ErrorResponse
+
+    /**
+ * @summary Trigger a DPIA for a business entity
+ */
+export const useTriggerEntityDpia = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerEntityDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof triggerEntityDpia>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getTriggerEntityDpiaMutationOptions(options), queryClient);
     }
     /**
  * Replaces the set of data processors linked to a business entity. Admin only.

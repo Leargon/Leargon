@@ -108,6 +108,20 @@ export const setProcessLegalBasis = (
 ): Promise<Record<string, unknown>> =>
   apiFetch(`/processes/${processKey}/legal-basis`, 'PUT', { legalBasis }, as);
 
+export const setProcessPurpose = (
+  processKey: string,
+  purpose: string | null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/purpose`, 'PUT', { purpose }, as);
+
+export const setProcessSecurityMeasures = (
+  processKey: string,
+  securityMeasures: string | null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/security-measures`, 'PUT', { securityMeasures }, as);
+
 export const updateCrossBorderTransfers = (
   entityKey: string,
   transfers: Array<{ destinationCountry: string; safeguard: string; notes?: string }>,

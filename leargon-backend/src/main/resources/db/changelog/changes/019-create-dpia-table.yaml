@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-create-dpia-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: dpia
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_dpia_process
+                    references: processes(id)
+              - column:
+                  name: entity_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_dpia_entity
+                    references: business_entities(id)
+              - column:
+                  name: risk_description
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: measures
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: residual_risk
+                  type: varchar(10)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fdpic_consultation_required
+                  type: boolean
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fdpic_consultation_completed
+                  type: boolean
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fdpic_consultation_date
+                  type: date
+                  constraints:
+                    nullable: true
+              - column:
+                  name: fdpic_consultation_outcome
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: triggered_by_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_dpia_triggered_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: datetime
+                  constraints:
+                    nullable: false
