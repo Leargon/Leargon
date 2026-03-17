@@ -126,9 +126,11 @@ class ExportControllerSpec extends Specification {
         then:
         response.status == HttpStatus.OK
         def body = response.body()
-        body.contains("Process Key")
         body.contains("Process Name")
         body.contains("Legal Basis")
+        body.contains("Security Measures")
+        body.contains("Data Subject Categories")
+        body.contains("Personal Data Categories")
         body.contains("Export Test Process")
     }
 
