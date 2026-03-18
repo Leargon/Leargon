@@ -38,3 +38,6 @@ jpa:
 
 liquibase:
   enabled: false
+
+jackson:
+  serialization-inclusion: ALWAYS

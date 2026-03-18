@@ -302,7 +302,7 @@
 ---
 
 ## Batch 10 · Catalogue insights
-*Pure read-only queries — no new tables. Results are computed on a configurable schedule and stored as snapshots; the Insights page displays the last computed result with a timestamp, not a live query. One new "Insights" page in the frontend. No dependencies; data already exists.*
+*Pure read-only queries — no new tables. Results are computed on a configurable schedule and stored as snapshots (using quarkus as framework this time); the Insights page displays the last computed result with a timestamp, not a live query. One new "Insights" page in the frontend. No dependencies; data already exists.*
 
 #### USER STORY 'Detect processes without a legal basis'
 **AS AN** admin\
@@ -408,6 +408,8 @@
 ## Batch 14 · Team & org insights
 *Analytics flush — aggregation and ratio queries on existing process-domain-orgunit relationships. Results stored as snapshots. New "Org Insights" section in the frontend. Depends on processes being assigned to both domains and org units.*
 
+**Scheduler note:** The periodic recomputation of snapshots will be handled by the **Quarkus scheduler** introduced in Batch 15. For this batch, analytics are computed on demand (triggered manually or at startup) and stored as timestamped snapshots — the scheduler integration is wired in later without changing the snapshot model.
+
 #### USER STORY 'View ownership workload per user'
 **AS AN** admin\
 **I WANT** to see a table of all users showing how many business entities, processes, and domains each user owns\
@@ -444,6 +446,8 @@
 
 ## Batch 15 · Compliance metrics dashboard & company view
 *Heavier flush: introduces the shared scheduler/job infrastructure that analytics batches (10, 12, 13, 14) also depend on. Results for all analytics are stored as timestamped snapshots and refreshed on this shared schedule.*
+
+**Framework: Quarkus.** The scheduler and job infrastructure in this batch are implemented as a separate **Quarkus** service (not Micronaut). Quarkus is chosen for its superior scheduled-job support, native compilation, and low idle memory footprint — appropriate for a background worker that runs infrequently but must be reliable. The Quarkus service reads from the same MySQL database as the Micronaut backend and writes snapshot results into shared tables that the Micronaut API then exposes to the frontend.
 
 #### USER STORY 'Configure analytics computation schedule'
 **AS AN** admin\

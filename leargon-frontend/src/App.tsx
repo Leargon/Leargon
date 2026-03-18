@@ -24,6 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import SetupWizardPage from './pages/SetupWizardPage';
 import MsalCallback from './pages/MsalCallback';
 import NotFoundPage from './pages/NotFoundPage';
+import TeamInsightsPage from './pages/TeamInsightsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +88,7 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/data-processors/:key" element={<DataProcessorsPage />} />
                   <Route path="/compliance" element={<ProcessingRegisterPage />} />
                   <Route path="/dpia" element={<DpiaListPage />} />
+                  <Route path="/team-insights" element={<TeamInsightsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

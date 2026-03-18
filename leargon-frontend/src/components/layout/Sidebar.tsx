@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import {
   Category, AccountTree, Timeline, CorporateFare,
-  Handshake, FactCheck, GppGood, Hub,
+  Handshake, FactCheck, GppGood, Hub, Insights,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -43,6 +43,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     items: [
       { label: 'Organisational Structure', path: '/organisation', icon: <CorporateFare /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
+      { label: 'Team Insights', path: '/team-insights', icon: <Insights /> },
     ],
   },
 };

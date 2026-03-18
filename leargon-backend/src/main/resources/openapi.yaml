@@ -58,6 +58,8 @@ tags:
   description: First-time setup wizard endpoints
 - name: User
   description: User profile management endpoints
+- name: Analytics
+  description: Analytics and team insights endpoints
 paths:
   /administration/users:
     get:
@@ -4165,6 +4167,23 @@ paths:
           description: Not authenticated
         '403':
           description: Requires ROLE_ADMIN
+  /analytics/team-insights:
+    get:
+      tags:
+      - Analytics
+      summary: Get team and org insights
+      operationId: getTeamInsights
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Team and org insights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInsightsResponse'
+        '401':
+          description: Unauthorized
   /users/me:
     get:
       tags:
@@ -6341,3 +6360,143 @@ components:
         fdpicConsultationOutcome:
           type: string
           nullable: true
+    TeamInsightsResponse:
+      type: object
+      required: [userOwnershipWorkload, orgUnitProcessLoad, bottleneckTeams, wronglyPlacedTeams, splitDomains, conwaysLawAlignment]
+      properties:
+        userOwnershipWorkload:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserOwnershipWorkloadItem'
+        orgUnitProcessLoad:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrgUnitProcessLoadItem'
+        bottleneckTeams:
+          type: array
+          items:
+            $ref: '#/components/schemas/BottleneckTeamItem'
+        wronglyPlacedTeams:
+          type: array
+          items:
+            $ref: '#/components/schemas/WronglyPlacedTeamItem'
+        splitDomains:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitDomainItem'
+        conwaysLawAlignment:
+          $ref: '#/components/schemas/ConwaysLawAlignment'
+    UserOwnershipWorkloadItem:
+      type: object
+      required: [userId, username, displayName, entityCount, processCount, totalCount]
+      properties:
+        userId:
+          type: integer
+          format: int64
+        username:
+          type: string
+        displayName:
+          type: string
+        entityCount:
+          type: integer
+        processCount:
+          type: integer
+        totalCount:
+          type: integer
+    OrgUnitProcessLoadItem:
+      type: object
+      required: [orgUnitKey, orgUnitName, processCount]
+      properties:
+        orgUnitKey:
+          type: string
+        orgUnitName:
+          type: string
+        processCount:
+          type: integer
+    BottleneckTeamItem:
+      type: object
+      required: [orgUnitKey, orgUnitName, processCount, distinctDomainCount, domainKeys]
+      properties:
+        orgUnitKey:
+          type: string
+        orgUnitName:
+          type: string
+        processCount:
+          type: integer
+        distinctDomainCount:
+          type: integer
+        domainKeys:
+          type: array
+          items:
+            type: string
+    WronglyPlacedTeamItem:
+      type: object
+      required: [orgUnitKey, orgUnitName, processCount, distinctDomainCount, dominantDomainShare]
+      properties:
+        orgUnitKey:
+          type: string
+        orgUnitName:
+          type: string
+        processCount:
+          type: integer
+        distinctDomainCount:
+          type: integer
+        dominantDomainKey:
+          type: string
+          nullable: true
+        dominantDomainName:
+          type: string
+          nullable: true
+        dominantDomainShare:
+          type: number
+          format: double
+    SplitDomainItem:
+      type: object
+      required: [domainKey, domainName, processCount, distinctOrgUnitCount, orgUnitKeys]
+      properties:
+        domainKey:
+          type: string
+        domainName:
+          type: string
+        processCount:
+          type: integer
+        distinctOrgUnitCount:
+          type: integer
+        orgUnitKeys:
+          type: array
+          items:
+            type: string
+    ConwaysLawAlignment:
+      type: object
+      required: [domainKeys, orgUnitKeys, domainNames, orgUnitNames, cells]
+      properties:
+        domainKeys:
+          type: array
+          items:
+            type: string
+        orgUnitKeys:
+          type: array
+          items:
+            type: string
+        domainNames:
+          type: object
+          additionalProperties:
+            type: string
+        orgUnitNames:
+          type: object
+          additionalProperties:
+            type: string
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConwaysLawCell'
+    ConwaysLawCell:
+      type: object
+      required: [domainKey, orgUnitKey, processCount]
+      properties:
+        domainKey:
+          type: string
+        orgUnitKey:
+          type: string
+        processCount:
+          type: integer
