@@ -843,6 +843,148 @@ def pk(en_name):
     return process_keys.get(en_name, en_name.lower().replace(' ', '-'))
 
 
+# ── Process purpose, security measures, and input/output entities ─────────────
+print('\n[8b/9] Process purpose, security measures & input/output entities...')
+
+common_tom = (
+    'Access controls and role-based permissions; encrypted data transmission (TLS 1.3); '
+    'encrypted data at rest (AES-256); audit logging; regular encrypted backups; '
+    'staff data-protection training; data-minimisation principles applied.'
+)
+payment_tom = (
+    'PCI-DSS compliant processing; tokenisation of card data; end-to-end encryption; '
+    'fraud detection and velocity checks; strict access controls; audit logging.'
+)
+
+process_details = {
+    'Customer Registration': {
+        'purpose': (
+            'To create and manage customer accounts, collecting the personal data '
+            'necessary to provide e-commerce services to new customers.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Natural Person'],
+        'outputs': ['Customer'],
+    },
+    'Validate Customer Data': {
+        'purpose': (
+            'To verify the accuracy and completeness of customer profile data '
+            'against defined business rules before account activation.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Customer'],
+        'outputs': ['Customer'],
+    },
+    'Confirm Email Address': {
+        'purpose': (
+            'To verify the customer\'s email address via a one-time token, '
+            'activating the account and confirming reachability.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Customer'],
+        'outputs': ['Customer'],
+    },
+    'Place an Order': {
+        'purpose': (
+            'To enable customers to select products, manage their cart, '
+            'complete checkout and receive payment confirmation for their purchase.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Customer', 'Product', 'Shopping Cart'],
+        'outputs': ['Order'],
+    },
+    'Search for Product': {
+        'purpose': (
+            'To allow customers to discover, search and filter products '
+            'in the catalogue based on keywords, categories and attributes.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Product Category'],
+        'outputs': ['Product'],
+    },
+    'Add to Cart': {
+        'purpose': (
+            'To allow customers to select products and add them with a specified '
+            'quantity to their active shopping cart prior to checkout.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Product', 'Customer'],
+        'outputs': ['Shopping Cart'],
+    },
+    'Checkout': {
+        'purpose': (
+            'To convert a customer\'s shopping cart into a confirmed order '
+            'after verifying the delivery address and payment details.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Shopping Cart', 'Shipping Address', 'Billing Address'],
+        'outputs': ['Order'],
+    },
+    'Validate Shipping Address': {
+        'purpose': (
+            'To verify that the provided shipping address is complete, '
+            'correctly formatted and deliverable by the selected carrier.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Shipping Address'],
+        'outputs': ['Shipping Address'],
+    },
+    'Process Payment': {
+        'purpose': (
+            'To initiate and confirm a payment transaction with the payment '
+            'provider to settle the order amount on behalf of the customer.'
+        ),
+        'securityMeasures': payment_tom,
+        'inputs':  ['Invoice'],
+        'outputs': ['Payment Transaction'],
+    },
+    'Send Invoice': {
+        'purpose': (
+            'To generate and deliver a legally required invoice to the customer '
+            'for each confirmed order, documenting the purchase and payment obligation.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Order'],
+        'outputs': ['Invoice'],
+    },
+    'Ship Order': {
+        'purpose': (
+            'To coordinate warehouse preparation and carrier handover so that '
+            'the customer\'s order is delivered to the specified address.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Order'],
+        'outputs': ['Parcel'],
+    },
+    'Pick and Pack': {
+        'purpose': (
+            'To physically pick ordered items from warehouse stock and pack them '
+            'securely into parcels ready for carrier collection and dispatch.'
+        ),
+        'securityMeasures': common_tom,
+        'inputs':  ['Order Line Item'],
+        'outputs': ['Parcel'],
+    },
+}
+
+for proc_en, details in process_details.items():
+    pkey = pk(proc_en)
+    ok(f'  purpose: {proc_en}',
+       api('PUT', f'/processes/{pkey}/purpose',
+           {'purpose': details['purpose']}, T))
+    ok(f'  securityMeasures: {proc_en}',
+       api('PUT', f'/processes/{pkey}/security-measures',
+           {'securityMeasures': details['securityMeasures']}, T))
+    for entity_en in details.get('inputs', []):
+        ekey = ek(entity_en)
+        ok(f'  input {entity_en} -> {proc_en}',
+           api('POST', f'/processes/{pkey}/inputs', {'entityKey': ekey}, T))
+    for entity_en in details.get('outputs', []):
+        ekey = ek(entity_en)
+        ok(f'  output {entity_en} <- {proc_en}',
+           api('POST', f'/processes/{pkey}/outputs', {'entityKey': ekey}, T))
+
+
 # ── 9. Relationships + classification assignments ──────────────────────────────
 print('\n[9/9] Relationships & classification assignments...')
 
@@ -943,18 +1085,6 @@ add_rel('Product Review', 'Customer', 1, 1, 0, None,
         "Un Avis produit est redige par un Client.",
         "Una Recensione prodotto e scritta da un Cliente.",
         'Una Reseña de producto es escrita por exactamente un Cliente.')
-add_rel('Customer', 'Billing Address', 0, None, 1, 1,
-        'A Customer has one Billing Address; a Billing Address belongs to one Customer.',
-        'Ein Kunde hat eine Rechnungsadresse; eine Rechnungsadresse gehört zu einem Kunden.',
-        "Un Client a une Adresse de facturation; une Adresse de facturation appartient a un Client.",
-        "Un Cliente ha un Indirizzo di fatturazione; un Indirizzo appartiene a un Cliente.",
-        'Un Cliente tiene una Dirección de facturación; una Dirección de facturación pertenece a un Cliente.')
-add_rel('Customer', 'Shipping Address', 0, None, 1, 1,
-        'A Customer may have one or more Shipping Addresses.',
-        'Ein Kunde kann eine oder mehrere Lieferadressen haben.',
-        "Un Client peut avoir une ou plusieurs Adresses de livraison.",
-        "Un Cliente puo avere uno o piu Indirizzi di spedizione.",
-        'Un Cliente puede tener una o más Direcciones de entrega.')
 add_rel('Applicant', 'Employee', 0, 1, 0, 1,
         'An Applicant may be hired and become an Employee.',
         'Ein Bewerber kann eingestellt werden und zum Mitarbeiter werden.',

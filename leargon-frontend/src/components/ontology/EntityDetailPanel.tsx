@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+
+const EntityLineageDiagram = lazy(() => import('../diagrams/EntityLineageDiagram'));
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -593,6 +595,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <Tab label={t('tabs.compliance')} />
         <Tab label={t('tabs.relationships')} />
         <Tab label={t('tabs.governance')} />
+        <Tab label={t('diagrams.lineageTab')} />
       </Tabs>
 
       {activeTab === 0 && <>
@@ -984,6 +987,15 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       </>}
+
+      {activeTab === 3 && (
+        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={24} /></Box>}>
+          <EntityLineageDiagram
+            entityKey={entityKey}
+            entityName={getLocalizedText(entity.names)}
+          />
+        </Suspense>
+      )}
 
       {/* Create Child Entity Dialog */}
       <CreateEntityDialog

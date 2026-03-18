@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   Box, Typography, Table, TableHead, TableBody, TableRow, TableCell,
   TableContainer, Chip, LinearProgress, Tooltip, CircularProgress, Alert,
@@ -281,6 +283,7 @@ const SplitDomainsTable: React.FC<{ data: SplitDomainItem[] }> = ({ data }) => {
 
 const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { domainKeys, orgUnitKeys, domainNames, orgUnitNames, cells } = data;
 
   if (domainKeys.length === 0 || orgUnitKeys.length === 0) return (
@@ -298,10 +301,12 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
   const cellColor = (count: number): string => {
     if (count === 0) return 'transparent';
     const intensity = Math.round((count / maxCount) * 100);
-    if (intensity > 66) return 'rgba(25, 118, 210, 0.70)';
-    if (intensity > 33) return 'rgba(25, 118, 210, 0.40)';
-    return 'rgba(25, 118, 210, 0.15)';
+    if (intensity > 66) return alpha(theme.palette.primary.main, 0.70);
+    if (intensity > 33) return alpha(theme.palette.primary.main, 0.40);
+    return alpha(theme.palette.primary.main, 0.15);
   };
+
+  const headerBg = theme.palette.background.default;
 
   return (
     <Box sx={{ p: 2, overflowX: 'auto' }}>
@@ -311,11 +316,11 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
       <Table size="small" sx={{ borderCollapse: 'collapse', width: 'auto' }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 600, bgcolor: 'grey.50', minWidth: 140, position: 'sticky', left: 0, zIndex: 1 }}>
+            <TableCell sx={{ fontWeight: 600, bgcolor: headerBg, minWidth: 140, position: 'sticky', left: 0, zIndex: 1 }}>
               {t('analytics.colDomain')} / {t('analytics.colOrgUnit')}
             </TableCell>
             {orgUnitKeys.map((uk) => (
-              <TableCell key={uk} align="center" sx={{ fontWeight: 600, bgcolor: 'grey.50', minWidth: 80, whiteSpace: 'nowrap' }}>
+              <TableCell key={uk} align="center" sx={{ fontWeight: 600, bgcolor: headerBg, minWidth: 80, whiteSpace: 'nowrap' }}>
                 <Tooltip title={orgUnitNames[uk] ?? uk}>
                   <Typography variant="caption" sx={{ fontWeight: 600 }}>
                     {(orgUnitNames[uk] ?? uk).length > 10
@@ -330,7 +335,7 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
         <TableBody>
           {domainKeys.map((dk) => (
             <TableRow key={dk} hover>
-              <TableCell sx={{ fontWeight: 500, bgcolor: 'grey.50', position: 'sticky', left: 0, zIndex: 1 }}>
+              <TableCell sx={{ fontWeight: 500, bgcolor: headerBg, position: 'sticky', left: 0, zIndex: 1 }}>
                 <Tooltip title={domainNames[dk] ?? dk}>
                   <Typography variant="body2">
                     {(domainNames[dk] ?? dk).length > 18
@@ -343,7 +348,7 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
                 const count = cellMap.get(`${dk}::${uk}`) ?? 0;
                 return (
                   <TableCell key={uk} align="center"
-                    sx={{ bgcolor: cellColor(count), border: '1px solid', borderColor: 'grey.200', p: 0.5 }}>
+                    sx={{ bgcolor: cellColor(count), border: '1px solid', borderColor: 'divider', p: 0.5 }}>
                     {count > 0
                       ? <Tooltip title={`${domainNames[dk] ?? dk} × ${orgUnitNames[uk] ?? uk}: ${count} process${count !== 1 ? 'es' : ''}`}>
                           <Typography variant="body2" fontWeight={600} sx={{ cursor: 'default' }}>{count}</Typography>

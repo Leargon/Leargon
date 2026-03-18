@@ -79,11 +79,8 @@ class Process {
     @OneToMany(mappedBy = "process", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var versions: MutableSet<ProcessVersion> = mutableSetOf()
 
-    @OneToMany(mappedBy = "process", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var diagramElements: MutableSet<ProcessElement> = mutableSetOf()
-
-    @OneToMany(mappedBy = "process", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    var diagramFlows: MutableSet<ProcessFlow> = mutableSetOf()
+    @Column(name = "bpmn_xml", columnDefinition = "MEDIUMTEXT")
+    var bpmnXml: String? = null
 
     @ManyToMany
     @JoinTable(

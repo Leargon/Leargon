@@ -23,7 +23,6 @@ import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
-import org.leargon.backend.repository.ProcessElementRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
 import org.leargon.backend.repository.UserRepository
@@ -36,7 +35,6 @@ open class ProcessService(
     private val businessEntityRepository: BusinessEntityRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
-    private val processElementRepository: ProcessElementRepository,
     private val userRepository: UserRepository,
     private val localeService: LocaleService,
     private val processMapper: ProcessMapper,
@@ -379,12 +377,6 @@ open class ProcessService(
     open fun deleteProcess(key: String, currentUser: User) {
         val process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
-
-        val references = processElementRepository.findByLinkedProcessId(process.id!!)
-        if (references.isNotEmpty()) {
-            throw IllegalArgumentException(
-                "Cannot delete process: it is referenced in ${references.size} diagram element(s). Remove the references first.")
-        }
 
         if (process.children.isNotEmpty()) {
             throw IllegalArgumentException(

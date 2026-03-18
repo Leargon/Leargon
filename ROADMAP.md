@@ -3,124 +3,6 @@
 
 ---
 
-## Batch 8 · Review cycles
-*One backend flush: new `review_cycles` and `review_confirmations` tables, a scheduled job that computes due dates, review section on all detail pages, and an overdue-reviews admin page. Self-contained. Transforms Léargon from a documentation tool into an active governance tool — owners are accountable, auditors get a timestamped attestation trail.*
-
-#### USER STORY 'Define review cycle for a business entity'
-**AS A** data owner or admin\
-**I WANT** to set a review cycle (e.g. every 6 months, annually) on a business entity\
-**SO THAT** the system knows when to prompt the data owner to confirm the entity's content is still accurate
-
-#### USER STORY 'Define review cycle for a business process'
-**AS A** process owner or admin\
-**I WANT** to set a review cycle on a business process\
-**SO THAT** the system knows when to prompt the process owner to confirm the process is still accurate
-
-#### USER STORY 'Define review cycle for a business domain'
-**AS AN** admin\
-**I WANT** to set a review cycle on a business domain\
-**SO THAT** the system knows when to prompt for a domain review
-
-#### USER STORY 'Confirm content at review checkpoint'
-**AS A** data owner, process owner, or admin\
-**IF** a review is due for an item I am responsible for\
-**I WANT** to confirm that the content of a business entity, process, or domain is still accurate and up-to-date, or modify it before confirming\
-**SO THAT** it is audited that the content has been actively reviewed and attested as correct at a specific point in time
-
-#### USER STORY 'View review history'
-**AS A** logged in user\
-**IF** reviews have been confirmed in the past\
-**I WANT** to see a chronological history of all review confirmations on a business entity, process, or domain, showing who confirmed and when\
-**SO THAT** the audit trail of periodic reviews is visible and traceable
-
-#### USER STORY 'View overdue reviews'
-**AS AN** admin\
-**IF** one or more review cycles are configured\
-**I WANT** to see a centralised list of all business entities, processes, and domains whose review deadline has passed without a confirmation\
-**SO THAT** I can follow up with the responsible owners to get overdue reviews completed
-
-#### USER STORY 'View upcoming reviews'
-**AS A** data owner, process owner, or admin\
-**IF** review cycles are configured for items I am responsible for\
-**I WANT** to see a list of my upcoming reviews with their due dates in my personal overview or notification panel\
-**SO THAT** I can plan ahead and avoid overdue reviews
-
----
-
-## Batch 11 · All diagram views
-*Frontend-heavy flush. All diagrams share the same technology stack (xyflow + dagre) and all read from existing data — no new tables. No dependencies. Highest visibility-to-effort ratio in the roadmap: makes the full data landscape legible to non-technical stakeholders in seconds.*
-
-#### USER STORY 'View entity relationship diagram for a single entity'
-**AS A** logged in user\
-**IF** the business entity exists\
-**I WANT** to view an ERD/class diagram starting from a single business entity, with configurable depth to show related entities and their relationship types and cardinalities\
-**SO THAT** I can understand the connections and usage of a specific data object in context
-
-#### USER STORY 'View entity relationship diagram for all entities'
-**AS A** logged in user\
-**I WANT** to view an ERD/class diagram showing all business entities and their relationships across the entire data landscape\
-**SO THAT** I can get a holistic overview of all data objects and how they connect
-
-#### USER STORY 'View entity diagram with domain layer'
-**AS A** logged in user\
-**IF** business entities are assigned to domains\
-**I WANT** to toggle a domain layer in the entity diagram so that entities are grouped inside their assigned domain as a visual container\
-**SO THAT** I can see both the data model and the domain structure simultaneously
-
-#### USER STORY 'View process landscape diagram'
-**AS A** logged in user\
-**I WANT** to view a BPMN-style landscape showing all business processes, their hierarchy (parent/subprocess), and their input and output entities\
-**SO THAT** I can see the complete process landscape of the organisation
-
-#### USER STORY 'View process landscape with organisational unit layer'
-**AS A** logged in user\
-**IF** processes are assigned to executing organisational units\
-**I WANT** to toggle an org unit layer in the process landscape so that processes are shown inside their executing organisational unit as a visual container\
-**SO THAT** I can see which parts of the organisation are responsible for which processes
-
-#### USER STORY 'View process landscape with domain layer'
-**AS A** logged in user\
-**IF** processes are assigned to business domains\
-**I WANT** to toggle a domain layer in the process landscape so that processes are grouped inside their assigned domain as a visual container\
-**SO THAT** I can see the process landscape segmented by domain
-
-#### USER STORY 'Expand and collapse subprocesses in process landscape'
-**AS A** logged in user\
-**IF** a process has child processes\
-**I WANT** to expand or collapse subprocesses within the process landscape diagram\
-**SO THAT** I can focus on the level of detail that is relevant to my current analysis
-
-#### USER STORY 'View org chart diagram'
-**AS A** logged in user\
-**I WANT** to view a hierarchical org chart diagram of all organisational units, showing the unit name, type, and lead user for each node\
-**SO THAT** I can understand the reporting and containment structure of the organisation visually, not just as a flat list
-
-#### USER STORY 'View process ownership overlay on org chart'
-**AS A** logged in user\
-**IF** processes are assigned to executing organisational units\
-**I WANT** to toggle a process count overlay on the org chart so that each org unit node shows how many processes it executes\
-**SO THAT** I can immediately see the workload distribution and identify over- or under-loaded units
-
-#### USER STORY 'View data lineage for a business entity'
-**AS A** logged in user\
-**IF** the business entity is linked as an input or output to one or more processes\
-**I WANT** to view the end-to-end data lineage for a business entity as a directed graph, showing which processes produce it, which consume it, and which other entities those processes in turn produce or consume\
-**SO THAT** I can trace how data flows through the organisation from source to destination
-
-#### USER STORY 'View lineage starting from a process'
-**AS A** logged in user\
-**IF** the process has linked input or output entities\
-**I WANT** to view the lineage graph starting from a specific business process, traversing upstream to source entities and downstream to derived entities and processes\
-**SO THAT** I can understand the full data dependency chain of a process
-
-#### USER STORY 'Navigate from diagram to detail'
-**AS A** logged in user\
-**IF** a diagram element represents a business entity, process, domain, or organisational unit\
-**I WANT** to click on any diagram element and navigate directly to its detail page\
-**SO THAT** I can drill into specific elements without having to search for them separately
-
----
-
 ## Batch 5 · Context mapping
 *One backend flush: new `context_relationships` table, CRUD endpoints, context relationship section on domain detail, and a context map diagram page using xyflow. Self-contained — no dependencies.*
 
@@ -214,6 +96,65 @@
 
 ---
 
+## Batch 16 · Stewards
+*Adds a new permission layer across all four entity types — touches every service and detail page. Wide blast radius; ship as one complete feature.*
+
+#### USER STORY 'Add steward to business entity'
+**AS AN** admin or data owner\
+**IF** the user is registered and active\
+**I WANT** to assign one or more users as stewards of a business entity\
+**SO THAT** the stewards can edit the entity alongside the data owner without having full admin rights
+
+#### USER STORY 'Remove steward from business entity'
+**AS AN** admin or data owner\
+**IF** the user is currently a steward of the entity\
+**I WANT** to remove a steward from a business entity\
+**SO THAT** the user no longer has edit rights on that entity
+
+#### USER STORY 'Add steward to business domain'
+**AS AN** admin\
+**IF** the user is registered and active\
+**I WANT** to assign one or more users as stewards of a business domain\
+**SO THAT** the stewards can edit the domain alongside admins
+
+#### USER STORY 'Remove steward from business domain'
+**AS AN** admin\
+**IF** the user is currently a steward of the domain\
+**I WANT** to remove a steward from a business domain\
+**SO THAT** the user no longer has edit rights on that domain
+
+#### USER STORY 'Add steward to business process'
+**AS AN** admin or process owner\
+**IF** the user is registered and active\
+**I WANT** to assign one or more users as stewards of a business process\
+**SO THAT** the stewards can edit the process alongside the process owner
+
+#### USER STORY 'Remove steward from business process'
+**AS AN** admin or process owner\
+**IF** the user is currently a steward of the process\
+**I WANT** to remove a steward from a business process\
+**SO THAT** the user no longer has edit rights on that process
+
+#### USER STORY 'Add steward to organisational unit'
+**AS AN** admin\
+**IF** the user is registered and active\
+**I WANT** to assign one or more users as stewards of an organisational unit\
+**SO THAT** the stewards can edit the unit alongside the unit lead
+
+#### USER STORY 'Remove steward from organisational unit'
+**AS AN** admin\
+**IF** the user is currently a steward of the organisational unit\
+**I WANT** to remove a steward from an organisational unit\
+**SO THAT** the user no longer has edit rights on that unit
+
+#### USER STORY 'View stewards on an item'
+**AS A** logged in user\
+**IF** stewards are assigned\
+**I WANT** to see the list of current stewards on the detail page of a business entity, domain, process, or organisational unit\
+**SO THAT** I know who is responsible for maintaining that item alongside the primary owner or lead
+
+---
+
 ## Batch 4 · Privacy notice generation
 *Single story. Depends on Batches 1–2 (done) producing complete processing register data. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
 
@@ -264,7 +205,7 @@
 ---
 
 ## Batch 9 · Watch & notifications
-*One backend flush: new `watches` table, an event-dispatch pipeline, SMTP and Teams webhook integrations, notification settings UI. Depends on Batch 8 — overdue review notifications only make sense once review cycles exist.*
+*One backend flush: new `watches` table, an event-dispatch pipeline, SMTP and Teams webhook integrations, notification settings UI. Core watch functionality is self-contained; review-cycle notifications are additive once Batch 8 is shipped.*
 
 #### USER STORY 'Watch a business entity'
 **AS A** logged in user\
@@ -290,13 +231,13 @@
 #### USER STORY 'Configure email notifications'
 **AS AN** admin\
 **IF** an SMTP server is configured\
-**I WANT** to configure Léargon to send email notifications to owners when a review is upcoming or overdue, and to watchers when an item they follow changes\
+**I WANT** to configure Léargon to send email notifications to watchers when an item they follow changes\
 **SO THAT** owners are informed without having to check the application manually
 
 #### USER STORY 'Configure Teams webhook notifications'
 **AS AN** admin\
 **IF** a Microsoft Teams webhook URL is configured\
-**I WANT** to configure Léargon to post notifications to a Teams channel for upcoming reviews, overdue reviews, and watched item changes\
+**I WANT** to configure Léargon to post notifications to a Teams channel for watched item changes\
 **SO THAT** teams can receive governance reminders within their existing communication tools
 
 ---
@@ -405,42 +346,30 @@
 
 ---
 
-## Batch 14 · Team & org insights
-*Analytics flush — aggregation and ratio queries on existing process-domain-orgunit relationships. Results stored as snapshots. New "Org Insights" section in the frontend. Depends on processes being assigned to both domains and org units.*
+## Batch 19 · Personal dashboard
+*Pure read-only flush — no new tables. The home screen aggregates existing data: owned items, recent activity feed from version history, and (once Batch 9 is shipped) the watchlist. The first two stories are self-contained and can ship independently; the watchlist widget requires Batch 9; the reviews widget requires Batch 8.*
 
-**Scheduler note:** The periodic recomputation of snapshots will be handled by the **Quarkus scheduler** introduced in Batch 15. For this batch, analytics are computed on demand (triggered manually or at startup) and stored as timestamped snapshots — the scheduler integration is wired in later without changing the snapshot model.
+#### USER STORY 'View owned items on personal dashboard'
+**AS A** data owner, process owner, or admin\
+**I WANT** to see a personal dashboard as the home screen listing all business entities, processes, and domains I own, grouped by type, with quick-glance status indicators (completeness score, open DPIA, missing mandatory fields)\
+**SO THAT** I have an immediate overview of my governance responsibilities every time I open Léargon without having to navigate through tree views
 
-#### USER STORY 'View ownership workload per user'
-**AS AN** admin\
-**I WANT** to see a table of all users showing how many business entities, processes, and domains each user owns\
-**SO THAT** I can identify over-burdened owners and redistribute ownership before items become neglected
+#### USER STORY 'View recent catalogue activity on dashboard'
+**AS A** logged in user\
+**I WANT** to see a chronological feed of recently created or modified items across the catalogue — showing item name, type, change type, who made the change, and when — limited to the last 20 entries\
+**SO THAT** I can stay informed about what is happening in the data catalogue without subscribing to individual items
 
-#### USER STORY 'View ownership workload per organisational unit'
-**AS AN** admin\
-**I WANT** to see a table of all organisational units showing how many processes each unit executes\
-**SO THAT** I can spot units that are executing a disproportionate number of processes and may be bottlenecks or overloaded
+#### USER STORY 'View watchlist on dashboard'
+**AS A** logged in user\
+**IF** I have watched one or more items (Batch 9)\
+**I WANT** to see a dedicated watchlist section on my dashboard showing all items I am following, with their last-modified date and a quick link to the detail page\
+**SO THAT** I can monitor the items I care about from a single screen without navigating to each one individually
 
-#### USER STORY 'Detect bottleneck teams'
-**AS AN** admin\
-**I WANT** to see a list of organisational units that execute processes spanning an unusually high number of distinct business domains, ranked by domain spread\
-**SO THAT** I can identify teams that act as coordination bottlenecks — a strong signal for team topology redesign
-
-#### USER STORY 'Detect wrongly placed teams'
-**AS AN** admin\
-**IF** processes are assigned to both organisational units and business domains\
-**I WANT** to see a list of organisational units where the majority of the processes they execute belong to a different domain than the domain most associated with that unit\
-**SO THAT** I can identify teams whose work does not match their structural placement
-
-#### USER STORY 'Detect split domains'
-**AS AN** admin\
-**I WANT** to see a list of business domains whose processes are distributed across an unusually high number of distinct organisational units, with no single unit owning a majority\
-**SO THAT** I can identify domains that lack a clear team owner and are at risk of incoherent evolution due to distributed responsibility
-
-#### USER STORY 'View Conway\'s Law alignment report'
-**AS AN** admin\
-**IF** processes are assigned to both organisational units and business domains\
-**I WANT** to view a matrix comparing domain boundaries against organisational unit boundaries, highlighting where the two structures are aligned (one team, one domain) and where they diverge\
-**SO THAT** I can apply Conway's Law reasoning to make conscious decisions about whether the org structure should follow the domain model or vice versa
+#### USER STORY 'View overdue and upcoming reviews on personal dashboard'
+**AS A** data owner, process owner, or admin\
+**IF** review cycles are configured (Batch 8) and one or more of my owned items has a review that is overdue or due within the next 30 days\
+**I WANT** to see a review-attention section on my dashboard split into overdue items (highlighted as urgent) and upcoming items (due soon), each showing the item name, type, and due date\
+**SO THAT** I can act on overdue reviews immediately and plan ahead for reviews that are coming up shortly
 
 ---
 
@@ -489,65 +418,6 @@
 
 ---
 
-## Batch 16 · Stewards
-*Adds a new permission layer across all four entity types — touches every service and detail page. Wide blast radius; ship as one complete feature.*
-
-#### USER STORY 'Add steward to business entity'
-**AS AN** admin or data owner\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business entity\
-**SO THAT** the stewards can edit the entity alongside the data owner without having full admin rights
-
-#### USER STORY 'Remove steward from business entity'
-**AS AN** admin or data owner\
-**IF** the user is currently a steward of the entity\
-**I WANT** to remove a steward from a business entity\
-**SO THAT** the user no longer has edit rights on that entity
-
-#### USER STORY 'Add steward to business domain'
-**AS AN** admin\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business domain\
-**SO THAT** the stewards can edit the domain alongside admins
-
-#### USER STORY 'Remove steward from business domain'
-**AS AN** admin\
-**IF** the user is currently a steward of the domain\
-**I WANT** to remove a steward from a business domain\
-**SO THAT** the user no longer has edit rights on that domain
-
-#### USER STORY 'Add steward to business process'
-**AS AN** admin or process owner\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business process\
-**SO THAT** the stewards can edit the process alongside the process owner
-
-#### USER STORY 'Remove steward from business process'
-**AS AN** admin or process owner\
-**IF** the user is currently a steward of the process\
-**I WANT** to remove a steward from a business process\
-**SO THAT** the user no longer has edit rights on that process
-
-#### USER STORY 'Add steward to organisational unit'
-**AS AN** admin\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of an organisational unit\
-**SO THAT** the stewards can edit the unit alongside the unit lead
-
-#### USER STORY 'Remove steward from organisational unit'
-**AS AN** admin\
-**IF** the user is currently a steward of the organisational unit\
-**I WANT** to remove a steward from an organisational unit\
-**SO THAT** the user no longer has edit rights on that unit
-
-#### USER STORY 'View stewards on an item'
-**AS A** logged in user\
-**IF** stewards are assigned\
-**I WANT** to see the list of current stewards on the detail page of a business entity, domain, process, or organisational unit\
-**SO THAT** I know who is responsible for maintaining that item alongside the primary owner or lead
-
----
-
 ## Batch 18 · Import & integration
 *Infrastructure-heavy flush: file upload handling, CSV parsing, column mapping UI, and a webhook receiver. Useful for initial catalogue seeding but not required for ongoing operation.*
 
@@ -576,3 +446,47 @@
 **IF** an external system (e.g. a data catalog, HR system, or schema registry) supports outbound webhooks\
 **I WANT** to configure Léargon to receive catalogue updates from that system via a webhook endpoint, mapping the incoming payload to the corresponding entity or process fields\
 **SO THAT** the Léargon catalogue stays in sync with authoritative external sources without manual re-entry
+
+---
+
+## Batch 8 · Review cycles
+*One backend flush: new `review_cycles` and `review_confirmations` tables, a scheduled job that computes due dates, review section on all detail pages, and an overdue-reviews admin page. Deprioritised — the core use case can be covered with external calendar reminders; the main value add over external tooling is the timestamped audit trail attached to each item, which matters primarily for formal compliance audits.*
+
+#### USER STORY 'Define review cycle for a business entity'
+**AS A** admin\
+**I WANT** to set a review cycle (e.g. every 6 months, annually) on the system\
+**SO THAT** the system knows when to prompt the data owner to confirm the entity's content is still accurate
+
+#### USER STORY 'Define review cycle for a business process'
+**AS A** admin\
+**I WANT** to set a review cycle (e.g. every 6 months, annually) on the system\
+**SO THAT** the system knows when to prompt the process owner to confirm the process is still accurate
+
+#### USER STORY 'Define review cycle for a business domain'
+**AS AN** admin\
+**I WANT** to set a review cycle (e.g. every 6 months, annually) on the system\
+**SO THAT** the system knows when to prompt for a domain review
+
+#### USER STORY 'Confirm content at review checkpoint'
+**AS A** data owner, process owner, or admin\
+**IF** a review is due for an item I am responsible for\
+**I WANT** to confirm that the content of a business entity, process, or domain is still accurate and up-to-date, or modify it before confirming\
+**SO THAT** it is audited that the content has been actively reviewed and attested as correct at a specific point in time
+
+#### USER STORY 'View review history'
+**AS A** logged in user\
+**IF** reviews have been confirmed in the past\
+**I WANT** to see a chronological history of all review confirmations on a business entity, process, or domain, showing who confirmed and when\
+**SO THAT** the audit trail of periodic reviews is visible and traceable
+
+#### USER STORY 'View overdue reviews'
+**AS AN** admin\
+**IF** one or more review cycles are configured\
+**I WANT** to see a centralised list of all business entities, processes, and domains whose review deadline has passed without a confirmation\
+**SO THAT** I can follow up with the responsible owners to get overdue reviews completed
+
+#### USER STORY 'View upcoming reviews'
+**AS A** data owner, process owner, or admin\
+**IF** review cycles are configured for items I am responsible for\
+**I WANT** to see a list of my upcoming reviews with their due dates in my personal overview or notification panel\
+**SO THAT** I can plan ahead and avoid overdue reviews

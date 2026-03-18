@@ -74,7 +74,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 
-const ProcessDiagramEditor = lazy(() => import('./diagram/ProcessDiagramEditor'));
+const BpmnEditor = lazy(() => import('./diagram/BpmnEditor'));
 import type {
   LocalizedText,
   LegalBasis,
@@ -894,10 +894,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">Process Diagram</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ p: 0, height: 500 }}>
+        <AccordionDetails sx={{ p: 1 }}>
           {diagramOpen && (
-            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><CircularProgress /></Box>}>
-              <ProcessDiagramEditor processKey={processKey} canEdit={isOwnerOrAdmin} />
+            <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>}>
+              <BpmnEditor processKey={processKey} canEdit={isOwnerOrAdmin} />
             </Suspense>
           )}
         </AccordionDetails>

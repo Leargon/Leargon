@@ -5,12 +5,17 @@ export type Perspective = 'gdpr' | 'governance' | 'ddd' | 'orgdev';
 
 const STORAGE_KEY = 'leargon_perspective';
 
+// Only routes exclusive to ONE perspective trigger an auto-switch.
+// Shared routes (/entities, /processes, /diagrams/entities, /diagrams/processes)
+// are intentionally absent so the current perspective is preserved.
 const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
   '/compliance': 'gdpr',
   '/data-processors': 'gdpr',
   '/dpia': 'gdpr',
   '/domains': 'ddd',
   '/organisation': 'orgdev',
+  '/diagrams/organisation': 'orgdev',
+  '/team-insights': 'orgdev',
 };
 
 function inferPerspective(pathname: string): Perspective | null {

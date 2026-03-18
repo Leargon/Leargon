@@ -16,10 +16,8 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessElementInput } from './processElementInput';
-import type { ProcessFlowInput } from './processFlowInput';
 
 export interface SaveProcessDiagramRequest {
-  elements: ProcessElementInput[];
-  flows: ProcessFlowInput[];
+  /** Full BPMN 2.0 XML string to persist */
+  bpmnXml: string;
 }

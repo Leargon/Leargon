@@ -16,10 +16,11 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { ProcessElementResponse } from './processElementResponse';
-import type { ProcessFlowResponse } from './processFlowResponse';
 
 export interface ProcessDiagramResponse {
-  elements: ProcessElementResponse[];
-  flows: ProcessFlowResponse[];
+  /**
+   * BPMN 2.0 XML string, or null if no diagram has been saved yet
+   * @nullable
+   */
+  bpmnXml?: string | null;
 }

@@ -1,0 +1,27 @@
+ databaseChangeLog:
+  - changeSet:
+      id: 021-add-bpmn-xml-column
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: bpmn_xml
+                  type: MEDIUMTEXT
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 021-drop-process-flows-table
+      author: leargon
+      changes:
+        - dropTable:
+            tableName: process_flows
+
+  - changeSet:
+      id: 021-drop-process-elements-table
+      author: leargon
+      changes:
+        - dropTable:
+            tableName: process_elements

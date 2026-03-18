@@ -5497,141 +5497,21 @@ components:
           type: string
           format: date-time
           description: Timestamp when this version was created
-    ProcessElementType:
-      type: string
-      enum:
-      - NONE_START_EVENT
-      - NONE_END_EVENT
-      - TERMINATE_END_EVENT
-      - TASK
-      - SUBPROCESS
-      - EXCLUSIVE_GATEWAY
-      - INCLUSIVE_GATEWAY
-      - PARALLEL_GATEWAY
-      - DATA_INPUT
-      - DATA_OUTPUT
-      - INTERMEDIATE_EVENT
-      description: Type of BPMN diagram element
-    ProcessElementResponse:
-      type: object
-      required:
-      - elementId
-      - elementType
-      - sortOrder
-      properties:
-        elementId:
-          type: string
-          description: Client-generated element ID
-        elementType:
-          $ref: '#/components/schemas/ProcessElementType'
-        linkedProcess:
-          $ref: '#/components/schemas/ProcessSummaryResponse'
-        linkedEntity:
-          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
-        labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocalizedText'
-        sortOrder:
-          type: integer
-          description: Order within the diagram (left-to-right)
-    ProcessFlowResponse:
-      type: object
-      required:
-      - flowId
-      - sourceElementId
-      - targetElementId
-      properties:
-        flowId:
-          type: string
-          description: Client-generated flow ID
-        sourceElementId:
-          type: string
-          description: Source element ID
-        targetElementId:
-          type: string
-          description: Target element ID
-        labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocalizedText'
     ProcessDiagramResponse:
       type: object
-      required:
-      - elements
-      - flows
       properties:
-        elements:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProcessElementResponse'
-        flows:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProcessFlowResponse'
-    ProcessElementInput:
-      type: object
-      required:
-      - elementId
-      - elementType
-      - sortOrder
-      properties:
-        elementId:
-          type: string
-          description: Client-generated element ID
-        elementType:
-          $ref: '#/components/schemas/ProcessElementType'
-        linkedProcessKey:
+        bpmnXml:
           type: string
           nullable: true
-          description: Key of an existing process to link
-        createLinkedProcess:
-          $ref: '#/components/schemas/CreateProcessRequest'
-        linkedEntityKey:
-          type: string
-          nullable: true
-          description: Key of a business entity to link (for DATA_INPUT/DATA_OUTPUT elements)
-        labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocalizedText'
-        sortOrder:
-          type: integer
-          description: Order within the diagram (left-to-right)
-    ProcessFlowInput:
-      type: object
-      required:
-      - flowId
-      - sourceElementId
-      - targetElementId
-      properties:
-        flowId:
-          type: string
-          description: Client-generated flow ID
-        sourceElementId:
-          type: string
-          description: Source element ID
-        targetElementId:
-          type: string
-          description: Target element ID
-        labels:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocalizedText'
+          description: BPMN 2.0 XML string, or null if no diagram has been saved yet
     SaveProcessDiagramRequest:
       type: object
       required:
-      - elements
-      - flows
+      - bpmnXml
       properties:
-        elements:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProcessElementInput'
-        flows:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProcessFlowInput'
+        bpmnXml:
+          type: string
+          description: Full BPMN 2.0 XML string to persist
     SignupRequest:
       type: object
       required:
