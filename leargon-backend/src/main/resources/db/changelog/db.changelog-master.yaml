@@ -41,3 +41,5 @@ databaseChangeLog:
       file: db/changelog/changes/020-add-compliance-fields-to-processes.yaml
   - include:
       file: db/changelog/changes/021-migrate-diagram-to-bpmn-xml.yaml
+  - include:
+      file: db/changelog/changes/022-create-context-relationships-table.yaml

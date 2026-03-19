@@ -943,6 +943,110 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /context-relationships:
+    get:
+      tags:
+      - ContextRelationship
+      summary: Get all context relationships
+      operationId: getAllContextRelationships
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of context relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContextRelationshipResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - ContextRelationship
+      summary: Create a context relationship
+      operationId: createContextRelationship
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContextRelationshipRequest'
+      responses:
+        '201':
+          description: Context relationship created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRelationshipResponse'
+        '400':
+          description: Invalid request
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Domain not found
+        '401':
+          description: Not authenticated
+  /context-relationships/{id}:
+    put:
+      tags:
+      - ContextRelationship
+      summary: Update a context relationship
+      operationId: updateContextRelationship
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContextRelationshipRequest'
+      responses:
+        '200':
+          description: Updated context relationship
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRelationshipResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - ContextRelationship
+      summary: Delete a context relationship
+      operationId: deleteContextRelationship
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
   /business-entities:
     get:
       tags:
@@ -6380,3 +6484,86 @@ components:
           type: string
         processCount:
           type: integer
+    ContextMapperRelationshipType:
+      type: string
+      enum:
+      - PARTNERSHIP
+      - SHARED_KERNEL
+      - CUSTOMER_SUPPLIER
+      - CONFORMIST
+      - ANTICORRUPTION_LAYER
+      - OPEN_HOST_SERVICE
+      - PUBLISHED_LANGUAGE
+      - BIG_BALL_OF_MUD
+    ContextRelationshipResponse:
+      type: object
+      required:
+      - id
+      - relationshipType
+      - upstreamDomain
+      - downstreamDomain
+      properties:
+        id:
+          type: integer
+          format: int64
+        relationshipType:
+          $ref: '#/components/schemas/ContextMapperRelationshipType'
+        upstreamDomain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        downstreamDomain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        upstreamRole:
+          type: string
+          nullable: true
+        downstreamRole:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateContextRelationshipRequest:
+      type: object
+      required:
+      - upstreamDomainKey
+      - downstreamDomainKey
+      - relationshipType
+      properties:
+        upstreamDomainKey:
+          type: string
+        downstreamDomainKey:
+          type: string
+        relationshipType:
+          $ref: '#/components/schemas/ContextMapperRelationshipType'
+        upstreamRole:
+          type: string
+          nullable: true
+        downstreamRole:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+    UpdateContextRelationshipRequest:
+      type: object
+      required:
+      - relationshipType
+      properties:
+        relationshipType:
+          $ref: '#/components/schemas/ContextMapperRelationshipType'
+        upstreamRole:
+          type: string
+          nullable: true
+        downstreamRole:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true

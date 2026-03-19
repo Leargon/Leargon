@@ -37,4 +37,12 @@ open class ExportController(
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
             .header("Content-Disposition", "attachment; filename=\"dpia-register.csv\"")
     }
+
+    @Get("/context-map")
+    fun exportContextMap(@QueryValue(defaultValue = "en") locale: String): HttpResponse<String> {
+        val cml = exportService.exportContextMap(locale)
+        return HttpResponse.ok(cml)
+            .contentType(MediaType.of("text/plain;charset=UTF-8"))
+            .header("Content-Disposition", "attachment; filename=\"context-map.cml\"")
+    }
 }

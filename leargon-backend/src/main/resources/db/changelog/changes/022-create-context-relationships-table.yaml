@@ -1,0 +1,78 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-create-context-relationships-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: context_relationships
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: upstream_domain_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_ctx_rel_upstream
+                    references: business_domains(id)
+              - column:
+                  name: downstream_domain_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_ctx_rel_downstream
+                    references: business_domains(id)
+              - column:
+                  name: relationship_type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: upstream_role
+                  type: varchar(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: downstream_role
+                  type: varchar(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_ctx_rel_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: datetime
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: datetime
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_upstream
+            columns:
+              - column:
+                  name: upstream_domain_id
+        - createIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_downstream
+            columns:
+              - column:
+                  name: downstream_domain_id
