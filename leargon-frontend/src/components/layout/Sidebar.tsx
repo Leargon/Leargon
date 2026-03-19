@@ -4,7 +4,7 @@ import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } fro
 import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
-  BubbleChart, AccountTreeOutlined, Schema,
+  BubbleChart, AccountTreeOutlined, Schema, Share,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -40,6 +40,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
       { label: 'Domain Model', path: '/domains', icon: <Category /> },
       { label: 'Ubiquitous Language', path: '/entities', icon: <Hub /> },
       { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
+      { label: 'Context Map', path: '/diagrams/context-map', icon: <Share /> },
     ],
   },
   orgdev: {

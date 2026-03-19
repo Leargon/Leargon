@@ -28,9 +28,12 @@ import {
   AccordionSummary,
   AccordionDetails,
   TableHead,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   useGetBusinessDomainByKey,
   getGetBusinessDomainByKeyQueryKey,
@@ -44,6 +47,12 @@ import {
   useGetBusinessDomainVersions,
   useGetAllBusinessDomains,
 } from '../../api/generated/business-domain/business-domain';
+import {
+  useGetAllContextRelationships,
+  getGetAllContextRelationshipsQueryKey,
+  useCreateContextRelationship,
+  useDeleteContextRelationship,
+} from '../../api/generated/context-relationship/context-relationship';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
@@ -61,7 +70,31 @@ import type {
   SupportedLocaleResponse,
   ClassificationResponse,
   ProcessResponse,
+  ContextRelationshipResponse,
 } from '../../api/generated/model';
+import type { ContextMapperRelationshipType } from '../../api/generated/model/contextMapperRelationshipType';
+
+const RELATIONSHIP_TYPES: ContextMapperRelationshipType[] = [
+  'PARTNERSHIP',
+  'SHARED_KERNEL',
+  'CUSTOMER_SUPPLIER',
+  'CONFORMIST',
+  'ANTICORRUPTION_LAYER',
+  'OPEN_HOST_SERVICE',
+  'PUBLISHED_LANGUAGE',
+  'BIG_BALL_OF_MUD',
+];
+
+const RELATIONSHIP_COLORS: Record<string, string> = {
+  PARTNERSHIP: '#9c27b0',
+  SHARED_KERNEL: '#2196f3',
+  CUSTOMER_SUPPLIER: '#ff9800',
+  CONFORMIST: '#f44336',
+  ANTICORRUPTION_LAYER: '#009688',
+  OPEN_HOST_SERVICE: '#4caf50',
+  PUBLISHED_LANGUAGE: '#00bcd4',
+  BIG_BALL_OF_MUD: '#795548',
+};
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -74,6 +107,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
@@ -88,6 +122,58 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const allDomains = (allDomainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
+
+  const { data: allRelsResponse } = useGetAllContextRelationships();
+  const allRels = (allRelsResponse?.data as ContextRelationshipResponse[] | undefined) || [];
+  const domainRels = allRels.filter(
+    (r) => r.upstreamDomain?.key === domainKey || r.downstreamDomain?.key === domainKey,
+  );
+
+  const [addRelOpen, setAddRelOpen] = useState(false);
+  const [addRelPartnerKey, setAddRelPartnerKey] = useState<string | null>(null);
+  const [addRelThisIsUpstream, setAddRelThisIsUpstream] = useState(true);
+  const [addRelType, setAddRelType] = useState<ContextMapperRelationshipType>('CUSTOMER_SUPPLIER');
+  const [addRelUpstreamRole, setAddRelUpstreamRole] = useState('');
+  const [addRelDownstreamRole, setAddRelDownstreamRole] = useState('');
+  const [addRelDescription, setAddRelDescription] = useState('');
+  const [addRelError, setAddRelError] = useState<string | null>(null);
+
+  const createRel = useCreateContextRelationship();
+  const deleteRel = useDeleteContextRelationship();
+
+  const invalidateRels = () => {
+    queryClient.invalidateQueries({ queryKey: getGetAllContextRelationshipsQueryKey() });
+  };
+
+  const handleAddRel = async () => {
+    if (!addRelPartnerKey) return;
+    setAddRelError(null);
+    try {
+      await createRel.mutateAsync({
+        data: {
+          upstreamDomainKey: addRelThisIsUpstream ? domainKey : addRelPartnerKey,
+          downstreamDomainKey: addRelThisIsUpstream ? addRelPartnerKey : domainKey,
+          relationshipType: addRelType,
+          upstreamRole: addRelUpstreamRole || undefined,
+          downstreamRole: addRelDownstreamRole || undefined,
+          description: addRelDescription || undefined,
+        },
+      });
+      invalidateRels();
+      setAddRelOpen(false);
+      setAddRelPartnerKey(null);
+      setAddRelUpstreamRole('');
+      setAddRelDownstreamRole('');
+      setAddRelDescription('');
+    } catch (e) {
+      setAddRelError((e as Error).message);
+    }
+  };
+
+  const handleDeleteRel = async (id: number) => {
+    await deleteRel.mutateAsync({ id });
+    invalidateRels();
+  };
 
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
@@ -472,6 +558,73 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         );
       })()}
 
+      {/* Context Relationships */}
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="subtitle2">{t('domain.contextRelationships')}</Typography>
+        {isAdmin && (
+          <Button size="small" startIcon={<Add />} onClick={() => setAddRelOpen(true)}>
+            {t('domain.addRelationship')}
+          </Button>
+        )}
+      </Box>
+      {domainRels.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('domain.noContextRelationships')}</Typography>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          {domainRels.map((rel) => {
+            const relType = rel.relationshipType as string;
+            const color = RELATIONSHIP_COLORS[relType] ?? '#aaa';
+            const isUpstream = rel.upstreamDomain?.key === domainKey;
+            const partnerDomain = isUpstream ? rel.downstreamDomain : rel.upstreamDomain;
+            return (
+              <Paper
+                key={rel.id}
+                variant="outlined"
+                sx={{ p: 1.5, mb: 1, display: 'flex', alignItems: 'flex-start', gap: 1.5 }}
+              >
+                <Chip
+                  label={t(`contextRelationshipType.${relType}` as never)}
+                  size="small"
+                  sx={{ bgcolor: color, color: '#fff', fontWeight: 700, flexShrink: 0 }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {isUpstream ? t('domain.upstream') : t('domain.downstream')}:
+                    </Typography>
+                    {partnerDomain && (
+                      <Chip
+                        label={partnerDomain.name}
+                        size="small"
+                        variant="outlined"
+                        onClick={() => navigate(`/domains/${partnerDomain.key}`)}
+                        clickable
+                      />
+                    )}
+                  </Box>
+                  {rel.description && (
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                      {rel.description}
+                    </Typography>
+                  )}
+                </Box>
+                {isAdmin && (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => rel.id && handleDeleteRel(rel.id as number)}
+                    title={t('domain.deleteRelationship')}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                )}
+              </Paper>
+            );
+          })}
+        </Box>
+      )}
+
       {/* Classifications */}
       <SectionHeader
         title="Classifications"
@@ -615,6 +768,80 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         onClose={() => setCreateSubdomainOpen(false)}
         parentKey={domainKey}
       />
+
+      {/* Add Context Relationship Dialog */}
+      <Dialog open={addRelOpen} onClose={() => setAddRelOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domain.addRelationship')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          <Autocomplete
+            options={allDomains.filter((d) => d.key !== domainKey)}
+            getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+            value={allDomains.find((d) => d.key === addRelPartnerKey) || null}
+            onChange={(_, newVal) => setAddRelPartnerKey(newVal?.key || null)}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Partner Domain" />
+            )}
+            isOptionEqualToValue={(option, value) => option.key === value.key}
+            size="small"
+          />
+          <FormControl size="small">
+            <InputLabel>Direction</InputLabel>
+            <Select
+              value={addRelThisIsUpstream ? 'upstream' : 'downstream'}
+              onChange={(e: SelectChangeEvent) => setAddRelThisIsUpstream(e.target.value === 'upstream')}
+              label="Direction"
+            >
+              <MenuItem value="upstream">This domain is Upstream (provides)</MenuItem>
+              <MenuItem value="downstream">This domain is Downstream (consumes)</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small">
+            <InputLabel>{t('domain.relationshipType')}</InputLabel>
+            <Select
+              value={addRelType}
+              onChange={(e: SelectChangeEvent) => setAddRelType(e.target.value as ContextMapperRelationshipType)}
+              label={t('domain.relationshipType')}
+            >
+              {RELATIONSHIP_TYPES.map((rt) => (
+                <MenuItem key={rt} value={rt}>
+                  {t(`contextRelationshipType.${rt}` as never)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            size="small"
+            label={t('domain.upstreamRole')}
+            value={addRelUpstreamRole}
+            onChange={(e) => setAddRelUpstreamRole(e.target.value)}
+          />
+          <TextField
+            size="small"
+            label={t('domain.downstreamRole')}
+            value={addRelDownstreamRole}
+            onChange={(e) => setAddRelDownstreamRole(e.target.value)}
+          />
+          <TextField
+            size="small"
+            label={t('domain.description')}
+            value={addRelDescription}
+            onChange={(e) => setAddRelDescription(e.target.value)}
+            multiline
+            rows={2}
+          />
+          {addRelError && <Alert severity="error">{addRelError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddRelOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={handleAddRel}
+            variant="contained"
+            disabled={!addRelPartnerKey || createRel.isPending}
+          >
+            {createRel.isPending ? t('common.saving') : t('common.create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.Process
+import org.leargon.backend.repository.ContextRelationshipRepository
 import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.ProcessRepository
@@ -15,6 +16,7 @@ open class ExportService(
     private val dataProcessorRepository: DataProcessorRepository,
     private val dpiaRepository: DpiaRepository,
     private val fieldConfigurationService: FieldConfigurationService,
+    private val contextRelationshipRepository: ContextRelationshipRepository,
 ) {
 
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -116,6 +118,51 @@ open class ExportService(
         }
         return sb.toString()
     }
+
+    fun exportContextMap(locale: String = "en"): String {
+        val rels = contextRelationshipRepository.findAll()
+        val domains = rels.flatMap { listOfNotNull(it.upstreamDomain, it.downstreamDomain) }
+            .distinctBy { it.key }
+
+        val sb = StringBuilder()
+        sb.appendLine("ContextMap LeargonContextMap {")
+        if (domains.isNotEmpty()) {
+            sb.appendLine("  contains ${domains.joinToString(", ") { toCmlIdentifier(it.getName(locale)) }}")
+            sb.appendLine()
+        }
+        for (rel in rels) {
+            val up = rel.upstreamDomain ?: continue
+            val down = rel.downstreamDomain ?: continue
+            val upId = toCmlIdentifier(up.getName(locale))
+            val downId = toCmlIdentifier(down.getName(locale))
+            val line = when (rel.relationshipType) {
+                "PARTNERSHIP" -> "  $upId <-> $downId : Partnership"
+                "SHARED_KERNEL" -> "  $upId [SK] <-> [SK] $downId : Shared-Kernel"
+                "CUSTOMER_SUPPLIER" -> "  $upId [U, S] -> [D, C] $downId : Customer-Supplier"
+                "CONFORMIST" -> "  $upId [U] -> [D, CF] $downId : Conformist"
+                "ANTICORRUPTION_LAYER" -> "  $upId [U] -> [D, ACL] $downId : Anticorruption-Layer"
+                "OPEN_HOST_SERVICE" -> "  $upId [U, OHS] -> [D] $downId : Open-Host-Service"
+                "PUBLISHED_LANGUAGE" -> "  $upId [U, OHS, PL] -> [D] $downId : Published-Language"
+                "BIG_BALL_OF_MUD" -> "  $upId [BBM] <-> [BBM] $downId : Big-Ball-Of-Mud"
+                else -> "  $upId -> $downId"
+            }
+            sb.appendLine(line)
+        }
+        sb.appendLine("}")
+        sb.appendLine()
+        for (domain in domains) {
+            val id = toCmlIdentifier(domain.getName(locale))
+            val type = domain.getEffectiveType()
+            sb.appendLine("BoundedContext $id {")
+            if (type != null) sb.appendLine("  type = ${type.lowercase().replaceFirstChar { it.uppercase() }}")
+            sb.appendLine("}")
+            sb.appendLine()
+        }
+        return sb.toString()
+    }
+
+    private fun toCmlIdentifier(name: String): String =
+        name.replace(Regex("[^A-Za-z0-9]"), "_").replace(Regex("_+"), "_").trim('_')
 
     fun exportDpiaRegister(): String {
         val sb = StringBuilder()
