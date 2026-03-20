@@ -36,6 +36,7 @@ import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, 
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetProcessByKey,
+  useGetAllProcesses,
   getGetProcessByKeyQueryKey,
   getGetAllProcessesQueryKey,
   getGetProcessTreeQueryKey,
@@ -45,6 +46,7 @@ import {
   useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
   useUpdateProcessCode,
+  useUpdateProcessParent,
   useAssignBoundedContextToProcess,
   useAssignClassificationsToProcess,
   useDeleteProcess,
@@ -165,6 +167,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: allItSystemsResponse } = useGetAllItSystems();
   const allItSystems = (allItSystemsResponse?.data as ItSystemResponse[] | undefined) || [];
+  const { data: allProcessesResponse } = useGetAllProcesses();
+  const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetProcessDpia(processKey, {
     query: { retry: false },
   });
@@ -214,6 +218,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
   const updateItSystems = useUpdateProcessItSystems();
+  const updateParent = useUpdateProcessParent();
 
   // Cross-border transfers dialog state
   const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
@@ -316,6 +321,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Parent process inline edit
+  const parentEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      const response = await updateParent.mutateAsync({ key: processKey, data: { parentKey: val } });
+      const newKey = (response.data as ProcessResponse).key;
+      queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
+      if (newKey !== processKey) navigate(`/processes/${newKey}`);
+      else invalidate();
+    },
+  });
+
   // IT Systems inline edit
   const itSystemsEdit = useInlineEdit<string[]>({
     onSave: async (keys) => {
@@ -337,6 +353,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     purposeEdit.cancel();
     securityMeasuresEdit.cancel();
     itSystemsEdit.cancel();
+    parentEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
 
@@ -883,6 +900,38 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.map((c) => {
+            if (c.multiValue) {
+              const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
+              return (
+                <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                  <Select<string[]>
+                    multiple
+                    value={currentValues}
+                    onChange={(e) => {
+                      const selected = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                      const otherAssignments = classEdit.editValue!.filter((a) => a.classificationKey !== c.key);
+                      classEdit.setEditValue([...otherAssignments, ...selected.map((v) => ({ classificationKey: c.key, valueKey: v }))]);
+                    }}
+                    size="small"
+                    displayEmpty
+                    sx={{ minWidth: 200 }}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((v) => {
+                          const val = c.values?.find((cv) => cv.key === v);
+                          return <Chip key={v} label={val ? getLocalizedText(val.names, v) : v} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {c.values?.map((v) => (
+                      <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              );
+            }
             const currentValue = classEdit.editValue!.find((a) => a.classificationKey === c.key)?.valueKey || '';
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -905,8 +954,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       ) : (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.length > 0 ? availableClassifications.map((c) => {
-            const assignment = process.classificationAssignments?.find((a) => a.classificationKey === c.key);
-            const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
+            const assignments = process.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                 <Typography variant="body2" sx={{ minWidth: 120 }}>
@@ -915,8 +963,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
                   )}:
                 </Typography>
-                {value ? (
-                  <Chip label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
+                {assignments.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {assignments.map((a) => {
+                      const value = c.values?.find((v) => v.key === a.valueKey);
+                      return value ? <Chip key={a.valueKey} label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" /> : null;
+                    })}
+                  </Box>
                 ) : (
                   <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
                 )}
@@ -931,17 +984,51 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <Divider sx={{ my: 2 }} />
 
       {/* Parent Process */}
-      {process.parentProcess && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Parent Process</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">Parent Process</Typography>
+        {isOwnerOrAdmin && !parentEdit.isEditing && (
+          <IconButton size="small" onClick={() => parentEdit.startEdit(process.parentProcess?.key ?? null)}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
+        {parentEdit.isEditing && (
+          <>
+            <IconButton size="small" onClick={parentEdit.save} disabled={parentEdit.isSaving} color="primary">
+              {parentEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+            </IconButton>
+            <IconButton size="small" onClick={parentEdit.cancel} disabled={parentEdit.isSaving}>
+              <Close fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        {parentEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={allProcesses.filter((p) => p.key !== processKey)}
+              getOptionLabel={(p) => `${getLocalizedText(p.names, p.key)} (${p.key})`}
+              value={allProcesses.find((p) => p.key === parentEdit.editValue) ?? null}
+              onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key ?? null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for parent process..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(a, b) => a.key === b.key}
+              size="small"
+            />
+            {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
+          </Box>
+        ) : process.parentProcess ? (
           <Chip
             label={process.parentProcess.name || process.parentProcess.key}
             size="small"
             onClick={() => navigate(`/processes/${process.parentProcess!.key}`)}
             clickable
           />
-        </Box>
-      )}
+        ) : (
+          <Typography variant="body2" color="text.secondary">Top-level process</Typography>
+        )}
+      </Box>
 
       {/* Child Processes */}
       {process.childProcesses && process.childProcesses.length > 0 && (

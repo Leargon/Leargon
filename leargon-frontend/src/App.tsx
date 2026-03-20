@@ -1,6 +1,6 @@
 import './i18n';
 import React, { useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -41,6 +41,50 @@ const queryClient = new QueryClient({
   },
 });
 
+const router = createBrowserRouter([
+  { path: '/login', element: <Login /> },
+  { path: '/signup', element: <Signup /> },
+  { path: '/setup', element: <SetupWizardPage /> },
+  { path: '/callback', element: <MsalCallback /> },
+  {
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/entities" replace /> },
+      { path: 'domains', element: <DomainsPage /> },
+      { path: 'domains/:key', element: <DomainsPage /> },
+      { path: 'entities', element: <OntologyPage /> },
+      { path: 'entities/:key', element: <OntologyPage /> },
+      { path: 'processes', element: <ProcessesPage /> },
+      { path: 'processes/:key', element: <ProcessesPage /> },
+      { path: 'organisation', element: <OrganisationPage /> },
+      { path: 'organisation/:key', element: <OrganisationPage /> },
+      { path: 'settings/users', element: <SettingsPage /> },
+      { path: 'settings/locales', element: <SettingsPage /> },
+      { path: 'settings/classifications', element: <SettingsPage /> },
+      { path: 'settings/field-configurations', element: <SettingsPage /> },
+      { path: 'data-processors', element: <DataProcessorsPage /> },
+      { path: 'data-processors/:key', element: <DataProcessorsPage /> },
+      { path: 'compliance', element: <ProcessingRegisterPage /> },
+      { path: 'dpia', element: <DpiaListPage /> },
+      { path: 'team-insights', element: <TeamInsightsPage /> },
+      { path: 'diagrams/entities', element: <EntityMapPage /> },
+      { path: 'diagrams/processes', element: <ProcessLandscapePage /> },
+      { path: 'diagrams/organisation', element: <OrgChartPage /> },
+      { path: 'diagrams/context-map', element: <ContextMapPage /> },
+      { path: 'diagrams/event-flow', element: <EventFlowPage /> },
+      { path: 'it-systems', element: <ItSystemsPage /> },
+      { path: 'it-systems/:key', element: <ItSystemsPage /> },
+      { path: 'profile', element: <ProfilePage /> },
+    ],
+  },
+  { path: '*', element: <NotFoundPage /> },
+]);
+
 const ThemedRoutes: React.FC = () => {
   const { effectiveMode } = useThemeMode();
   const theme = useMemo(
@@ -59,58 +103,11 @@ const ThemedRoutes: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
-        <BrowserRouter>
-          <AuthProvider>
-            <LocaleProvider>
-              <Routes>
-                {/* Public routes — no shell */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/setup" element={<SetupWizardPage />} />
-                <Route path="/callback" element={<MsalCallback />} />
-
-                {/* Protected routes — inside AppShell */}
-                <Route
-                  element={
-                    <ProtectedRoute>
-                      <AppShell />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<Navigate to="/entities" replace />} />
-                  <Route path="/domains" element={<DomainsPage />} />
-                  <Route path="/domains/:key" element={<DomainsPage />} />
-                  <Route path="/entities" element={<OntologyPage />} />
-                  <Route path="/entities/:key" element={<OntologyPage />} />
-                  <Route path="/processes" element={<ProcessesPage />} />
-                  <Route path="/processes/:key" element={<ProcessesPage />} />
-                  <Route path="/organisation" element={<OrganisationPage />} />
-                  <Route path="/organisation/:key" element={<OrganisationPage />} />
-                  <Route path="/settings/users" element={<SettingsPage />} />
-                  <Route path="/settings/locales" element={<SettingsPage />} />
-                  <Route path="/settings/classifications" element={<SettingsPage />} />
-                  <Route path="/settings/field-configurations" element={<SettingsPage />} />
-                  <Route path="/data-processors" element={<DataProcessorsPage />} />
-                  <Route path="/data-processors/:key" element={<DataProcessorsPage />} />
-                  <Route path="/compliance" element={<ProcessingRegisterPage />} />
-                  <Route path="/dpia" element={<DpiaListPage />} />
-                  <Route path="/team-insights" element={<TeamInsightsPage />} />
-                  <Route path="/diagrams/entities" element={<EntityMapPage />} />
-                  <Route path="/diagrams/processes" element={<ProcessLandscapePage />} />
-                  <Route path="/diagrams/organisation" element={<OrgChartPage />} />
-                  <Route path="/diagrams/context-map" element={<ContextMapPage />} />
-                  <Route path="/diagrams/event-flow" element={<EventFlowPage />} />
-                  <Route path="/it-systems" element={<ItSystemsPage />} />
-                  <Route path="/it-systems/:key" element={<ItSystemsPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                </Route>
-
-                {/* Catch-all — 404 page */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </LocaleProvider>
-          </AuthProvider>
-        </BrowserRouter>
+        <AuthProvider>
+          <LocaleProvider>
+            <RouterProvider router={router} />
+          </LocaleProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </ThemeProvider>
   );

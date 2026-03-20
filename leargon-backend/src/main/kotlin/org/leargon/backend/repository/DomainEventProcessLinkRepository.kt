@@ -12,4 +12,6 @@ interface DomainEventProcessLinkRepository : JpaRepository<DomainEventProcessLin
     fun findByEventId(eventId: Long): List<DomainEventProcessLink>
 
     fun deleteByEventId(eventId: Long)
+
+    fun deleteByProcessId(processId: Long)
 }

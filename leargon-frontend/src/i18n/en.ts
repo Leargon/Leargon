@@ -42,6 +42,7 @@ const en = {
     topLevel: 'Top-level',
     apply: 'Apply',
     noOptions: 'No options',
+    open: 'Open',
   },
   tabs: {
     compliance: 'Compliance',
@@ -69,6 +70,7 @@ const en = {
     translationLinks: 'Translation Links',
     noTranslationLinks: 'No translation links recorded',
     addTranslationLink: 'Add Translation Link',
+    editTranslationLink: 'Edit Translation Link',
     linkedEntity: 'Linked Entity',
     semanticDifferenceNote: 'Semantic Difference Note',
   },
@@ -306,11 +308,15 @@ const en = {
     selectExisting: 'Select existing process',
     nameNew: 'Enter name',
     selectExistingHint: 'Link this element to an existing process in the registry.',
-    nameNewHint: 'Enter a label for this element. You can link it to a process later.',
+    nameNewHint: 'Enter a name for the new process. It will be created in the registry and linked to this element.',
     searchProcess: 'Search process…',
     selectedKey: 'Key',
     topLevel: 'Top-level processes',
     elementName: 'Element name',
+    createProcessError: 'Failed to create process',
+    unsavedChanges: 'Unsaved changes',
+    unsavedChangesHint: 'You have unsaved changes in the diagram. Do you want to discard them and leave?',
+    discardAndLeave: 'Discard & leave',
   },
 } as const;
 

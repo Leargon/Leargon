@@ -24,7 +24,6 @@ export interface ProcessNodeData {
 
 export interface DataEntityNodeData {
   label: string;
-  direction: 'input' | 'output';
 }
 
 export interface OrgUnitNodeData {
@@ -164,28 +163,24 @@ ProcessNode.displayName = 'ProcessNode';
 
 export const DataEntityNode = memo(({ data }: NodeProps) => {
   const d = data as unknown as DataEntityNodeData;
-  const isInput = d.direction === 'input';
   return (
     <Box
       sx={{
         width: 150,
         minHeight: 44,
         border: 1.5,
-        borderColor: isInput ? '#0097a7' : '#f57c00',
+        borderColor: '#5c6bc0',
         borderRadius: 1,
-        bgcolor: isInput ? 'rgba(0,151,167,0.08)' : 'rgba(245,124,0,0.08)',
+        bgcolor: 'rgba(92,107,192,0.08)',
         px: 1.5,
         py: 0.75,
         cursor: 'pointer',
       }}
     >
-      <Handle type="source" position={Position.Right} style={{ background: isInput ? '#0097a7' : '#f57c00' }} />
-      <Handle type="target" position={Position.Left} style={{ background: isInput ? '#0097a7' : '#f57c00' }} />
+      <Handle type="source" position={Position.Right} style={{ background: '#5c6bc0' }} />
+      <Handle type="target" position={Position.Left} style={{ background: '#5c6bc0' }} />
       <Typography variant="caption" fontWeight={600} noWrap title={d.label} display="block">
         {d.label}
-      </Typography>
-      <Typography variant="caption" sx={{ color: isInput ? '#0097a7' : '#f57c00', fontSize: '0.65rem' }}>
-        {isInput ? '▶ input' : 'output ▶'}
       </Typography>
     </Box>
   );

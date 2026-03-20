@@ -230,6 +230,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
               descriptions={[]}
               onNamesChange={(n) => namesEdit.setEditValue(n)}
               onDescriptionsChange={() => {}}
+              hideDescriptions
             />
             {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
           </Box>
@@ -249,7 +250,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         title="Processing Countries"
         canEdit={isAdmin}
         isEditing={countriesEdit.isEditing}
-        onEdit={() => countriesEdit.startEdit([...processor.processingCountries])}
+        onEdit={() => countriesEdit.startEdit([...(processor.processingCountries ?? [])])}
         onSave={countriesEdit.save}
         onCancel={countriesEdit.cancel}
         isSaving={countriesEdit.isSaving}
@@ -272,9 +273,9 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
             />
             {countriesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{countriesEdit.error}</Alert>}
           </Box>
-        ) : processor.processingCountries.length > 0 ? (
+        ) : (processor.processingCountries ?? []).length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {processor.processingCountries.map((code) => (
+            {(processor.processingCountries ?? []).map((code) => (
               <Chip key={code} label={`${code} – ${COUNTRY_NAMES[code] ?? code}`} size="small" />
             ))}
           </Box>

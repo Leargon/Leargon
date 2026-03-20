@@ -1,10 +1,11 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
   BubbleChart, AccountTreeOutlined, Schema, Share, FlashOn, Computer,
+  People, Language, Label, Tune,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -58,9 +59,21 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
   },
 };
 
+const SETTINGS_NAV = {
+  title: 'Settings',
+  items: [
+    { label: 'Users', path: '/settings/users', icon: <People /> },
+    { label: 'Locales', path: '/settings/locales', icon: <Language /> },
+    { label: 'Classifications', path: '/settings/classifications', icon: <Label /> },
+    { label: 'Field Configuration', path: '/settings/field-configurations', icon: <Tune /> },
+  ],
+};
+
 const Sidebar: React.FC = () => {
   const { perspective } = useNavigation();
-  const { title, items } = PERSPECTIVE_NAV[perspective];
+  const location = useLocation();
+  const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
+  const { title, items } = isSettingsRoute ? SETTINGS_NAV : PERSPECTIVE_NAV[perspective];
 
   return (
     <Box
