@@ -12,23 +12,26 @@ import java.time.ZoneOffset
 open class DomainEventMapper(
     private val processMapper: ProcessMapper
 ) {
-
-    fun toResponse(event: DomainEvent, processLinks: List<DomainEventProcessLink>): DomainEventResponse {
+    fun toResponse(
+        event: DomainEvent,
+        processLinks: List<DomainEventProcessLink>
+    ): DomainEventResponse {
         val publishingBc = BoundedContextMapper.toSummaryResponse(event.publishingBoundedContext)
         val consumers = event.consumers.map { BoundedContextMapper.toSummaryResponse(it)!! }
         val links = processLinks.map { toProcessLinkResponse(it) }
 
-        val response = DomainEventResponse(
-            event.id,
-            event.key,
-            LocalizedTextMapper.toModel(event.names),
-            LocalizedTextMapper.toModel(event.descriptions),
-            publishingBc,
-            consumers,
-            links,
-            event.createdAt?.atZone(ZoneOffset.UTC),
-            event.updatedAt?.atZone(ZoneOffset.UTC)
-        )
+        val response =
+            DomainEventResponse(
+                event.id,
+                event.key,
+                LocalizedTextMapper.toModel(event.names),
+                LocalizedTextMapper.toModel(event.descriptions),
+                publishingBc,
+                consumers,
+                links,
+                event.createdAt?.atZone(ZoneOffset.UTC),
+                event.updatedAt?.atZone(ZoneOffset.UTC)
+            )
         response.createdBy = UserMapper.toUserSummary(event.createdBy)
         return response
     }

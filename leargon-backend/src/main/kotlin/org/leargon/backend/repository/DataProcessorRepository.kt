@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface DataProcessorRepository : JpaRepository<DataProcessor, Long> {
-
     @Join(value = "linkedBusinessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "linkedProcesses", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<DataProcessor>

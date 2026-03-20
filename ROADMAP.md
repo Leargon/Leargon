@@ -427,3 +427,144 @@
 **IF** review cycles are configured for items I am responsible for\
 **I WANT** to see a list of my upcoming reviews with their due dates in my personal overview or notification panel\
 **SO THAT** I can plan ahead and avoid overdue reviews
+
+---
+
+## Batch 21 · DDD guided setup
+*Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. Depends on domains, bounded contexts, domain events, and context relationships being in place (Batches 1, 5, 7). No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
+
+#### USER STORY 'DDD setup wizard entry point'
+**AS A** company that is new to Domain-Driven Design\
+**IF** I open Léargon and no business domains exist yet\
+**I WANT** to be offered a guided setup wizard that walks me through the first DDD modelling steps\
+**SO THAT** I can establish a meaningful domain landscape without prior Léargon or DDD expertise
+
+#### USER STORY 'Domain classification guidance'
+**AS AN** architect\
+**IF** I am in the DDD setup wizard and have created at least one domain\
+**I WANT** the wizard to explain the four domain types (Core, Supporting, Generic, Undefined) with examples and prompt me to classify each domain I have created\
+**SO THAT** my domain types reflect strategic importance from the start and are not left at the default
+
+#### USER STORY 'Bounded context setup step'
+**AS AN** architect\
+**IF** I have defined at least one business domain\
+**I WANT** the wizard to walk me through creating at least one bounded context per domain and explain what a bounded context represents\
+**SO THAT** each domain has an explicit service boundary before I add events or relationships
+
+#### USER STORY 'Context relationship step'
+**AS AN** architect\
+**IF** I have created two or more bounded contexts\
+**I WANT** the wizard to prompt me to define how contexts relate to each other (Partnership, Customer/Supplier, Shared Kernel, etc.) and explain the implications of each relationship type\
+**SO THAT** the integration topology and Conway's Law implications are explicitly modelled
+
+#### USER STORY 'Domain event assignment step'
+**AS AN** architect or domain expert\
+**IF** I have defined bounded contexts\
+**I WANT** the wizard to prompt me to identify at least one domain event per bounded context and assign it a publishing context\
+**SO THAT** asynchronous communication patterns are explicitly captured in the model from the beginning
+
+#### USER STORY 'Team assignment step'
+**AS AN** architect\
+**IF** I have defined bounded contexts and organisational units\
+**I WANT** the wizard to suggest assigning each bounded context to an owning organisational unit\
+**SO THAT** team topologies and ownership are reflected in the domain model
+
+#### USER STORY 'DDD setup progress indicator'
+**AS AN** architect\
+**IF** I am building my DDD model incrementally\
+**I WANT** a progress overview in the wizard showing which steps are complete (domains created, all classified, bounded contexts created, context relationships defined, domain events assigned, team assignments done)\
+**SO THAT** I know which gaps remain before the model is useful and coherent
+
+---
+
+## Batch 22 · Data governance guided setup
+*Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. All derived from existing catalogue data; no new tables.*
+
+#### USER STORY 'Governance setup wizard entry point'
+**AS A** CDO or data steward\
+**IF** my organisation is starting a data governance programme\
+**I WANT** to be guided through the recommended order of governance setup steps\
+**SO THAT** I build a governable data landscape without skipping foundational prerequisites
+
+#### USER STORY 'Classification taxonomy setup step'
+**AS AN** admin\
+**IF** I am at the first step of the governance wizard\
+**I WANT** to be walked through creating a classification taxonomy (e.g. confidentiality: Public / Internal / Confidential / Secret; data quality tiers) with suggested starting templates\
+**SO THAT** a consistent vocabulary is in place before other users start cataloguing entities
+
+#### USER STORY 'Data owner assignment step'
+**AS AN** admin or CDO\
+**IF** business entities exist in the catalogue without a designated data owner\
+**I WANT** the wizard to present a filtered list of unowned entities and allow me to assign owners in bulk from a single screen\
+**SO THAT** every data object has a responsible person before moving on to classifications
+
+#### USER STORY 'Entity classification coverage step'
+**AS A** data steward\
+**IF** business entities exist without mandatory classification assignments\
+**I WANT** the wizard to highlight which entities lack mandatory classifications and allow me to fill gaps inline\
+**SO THAT** the catalogue is complete and fit for governance reporting before the wizard is marked done
+
+#### USER STORY 'Process ownership step'
+**AS AN** admin\
+**IF** business processes exist without an assigned owner or executing organisational unit\
+**I WANT** the wizard to list unowned processes and allow me to assign owners or executing units in bulk\
+**SO THAT** every process has clear accountability once the governance foundation is in place
+
+#### USER STORY 'Governance maturity overview'
+**AS A** CDO\
+**IF** I want to track the organisation's governance progress over time\
+**I WANT** a maturity overview showing: % of entities with owners, % with mandatory classifications assigned, % of processes with owners, and % of domains with at least one bounded context\
+**SO THAT** I can report governance progress to leadership and identify regressions between reviews
+
+---
+
+## Batch 23 · DSG / GDPR compliance guided setup
+*Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. Depends on Batches 1, 2, 3 (processing register, data processors, DPIAs). No new tables beyond what those batches introduced.*
+
+#### USER STORY 'Compliance setup wizard entry point'
+**AS A** privacy officer or DPO\
+**IF** I need to comply with GDPR Art. 30 or Swiss DSG Art. 12 (record of processing activities)\
+**I WANT** to be offered a compliance setup wizard that walks me through building the processing register step by step\
+**SO THAT** I can reach an audit-ready compliance posture without expert knowledge of the tool's data model
+
+#### USER STORY 'Personal data classification step'
+**AS A** privacy officer\
+**IF** I am at the first step of the compliance wizard\
+**I WANT** to be guided through creating a classification scheme for personal data categories (e.g. ordinary personal data, sensitive personal data, special categories under GDPR Art. 9 / DSG Art. 5)\
+**SO THAT** business entities containing personal data are consistently labelled before I build the processing register
+
+#### USER STORY 'Processing activity identification step'
+**AS A** privacy officer\
+**IF** business processes exist in the catalogue\
+**I WANT** the wizard to walk me through reviewing each process and marking which ones involve personal data processing\
+**SO THAT** I can quickly scope the processing register to the relevant subset of all documented processes
+
+#### USER STORY 'Legal basis assignment step'
+**AS A** privacy officer\
+**IF** I have identified processes that handle personal data\
+**I WANT** the wizard to prompt me to record the legal basis for each processing activity (consent, contract, legal obligation, vital interests, public task, legitimate interest)\
+**SO THAT** the processing register is complete with mandatory legal basis information
+
+#### USER STORY 'Data processor inventory step'
+**AS A** privacy officer\
+**IF** third-party vendors process personal data on our behalf\
+**I WANT** the wizard to walk me through inventorying external data processors and linking them to the relevant processes\
+**SO THAT** processor agreements (GDPR Art. 28 / DSG Art. 9) are traceable in the system and not omitted
+
+#### USER STORY 'Cross-border transfer step'
+**AS A** privacy officer\
+**IF** data processors or processes involve transferring personal data outside Switzerland or the EU/EEA\
+**I WANT** the wizard to identify these transfers and prompt me to record the destination country and the transfer mechanism (SCCs, adequacy decision, BCRs, derogations)\
+**SO THAT** cross-border transfers are documented as required by DSG Art. 16 and GDPR Art. 44
+
+#### USER STORY 'DPIA triggering step'
+**AS A** privacy officer\
+**IF** I have identified processing activities that pose a high risk to data subjects (large-scale profiling, systematic monitoring, automated decision-making, special category data)\
+**I WANT** the wizard to flag these high-risk processes and prompt me to initiate a Data Protection Impact Assessment for each one\
+**SO THAT** no high-risk processing activity proceeds without a documented DPIA as required by GDPR Art. 35 and DSG Art. 22
+
+#### USER STORY 'Compliance readiness score'
+**AS A** privacy officer\
+**IF** I am building the organisation's compliance posture into Léargon\
+**I WANT** a readiness overview at the end of the wizard showing: how many processes lack a legal basis, how many entities lack a personal data category classification, how many data processors are linked, and how many DPIAs are outstanding\
+**SO THAT** I can close remaining gaps before an audit or supervisory inquiry

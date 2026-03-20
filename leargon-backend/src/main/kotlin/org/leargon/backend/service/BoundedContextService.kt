@@ -26,14 +26,13 @@ open class BoundedContextService(
     private val localeService: LocaleService,
     private val boundedContextMapper: BoundedContextMapper
 ) {
-
     open fun getByKey(key: String): BoundedContext =
-        boundedContextRepository.findByKey(key)
+        boundedContextRepository
+            .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BoundedContext not found: $key") }
 
     @Transactional
-    open fun getByKeyAsResponse(key: String): BoundedContextResponse =
-        boundedContextMapper.toResponse(getByKey(key))
+    open fun getByKeyAsResponse(key: String): BoundedContextResponse = boundedContextMapper.toResponse(getByKey(key))
 
     @Transactional
     open fun getForDomain(domainKey: String): List<BoundedContextResponse> {
@@ -45,9 +44,15 @@ open class BoundedContextService(
     }
 
     @Transactional
-    open fun create(domainKey: String, request: CreateBoundedContextRequest, currentUser: User): BoundedContext {
-        val domain = businessDomainRepository.findByKey(domainKey)
-            .orElseThrow { ResourceNotFoundException("BusinessDomain not found: $domainKey") }
+    open fun create(
+        domainKey: String,
+        request: CreateBoundedContextRequest,
+        currentUser: User
+    ): BoundedContext {
+        val domain =
+            businessDomainRepository
+                .findByKey(domainKey)
+                .orElseThrow { ResourceNotFoundException("BusinessDomain not found: $domainKey") }
 
         val bc = BoundedContext()
         bc.domain = domain
@@ -63,13 +68,16 @@ open class BoundedContextService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = bc.names.find { it.locale == defaultLocale?.localeCode }?.text
         val slug = SlugUtil.slugify(defaultName)
-        bc.key = "${domainKey}/${slug}"
+        bc.key = "$domainKey/$slug"
 
         return boundedContextRepository.save(bc)
     }
 
     @Transactional
-    open fun createDefaultForDomain(domain: BusinessDomain, currentUser: User): BoundedContext {
+    open fun createDefaultForDomain(
+        domain: BusinessDomain,
+        currentUser: User
+    ): BoundedContext {
         val bc = BoundedContext()
         bc.domain = domain
         bc.createdBy = currentUser
@@ -79,7 +87,11 @@ open class BoundedContextService(
     }
 
     @Transactional
-    open fun updateNames(key: String, request: UpdateBoundedContextNamesRequest, currentUser: User): BoundedContextResponse {
+    open fun updateNames(
+        key: String,
+        request: UpdateBoundedContextNamesRequest,
+        currentUser: User
+    ): BoundedContextResponse {
         val bc = getByKey(key)
         bc.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = boundedContextRepository.update(bc)
@@ -88,7 +100,11 @@ open class BoundedContextService(
     }
 
     @Transactional
-    open fun updateDescriptions(key: String, request: UpdateBoundedContextDescriptionsRequest, currentUser: User): BoundedContextResponse {
+    open fun updateDescriptions(
+        key: String,
+        request: UpdateBoundedContextDescriptionsRequest,
+        currentUser: User
+    ): BoundedContextResponse {
         val bc = getByKey(key)
         bc.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = boundedContextRepository.update(bc)
@@ -97,7 +113,10 @@ open class BoundedContextService(
     }
 
     @Transactional
-    open fun delete(key: String, currentUser: User) {
+    open fun delete(
+        key: String,
+        currentUser: User
+    ) {
         val bc = getByKey(key)
         if (!currentUser.roles.contains("ROLE_ADMIN")) {
             throw ForbiddenOperationException("Only admins can delete bounded contexts")

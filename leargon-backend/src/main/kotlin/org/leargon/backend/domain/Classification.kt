@@ -20,7 +20,6 @@ import java.time.Instant
 @Entity
 @Table(name = "classifications")
 class Classification {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -67,7 +66,5 @@ class Classification {
         value.classification = null
     }
 
-    fun getName(locale: String): String {
-        return names.find { it.locale == locale }?.text ?: names.first().text
-    }
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 }

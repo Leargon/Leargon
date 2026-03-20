@@ -28,11 +28,11 @@ open class TranslationLinkController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : TranslationLinkApi {
+    override fun getEntityTranslationLinks(key: String): List<TranslationLinkResponse> = translationLinkService.getForEntity(key)
 
-    override fun getEntityTranslationLinks(key: String): List<TranslationLinkResponse> =
-        translationLinkService.getForEntity(key)
-
-    override fun createTranslationLink(@Valid @Body createTranslationLinkRequest: CreateTranslationLinkRequest): HttpResponse<TranslationLinkResponse> {
+    override fun createTranslationLink(
+        @Valid @Body createTranslationLinkRequest: CreateTranslationLinkRequest
+    ): HttpResponse<TranslationLinkResponse> {
         val currentUser = getCurrentUser()
         val link = translationLinkService.create(createTranslationLinkRequest, currentUser)
         val firstEntity = link.firstEntity!!
@@ -40,7 +40,10 @@ open class TranslationLinkController(
         return HttpResponse.status<TranslationLinkResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun updateTranslationLink(id: Long, @Valid @Body updateTranslationLinkRequest: UpdateTranslationLinkRequest): TranslationLinkResponse {
+    override fun updateTranslationLink(
+        id: Long,
+        @Valid @Body updateTranslationLinkRequest: UpdateTranslationLinkRequest
+    ): TranslationLinkResponse {
         val currentUser = getCurrentUser()
         return translationLinkService.update(id, updateTranslationLinkRequest, currentUser)
     }
@@ -52,9 +55,12 @@ open class TranslationLinkController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

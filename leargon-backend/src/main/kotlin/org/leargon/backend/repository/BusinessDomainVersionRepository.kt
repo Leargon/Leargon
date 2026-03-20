@@ -8,12 +8,14 @@ import java.util.Optional
 
 @Repository
 interface BusinessDomainVersionRepository : JpaRepository<BusinessDomainVersion, Long> {
-
     @Join(value = "changedBy", type = Join.Type.FETCH)
     fun findByBusinessDomainIdOrderByVersionNumberDesc(businessDomainId: Long): List<BusinessDomainVersion>
 
     @Join(value = "changedBy", type = Join.Type.FETCH)
-    fun findByBusinessDomainIdAndVersionNumber(businessDomainId: Long, versionNumber: Int): Optional<BusinessDomainVersion>
+    fun findByBusinessDomainIdAndVersionNumber(
+        businessDomainId: Long,
+        versionNumber: Int
+    ): Optional<BusinessDomainVersion>
 
     fun findFirstByBusinessDomainIdOrderByVersionNumberDesc(businessDomainId: Long): Optional<BusinessDomainVersion>
 }

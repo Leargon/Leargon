@@ -36,14 +36,14 @@ open class ClassificationService(
     private val localeService: LocaleService,
     private val classificationMapper: ClassificationMapper
 ) {
-
     @Transactional
     open fun getClassifications(assignableTo: String?): List<ClassificationResponse> {
-        val classifications = if (assignableTo != null) {
-            classificationRepository.findByAssignableTo(assignableTo)
-        } else {
-            classificationRepository.findAll()
-        }
+        val classifications =
+            if (assignableTo != null) {
+                classificationRepository.findByAssignableTo(assignableTo)
+            } else {
+                classificationRepository.findAll()
+            }
         return classifications.map { classificationMapper.toClassificationResponse(it) }
     }
 
@@ -54,11 +54,15 @@ open class ClassificationService(
     }
 
     open fun getClassificationByKey(key: String): Classification =
-        classificationRepository.findByKey(key)
+        classificationRepository
+            .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Classification not found") }
 
     @Transactional
-    open fun createClassification(request: CreateClassificationRequest, currentUser: User): ClassificationResponse {
+    open fun createClassification(
+        request: CreateClassificationRequest,
+        currentUser: User
+    ): ClassificationResponse {
         checkAdminRole(currentUser)
         validateTranslations(request.names)
         if (request.descriptions != null) {
@@ -85,7 +89,11 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun updateClassification(key: String, request: UpdateClassificationRequest, currentUser: User): ClassificationResponse {
+    open fun updateClassification(
+        key: String,
+        request: UpdateClassificationRequest,
+        currentUser: User
+    ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(key)
 
@@ -114,7 +122,10 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun deleteClassification(key: String, currentUser: User) {
+    open fun deleteClassification(
+        key: String,
+        currentUser: User
+    ) {
         checkAdminRole(currentUser)
         val classification = getClassificationByKey(key)
 
@@ -154,7 +165,11 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun createClassificationValue(classificationKey: String, request: CreateClassificationValueRequest, currentUser: User): ClassificationResponse {
+    open fun createClassificationValue(
+        classificationKey: String,
+        request: CreateClassificationValueRequest,
+        currentUser: User
+    ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
 
@@ -181,12 +196,18 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun updateClassificationValue(classificationKey: String, valueKey: String, request: UpdateClassificationValueRequest, currentUser: User): ClassificationResponse {
+    open fun updateClassificationValue(
+        classificationKey: String,
+        valueKey: String,
+        request: UpdateClassificationValueRequest,
+        currentUser: User
+    ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
 
-        val value = classification.values.find { it.key == valueKey }
-            ?: throw ResourceNotFoundException("Classification value not found: $valueKey")
+        val value =
+            classification.values.find { it.key == valueKey }
+                ?: throw ResourceNotFoundException("Classification value not found: $valueKey")
 
         if (!request.names.isNullOrEmpty()) {
             validateTranslations(request.names)
@@ -205,19 +226,26 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun deleteClassificationValue(classificationKey: String, valueKey: String, currentUser: User) {
+    open fun deleteClassificationValue(
+        classificationKey: String,
+        valueKey: String,
+        currentUser: User
+    ) {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
 
-        val value = classification.values.find { it.key == valueKey }
-            ?: throw ResourceNotFoundException("Classification value not found: $valueKey")
+        val value =
+            classification.values.find { it.key == valueKey }
+                ?: throw ResourceNotFoundException("Classification value not found: $valueKey")
 
         // Remove assignments from entities
         businessEntityRepository.findAll().forEach { entity ->
             if (entity.classificationAssignments.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
-                entity.classificationAssignments = entity.classificationAssignments.filter {
-                    !(it.classificationKey == classificationKey && it.valueKey == valueKey)
-                }.toMutableList()
+                entity.classificationAssignments =
+                    entity.classificationAssignments
+                        .filter {
+                            !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                        }.toMutableList()
                 businessEntityRepository.update(entity)
             }
         }
@@ -225,9 +253,11 @@ open class ClassificationService(
         // Remove assignments from domains
         businessDomainRepository.findAll().forEach { domain ->
             if (domain.classificationAssignments.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
-                domain.classificationAssignments = domain.classificationAssignments.filter {
-                    !(it.classificationKey == classificationKey && it.valueKey == valueKey)
-                }.toMutableList()
+                domain.classificationAssignments =
+                    domain.classificationAssignments
+                        .filter {
+                            !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                        }.toMutableList()
                 businessDomainRepository.update(domain)
             }
         }
@@ -235,9 +265,11 @@ open class ClassificationService(
         // Remove assignments from processes
         processRepository.findAll().forEach { process ->
             if (process.classificationAssignments.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
-                process.classificationAssignments = process.classificationAssignments.filter {
-                    !(it.classificationKey == classificationKey && it.valueKey == valueKey)
-                }.toMutableList()
+                process.classificationAssignments =
+                    process.classificationAssignments
+                        .filter {
+                            !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                        }.toMutableList()
                 processRepository.update(process)
             }
         }
@@ -245,9 +277,11 @@ open class ClassificationService(
         // Remove assignments from organisational units
         organisationalUnitRepository.findAll().forEach { unit ->
             if (unit.classificationAssignments.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
-                unit.classificationAssignments = unit.classificationAssignments.filter {
-                    !(it.classificationKey == classificationKey && it.valueKey == valueKey)
-                }.toMutableList()
+                unit.classificationAssignments =
+                    unit.classificationAssignments
+                        .filter {
+                            !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                        }.toMutableList()
                 organisationalUnitRepository.update(unit)
             }
         }
@@ -257,9 +291,15 @@ open class ClassificationService(
     }
 
     @Transactional
-    open fun assignClassificationsToEntity(entityKey: String, assignments: List<ClassificationAssignmentRequest>, currentUser: User) {
-        val entity = businessEntityRepository.findByKey(entityKey)
-            .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
+    open fun assignClassificationsToEntity(
+        entityKey: String,
+        assignments: List<ClassificationAssignmentRequest>,
+        currentUser: User
+    ) {
+        val entity =
+            businessEntityRepository
+                .findByKey(entityKey)
+                .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
         val isOwner = entity.dataOwner!!.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
@@ -269,34 +309,54 @@ open class ClassificationService(
 
         validateAssignments(assignments, "BUSINESS_ENTITY")
 
-        entity.classificationAssignments = assignments.map {
-            ClassificationAssignment(it.classificationKey, it.valueKey)
-        }.toMutableList()
+        entity.classificationAssignments =
+            assignments
+                .map {
+                    ClassificationAssignment(it.classificationKey, it.valueKey)
+                }.toMutableList()
         businessEntityRepository.update(entity)
 
-        businessEntityService.recordVersion(entityKey, currentUser, "CLASSIFICATION_CHANGE",
-            "Updated classification assignments")
+        businessEntityService.recordVersion(
+            entityKey,
+            currentUser,
+            "CLASSIFICATION_CHANGE",
+            "Updated classification assignments"
+        )
     }
 
     @Transactional
-    open fun assignClassificationsToDomain(domainKey: String, assignments: List<ClassificationAssignmentRequest>, currentUser: User) {
+    open fun assignClassificationsToDomain(
+        domainKey: String,
+        assignments: List<ClassificationAssignmentRequest>,
+        currentUser: User
+    ) {
         checkAdminRole(currentUser)
 
-        val domain = businessDomainRepository.findByKey(domainKey)
-            .orElseThrow { ResourceNotFoundException("BusinessDomain not found") }
+        val domain =
+            businessDomainRepository
+                .findByKey(domainKey)
+                .orElseThrow { ResourceNotFoundException("BusinessDomain not found") }
 
         validateAssignments(assignments, "BUSINESS_DOMAIN")
 
-        domain.classificationAssignments = assignments.map {
-            ClassificationAssignment(it.classificationKey, it.valueKey)
-        }.toMutableList()
+        domain.classificationAssignments =
+            assignments
+                .map {
+                    ClassificationAssignment(it.classificationKey, it.valueKey)
+                }.toMutableList()
         businessDomainRepository.update(domain)
     }
 
     @Transactional
-    open fun assignClassificationsToProcess(processKey: String, assignments: List<ClassificationAssignmentRequest>, currentUser: User) {
-        val process = processRepository.findByKey(processKey)
-            .orElseThrow { ResourceNotFoundException("Process not found") }
+    open fun assignClassificationsToProcess(
+        processKey: String,
+        assignments: List<ClassificationAssignmentRequest>,
+        currentUser: User
+    ) {
+        val process =
+            processRepository
+                .findByKey(processKey)
+                .orElseThrow { ResourceNotFoundException("Process not found") }
 
         val isOwner = process.processOwner!!.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
@@ -306,16 +366,24 @@ open class ClassificationService(
 
         validateAssignments(assignments, "BUSINESS_PROCESS")
 
-        process.classificationAssignments = assignments.map {
-            ClassificationAssignment(it.classificationKey, it.valueKey)
-        }.toMutableList()
+        process.classificationAssignments =
+            assignments
+                .map {
+                    ClassificationAssignment(it.classificationKey, it.valueKey)
+                }.toMutableList()
         processRepository.update(process)
     }
 
     @Transactional
-    open fun assignClassificationsToOrgUnit(orgUnitKey: String, assignments: List<ClassificationAssignmentRequest>, currentUser: User) {
-        val unit = organisationalUnitRepository.findByKey(orgUnitKey)
-            .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
+    open fun assignClassificationsToOrgUnit(
+        orgUnitKey: String,
+        assignments: List<ClassificationAssignmentRequest>,
+        currentUser: User
+    ) {
+        val unit =
+            organisationalUnitRepository
+                .findByKey(orgUnitKey)
+                .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
 
         val isLead = unit.lead?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
@@ -325,45 +393,59 @@ open class ClassificationService(
 
         validateAssignments(assignments, "ORGANISATIONAL_UNIT")
 
-        unit.classificationAssignments = assignments.map {
-            ClassificationAssignment(it.classificationKey, it.valueKey)
-        }.toMutableList()
+        unit.classificationAssignments =
+            assignments
+                .map {
+                    ClassificationAssignment(it.classificationKey, it.valueKey)
+                }.toMutableList()
         organisationalUnitRepository.update(unit)
     }
 
-    private fun validateAssignments(assignments: List<ClassificationAssignmentRequest>, expectedAssignableTo: String) {
+    private fun validateAssignments(
+        assignments: List<ClassificationAssignmentRequest>,
+        expectedAssignableTo: String
+    ) {
         assignments.groupBy { it.classificationKey }.forEach { (classKey, group) ->
-            val classification = classificationRepository.findByKey(classKey)
-                .orElseThrow { ResourceNotFoundException("Classification not found: $classKey") }
+            val classification =
+                classificationRepository
+                    .findByKey(classKey)
+                    .orElseThrow { ResourceNotFoundException("Classification not found: $classKey") }
 
             if (classification.assignableTo != expectedAssignableTo) {
                 throw IllegalArgumentException(
-                    "Classification '$classKey' is not assignable to $expectedAssignableTo")
+                    "Classification '$classKey' is not assignable to $expectedAssignableTo"
+                )
             }
 
             if (group.size > 1 && !classification.multiValue) {
                 throw IllegalArgumentException(
-                    "Classification '$classKey' is single-value: only one value can be assigned")
+                    "Classification '$classKey' is single-value: only one value can be assigned"
+                )
             }
 
             group.forEach { assignment ->
                 val value = classification.values.find { it.key == assignment.valueKey }
                 if (value == null) {
                     throw ResourceNotFoundException(
-                        "Classification value '${assignment.valueKey}' not found in classification '$classKey'")
+                        "Classification value '${assignment.valueKey}' not found in classification '$classKey'"
+                    )
                 }
             }
         }
     }
 
-    private fun validateTranslations(translations: List<org.leargon.backend.model.LocalizedText>?, requireDefault: Boolean = true) {
+    private fun validateTranslations(
+        translations: List<org.leargon.backend.model.LocalizedText>?,
+        requireDefault: Boolean = true
+    ) {
         if (translations.isNullOrEmpty()) {
             if (requireDefault) throw IllegalArgumentException("At least one translation is required")
             return
         }
 
-        val defaultLocale = localeService.getDefaultLocale()
-            ?: throw IllegalStateException("No default locale configured")
+        val defaultLocale =
+            localeService.getDefaultLocale()
+                ?: throw IllegalStateException("No default locale configured")
 
         val defaultLocaleCode = defaultLocale.localeCode
 
@@ -380,7 +462,8 @@ open class ClassificationService(
             val defaultTranslation = translations.find { it.locale == defaultLocaleCode }
             if (defaultTranslation == null) {
                 throw IllegalArgumentException(
-                    "Translation for default locale '$defaultLocaleCode' is required")
+                    "Translation for default locale '$defaultLocaleCode' is required"
+                )
             }
         }
     }

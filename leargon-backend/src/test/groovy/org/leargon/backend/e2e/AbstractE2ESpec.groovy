@@ -1,6 +1,5 @@
 package org.leargon.backend.e2e
 
-import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client

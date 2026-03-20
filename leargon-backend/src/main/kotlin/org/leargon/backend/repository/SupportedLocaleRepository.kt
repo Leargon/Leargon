@@ -7,7 +7,6 @@ import java.util.Optional
 
 @Repository
 interface SupportedLocaleRepository : JpaRepository<SupportedLocale, Long> {
-
     fun findByLocaleCode(localeCode: String): Optional<SupportedLocale>
 
     fun findByIsActiveOrderBySortOrder(isActive: Boolean): List<SupportedLocale>

@@ -7,7 +7,6 @@ import org.leargon.backend.domain.ItSystem
 
 @Repository
 interface ItSystemRepository : JpaRepository<ItSystem, Long> {
-
     @Join(value = "linkedProcesses", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<ItSystem>
 

@@ -16,20 +16,19 @@ import org.leargon.backend.service.ItSystemService
 open class ItSystemController(
     private val itSystemService: ItSystemService
 ) : ItSystemApi {
+    override fun getAllItSystems(): List<ItSystemResponse> = itSystemService.getAll()
 
-    override fun getAllItSystems(): List<ItSystemResponse> =
-        itSystemService.getAll()
-
-    override fun getItSystem(key: String): ItSystemResponse =
-        itSystemService.getByKey(key)
+    override fun getItSystem(key: String): ItSystemResponse = itSystemService.getByKey(key)
 
     @Secured("ROLE_ADMIN")
     override fun createItSystem(createItSystemRequest: CreateItSystemRequest): HttpResponse<ItSystemResponse> =
         HttpResponse.created(itSystemService.create(createItSystemRequest))
 
     @Secured("ROLE_ADMIN")
-    override fun updateItSystem(key: String, updateItSystemRequest: UpdateItSystemRequest): ItSystemResponse =
-        itSystemService.update(key, updateItSystemRequest)
+    override fun updateItSystem(
+        key: String,
+        updateItSystemRequest: UpdateItSystemRequest
+    ): ItSystemResponse = itSystemService.update(key, updateItSystemRequest)
 
     @Secured("ROLE_ADMIN")
     override fun deleteItSystem(key: String): HttpResponse<Void> {
@@ -38,7 +37,10 @@ open class ItSystemController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateItSystemLinkedProcesses(key: String, updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest): HttpResponse<Void> {
+    override fun updateItSystemLinkedProcesses(
+        key: String,
+        updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest
+    ): HttpResponse<Void> {
         itSystemService.updateLinkedProcesses(key, updateItSystemLinkedProcessesRequest)
         return HttpResponse.noContent()
     }

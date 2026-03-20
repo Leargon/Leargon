@@ -11,7 +11,6 @@ import jakarta.inject.Inject
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.BusinessEntityResponse
 import org.leargon.backend.model.CreateBusinessEntityRequest
-import org.leargon.backend.model.FieldConfigurationEntry
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest

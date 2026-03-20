@@ -15,7 +15,6 @@ open class AdministratorUserBootstrap(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder
 ) : ApplicationEventListener<StartupEvent> {
-
     companion object {
         private val LOG = LoggerFactory.getLogger(AdministratorUserBootstrap::class.java)
     }
@@ -91,7 +90,6 @@ open class AdministratorUserBootstrap(
             userRepository.save(adminUser)
             LOG.info("Successfully created fallback admin user: {}", email)
             LOG.warn("SECURITY: Change admin password after first login!")
-
         } catch (e: Exception) {
             LOG.error("Failed to create fallback admin user: {}", e.message, e)
         }

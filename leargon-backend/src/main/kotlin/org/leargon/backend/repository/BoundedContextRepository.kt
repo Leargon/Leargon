@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface BoundedContextRepository : JpaRepository<BoundedContext, Long> {
-
     @Join(value = "domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     fun findByDomainKey(key: String): List<BoundedContext>

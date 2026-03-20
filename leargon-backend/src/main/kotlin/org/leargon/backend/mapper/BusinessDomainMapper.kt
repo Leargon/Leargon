@@ -19,36 +19,35 @@ import java.time.ZonedDateTime
 open class BusinessDomainMapper(
     private val fieldConfigurationService: FieldConfigurationService
 ) {
-
     fun toBusinessDomainResponse(domain: BusinessDomain): BusinessDomainResponse {
-        val fc = fieldConfigurationService.compute("BUSINESS_DOMAIN") { fieldName ->
-            when {
-                fieldName == "names" -> domain.names.isNotEmpty()
-                fieldName == "descriptions" -> domain.descriptions.isNotEmpty()
-                fieldName == "type" -> domain.type != null
-                fieldName.startsWith("names.") -> {
-                    val locale = fieldName.removePrefix("names.")
-                    domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+        val fc =
+            fieldConfigurationService.compute("BUSINESS_DOMAIN") { fieldName ->
+                when {
+                    fieldName == "names" -> domain.names.isNotEmpty()
+                    fieldName == "descriptions" -> domain.descriptions.isNotEmpty()
+                    fieldName == "type" -> domain.type != null
+                    fieldName.startsWith("names.") -> {
+                        val locale = fieldName.removePrefix("names.")
+                        domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    }
+                    fieldName.startsWith("descriptions.") -> {
+                        val locale = fieldName.removePrefix("descriptions.")
+                        domain.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    }
+                    fieldName.startsWith("classification.") -> {
+                        val classKey = fieldName.removePrefix("classification.")
+                        domain.classificationAssignments.any { it.classificationKey == classKey }
+                    }
+                    else -> true
                 }
-                fieldName.startsWith("descriptions.") -> {
-                    val locale = fieldName.removePrefix("descriptions.")
-                    domain.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                }
-                fieldName.startsWith("classification.") -> {
-                    val classKey = fieldName.removePrefix("classification.")
-                    domain.classificationAssignments.any { it.classificationKey == classKey }
-                }
-                else -> true
             }
-        }
         return BusinessDomainResponse(
             domain.key,
             UserMapper.toUserSummary(domain.createdBy),
             LocalizedTextMapper.toModel(domain.names),
             toZonedDateTime(domain.createdAt),
             toZonedDateTime(domain.updatedAt)
-        )
-            .parent(toBusinessDomainSummaryResponse(domain.parent))
+        ).parent(toBusinessDomainSummaryResponse(domain.parent))
             .descriptions(LocalizedTextMapper.toModel(domain.descriptions))
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
@@ -60,40 +59,38 @@ open class BusinessDomainMapper(
             .mandatoryFields(fc.mandatory)
     }
 
-    fun toLocalizedBusinessDomainResponse(domain: BusinessDomain, locale: String): LocalizedBusinessDomainResponse {
-        return LocalizedBusinessDomainResponse(
+    fun toLocalizedBusinessDomainResponse(
+        domain: BusinessDomain,
+        locale: String
+    ): LocalizedBusinessDomainResponse =
+        LocalizedBusinessDomainResponse(
             domain.key,
             domain.getName(locale),
             toZonedDateTime(domain.createdAt),
             toZonedDateTime(domain.updatedAt)
-        )
-            .description(if (domain.descriptions.isEmpty()) null else domain.getDescription(locale))
+        ).description(if (domain.descriptions.isEmpty()) null else domain.getDescription(locale))
             .parent(toBusinessDomainSummaryResponse(domain.parent))
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(domain.classificationAssignments))
-    }
 
-    fun toBusinessDomainTreeResponse(domain: BusinessDomain): BusinessDomainTreeResponse {
-        return BusinessDomainTreeResponse(
+    fun toBusinessDomainTreeResponse(domain: BusinessDomain): BusinessDomainTreeResponse =
+        BusinessDomainTreeResponse(
             domain.key,
             LocalizedTextMapper.toModel(domain.names),
             toBusinessDomainTreeResponses(domain.children)
-        )
-            .parent(toBusinessDomainSummaryResponse(domain.parent))
+        ).parent(toBusinessDomainSummaryResponse(domain.parent))
             .descriptions(LocalizedTextMapper.toModel(domain.descriptions))
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
-    }
 
-    fun toBusinessDomainVersionResponse(version: BusinessDomainVersion): BusinessDomainVersionResponse {
-        return BusinessDomainVersionResponse(
+    fun toBusinessDomainVersionResponse(version: BusinessDomainVersion): BusinessDomainVersionResponse =
+        BusinessDomainVersionResponse(
             version.versionNumber,
             UserMapper.toUserSummary(version.changedBy),
             toDomainChangeType(version.changeType),
             toZonedDateTime(version.createdAt)
         ).changeSummary(version.changeSummary)
-    }
 
     fun toBusinessDomainSummaryResponse(domain: BusinessDomain?): BusinessDomainSummaryResponse? {
         if (domain == null) return null
@@ -112,9 +109,7 @@ open class BusinessDomainMapper(
 
     companion object {
         @JvmStatic
-        fun toZonedDateTime(instant: Instant?): ZonedDateTime? {
-            return instant?.atZone(ZoneOffset.UTC)
-        }
+        fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
 
         @JvmStatic
         fun toBusinessDomainType(businessDomainType: String?): BusinessDomainType? {

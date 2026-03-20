@@ -13,50 +13,47 @@ import java.time.ZoneOffset
 
 @Singleton
 class DataProcessorMapper {
-
-    fun toDataProcessorResponse(dp: DataProcessor): DataProcessorResponse {
-        return DataProcessorResponse(
+    fun toDataProcessorResponse(dp: DataProcessor): DataProcessorResponse =
+        DataProcessorResponse(
             dp.key,
             LocalizedTextMapper.toModel(dp.names),
             dp.processingCountries,
             dp.processorAgreementInPlace,
             dp.subProcessorsApproved,
             dp.createdAt.atZone(ZoneOffset.UTC)
-        )
-            .updatedAt(dp.updatedAt?.atZone(ZoneOffset.UTC))
-            .linkedBusinessEntities(dp.linkedBusinessEntities.map {
-                BusinessEntitySummaryResponse(it.key, it.getName("en"))
-            })
-            .linkedProcesses(dp.linkedProcesses.map {
-                ProcessSummaryResponse(it.key, it.getName("en"))
-            })
-    }
+        ).updatedAt(dp.updatedAt?.atZone(ZoneOffset.UTC))
+            .linkedBusinessEntities(
+                dp.linkedBusinessEntities.map {
+                    BusinessEntitySummaryResponse(it.key, it.getName("en"))
+                }
+            ).linkedProcesses(
+                dp.linkedProcesses.map {
+                    ProcessSummaryResponse(it.key, it.getName("en"))
+                }
+            )
 
-    fun toDataProcessorSummaryResponse(dp: DataProcessor): DataProcessorSummaryResponse {
-        return DataProcessorSummaryResponse(
+    fun toDataProcessorSummaryResponse(dp: DataProcessor): DataProcessorSummaryResponse =
+        DataProcessorSummaryResponse(
             dp.key,
             LocalizedTextMapper.toModel(dp.names),
             dp.processorAgreementInPlace,
             dp.subProcessorsApproved
         )
-    }
 
     companion object {
         @JvmStatic
-        fun toCrossBorderTransferEntry(t: CrossBorderTransfer): CrossBorderTransferEntry {
-            return CrossBorderTransferEntry(
+        fun toCrossBorderTransferEntry(t: CrossBorderTransfer): CrossBorderTransferEntry =
+            CrossBorderTransferEntry(
                 t.destinationCountry,
                 CrossBorderTransferSafeguard.fromValue(t.safeguard)
             ).notes(t.notes)
-        }
 
         @JvmStatic
-        fun fromCrossBorderTransferEntry(e: CrossBorderTransferEntry): CrossBorderTransfer {
-            return CrossBorderTransfer(
+        fun fromCrossBorderTransferEntry(e: CrossBorderTransferEntry): CrossBorderTransfer =
+            CrossBorderTransfer(
                 destinationCountry = e.destinationCountry,
                 safeguard = e.safeguard.value,
                 notes = e.notes
             )
-        }
     }
 }

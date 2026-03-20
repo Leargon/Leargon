@@ -28,7 +28,6 @@ open class OrganisationalUnitService(
     private val dataProcessorRepository: DataProcessorRepository,
     private val businessEntityRepository: BusinessEntityRepository
 ) {
-
     @Transactional
     open fun getAllAsResponses(): List<OrganisationalUnitResponse> =
         organisationalUnitRepository.findAll().map { organisationalUnitMapper.toResponse(it) }
@@ -40,7 +39,8 @@ open class OrganisationalUnitService(
     }
 
     open fun getByKey(key: String): OrganisationalUnit =
-        organisationalUnitRepository.findByKey(key)
+        organisationalUnitRepository
+            .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
 
     @Transactional
@@ -51,7 +51,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun create(request: CreateOrganisationalUnitRequest, currentUser: User): OrganisationalUnit {
+    open fun create(
+        request: CreateOrganisationalUnitRequest,
+        currentUser: User
+    ): OrganisationalUnit {
         validateTranslations(request.names)
 
         var unit = OrganisationalUnit()
@@ -63,12 +66,14 @@ open class OrganisationalUnitService(
             unit.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
 
-        unit.lead = if (request.leadUsername != null) {
-            userRepository.findByUsername(request.leadUsername)
-                .orElseThrow { ResourceNotFoundException("Lead user not found") }
-        } else {
-            currentUser
-        }
+        unit.lead =
+            if (request.leadUsername != null) {
+                userRepository
+                    .findByUsername(request.leadUsername)
+                    .orElseThrow { ResourceNotFoundException("Lead user not found") }
+            } else {
+                currentUser
+            }
 
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = unit.names.find { it.locale == defaultLocale?.localeCode }?.text
@@ -76,8 +81,10 @@ open class OrganisationalUnitService(
 
         if (request.parentKeys != null) {
             for (parentKey in request.parentKeys!!) {
-                val parent = organisationalUnitRepository.findByKey(parentKey)
-                    .orElseThrow { ResourceNotFoundException("Parent unit not found: $parentKey") }
+                val parent =
+                    organisationalUnitRepository
+                        .findByKey(parentKey)
+                        .orElseThrow { ResourceNotFoundException("Parent unit not found: $parentKey") }
                 unit.parents.add(parent)
             }
         }
@@ -87,7 +94,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateNames(key: String, names: List<org.leargon.backend.model.LocalizedText>): OrganisationalUnitResponse {
+    open fun updateNames(
+        key: String,
+        names: List<org.leargon.backend.model.LocalizedText>
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
         validateTranslations(names)
@@ -103,7 +113,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateDescriptions(key: String, descriptions: List<org.leargon.backend.model.LocalizedText>): OrganisationalUnitResponse {
+    open fun updateDescriptions(
+        key: String,
+        descriptions: List<org.leargon.backend.model.LocalizedText>
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
         validateTranslations(descriptions, false)
@@ -114,12 +127,17 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateLead(key: String, leadUsername: String?): OrganisationalUnitResponse {
+    open fun updateLead(
+        key: String,
+        leadUsername: String?
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
         if (leadUsername != null) {
-            unit.lead = userRepository.findByUsername(leadUsername)
-                .orElseThrow { ResourceNotFoundException("Lead user not found") }
+            unit.lead =
+                userRepository
+                    .findByUsername(leadUsername)
+                    .orElseThrow { ResourceNotFoundException("Lead user not found") }
         } else {
             throw IllegalArgumentException("Lead is required and cannot be removed")
         }
@@ -129,7 +147,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateType(key: String, unitType: String?): OrganisationalUnitResponse {
+    open fun updateType(
+        key: String,
+        unitType: String?
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         unit.unitType = unitType
         unit = organisationalUnitRepository.update(unit)
@@ -137,7 +158,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateParents(key: String, parentKeys: List<String>?): OrganisationalUnitResponse {
+    open fun updateParents(
+        key: String,
+        parentKeys: List<String>?
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
         unit.parents.clear()
@@ -147,8 +171,10 @@ open class OrganisationalUnitService(
                 if (parentKey == key) {
                     throw IllegalArgumentException("An organisational unit cannot be its own parent")
                 }
-                val parent = organisationalUnitRepository.findByKey(parentKey)
-                    .orElseThrow { ResourceNotFoundException("Parent unit not found: $parentKey") }
+                val parent =
+                    organisationalUnitRepository
+                        .findByKey(parentKey)
+                        .orElseThrow { ResourceNotFoundException("Parent unit not found: $parentKey") }
                 unit.parents.add(parent)
             }
         }
@@ -158,23 +184,31 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateExternalFields(key: String, request: UpdateOrgUnitExternalFieldsRequest): OrganisationalUnitResponse {
+    open fun updateExternalFields(
+        key: String,
+        request: UpdateOrgUnitExternalFieldsRequest
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         if (request.isExternal != null) unit.isExternal = request.isExternal
         unit.externalCompanyName = request.externalCompanyName
         unit.countryOfExecution = request.countryOfExecution
-        unit.linkedDataProcessor = if (request.linkedDataProcessorKey != null) {
-            dataProcessorRepository.findByKey(request.linkedDataProcessorKey)
-                .orElseThrow { ResourceNotFoundException("Data processor not found: ${request.linkedDataProcessorKey}") }
-        } else {
-            null
-        }
+        unit.linkedDataProcessor =
+            if (request.linkedDataProcessorKey != null) {
+                dataProcessorRepository
+                    .findByKey(request.linkedDataProcessorKey)
+                    .orElseThrow { ResourceNotFoundException("Data processor not found: ${request.linkedDataProcessorKey}") }
+            } else {
+                null
+            }
         unit = organisationalUnitRepository.update(unit)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
     @Transactional
-    open fun updateDataAccessEntities(key: String, entityKeys: List<String>): OrganisationalUnitResponse {
+    open fun updateDataAccessEntities(
+        key: String,
+        entityKeys: List<String>
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         val repo = businessEntityRepository
         unit.dataAccessEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
@@ -183,7 +217,10 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateDataManipulationEntities(key: String, entityKeys: List<String>): OrganisationalUnitResponse {
+    open fun updateDataManipulationEntities(
+        key: String,
+        entityKeys: List<String>
+    ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         val repo = businessEntityRepository
         unit.dataManipulationEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
@@ -197,14 +234,18 @@ open class OrganisationalUnitService(
         organisationalUnitRepository.delete(unit)
     }
 
-    private fun validateTranslations(translations: List<org.leargon.backend.model.LocalizedText>?, requireDefault: Boolean = true) {
+    private fun validateTranslations(
+        translations: List<org.leargon.backend.model.LocalizedText>?,
+        requireDefault: Boolean = true
+    ) {
         if (translations.isNullOrEmpty()) {
             if (requireDefault) throw IllegalArgumentException("At least one translation is required")
             return
         }
 
-        val defaultLocale = localeService.getDefaultLocale()
-            ?: throw IllegalStateException("No default locale configured")
+        val defaultLocale =
+            localeService.getDefaultLocale()
+                ?: throw IllegalStateException("No default locale configured")
 
         translations.forEach { translation ->
             if (!localeService.isLocaleActive(translation.locale)) {
@@ -219,7 +260,8 @@ open class OrganisationalUnitService(
             val defaultTranslation = translations.find { it.locale == defaultLocale.localeCode }
             if (defaultTranslation == null) {
                 throw IllegalArgumentException(
-                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required")
+                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required"
+                )
             }
         }
     }

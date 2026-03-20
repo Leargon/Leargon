@@ -20,7 +20,6 @@ import java.time.Instant
 @Entity
 @Table(name = "organisational_units")
 class OrganisationalUnit {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -99,11 +98,7 @@ class OrganisationalUnit {
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
 
-    fun getName(locale: String): String {
-        return names.find { it.locale == locale }?.text ?: names.first().text
-    }
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
-    fun getDescription(locale: String): String {
-        return descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
-    }
+    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
 }

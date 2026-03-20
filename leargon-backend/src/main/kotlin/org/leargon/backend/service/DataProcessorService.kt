@@ -24,7 +24,6 @@ open class DataProcessorService(
     private val dataProcessorMapper: DataProcessorMapper,
     private val localeService: LocaleService
 ) {
-
     @Transactional
     open fun getAll(): List<DataProcessorResponse> {
         val mapper = dataProcessorMapper
@@ -33,8 +32,10 @@ open class DataProcessorService(
 
     @Transactional
     open fun getByKey(key: String): DataProcessorResponse {
-        val dp = dataProcessorRepository.findByKey(key)
-            .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
+        val dp =
+            dataProcessorRepository
+                .findByKey(key)
+                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
         val mapper = dataProcessorMapper
         return mapper.toDataProcessorResponse(dp)
     }
@@ -48,8 +49,9 @@ open class DataProcessorService(
         dp.subProcessorsApproved = request.subProcessorsApproved ?: false
 
         val defaultLocale = localeService.getDefaultLocale()
-        val defaultName = dp.names.find { it.locale == defaultLocale?.localeCode }?.text
-            ?: dp.names.firstOrNull()?.text
+        val defaultName =
+            dp.names.find { it.locale == defaultLocale?.localeCode }?.text
+                ?: dp.names.firstOrNull()?.text
         val slug = SlugUtil.slugify(defaultName)
 
         if (dataProcessorRepository.existsByKey(slug)) {
@@ -62,9 +64,14 @@ open class DataProcessorService(
     }
 
     @Transactional
-    open fun update(key: String, request: UpdateDataProcessorRequest): DataProcessorResponse {
-        val dp = dataProcessorRepository.findByKey(key)
-            .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
+    open fun update(
+        key: String,
+        request: UpdateDataProcessorRequest
+    ): DataProcessorResponse {
+        val dp =
+            dataProcessorRepository
+                .findByKey(key)
+                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
 
         dp.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         dp.processingCountries = (request.processingCountries ?: emptyList()).toMutableList()
@@ -73,27 +80,37 @@ open class DataProcessorService(
         dp.updatedAt = Instant.now()
 
         val updated = dataProcessorRepository.update(dp)
-        return dataProcessorRepository.findByKey(updated.key)
+        return dataProcessorRepository
+            .findByKey(updated.key)
             .map { dataProcessorMapper.toDataProcessorResponse(it) }
             .orElseThrow { ResourceNotFoundException("DataProcessor not found after update: $key") }
     }
 
     @Transactional
     open fun delete(key: String) {
-        val dp = dataProcessorRepository.findByKey(key)
-            .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
+        val dp =
+            dataProcessorRepository
+                .findByKey(key)
+                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
         dataProcessorRepository.delete(dp)
     }
 
     @Transactional
-    open fun updateLinkedEntities(key: String, entityKeys: List<String>) {
-        val dp = dataProcessorRepository.findByKey(key)
-            .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
+    open fun updateLinkedEntities(
+        key: String,
+        entityKeys: List<String>
+    ) {
+        val dp =
+            dataProcessorRepository
+                .findByKey(key)
+                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
 
-        val newEntities = entityKeys.map { entityKey ->
-            businessEntityRepository.findByKey(entityKey)
-                .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
-        }
+        val newEntities =
+            entityKeys.map { entityKey ->
+                businessEntityRepository
+                    .findByKey(entityKey)
+                    .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
+            }
 
         dp.linkedBusinessEntities.clear()
         dp.linkedBusinessEntities.addAll(newEntities)
@@ -101,14 +118,21 @@ open class DataProcessorService(
     }
 
     @Transactional
-    open fun updateLinkedProcesses(key: String, processKeys: List<String>) {
-        val dp = dataProcessorRepository.findByKey(key)
-            .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
+    open fun updateLinkedProcesses(
+        key: String,
+        processKeys: List<String>
+    ) {
+        val dp =
+            dataProcessorRepository
+                .findByKey(key)
+                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
 
-        val newProcesses = processKeys.map { processKey ->
-            processRepository.findByKey(processKey)
-                .orElseThrow { ResourceNotFoundException("Process not found: $processKey") }
-        }
+        val newProcesses =
+            processKeys.map { processKey ->
+                processRepository
+                    .findByKey(processKey)
+                    .orElseThrow { ResourceNotFoundException("Process not found: $processKey") }
+            }
 
         dp.linkedProcesses.clear()
         dp.linkedProcesses.addAll(newProcesses)
@@ -116,14 +140,22 @@ open class DataProcessorService(
     }
 
     @Transactional
-    open fun updateEntityDataProcessors(entityKey: String, dpKeys: List<String>) {
-        val entity = businessEntityRepository.findByKey(entityKey)
-            .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
+    open fun updateEntityDataProcessors(
+        entityKey: String,
+        dpKeys: List<String>
+    ) {
+        val entity =
+            businessEntityRepository
+                .findByKey(entityKey)
+                .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
 
-        val desired = dpKeys.map { dpKey ->
-            dataProcessorRepository.findByKey(dpKey)
-                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $dpKey") }
-        }.toSet()
+        val desired =
+            dpKeys
+                .map { dpKey ->
+                    dataProcessorRepository
+                        .findByKey(dpKey)
+                        .orElseThrow { ResourceNotFoundException("DataProcessor not found: $dpKey") }
+                }.toSet()
 
         val current = dataProcessorRepository.findByLinkedBusinessEntitiesKey(entityKey)
         current.forEach { dp ->
@@ -137,14 +169,22 @@ open class DataProcessorService(
     }
 
     @Transactional
-    open fun updateProcessDataProcessors(processKey: String, dpKeys: List<String>) {
-        val process = processRepository.findByKey(processKey)
-            .orElseThrow { ResourceNotFoundException("Process not found: $processKey") }
+    open fun updateProcessDataProcessors(
+        processKey: String,
+        dpKeys: List<String>
+    ) {
+        val process =
+            processRepository
+                .findByKey(processKey)
+                .orElseThrow { ResourceNotFoundException("Process not found: $processKey") }
 
-        val desired = dpKeys.map { dpKey ->
-            dataProcessorRepository.findByKey(dpKey)
-                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $dpKey") }
-        }.toSet()
+        val desired =
+            dpKeys
+                .map { dpKey ->
+                    dataProcessorRepository
+                        .findByKey(dpKey)
+                        .orElseThrow { ResourceNotFoundException("DataProcessor not found: $dpKey") }
+                }.toSet()
 
         val current = dataProcessorRepository.findByLinkedProcessesKey(processKey)
         current.forEach { dp ->

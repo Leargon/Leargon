@@ -21,18 +21,13 @@ open class LocaleService(
     private val classificationRepository: ClassificationRepository,
     private val classificationValueRepository: ClassificationValueRepository
 ) {
+    open fun getActiveLocales(): List<SupportedLocale> = localeRepository.findByIsActiveOrderBySortOrder(true)
 
-    open fun getActiveLocales(): List<SupportedLocale> =
-        localeRepository.findByIsActiveOrderBySortOrder(true)
+    open fun getActiveLocalesAsResponses(): List<SupportedLocaleResponse> = getActiveLocales().map { toResponse(it) }
 
-    open fun getActiveLocalesAsResponses(): List<SupportedLocaleResponse> =
-        getActiveLocales().map { toResponse(it) }
+    open fun getAllLocalesAsResponses(): List<SupportedLocaleResponse> = localeRepository.findAllOrderBySortOrder().map { toResponse(it) }
 
-    open fun getAllLocalesAsResponses(): List<SupportedLocaleResponse> =
-        localeRepository.findAllOrderBySortOrder().map { toResponse(it) }
-
-    open fun getDefaultLocale(): SupportedLocale? =
-        localeRepository.findByIsDefault(true).orElse(null)
+    open fun getDefaultLocale(): SupportedLocale? = localeRepository.findByIsDefault(true).orElse(null)
 
     open fun isLocaleActive(localeCode: String): Boolean {
         val locale = localeRepository.findByLocaleCode(localeCode)
@@ -44,7 +39,10 @@ open class LocaleService(
             throw HttpStatusException(HttpStatus.BAD_REQUEST, "Locale code '${request.localeCode}' already exists")
         }
 
-        val validLanguageCodes = java.util.Locale.getISOLanguages().toSet()
+        val validLanguageCodes =
+            java.util.Locale
+                .getISOLanguages()
+                .toSet()
         val requestedLanguage = request.localeCode?.split(Regex("[-_]"), 2)?.get(0)
 
         if (requestedLanguage.isNullOrEmpty() || !validLanguageCodes.contains(requestedLanguage)) {
@@ -62,9 +60,14 @@ open class LocaleService(
         return toResponse(locale)
     }
 
-    open fun updateLocale(id: Long, request: UpdateSupportedLocaleRequest): SupportedLocaleResponse {
-        var locale = localeRepository.findById(id)
-            .orElseThrow { HttpStatusException(HttpStatus.NOT_FOUND, "Locale not found") }
+    open fun updateLocale(
+        id: Long,
+        request: UpdateSupportedLocaleRequest
+    ): SupportedLocaleResponse {
+        var locale =
+            localeRepository
+                .findById(id)
+                .orElseThrow { HttpStatusException(HttpStatus.NOT_FOUND, "Locale not found") }
 
         if (request.displayName != null) locale.displayName = request.displayName
         if (request.isActive != null) {
@@ -95,23 +98,28 @@ open class LocaleService(
     }
 
     open fun deleteLocale(id: Long) {
-        val locale = localeRepository.findById(id)
-            .orElseThrow { HttpStatusException(HttpStatus.NOT_FOUND, "Locale not found") }
+        val locale =
+            localeRepository
+                .findById(id)
+                .orElseThrow { HttpStatusException(HttpStatus.NOT_FOUND, "Locale not found") }
 
         if (locale.isDefault) {
             throw HttpStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the default locale")
         }
         if (isLocaleInUse(locale.localeCode)) {
-            throw HttpStatusException(HttpStatus.BAD_REQUEST, "Cannot delete locale '${locale.localeCode}' because it is used by existing translations")
+            throw HttpStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Cannot delete locale '${locale.localeCode}' because it is used by existing translations"
+            )
         }
         localeRepository.deleteById(id)
     }
 
     private fun isLocaleInUse(localeCode: String): Boolean =
         entityRepository.countByLocaleInTranslations(localeCode) > 0 ||
-                domainRepository.countByLocaleInTranslations(localeCode) > 0 ||
-                classificationRepository.countByLocaleInTranslations(localeCode) > 0 ||
-                classificationValueRepository.countByLocaleInTranslations(localeCode) > 0
+            domainRepository.countByLocaleInTranslations(localeCode) > 0 ||
+            classificationRepository.countByLocaleInTranslations(localeCode) > 0 ||
+            classificationValueRepository.countByLocaleInTranslations(localeCode) > 0
 
     private fun toResponse(locale: SupportedLocale): SupportedLocaleResponse =
         SupportedLocaleResponse(

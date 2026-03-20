@@ -33,15 +33,15 @@ open class AuthenticationController(
     @param:Value("\${azure.tenant-id:}") private val azureTenantId: String,
     @param:Value("\${azure.client-id:}") private val azureClientId: String
 ) : AuthenticationApi {
-
     companion object {
         private const val TOKEN_EXPIRATION_SECONDS = 3600L
     }
 
-    private fun isAzureEnabled(): Boolean =
-        azureAuthService != null && azureTenantId.isNotEmpty() && azureClientId.isNotEmpty()
+    private fun isAzureEnabled(): Boolean = azureAuthService != null && azureTenantId.isNotEmpty() && azureClientId.isNotEmpty()
 
-    override fun signup(@Valid @Body signupRequest: SignupRequest): AuthResponse {
+    override fun signup(
+        @Valid @Body signupRequest: SignupRequest
+    ): AuthResponse {
         if (isAzureEnabled()) {
             throw AuthenticationException("Signup is disabled when Azure authentication is configured")
         }
@@ -49,13 +49,17 @@ open class AuthenticationController(
         return generateAuthResponse(user)
     }
 
-    override fun login(@Valid @Body loginRequest: LoginRequest): AuthResponse {
+    override fun login(
+        @Valid @Body loginRequest: LoginRequest
+    ): AuthResponse {
         var user = authenticationService.authenticate(loginRequest)
         user = userService.updateLastLogin(user.id!!)
         return generateAuthResponse(user)
     }
 
-    override fun azureLogin(@Valid @Body azureLoginRequest: AzureLoginRequest): AuthResponse {
+    override fun azureLogin(
+        @Valid @Body azureLoginRequest: AzureLoginRequest
+    ): AuthResponse {
         if (azureAuthService == null) {
             throw AuthenticationException("Azure login is not configured")
         }
@@ -76,17 +80,20 @@ open class AuthenticationController(
     private fun generateAuthResponse(user: org.leargon.backend.domain.User): AuthResponse {
         val roles = userService.getUserRoles(user)
 
-        val claims = mapOf(
-            "sub" to user.email,
-            "roles" to roles,
-            "userId" to user.id,
-            "email" to user.email,
-            "username" to user.username,
-            "iat" to Instant.now().epochSecond
-        )
+        val claims =
+            mapOf(
+                "sub" to user.email,
+                "roles" to roles,
+                "userId" to user.id,
+                "email" to user.email,
+                "username" to user.username,
+                "iat" to Instant.now().epochSecond
+            )
 
-        val token = tokenGenerator.generateToken(claims)
-            .orElseThrow { ResourceNotFoundException("Failed to generate authentication token") }
+        val token =
+            tokenGenerator
+                .generateToken(claims)
+                .orElseThrow { ResourceNotFoundException("Failed to generate authentication token") }
 
         return AuthResponse(
             token,

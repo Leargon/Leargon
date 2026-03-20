@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface DpiaRepository : JpaRepository<Dpia, Long> {
-
     @Join(value = "process", type = Join.Type.LEFT_FETCH)
     @Join(value = "entity", type = Join.Type.LEFT_FETCH)
     @Join(value = "triggeredBy", type = Join.Type.LEFT_FETCH)

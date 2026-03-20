@@ -14,9 +14,8 @@ import java.time.ZonedDateTime
 
 @Singleton
 open class ClassificationMapper {
-
-    fun toClassificationResponse(classification: Classification): ClassificationResponse {
-        return ClassificationResponse(
+    fun toClassificationResponse(classification: Classification): ClassificationResponse =
+        ClassificationResponse(
             classification.key,
             ClassificationAssignableTo.fromValue(classification.assignableTo),
             classification.multiValue,
@@ -26,27 +25,24 @@ open class ClassificationMapper {
             toZonedDateTime(classification.createdAt),
             toZonedDateTime(classification.updatedAt)
         ).descriptions(LocalizedTextMapper.toModel(classification.descriptions))
-    }
 
     fun toClassificationValueResponses(values: Collection<ClassificationValue>?): List<ClassificationValueResponse> {
         if (values == null) return emptyList()
         return values.map { toClassificationValueResponse(it) }
     }
 
-    fun toClassificationValueResponse(value: ClassificationValue): ClassificationValueResponse {
-        return ClassificationValueResponse(
+    fun toClassificationValueResponse(value: ClassificationValue): ClassificationValueResponse =
+        ClassificationValueResponse(
             value.key,
             LocalizedTextMapper.toModel(value.names),
             toZonedDateTime(value.createdAt),
             toZonedDateTime(value.updatedAt)
         ).descriptions(LocalizedTextMapper.toModel(value.descriptions))
-    }
 
     companion object {
         @JvmStatic
-        fun toClassificationAssignmentResponse(assignment: ClassificationAssignment): ClassificationAssignmentResponse {
-            return ClassificationAssignmentResponse(assignment.classificationKey, assignment.valueKey)
-        }
+        fun toClassificationAssignmentResponse(assignment: ClassificationAssignment): ClassificationAssignmentResponse =
+            ClassificationAssignmentResponse(assignment.classificationKey, assignment.valueKey)
 
         @JvmStatic
         fun toClassificationAssignmentResponses(assignments: List<ClassificationAssignment>?): List<ClassificationAssignmentResponse> {
@@ -55,8 +51,6 @@ open class ClassificationMapper {
         }
 
         @JvmStatic
-        fun toZonedDateTime(instant: Instant?): ZonedDateTime? {
-            return instant?.atZone(ZoneOffset.UTC)
-        }
+        fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
     }
 }

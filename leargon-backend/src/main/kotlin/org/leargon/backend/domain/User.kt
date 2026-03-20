@@ -13,7 +13,6 @@ import java.time.Instant
 @Entity
 @Table(name = "users")
 class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

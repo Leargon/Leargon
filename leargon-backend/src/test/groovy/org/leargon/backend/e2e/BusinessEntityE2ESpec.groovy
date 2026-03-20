@@ -712,7 +712,7 @@ class BusinessEntityE2ESpec extends AbstractE2ESpec {
         given:
         def token = signup("ent-cascade@example.com", "entcascade")
         def parent = createEntity(token, "Cascade Parent")
-        def child = createEntity(token, "Cascade Child", [parentKey: parent.key])
+        createEntity(token, "Cascade Child", [parentKey: parent.key])
 
         when: "deleting parent"
         client.toBlocking().exchange(

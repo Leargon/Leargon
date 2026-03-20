@@ -27,15 +27,15 @@ open class BoundedContextController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : BoundedContextApi {
+    override fun getBoundedContextsForDomain(key: String): List<BoundedContextResponse> = boundedContextService.getForDomain(key)
 
-    override fun getBoundedContextsForDomain(key: String): List<BoundedContextResponse> =
-        boundedContextService.getForDomain(key)
-
-    override fun getBoundedContextByKey(key: String): BoundedContextResponse =
-        boundedContextService.getByKeyAsResponse(key)
+    override fun getBoundedContextByKey(key: String): BoundedContextResponse = boundedContextService.getByKeyAsResponse(key)
 
     @Secured("ROLE_ADMIN")
-    override fun createBoundedContext(key: String, @Valid @Body createBoundedContextRequest: CreateBoundedContextRequest): HttpResponse<BoundedContextResponse> {
+    override fun createBoundedContext(
+        key: String,
+        @Valid @Body createBoundedContextRequest: CreateBoundedContextRequest
+    ): HttpResponse<BoundedContextResponse> {
         val currentUser = getCurrentUser()
         val bc = boundedContextService.create(key, createBoundedContextRequest, currentUser)
         val response = boundedContextMapper.toResponse(bc)
@@ -43,13 +43,19 @@ open class BoundedContextController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBoundedContextNames(key: String, @Valid @Body updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest): BoundedContextResponse {
+    override fun updateBoundedContextNames(
+        key: String,
+        @Valid @Body updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest
+    ): BoundedContextResponse {
         val currentUser = getCurrentUser()
         return boundedContextService.updateNames(key, updateBoundedContextNamesRequest, currentUser)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBoundedContextDescriptions(key: String, @Valid @Body updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest): BoundedContextResponse {
+    override fun updateBoundedContextDescriptions(
+        key: String,
+        @Valid @Body updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest
+    ): BoundedContextResponse {
         val currentUser = getCurrentUser()
         return boundedContextService.updateDescriptions(key, updateBoundedContextDescriptionsRequest, currentUser)
     }
@@ -62,9 +68,12 @@ open class BoundedContextController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

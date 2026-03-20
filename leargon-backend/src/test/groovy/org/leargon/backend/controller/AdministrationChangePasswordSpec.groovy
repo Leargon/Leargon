@@ -32,7 +32,7 @@ class AdministrationChangePasswordSpec extends Specification {
     String createAdminToken() {
         // Create admin user
         def adminSignup = new SignupRequest("admin@test.com", "admin", "Admin123", "Admin", "User")
-        def adminResponse = client.toBlocking().exchange(
+        client.toBlocking().exchange(
                 HttpRequest.POST('/authentication/signup', adminSignup),
                 Map
         )

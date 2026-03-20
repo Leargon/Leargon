@@ -33,22 +33,21 @@ open class BusinessDomainService(
 ) {
     private val objectMapper = ObjectMapper()
 
-    open fun getAllBusinessDomains(): List<BusinessDomain> =
-        businessDomainRepository.findAll()
+    open fun getAllBusinessDomains(): List<BusinessDomain> = businessDomainRepository.findAll()
 
     @Transactional
     open fun getAllBusinessDomainsAsResponses(): List<BusinessDomainResponse> =
         getAllBusinessDomains().map { businessDomainMapper.toBusinessDomainResponse(it) }
 
-    open fun getBusinessDomainTree(): List<BusinessDomain> =
-        businessDomainRepository.findByParentIsNull()
+    open fun getBusinessDomainTree(): List<BusinessDomain> = businessDomainRepository.findByParentIsNull()
 
     @Transactional
     open fun getBusinessDomainTreeAsResponses(): List<BusinessDomainTreeResponse> =
         getBusinessDomainTree().map { businessDomainMapper.toBusinessDomainTreeResponse(it) }
 
     open fun getBusinessDomainByKey(key: String): BusinessDomain =
-        businessDomainRepository.findByKey(key)
+        businessDomainRepository
+            .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BusinessDomain not found") }
 
     @Transactional
@@ -56,20 +55,30 @@ open class BusinessDomainService(
         businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(key))
 
     @Transactional
-    open fun getLocalizedDomain(key: String, locale: String?, currentUser: User): LocalizedBusinessDomainResponse {
+    open fun getLocalizedDomain(
+        key: String,
+        locale: String?,
+        currentUser: User
+    ): LocalizedBusinessDomainResponse {
         val domain = getBusinessDomainByKey(key)
         val resolvedLocale = resolveLocale(locale, currentUser)
         return businessDomainMapper.toLocalizedBusinessDomainResponse(domain, resolvedLocale)
     }
 
-    private fun resolveLocale(locale: String?, currentUser: User): String {
+    private fun resolveLocale(
+        locale: String?,
+        currentUser: User
+    ): String {
         if (!locale.isNullOrEmpty()) return locale
         if (!currentUser.preferredLanguage.isNullOrEmpty()) return currentUser.preferredLanguage!!
         return localeService.getDefaultLocale()!!.localeCode
     }
 
     @Transactional
-    open fun createBusinessDomain(request: CreateBusinessDomainRequest, currentUser: User): BusinessDomain {
+    open fun createBusinessDomain(
+        request: CreateBusinessDomainRequest,
+        currentUser: User
+    ): BusinessDomain {
         validateTranslations(request.names)
 
         var domain = BusinessDomain()
@@ -77,8 +86,10 @@ open class BusinessDomainService(
         domain.type = request.type?.value
 
         if (request.parentKey != null) {
-            domain.parent = businessDomainRepository.findByKey(request.parentKey)
-                .orElseThrow { ResourceNotFoundException("Parent BusinessDomain not found") }
+            domain.parent =
+                businessDomainRepository
+                    .findByKey(request.parentKey)
+                    .orElseThrow { ResourceNotFoundException("Parent BusinessDomain not found") }
         }
 
         domain.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -97,15 +108,21 @@ open class BusinessDomainService(
     }
 
     @Transactional
-    open fun updateBusinessDomainParent(domainKey: String, parentKey: String?, currentUser: User): BusinessDomain {
+    open fun updateBusinessDomainParent(
+        domainKey: String,
+        parentKey: String?,
+        currentUser: User
+    ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
 
         if (parentKey != null) {
             if (parentKey == domainKey) {
                 throw IllegalArgumentException("A businessDomain cannot be its own parent")
             }
-            val newParent = businessDomainRepository.findByKey(parentKey)
-                .orElseThrow { ResourceNotFoundException("Parent businessDomain not found") }
+            val newParent =
+                businessDomainRepository
+                    .findByKey(parentKey)
+                    .orElseThrow { ResourceNotFoundException("Parent businessDomain not found") }
             if (wouldCreateCycle(domain.id!!, newParent.id!!)) {
                 throw IllegalArgumentException("Cannot set parent: would create a cycle in the hierarchy")
             }
@@ -116,33 +133,57 @@ open class BusinessDomainService(
 
         recomputeKeysForSubtree(domain)
         domain = businessDomainRepository.update(domain)
-        createBusinessDomainVersion(domain, currentUser, "PARENT_CHANGE",
-            "Changed parent to ${parentKey ?: "none"}")
+        createBusinessDomainVersion(
+            domain,
+            currentUser,
+            "PARENT_CHANGE",
+            "Changed parent to ${parentKey ?: "none"}"
+        )
         return domain
     }
 
     @Transactional
-    open fun updateBusinessDomainVisionStatement(domainKey: String, visionStatement: String?, currentUser: User): BusinessDomain {
+    open fun updateBusinessDomainVisionStatement(
+        domainKey: String,
+        visionStatement: String?,
+        currentUser: User
+    ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
         domain.visionStatement = visionStatement
         domain = businessDomainRepository.update(domain)
-        createBusinessDomainVersion(domain, currentUser, "UPDATE",
-            "Updated vision statement")
+        createBusinessDomainVersion(
+            domain,
+            currentUser,
+            "UPDATE",
+            "Updated vision statement"
+        )
         return domain
     }
 
     @Transactional
-    open fun updateBusinessDomainType(domainKey: String, type: String?, currentUser: User): BusinessDomain {
+    open fun updateBusinessDomainType(
+        domainKey: String,
+        type: String?,
+        currentUser: User
+    ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
         domain.type = type
         domain = businessDomainRepository.update(domain)
-        createBusinessDomainVersion(domain, currentUser, "TYPE_CHANGE",
-            "Changed type to ${type ?: "none"}")
+        createBusinessDomainVersion(
+            domain,
+            currentUser,
+            "TYPE_CHANGE",
+            "Changed type to ${type ?: "none"}"
+        )
         return domain
     }
 
     @Transactional
-    open fun updateBusinessDomainNames(domainKey: String, names: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessDomain {
+    open fun updateBusinessDomainNames(
+        domainKey: String,
+        names: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
+    ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
 
         validateTranslations(names)
@@ -152,7 +193,8 @@ open class BusinessDomainService(
         val defaultTranslation = domain.names.find { it.locale == defaultLocale?.localeCode }
         if (defaultTranslation?.text.isNullOrBlank()) {
             throw IllegalArgumentException(
-                "Name for default locale '${defaultLocale?.localeCode}' (${defaultLocale?.displayName}) is required")
+                "Name for default locale '${defaultLocale?.localeCode}' (${defaultLocale?.displayName}) is required"
+            )
         }
 
         recomputeKeysForSubtree(domain)
@@ -162,7 +204,11 @@ open class BusinessDomainService(
     }
 
     @Transactional
-    open fun updateBusinessDomainDescriptions(domainKey: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): BusinessDomain {
+    open fun updateBusinessDomainDescriptions(
+        domainKey: String,
+        descriptions: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
+    ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
 
         validateTranslations(descriptions, false)
@@ -198,22 +244,30 @@ open class BusinessDomainService(
 
     open fun getVersionHistory(domainKey: String): List<BusinessDomainVersionResponse> {
         val domain = getBusinessDomainByKey(domainKey)
-        return businessDomainVersionRepository.findByBusinessDomainIdOrderByVersionNumberDesc(domain.id!!)
+        return businessDomainVersionRepository
+            .findByBusinessDomainIdOrderByVersionNumberDesc(domain.id!!)
             .map { businessDomainMapper.toBusinessDomainVersionResponse(it) }
     }
 
-    open fun getVersionDiff(domainKey: String, versionNumber: Int): VersionDiffResponse {
+    open fun getVersionDiff(
+        domainKey: String,
+        versionNumber: Int
+    ): VersionDiffResponse {
         val domain = getBusinessDomainByKey(domainKey)
 
-        val currentVersion = businessDomainVersionRepository
-            .findByBusinessDomainIdAndVersionNumber(domain.id!!, versionNumber)
-            .orElseThrow { ResourceNotFoundException("Version not found") }
-
-        val previousVersion = if (versionNumber > 1) {
+        val currentVersion =
             businessDomainVersionRepository
-                .findByBusinessDomainIdAndVersionNumber(domain.id!!, versionNumber - 1)
-                .orElse(null)
-        } else null
+                .findByBusinessDomainIdAndVersionNumber(domain.id!!, versionNumber)
+                .orElseThrow { ResourceNotFoundException("Version not found") }
+
+        val previousVersion =
+            if (versionNumber > 1) {
+                businessDomainVersionRepository
+                    .findByBusinessDomainIdAndVersionNumber(domain.id!!, versionNumber - 1)
+                    .orElse(null)
+            } else {
+                null
+            }
 
         val currentSnapshot = parseSnapshot(currentVersion.snapshotJson)
         val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson) else emptyMap()
@@ -225,19 +279,26 @@ open class BusinessDomainService(
 
     // --- Private helpers ---
 
-    private fun createBusinessDomainVersion(domain: BusinessDomain, changedBy: User, changeType: String, changeSummary: String) {
-        val nextVersion = businessDomainVersionRepository
-            .findFirstByBusinessDomainIdOrderByVersionNumberDesc(domain.id!!)
-            .map { it.versionNumber + 1 }
-            .orElse(1)
+    private fun createBusinessDomainVersion(
+        domain: BusinessDomain,
+        changedBy: User,
+        changeType: String,
+        changeSummary: String
+    ) {
+        val nextVersion =
+            businessDomainVersionRepository
+                .findFirstByBusinessDomainIdOrderByVersionNumberDesc(domain.id!!)
+                .map { it.versionNumber + 1 }
+                .orElse(1)
 
-        val snapshot = mapOf(
-            "key" to domain.key,
-            "names" to domain.names.map { mapOf("locale" to it.locale, "text" to it.text) },
-            "descriptions" to domain.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) },
-            "type" to domain.type,
-            "parentKey" to domain.parent?.key
-        )
+        val snapshot =
+            mapOf(
+                "key" to domain.key,
+                "names" to domain.names.map { mapOf("locale" to it.locale, "text" to it.text) },
+                "descriptions" to domain.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) },
+                "type" to domain.type,
+                "parentKey" to domain.parent?.key
+            )
 
         val version = BusinessDomainVersion()
         version.businessDomain = domain
@@ -261,25 +322,35 @@ open class BusinessDomainService(
         }
     }
 
-    private fun wouldCreateCycle(domainId: Long, newParentId: Long): Boolean {
+    private fun wouldCreateCycle(
+        domainId: Long,
+        newParentId: Long
+    ): Boolean {
         var currentId: Long? = newParentId
         while (currentId != null) {
             if (currentId == domainId) return true
-            currentId = businessDomainRepository.findById(currentId)
-                .map { it.parent }
-                .orElse(null)?.id
+            currentId =
+                businessDomainRepository
+                    .findById(currentId)
+                    .map { it.parent }
+                    .orElse(null)
+                    ?.id
         }
         return false
     }
 
-    private fun validateTranslations(translations: List<org.leargon.backend.model.LocalizedText>?, requireDefault: Boolean = true) {
+    private fun validateTranslations(
+        translations: List<org.leargon.backend.model.LocalizedText>?,
+        requireDefault: Boolean = true
+    ) {
         if (translations.isNullOrEmpty()) {
             if (requireDefault) throw IllegalArgumentException("At least one translation is required")
             return
         }
 
-        val defaultLocale = localeService.getDefaultLocale()
-            ?: throw IllegalStateException("No default locale configured")
+        val defaultLocale =
+            localeService.getDefaultLocale()
+                ?: throw IllegalStateException("No default locale configured")
 
         translations.forEach { translation ->
             if (!localeService.isLocaleActive(translation.locale)) {
@@ -294,7 +365,8 @@ open class BusinessDomainService(
             val defaultTranslation = translations.find { it.locale == defaultLocale.localeCode }
             if (defaultTranslation == null) {
                 throw IllegalArgumentException(
-                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required")
+                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required"
+                )
             }
         }
     }
@@ -311,7 +383,10 @@ open class BusinessDomainService(
     companion object {
         @JvmStatic
         @Suppress("UNCHECKED_CAST")
-        fun calculateDiff(previous: Map<String, Any?>, current: Map<String, Any?>): List<FieldChange> {
+        fun calculateDiff(
+            previous: Map<String, Any?>,
+            current: Map<String, Any?>
+        ): List<FieldChange> {
             val changes = mutableListOf<FieldChange>()
 
             val prevType = previous["type"]
@@ -328,7 +403,10 @@ open class BusinessDomainService(
 
             val prevNames = (previous["names"] as? List<Map<*, *>>) ?: emptyList()
             val currNames = (current["names"] as? List<Map<*, *>>) ?: emptyList()
-            val allNameLocales = (prevNames.map { it["locale"]?.toString() } + currNames.map { it["locale"]?.toString() }).filterNotNull().toSet()
+            val allNameLocales =
+                (prevNames.map { it["locale"]?.toString() } + currNames.map { it["locale"]?.toString() })
+                    .filterNotNull()
+                    .toSet()
             allNameLocales.forEach { locale ->
                 val prev = prevNames.find { it["locale"] == locale }
                 val curr = currNames.find { it["locale"] == locale }
@@ -343,7 +421,10 @@ open class BusinessDomainService(
 
             val prevDescs = (previous["descriptions"] as? List<Map<*, *>>) ?: emptyList()
             val currDescs = (current["descriptions"] as? List<Map<*, *>>) ?: emptyList()
-            val allDescLocales = (prevDescs.map { it["locale"]?.toString() } + currDescs.map { it["locale"]?.toString() }).filterNotNull().toSet()
+            val allDescLocales =
+                (prevDescs.map { it["locale"]?.toString() } + currDescs.map { it["locale"]?.toString() })
+                    .filterNotNull()
+                    .toSet()
             allDescLocales.forEach { locale ->
                 val prev = prevDescs.find { it["locale"] == locale }
                 val curr = currDescs.find { it["locale"] == locale }

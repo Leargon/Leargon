@@ -417,7 +417,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/owner should update process owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def ownerData = createUserWithToken("owner@example.com", "owner")
+        createUserWithToken("owner@example.com", "owner")
         String token = creatorData.token
 
         and:

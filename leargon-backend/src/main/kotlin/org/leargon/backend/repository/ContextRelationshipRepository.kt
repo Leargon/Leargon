@@ -7,7 +7,6 @@ import org.leargon.backend.domain.ContextRelationship
 
 @Repository
 interface ContextRelationshipRepository : JpaRepository<ContextRelationship, Long> {
-
     @Join(value = "upstreamBoundedContext", type = Join.Type.LEFT_FETCH)
     @Join(value = "upstreamBoundedContext.domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "downstreamBoundedContext", type = Join.Type.LEFT_FETCH)

@@ -28,42 +28,56 @@ open class DomainEventController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : DomainEventApi {
+    override fun getAllDomainEvents(): List<DomainEventResponse> = domainEventService.getAll()
 
-    override fun getAllDomainEvents(): List<DomainEventResponse> =
-        domainEventService.getAll()
+    override fun getDomainEventByKey(key: String): DomainEventResponse = domainEventService.getByKey(key)
 
-    override fun getDomainEventByKey(key: String): DomainEventResponse =
-        domainEventService.getByKey(key)
-
-    override fun createDomainEvent(@Valid @Body createDomainEventRequest: CreateDomainEventRequest): HttpResponse<DomainEventResponse> {
+    override fun createDomainEvent(
+        @Valid @Body createDomainEventRequest: CreateDomainEventRequest
+    ): HttpResponse<DomainEventResponse> {
         val currentUser = getCurrentUser()
         val event = domainEventService.create(createDomainEventRequest, currentUser)
         val response = domainEventService.getByKey(event.key)
         return HttpResponse.status<DomainEventResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun updateDomainEventNames(key: String, @Body localizedTexts: List<@Valid LocalizedText>): DomainEventResponse {
+    override fun updateDomainEventNames(
+        key: String,
+        @Body localizedTexts: List<@Valid LocalizedText>
+    ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.updateNames(key, localizedTexts, currentUser)
     }
 
-    override fun updateDomainEventDescriptions(key: String, @Body localizedTexts: List<@Valid LocalizedText>): DomainEventResponse {
+    override fun updateDomainEventDescriptions(
+        key: String,
+        @Body localizedTexts: List<@Valid LocalizedText>
+    ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.updateDescriptions(key, localizedTexts, currentUser)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun setDomainEventConsumers(key: String, @Valid @Body setDomainEventConsumersRequest: SetDomainEventConsumersRequest): DomainEventResponse {
+    override fun setDomainEventConsumers(
+        key: String,
+        @Valid @Body setDomainEventConsumersRequest: SetDomainEventConsumersRequest
+    ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.setConsumers(key, setDomainEventConsumersRequest.consumerBoundedContextKeys, currentUser)
     }
 
-    override fun addDomainEventProcessLink(key: String, @Valid @Body addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest): DomainEventResponse {
+    override fun addDomainEventProcessLink(
+        key: String,
+        @Valid @Body addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest
+    ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.addProcessLink(key, addDomainEventProcessLinkRequest, currentUser)
     }
 
-    override fun removeDomainEventProcessLink(key: String, linkId: Long): DomainEventResponse {
+    override fun removeDomainEventProcessLink(
+        key: String,
+        linkId: Long
+    ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.removeProcessLink(key, linkId, currentUser)
     }
@@ -76,9 +90,12 @@ open class DomainEventController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

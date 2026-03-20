@@ -17,7 +17,6 @@ open class ContextRelationshipService(
     private val contextRelationshipMapper: ContextRelationshipMapper,
     private val boundedContextService: BoundedContextService
 ) {
-
     @Transactional
     open fun getAll(): List<ContextRelationshipResponse> {
         val mapper = contextRelationshipMapper
@@ -25,27 +24,36 @@ open class ContextRelationshipService(
     }
 
     @Transactional
-    open fun create(request: CreateContextRelationshipRequest, currentUser: User): ContextRelationshipResponse {
+    open fun create(
+        request: CreateContextRelationshipRequest,
+        currentUser: User
+    ): ContextRelationshipResponse {
         val upstream = boundedContextService.getByKey(request.upstreamBoundedContextKey)
         val downstream = boundedContextService.getByKey(request.downstreamBoundedContextKey)
-        val rel = ContextRelationship().apply {
-            this.upstreamBoundedContext = upstream
-            this.downstreamBoundedContext = downstream
-            this.relationshipType = request.relationshipType.value
-            this.upstreamRole = request.upstreamRole
-            this.downstreamRole = request.downstreamRole
-            this.description = request.description
-            this.createdBy = currentUser
-        }
+        val rel =
+            ContextRelationship().apply {
+                this.upstreamBoundedContext = upstream
+                this.downstreamBoundedContext = downstream
+                this.relationshipType = request.relationshipType.value
+                this.upstreamRole = request.upstreamRole
+                this.downstreamRole = request.downstreamRole
+                this.description = request.description
+                this.createdBy = currentUser
+            }
         val saved = contextRelationshipRepository.save(rel)
         val mapper = contextRelationshipMapper
         return mapper.toResponse(saved)
     }
 
     @Transactional
-    open fun update(id: Long, request: UpdateContextRelationshipRequest): ContextRelationshipResponse {
-        val rel = contextRelationshipRepository.findById(id)
-            .orElseThrow { ResourceNotFoundException("Context relationship not found: $id") }
+    open fun update(
+        id: Long,
+        request: UpdateContextRelationshipRequest
+    ): ContextRelationshipResponse {
+        val rel =
+            contextRelationshipRepository
+                .findById(id)
+                .orElseThrow { ResourceNotFoundException("Context relationship not found: $id") }
         rel.relationshipType = request.relationshipType.value
         rel.upstreamRole = request.upstreamRole
         rel.downstreamRole = request.downstreamRole

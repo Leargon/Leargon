@@ -21,12 +21,13 @@ import {
   TextField,
   Autocomplete,
 } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, Edit } from '@mui/icons-material';
 import {
   useGetAllDomainEvents,
   getGetAllDomainEventsQueryKey,
   useCreateDomainEvent,
   useDeleteDomainEvent,
+  useSetDomainEventConsumers,
 } from '../api/generated/domain-event/domain-event';
 import { useGetAllBusinessDomains } from '../api/generated/business-domain/business-domain';
 import { useGetBoundedContextsForDomain } from '../api/generated/bounded-context/bounded-context';
@@ -37,22 +38,23 @@ import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
-/** Sub-component that loads BCs for a given domain key (used inside the create dialog) */
+/** Sub-component that loads BCs for a given domain key */
 const BcSelector: React.FC<{
   domainKey: string;
-  value: string | null;
-  onChange: (key: string | null) => void;
+  value: BoundedContextResponse | null;
+  onChange: (bc: BoundedContextResponse | null) => void;
+  label: string;
   getLocalizedText: (names: { locale: string; text: string }[], fallback?: string) => string;
-}> = ({ domainKey, value, onChange, getLocalizedText }) => {
+}> = ({ domainKey, value, onChange, label, getLocalizedText }) => {
   const { data } = useGetBoundedContextsForDomain(domainKey);
   const bcs = (data?.data as BoundedContextResponse[] | undefined) ?? [];
   return (
     <Autocomplete
       options={bcs}
       getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
-      value={bcs.find((bc) => bc.key === value) || null}
-      onChange={(_, newVal) => onChange(newVal?.key || null)}
-      renderInput={(params) => <TextField {...params} size="small" label="Publishing Bounded Context" />}
+      value={value}
+      onChange={(_, newVal) => onChange(newVal)}
+      renderInput={(params) => <TextField {...params} size="small" label={label} />}
       isOptionEqualToValue={(option, v) => option.key === v.key}
       size="small"
     />
@@ -74,31 +76,39 @@ const EventFlowPage: React.FC = () => {
 
   const createDomainEvent = useCreateDomainEvent();
   const deleteDomainEvent = useDeleteDomainEvent();
+  const setConsumers = useSetDomainEventConsumers();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createDomainKey, setCreateDomainKey] = useState<string | null>(null);
-  const [createBcKey, setCreateBcKey] = useState<string | null>(null);
+  const [createBc, setCreateBc] = useState<BoundedContextResponse | null>(null);
   const [createName, setCreateName] = useState('');
   const [createError, setCreateError] = useState('');
+
+  // Consumer management state
+  const [consumersEditEvent, setConsumersEditEvent] = useState<DomainEventResponse | null>(null);
+  const [pendingConsumers, setPendingConsumers] = useState<{ key: string; name: string }[]>([]);
+  const [addConsumerDomainKey, setAddConsumerDomainKey] = useState<string | null>(null);
+  const [addConsumerBc, setAddConsumerBc] = useState<BoundedContextResponse | null>(null);
+  const [consumersError, setConsumersError] = useState('');
 
   const invalidateEvents = () => {
     queryClient.invalidateQueries({ queryKey: getGetAllDomainEventsQueryKey() });
   };
 
   const handleCreate = async () => {
-    if (!createBcKey || !createName.trim()) return;
+    if (!createBc || !createName.trim()) return;
     setCreateError('');
     try {
       await createDomainEvent.mutateAsync({
         data: {
-          publishingBoundedContextKey: createBcKey,
+          publishingBoundedContextKey: createBc.key,
           names: [{ locale: 'en', text: createName.trim() }],
         },
       });
       invalidateEvents();
       setCreateOpen(false);
       setCreateName('');
-      setCreateBcKey(null);
+      setCreateBc(null);
       setCreateDomainKey(null);
     } catch {
       setCreateError('Failed to create domain event');
@@ -108,6 +118,29 @@ const EventFlowPage: React.FC = () => {
   const handleDelete = async (key: string) => {
     await deleteDomainEvent.mutateAsync({ key });
     invalidateEvents();
+  };
+
+  const openConsumersEdit = (ev: DomainEventResponse) => {
+    setConsumersEditEvent(ev);
+    setPendingConsumers((ev.consumers ?? []).map((c) => ({ key: c.key, name: c.name ?? c.key })));
+    setAddConsumerDomainKey(null);
+    setAddConsumerBc(null);
+    setConsumersError('');
+  };
+
+  const handleSaveConsumers = async () => {
+    if (!consumersEditEvent) return;
+    setConsumersError('');
+    try {
+      await setConsumers.mutateAsync({
+        key: consumersEditEvent.key,
+        data: { consumerBoundedContextKeys: pendingConsumers.map((c) => c.key) },
+      });
+      invalidateEvents();
+      setConsumersEditEvent(null);
+    } catch {
+      setConsumersError('Failed to save consumers');
+    }
   };
 
   if (eventsLoading) {
@@ -150,7 +183,7 @@ const EventFlowPage: React.FC = () => {
             size="small"
             variant="contained"
             startIcon={<Add />}
-            onClick={() => { setCreateName(''); setCreateBcKey(null); setCreateDomainKey(null); setCreateError(''); setCreateOpen(true); }}
+            onClick={() => { setCreateName(''); setCreateBc(null); setCreateDomainKey(null); setCreateError(''); setCreateOpen(true); }}
           >
             {t('domainEvent.create')}
           </Button>
@@ -197,12 +230,17 @@ const EventFlowPage: React.FC = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
                           {ev.consumers && ev.consumers.length > 0
                             ? ev.consumers.map((c) => (
                                 <Chip key={c.key} label={c.name} size="small" variant="outlined" />
                               ))
                             : <Typography variant="caption" color="text.secondary">{t('domainEvent.noConsumers')}</Typography>}
+                          {isAdmin && (
+                            <IconButton size="small" onClick={() => openConsumersEdit(ev)} title={t('domainEvent.addConsumer')}>
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          )}
                         </Box>
                       </TableCell>
                       {isAdmin && (
@@ -258,6 +296,66 @@ const EventFlowPage: React.FC = () => {
         </Box>
       )}
 
+      {/* Manage Consumers Dialog */}
+      <Dialog open={!!consumersEditEvent} onClose={() => setConsumersEditEvent(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domainEvent.addConsumer')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          {pendingConsumers.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {pendingConsumers.map((c) => (
+                <Chip
+                  key={c.key}
+                  label={c.name}
+                  size="small"
+                  variant="outlined"
+                  onDelete={() => setPendingConsumers((prev) => prev.filter((x) => x.key !== c.key))}
+                />
+              ))}
+            </Box>
+          )}
+          <Autocomplete
+            options={allDomains}
+            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
+            value={allDomains.find((d) => d.key === addConsumerDomainKey) || null}
+            onChange={(_, newVal) => { setAddConsumerDomainKey(newVal?.key || null); setAddConsumerBc(null); }}
+            renderInput={(params) => <TextField {...params} size="small" label="Domain" />}
+            isOptionEqualToValue={(option, value) => option.key === value.key}
+            size="small"
+          />
+          {addConsumerDomainKey && (
+            <BcSelector
+              domainKey={addConsumerDomainKey}
+              value={addConsumerBc}
+              onChange={setAddConsumerBc}
+              label="Bounded Context"
+              getLocalizedText={getLocalizedText}
+            />
+          )}
+          {addConsumerBc && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                if (!addConsumerBc || pendingConsumers.some((c) => c.key === addConsumerBc.key)) return;
+                const name = getLocalizedText(addConsumerBc.names, addConsumerBc.key);
+                setPendingConsumers((prev) => [...prev, { key: addConsumerBc.key, name }]);
+                setAddConsumerBc(null);
+                setAddConsumerDomainKey(null);
+              }}
+            >
+              {t('domainEvent.addConsumer')}
+            </Button>
+          )}
+          {consumersError && <Alert severity="error">{consumersError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConsumersEditEvent(null)}>{t('common.cancel')}</Button>
+          <Button onClick={handleSaveConsumers} variant="contained" disabled={setConsumers.isPending}>
+            {setConsumers.isPending ? t('common.saving') : t('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Create Domain Event Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('domainEvent.create')}</DialogTitle>
@@ -266,7 +364,7 @@ const EventFlowPage: React.FC = () => {
             options={allDomains}
             getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
             value={allDomains.find((d) => d.key === createDomainKey) || null}
-            onChange={(_, newVal) => { setCreateDomainKey(newVal?.key || null); setCreateBcKey(null); }}
+            onChange={(_, newVal) => { setCreateDomainKey(newVal?.key || null); setCreateBc(null); }}
             renderInput={(params) => <TextField {...params} size="small" label="Domain" />}
             isOptionEqualToValue={(option, value) => option.key === value.key}
             size="small"
@@ -274,8 +372,9 @@ const EventFlowPage: React.FC = () => {
           {createDomainKey && (
             <BcSelector
               domainKey={createDomainKey}
-              value={createBcKey}
-              onChange={setCreateBcKey}
+              value={createBc}
+              onChange={setCreateBc}
+              label="Publishing Bounded Context"
               getLocalizedText={getLocalizedText}
             />
           )}
@@ -294,7 +393,7 @@ const EventFlowPage: React.FC = () => {
           <Button
             onClick={handleCreate}
             variant="contained"
-            disabled={!createBcKey || !createName.trim() || createDomainEvent.isPending}
+            disabled={!createBc || !createName.trim() || createDomainEvent.isPending}
           >
             {createDomainEvent.isPending ? t('common.saving') : t('common.create')}
           </Button>

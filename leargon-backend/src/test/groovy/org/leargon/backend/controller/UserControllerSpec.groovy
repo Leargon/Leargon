@@ -256,7 +256,7 @@ class UserControllerSpec extends Specification {
         responses.every { it != null && it.status == HttpStatus.OK }
 
         and: "same user data is returned"
-        def users = responses.collect { it.body() }
+        def users = responses*.body()
         users.every { it.email == "concurrent@example.com" }
         users.every { it.id == users[0].id }
     }

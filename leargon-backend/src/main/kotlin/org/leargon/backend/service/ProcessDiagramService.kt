@@ -12,7 +12,6 @@ open class ProcessDiagramService(
     private val processRepository: ProcessRepository,
     private val processService: ProcessService
 ) {
-
     @Transactional
     open fun getDiagram(processKey: String): ProcessDiagramResponse {
         val process = processService.getProcessByKey(processKey)
@@ -20,7 +19,11 @@ open class ProcessDiagramService(
     }
 
     @Transactional
-    open fun saveDiagram(processKey: String, request: SaveProcessDiagramRequest, currentUser: User): ProcessDiagramResponse {
+    open fun saveDiagram(
+        processKey: String,
+        request: SaveProcessDiagramRequest,
+        currentUser: User
+    ): ProcessDiagramResponse {
         val process = processService.getProcessByKey(processKey)
         ProcessService.checkEditPermission(process, currentUser)
         process.bpmnXml = request.bpmnXml

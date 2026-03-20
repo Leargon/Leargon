@@ -22,7 +22,6 @@ import java.time.Instant
 @Entity
 @Table(name = "processes")
 class Process {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -129,11 +128,7 @@ class Process {
         version.process = this
     }
 
-    fun getName(locale: String): String {
-        return names.find { it.locale == locale }?.text ?: names.first().text
-    }
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
-    fun getDescription(locale: String): String {
-        return descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
-    }
+    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
 }

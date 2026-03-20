@@ -15,7 +15,6 @@ import java.time.Instant
 @Entity
 @Table(name = "domain_event_process_links")
 class DomainEventProcessLink {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

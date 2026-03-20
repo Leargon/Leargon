@@ -6,6 +6,5 @@ import org.leargon.backend.domain.FieldConfiguration
 
 @Repository
 interface FieldConfigurationRepository : JpaRepository<FieldConfiguration, Long> {
-
     fun findByEntityType(entityType: String): List<FieldConfiguration>
 }

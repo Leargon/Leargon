@@ -9,7 +9,6 @@ import java.time.ZoneOffset
 
 @Singleton
 class ItSystemMapper {
-
     fun toItSystemSummaryResponse(itSystem: ItSystem): ItSystemSummaryResponse =
         ItSystemSummaryResponse(itSystem.key, itSystem.getName("en"))
 
@@ -20,10 +19,11 @@ class ItSystemMapper {
             LocalizedTextMapper.toModel(itSystem.descriptions),
             itSystem.createdAt.atZone(ZoneOffset.UTC),
             itSystem.updatedAt?.atZone(ZoneOffset.UTC)
-        )
-            .vendor(itSystem.vendor)
+        ).vendor(itSystem.vendor)
             .systemUrl(itSystem.systemUrl)
-            .linkedProcesses(itSystem.linkedProcesses.map { p ->
-                ProcessSummaryResponse(p.key, p.getName("en"))
-            })
+            .linkedProcesses(
+                itSystem.linkedProcesses.map { p ->
+                    ProcessSummaryResponse(p.key, p.getName("en"))
+                }
+            )
 }

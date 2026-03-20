@@ -167,7 +167,7 @@ class LocaleControllerSpec extends Specification {
 
         then: "locales are ordered by sortOrder"
         def locales = response.body()
-        def sortOrders = locales.collect { it.sortOrder }
+        def sortOrders = locales*.sortOrder
         sortOrders == sortOrders.sort()
     }
 

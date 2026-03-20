@@ -372,7 +372,7 @@ class BusinessDomainServiceSpec extends Specification {
 
         def childRequest = new CreateBusinessDomainRequest([new LocalizedText("en", "Child")])
         childRequest.parentKey = parent.key
-        def child = domainService.createBusinessDomain(childRequest, admin)
+        domainService.createBusinessDomain(childRequest, admin)
 
         when: "deleting parent"
         domainService.deleteBusinessDomain(parent.key)
@@ -386,7 +386,7 @@ class BusinessDomainServiceSpec extends Specification {
 
     def "should throw exception when deleting non-existent domain"() {
         given: "an admin user"
-        def admin = createAdminUser("admin@example.com", "admin")
+        createAdminUser("admin@example.com", "admin")
 
         when: "deleting non-existent businessDomain"
         domainService.deleteBusinessDomain("non-existent-key")

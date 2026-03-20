@@ -18,7 +18,6 @@ import java.time.Instant
 @Entity
 @Table(name = "bounded_contexts")
 class BoundedContext {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -53,6 +52,5 @@ class BoundedContext {
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
 
-    fun getName(locale: String): String =
-        names.find { it.locale == locale }?.text ?: names.firstOrNull()?.text ?: key
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.firstOrNull()?.text ?: key
 }

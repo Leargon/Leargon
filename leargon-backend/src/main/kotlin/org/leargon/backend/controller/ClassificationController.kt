@@ -27,20 +27,23 @@ open class ClassificationController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : ClassificationApi {
-
     override fun getClassifications(assignableTo: ClassificationAssignableTo?): List<ClassificationResponse> =
         classificationService.getClassifications(assignableTo?.value)
 
-    override fun createClassification(@Valid @Body createClassificationRequest: CreateClassificationRequest): HttpResponse<ClassificationResponse> {
+    override fun createClassification(
+        @Valid @Body createClassificationRequest: CreateClassificationRequest
+    ): HttpResponse<ClassificationResponse> {
         val currentUser = getCurrentUser()
         val response = classificationService.createClassification(createClassificationRequest, currentUser)
         return HttpResponse.status<ClassificationResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun getClassificationByKey(key: String): ClassificationResponse =
-        classificationService.getClassificationByKeyAsResponse(key)
+    override fun getClassificationByKey(key: String): ClassificationResponse = classificationService.getClassificationByKeyAsResponse(key)
 
-    override fun updateClassification(key: String, @Valid @Body updateClassificationRequest: UpdateClassificationRequest): ClassificationResponse {
+    override fun updateClassification(
+        key: String,
+        @Valid @Body updateClassificationRequest: UpdateClassificationRequest
+    ): ClassificationResponse {
         val currentUser = getCurrentUser()
         return classificationService.updateClassification(key, updateClassificationRequest, currentUser)
     }
@@ -51,27 +54,40 @@ open class ClassificationController(
         return HttpResponse.noContent()
     }
 
-    override fun createClassificationValue(key: String, @Valid @Body createClassificationValueRequest: CreateClassificationValueRequest): HttpResponse<ClassificationResponse> {
+    override fun createClassificationValue(
+        key: String,
+        @Valid @Body createClassificationValueRequest: CreateClassificationValueRequest
+    ): HttpResponse<ClassificationResponse> {
         val currentUser = getCurrentUser()
         val response = classificationService.createClassificationValue(key, createClassificationValueRequest, currentUser)
         return HttpResponse.status<ClassificationResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun updateClassificationValue(key: String, valueKey: String, @Valid @Body updateClassificationValueRequest: UpdateClassificationValueRequest): ClassificationResponse {
+    override fun updateClassificationValue(
+        key: String,
+        valueKey: String,
+        @Valid @Body updateClassificationValueRequest: UpdateClassificationValueRequest
+    ): ClassificationResponse {
         val currentUser = getCurrentUser()
         return classificationService.updateClassificationValue(key, valueKey, updateClassificationValueRequest, currentUser)
     }
 
-    override fun deleteClassificationValue(key: String, valueKey: String): HttpResponse<Void> {
+    override fun deleteClassificationValue(
+        key: String,
+        valueKey: String
+    ): HttpResponse<Void> {
         val currentUser = getCurrentUser()
         classificationService.deleteClassificationValue(key, valueKey, currentUser)
         return HttpResponse.noContent()
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

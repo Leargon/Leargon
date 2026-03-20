@@ -8,12 +8,12 @@ import java.time.ZoneOffset
 
 @Singleton
 open class ContextRelationshipMapper {
-
     fun toResponse(rel: ContextRelationship): ContextRelationshipResponse {
-        val response = ContextRelationshipResponse(
-            rel.id,
-            ContextMapperRelationshipType.fromValue(rel.relationshipType)
-        )
+        val response =
+            ContextRelationshipResponse(
+                rel.id,
+                ContextMapperRelationshipType.fromValue(rel.relationshipType)
+            )
         response.upstreamBoundedContext = BoundedContextMapper.toSummaryResponse(rel.upstreamBoundedContext)
         response.downstreamBoundedContext = BoundedContextMapper.toSummaryResponse(rel.downstreamBoundedContext)
         response.upstreamRole = rel.upstreamRole

@@ -18,7 +18,6 @@ import java.time.Instant
 @Entity
 @Table(name = "classification_values")
 class ClassificationValue {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

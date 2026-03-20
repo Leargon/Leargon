@@ -79,13 +79,6 @@ class ExportControllerSpec extends Specification {
         resp.body().key
     }
 
-    private String createBusinessEntity(String token, String name = "Test Entity") {
-        def req = [names: [[locale: "en", text: name]]]
-        def resp = client.toBlocking().exchange(
-            HttpRequest.POST("/business-entities", req).bearerAuth(token), Map)
-        resp.body().key
-    }
-
     private String createDataProcessor(String adminToken, String name = "Test Processor") {
         def req = [
             names: [[locale: "en", text: name]],

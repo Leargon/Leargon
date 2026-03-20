@@ -9,7 +9,6 @@ import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.SecurityService
 import jakarta.validation.Valid
 import org.leargon.backend.api.DataProcessorApi
-import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.CreateDataProcessorRequest
 import org.leargon.backend.model.DataProcessorResponse
 import org.leargon.backend.model.UpdateDataProcessorEntityLinksRequest
@@ -25,22 +24,23 @@ open class DataProcessorController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : DataProcessorApi {
+    override fun getAllDataProcessors(): List<DataProcessorResponse> = dataProcessorService.getAll()
 
-    override fun getAllDataProcessors(): List<DataProcessorResponse> =
-        dataProcessorService.getAll()
-
-    override fun getDataProcessor(key: String): DataProcessorResponse =
-        dataProcessorService.getByKey(key)
+    override fun getDataProcessor(key: String): DataProcessorResponse = dataProcessorService.getByKey(key)
 
     @Secured("ROLE_ADMIN")
-    override fun createDataProcessor(@Valid @Body createDataProcessorRequest: CreateDataProcessorRequest): HttpResponse<DataProcessorResponse> {
+    override fun createDataProcessor(
+        @Valid @Body createDataProcessorRequest: CreateDataProcessorRequest
+    ): HttpResponse<DataProcessorResponse> {
         val response = dataProcessorService.create(createDataProcessorRequest)
         return HttpResponse.status<DataProcessorResponse>(HttpStatus.CREATED).body(response)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateDataProcessor(key: String, @Valid @Body updateDataProcessorRequest: UpdateDataProcessorRequest): DataProcessorResponse =
-        dataProcessorService.update(key, updateDataProcessorRequest)
+    override fun updateDataProcessor(
+        key: String,
+        @Valid @Body updateDataProcessorRequest: UpdateDataProcessorRequest
+    ): DataProcessorResponse = dataProcessorService.update(key, updateDataProcessorRequest)
 
     @Secured("ROLE_ADMIN")
     override fun deleteDataProcessor(key: String): HttpResponse<Void> {
@@ -49,13 +49,19 @@ open class DataProcessorController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateDataProcessorLinkedEntities(key: String, @Valid @Body updateDataProcessorEntityLinksRequest: UpdateDataProcessorEntityLinksRequest): HttpResponse<Void> {
+    override fun updateDataProcessorLinkedEntities(
+        key: String,
+        @Valid @Body updateDataProcessorEntityLinksRequest: UpdateDataProcessorEntityLinksRequest
+    ): HttpResponse<Void> {
         dataProcessorService.updateLinkedEntities(key, updateDataProcessorEntityLinksRequest.businessEntityKeys ?: emptyList())
         return HttpResponse.noContent()
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateDataProcessorLinkedProcesses(key: String, @Valid @Body updateDataProcessorProcessLinksRequest: UpdateDataProcessorProcessLinksRequest): HttpResponse<Void> {
+    override fun updateDataProcessorLinkedProcesses(
+        key: String,
+        @Valid @Body updateDataProcessorProcessLinksRequest: UpdateDataProcessorProcessLinksRequest
+    ): HttpResponse<Void> {
         dataProcessorService.updateLinkedProcesses(key, updateDataProcessorProcessLinksRequest.processKeys ?: emptyList())
         return HttpResponse.noContent()
     }

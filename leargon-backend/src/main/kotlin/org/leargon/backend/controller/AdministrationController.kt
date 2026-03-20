@@ -20,16 +20,16 @@ open class AdministrationController(
     private val userService: UserService,
     private val fieldConfigurationService: FieldConfigurationService
 ) : AdministrationApi {
-
     @Secured("ROLE_ADMIN")
-    override fun createUser(@Valid @Body signupRequest: SignupRequest): HttpResponse<UserResponse> {
+    override fun createUser(
+        @Valid @Body signupRequest: SignupRequest
+    ): HttpResponse<UserResponse> {
         val user = userService.createUser(signupRequest)
         return HttpResponse.created(userService.toUserResponse(user))
     }
 
     @Secured("ROLE_ADMIN")
-    override fun getAllUsers(): List<UserResponse> =
-        userService.getAllUsersAsResponses()
+    override fun getAllUsers(): List<UserResponse> = userService.getAllUsersAsResponses()
 
     @Secured("ROLE_ADMIN")
     override fun getUserById(id: Long): UserResponse {
@@ -38,7 +38,10 @@ open class AdministrationController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateUser(id: Long, @Valid @Body updateUserRequest: UpdateUserRequest): UserResponse {
+    override fun updateUser(
+        id: Long,
+        @Valid @Body updateUserRequest: UpdateUserRequest
+    ): UserResponse {
         val user = userService.updateUser(id, updateUserRequest)
         return userService.toUserResponse(user)
     }
@@ -64,15 +67,18 @@ open class AdministrationController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun administrationChangePassword(id: Long, @Body @Valid administrationChangePasswordRequest: AdministrationChangePasswordRequest) {
+    override fun administrationChangePassword(
+        id: Long,
+        @Body @Valid administrationChangePasswordRequest: AdministrationChangePasswordRequest
+    ) {
         userService.adminChangePassword(id, administrationChangePasswordRequest)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun getFieldConfigurations(): List<FieldConfigurationEntry> =
-        fieldConfigurationService.getAll()
+    override fun getFieldConfigurations(): List<FieldConfigurationEntry> = fieldConfigurationService.getAll()
 
     @Secured("ROLE_ADMIN")
-    override fun replaceFieldConfigurations(@Body @Valid entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> =
-        fieldConfigurationService.replace(entries)
+    override fun replaceFieldConfigurations(
+        @Body @Valid entries: List<FieldConfigurationEntry>
+    ): List<FieldConfigurationEntry> = fieldConfigurationService.replace(entries)
 }

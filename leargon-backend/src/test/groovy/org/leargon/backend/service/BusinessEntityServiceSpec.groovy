@@ -114,7 +114,7 @@ class BusinessEntityServiceSpec extends Specification {
     def "should create entity with custom data owner"() {
         given: "a creator and a different data owner"
         def creator = createTestUser("creator@example.com", "creator")
-        def owner = createTestUser("owner@example.com", "owner")
+        createTestUser("owner@example.com", "owner")
 
         def request = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         request.dataOwnerUsername = "owner"
@@ -288,7 +288,7 @@ class BusinessEntityServiceSpec extends Specification {
     def "should update data owner and create OWNER_CHANGE version"() {
         given: "an entity and a new owner"
         def owner = createTestUser("owner@example.com", "owner")
-        def newOwner = createTestUser("newowner@example.com", "newowner")
+        createTestUser("newowner@example.com", "newowner")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def entity = entityService.createBusinessEntity(createRequest, owner)
@@ -412,7 +412,7 @@ class BusinessEntityServiceSpec extends Specification {
 
         def childRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "Child")])
         childRequest.parentKey = parent.key
-        def child = entityService.createBusinessEntity(childRequest, user)
+        entityService.createBusinessEntity(childRequest, user)
 
         when: "deleting parent"
         entityService.deleteBusinessEntity(parent.key, user)

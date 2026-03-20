@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface ProcessRepository : JpaRepository<Process, Long> {
-
     @Join(value = "processOwner", type = Join.Type.FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)

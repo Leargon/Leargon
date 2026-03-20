@@ -7,7 +7,6 @@ import org.leargon.backend.domain.TranslationLink
 
 @Repository
 interface TranslationLinkRepository : JpaRepository<TranslationLink, Long> {
-
     @Join(value = "firstEntity", type = Join.Type.LEFT_FETCH)
     @Join(value = "secondEntity", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
@@ -23,7 +22,10 @@ interface TranslationLinkRepository : JpaRepository<TranslationLink, Long> {
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): java.util.Optional<TranslationLink>
 
-    fun existsByFirstEntityIdAndSecondEntityId(firstEntityId: Long, secondEntityId: Long): Boolean
+    fun existsByFirstEntityIdAndSecondEntityId(
+        firstEntityId: Long,
+        secondEntityId: Long
+    ): Boolean
 
     fun deleteByFirstEntityId(entityId: Long)
 

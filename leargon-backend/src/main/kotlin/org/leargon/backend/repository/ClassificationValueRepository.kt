@@ -7,7 +7,11 @@ import org.leargon.backend.domain.ClassificationValue
 
 @Repository
 interface ClassificationValueRepository : JpaRepository<ClassificationValue, Long> {
-
-    @Query(value = "SELECT COUNT(*) FROM classification_values WHERE names LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%') OR descriptions LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')", nativeQuery = true)
+    @Query(
+        value =
+            "SELECT COUNT(*) FROM classification_values WHERE names LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')" +
+                " OR descriptions LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')",
+        nativeQuery = true
+    )
     fun countByLocaleInTranslations(localeCode: String): Long
 }

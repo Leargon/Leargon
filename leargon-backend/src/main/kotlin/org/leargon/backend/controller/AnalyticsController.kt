@@ -12,9 +12,6 @@ import org.leargon.backend.service.AnalyticsService
 open class AnalyticsController(
     private val analyticsService: AnalyticsService
 ) {
-
     @Get("/team-insights")
-    fun getTeamInsights(): TeamInsightsResponse {
-        return analyticsService.getTeamInsights()
-    }
+    fun getTeamInsights(): TeamInsightsResponse = analyticsService.getTeamInsights()
 }

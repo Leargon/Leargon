@@ -6,7 +6,6 @@ import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.LocalizedText
-import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.domain.User
@@ -45,8 +44,7 @@ open class ProcessService(
     private val objectMapper = ObjectMapper()
 
     @Transactional
-    open fun getAllProcessesAsResponses(): List<ProcessResponse> =
-        processRepository.findAll().map { processMapper.toProcessResponse(it) }
+    open fun getAllProcessesAsResponses(): List<ProcessResponse> = processRepository.findAll().map { processMapper.toProcessResponse(it) }
 
     @Transactional
     open fun getProcessTreeAsResponses(): List<ProcessTreeResponse> {
@@ -55,15 +53,18 @@ open class ProcessService(
     }
 
     open fun getProcessByKey(key: String): Process =
-        processRepository.findByKey(key)
+        processRepository
+            .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Process not found") }
 
     @Transactional
-    open fun getProcessByKeyAsResponse(key: String): ProcessResponse =
-        processMapper.toProcessResponse(getProcessByKey(key))
+    open fun getProcessByKeyAsResponse(key: String): ProcessResponse = processMapper.toProcessResponse(getProcessByKey(key))
 
     @Transactional
-    open fun createProcess(request: CreateProcessRequest, currentUser: User): Process {
+    open fun createProcess(
+        request: CreateProcessRequest,
+        currentUser: User
+    ): Process {
         validateTranslations(request.names)
         if (request.descriptions != null) {
             validateTranslations(request.descriptions, false)
@@ -72,12 +73,14 @@ open class ProcessService(
         var process = Process()
         process.createdBy = currentUser
 
-        process.processOwner = if (request.processOwnerUsername != null) {
-            userRepository.findByUsername(request.processOwnerUsername)
-                .orElseThrow { ResourceNotFoundException("Process owner user not found") }
-        } else {
-            currentUser
-        }
+        process.processOwner =
+            if (request.processOwnerUsername != null) {
+                userRepository
+                    .findByUsername(request.processOwnerUsername)
+                    .orElseThrow { ResourceNotFoundException("Process owner user not found") }
+            } else {
+                currentUser
+            }
 
         process.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         if (request.descriptions != null) {
@@ -93,31 +96,38 @@ open class ProcessService(
         }
 
         val defaultLocale = localeService.getDefaultLocale()
-        process.key = if (!process.code.isNullOrBlank()) {
-            SlugUtil.slugify(process.code)
-        } else {
-            val defaultName = process.names.find { it.locale == defaultLocale?.localeCode }?.text
-            SlugUtil.slugify(defaultName)
-        }
+        process.key =
+            if (!process.code.isNullOrBlank()) {
+                SlugUtil.slugify(process.code)
+            } else {
+                val defaultName = process.names.find { it.locale == defaultLocale?.localeCode }?.text
+                SlugUtil.slugify(defaultName)
+            }
 
         if (request.parentProcessKey != null) {
-            val parentProcess = processRepository.findByKey(request.parentProcessKey)
-                .orElseThrow { ResourceNotFoundException("Parent process not found: ${request.parentProcessKey}") }
+            val parentProcess =
+                processRepository
+                    .findByKey(request.parentProcessKey)
+                    .orElseThrow { ResourceNotFoundException("Parent process not found: ${request.parentProcessKey}") }
             process.parent = parentProcess
         }
 
         if (request.inputEntityKeys != null) {
             for (entityKey in request.inputEntityKeys!!) {
-                val entity = businessEntityRepository.findByKey(entityKey)
-                    .orElseThrow { ResourceNotFoundException("Input entity not found: $entityKey") }
+                val entity =
+                    businessEntityRepository
+                        .findByKey(entityKey)
+                        .orElseThrow { ResourceNotFoundException("Input entity not found: $entityKey") }
                 process.inputEntities.add(entity)
             }
         }
 
         if (request.outputEntityKeys != null) {
             for (entityKey in request.outputEntityKeys!!) {
-                val entity = businessEntityRepository.findByKey(entityKey)
-                    .orElseThrow { ResourceNotFoundException("Output entity not found: $entityKey") }
+                val entity =
+                    businessEntityRepository
+                        .findByKey(entityKey)
+                        .orElseThrow { ResourceNotFoundException("Output entity not found: $entityKey") }
                 process.outputEntities.add(entity)
             }
         }
@@ -128,7 +138,11 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun updateProcessNames(key: String, names: List<org.leargon.backend.model.LocalizedText>, currentUser: User): ProcessResponse {
+    open fun updateProcessNames(
+        key: String,
+        names: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -150,7 +164,11 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun updateProcessDescriptions(key: String, descriptions: List<org.leargon.backend.model.LocalizedText>, currentUser: User): ProcessResponse {
+    open fun updateProcessDescriptions(
+        key: String,
+        descriptions: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -165,7 +183,11 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun updateLegalBasis(key: String, legalBasis: String?, currentUser: User): ProcessResponse {
+    open fun updateLegalBasis(
+        key: String,
+        legalBasis: String?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -173,15 +195,23 @@ open class ProcessService(
         process.legalBasis = legalBasis
 
         process = processRepository.update(process)
-        createProcessVersion(process, currentUser, "UPDATE",
-            "Changed legal basis from '$oldBasis' to '${legalBasis ?: "none"}'")
+        createProcessVersion(
+            process,
+            currentUser,
+            "UPDATE",
+            "Changed legal basis from '$oldBasis' to '${legalBasis ?: "none"}'"
+        )
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
     @Transactional
-    open fun updatePurpose(key: String, purpose: String?, currentUser: User): ProcessResponse {
+    open fun updatePurpose(
+        key: String,
+        purpose: String?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
         process.purpose = purpose
@@ -192,7 +222,11 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun updateSecurityMeasures(key: String, securityMeasures: String?, currentUser: User): ProcessResponse {
+    open fun updateSecurityMeasures(
+        key: String,
+        securityMeasures: String?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
         process.securityMeasures = securityMeasures
@@ -203,7 +237,11 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun updateProcessType(key: String, processType: String?, currentUser: User): ProcessResponse {
+    open fun updateProcessType(
+        key: String,
+        processType: String?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -211,32 +249,50 @@ open class ProcessService(
         process.processType = processType
 
         process = processRepository.update(process)
-        createProcessVersion(process, currentUser, "TYPE_CHANGE",
-            "Changed process type from '$oldType' to '${processType ?: "none"}'")
+        createProcessVersion(
+            process,
+            currentUser,
+            "TYPE_CHANGE",
+            "Changed process type from '$oldType' to '${processType ?: "none"}'"
+        )
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
     @Transactional
-    open fun updateProcessOwner(key: String, ownerUsername: String, currentUser: User): ProcessResponse {
+    open fun updateProcessOwner(
+        key: String,
+        ownerUsername: String,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        val newOwner = userRepository.findByUsername(ownerUsername)
-            .orElseThrow { ResourceNotFoundException("Process owner user not found") }
+        val newOwner =
+            userRepository
+                .findByUsername(ownerUsername)
+                .orElseThrow { ResourceNotFoundException("Process owner user not found") }
         process.processOwner = newOwner
 
         process = processRepository.update(process)
-        createProcessVersion(process, currentUser, "OWNER_CHANGE",
-            "Changed process owner to ${newOwner.username}")
+        createProcessVersion(
+            process,
+            currentUser,
+            "OWNER_CHANGE",
+            "Changed process owner to ${newOwner.username}"
+        )
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
     }
 
     @Transactional
-    open fun updateProcessCode(key: String, code: String, currentUser: User): ProcessResponse {
+    open fun updateProcessCode(
+        key: String,
+        code: String,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -258,9 +314,12 @@ open class ProcessService(
     ): ProcessResponse {
         var process = getProcessByKey(processKey)
         checkEditPermission(process, currentUser)
-        process.crossBorderTransfers = transfers
-            .map { org.leargon.backend.mapper.DataProcessorMapper.fromCrossBorderTransferEntry(it) }
-            .toMutableList()
+        process.crossBorderTransfers =
+            transfers
+                .map {
+                    org.leargon.backend.mapper.DataProcessorMapper
+                        .fromCrossBorderTransferEntry(it)
+                }.toMutableList()
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated cross-border transfers")
         process = getProcessByKey(process.key)
@@ -269,22 +328,34 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun assignBoundedContext(key: String, boundedContextKey: String?, currentUser: User): ProcessResponse {
+    open fun assignBoundedContext(
+        key: String,
+        boundedContextKey: String?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
         val oldName = process.boundedContext?.getName("en") ?: "none"
 
-        process.boundedContext = if (boundedContextKey != null) {
-            boundedContextRepository.findByKey(boundedContextKey)
-                .orElseThrow { ResourceNotFoundException("Bounded context not found") }
-        } else null
+        process.boundedContext =
+            if (boundedContextKey != null) {
+                boundedContextRepository
+                    .findByKey(boundedContextKey)
+                    .orElseThrow { ResourceNotFoundException("Bounded context not found") }
+            } else {
+                null
+            }
 
         process = processRepository.update(process)
 
         val newName = process.boundedContext?.getName("en") ?: "none"
-        createProcessVersion(process, currentUser, "UPDATE",
-            "BoundedContext assignment changed from '$oldName' to '$newName'")
+        createProcessVersion(
+            process,
+            currentUser,
+            "UPDATE",
+            "BoundedContext assignment changed from '$oldName' to '$newName'"
+        )
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
@@ -292,7 +363,11 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun addInput(key: String, request: AddProcessEntityRequest, currentUser: User): ProcessResponse {
+    open fun addInput(
+        key: String,
+        request: AddProcessEntityRequest,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -308,7 +383,11 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun removeInput(key: String, entityKey: String, currentUser: User): ProcessResponse {
+    open fun removeInput(
+        key: String,
+        entityKey: String,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -323,7 +402,11 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun addOutput(key: String, request: AddProcessEntityRequest, currentUser: User): ProcessResponse {
+    open fun addOutput(
+        key: String,
+        request: AddProcessEntityRequest,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -339,7 +422,11 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun removeOutput(key: String, entityKey: String, currentUser: User): ProcessResponse {
+    open fun removeOutput(
+        key: String,
+        entityKey: String,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -354,7 +441,11 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun assignExecutingUnits(key: String, unitKeys: List<String>?, currentUser: User): ProcessResponse {
+    open fun assignExecutingUnits(
+        key: String,
+        unitKeys: List<String>?,
+        currentUser: User
+    ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
@@ -362,8 +453,10 @@ open class ProcessService(
 
         if (unitKeys != null) {
             for (unitKey in unitKeys) {
-                val unit = organisationalUnitRepository.findByKey(unitKey)
-                    .orElseThrow { ResourceNotFoundException("Organisational unit not found: $unitKey") }
+                val unit =
+                    organisationalUnitRepository
+                        .findByKey(unitKey)
+                        .orElseThrow { ResourceNotFoundException("Organisational unit not found: $unitKey") }
                 process.executingUnits.add(unit)
             }
         }
@@ -376,13 +469,17 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun deleteProcess(key: String, currentUser: User) {
+    open fun deleteProcess(
+        key: String,
+        currentUser: User
+    ) {
         val process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
         if (process.children.isNotEmpty()) {
             throw IllegalArgumentException(
-                "Cannot delete process: it has ${process.children.size} child process(es). Delete or reassign them first.")
+                "Cannot delete process: it has ${process.children.size} child process(es). Delete or reassign them first."
+            )
         }
 
         processRepository.delete(process)
@@ -391,23 +488,31 @@ open class ProcessService(
     @Transactional
     open fun getVersionHistory(key: String): List<ProcessVersionResponse> {
         val process = getProcessByKey(key)
-        return processVersionRepository.findByProcessIdOrderByVersionNumberDesc(process.id!!)
+        return processVersionRepository
+            .findByProcessIdOrderByVersionNumberDesc(process.id!!)
             .map { processMapper.toProcessVersionResponse(it) }
     }
 
     @Transactional
-    open fun getVersionDiff(key: String, versionNumber: Int): VersionDiffResponse {
+    open fun getVersionDiff(
+        key: String,
+        versionNumber: Int
+    ): VersionDiffResponse {
         val process = getProcessByKey(key)
 
-        val currentVersion = processVersionRepository
-            .findByProcessIdAndVersionNumber(process.id!!, versionNumber)
-            .orElseThrow { ResourceNotFoundException("Version not found") }
-
-        val previousVersion = if (versionNumber > 1) {
+        val currentVersion =
             processVersionRepository
-                .findByProcessIdAndVersionNumber(process.id!!, versionNumber - 1)
-                .orElse(null)
-        } else null
+                .findByProcessIdAndVersionNumber(process.id!!, versionNumber)
+                .orElseThrow { ResourceNotFoundException("Version not found") }
+
+        val previousVersion =
+            if (versionNumber > 1) {
+                processVersionRepository
+                    .findByProcessIdAndVersionNumber(process.id!!, versionNumber - 1)
+                    .orElse(null)
+            } else {
+                null
+            }
 
         val currentSnapshot = parseSnapshot(currentVersion.snapshotJson)
         val previousSnapshot = if (previousVersion != null) parseSnapshot(previousVersion.snapshotJson) else emptyMap()
@@ -418,28 +523,41 @@ open class ProcessService(
     }
 
     @Transactional
-    open fun recordVersion(key: String, changedBy: User, changeType: String, changeSummary: String) {
+    open fun recordVersion(
+        key: String,
+        changedBy: User,
+        changeType: String,
+        changeSummary: String
+    ) {
         val process = getProcessByKey(key)
         createProcessVersion(process, changedBy, changeType, changeSummary)
     }
 
-    private fun resolveOrCreateEntity(request: AddProcessEntityRequest, currentUser: User): BusinessEntity {
-        return when {
-            request.entityKey != null -> businessEntityRepository.findByKey(request.entityKey)
-                .orElseThrow { ResourceNotFoundException("Business entity not found: ${request.entityKey}") }
+    private fun resolveOrCreateEntity(
+        request: AddProcessEntityRequest,
+        currentUser: User
+    ): BusinessEntity =
+        when {
+            request.entityKey != null ->
+                businessEntityRepository
+                    .findByKey(request.entityKey)
+                    .orElseThrow { ResourceNotFoundException("Business entity not found: ${request.entityKey}") }
             request.createEntity != null -> businessEntityService.createBusinessEntity(request.createEntity!!, currentUser)
             else -> throw IllegalArgumentException("Either entityKey or createEntity must be provided")
         }
-    }
 
-    private fun validateTranslations(translations: List<org.leargon.backend.model.LocalizedText>?, requireDefault: Boolean = true) {
+    private fun validateTranslations(
+        translations: List<org.leargon.backend.model.LocalizedText>?,
+        requireDefault: Boolean = true
+    ) {
         if (translations.isNullOrEmpty()) {
             if (requireDefault) throw IllegalArgumentException("At least one translation is required")
             return
         }
 
-        val defaultLocale = localeService.getDefaultLocale()
-            ?: throw IllegalStateException("No default locale configured")
+        val defaultLocale =
+            localeService.getDefaultLocale()
+                ?: throw IllegalStateException("No default locale configured")
 
         translations.forEach { translation ->
             if (!localeService.isLocaleActive(translation.locale)) {
@@ -454,26 +572,34 @@ open class ProcessService(
             val defaultTranslation = translations.find { it.locale == defaultLocale.localeCode }
             if (defaultTranslation == null) {
                 throw IllegalArgumentException(
-                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required")
+                    "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required"
+                )
             }
         }
     }
 
-    private fun createProcessVersion(process: Process, changedBy: User, changeType: String, changeSummary: String) {
-        val nextVersion = processVersionRepository
-            .findFirstByProcessIdOrderByVersionNumberDesc(process.id!!)
-            .map { it.versionNumber + 1 }
-            .orElse(1)
+    private fun createProcessVersion(
+        process: Process,
+        changedBy: User,
+        changeType: String,
+        changeSummary: String
+    ) {
+        val nextVersion =
+            processVersionRepository
+                .findFirstByProcessIdOrderByVersionNumberDesc(process.id!!)
+                .map { it.versionNumber + 1 }
+                .orElse(1)
 
-        val snapshot = mapOf(
-            "key" to process.key,
-            "code" to process.code,
-            "processType" to process.processType,
-            "legalBasis" to process.legalBasis,
-            "processOwnerUsername" to process.processOwner!!.username,
-            "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
-            "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
-        )
+        val snapshot =
+            mapOf(
+                "key" to process.key,
+                "code" to process.code,
+                "processType" to process.processType,
+                "legalBasis" to process.legalBasis,
+                "processOwnerUsername" to process.processOwner!!.username,
+                "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
+                "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
+            )
 
         val version = ProcessVersion()
         version.process = process
@@ -497,7 +623,10 @@ open class ProcessService(
 
     companion object {
         @JvmStatic
-        fun checkEditPermission(process: Process, currentUser: User) {
+        fun checkEditPermission(
+            process: Process,
+            currentUser: User
+        ) {
             val isOwner = process.processOwner!!.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
@@ -507,7 +636,10 @@ open class ProcessService(
 
         @JvmStatic
         @Suppress("UNCHECKED_CAST")
-        fun calculateDiff(previous: Map<String, Any?>, current: Map<String, Any?>): List<FieldChange> {
+        fun calculateDiff(
+            previous: Map<String, Any?>,
+            current: Map<String, Any?>
+        ): List<FieldChange> {
             val changes = mutableListOf<FieldChange>()
 
             val prevOwner = previous["processOwnerUsername"]
@@ -536,7 +668,10 @@ open class ProcessService(
 
             val prevNames = (previous["names"] as? List<Map<*, *>>) ?: emptyList()
             val currNames = (current["names"] as? List<Map<*, *>>) ?: emptyList()
-            val allNameLocales = (prevNames.map { it["locale"]?.toString() } + currNames.map { it["locale"]?.toString() }).filterNotNull().toSet()
+            val allNameLocales =
+                (prevNames.map { it["locale"]?.toString() } + currNames.map { it["locale"]?.toString() })
+                    .filterNotNull()
+                    .toSet()
             allNameLocales.forEach { locale ->
                 val prev = prevNames.find { it["locale"] == locale }
                 val curr = currNames.find { it["locale"] == locale }
@@ -551,7 +686,10 @@ open class ProcessService(
 
             val prevDescs = (previous["descriptions"] as? List<Map<*, *>>) ?: emptyList()
             val currDescs = (current["descriptions"] as? List<Map<*, *>>) ?: emptyList()
-            val allDescLocales = (prevDescs.map { it["locale"]?.toString() } + currDescs.map { it["locale"]?.toString() }).filterNotNull().toSet()
+            val allDescLocales =
+                (prevDescs.map { it["locale"]?.toString() } + currDescs.map { it["locale"]?.toString() })
+                    .filterNotNull()
+                    .toSet()
             allDescLocales.forEach { locale ->
                 val prev = prevDescs.find { it["locale"] == locale }
                 val curr = currDescs.find { it["locale"] == locale }

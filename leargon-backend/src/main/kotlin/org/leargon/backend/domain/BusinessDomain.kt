@@ -13,7 +13,6 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import jakarta.persistence.Transient
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.Instant
@@ -21,7 +20,6 @@ import java.time.Instant
 @Entity
 @Table(name = "business_domains")
 class BusinessDomain {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -82,15 +80,9 @@ class BusinessDomain {
         child.parent = null
     }
 
-    fun getEffectiveType(): String? {
-        return type ?: parent?.type
-    }
+    fun getEffectiveType(): String? = type ?: parent?.type
 
-    fun getName(locale: String): String {
-        return names.find { it.locale == locale }?.text ?: names.first().text
-    }
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
-    fun getDescription(locale: String): String {
-        return descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
-    }
+    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
 }

@@ -150,7 +150,7 @@ class BusinessEntityControllerSpec extends Specification {
     def "POST /business-entities should allow setting custom data owner"() {
         given: "two users"
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def ownerData = createUserWithToken("owner@example.com", "owner")
+        createUserWithToken("owner@example.com", "owner")
 
         and: "a create request with custom data owner"
         def request = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
@@ -363,7 +363,7 @@ class BusinessEntityControllerSpec extends Specification {
     def "PUT /business-entities/{key}/data-owner should allow changing data owner"() {
         given: "an entity and a new owner"
         def ownerData = createUserWithToken("owner@example.com", "owner")
-        def newOwnerData = createUserWithToken("newowner@example.com", "newowner")
+        createUserWithToken("newowner@example.com", "newowner")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def createResponse = client.toBlocking().exchange(

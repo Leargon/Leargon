@@ -13,11 +13,12 @@ open class SetupService(
     private val userRepository: UserRepository,
     private val userMapper: UserMapper
 ) {
-
     @Transactional
     open fun completeSetup(email: String): UserResponse {
-        var user = userRepository.findByEmail(email)
-            .orElseThrow { ResourceNotFoundException("User not found") }
+        var user =
+            userRepository
+                .findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found") }
 
         if (!user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Only the fallback administrator can complete setup")

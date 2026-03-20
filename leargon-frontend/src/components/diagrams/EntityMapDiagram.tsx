@@ -187,7 +187,7 @@ const EntityMapDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const [showDomainLayer, setShowDomainLayer] = useState(true);
+  const [showDomainLayer, setShowDomainLayer] = useState(false);
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
 
   const { data: entitiesResponse, isLoading, isError } = useGetAllBusinessEntities();

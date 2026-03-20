@@ -3,13 +3,14 @@ package org.leargon.backend.util
 import java.text.Normalizer
 
 object SlugUtil {
-
     fun slugify(text: String?): String {
         if (text == null || text.trim().isEmpty()) {
             return ""
         }
-        val normalized = Normalizer.normalize(text, Normalizer.Form.NFD)
-            .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+        val normalized =
+            Normalizer
+                .normalize(text, Normalizer.Form.NFD)
+                .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
         return normalized
             .lowercase()
             .replace(Regex("[\\s_]+"), "-")
@@ -18,7 +19,8 @@ object SlugUtil {
             .replace(Regex("^-|-$"), "")
     }
 
-    fun buildKey(parentKey: String?, slug: String): String {
-        return if (!parentKey.isNullOrEmpty()) "${parentKey}.${slug}" else slug
-    }
+    fun buildKey(
+        parentKey: String?,
+        slug: String
+    ): String = if (!parentKey.isNullOrEmpty()) "$parentKey.$slug" else slug
 }

@@ -14,12 +14,13 @@ open class AuthenticationService(
     @param:Value("\${azure.tenant-id:}") private val azureTenantId: String,
     @param:Value("\${azure.client-id:}") private val azureClientId: String
 ) {
-
     private fun isAzureEnabled(): Boolean = azureTenantId.isNotEmpty() && azureClientId.isNotEmpty()
 
     open fun authenticate(request: LoginRequest): User {
-        val user = userService.findByEmail(request.email)
-            .orElseThrow { AuthenticationException("Invalid email or password") }
+        val user =
+            userService
+                .findByEmail(request.email)
+                .orElseThrow { AuthenticationException("Invalid email or password") }
 
         if (isAzureEnabled() && !user.isFallbackAdministrator) {
             throw AuthenticationException("Please use Azure login")

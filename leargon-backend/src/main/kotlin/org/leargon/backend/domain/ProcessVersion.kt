@@ -19,7 +19,6 @@ import java.time.Instant
     uniqueConstraints = [UniqueConstraint(columnNames = ["process_id", "version_number"])]
 )
 class ProcessVersion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

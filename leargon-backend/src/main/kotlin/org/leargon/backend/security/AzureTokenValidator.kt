@@ -20,7 +20,6 @@ open class AzureTokenValidator(
     @param:Value("\${azure.tenant-id}") private val tenantId: String,
     @param:Value("\${azure.client-id}") private val clientId: String
 ) {
-
     companion object {
         private val LOG = LoggerFactory.getLogger(AzureTokenValidator::class.java)
     }
@@ -35,22 +34,25 @@ open class AzureTokenValidator(
         val jwksUrl = URI("https://login.microsoftonline.com/$tenantId/discovery/v2.0/keys").toURL()
         val jwkSource = JWKSourceBuilder.create<SecurityContext>(jwksUrl).build()
 
-        val keySelector = JWSVerificationKeySelector<SecurityContext>(
-            JWSAlgorithm.RS256,
-            jwkSource
-        )
+        val keySelector =
+            JWSVerificationKeySelector<SecurityContext>(
+                JWSAlgorithm.RS256,
+                jwkSource
+            )
 
         jwtProcessor = DefaultJWTProcessor<SecurityContext>()
         jwtProcessor.jwsKeySelector = keySelector
 
         val expectedIssuer = "https://login.microsoftonline.com/$tenantId/v2.0"
-        val claimsVerifier = DefaultJWTClaimsVerifier<SecurityContext>(
-            JWTClaimsSet.Builder()
-                .issuer(expectedIssuer)
-                .audience(clientId)
-                .build(),
-            HashSet(listOf("sub", "iat", "exp", "iss", "aud"))
-        )
+        val claimsVerifier =
+            DefaultJWTClaimsVerifier<SecurityContext>(
+                JWTClaimsSet
+                    .Builder()
+                    .issuer(expectedIssuer)
+                    .audience(clientId)
+                    .build(),
+                HashSet(listOf("sub", "iat", "exp", "iss", "aud"))
+            )
         jwtProcessor.jwtClaimsSetVerifier = claimsVerifier
     }
 

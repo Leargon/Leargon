@@ -16,7 +16,6 @@ import java.time.Instant
 @Entity
 @Table(name = "context_relationships")
 class ContextRelationship {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

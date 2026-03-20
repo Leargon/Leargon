@@ -19,7 +19,6 @@ import java.time.Instant
     uniqueConstraints = [UniqueConstraint(columnNames = ["business_domain_id", "version_number"])]
 )
 class BusinessDomainVersion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

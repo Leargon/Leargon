@@ -7,6 +7,8 @@ plugins {
     id("io.micronaut.application") version "4.6.2"
     id("com.gradleup.shadow") version "9.3.2"
     id("io.micronaut.openapi") version "4.6.2"
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
+    id("codenarc")
 }
 
 version = "1.0.0"
@@ -195,6 +197,29 @@ dependencies {
 tasks.withType(Jar).configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+ktlint {
+    version = "1.5.0"
+    android = false
+    reporters {
+        reporter("plain")
+        reporter("checkstyle")
+        reporter("sarif")
+    }
+    filter {
+        // Only lint hand-written Kotlin sources, not generated OpenAPI files
+        exclude { entry -> entry.file.path.contains("build/generated") }
+    }
+}
+
+codenarc {
+    toolVersion = "3.6.0"
+    configFile = file("config/codenarc/codenarc.xml")
+    reportFormat = "html"
+}
+
+// Only run CodeNarc on test sources (main sources are Kotlin, not Groovy)
+tasks.named("codenarcMain") { enabled = false }
 
 micronaut {
     version = "4.10.9"

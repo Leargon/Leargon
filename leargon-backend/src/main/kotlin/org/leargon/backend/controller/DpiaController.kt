@@ -25,21 +25,28 @@ open class DpiaController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : DpiaApi {
+    override fun getAllDpias(): List<DpiaListItemResponse> = dpiaService.getAllDpias()
 
-    override fun getAllDpias(): List<DpiaListItemResponse> =
-        dpiaService.getAllDpias()
-
-    override fun updateDpiaRiskDescription(key: String, @Valid @Body updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest): DpiaResponse {
+    override fun updateDpiaRiskDescription(
+        key: String,
+        @Valid @Body updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest
+    ): DpiaResponse {
         val currentUser = getCurrentUser()
         return dpiaService.updateRiskDescription(key, updateDpiaRiskDescriptionRequest.riskDescription, currentUser)
     }
 
-    override fun updateDpiaMeasures(key: String, @Valid @Body updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest): DpiaResponse {
+    override fun updateDpiaMeasures(
+        key: String,
+        @Valid @Body updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest
+    ): DpiaResponse {
         val currentUser = getCurrentUser()
         return dpiaService.updateMeasures(key, updateDpiaMeasuresRequest.measures, currentUser)
     }
 
-    override fun updateDpiaResidualRisk(key: String, @Valid @Body updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest): DpiaResponse {
+    override fun updateDpiaResidualRisk(
+        key: String,
+        @Valid @Body updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest
+    ): DpiaResponse {
         val currentUser = getCurrentUser()
         return dpiaService.updateResidualRisk(
             key,
@@ -59,7 +66,10 @@ open class DpiaController(
         return dpiaService.reopen(key, currentUser)
     }
 
-    override fun updateDpiaFdpicConsultation(key: String, @Valid @Body updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest): DpiaResponse {
+    override fun updateDpiaFdpicConsultation(
+        key: String,
+        @Valid @Body updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest
+    ): DpiaResponse {
         val currentUser = getCurrentUser()
         return dpiaService.updateFdpicConsultation(
             key,
@@ -71,9 +81,12 @@ open class DpiaController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

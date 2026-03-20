@@ -20,7 +20,6 @@ import java.time.Instant
 @Entity
 @Table(name = "domain_events")
 class DomainEvent {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

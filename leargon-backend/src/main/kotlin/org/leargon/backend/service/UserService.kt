@@ -30,7 +30,6 @@ open class UserService(
     private val passwordEncoder: PasswordEncoder,
     private val userMapper: UserMapper
 ) {
-
     @Transactional
     open fun createUser(request: SignupRequest): User {
         if (userRepository.existsByEmail(request.email)) {
@@ -47,8 +46,7 @@ open class UserService(
 
     open fun findByEmail(email: String): Optional<User> = userRepository.findByEmail(email)
 
-    open fun getUserById(id: Long): User =
-        userRepository.findById(id).orElseThrow { ResourceNotFoundException("User not found") }
+    open fun getUserById(id: Long): User = userRepository.findById(id).orElseThrow { ResourceNotFoundException("User not found") }
 
     @Transactional
     open fun updateLastLogin(userId: Long): User {
@@ -59,11 +57,13 @@ open class UserService(
 
     open fun toUserResponse(user: User): UserResponse = userMapper.toUserResponse(user)
 
-    open fun getAllUsersAsResponses(): List<UserResponse> =
-        userRepository.findAll().map { toUserResponse(it) }
+    open fun getAllUsersAsResponses(): List<UserResponse> = userRepository.findAll().map { toUserResponse(it) }
 
     @Transactional
-    open fun updateUser(userId: Long, request: UpdateUserRequest): User {
+    open fun updateUser(
+        userId: Long,
+        request: UpdateUserRequest
+    ): User {
         val user = getUserById(userId)
         if (user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Cannot modify fallback admin user")
@@ -91,26 +91,34 @@ open class UserService(
         val ownedEntities = businessEntityRepository.findByDataOwnerId(userId)
         if (ownedEntities.isNotEmpty()) {
             val suffix = if (ownedEntities.size == 1) "y" else "ies"
-            throw ForbiddenOperationException("Cannot delete user who is data owner of ${ownedEntities.size} business entit$suffix. Reassign ownership first.")
+            throw ForbiddenOperationException(
+                "Cannot delete user who is data owner of ${ownedEntities.size} business entit$suffix. Reassign ownership first."
+            )
         }
         val ownedProcesses = processRepository.findByProcessOwnerId(userId)
         if (ownedProcesses.isNotEmpty()) {
             val suffix = if (ownedProcesses.size == 1) "" else "es"
-            throw ForbiddenOperationException("Cannot delete user who is process owner of ${ownedProcesses.size} process$suffix. Reassign ownership first.")
+            throw ForbiddenOperationException(
+                "Cannot delete user who is process owner of ${ownedProcesses.size} process$suffix. Reassign ownership first."
+            )
         }
         val ledUnits = organisationalUnitRepository.findByLeadId(userId)
         if (ledUnits.isNotEmpty()) {
             val suffix = if (ledUnits.size == 1) "" else "s"
-            throw ForbiddenOperationException("Cannot delete user who is lead of ${ledUnits.size} organisational unit$suffix. Reassign lead first.")
+            throw ForbiddenOperationException(
+                "Cannot delete user who is lead of ${ledUnits.size} organisational unit$suffix. Reassign lead first."
+            )
         }
         userRepository.delete(user)
     }
 
-    open fun getUserRoles(user: User): List<String> =
-        user.roles.split(',').toList()
+    open fun getUserRoles(user: User): List<String> = user.roles.split(',').toList()
 
     @Transactional
-    open fun changePassword(userId: Long, request: ChangePasswordRequest) {
+    open fun changePassword(
+        userId: Long,
+        request: ChangePasswordRequest
+    ) {
         val user = getUserById(userId)
         if (user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Cannot change password of fallback admin user")
@@ -123,7 +131,10 @@ open class UserService(
     }
 
     @Transactional
-    open fun adminChangePassword(userId: Long, request: AdministrationChangePasswordRequest) {
+    open fun adminChangePassword(
+        userId: Long,
+        request: AdministrationChangePasswordRequest
+    ) {
         val user = getUserById(userId)
         if (user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Cannot change password of fallback admin user")

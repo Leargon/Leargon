@@ -18,20 +18,29 @@ open class UserController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : UserApi {
-
     override fun getCurrentUser(): UserResponse {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        val user = userService.findByEmail(email)
-            .orElseThrow { ResourceNotFoundException("User not found") }
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        val user =
+            userService
+                .findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found") }
         return userService.toUserResponse(user)
     }
 
-    override fun changePassword(@Valid @Body changePasswordRequest: ChangePasswordRequest) {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        val user = userService.findByEmail(email)
-            .orElseThrow { ResourceNotFoundException("User not found") }
+    override fun changePassword(
+        @Valid @Body changePasswordRequest: ChangePasswordRequest
+    ) {
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        val user =
+            userService
+                .findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found") }
         userService.changePassword(user.id!!, changePasswordRequest)
     }
 }

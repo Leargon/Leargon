@@ -16,7 +16,6 @@ import java.time.Instant
 @Entity
 @Table(name = "translation_links")
 class TranslationLink {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

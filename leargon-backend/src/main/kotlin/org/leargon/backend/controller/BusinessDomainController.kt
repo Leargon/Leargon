@@ -37,23 +37,24 @@ open class BusinessDomainController(
     private val securityService: SecurityService,
     private val businessDomainMapper: BusinessDomainMapper
 ) : BusinessDomainApi {
+    override fun getAllBusinessDomains(): List<BusinessDomainResponse> = businessDomainService.getAllBusinessDomainsAsResponses()
 
-    override fun getAllBusinessDomains(): List<BusinessDomainResponse> =
-        businessDomainService.getAllBusinessDomainsAsResponses()
+    override fun getBusinessDomainTree(): List<BusinessDomainTreeResponse> = businessDomainService.getBusinessDomainTreeAsResponses()
 
-    override fun getBusinessDomainTree(): List<BusinessDomainTreeResponse> =
-        businessDomainService.getBusinessDomainTreeAsResponses()
+    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse = businessDomainService.getBusinessDomainByKeyAsResponse(key)
 
-    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse =
-        businessDomainService.getBusinessDomainByKeyAsResponse(key)
-
-    override fun getLocalizedBusinessDomain(key: String, locale: String?): LocalizedBusinessDomainResponse {
+    override fun getLocalizedBusinessDomain(
+        key: String,
+        locale: String?
+    ): LocalizedBusinessDomainResponse {
         val currentUser = getCurrentUser()
         return businessDomainService.getLocalizedDomain(key, locale, currentUser)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun createBusinessDomain(@Valid @Body createDomainRequest: CreateBusinessDomainRequest): HttpResponse<BusinessDomainResponse> {
+    override fun createBusinessDomain(
+        @Valid @Body createDomainRequest: CreateBusinessDomainRequest
+    ): HttpResponse<BusinessDomainResponse> {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.createBusinessDomain(createDomainRequest, currentUser)
@@ -70,7 +71,10 @@ open class BusinessDomainController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessDomainParent(key: String, @Valid @Body updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest): BusinessDomainResponse {
+    override fun updateBusinessDomainParent(
+        key: String,
+        @Valid @Body updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.updateBusinessDomainParent(key, updateBusinessDomainParentRequest.parentKey, currentUser)
@@ -78,15 +82,26 @@ open class BusinessDomainController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessDomainVisionStatement(key: String, @Valid @Body updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest): BusinessDomainResponse {
+    override fun updateBusinessDomainVisionStatement(
+        key: String,
+        @Valid @Body updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
-        val domain = businessDomainService.updateBusinessDomainVisionStatement(key, updateDomainVisionStatementRequest.visionStatement, currentUser)
+        val domain =
+            businessDomainService.updateBusinessDomainVisionStatement(
+                key,
+                updateDomainVisionStatementRequest.visionStatement,
+                currentUser
+            )
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessDomainType(key: String, @Valid @Body updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest): BusinessDomainResponse {
+    override fun updateBusinessDomainType(
+        key: String,
+        @Valid @Body updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.updateBusinessDomainType(key, updateBusinessDomainTypeRequest.type?.value, currentUser)
@@ -94,7 +109,10 @@ open class BusinessDomainController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessDomainNames(key: String, @Valid @Body names: List<LocalizedText>): BusinessDomainResponse {
+    override fun updateBusinessDomainNames(
+        key: String,
+        @Valid @Body names: List<LocalizedText>
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.updateBusinessDomainNames(key, names, currentUser)
@@ -102,29 +120,39 @@ open class BusinessDomainController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessDomainDescriptions(key: String, @Valid @Body descriptions: List<LocalizedText>): BusinessDomainResponse {
+    override fun updateBusinessDomainDescriptions(
+        key: String,
+        @Valid @Body descriptions: List<LocalizedText>
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.updateBusinessDomainDescriptions(key, descriptions, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    override fun getBusinessDomainVersions(key: String): List<BusinessDomainVersionResponse> =
-        businessDomainService.getVersionHistory(key)
+    override fun getBusinessDomainVersions(key: String): List<BusinessDomainVersionResponse> = businessDomainService.getVersionHistory(key)
 
-    override fun getBusinessDomainVersionDiff(key: String, versionNumber: Int): VersionDiffResponse =
-        businessDomainService.getVersionDiff(key, versionNumber)
+    override fun getBusinessDomainVersionDiff(
+        key: String,
+        versionNumber: Int
+    ): VersionDiffResponse = businessDomainService.getVersionDiff(key, versionNumber)
 
-    override fun assignClassificationsToDomain(key: String, @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>): BusinessDomainResponse {
+    override fun assignClassificationsToDomain(
+        key: String,
+        @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>
+    ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         classificationService.assignClassificationsToDomain(key, classificationAssignmentRequest, currentUser)
         return businessDomainService.getBusinessDomainByKeyAsResponse(key)
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 

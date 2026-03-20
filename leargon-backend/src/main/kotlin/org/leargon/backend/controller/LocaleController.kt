@@ -15,10 +15,12 @@ import org.leargon.backend.service.LocaleService
 open class LocaleController(
     private val localeService: LocaleService
 ) : LocaleApi {
-
     override fun getSupportedLocales(includeInactive: Boolean?): List<SupportedLocaleResponse> =
-        if (includeInactive == true) localeService.getAllLocalesAsResponses()
-        else localeService.getActiveLocalesAsResponses()
+        if (includeInactive == true) {
+            localeService.getAllLocalesAsResponses()
+        } else {
+            localeService.getActiveLocalesAsResponses()
+        }
 
     @Secured("ROLE_ADMIN")
     override fun createSupportedLocale(request: CreateSupportedLocaleRequest): HttpResponse<SupportedLocaleResponse> {
@@ -27,8 +29,10 @@ open class LocaleController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateSupportedLocale(id: Long, request: UpdateSupportedLocaleRequest): SupportedLocaleResponse =
-        localeService.updateLocale(id, request)
+    override fun updateSupportedLocale(
+        id: Long,
+        request: UpdateSupportedLocaleRequest
+    ): SupportedLocaleResponse = localeService.updateLocale(id, request)
 
     @Secured("ROLE_ADMIN")
     override fun deleteSupportedLocale(id: Long): HttpResponse<Void> {

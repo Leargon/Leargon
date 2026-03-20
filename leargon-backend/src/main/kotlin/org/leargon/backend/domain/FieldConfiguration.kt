@@ -10,7 +10,6 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "field_configurations")
 class FieldConfiguration {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null

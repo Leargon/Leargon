@@ -17,7 +17,6 @@ import java.time.Instant
 @Entity
 @Table(name = "data_processors")
 class DataProcessor {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -61,7 +60,5 @@ class DataProcessor {
     @Column(name = "updated_at")
     var updatedAt: Instant? = null
 
-    fun getName(locale: String): String {
-        return names.find { it.locale == locale }?.text ?: names.firstOrNull()?.text ?: key
-    }
+    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.firstOrNull()?.text ?: key
 }

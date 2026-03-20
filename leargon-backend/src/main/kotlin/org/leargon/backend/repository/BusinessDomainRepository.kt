@@ -9,8 +9,12 @@ import java.util.Optional
 
 @Repository
 interface BusinessDomainRepository : JpaRepository<BusinessDomain, Long> {
-
-    @Query(value = "SELECT COUNT(*) FROM business_domains WHERE names LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%') OR descriptions LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')", nativeQuery = true)
+    @Query(
+        value =
+            "SELECT COUNT(*) FROM business_domains WHERE names LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')" +
+                " OR descriptions LIKE CONCAT('%\"locale\":\"', :localeCode, '\"%')",
+        nativeQuery = true
+    )
     fun countByLocaleInTranslations(localeCode: String): Long
 
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)

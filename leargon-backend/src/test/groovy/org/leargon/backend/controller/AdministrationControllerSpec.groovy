@@ -324,7 +324,7 @@ class AdministrationControllerSpec extends Specification {
     def "PUT /administration/users/{id} should update user roles"() {
         given: "an admin token and a regular user"
         String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
+        createRegularUserToken()
         def user = userRepository.findByEmail("regular@example.com").get()
 
         and: "an update request with admin role"
@@ -487,7 +487,7 @@ class AdministrationControllerSpec extends Specification {
     def "POST /administration/users/{id}/disable should disable user account"() {
         given: "an admin token and a user"
         String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
+        createRegularUserToken()
         def user = userRepository.findByEmail("regular@example.com").get()
 
         when: "disabling user account"
@@ -507,7 +507,7 @@ class AdministrationControllerSpec extends Specification {
     def "POST /administration/users/{id}/enable should enable user account"() {
         given: "an admin token and a disabled user"
         String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
+        createRegularUserToken()
         def user = userRepository.findByEmail("regular@example.com").get()
 
         // Disable the user first
@@ -571,7 +571,7 @@ class AdministrationControllerSpec extends Specification {
     def "PUT /administration/users/{id}/password should change user password"() {
         given: "an admin token and a regular user"
         String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
+        createRegularUserToken()
         def user = userRepository.findByEmail("regular@example.com").get()
 
         and: "a password change request"
@@ -668,7 +668,7 @@ class AdministrationControllerSpec extends Specification {
     def "POST /administration/users/{id}/promote-admin should work via updateUser endpoint"() {
         given: "an admin token and a regular user"
         String adminToken = createAdminToken()
-        String regularToken = createRegularUserToken()
+        createRegularUserToken()
         def user = userRepository.findByEmail("regular@example.com").get()
 
         and: "an update request to promote to admin"

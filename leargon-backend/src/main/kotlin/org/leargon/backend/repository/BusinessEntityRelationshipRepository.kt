@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface BusinessEntityRelationshipRepository : JpaRepository<BusinessEntityRelationship, Long> {
-
     @Join(value = "firstBusinessEntity", type = Join.Type.FETCH)
     @Join(value = "secondBusinessEntity", type = Join.Type.FETCH)
     override fun findById(id: Long): Optional<BusinessEntityRelationship>

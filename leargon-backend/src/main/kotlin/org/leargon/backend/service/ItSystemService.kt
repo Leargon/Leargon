@@ -22,7 +22,6 @@ open class ItSystemService(
     private val processRepository: ProcessRepository,
     private val itSystemMapper: ItSystemMapper
 ) {
-
     @Transactional
     open fun getAll(): List<ItSystemResponse> {
         val mapper = itSystemMapper
@@ -31,34 +30,41 @@ open class ItSystemService(
 
     @Transactional
     open fun getByKey(key: String): ItSystemResponse {
-        val itSystem = itSystemRepository.findByKey(key)
-            ?: throw ResourceNotFoundException("IT system not found: $key")
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
         return itSystemMapper.toItSystemResponse(itSystem)
     }
 
     @Transactional
     open fun create(request: CreateItSystemRequest): ItSystemResponse {
-        val slug = request.names.find { it.locale == "en" }?.text
-            ?: request.names.first().text
+        val slug =
+            request.names.find { it.locale == "en" }?.text
+                ?: request.names.first().text
         val key = slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
         if (itSystemRepository.existsByKey(key)) {
             throw DuplicateResourceException("IT system with key '$key' already exists")
         }
-        val itSystem = ItSystem().apply {
-            this.key = key
-            this.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
-            this.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
-            this.vendor = request.vendor
-            this.systemUrl = request.systemUrl
-        }
+        val itSystem =
+            ItSystem().apply {
+                this.key = key
+                this.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
+                this.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
+                this.vendor = request.vendor
+                this.systemUrl = request.systemUrl
+            }
         itSystemRepository.save(itSystem)
         return itSystemMapper.toItSystemResponse(itSystem)
     }
 
     @Transactional
-    open fun update(key: String, request: UpdateItSystemRequest): ItSystemResponse {
-        val itSystem = itSystemRepository.findByKey(key)
-            ?: throw ResourceNotFoundException("IT system not found: $key")
+    open fun update(
+        key: String,
+        request: UpdateItSystemRequest
+    ): ItSystemResponse {
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
         itSystem.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         itSystem.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
         itSystem.vendor = request.vendor
@@ -70,15 +76,20 @@ open class ItSystemService(
 
     @Transactional
     open fun delete(key: String) {
-        val itSystem = itSystemRepository.findByKey(key)
-            ?: throw ResourceNotFoundException("IT system not found: $key")
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
         itSystemRepository.delete(itSystem)
     }
 
     @Transactional
-    open fun updateLinkedProcesses(key: String, request: UpdateItSystemLinkedProcessesRequest) {
-        val itSystem = itSystemRepository.findByKey(key)
-            ?: throw ResourceNotFoundException("IT system not found: $key")
+    open fun updateLinkedProcesses(
+        key: String,
+        request: UpdateItSystemLinkedProcessesRequest
+    ) {
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
         val processes = request.processKeys.mapNotNull { processRepository.findByKey(it).orElse(null) }.toMutableSet()
         itSystem.linkedProcesses = processes
         itSystem.updatedAt = Instant.now()
@@ -86,10 +97,14 @@ open class ItSystemService(
     }
 
     @Transactional
-    open fun updateProcessItSystems(processKey: String, request: UpdateProcessItSystemsRequest) {
-        val process = processRepository.findByKey(processKey).orElseThrow {
-            ResourceNotFoundException("Process not found: $processKey")
-        }
+    open fun updateProcessItSystems(
+        processKey: String,
+        request: UpdateProcessItSystemsRequest
+    ) {
+        val process =
+            processRepository.findByKey(processKey).orElseThrow {
+                ResourceNotFoundException("Process not found: $processKey")
+            }
         val repo = itSystemRepository
         val itSystems = request.itSystemKeys.mapNotNull { repo.findByKey(it) }.toMutableSet()
         process.itSystems = itSystems

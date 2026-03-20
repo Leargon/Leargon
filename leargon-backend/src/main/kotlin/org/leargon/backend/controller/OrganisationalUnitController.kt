@@ -37,17 +37,15 @@ open class OrganisationalUnitController(
     private val securityService: SecurityService,
     private val organisationalUnitMapper: OrganisationalUnitMapper
 ) : OrganisationalUnitApi {
+    override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> = organisationalUnitService.getAllAsResponses()
 
-    override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> =
-        organisationalUnitService.getAllAsResponses()
+    override fun getOrganisationalUnitTree(): List<OrganisationalUnitTreeResponse> = organisationalUnitService.getTreeAsResponses()
 
-    override fun getOrganisationalUnitTree(): List<OrganisationalUnitTreeResponse> =
-        organisationalUnitService.getTreeAsResponses()
+    override fun getOrganisationalUnitByKey(key: String): OrganisationalUnitResponse = organisationalUnitService.getByKeyAsResponse(key)
 
-    override fun getOrganisationalUnitByKey(key: String): OrganisationalUnitResponse =
-        organisationalUnitService.getByKeyAsResponse(key)
-
-    override fun createOrganisationalUnit(@Valid @Body request: CreateOrganisationalUnitRequest): HttpResponse<OrganisationalUnitResponse> {
+    override fun createOrganisationalUnit(
+        @Valid @Body request: CreateOrganisationalUnitRequest
+    ): HttpResponse<OrganisationalUnitResponse> {
         val currentUser = getCurrentUser()
         checkCreatePermission(currentUser, request.parentKeys)
 
@@ -64,67 +62,98 @@ open class OrganisationalUnitController(
         return HttpResponse.noContent()
     }
 
-    override fun updateOrganisationalUnitNames(key: String, @Valid @Body names: List<LocalizedText>): OrganisationalUnitResponse {
+    override fun updateOrganisationalUnitNames(
+        key: String,
+        @Valid @Body names: List<LocalizedText>
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateNames(key, names)
     }
 
-    override fun updateOrganisationalUnitDescriptions(key: String, @Valid @Body descriptions: List<LocalizedText>): OrganisationalUnitResponse {
+    override fun updateOrganisationalUnitDescriptions(
+        key: String,
+        @Valid @Body descriptions: List<LocalizedText>
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateDescriptions(key, descriptions)
     }
 
-    override fun updateOrganisationalUnitLead(key: String, @Valid @Body request: UpdateOrgUnitLeadRequest): OrganisationalUnitResponse {
+    override fun updateOrganisationalUnitLead(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitLeadRequest
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateLead(key, request.leadUsername)
     }
 
-    override fun updateOrganisationalUnitType(key: String, @Valid @Body request: UpdateOrgUnitTypeRequest): OrganisationalUnitResponse {
+    override fun updateOrganisationalUnitType(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitTypeRequest
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateType(key, request.unitType)
     }
 
-    override fun updateOrganisationalUnitParents(key: String, @Valid @Body request: UpdateOrgUnitParentsRequest): OrganisationalUnitResponse {
+    override fun updateOrganisationalUnitParents(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitParentsRequest
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateParents(key, request.keys)
     }
 
-    override fun assignClassificationsToOrgUnit(key: String, @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>): OrganisationalUnitResponse {
+    override fun assignClassificationsToOrgUnit(
+        key: String,
+        @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>
+    ): OrganisationalUnitResponse {
         val currentUser = getCurrentUser()
         classificationService.assignClassificationsToOrgUnit(key, classificationAssignmentRequest, currentUser)
         return organisationalUnitService.getByKeyAsResponse(key)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateOrgUnitExternalFields(key: String, @Valid @Body updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest): OrganisationalUnitResponse =
-        organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest)
+    override fun updateOrgUnitExternalFields(
+        key: String,
+        @Valid @Body updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest
+    ): OrganisationalUnitResponse = organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest)
 
     @Secured("ROLE_ADMIN")
-    override fun updateOrgUnitDataAccessEntities(key: String, @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest): OrganisationalUnitResponse =
-        organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+    override fun updateOrgUnitDataAccessEntities(
+        key: String,
+        @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
+    ): OrganisationalUnitResponse = organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
 
     @Secured("ROLE_ADMIN")
-    override fun updateOrgUnitDataManipulationEntities(key: String, @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest): OrganisationalUnitResponse =
+    override fun updateOrgUnitDataManipulationEntities(
+        key: String,
+        @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
+    ): OrganisationalUnitResponse =
         organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 
-    private fun checkCreatePermission(currentUser: User, parentKeys: List<String>?) {
+    private fun checkCreatePermission(
+        currentUser: User,
+        parentKeys: List<String>?
+    ) {
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (isAdmin) return
 
@@ -132,10 +161,11 @@ open class OrganisationalUnitController(
             throw ForbiddenOperationException("Only admins can create root organisational units")
         }
 
-        val isLeadOfAnyParent = parentKeys.any { parentKey ->
-            val parent = organisationalUnitService.getByKey(parentKey)
-            parent.lead?.id == currentUser.id
-        }
+        val isLeadOfAnyParent =
+            parentKeys.any { parentKey ->
+                val parent = organisationalUnitService.getByKey(parentKey)
+                parent.lead?.id == currentUser.id
+            }
 
         if (!isLeadOfAnyParent) {
             throw ForbiddenOperationException("Only the lead of a parent unit or an admin can create child units")
@@ -144,7 +174,10 @@ open class OrganisationalUnitController(
 
     companion object {
         @JvmStatic
-        private fun checkEditPermission(unit: OrganisationalUnit, currentUser: User) {
+        private fun checkEditPermission(
+            unit: OrganisationalUnit,
+            currentUser: User
+        ) {
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             val isLead = unit.lead?.id == currentUser.id
             if (!isAdmin && !isLead) {

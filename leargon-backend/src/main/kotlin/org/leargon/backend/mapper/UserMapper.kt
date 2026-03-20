@@ -12,7 +12,6 @@ import java.time.ZonedDateTime
 
 @Singleton
 open class UserMapper {
-
     fun toUser(request: SignupRequest): User {
         val user = User()
         user.email = request.email
@@ -27,8 +26,8 @@ open class UserMapper {
         return user
     }
 
-    fun toUserResponse(user: User): UserResponse {
-        return UserResponse(
+    fun toUserResponse(user: User): UserResponse =
+        UserResponse(
             user.id,
             user.email,
             user.username,
@@ -43,9 +42,11 @@ open class UserMapper {
             toZonedDateTime(user.updatedAt)
         ).lastLoginAt(toZonedDateTime(user.lastLoginAt))
             .authProvider(user.authProvider)
-    }
 
-    fun updateUserFromRequest(request: UpdateUserRequest, user: User) {
+    fun updateUserFromRequest(
+        request: UpdateUserRequest,
+        user: User
+    ) {
         if (request.email != null) user.email = request.email!!
         if (request.username != null) user.username = request.username!!
         if (request.firstName != null) user.firstName = request.firstName!!
@@ -60,7 +61,10 @@ open class UserMapper {
         return rolesString.split(",")
     }
 
-    fun mapRoles(request: UpdateUserRequest, user: User): String {
+    fun mapRoles(
+        request: UpdateUserRequest,
+        user: User
+    ): String {
         val roles = request.roles
         if (roles.isNullOrEmpty()) return user.roles
         return roles.map { it.value }.joinToString(",")
@@ -68,9 +72,7 @@ open class UserMapper {
 
     companion object {
         @JvmStatic
-        fun toZonedDateTime(instant: Instant?): ZonedDateTime? {
-            return instant?.atZone(ZoneOffset.UTC)
-        }
+        fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
 
         @JvmStatic
         fun toUserSummary(user: User?): UserSummaryResponse? {

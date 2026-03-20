@@ -12,10 +12,11 @@ open class SetupController(
     private val setupService: SetupService,
     private val securityService: SecurityService
 ) : SetupApi {
-
     override fun completeSetup(): UserResponse {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
         return setupService.completeSetup(email)
     }
 }

@@ -22,29 +22,29 @@ open class BusinessEntityMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val dataProcessorMapper: DataProcessorMapper
 ) {
-
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
-        val fc = fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
-            when {
-                fieldName == "names" -> businessEntity.names.isNotEmpty()
-                fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
-                fieldName == "boundedContext" -> businessEntity.boundedContext != null
-                fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
-                fieldName.startsWith("names.") -> {
-                    val locale = fieldName.removePrefix("names.")
-                    businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+        val fc =
+            fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
+                when {
+                    fieldName == "names" -> businessEntity.names.isNotEmpty()
+                    fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
+                    fieldName == "boundedContext" -> businessEntity.boundedContext != null
+                    fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
+                    fieldName.startsWith("names.") -> {
+                        val locale = fieldName.removePrefix("names.")
+                        businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    }
+                    fieldName.startsWith("descriptions.") -> {
+                        val locale = fieldName.removePrefix("descriptions.")
+                        businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    }
+                    fieldName.startsWith("classification.") -> {
+                        val classKey = fieldName.removePrefix("classification.")
+                        businessEntity.classificationAssignments.any { it.classificationKey == classKey }
+                    }
+                    else -> true
                 }
-                fieldName.startsWith("descriptions.") -> {
-                    val locale = fieldName.removePrefix("descriptions.")
-                    businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                }
-                fieldName.startsWith("classification.") -> {
-                    val classKey = fieldName.removePrefix("classification.")
-                    businessEntity.classificationAssignments.any { it.classificationKey == classKey }
-                }
-                else -> true
             }
-        }
         return BusinessEntityResponse(
             businessEntity.key,
             UserMapper.toUserSummary(businessEntity.dataOwner),
@@ -53,8 +53,7 @@ open class BusinessEntityMapper(
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
-        )
-            .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
+        ).parent(toBusinessEntitySummaryResponse(businessEntity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext))
             .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities))
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
@@ -68,21 +67,24 @@ open class BusinessEntityMapper(
             .mandatoryFields(fc.mandatory)
     }
 
-    fun toLocalizedBusinessEntityResponse(entity: BusinessEntity, locale: String): LocalizedBusinessEntityResponse {
-        return LocalizedBusinessEntityResponse(
+    fun toLocalizedBusinessEntityResponse(
+        entity: BusinessEntity,
+        locale: String
+    ): LocalizedBusinessEntityResponse =
+        LocalizedBusinessEntityResponse(
             entity.key,
             entity.getName(locale),
             toZonedDateTime(entity.createdAt),
             toZonedDateTime(entity.updatedAt)
-        )
-            .description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
+        ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
             .dataOwner(UserMapper.toUserSummary(entity.dataOwner))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments))
-    }
 
-    fun toBusinessEntityRelationships(businessEntityRelationships: Set<BusinessEntityRelationship>?): List<BusinessEntityRelationshipResponse> {
+    fun toBusinessEntityRelationships(
+        businessEntityRelationships: Set<BusinessEntityRelationship>?
+    ): List<BusinessEntityRelationshipResponse> {
         if (businessEntityRelationships == null) return emptyList()
         return businessEntityRelationships.map { rel ->
             BusinessEntityRelationshipResponse()
@@ -93,8 +95,7 @@ open class BusinessEntityMapper(
                         toBusinessEntitySummaryResponse(rel.firstBusinessEntity),
                         rel.firstCardinalityMinimum
                     ).maximum(rel.firstCardinalityMaximum)
-                )
-                .addCardinalityItem(
+                ).addCardinalityItem(
                     BusinessEntityRelationshipResponseCardinalityInner(
                         toBusinessEntitySummaryResponse(rel.secondBusinessEntity),
                         rel.secondCardinalityMinimum
@@ -103,23 +104,21 @@ open class BusinessEntityMapper(
         }
     }
 
-    fun toBusinessEntityVersionResponse(version: BusinessEntityVersion): BusinessEntityVersionResponse {
-        return BusinessEntityVersionResponse(
+    fun toBusinessEntityVersionResponse(version: BusinessEntityVersion): BusinessEntityVersionResponse =
+        BusinessEntityVersionResponse(
             version.versionNumber,
             UserMapper.toUserSummary(version.changedBy),
             toChangeType(version.changeType),
             toZonedDateTime(version.createdAt)
         ).changeSummary(version.changeSummary)
-    }
 
-    fun toBusinessEntityTreeResponse(businessEntity: BusinessEntity): BusinessEntityTreeResponse {
-        return BusinessEntityTreeResponse(
+    fun toBusinessEntityTreeResponse(businessEntity: BusinessEntity): BusinessEntityTreeResponse =
+        BusinessEntityTreeResponse(
             businessEntity.key,
             LocalizedTextMapper.toModel(businessEntity.names),
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toBusinessEntityTreeResponses(businessEntity.children)
         ).parent(toBusinessEntitySummaryResponse(businessEntity.parent))
-    }
 
     fun toBusinessEntityTreeResponses(businessEntities: Collection<BusinessEntity>?): List<BusinessEntityTreeResponse> {
         if (businessEntities == null) return emptyList()
@@ -128,9 +127,7 @@ open class BusinessEntityMapper(
 
     companion object {
         @JvmStatic
-        fun toZonedDateTime(instant: Instant?): ZonedDateTime? {
-            return instant?.atZone(ZoneOffset.UTC)
-        }
+        fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
 
         @JvmStatic
         fun toChangeType(changeType: String?): BusinessEntityVersionResponseChangeType? {

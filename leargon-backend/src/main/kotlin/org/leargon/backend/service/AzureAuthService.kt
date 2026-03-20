@@ -15,7 +15,6 @@ open class AzureAuthService(
     private val tokenValidator: AzureTokenValidator,
     private val userRepository: UserRepository
 ) {
-
     companion object {
         private val LOG = LoggerFactory.getLogger(AzureAuthService::class.java)
     }

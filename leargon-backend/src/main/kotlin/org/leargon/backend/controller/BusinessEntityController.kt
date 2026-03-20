@@ -13,12 +13,12 @@ import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.AssignBoundedContextRequest
 import org.leargon.backend.model.BusinessEntityResponse
-import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateBusinessEntityRelationshipRequest
 import org.leargon.backend.model.CreateBusinessEntityRequest
+import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
@@ -45,22 +45,23 @@ open class BusinessEntityController(
     private val dataProcessorService: DataProcessorService,
     private val dpiaService: DpiaService
 ) : BusinessEntityApi {
+    override fun getAllBusinessEntities(): List<BusinessEntityResponse> = businessEntityService.getAllBusinessEntitiesAsResponses()
 
-    override fun getAllBusinessEntities(): List<BusinessEntityResponse> =
-        businessEntityService.getAllBusinessEntitiesAsResponses()
+    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse = businessEntityService.getBusinessEntityByKeyAsResponse(key)
 
-    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse =
-        businessEntityService.getBusinessEntityByKeyAsResponse(key)
+    override fun getBusinessEntityTree(): List<BusinessEntityTreeResponse> = businessEntityService.getBusinessEntityTreeAsResponses()
 
-    override fun getBusinessEntityTree(): List<BusinessEntityTreeResponse> =
-        businessEntityService.getBusinessEntityTreeAsResponses()
-
-    override fun getLocalizedBusinessEntity(key: String, locale: String?): LocalizedBusinessEntityResponse {
+    override fun getLocalizedBusinessEntity(
+        key: String,
+        locale: String?
+    ): LocalizedBusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.getLocalizedEntity(key, locale, currentUser)
     }
 
-    override fun createBusinessEntity(@Valid @Body createBusinessEntityRequest: CreateBusinessEntityRequest): HttpResponse<BusinessEntityResponse> {
+    override fun createBusinessEntity(
+        @Valid @Body createBusinessEntityRequest: CreateBusinessEntityRequest
+    ): HttpResponse<BusinessEntityResponse> {
         val currentUser = getCurrentUser()
         val response = businessEntityService.createBusinessEntityAsResponse(createBusinessEntityRequest, currentUser)
         return HttpResponse.status<BusinessEntityResponse>(HttpStatus.CREATED).body(response)
@@ -72,83 +73,127 @@ open class BusinessEntityController(
         return HttpResponse.noContent()
     }
 
-    override fun getVersions(key: String): List<BusinessEntityVersionResponse> =
-        businessEntityService.getVersionHistory(key)
+    override fun getVersions(key: String): List<BusinessEntityVersionResponse> = businessEntityService.getVersionHistory(key)
 
-    override fun getVersionDiff(key: String, versionNumber: Int): VersionDiffResponse =
-        businessEntityService.getVersionDiff(key, versionNumber)
+    override fun getVersionDiff(
+        key: String,
+        versionNumber: Int
+    ): VersionDiffResponse = businessEntityService.getVersionDiff(key, versionNumber)
 
-    override fun assignBoundedContextToBusinessEntity(key: String, @Valid @Body assignBoundedContextRequest: AssignBoundedContextRequest): BusinessEntityResponse {
+    override fun assignBoundedContextToBusinessEntity(
+        key: String,
+        @Valid @Body assignBoundedContextRequest: AssignBoundedContextRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.assignBoundedContext(key, assignBoundedContextRequest.boundedContextKey, currentUser)
     }
 
-    override fun updateBusinessEntityParent(key: String, @Valid @Body updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityParent(
+        key: String,
+        @Valid @Body updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityParentAsResponse(key, updateBusinessEntityParentRequest.parentKey, currentUser)
     }
 
-    override fun updateBusinessEntityDataOwner(key: String, @Valid @Body updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityDataOwner(
+        key: String,
+        @Valid @Body updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        return businessEntityService.updateBusinessEntityDataOwnerAsResponse(key, updateBusinessEntityDataOwnerRequest.dataOwnerUsername, currentUser)
+        return businessEntityService.updateBusinessEntityDataOwnerAsResponse(
+            key,
+            updateBusinessEntityDataOwnerRequest.dataOwnerUsername,
+            currentUser
+        )
     }
 
-    override fun updateBusinessEntityNames(key: String, @Valid @Body names: List<LocalizedText>): BusinessEntityResponse {
+    override fun updateBusinessEntityNames(
+        key: String,
+        @Valid @Body names: List<LocalizedText>
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityNamesAsResponse(key, names, currentUser)
     }
 
-    override fun updateBusinessEntityDescriptions(key: String, @Valid @Body descriptions: List<LocalizedText>): BusinessEntityResponse {
+    override fun updateBusinessEntityDescriptions(
+        key: String,
+        @Valid @Body descriptions: List<LocalizedText>
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityDescriptionsAsResponse(key, descriptions, currentUser)
     }
 
-    override fun updateBusinessEntityInterfaces(key: String, @Valid @Body updateBusinessEntityInterfacesRequest: UpdateBusinessEntityInterfacesRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityInterfaces(
+        key: String,
+        @Valid @Body updateBusinessEntityInterfacesRequest: UpdateBusinessEntityInterfacesRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityInterfaces(key, updateBusinessEntityInterfacesRequest.interfaces, currentUser)
     }
 
-    override fun createBusinessEntityRelationship(key: String, @Valid @Body createBusinessEntityRelationshipRequest: CreateBusinessEntityRelationshipRequest): HttpResponse<BusinessEntityResponse> {
+    override fun createBusinessEntityRelationship(
+        key: String,
+        @Valid @Body createBusinessEntityRelationshipRequest: CreateBusinessEntityRelationshipRequest
+    ): HttpResponse<BusinessEntityResponse> {
         val currentUser = getCurrentUser()
         val response = businessEntityService.createRelationship(key, createBusinessEntityRelationshipRequest, currentUser)
         return HttpResponse.status<BusinessEntityResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun updateBusinessEntityRelationship(key: String, relationshipId: Long, @Valid @Body updateBusinessEntityRelationshipRequest: UpdateBusinessEntityRelationshipRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityRelationship(
+        key: String,
+        relationshipId: Long,
+        @Valid @Body updateBusinessEntityRelationshipRequest: UpdateBusinessEntityRelationshipRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateRelationship(key, relationshipId, updateBusinessEntityRelationshipRequest, currentUser)
     }
 
-    override fun deleteBusinessEntityRelationship(key: String, relationshipId: Long): HttpResponse<Void> {
+    override fun deleteBusinessEntityRelationship(
+        key: String,
+        relationshipId: Long
+    ): HttpResponse<Void> {
         val currentUser = getCurrentUser()
         businessEntityService.deleteRelationship(key, relationshipId, currentUser)
         return HttpResponse.noContent()
     }
 
-    override fun assignClassificationsToEntity(key: String, @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>): BusinessEntityResponse {
+    override fun assignClassificationsToEntity(
+        key: String,
+        @Valid @Body classificationAssignmentRequest: List<ClassificationAssignmentRequest>
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         classificationService.assignClassificationsToEntity(key, classificationAssignmentRequest, currentUser)
         return businessEntityService.getBusinessEntityByKeyAsResponse(key)
     }
 
-    override fun updateBusinessEntityRetentionPeriod(key: String, @Valid @Body updateRetentionPeriodRequest: UpdateRetentionPeriodRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityRetentionPeriod(
+        key: String,
+        @Valid @Body updateRetentionPeriodRequest: UpdateRetentionPeriodRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateRetentionPeriod(key, updateRetentionPeriodRequest.retentionPeriod, currentUser)
     }
 
-    override fun updateBusinessEntityCrossBorderTransfers(key: String, @Valid @Body updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest): BusinessEntityResponse {
+    override fun updateBusinessEntityCrossBorderTransfers(
+        key: String,
+        @Valid @Body updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest
+    ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateCrossBorderTransfers(key, updateCrossBorderTransfersRequest.transfers, currentUser)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateBusinessEntityDataProcessors(key: String, @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest): HttpResponse<Void> {
+    override fun updateBusinessEntityDataProcessors(
+        key: String,
+        @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest
+    ): HttpResponse<Void> {
         dataProcessorService.updateEntityDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
         return HttpResponse.noContent()
     }
 
-    override fun getEntityDpia(key: String): DpiaResponse =
-        dpiaService.getDpiaForEntity(key)
+    override fun getEntityDpia(key: String): DpiaResponse = dpiaService.getDpiaForEntity(key)
 
     override fun triggerEntityDpia(key: String): HttpResponse<DpiaResponse> {
         val currentUser = getCurrentUser()
@@ -157,9 +202,12 @@ open class BusinessEntityController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

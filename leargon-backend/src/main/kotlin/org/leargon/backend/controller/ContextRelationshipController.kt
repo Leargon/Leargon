@@ -23,20 +23,22 @@ open class ContextRelationshipController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : ContextRelationshipApi {
-
-    override fun getAllContextRelationships(): List<ContextRelationshipResponse> =
-        contextRelationshipService.getAll()
+    override fun getAllContextRelationships(): List<ContextRelationshipResponse> = contextRelationshipService.getAll()
 
     @Secured("ROLE_ADMIN")
-    override fun createContextRelationship(@Body request: CreateContextRelationshipRequest): HttpResponse<ContextRelationshipResponse> {
+    override fun createContextRelationship(
+        @Body request: CreateContextRelationshipRequest
+    ): HttpResponse<ContextRelationshipResponse> {
         val currentUser = getCurrentUser()
         val response = contextRelationshipService.create(request, currentUser)
         return HttpResponse.status<ContextRelationshipResponse>(HttpStatus.CREATED).body(response)
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateContextRelationship(id: Long, @Body request: UpdateContextRelationshipRequest): ContextRelationshipResponse =
-        contextRelationshipService.update(id, request)
+    override fun updateContextRelationship(
+        id: Long,
+        @Body request: UpdateContextRelationshipRequest
+    ): ContextRelationshipResponse = contextRelationshipService.update(id, request)
 
     @Secured("ROLE_ADMIN")
     override fun deleteContextRelationship(id: Long): HttpResponse<Void> {
@@ -45,9 +47,12 @@ open class ContextRelationshipController(
     }
 
     private fun getCurrentUser(): User {
-        val email = securityService.username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return userService.findByEmail(email)
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

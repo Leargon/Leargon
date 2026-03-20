@@ -8,7 +8,6 @@ import java.util.Optional
 
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEvent, Long> {
-
     @Join(value = "publishingBoundedContext", type = Join.Type.LEFT_FETCH)
     @Join(value = "publishingBoundedContext.domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)

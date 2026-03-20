@@ -9,16 +9,16 @@ import java.time.ZoneOffset
 
 @Singleton
 open class BoundedContextMapper {
-
     fun toResponse(bc: BoundedContext): BoundedContextResponse {
         val domainSummary = BusinessDomainMapper.toBusinessDomainSummary(bc.domain)
-        val response = BoundedContextResponse(
-            bc.key,
-            LocalizedTextMapper.toModel(bc.names),
-            domainSummary,
-            bc.createdAt?.atZone(ZoneOffset.UTC),
-            bc.updatedAt?.atZone(ZoneOffset.UTC)
-        )
+        val response =
+            BoundedContextResponse(
+                bc.key,
+                LocalizedTextMapper.toModel(bc.names),
+                domainSummary,
+                bc.createdAt?.atZone(ZoneOffset.UTC),
+                bc.updatedAt?.atZone(ZoneOffset.UTC)
+            )
         response.descriptions = LocalizedTextMapper.toModel(bc.descriptions)
         response.createdBy = UserMapper.toUserSummary(bc.createdBy)
         if (bc.contextType != null) {
