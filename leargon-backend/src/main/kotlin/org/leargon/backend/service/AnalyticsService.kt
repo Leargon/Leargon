@@ -71,7 +71,7 @@ open class AnalyticsService(
 
         // 3. Bottleneck teams (>= 3 distinct domains)
         val bottleneckTeams = processesByOrgUnit.mapNotNull { (key, procs) ->
-            val domains = procs.mapNotNull { it.businessDomain?.key }.toSet()
+            val domains = procs.mapNotNull { it.boundedContext?.key }.toSet()
             if (domains.size < 3) return@mapNotNull null
             val unit = orgUnitByKey[key]
             val unitName = unit?.let { nameOf(it.names, key) } ?: key
@@ -81,37 +81,37 @@ open class AnalyticsService(
         // 4. Wrongly placed teams (dominant domain share < 60%, >= 2 processes)
         val wronglyPlacedTeams = processesByOrgUnit.mapNotNull { (key, procs) ->
             if (procs.size < 2) return@mapNotNull null
-            val withDomain = procs.filter { it.businessDomain != null }
+            val withDomain = procs.filter { it.boundedContext != null }
             if (withDomain.isEmpty()) return@mapNotNull null
-            val domainFreq = withDomain.groupBy { it.businessDomain!!.key }.mapValues { it.value.size }
+            val domainFreq = withDomain.groupBy { it.boundedContext!!.key }.mapValues { it.value.size }
             val dominantEntry = domainFreq.maxByOrNull { it.value } ?: return@mapNotNull null
             val share = dominantEntry.value.toDouble() / withDomain.size
             if (share >= 0.6) return@mapNotNull null
             val unit = orgUnitByKey[key]
             val unitName = unit?.let { nameOf(it.names, key) } ?: key
-            val domainName = withDomain.find { it.businessDomain?.key == dominantEntry.key }
-                ?.businessDomain?.let { nameOf(it.names, it.key) }
+            val domainName = withDomain.find { it.boundedContext?.key == dominantEntry.key }
+                ?.boundedContext?.let { nameOf(it.names, it.key) }
             WronglyPlacedTeamItem(key, unitName, procs.size, domainFreq.size, share)
                 .dominantDomainKey(dominantEntry.key)
                 .dominantDomainName(domainName)
         }.sortedBy { it.dominantDomainShare }
 
         // 5. Split domains (>= 3 distinct org units)
-        val domainProcesses = processes.filter { it.businessDomain != null }
-        val processesByDomain = domainProcesses.groupBy { it.businessDomain!!.key }
+        val domainProcesses = processes.filter { it.boundedContext != null }
+        val processesByDomain = domainProcesses.groupBy { it.boundedContext!!.key }
         val splitDomains = processesByDomain.mapNotNull { (domainKey, procs) ->
             val orgUnits = procs.flatMap { it.executingUnits.map { u -> u.key } }.toSet()
             if (orgUnits.size < 3) return@mapNotNull null
-            val domain = procs.first().businessDomain!!
+            val domain = procs.first().boundedContext!!
             val domainName = nameOf(domain.names, domainKey)
             SplitDomainItem(domainKey, domainName, procs.size, orgUnits.size, orgUnits.toList().sorted())
         }.sortedByDescending { it.distinctOrgUnitCount }
 
         // 6. Conway's Law alignment matrix
-        val allDomainKeys = domainProcesses.mapNotNull { it.businessDomain?.key }.toSet().sorted()
+        val allDomainKeys = domainProcesses.mapNotNull { it.boundedContext?.key }.toSet().sorted()
         val allOrgUnitKeysConway = processesByOrgUnit.keys.sorted()
         val domainNameMap = domainProcesses
-            .mapNotNull { it.businessDomain }
+            .mapNotNull { it.boundedContext }
             .distinctBy { it.key }
             .associate { it.key to nameOf(it.names, it.key) }
         val orgUnitNameMap = orgUnitByKey.entries
@@ -120,7 +120,7 @@ open class AnalyticsService(
 
         val cellMap = mutableMapOf<Pair<String, String>, Int>()
         for (p in domainProcesses) {
-            val dk = p.businessDomain!!.key
+            val dk = p.boundedContext!!.key
             for (u in p.executingUnits) {
                 val pair = Pair(dk, u.key)
                 cellMap[pair] = (cellMap[pair] ?: 0) + 1

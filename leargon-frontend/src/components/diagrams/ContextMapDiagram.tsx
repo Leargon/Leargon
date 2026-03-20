@@ -20,9 +20,9 @@ import { useGetAllContextRelationships } from '../../api/generated/context-relat
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import type { ContextRelationshipResponse } from '../../api/generated/model/contextRelationshipResponse';
 import type { BusinessDomainResponse } from '../../api/generated/model/businessDomainResponse';
+import type { BoundedContextSummaryResponse } from '../../api/generated/model/boundedContextSummaryResponse';
 import { applyDagreLayout } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
-import { useLocale } from '../../context/LocaleContext';
 
 // ─── Color maps ────────────────────────────────────────────────────────────
 
@@ -61,6 +61,7 @@ interface DomainNodeData {
   label: string;
   domainType: string | null | undefined;
   domainKey: string;
+  domainName?: string;
 }
 
 const DomainNode: React.FC<{ data: DomainNodeData }> = ({ data }) => {
@@ -68,7 +69,7 @@ const DomainNode: React.FC<{ data: DomainNodeData }> = ({ data }) => {
   return (
     <Box
       sx={{
-        background: 'var(--node-bg, #fff)',
+        bgcolor: 'background.paper',
         border: '2px solid',
         borderColor: typeColor,
         borderRadius: 2,
@@ -93,6 +94,11 @@ const DomainNode: React.FC<{ data: DomainNodeData }> = ({ data }) => {
       <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.3 }}>
         {data.label}
       </Typography>
+      {data.domainName && (
+        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+          {data.domainName}
+        </Typography>
+      )}
     </Box>
   );
 };
@@ -104,36 +110,46 @@ const DOMAIN_NODE_TYPES = { domainNode: DomainNode };
 function buildGraph(
   rels: ContextRelationshipResponse[],
   allDomains: BusinessDomainResponse[],
-  getLocalizedText: (texts: { locale: string; text: string }[]) => string,
 ): { nodes: Node[]; edges: Edge[] } {
-  // Collect all domain keys that appear in any relationship
-  const domainKeys = new Set<string>();
+  // Collect all bounded context summaries that appear in relationships
+  const bcMap = new Map<string, BoundedContextSummaryResponse>();
   rels.forEach((r) => {
-    if (r.upstreamDomain) domainKeys.add(r.upstreamDomain.key);
-    if (r.downstreamDomain) domainKeys.add(r.downstreamDomain.key);
+    if (r.upstreamBoundedContext) bcMap.set(r.upstreamBoundedContext.key, r.upstreamBoundedContext);
+    if (r.downstreamBoundedContext) bcMap.set(r.downstreamBoundedContext.key, r.downstreamBoundedContext);
   });
 
-  // If no relationships, show all domains
-  const domainKeyList = domainKeys.size > 0 ? Array.from(domainKeys) : allDomains.map((d) => d.key);
+  // If no relationships, show all bounded contexts from all domains
+  const allBcs: BoundedContextSummaryResponse[] = bcMap.size > 0
+    ? Array.from(bcMap.values())
+    : allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({
+        key: bc.key,
+        name: bc.name,
+        domainKey: d.key,
+        domainName: bc.domainName || d.key,
+      })));
 
-  const domainMap = new Map(allDomains.map((d) => [d.key, d]));
+  // Build domain type map for coloring
+  const domainTypeMap = new Map(allDomains.map((d) => [d.key, d.effectiveType ?? d.type ?? null]));
 
-  const nodes: Node[] = domainKeyList.map((key) => {
-    const domain = domainMap.get(key);
-    const label = domain ? getLocalizedText(domain.names) : key;
-    const domainType = domain?.effectiveType ?? domain?.type ?? null;
+  const nodes: Node[] = allBcs.map((bc) => {
+    const domainType = domainTypeMap.get(bc.domainKey) ?? null;
     return {
-      id: key,
+      id: bc.key,
       type: 'domainNode',
       position: { x: 0, y: 0 },
-      width: 160,
-      height: 72,
-      data: { label, domainType, domainKey: key } satisfies DomainNodeData,
+      width: 180,
+      height: 80,
+      data: {
+        label: bc.name,
+        domainType,
+        domainKey: bc.domainKey,
+        domainName: bc.domainName,
+      } satisfies DomainNodeData,
     };
   });
 
   const edges: Edge[] = rels
-    .filter((r) => r.upstreamDomain && r.downstreamDomain)
+    .filter((r) => r.upstreamBoundedContext && r.downstreamBoundedContext)
     .map((r, i) => {
       const relType = r.relationshipType as string;
       const color = RELATIONSHIP_COLORS[relType] ?? '#aaa';
@@ -141,8 +157,8 @@ function buildGraph(
       const isBidirectional = relType === 'PARTNERSHIP' || relType === 'SHARED_KERNEL' || relType === 'BIG_BALL_OF_MUD';
       return {
         id: `rel-${r.id ?? i}`,
-        source: r.upstreamDomain!.key,
-        target: r.downstreamDomain!.key,
+        source: r.upstreamBoundedContext!.key,
+        target: r.downstreamBoundedContext!.key,
         label: abbr,
         type: 'default',
         style: {
@@ -201,8 +217,7 @@ const RelationshipLegend: React.FC = () => {
 const ContextMapDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLocalizedText } = useLocale();
-  const { canvasSx, miniMapProps } = useReactFlowTheme();
+  const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
 
   const { data: relsResponse, isLoading: relsLoading, isError: relsError } = useGetAllContextRelationships();
   const rels = (relsResponse?.data as ContextRelationshipResponse[] | undefined) ?? [];
@@ -216,8 +231,8 @@ const ContextMapDiagram: React.FC = () => {
   const isLoading = relsLoading || domainsLoading;
 
   const { nodes: builtNodes, edges: builtEdges } = useMemo(
-    () => buildGraph(rels, allDomains, getLocalizedText),
-    [rels, allDomains, getLocalizedText],
+    () => buildGraph(rels, allDomains),
+    [rels, allDomains],
   );
 
   useEffect(() => {
@@ -226,7 +241,10 @@ const ContextMapDiagram: React.FC = () => {
   }, [builtNodes, builtEdges, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
-    (_, node) => navigate(`/domains/${node.id}`),
+    (_, node) => {
+      const data = node.data as unknown as DomainNodeData;
+      if (data.domainKey) navigate(`/domains/${data.domainKey}`);
+    },
     [navigate],
   );
 
@@ -272,6 +290,7 @@ const ContextMapDiagram: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           nodeTypes={DOMAIN_NODE_TYPES}
+          colorMode={colorMode}
           fitView
           fitViewOptions={{ padding: 0.15 }}
           minZoom={0.05}

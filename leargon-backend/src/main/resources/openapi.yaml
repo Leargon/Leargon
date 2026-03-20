@@ -60,6 +60,16 @@ tags:
   description: User profile management endpoints
 - name: Analytics
   description: Analytics and team insights endpoints
+- name: Glossary
+  description: Ubiquitous Language Glossary endpoints
+- name: BoundedContext
+  description: Bounded Context management endpoints
+- name: ContextRelationship
+  description: Context Map relationship endpoints
+- name: TranslationLink
+  description: Cross-domain Translation Link endpoints
+- name: DomainEvent
+  description: Domain Event management endpoints
 paths:
   /administration/users:
     get:
@@ -1047,6 +1057,589 @@ paths:
           description: Not found
         '401':
           description: Not authenticated
+  /business-domains/{key}/vision-statement:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update domain vision statement
+      operationId: updateBusinessDomainVisionStatement
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainVisionStatementRequest'
+      responses:
+        '200':
+          description: Updated domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Domain not found
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/bounded-contexts:
+    get:
+      tags:
+      - BoundedContext
+      summary: Get bounded contexts for a domain
+      operationId: getBoundedContextsForDomain
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business domain key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of bounded contexts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoundedContextResponse'
+        '404':
+          description: Domain not found
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - BoundedContext
+      summary: Create a bounded context for a domain
+      operationId: createBoundedContext
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business domain key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBoundedContextRequest'
+      responses:
+        '201':
+          description: Bounded context created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Domain not found
+        '401':
+          description: Not authenticated
+  /bounded-contexts/{key}:
+    get:
+      tags:
+      - BoundedContext
+      summary: Get bounded context by key
+      operationId: getBoundedContextByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Bounded context key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Bounded context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - BoundedContext
+      summary: Delete a bounded context
+      operationId: deleteBoundedContext
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Bounded context key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /bounded-contexts/{key}/names:
+    put:
+      tags:
+      - BoundedContext
+      summary: Update bounded context names
+      operationId: updateBoundedContextNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBoundedContextNamesRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /bounded-contexts/{key}/descriptions:
+    put:
+      tags:
+      - BoundedContext
+      summary: Update bounded context descriptions
+      operationId: updateBoundedContextDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBoundedContextDescriptionsRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/translation-links:
+    get:
+      tags:
+      - TranslationLink
+      summary: Get translation links for an entity
+      operationId: getEntityTranslationLinks
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of translation links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TranslationLinkResponse'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Entity not found
+  /translation-links:
+    post:
+      tags:
+      - TranslationLink
+      summary: Create a translation link between two entities
+      operationId: createTranslationLink
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTranslationLinkRequest'
+      responses:
+        '201':
+          description: Translation link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationLinkResponse'
+        '400':
+          description: Invalid request or entities in same domain
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not owner of either entity or admin
+        '404':
+          description: Entity not found
+  /translation-links/{id}:
+    put:
+      tags:
+      - TranslationLink
+      summary: Update a translation link
+      operationId: updateTranslationLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTranslationLinkRequest'
+      responses:
+        '200':
+          description: Updated translation link
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationLinkResponse'
+        '403':
+          description: Not creator or admin
+        '404':
+          description: Link not found
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - TranslationLink
+      summary: Delete a translation link
+      operationId: deleteTranslationLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Not creator or admin
+        '404':
+          description: Link not found
+        '401':
+          description: Not authenticated
+  /domain-events:
+    get:
+      tags:
+      - DomainEvent
+      summary: Get all domain events
+      operationId: getAllDomainEvents
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of domain events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainEventResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - DomainEvent
+      summary: Create a domain event
+      operationId: createDomainEvent
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDomainEventRequest'
+      responses:
+        '201':
+          description: Domain event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Not authenticated
+        '404':
+          description: Domain not found
+  /domain-events/{key}:
+    get:
+      tags:
+      - DomainEvent
+      summary: Get a domain event by key
+      operationId: getDomainEventByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Event not found
+    delete:
+      tags:
+      - DomainEvent
+      summary: Delete a domain event
+      operationId: deleteDomainEvent
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Event not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/names:
+    put:
+      tags:
+      - DomainEvent
+      summary: Update domain event names
+      operationId: updateDomainEventNames
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Not publisher owner or admin
+        '404':
+          description: Event not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/descriptions:
+    put:
+      tags:
+      - DomainEvent
+      summary: Update domain event descriptions
+      operationId: updateDomainEventDescriptions
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LocalizedText'
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Not publisher owner or admin
+        '404':
+          description: Event not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/consumers:
+    put:
+      tags:
+      - DomainEvent
+      summary: Set consuming domains for a domain event
+      operationId: setDomainEventConsumers
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDomainEventConsumersRequest'
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Event not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/process-links:
+    post:
+      tags:
+      - DomainEvent
+      summary: Add a process link to a domain event
+      operationId: addDomainEventProcessLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDomainEventProcessLinkRequest'
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Not process owner or admin
+        '404':
+          description: Event or process not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/process-links/{linkId}:
+    delete:
+      tags:
+      - DomainEvent
+      summary: Remove a process link from a domain event
+      operationId: removeDomainEventProcessLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: linkId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Not process owner or admin
+        '404':
+          description: Event or link not found
+        '401':
+          description: Not authenticated
   /business-entities:
     get:
       tags:
@@ -1325,13 +1918,13 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
-  /business-entities/{key}/domain:
+  /business-entities/{key}/bounded-context:
     put:
       tags:
       - BusinessEntity
-      summary: Assign business domain to business entity
-      description: Assigns a business domain to an business entity. Only the Data Owner or an Administrator can assign domains.
-      operationId: assignBusinessDomainToBusinessEntity
+      summary: Assign bounded context to business entity
+      description: Assigns a bounded context to a business entity. Only the Data Owner or an Administrator can assign.
+      operationId: assignBoundedContextToBusinessEntity
       security:
       - bearerAuth: []
       parameters:
@@ -1346,7 +1939,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignBusinessDomainRequest'
+              $ref: '#/components/schemas/AssignBoundedContextRequest'
       responses:
         '200':
           description: Business Domain assigned successfully
@@ -2931,13 +3524,13 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
-  /processes/{key}/domain:
+  /processes/{key}/bounded-context:
     put:
       tags:
       - Process
-      summary: Assign business domain to process
-      description: Assigns a business domain to a process. Only the process owner or an admin can assign.
-      operationId: assignBusinessDomainToProcess
+      summary: Assign bounded context to process
+      description: Assigns a bounded context to a process. Only the process owner or an admin can assign.
+      operationId: assignBoundedContextToProcess
       security:
       - bearerAuth: []
       parameters:
@@ -2952,7 +3545,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignBusinessDomainRequest'
+              $ref: '#/components/schemas/AssignBoundedContextRequest'
       responses:
         '200':
           description: Business domain assigned
@@ -4367,13 +4960,13 @@ components:
           format: password
           minLength: 8
           description: New password (minimum 8 characters)
-    AssignBusinessDomainRequest:
+    AssignBoundedContextRequest:
       type: object
       properties:
-        businessDomainKey:
+        boundedContextKey:
           type: string
           nullable: true
-          description: Business domain key to assign (null to unassign)
+          description: Bounded context key to assign (null to unassign)
     AuthResponse:
       type: object
       required:
@@ -4457,10 +5050,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BusinessDomainSummaryResponse'
-        assignedEntities:
+        boundedContexts:
           type: array
           items:
-            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+            $ref: '#/components/schemas/BoundedContextSummaryResponse'
         classificationAssignments:
           type: array
           items:
@@ -4477,6 +5070,10 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        visionStatement:
+          type: string
+          nullable: true
+          description: Vision statement for the bounded context
         createdAt:
           type: string
           format: date-time
@@ -4487,6 +5084,111 @@ components:
           format: date-time
           description: Last update timestamp
           example: '2024-01-15T10:30:00Z'
+    BoundedContextSummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      - domainKey
+      - domainName
+      properties:
+        key:
+          type: string
+          description: Bounded context key
+          example: sales/default
+        name:
+          type: string
+          description: Bounded context name in default locale
+          example: Sales
+        domainKey:
+          type: string
+          description: Parent domain key
+          example: sales
+        domainName:
+          type: string
+          description: Parent domain name in default locale
+          example: Sales Domain
+    BoundedContextResponse:
+      type: object
+      required:
+      - key
+      - names
+      - domain
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        contextType:
+          type: string
+          nullable: true
+          enum:
+          - FEATURE
+          - APPLICATION
+          - SYSTEM
+          - TEAM
+          - SHARED_KERNEL
+        domain:
+          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateBoundedContextRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        contextType:
+          type: string
+          nullable: true
+          enum:
+          - FEATURE
+          - APPLICATION
+          - SYSTEM
+          - TEAM
+          - SHARED_KERNEL
+    UpdateBoundedContextNamesRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    UpdateBoundedContextDescriptionsRequest:
+      type: object
+      required:
+      - descriptions
+      properties:
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BusinessDomainSummaryResponse:
       type: object
       required:
@@ -4631,8 +5333,9 @@ components:
             $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
-        businessDomain:
-          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
         names:
           type: array
           items:
@@ -5207,8 +5910,8 @@ components:
           $ref: '#/components/schemas/UserSummaryResponse'
         parent:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
-        businessDomain:
-          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
         classificationAssignments:
           type: array
           items:
@@ -5453,8 +6156,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
-        businessDomain:
-          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
         inputEntities:
           type: array
           items:
@@ -6500,18 +7204,18 @@ components:
       required:
       - id
       - relationshipType
-      - upstreamDomain
-      - downstreamDomain
       properties:
         id:
           type: integer
           format: int64
         relationshipType:
           $ref: '#/components/schemas/ContextMapperRelationshipType'
-        upstreamDomain:
-          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
-        downstreamDomain:
-          $ref: '#/components/schemas/BusinessDomainSummaryResponse'
+        upstreamBoundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
+        downstreamBoundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
         upstreamRole:
           type: string
           nullable: true
@@ -6532,13 +7236,13 @@ components:
     CreateContextRelationshipRequest:
       type: object
       required:
-      - upstreamDomainKey
-      - downstreamDomainKey
+      - upstreamBoundedContextKey
+      - downstreamBoundedContextKey
       - relationshipType
       properties:
-        upstreamDomainKey:
+        upstreamBoundedContextKey:
           type: string
-        downstreamDomainKey:
+        downstreamBoundedContextKey:
           type: string
         relationshipType:
           $ref: '#/components/schemas/ContextMapperRelationshipType'
@@ -6567,3 +7271,172 @@ components:
         description:
           type: string
           nullable: true
+    UpdateDomainVisionStatementRequest:
+      type: object
+      properties:
+        visionStatement:
+          type: string
+          nullable: true
+    TranslationLinkResponse:
+      type: object
+      required:
+      - id
+      - linkedEntity
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        linkedEntity:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        semanticDifferenceNote:
+          type: string
+          nullable: true
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateTranslationLinkRequest:
+      type: object
+      required:
+      - firstEntityKey
+      - secondEntityKey
+      properties:
+        firstEntityKey:
+          type: string
+        secondEntityKey:
+          type: string
+        semanticDifferenceNote:
+          type: string
+          nullable: true
+    UpdateTranslationLinkRequest:
+      type: object
+      properties:
+        semanticDifferenceNote:
+          type: string
+          nullable: true
+    DomainEventLinkType:
+      type: string
+      enum:
+      - TRIGGERS
+      - HANDLES
+    DomainEventSummaryResponse:
+      type: object
+      required:
+      - id
+      - key
+      - names
+      - publishingBoundedContext
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        publishingBoundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+    DomainEventProcessLinkResponse:
+      type: object
+      required:
+      - id
+      - process
+      - linkType
+      properties:
+        id:
+          type: integer
+          format: int64
+        process:
+          $ref: '#/components/schemas/ProcessSummaryResponse'
+        linkType:
+          $ref: '#/components/schemas/DomainEventLinkType'
+    DomainEventResponse:
+      type: object
+      required:
+      - id
+      - key
+      - names
+      - descriptions
+      - publishingBoundedContext
+      - consumers
+      - processLinks
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        publishingBoundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+        consumers:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoundedContextSummaryResponse'
+        processLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainEventProcessLinkResponse'
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateDomainEventRequest:
+      type: object
+      required:
+      - names
+      - publishingBoundedContextKey
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        publishingBoundedContextKey:
+          type: string
+    SetDomainEventConsumersRequest:
+      type: object
+      required:
+      - consumerBoundedContextKeys
+      properties:
+        consumerBoundedContextKeys:
+          type: array
+          items:
+            type: string
+    AddDomainEventProcessLinkRequest:
+      type: object
+      required:
+      - processKey
+      - linkType
+      properties:
+        processKey:
+          type: string
+        linkType:
+          $ref: '#/components/schemas/DomainEventLinkType'

@@ -28,7 +28,7 @@ open class BusinessEntityMapper(
             when {
                 fieldName == "names" -> businessEntity.names.isNotEmpty()
                 fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
-                fieldName == "businessDomain" -> businessEntity.businessDomain != null
+                fieldName == "boundedContext" -> businessEntity.boundedContext != null
                 fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
                 fieldName.startsWith("names.") -> {
                     val locale = fieldName.removePrefix("names.")
@@ -55,7 +55,7 @@ open class BusinessEntityMapper(
             toZonedDateTime(businessEntity.updatedAt)
         )
             .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
-            .businessDomain(BusinessDomainMapper.toBusinessDomainSummary(businessEntity.businessDomain))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext))
             .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities))
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
@@ -78,7 +78,7 @@ open class BusinessEntityMapper(
             .description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
             .dataOwner(UserMapper.toUserSummary(entity.dataOwner))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
-            .businessDomain(BusinessDomainMapper.toBusinessDomainSummary(entity.businessDomain))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments))
     }
 

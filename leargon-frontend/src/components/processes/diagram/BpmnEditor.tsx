@@ -1,7 +1,7 @@
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
 import { Alert, Box, Button, CircularProgress, Snackbar } from '@mui/material';
@@ -14,6 +14,7 @@ import {
   getGetProcessDiagramQueryKey,
 } from '../../../api/generated/process/process';
 import type { ProcessDiagramResponse } from '../../../api/generated/model/processDiagramResponse';
+import BpmnElementLinkDialog from './BpmnElementLinkDialog';
 
 const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -32,6 +33,24 @@ const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;
 
+/** Element types that trigger the link dialog when added to the canvas */
+const LINKABLE_TYPES = new Set([
+  'bpmn:Task',
+  'bpmn:UserTask',
+  'bpmn:ServiceTask',
+  'bpmn:ScriptTask',
+  'bpmn:ManualTask',
+  'bpmn:BusinessRuleTask',
+  'bpmn:SendTask',
+  'bpmn:ReceiveTask',
+  'bpmn:SubProcess',
+  'bpmn:CallActivity',
+]);
+
+interface PendingElement {
+  element: { id: string; type: string };
+}
+
 interface Props {
   processKey: string;
   canEdit: boolean;
@@ -43,6 +62,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | BpmnViewer | null>(null);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+  const [pending, setPending] = useState<PendingElement | null>(null);
 
   const { data: diagramResponse, isLoading, isError } = useGetProcessDiagram(processKey);
   const saveProcessDiagram = useSaveProcessDiagram();
@@ -62,6 +82,19 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     modelerRef.current = instance;
     instance.importXML(xml).catch(console.error);
 
+    if (canEdit) {
+      // Listen for newly added shapes — open dialog for tasks / sub-processes
+      // bpmn-js uses a didi injector; cast through unknown to reach .get()
+      type BpmnInstance = { get: (name: string) => unknown };
+      type EventBus = { on: (event: string, cb: (e: { element: { id: string; type: string } }) => void) => void };
+      const eventBus = (instance as unknown as BpmnInstance).get('eventBus') as EventBus;
+      eventBus.on('shape.added', (event) => {
+        if (LINKABLE_TYPES.has(event.element.type)) {
+          setPending({ element: event.element });
+        }
+      });
+    }
+
     return () => {
       instance.destroy();
       modelerRef.current = null;
@@ -80,6 +113,37 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       setSnackbar({ message: t('processDiagram.saveError'), severity: 'error' });
     }
   };
+
+  type BpmnInstance = { get: (name: string) => unknown };
+  type ElementRegistry = { get: (id: string) => unknown };
+  type Modeling = {
+    updateProperties: (element: unknown, props: Record<string, unknown>) => void;
+    removeElements: (elements: unknown[]) => void;
+  };
+
+  const handleDialogConfirm = useCallback(
+    (name: string) => {
+      if (!pending || !modelerRef.current) { setPending(null); return; }
+      const bpmn = modelerRef.current as unknown as BpmnInstance;
+      const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
+      const modeling = bpmn.get('modeling') as Modeling;
+      const el = elementRegistry.get(pending.element.id);
+      if (el) modeling.updateProperties(el, { name });
+      setPending(null);
+    },
+    [pending],
+  );
+
+  const handleDialogCancel = useCallback(() => {
+    // Remove the element from the canvas when user cancels
+    if (!pending || !modelerRef.current) { setPending(null); return; }
+    const bpmn = modelerRef.current as unknown as BpmnInstance;
+    const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
+    const modeling = bpmn.get('modeling') as Modeling;
+    const el = elementRegistry.get(pending.element.id);
+    if (el) modeling.removeElements([el]);
+    setPending(null);
+  }, [pending]);
 
   if (isLoading)
     return (
@@ -117,10 +181,19 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           borderRadius: 1,
           overflow: 'hidden',
           bgcolor: 'background.paper',
-          // bpmn-js palette sits inside this container — ensure it's visible
           '& .djs-palette': { left: 0, top: 0 },
         }}
       />
+
+      {canEdit && pending && (
+        <BpmnElementLinkDialog
+          open={!!pending}
+          elementType={pending.element.type}
+          currentProcessKey={processKey}
+          onConfirm={handleDialogConfirm}
+          onCancel={handleDialogCancel}
+        />
+      )}
 
       <Snackbar
         open={!!snackbar}

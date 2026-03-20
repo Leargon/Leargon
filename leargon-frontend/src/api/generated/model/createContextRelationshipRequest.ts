@@ -19,8 +19,8 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 import type { ContextMapperRelationshipType } from './contextMapperRelationshipType';
 
 export interface CreateContextRelationshipRequest {
-  upstreamDomainKey: string;
-  downstreamDomainKey: string;
+  upstreamBoundedContextKey: string;
+  downstreamBoundedContextKey: string;
   relationshipType: ContextMapperRelationshipType;
   /** @nullable */
   upstreamRole?: string | null;

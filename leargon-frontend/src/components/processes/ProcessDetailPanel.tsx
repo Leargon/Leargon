@@ -45,7 +45,7 @@ import {
   useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
   useUpdateProcessCode,
-  useAssignBusinessDomainToProcess,
+  useAssignBoundedContextToProcess,
   useAssignClassificationsToProcess,
   useDeleteProcess,
   useGetProcessVersions,
@@ -65,6 +65,7 @@ import { useGetAllUsers } from '../../api/generated/administration/administratio
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
+
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
@@ -194,7 +195,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateLegalBasis = useUpdateProcessLegalBasis();
   const updateOwner = useUpdateProcessOwner();
   const updateCode = useUpdateProcessCode();
-  const assignDomain = useAssignBusinessDomainToProcess();
+  const assignBoundedContext = useAssignBoundedContextToProcess();
   const assignClassifications = useAssignClassificationsToProcess();
   const deleteProcess = useDeleteProcess();
   const addInput = useAddProcessInput();
@@ -275,10 +276,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
-  // Business domain inline edit
-  const domainEdit = useInlineEdit<string | null>({
+  // Bounded context inline edit
+  const boundedContextEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
-      await assignDomain.mutateAsync({ key: processKey, data: { businessDomainKey: val } });
+      await assignBoundedContext.mutateAsync({ key: processKey, data: { boundedContextKey: val } });
       invalidate();
     },
   });
@@ -314,7 +315,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     legalBasisEdit.cancel();
     ownerEdit.cancel();
     codeEdit.cancel();
-    domainEdit.cancel();
+    boundedContextEdit.cancel();
     classEdit.cancel();
     execUnitsEdit.cancel();
     purposeEdit.cancel();
@@ -560,26 +561,29 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
           )}
         </PropRow>
-        <PropRow label={t('process.businessDomain')} canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
-          onEdit={() => domainEdit.startEdit(process.businessDomain?.key || null)} onSave={domainEdit.save}
-          onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving} isMandatory={isMandatory('businessDomain')}>
-          {domainEdit.isEditing ? (
+        <PropRow label={t('process.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+          onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
+          onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
+          {boundedContextEdit.isEditing ? (
             <Box>
               <Autocomplete
-                options={allDomains}
-                getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-                value={allDomains.find((d) => d.key === domainEdit.editValue) || null}
-                onChange={(_, newVal) => domainEdit.setEditValue(newVal?.key || null)}
+                options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
+                getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
+                onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
                 renderInput={(params) => (
-                  <TextField {...params} size="small" placeholder="Search for domain..." sx={{ width: 350 }} />
+                  <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
                 )}
                 isOptionEqualToValue={(option, value) => option.key === value.key}
                 size="small"
               />
-              {domainEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{domainEdit.error}</Alert>}
+              {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
             </Box>
-          ) : process.businessDomain ? (
-            <Chip label={process.businessDomain.name} size="small" onClick={() => navigate(`/domains/${process.businessDomain!.key}`)} clickable />
+          ) : process.boundedContext ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Chip label={process.boundedContext.name} size="small" />
+              <Typography variant="caption" color="text.secondary">({process.boundedContext.domainName})</Typography>
+            </Box>
           ) : (
             <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
           )}

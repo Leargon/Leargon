@@ -6,10 +6,11 @@ Phase 1 (WIPE): Deletes all business data + non-admin users in safe FK order:
 
 Phase 2 (SEED): Creates fresh e-commerce demo data:
   locales · users · classifications · org units (+ hierarchy + leads) · domains
-  (+ types) · entities (+ domains + data owners + interfaces) ·
-  processes (+ hierarchy + domains + owners + executing units) ·
+  (+ types + vision statements) · entities (+ bounded-contexts + data owners + interfaces) ·
+  processes (+ hierarchy + bounded-contexts + owners + executing units) ·
   relationships · classification assignments · field configurations (mandatory fields) ·
-  data processors (Art. 9 revDSG) · cross-border transfers (Art. 16-17 revDSG)
+  data processors (Art. 9 revDSG) · cross-border transfers (Art. 16-17 revDSG) ·
+  context relationships · domain events (+ consumers + process links) · translation links
 
 Usage:
   python3 seed-demo.py
@@ -474,6 +475,37 @@ domain_data = [
         'Gestión del ciclo de vida de empleados y candidatos.')),
 ]
 
+domain_vision = {
+    'Sales': (
+        'Products are discovered, selected and purchased. The Sales bounded context owns the '
+        'complete customer purchasing journey from product browsing through order placement.'
+    ),
+    'Billing': (
+        'Payments are collected and invoices are issued. The Billing bounded context is the '
+        'financial ledger of the e-commerce platform, ensuring accurate transaction recording.'
+    ),
+    'Warehouse': (
+        'Physical inventory is managed and orders are fulfilled. The Warehouse bounded context '
+        'tracks all goods from receipt through dispatch to the shipping carriers.'
+    ),
+    'Shipping': (
+        'Last-mile delivery is coordinated with external carriers. The Shipping bounded context '
+        'bridges internal fulfilment with external logistics providers.'
+    ),
+    'Marketing': (
+        'Customer acquisition and engagement are driven through targeted campaigns and promotions. '
+        'The Marketing bounded context uses product and order data to reach and retain customers.'
+    ),
+    'Customer Care': (
+        'Customer identities are registered and support is delivered. The Customer Care bounded '
+        'context is the single source of truth for natural person data in the platform.'
+    ),
+    'Human Resources': (
+        'Employee and applicant lifecycles are managed. The Human Resources bounded context '
+        'maintains the workforce registry and HR processes.'
+    ),
+}
+
 domain_keys = {}
 for (en_name, parent_en, domain_type, nms, descs) in domain_data:
     payload = {'names': nms, 'descriptions': descs}
@@ -484,12 +516,19 @@ for (en_name, parent_en, domain_type, nms, descs) in domain_data:
         dkey = result['key']
         domain_keys[en_name] = dkey
         api('PUT', f'/business-domains/{dkey}/type', {'type': domain_type}, T)
+        if en_name in domain_vision:
+            api('PUT', f'/business-domains/{dkey}/vision-statement',
+                {'visionStatement': domain_vision[en_name]}, T)
         ok(f'{en_name} (type={domain_type})', result)
     else:
         domain_keys[en_name] = en_name.lower().replace(' ', '-')
 
 def dk(en_name):
     return domain_keys.get(en_name, en_name.lower().replace(' ', '-'))
+
+def bck(en_name):
+    """Default bounded context key for a domain: {domainKey}/default"""
+    return dk(en_name) + '/default'
 
 
 # ── 6. Business entities ────────────────────────────────────────────────────────
@@ -664,9 +703,9 @@ for (en_name, parent_en, domain_en, nms, descs, owner) in entity_data:
             api('PUT', f'/business-entities/{ekey}/data-owner',
                 {'dataOwnerUsername': owner}, T)
         if domain_en:
-            api('PUT', f'/business-entities/{ekey}/domain',
-                {'businessDomainKey': dk(domain_en)}, T)
-        ok(f'{en_name}' + (f' (owner={owner}, domain={domain_en})' if owner else ''), result)
+            api('PUT', f'/business-entities/{ekey}/bounded-context',
+                {'boundedContextKey': bck(domain_en)}, T)
+        ok(f'{en_name}' + (f' (owner={owner}, bc={domain_en})' if owner else ''), result)
     else:
         entity_keys[en_name] = en_name.lower().replace(' ', '-')
 
@@ -829,8 +868,8 @@ for (en_name, parent_en, domain_en, nms, descs, ou_slugs, proc_owner) in process
         if proc_owner:
             api('PUT', f'/processes/{pkey}/owner', {'processOwnerUsername': proc_owner}, T)
         if domain_en:
-            api('PUT', f'/processes/{pkey}/domain',
-                {'businessDomainKey': dk(domain_en)}, T)
+            api('PUT', f'/processes/{pkey}/bounded-context',
+                {'boundedContextKey': bck(domain_en)}, T)
         legal_basis = process_legal_basis.get(en_name)
         if legal_basis:
             api('PUT', f'/processes/{pkey}/legal-basis', {'legalBasis': legal_basis}, T)
@@ -1254,6 +1293,121 @@ ok('cross-border transfers: Customer Registration',
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
             'notes': 'Email verification service via Klaviyo (US)'},
        ]}, T))
+
+
+# ── Context Relationships (DDD Strategic Patterns) ────────────────────────────────
+print('\n[16] Context relationships...')
+
+# (upstream_domain, downstream_domain, relationship_type, upstream_role, downstream_role, notes)
+context_rels = [
+    ('Sales', 'Billing', 'CUSTOMER_SUPPLIER',
+     'U', 'D',
+     'Sales is upstream: placed orders trigger invoice generation in Billing.'),
+    ('Sales', 'Warehouse', 'CUSTOMER_SUPPLIER',
+     'U', 'D',
+     'Sales is upstream: confirmed orders drive fulfilment tasks in Warehouse.'),
+    ('Warehouse', 'Shipping', 'CUSTOMER_SUPPLIER',
+     'U', 'D',
+     'Warehouse is upstream: packed parcels are handed off to the Shipping context.'),
+    ('Customer Care', 'Sales', 'OPEN_HOST_SERVICE',
+     'OHS', None,
+     'Customer Care publishes an open customer-identity API consumed by Sales and other contexts.'),
+    ('Sales', 'Marketing', 'CUSTOMER_SUPPLIER',
+     'U', 'D',
+     'Sales is upstream: product catalogue and order data feed Marketing campaign logic.'),
+]
+
+for (up_en, dn_en, rel_type, up_role, dn_role, notes) in context_rels:
+    payload = {
+        'upstreamBoundedContextKey': bck(up_en),
+        'downstreamBoundedContextKey': bck(dn_en),
+        'relationshipType': rel_type,
+    }
+    if up_role:
+        payload['upstreamRole'] = up_role
+    if dn_role:
+        payload['downstreamRole'] = dn_role
+    if notes:
+        payload['description'] = notes
+    ok(f'{up_en} →[{rel_type}]→ {dn_en}',
+       api('POST', '/context-relationships', payload, T))
+
+
+# ── Domain Events ──────────────────────────────────────────────────────────────────
+print('\n[17] Domain events...')
+
+# (en_name, publishing_domain, consumer_domains, process_links, en_desc)
+domain_event_defs = [
+    ('OrderPlaced', 'Sales',
+     ['Billing', 'Warehouse'],
+     [('Place an Order', 'TRIGGERS')],
+     'Raised when a customer successfully places an order. Triggers invoice creation in Billing and fulfilment in Warehouse.'),
+    ('PaymentProcessed', 'Billing',
+     ['Sales'],
+     [('Process Payment', 'TRIGGERS')],
+     'Raised when a payment is successfully processed. Allows Sales to confirm the order and proceed to fulfilment.'),
+    ('OrderShipped', 'Shipping',
+     ['Sales', 'Customer Care'],
+     [('Ship Order', 'TRIGGERS')],
+     'Raised when a parcel is dispatched to the carrier. Notifies Sales to mark the order as shipped and Customer Care to trigger delivery notifications.'),
+    ('CustomerRegistered', 'Customer Care',
+     ['Marketing', 'Sales'],
+     [('Customer Registration', 'TRIGGERS')],
+     'Raised when a new customer account is created. Allows Marketing to trigger a welcome campaign and Sales to enable personalised recommendations.'),
+]
+
+for (ev_en, pub_domain, consumer_domains, proc_links, desc) in domain_event_defs:
+    ev_payload = {
+        'names': [{'locale': 'en', 'text': ev_en}],
+        'descriptions': [{'locale': 'en', 'text': desc}],
+        'publishingBoundedContextKey': bck(pub_domain),
+    }
+    ev = api('POST', '/domain-events', ev_payload, T)
+    if '_error' not in ev:
+        evk = ev['key']
+        # Set consumers
+        consumer_keys = [bck(d) for d in consumer_domains]
+        ok(f'{ev_en} consumers={consumer_domains}',
+           api('PUT', f'/domain-events/{evk}/consumers',
+               {'consumerBoundedContextKeys': consumer_keys}, T))
+        # Link to processes
+        for (proc_en, link_type) in proc_links:
+            pkey = pk(proc_en)
+            ok(f'{ev_en} linked to {proc_en} ({link_type})',
+               api('POST', f'/domain-events/{evk}/process-links',
+                   {'processKey': pkey, 'linkType': link_type}, T))
+        ok(f'domain event: {ev_en}', ev)
+    else:
+        print(f'  SKIP domain event {ev_en} (error)')
+
+
+# ── Translation Links ────────────────────────────────────────────────────────────
+print('\n[18] Translation links...')
+
+# (first_entity_en, second_entity_en, note)
+translation_links = [
+    ('Order', 'Invoice',
+     'An Order in the Sales context is the upstream representation of the same transaction '
+     'that appears as an Invoice in the Billing context. They share the same identity '
+     '(order ID = invoice reference) but carry domain-specific attributes.'),
+    ('Customer', 'Natural Person',
+     'A Customer in the Sales/Customer Care context is a Natural Person who has completed '
+     'registration. Natural Person is the privacy-law entity; Customer is the commercial identity.'),
+    ('Product', 'Parcel',
+     'A Product in the Sales context is the commercial item. When shipped, it is tracked '
+     'as a physical Parcel in the Warehouse/Shipping context.'),
+    ('Employee', 'Natural Person',
+     'An Employee in the HR context is a Natural Person in an employment relationship. '
+     'Both share identity data (name, date of birth) but diverge in domain-specific attributes.'),
+]
+
+for (first_en, second_en, note) in translation_links:
+    ok(f'translation link: {first_en} ↔ {second_en}',
+       api('POST', '/translation-links', {
+           'firstEntityKey': ek(first_en),
+           'secondEntityKey': ek(second_en),
+           'semanticDifferenceNote': note,
+       }, T))
 
 
 # ── Summary ─────────────────────────────────────────────────────────────────────

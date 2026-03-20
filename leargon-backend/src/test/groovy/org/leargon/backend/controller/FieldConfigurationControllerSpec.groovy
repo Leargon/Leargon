@@ -114,7 +114,7 @@ class FieldConfigurationControllerSpec extends Specification {
         and: "initial configurations"
         def configs = [
                 [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
-                [entityType: "BUSINESS_ENTITY", fieldName: "businessDomain"],
+                [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"],
                 [entityType: "BUSINESS_DOMAIN", fieldName: "type"]
         ]
 
@@ -130,7 +130,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         and: "all entries are present"
         response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod" }
-        response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "businessDomain" }
+        response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "boundedContext" }
         response.body().any { it.entityType == "BUSINESS_DOMAIN" && it.fieldName == "type" }
     }
 
@@ -196,20 +196,20 @@ class FieldConfigurationControllerSpec extends Specification {
     // =====================
 
     def "BusinessEntity response should include missingMandatoryFields when fields are configured"() {
-        given: "admin configures retentionPeriod and businessDomain as mandatory for BUSINESS_ENTITY"
+        given: "admin configures retentionPeriod and boundedContext as mandatory for BUSINESS_ENTITY"
         String token = createAdminToken()
 
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
                         [
                                 [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
-                                [entityType: "BUSINESS_ENTITY", fieldName: "businessDomain"]
+                                [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"]
                         ]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
         )
 
-        and: "an entity without retentionPeriod or businessDomain"
+        and: "an entity without retentionPeriod or boundedContext"
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities",
                         new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
@@ -228,7 +228,7 @@ class FieldConfigurationControllerSpec extends Specification {
         def missing = response.body().missingMandatoryFields
         missing != null
         missing.contains("retentionPeriod")
-        missing.contains("businessDomain")
+        missing.contains("boundedContext")
     }
 
     def "BusinessEntity response should have null missingMandatoryFields when no fields are configured"() {
@@ -297,7 +297,7 @@ class FieldConfigurationControllerSpec extends Specification {
                 HttpRequest.PUT("/administration/field-configurations",
                         [
                                 [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
-                                [entityType: "BUSINESS_ENTITY", fieldName: "businessDomain"]
+                                [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"]
                         ]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
@@ -322,7 +322,7 @@ class FieldConfigurationControllerSpec extends Specification {
         def mandatory = response.body().mandatoryFields
         mandatory != null
         mandatory.contains("retentionPeriod")
-        mandatory.contains("businessDomain")
+        mandatory.contains("boundedContext")
     }
 
     def "BusinessEntity response should have null mandatoryFields when no fields are configured"() {

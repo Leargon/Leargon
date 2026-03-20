@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Box, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 
 // ─── Data types (exported for use in parent components) ───────────────────────
 
@@ -254,6 +254,103 @@ export const OrgUnitNode = memo(({ data, selected }: NodeProps) => {
 });
 OrgUnitNode.displayName = 'OrgUnitNode';
 
+// ─── Group / Container Nodes ──────────────────────────────────────────────────
+
+export interface GroupNodeData {
+  label: string;
+  color: string;
+  subtypeLabel?: string;
+}
+
+/** Solid-border container for bounded context / domain grouping */
+export const DomainGroupNode = memo(({ data }: NodeProps) => {
+  const d = data as unknown as GroupNodeData;
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        border: 2,
+        borderColor: d.color,
+        borderRadius: 2,
+        bgcolor: d.color + '12',
+        position: 'relative',
+        pointerEvents: 'none',
+      }}
+    >
+      <Handle type="target" position={Position.Left} style={{ background: d.color, top: 22, pointerEvents: 'all' }} />
+      <Handle type="source" position={Position.Right} style={{ background: d.color, top: 22, pointerEvents: 'all' }} />
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.5,
+          borderBottom: 2,
+          borderColor: d.color,
+          bgcolor: d.color + '22',
+          borderRadius: '6px 6px 0 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.75,
+          height: 36,
+        }}
+      >
+        {d.subtypeLabel && (
+          <Chip
+            label={d.subtypeLabel}
+            size="small"
+            sx={{ bgcolor: d.color, color: '#fff', fontWeight: 700, fontSize: '0.6rem', height: 16, pointerEvents: 'all' }}
+          />
+        )}
+        <Typography variant="caption" fontWeight={700} noWrap sx={{ color: d.color, pointerEvents: 'all' }}>
+          {d.label}
+        </Typography>
+      </Box>
+    </Box>
+  );
+});
+DomainGroupNode.displayName = 'DomainGroupNode';
+
+/** Dashed-border container for organisational unit grouping */
+export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
+  const d = data as unknown as GroupNodeData;
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        border: '2px dashed',
+        borderColor: d.color,
+        borderRadius: 2,
+        bgcolor: d.color + '0d',
+        position: 'relative',
+        pointerEvents: 'none',
+      }}
+    >
+      <Handle type="target" position={Position.Left} style={{ background: d.color, top: 20, pointerEvents: 'all' }} />
+      <Handle type="source" position={Position.Right} style={{ background: d.color, top: 20, pointerEvents: 'all' }} />
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.5,
+          borderBottom: '2px dashed',
+          borderColor: d.color,
+          bgcolor: d.color + '18',
+          borderRadius: '6px 6px 0 0',
+          height: 32,
+          display: 'flex',
+          alignItems: 'center',
+          pointerEvents: 'all',
+        }}
+      >
+        <Typography variant="caption" fontWeight={700} noWrap sx={{ color: d.color }}>
+          {d.label}
+        </Typography>
+      </Box>
+    </Box>
+  );
+});
+OrgUnitGroupNode.displayName = 'OrgUnitGroupNode';
+
 // ─── Node types map ────────────────────────────────────────────────────────────
 
 export const SHARED_NODE_TYPES = {
@@ -261,4 +358,6 @@ export const SHARED_NODE_TYPES = {
   processNode: ProcessNode,
   dataEntityNode: DataEntityNode,
   orgUnitNode: OrgUnitNode,
+  domainGroupNode: DomainGroupNode,
+  orgUnitGroupNode: OrgUnitGroupNode,
 };

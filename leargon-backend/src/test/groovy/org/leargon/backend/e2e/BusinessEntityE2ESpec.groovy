@@ -288,24 +288,25 @@ class BusinessEntityE2ESpec extends AbstractE2ESpec {
     // UPDATE DOMAIN ASSIGNMENT
     // =====================
 
-    def "should assign entity to a business domain"() {
+    def "should assign entity to a bounded context"() {
         given:
         def adminToken = signupAdmin("ent-domain@example.com", "entdomain")
         def domain = createDomain(adminToken, "Sales Domain")
+        def bc = createBoundedContext(adminToken, domain.key, "Sales Core")
         def entity = createEntity(adminToken, "Domain Entity")
 
         when:
         def response = client.toBlocking().exchange(
-                HttpRequest.PUT("/business-entities/${entity.key}/domain", [
-                        businessDomainKey: domain.key
+                HttpRequest.PUT("/business-entities/${entity.key}/bounded-context", [
+                        boundedContextKey: bc.key
                 ]).bearerAuth(adminToken),
                 Map
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().businessDomain != null
-        response.body().businessDomain.key == domain.key
+        response.body().boundedContext != null
+        response.body().boundedContext.key == bc.key
     }
 
     // =====================
@@ -616,10 +617,11 @@ class BusinessEntityE2ESpec extends AbstractE2ESpec {
     // =====================
 
     def "should perform complete entity lifecycle: create, read, update all fields, version, delete"() {
-        given: "admin user with a domain and classification"
+        given: "admin user with a domain, bounded context and classification"
         def adminToken = signupAdmin("ent-lifecycle@example.com", "entlifecycle")
         signup("ent-newowner@example.com", "entnewowner2")
         def domain = createDomain(adminToken, "Lifecycle Domain")
+        def bc = createBoundedContext(adminToken, domain.key, "Lifecycle Core")
         def classif = createClassification(adminToken, "Lifecycle Class", "BUSINESS_ENTITY", [
                 [key: "a", names: [[locale: "en", text: "Value A"]]],
                 [key: "b", names: [[locale: "en", text: "Value B"]]]
@@ -654,15 +656,15 @@ class BusinessEntityE2ESpec extends AbstractE2ESpec {
         then:
         descResp.body().descriptions.size() == 1
 
-        when: "4. Assign domain"
+        when: "4. Assign bounded context"
         def domResp = client.toBlocking().exchange(
-                HttpRequest.PUT("/business-entities/${key}/domain", [
-                        businessDomainKey: domain.key
+                HttpRequest.PUT("/business-entities/${key}/bounded-context", [
+                        boundedContextKey: bc.key
                 ]).bearerAuth(adminToken), Map
         )
 
         then:
-        domResp.body().businessDomain.key == domain.key
+        domResp.body().boundedContext.key == bc.key
 
         when: "5. Assign classification"
         def classResp = client.toBlocking().exchange(
@@ -725,28 +727,29 @@ class BusinessEntityE2ESpec extends AbstractE2ESpec {
         childResp.body().parentKey == null
     }
 
-    def "should detach entity from domain when domain is deleted"() {
+    def "should detach entity from bounded context when domain is deleted"() {
         given:
         def adminToken = signupAdmin("ent-domcasc@example.com", "entdomcasc")
         def domain = createDomain(adminToken, "Ephemeral Domain")
+        def bc = createBoundedContext(adminToken, domain.key, "Ephemeral Core")
         def entity = createEntity(adminToken, "Domain Bound Entity")
 
-        // Assign to domain
+        // Assign to bounded context
         client.toBlocking().exchange(
-                HttpRequest.PUT("/business-entities/${entity.key}/domain", [
-                        businessDomainKey: domain.key
+                HttpRequest.PUT("/business-entities/${entity.key}/bounded-context", [
+                        boundedContextKey: bc.key
                 ]).bearerAuth(adminToken), Map
         )
 
-        when: "deleting the domain"
+        when: "deleting the domain (cascades to bounded context)"
         client.toBlocking().exchange(
                 HttpRequest.DELETE("/business-domains/${domain.key}").bearerAuth(adminToken)
         )
 
-        then: "entity still exists but domain is null"
+        then: "entity still exists but bounded context is null"
         def entityResp = client.toBlocking().exchange(
                 HttpRequest.GET("/business-entities/${entity.key}").bearerAuth(adminToken), Map
         )
-        entityResp.body().businessDomain == null
+        entityResp.body().boundedContext == null
     }
 }

@@ -29,6 +29,7 @@ import EntityMapPage from './pages/EntityMapPage';
 import ProcessLandscapePage from './pages/ProcessLandscapePage';
 import OrgChartPage from './pages/OrgChartPage';
 import ContextMapPage from './pages/ContextMapPage';
+import EventFlowPage from './pages/EventFlowPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,6 +98,7 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/diagrams/processes" element={<ProcessLandscapePage />} />
                   <Route path="/diagrams/organisation" element={<OrgChartPage />} />
                   <Route path="/diagrams/context-map" element={<ContextMapPage />} />
+                  <Route path="/diagrams/event-flow" element={<EventFlowPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-update-context-relationships-for-bounded-contexts
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: context_relationships
+            columns:
+              - column:
+                  name: upstream_bounded_context_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addColumn:
+            tableName: context_relationships
+            columns:
+              - column:
+                  name: downstream_bounded_context_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: context_relationships
+            baseColumnNames: upstream_bounded_context_id
+            constraintName: fk_context_relationships_upstream_bc
+            referencedTableName: bounded_contexts
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: context_relationships
+            baseColumnNames: downstream_bounded_context_id
+            constraintName: fk_context_relationships_downstream_bc
+            referencedTableName: bounded_contexts
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - dropForeignKeyConstraint:
+            baseTableName: context_relationships
+            constraintName: fk_ctx_rel_upstream
+        - dropForeignKeyConstraint:
+            baseTableName: context_relationships
+            constraintName: fk_ctx_rel_downstream
+        - dropIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_upstream
+        - dropIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_downstream
+        - dropColumn:
+            tableName: context_relationships
+            columnName: upstream_domain_id
+        - dropColumn:
+            tableName: context_relationships
+            columnName: downstream_domain_id
+        - createIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_upstream_bc
+            columns:
+              - column:
+                  name: upstream_bounded_context_id
+        - createIndex:
+            tableName: context_relationships
+            indexName: idx_ctx_rel_downstream_bc
+            columns:
+              - column:
+                  name: downstream_bounded_context_id

@@ -145,7 +145,7 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const { canvasSx } = useReactFlowTheme();
+  const { canvasSx, colorMode } = useReactFlowTheme();
 
   const { data: processesResponse, isLoading, isError } = useGetAllProcesses();
   const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? undefined;
@@ -196,6 +196,7 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         nodeTypes={SHARED_NODE_TYPES}
+        colorMode={colorMode}
         fitView
         fitViewOptions={{ padding: 0.15 }}
         minZoom={0.1}

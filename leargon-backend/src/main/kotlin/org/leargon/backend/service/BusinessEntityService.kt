@@ -22,6 +22,7 @@ import org.leargon.backend.model.FieldChange
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
 import org.leargon.backend.model.VersionDiffResponse
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRelationshipRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -36,6 +37,7 @@ open class BusinessEntityService(
     private val businessEntityRelationshipRepository: BusinessEntityRelationshipRepository,
     private val userRepository: UserRepository,
     private val businessDomainRepository: BusinessDomainRepository,
+    private val boundedContextRepository: BoundedContextRepository,
     private val localeService: LocaleService,
     private val businessEntityMapper: BusinessEntityMapper
 ) {
@@ -401,22 +403,22 @@ open class BusinessEntityService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun assignBusinessDomain(entityKey: String, domainKey: String?, currentUser: User): BusinessEntityResponse {
+    open fun assignBoundedContext(entityKey: String, boundedContextKey: String?, currentUser: User): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
 
-        val oldDomainName = entity.businessDomain?.getName("en") ?: "none"
+        val oldName = entity.boundedContext?.getName("en") ?: "none"
 
-        entity.businessDomain = if (domainKey != null) {
-            businessDomainRepository.findByKey(domainKey)
-                .orElseThrow { ResourceNotFoundException("Business businessDomain not found") }
+        entity.boundedContext = if (boundedContextKey != null) {
+            boundedContextRepository.findByKey(boundedContextKey)
+                .orElseThrow { ResourceNotFoundException("Bounded context not found") }
         } else null
 
         entity = businessEntityRepository.update(entity)
 
-        val newDomainName = entity.businessDomain?.getName("en") ?: "none"
+        val newName = entity.boundedContext?.getName("en") ?: "none"
         createBusinessEntityVersion(entity, currentUser, "UPDATE",
-            "BusinessDomain assignment changed from '$oldDomainName' to '$newDomainName'")
+            "BoundedContext assignment changed from '$oldName' to '$newName'")
 
         entity = getBusinessEntityByKey(entityKey)
         return businessEntityMapper.toBusinessEntityResponse(entity)

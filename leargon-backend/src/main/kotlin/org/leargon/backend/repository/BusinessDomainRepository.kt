@@ -14,24 +14,24 @@ interface BusinessDomainRepository : JpaRepository<BusinessDomain, Long> {
     fun countByLocaleInTranslations(localeCode: String): Long
 
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
+    @Join(value = "children", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContexts", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "assignedEntities", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<BusinessDomain>
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "assignedEntities", type = Join.Type.LEFT_FETCH)
     fun findByParentIsNull(): List<BusinessDomain>
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContexts", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "assignedEntities", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<BusinessDomain>
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContexts", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "assignedEntities", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<BusinessDomain>
 }

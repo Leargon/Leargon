@@ -11,7 +11,8 @@ interface ProcessRepository : JpaRepository<Process, Long> {
 
     @Join(value = "processOwner", type = Join.Type.FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "businessDomain", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "inputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "outputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
@@ -22,7 +23,8 @@ interface ProcessRepository : JpaRepository<Process, Long> {
 
     @Join(value = "processOwner", type = Join.Type.FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "businessDomain", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "inputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "outputEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)

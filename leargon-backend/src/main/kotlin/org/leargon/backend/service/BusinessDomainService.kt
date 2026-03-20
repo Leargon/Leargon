@@ -18,14 +18,12 @@ import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
-import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
 open class BusinessDomainService(
     private val businessDomainRepository: BusinessDomainRepository,
     private val businessDomainVersionRepository: BusinessDomainVersionRepository,
-    private val businessEntityRepository: BusinessEntityRepository,
     private val localeService: LocaleService,
     private val businessDomainMapper: BusinessDomainMapper
 ) {
@@ -120,6 +118,16 @@ open class BusinessDomainService(
     }
 
     @Transactional
+    open fun updateBusinessDomainVisionStatement(domainKey: String, visionStatement: String?, currentUser: User): BusinessDomain {
+        var domain = getBusinessDomainByKey(domainKey)
+        domain.visionStatement = visionStatement
+        domain = businessDomainRepository.update(domain)
+        createBusinessDomainVersion(domain, currentUser, "UPDATE",
+            "Updated vision statement")
+        return domain
+    }
+
+    @Transactional
     open fun updateBusinessDomainType(domainKey: String, type: String?, currentUser: User): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
         domain.type = type
@@ -172,13 +180,6 @@ open class BusinessDomainService(
             businessDomainRepository.update(child)
         }
         domain.children.clear()
-
-        val assignedEntities = domain.assignedEntities.toList()
-        for (entity in assignedEntities) {
-            entity.businessDomain = null
-            businessEntityRepository.update(entity)
-        }
-        domain.assignedEntities.clear()
 
         businessDomainRepository.delete(domain)
     }

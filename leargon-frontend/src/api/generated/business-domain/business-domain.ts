@@ -47,6 +47,7 @@ import type {
   LocalizedText,
   UpdateBusinessDomainParentRequest,
   UpdateBusinessDomainTypeRequest,
+  UpdateDomainVisionStatementRequest,
   VersionDiffResponse
 } from '../model';
 
@@ -1532,3 +1533,104 @@ export function useGetBusinessDomainVersionDiff<TData = Awaited<ReturnType<typeo
 
 
 
+/**
+ * @summary Update domain vision statement
+ */
+export type updateBusinessDomainVisionStatementResponse200 = {
+  data: BusinessDomainResponse
+  status: 200
+}
+
+export type updateBusinessDomainVisionStatementResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessDomainVisionStatementResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBusinessDomainVisionStatementResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBusinessDomainVisionStatementResponseSuccess = (updateBusinessDomainVisionStatementResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessDomainVisionStatementResponseError = (updateBusinessDomainVisionStatementResponse401 | updateBusinessDomainVisionStatementResponse403 | updateBusinessDomainVisionStatementResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessDomainVisionStatementResponse = (updateBusinessDomainVisionStatementResponseSuccess | updateBusinessDomainVisionStatementResponseError)
+
+export const getUpdateBusinessDomainVisionStatementUrl = (key: string,) => {
+
+
+  
+
+  return `/business-domains/${key}/vision-statement`
+}
+
+export const updateBusinessDomainVisionStatement = async (key: string,
+    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options?: RequestInit): Promise<updateBusinessDomainVisionStatementResponse> => {
+  
+  return customAxios<updateBusinessDomainVisionStatementResponse>(getUpdateBusinessDomainVisionStatementUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateDomainVisionStatementRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessDomainVisionStatementMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessDomainVisionStatement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, {key: string;data: UpdateDomainVisionStatementRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessDomainVisionStatement(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainVisionStatementMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>>
+    export type UpdateBusinessDomainVisionStatementMutationBody = UpdateDomainVisionStatementRequest
+    export type UpdateBusinessDomainVisionStatementMutationError = void
+
+    /**
+ * @summary Update domain vision statement
+ */
+export const useUpdateBusinessDomainVisionStatement = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>,
+        TError,
+        {key: string;data: UpdateDomainVisionStatementRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainVisionStatementMutationOptions(options), queryClient);
+    }
+    

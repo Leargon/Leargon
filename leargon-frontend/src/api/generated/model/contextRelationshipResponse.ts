@@ -16,15 +16,15 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse';
+import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 import type { ContextMapperRelationshipType } from './contextMapperRelationshipType';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface ContextRelationshipResponse {
   id: number;
   relationshipType: ContextMapperRelationshipType;
-  upstreamDomain: BusinessDomainSummaryResponse;
-  downstreamDomain: BusinessDomainSummaryResponse;
+  upstreamBoundedContext?: BoundedContextSummaryResponse | null;
+  downstreamBoundedContext?: BoundedContextSummaryResponse | null;
   /** @nullable */
   upstreamRole?: string | null;
   /** @nullable */

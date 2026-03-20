@@ -14,6 +14,7 @@ const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
   '/dpia': 'gdpr',
   '/domains': 'ddd',
   '/diagrams/context-map': 'ddd',
+  '/diagrams/event-flow': 'ddd',
   '/organisation': 'orgdev',
   '/diagrams/organisation': 'orgdev',
   '/team-insights': 'orgdev',

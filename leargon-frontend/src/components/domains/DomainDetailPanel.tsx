@@ -53,7 +53,13 @@ import {
   useCreateContextRelationship,
   useDeleteContextRelationship,
 } from '../../api/generated/context-relationship/context-relationship';
-import { useGetAllProcesses } from '../../api/generated/process/process';
+import {
+  useGetBoundedContextsForDomain,
+  getGetBoundedContextsForDomainQueryKey,
+  useCreateBoundedContext,
+  useDeleteBoundedContext,
+} from '../../api/generated/bounded-context/bounded-context';
+import { useUpdateBusinessDomainVisionStatement } from '../../api/generated/business-domain/business-domain';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
@@ -69,8 +75,8 @@ import type {
   BusinessDomainResponse,
   SupportedLocaleResponse,
   ClassificationResponse,
-  ProcessResponse,
   ContextRelationshipResponse,
+  BoundedContextResponse,
 } from '../../api/generated/model';
 import type { ContextMapperRelationshipType } from '../../api/generated/model/contextMapperRelationshipType';
 
@@ -120,18 +126,34 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: allDomainsResponse } = useGetAllBusinessDomains();
   const allDomains = (allDomainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
-  const { data: allProcessesResponse } = useGetAllProcesses();
-  const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
+
+  const { data: boundedContextsResponse } = useGetBoundedContextsForDomain(domainKey);
+  const boundedContexts = (boundedContextsResponse?.data as BoundedContextResponse[] | undefined) || [];
 
   const { data: allRelsResponse } = useGetAllContextRelationships();
   const allRels = (allRelsResponse?.data as ContextRelationshipResponse[] | undefined) || [];
+  // Show relationships where either side's bounded context belongs to this domain
   const domainRels = allRels.filter(
-    (r) => r.upstreamDomain?.key === domainKey || r.downstreamDomain?.key === domainKey,
+    (r) => r.upstreamBoundedContext?.domainKey === domainKey || r.downstreamBoundedContext?.domainKey === domainKey,
   );
 
+  // Bounded context management state
+  const [addBcOpen, setAddBcOpen] = useState(false);
+  const [addBcName, setAddBcName] = useState('');
+  const [addBcError, setAddBcError] = useState('');
+
+  const createBoundedContext = useCreateBoundedContext();
+  const deleteBoundedContext = useDeleteBoundedContext();
+
+  const invalidateBcs = () => {
+    queryClient.invalidateQueries({ queryKey: getGetBoundedContextsForDomainQueryKey(domainKey) });
+    queryClient.invalidateQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+  };
+
+  // Context relationship state — now between bounded contexts
   const [addRelOpen, setAddRelOpen] = useState(false);
-  const [addRelPartnerKey, setAddRelPartnerKey] = useState<string | null>(null);
-  const [addRelThisIsUpstream, setAddRelThisIsUpstream] = useState(true);
+  const [addRelUpstreamBcKey, setAddRelUpstreamBcKey] = useState<string | null>(null);
+  const [addRelDownstreamBcKey, setAddRelDownstreamBcKey] = useState<string | null>(null);
   const [addRelType, setAddRelType] = useState<ContextMapperRelationshipType>('CUSTOMER_SUPPLIER');
   const [addRelUpstreamRole, setAddRelUpstreamRole] = useState('');
   const [addRelDownstreamRole, setAddRelDownstreamRole] = useState('');
@@ -146,13 +168,13 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   };
 
   const handleAddRel = async () => {
-    if (!addRelPartnerKey) return;
+    if (!addRelUpstreamBcKey || !addRelDownstreamBcKey) return;
     setAddRelError(null);
     try {
       await createRel.mutateAsync({
         data: {
-          upstreamDomainKey: addRelThisIsUpstream ? domainKey : addRelPartnerKey,
-          downstreamDomainKey: addRelThisIsUpstream ? addRelPartnerKey : domainKey,
+          upstreamBoundedContextKey: addRelUpstreamBcKey,
+          downstreamBoundedContextKey: addRelDownstreamBcKey,
           relationshipType: addRelType,
           upstreamRole: addRelUpstreamRole || undefined,
           downstreamRole: addRelDownstreamRole || undefined,
@@ -161,7 +183,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       });
       invalidateRels();
       setAddRelOpen(false);
-      setAddRelPartnerKey(null);
+      setAddRelUpstreamBcKey(null);
+      setAddRelDownstreamBcKey(null);
       setAddRelUpstreamRole('');
       setAddRelDownstreamRole('');
       setAddRelDescription('');
@@ -201,6 +224,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const updateDescriptions = useUpdateBusinessDomainDescriptions();
   const updateType = useUpdateBusinessDomainType();
   const updateParent = useUpdateBusinessDomainParent();
+  const updateVisionStatement = useUpdateBusinessDomainVisionStatement();
   const deleteDomain = useDeleteBusinessDomain();
   const assignClassifications = useAssignClassificationsToDomain();
 
@@ -254,12 +278,21 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     },
   });
 
+  // Inline edit for vision statement
+  const visionEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      await updateVisionStatement.mutateAsync({ key: domainKey, data: { visionStatement: val || undefined } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different domain
   useEffect(() => {
     namesEdit.cancel();
     typeEdit.cancel();
     parentEdit.cancel();
     classEdit.cancel();
+    visionEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domainKey]);
 
@@ -514,55 +547,75 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {/* Assigned Entities (read-only) */}
-      {domain.assignedEntities && domain.assignedEntities.length > 0 && (
-        <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Assigned Entities</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-            {domain.assignedEntities.map((entity) => (
-              <Chip
-                key={entity.key}
-                label={entity.name}
-                size="small"
-                variant="outlined"
-                onClick={() => navigate(`/entities/${entity.key}`)}
-                clickable
-              />
-            ))}
-          </Box>
-          <Divider sx={{ my: 2 }} />
-        </>
+      {/* Vision Statement */}
+      <SectionHeader
+        title={t('domain.visionStatement')}
+        canEdit={isAdmin}
+        isEditing={visionEdit.isEditing}
+        onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
+        onSave={visionEdit.save}
+        onCancel={visionEdit.cancel}
+        isSaving={visionEdit.isSaving}
+      />
+      {visionEdit.isEditing ? (
+        <Box sx={{ mb: 2 }}>
+          <TextField
+            value={visionEdit.editValue ?? ''}
+            onChange={(e) => visionEdit.setEditValue(e.target.value)}
+            size="small"
+            multiline
+            rows={3}
+            fullWidth
+            placeholder={t('domain.visionStatementPlaceholder')}
+          />
+          {visionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{visionEdit.error}</Alert>}
+        </Box>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          {domain.visionStatement ? (
+            <Typography variant="body2">{domain.visionStatement}</Typography>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>{t('common.notSet')}</Typography>
+          )}
+        </Box>
       )}
 
-      {/* Assigned Processes */}
-      {(() => {
-        const assignedProcesses = allProcesses.filter((p) => p.businessDomain?.key === domainKey);
-        if (assignedProcesses.length === 0) return null;
-        return (
-          <>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Assigned Processes</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-              {assignedProcesses.map((p) => (
-                <Chip
-                  key={p.key}
-                  label={getLocalizedText(p.names, p.key)}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => navigate(`/processes/${p.key}`)}
-                  clickable
-                />
-              ))}
-            </Box>
-            <Divider sx={{ my: 2 }} />
-          </>
-        );
-      })()}
-
-      {/* Context Relationships */}
       <Divider sx={{ my: 2 }} />
+
+      {/* Bounded Contexts */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="subtitle2">{t('domain.boundedContexts')}</Typography>
+        {isAdmin && (
+          <Button size="small" startIcon={<Add />} onClick={() => { setAddBcName(''); setAddBcError(''); setAddBcOpen(true); }}>
+            {t('domain.addBoundedContext')}
+          </Button>
+        )}
+      </Box>
+      {boundedContexts.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('domain.noBoundedContexts')}</Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+          {boundedContexts.map((bc) => (
+            <Chip
+              key={bc.key}
+              label={getLocalizedText(bc.names, bc.key)}
+              size="small"
+              variant="outlined"
+              onDelete={isAdmin ? async () => {
+                await deleteBoundedContext.mutateAsync({ key: bc.key });
+                invalidateBcs();
+              } : undefined}
+            />
+          ))}
+        </Box>
+      )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Context Relationships (between bounded contexts in this domain) */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.contextRelationships')}</Typography>
-        {isAdmin && (
+        {isAdmin && boundedContexts.length >= 2 && (
           <Button size="small" startIcon={<Add />} onClick={() => setAddRelOpen(true)}>
             {t('domain.addRelationship')}
           </Button>
@@ -575,8 +628,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {domainRels.map((rel) => {
             const relType = rel.relationshipType as string;
             const color = RELATIONSHIP_COLORS[relType] ?? '#aaa';
-            const isUpstream = rel.upstreamDomain?.key === domainKey;
-            const partnerDomain = isUpstream ? rel.downstreamDomain : rel.upstreamDomain;
+            const upstreamBc = rel.upstreamBoundedContext;
+            const downstreamBc = rel.downstreamBoundedContext;
             return (
               <Paper
                 key={rel.id}
@@ -590,18 +643,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {isUpstream ? t('domain.upstream') : t('domain.downstream')}:
-                    </Typography>
-                    {partnerDomain && (
-                      <Chip
-                        label={partnerDomain.name}
-                        size="small"
-                        variant="outlined"
-                        onClick={() => navigate(`/domains/${partnerDomain.key}`)}
-                        clickable
-                      />
-                    )}
+                    <Typography variant="caption" color="text.secondary">{t('domain.upstream')}:</Typography>
+                    {upstreamBc && <Chip label={upstreamBc.name} size="small" variant="outlined" />}
+                    <Typography variant="caption" color="text.secondary">→ {t('domain.downstream')}:</Typography>
+                    {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
                   </Box>
                   {rel.description && (
                     <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
@@ -769,32 +814,71 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         parentKey={domainKey}
       />
 
+      {/* Add Bounded Context Dialog */}
+      <Dialog open={addBcOpen} onClose={() => setAddBcOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domain.addBoundedContext')}</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            size="small"
+            label="Name (English)"
+            value={addBcName}
+            onChange={(e) => setAddBcName(e.target.value)}
+            fullWidth
+            autoFocus
+          />
+          {addBcError && <Alert severity="error" sx={{ mt: 1 }}>{addBcError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddBcOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={async () => {
+              if (!addBcName.trim()) return;
+              setAddBcError('');
+              try {
+                await createBoundedContext.mutateAsync({
+                  key: domainKey,
+                  data: { names: [{ locale: 'en', text: addBcName.trim() }] },
+                });
+                invalidateBcs();
+                setAddBcOpen(false);
+              } catch {
+                setAddBcError('Failed to create bounded context');
+              }
+            }}
+            variant="contained"
+            disabled={!addBcName.trim() || createBoundedContext.isPending}
+          >
+            {createBoundedContext.isPending ? t('common.saving') : t('common.create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Add Context Relationship Dialog */}
       <Dialog open={addRelOpen} onClose={() => setAddRelOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('domain.addRelationship')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           <Autocomplete
-            options={allDomains.filter((d) => d.key !== domainKey)}
-            getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-            value={allDomains.find((d) => d.key === addRelPartnerKey) || null}
-            onChange={(_, newVal) => setAddRelPartnerKey(newVal?.key || null)}
+            options={boundedContexts}
+            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
+            value={boundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
+            onChange={(_, newVal) => setAddRelUpstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Partner Domain" />
+              <TextField {...params} size="small" label={`${t('domain.upstream')} (provides)`} />
             )}
             isOptionEqualToValue={(option, value) => option.key === value.key}
             size="small"
           />
-          <FormControl size="small">
-            <InputLabel>Direction</InputLabel>
-            <Select
-              value={addRelThisIsUpstream ? 'upstream' : 'downstream'}
-              onChange={(e: SelectChangeEvent) => setAddRelThisIsUpstream(e.target.value === 'upstream')}
-              label="Direction"
-            >
-              <MenuItem value="upstream">This domain is Upstream (provides)</MenuItem>
-              <MenuItem value="downstream">This domain is Downstream (consumes)</MenuItem>
-            </Select>
-          </FormControl>
+          <Autocomplete
+            options={boundedContexts}
+            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
+            value={boundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
+            onChange={(_, newVal) => setAddRelDownstreamBcKey(newVal?.key || null)}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label={`${t('domain.downstream')} (consumes)`} />
+            )}
+            isOptionEqualToValue={(option, value) => option.key === value.key}
+            size="small"
+          />
           <FormControl size="small">
             <InputLabel>{t('domain.relationshipType')}</InputLabel>
             <Select
@@ -836,7 +920,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Button
             onClick={handleAddRel}
             variant="contained"
-            disabled={!addRelPartnerKey || createRel.isPending}
+            disabled={!addRelUpstreamBcKey || !addRelDownstreamBcKey || createRel.isPending}
           >
             {createRel.isPending ? t('common.saving') : t('common.create')}
           </Button>

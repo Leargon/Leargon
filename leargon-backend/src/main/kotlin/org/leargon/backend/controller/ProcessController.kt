@@ -13,7 +13,7 @@ import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.AddProcessEntityRequest
-import org.leargon.backend.model.AssignBusinessDomainRequest
+import org.leargon.backend.model.AssignBoundedContextRequest
 import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateProcessRequest
 import org.leargon.backend.model.LocalizedText
@@ -115,9 +115,9 @@ open class ProcessController(
         return processService.updateProcessCode(key, request.code, currentUser)
     }
 
-    override fun assignBusinessDomainToProcess(key: String, @Valid @Body request: AssignBusinessDomainRequest): ProcessResponse {
+    override fun assignBoundedContextToProcess(key: String, @Valid @Body request: AssignBoundedContextRequest): ProcessResponse {
         val currentUser = getCurrentUser()
-        return processService.assignBusinessDomain(key, request.businessDomainKey, currentUser)
+        return processService.assignBoundedContext(key, request.boundedContextKey, currentUser)
     }
 
     override fun assignClassificationsToProcess(key: String, @Valid @Body assignments: List<ClassificationAssignmentRequest>): ProcessResponse {

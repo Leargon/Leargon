@@ -44,7 +44,7 @@ import {
   useUpdateBusinessEntityDescriptions,
   useUpdateBusinessEntityDataOwner,
   useUpdateBusinessEntityParent,
-  useAssignBusinessDomainToBusinessEntity,
+  useAssignBoundedContextToBusinessEntity,
   useUpdateBusinessEntityInterfaces,
   useAssignClassificationsToEntity,
   useDeleteBusinessEntity,
@@ -65,6 +65,12 @@ import type { DataProcessorResponse } from '../../api/generated/model';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
+import {
+  useGetEntityTranslationLinks,
+  getGetEntityTranslationLinksQueryKey,
+  useCreateTranslationLink,
+  useDeleteTranslationLink,
+} from '../../api/generated/translation-link/translation-link';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
@@ -86,6 +92,7 @@ import type {
   ProcessResponse,
   UserResponse,
   CrossBorderTransferEntry,
+  TranslationLinkResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
@@ -129,6 +136,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: domainsResponse } = useGetAllBusinessDomains();
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
+  const { data: translationLinksResponse } = useGetEntityTranslationLinks(entityKey);
+  const translationLinks = (translationLinksResponse?.data as TranslationLinkResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
@@ -145,6 +154,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [createChildOpen, setCreateChildOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+
+  // Translation link dialog state
+  const [tlDialogOpen, setTlDialogOpen] = useState(false);
+  const [tlTargetEntityKey, setTlTargetEntityKey] = useState<string | null>(null);
+  const [tlSemanticNote, setTlSemanticNote] = useState('');
+  const [tlError, setTlError] = useState('');
 
   // Relationship create dialog
   const [relDialogOpen, setRelDialogOpen] = useState(false);
@@ -189,7 +204,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateDescriptions = useUpdateBusinessEntityDescriptions();
   const updateDataOwner = useUpdateBusinessEntityDataOwner();
   const updateParent = useUpdateBusinessEntityParent();
-  const assignDomain = useAssignBusinessDomainToBusinessEntity();
+  const assignBoundedContext = useAssignBoundedContextToBusinessEntity();
+  const createTranslationLink = useCreateTranslationLink();
+  const deleteTranslationLink = useDeleteTranslationLink();
   const updateInterfaces = useUpdateBusinessEntityInterfaces();
   const assignClassifications = useAssignClassificationsToEntity();
   const deleteEntity = useDeleteBusinessEntity();
@@ -258,10 +275,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     },
   });
 
-  // Business domain inline edit
-  const domainEdit = useInlineEdit<string | null>({
+  // Bounded context inline edit
+  const boundedContextEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
-      await assignDomain.mutateAsync({ key: entityKey, data: { businessDomainKey: val } });
+      await assignBoundedContext.mutateAsync({ key: entityKey, data: { boundedContextKey: val } });
       invalidate();
     },
   });
@@ -295,7 +312,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     namesEdit.cancel();
     ownerEdit.cancel();
     parentEdit.cancel();
-    domainEdit.cancel();
+    boundedContextEdit.cancel();
     classEdit.cancel();
     interfacesEdit.cancel();
     retentionEdit.cancel();
@@ -543,26 +560,29 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             <Typography variant="body2" color="text.secondary">{t('entity.topLevel')}</Typography>
           )}
         </PropRow>
-        <PropRow label={t('entity.businessDomain')} canEdit={isOwnerOrAdmin} isEditing={domainEdit.isEditing}
-          onEdit={() => domainEdit.startEdit(entity.businessDomain?.key || null)} onSave={domainEdit.save}
-          onCancel={domainEdit.cancel} isSaving={domainEdit.isSaving} isMandatory={isMandatory('businessDomain')}>
-          {domainEdit.isEditing ? (
+        <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+          onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
+          onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
+          {boundedContextEdit.isEditing ? (
             <Box>
               <Autocomplete
-                options={allDomains}
-                getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-                value={allDomains.find((d) => d.key === domainEdit.editValue) || null}
-                onChange={(_, newVal) => domainEdit.setEditValue(newVal?.key || null)}
+                options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
+                getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
+                onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
                 renderInput={(params) => (
-                  <TextField {...params} size="small" placeholder="Search for domain..." sx={{ width: 350 }} />
+                  <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
                 )}
                 isOptionEqualToValue={(option, value) => option.key === value.key}
                 size="small"
               />
-              {domainEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{domainEdit.error}</Alert>}
+              {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
             </Box>
-          ) : entity.businessDomain ? (
-            <Chip label={entity.businessDomain.name} size="small" onClick={() => navigate(`/domains/${entity.businessDomain!.key}`)} clickable />
+          ) : entity.boundedContext ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Chip label={entity.boundedContext.name} size="small" />
+              <Typography variant="caption" color="text.secondary">({entity.boundedContext.domainName})</Typography>
+            </Box>
           ) : (
             <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
           )}
@@ -775,6 +795,56 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </Paper>
       ) : (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>No relationships</Typography>
+      )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Translation Links */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">{t('entity.translationLinks')}</Typography>
+        {isOwnerOrAdmin && (
+          <IconButton size="small" onClick={() => { setTlTargetEntityKey(null); setTlSemanticNote(''); setTlError(''); setTlDialogOpen(true); }} color="primary">
+            <Add fontSize="small" />
+          </IconButton>
+        )}
+      </Box>
+      {translationLinks.length > 0 ? (
+        <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>{t('entity.linkedEntity')}</TableCell>
+                <TableCell>{t('entity.semanticDifferenceNote')}</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {translationLinks.map((link: TranslationLinkResponse) => (
+                <TableRow key={link.id}>
+                  <TableCell>
+                    {link.linkedEntity && (
+                      <Chip label={link.linkedEntity.name} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
+                    )}
+                  </TableCell>
+                  <TableCell>{link.semanticDifferenceNote || '—'}</TableCell>
+                  <TableCell align="right">
+                    {isOwnerOrAdmin && (
+                      <IconButton size="small" color="error"
+                        onClick={async () => {
+                          await deleteTranslationLink.mutateAsync({ id: link.id! });
+                          queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
+                        }}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      ) : (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('entity.noTranslationLinks')}</Typography>
       )}
 
       <Divider sx={{ my: 2 }} />
@@ -1101,6 +1171,63 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Button onClick={() => setEditRelDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleSaveEditRelationship} variant="contained" disabled={updateRelationship.isPending}>
             {updateRelationship.isPending ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Translation Link Dialog */}
+      <Dialog open={tlDialogOpen} onClose={() => setTlDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('entity.addTranslationLink')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Autocomplete
+              options={allEntities.filter((e) => e.key !== entityKey)}
+              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+              value={allEntities.find((e) => e.key === tlTargetEntityKey) || null}
+              onChange={(_, newVal) => setTlTargetEntityKey(newVal?.key || null)}
+              renderInput={(params) => (
+                <TextField {...params} label={t('entity.linkedEntity')} size="small" />
+              )}
+              isOptionEqualToValue={(option, value) => option.key === value.key}
+              size="small"
+            />
+            <TextField
+              label={t('entity.semanticDifferenceNote')}
+              value={tlSemanticNote}
+              onChange={(e) => setTlSemanticNote(e.target.value)}
+              size="small"
+              multiline
+              rows={2}
+              fullWidth
+              placeholder="Optional: note any semantic differences between the two entities..."
+            />
+            {tlError && <Alert severity="error">{tlError}</Alert>}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTlDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={async () => {
+              if (!tlTargetEntityKey) return;
+              setTlError('');
+              try {
+                await createTranslationLink.mutateAsync({
+                  data: {
+                    firstEntityKey: entityKey,
+                    secondEntityKey: tlTargetEntityKey,
+                    semanticDifferenceNote: tlSemanticNote || undefined,
+                  },
+                });
+                queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
+                setTlDialogOpen(false);
+              } catch {
+                setTlError('Failed to create translation link');
+              }
+            }}
+            variant="contained"
+            disabled={!tlTargetEntityKey || createTranslationLink.isPending}
+          >
+            {createTranslationLink.isPending ? t('common.saving') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

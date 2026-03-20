@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.persistence.Transient
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.Instant
@@ -50,8 +51,8 @@ class BusinessDomain {
     @OneToMany(mappedBy = "businessDomain", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var versions: MutableSet<BusinessDomainVersion> = mutableSetOf()
 
-    @OneToMany(mappedBy = "businessDomain", cascade = [], orphanRemoval = false, fetch = FetchType.LAZY)
-    var assignedEntities: MutableSet<BusinessEntity> = mutableSetOf()
+    @OneToMany(mappedBy = "domain", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+    var boundedContexts: MutableSet<BoundedContext> = mutableSetOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "classification_assignments", columnDefinition = "TEXT")
@@ -67,6 +68,9 @@ class BusinessDomain {
 
     @Column(name = "business_domain_type", length = 20)
     var type: String? = null
+
+    @Column(name = "vision_statement", columnDefinition = "TEXT")
+    var visionStatement: String? = null
 
     fun addChild(child: BusinessDomain) {
         children.add(child)

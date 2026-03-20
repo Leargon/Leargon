@@ -210,29 +210,30 @@ class ProcessE2ESpec extends AbstractE2ESpec {
     // BUSINESS DOMAIN
     // =====================
 
-    def "should assign and unassign business domain"() {
+    def "should assign and unassign bounded context"() {
         given:
         def adminToken = signupAdmin("proc-dom@example.com", "procdom")
         def proc = createProcess(adminToken, "Domain Process")
         def domain = createDomain(adminToken, "Test Domain")
+        def bc = createBoundedContext(adminToken, domain.key, "Test Core")
 
-        when: "assigning domain"
+        when: "assigning bounded context"
         def response = client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/domain", [businessDomainKey: domain.key])
+                HttpRequest.PUT("/processes/${proc.key}/bounded-context", [boundedContextKey: bc.key])
                         .bearerAuth(adminToken), Map
         )
 
         then:
-        response.body().businessDomain.key == domain.key
+        response.body().boundedContext.key == bc.key
 
-        when: "unassigning domain"
+        when: "unassigning bounded context"
         def response2 = client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/domain", [businessDomainKey: null])
+                HttpRequest.PUT("/processes/${proc.key}/bounded-context", [boundedContextKey: null])
                         .bearerAuth(adminToken), Map
         )
 
         then:
-        response2.body().businessDomain == null
+        response2.body().boundedContext == null
     }
 
     // =====================

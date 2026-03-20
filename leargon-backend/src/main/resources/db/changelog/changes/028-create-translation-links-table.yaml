@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-create-translation-links-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: translation_links
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: first_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: second_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: semantic_difference_note
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: translation_links
+            baseColumnNames: first_entity_id
+            constraintName: fk_translation_links_first_entity
+            referencedTableName: business_entities
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: translation_links
+            baseColumnNames: second_entity_id
+            constraintName: fk_translation_links_second_entity
+            referencedTableName: business_entities
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: translation_links
+            baseColumnNames: created_by_id
+            constraintName: fk_translation_links_created_by
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - addUniqueConstraint:
+            tableName: translation_links
+            columnNames: first_entity_id, second_entity_id
+            constraintName: uq_translation_links_entities
+        - createIndex:
+            tableName: translation_links
+            indexName: idx_translation_links_first_entity_id
+            columns:
+              - column:
+                  name: first_entity_id
+        - createIndex:
+            tableName: translation_links
+            indexName: idx_translation_links_second_entity_id
+            columns:
+              - column:
+                  name: second_entity_id

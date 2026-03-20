@@ -33,7 +33,7 @@ open class ExportService(
             when {
                 fieldName == "names" -> process.names.isNotEmpty()
                 fieldName == "descriptions" -> process.descriptions.isNotEmpty()
-                fieldName == "businessDomain" -> process.businessDomain != null
+                fieldName == "boundedContext" -> process.boundedContext != null
                 fieldName == "processOwner" -> process.processOwner != null
                 fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
                 fieldName == "legalBasis" -> process.legalBasis != null
@@ -121,18 +121,18 @@ open class ExportService(
 
     fun exportContextMap(locale: String = "en"): String {
         val rels = contextRelationshipRepository.findAll()
-        val domains = rels.flatMap { listOfNotNull(it.upstreamDomain, it.downstreamDomain) }
+        val boundedContexts = rels.flatMap { listOfNotNull(it.upstreamBoundedContext, it.downstreamBoundedContext) }
             .distinctBy { it.key }
 
         val sb = StringBuilder()
         sb.appendLine("ContextMap LeargonContextMap {")
-        if (domains.isNotEmpty()) {
-            sb.appendLine("  contains ${domains.joinToString(", ") { toCmlIdentifier(it.getName(locale)) }}")
+        if (boundedContexts.isNotEmpty()) {
+            sb.appendLine("  contains ${boundedContexts.joinToString(", ") { toCmlIdentifier(it.getName(locale)) }}")
             sb.appendLine()
         }
         for (rel in rels) {
-            val up = rel.upstreamDomain ?: continue
-            val down = rel.downstreamDomain ?: continue
+            val up = rel.upstreamBoundedContext ?: continue
+            val down = rel.downstreamBoundedContext ?: continue
             val upId = toCmlIdentifier(up.getName(locale))
             val downId = toCmlIdentifier(down.getName(locale))
             val line = when (rel.relationshipType) {
@@ -150,11 +150,10 @@ open class ExportService(
         }
         sb.appendLine("}")
         sb.appendLine()
-        for (domain in domains) {
-            val id = toCmlIdentifier(domain.getName(locale))
-            val type = domain.getEffectiveType()
+        for (bc in boundedContexts) {
+            val id = toCmlIdentifier(bc.getName(locale))
             sb.appendLine("BoundedContext $id {")
-            if (type != null) sb.appendLine("  type = ${type.lowercase().replaceFirstChar { it.uppercase() }}")
+            if (bc.contextType != null) sb.appendLine("  type = ${bc.contextType!!.lowercase().replaceFirstChar { it.uppercase() }}")
             sb.appendLine("}")
             sb.appendLine()
         }

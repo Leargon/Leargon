@@ -15,7 +15,7 @@ import org.leargon.backend.repository.ContextRelationshipRepository
 open class ContextRelationshipService(
     private val contextRelationshipRepository: ContextRelationshipRepository,
     private val contextRelationshipMapper: ContextRelationshipMapper,
-    private val businessDomainService: BusinessDomainService
+    private val boundedContextService: BoundedContextService
 ) {
 
     @Transactional
@@ -26,11 +26,11 @@ open class ContextRelationshipService(
 
     @Transactional
     open fun create(request: CreateContextRelationshipRequest, currentUser: User): ContextRelationshipResponse {
-        val upstream = businessDomainService.getBusinessDomainByKey(request.upstreamDomainKey)
-        val downstream = businessDomainService.getBusinessDomainByKey(request.downstreamDomainKey)
+        val upstream = boundedContextService.getByKey(request.upstreamBoundedContextKey)
+        val downstream = boundedContextService.getByKey(request.downstreamBoundedContextKey)
         val rel = ContextRelationship().apply {
-            this.upstreamDomain = upstream
-            this.downstreamDomain = downstream
+            this.upstreamBoundedContext = upstream
+            this.downstreamBoundedContext = downstream
             this.relationshipType = request.relationshipType.value
             this.upstreamRole = request.upstreamRole
             this.downstreamRole = request.downstreamRole
@@ -64,10 +64,10 @@ open class ContextRelationshipService(
     }
 
     @Transactional
-    open fun getForDomain(domainKey: String): List<ContextRelationshipResponse> {
+    open fun getForBoundedContext(boundedContextKey: String): List<ContextRelationshipResponse> {
         val mapper = contextRelationshipMapper
-        val upstream = contextRelationshipRepository.findByUpstreamDomainKey(domainKey)
-        val downstream = contextRelationshipRepository.findByDownstreamDomainKey(domainKey)
+        val upstream = contextRelationshipRepository.findByUpstreamBoundedContextKey(boundedContextKey)
+        val downstream = contextRelationshipRepository.findByDownstreamBoundedContextKey(boundedContextKey)
         return (upstream + downstream).map { mapper.toResponse(it) }
     }
 }

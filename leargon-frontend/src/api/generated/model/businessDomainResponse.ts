@@ -16,9 +16,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse';
 import type { BusinessDomainType } from './businessDomainType';
-import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
 import type { UserSummaryResponse } from './userSummaryResponse';
@@ -33,7 +33,7 @@ export interface BusinessDomainResponse {
   names: LocalizedText[];
   descriptions?: LocalizedText[];
   subdomains?: BusinessDomainSummaryResponse[];
-  assignedEntities?: BusinessEntitySummaryResponse[];
+  boundedContexts?: BoundedContextSummaryResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
   /**
    * List of mandatory fields that are currently missing values
@@ -45,6 +45,11 @@ export interface BusinessDomainResponse {
    * @nullable
    */
   mandatoryFields?: string[] | null;
+  /**
+   * Vision statement for the bounded context
+   * @nullable
+   */
+  visionStatement?: string | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

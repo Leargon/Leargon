@@ -11,7 +11,7 @@ import jakarta.validation.Valid
 import org.leargon.backend.api.BusinessEntityApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
-import org.leargon.backend.model.AssignBusinessDomainRequest
+import org.leargon.backend.model.AssignBoundedContextRequest
 import org.leargon.backend.model.BusinessEntityResponse
 import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
@@ -78,9 +78,9 @@ open class BusinessEntityController(
     override fun getVersionDiff(key: String, versionNumber: Int): VersionDiffResponse =
         businessEntityService.getVersionDiff(key, versionNumber)
 
-    override fun assignBusinessDomainToBusinessEntity(key: String, @Valid @Body assignBusinessDomainRequest: AssignBusinessDomainRequest): BusinessEntityResponse {
+    override fun assignBoundedContextToBusinessEntity(key: String, @Valid @Body assignBoundedContextRequest: AssignBoundedContextRequest): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        return businessEntityService.assignBusinessDomain(key, assignBusinessDomainRequest.businessDomainKey, currentUser)
+        return businessEntityService.assignBoundedContext(key, assignBoundedContextRequest.boundedContextKey, currentUser)
     }
 
     override fun updateBusinessEntityParent(key: String, @Valid @Body updateBusinessEntityParentRequest: UpdateBusinessEntityParentRequest): BusinessEntityResponse {

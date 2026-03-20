@@ -22,12 +22,12 @@ class ContextRelationship {
     var id: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "upstream_domain_id")
-    var upstreamDomain: BusinessDomain? = null
+    @JoinColumn(name = "upstream_bounded_context_id")
+    var upstreamBoundedContext: BoundedContext? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "downstream_domain_id")
-    var downstreamDomain: BusinessDomain? = null
+    @JoinColumn(name = "downstream_bounded_context_id")
+    var downstreamBoundedContext: BoundedContext? = null
 
     @Column(name = "relationship_type", length = 30, nullable = false)
     var relationshipType: String = ""

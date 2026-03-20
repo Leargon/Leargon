@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-add-vision-statement-to-domains
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_domains
+            columns:
+              - column:
+                  name: vision_statement
+                  type: TEXT
+                  constraints:
+                    nullable: true

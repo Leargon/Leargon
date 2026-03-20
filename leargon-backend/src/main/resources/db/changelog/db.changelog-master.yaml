@@ -43,3 +43,17 @@ databaseChangeLog:
       file: db/changelog/changes/021-migrate-diagram-to-bpmn-xml.yaml
   - include:
       file: db/changelog/changes/022-create-context-relationships-table.yaml
+  - include:
+      file: db/changelog/changes/023-add-vision-statement-to-domains.yaml
+  - include:
+      file: db/changelog/changes/024-create-bounded-contexts-table.yaml
+  - include:
+      file: db/changelog/changes/025-update-context-relationships-for-bounded-contexts.yaml
+  - include:
+      file: db/changelog/changes/026-update-business-entities-for-bounded-contexts.yaml
+  - include:
+      file: db/changelog/changes/027-update-processes-for-bounded-contexts.yaml
+  - include:
+      file: db/changelog/changes/028-create-translation-links-table.yaml
+  - include:
+      file: db/changelog/changes/029-create-domain-events-tables.yaml

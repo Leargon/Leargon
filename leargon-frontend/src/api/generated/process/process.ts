@@ -37,7 +37,7 @@ import type {
 
 import type {
   AddProcessEntityRequest,
-  AssignBusinessDomainRequest,
+  AssignBoundedContextRequest,
   ClassificationAssignmentRequest,
   CreateProcessRequest,
   DpiaResponse,
@@ -1030,67 +1030,67 @@ export const useUpdateProcessDescriptions = <TError = ErrorResponse | void,
       return useMutation(getUpdateProcessDescriptionsMutationOptions(options), queryClient);
     }
     /**
- * Assigns a business domain to a process. Only the process owner or an admin can assign.
- * @summary Assign business domain to process
+ * Assigns a bounded context to a process. Only the process owner or an admin can assign.
+ * @summary Assign bounded context to process
  */
-export type assignBusinessDomainToProcessResponse200 = {
+export type assignBoundedContextToProcessResponse200 = {
   data: ProcessResponse
   status: 200
 }
 
-export type assignBusinessDomainToProcessResponse401 = {
+export type assignBoundedContextToProcessResponse401 = {
   data: void
   status: 401
 }
 
-export type assignBusinessDomainToProcessResponse403 = {
+export type assignBoundedContextToProcessResponse403 = {
   data: void
   status: 403
 }
 
-export type assignBusinessDomainToProcessResponse404 = {
+export type assignBoundedContextToProcessResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type assignBusinessDomainToProcessResponseSuccess = (assignBusinessDomainToProcessResponse200) & {
+export type assignBoundedContextToProcessResponseSuccess = (assignBoundedContextToProcessResponse200) & {
   headers: Headers;
 };
-export type assignBusinessDomainToProcessResponseError = (assignBusinessDomainToProcessResponse401 | assignBusinessDomainToProcessResponse403 | assignBusinessDomainToProcessResponse404) & {
+export type assignBoundedContextToProcessResponseError = (assignBoundedContextToProcessResponse401 | assignBoundedContextToProcessResponse403 | assignBoundedContextToProcessResponse404) & {
   headers: Headers;
 };
 
-export type assignBusinessDomainToProcessResponse = (assignBusinessDomainToProcessResponseSuccess | assignBusinessDomainToProcessResponseError)
+export type assignBoundedContextToProcessResponse = (assignBoundedContextToProcessResponseSuccess | assignBoundedContextToProcessResponseError)
 
-export const getAssignBusinessDomainToProcessUrl = (key: string,) => {
+export const getAssignBoundedContextToProcessUrl = (key: string,) => {
 
 
   
 
-  return `/processes/${key}/domain`
+  return `/processes/${key}/bounded-context`
 }
 
-export const assignBusinessDomainToProcess = async (key: string,
-    assignBusinessDomainRequest: AssignBusinessDomainRequest, options?: RequestInit): Promise<assignBusinessDomainToProcessResponse> => {
+export const assignBoundedContextToProcess = async (key: string,
+    assignBoundedContextRequest: AssignBoundedContextRequest, options?: RequestInit): Promise<assignBoundedContextToProcessResponse> => {
   
-  return customAxios<assignBusinessDomainToProcessResponse>(getAssignBusinessDomainToProcessUrl(key),
+  return customAxios<assignBoundedContextToProcessResponse>(getAssignBoundedContextToProcessUrl(key),
   {      
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      assignBusinessDomainRequest,)
+      assignBoundedContextRequest,)
   }
 );}
   
 
 
 
-export const getAssignBusinessDomainToProcessMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
+export const getAssignBoundedContextToProcessMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToProcess>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToProcess>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext> => {
 
-const mutationKey = ['assignBusinessDomainToProcess'];
+const mutationKey = ['assignBoundedContextToProcess'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1100,10 +1100,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBoundedContextToProcess>>, {key: string;data: AssignBoundedContextRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignBusinessDomainToProcess(key,data,requestOptions)
+          return  assignBoundedContextToProcess(key,data,requestOptions)
         }
 
 
@@ -1113,22 +1113,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AssignBusinessDomainToProcessMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>>
-    export type AssignBusinessDomainToProcessMutationBody = AssignBusinessDomainRequest
-    export type AssignBusinessDomainToProcessMutationError = void | ErrorResponse
+    export type AssignBoundedContextToProcessMutationResult = NonNullable<Awaited<ReturnType<typeof assignBoundedContextToProcess>>>
+    export type AssignBoundedContextToProcessMutationBody = AssignBoundedContextRequest
+    export type AssignBoundedContextToProcessMutationError = void | ErrorResponse
 
     /**
- * @summary Assign business domain to process
+ * @summary Assign bounded context to process
  */
-export const useAssignBusinessDomainToProcess = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToProcess>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+export const useAssignBoundedContextToProcess = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToProcess>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignBusinessDomainToProcess>>,
+        Awaited<ReturnType<typeof assignBoundedContextToProcess>>,
         TError,
-        {key: string;data: AssignBusinessDomainRequest},
+        {key: string;data: AssignBoundedContextRequest},
         TContext
       > => {
-      return useMutation(getAssignBusinessDomainToProcessMutationOptions(options), queryClient);
+      return useMutation(getAssignBoundedContextToProcessMutationOptions(options), queryClient);
     }
     /**
  * Adds a business entity as input to a process. Can reference existing entity or create one on-the-fly.

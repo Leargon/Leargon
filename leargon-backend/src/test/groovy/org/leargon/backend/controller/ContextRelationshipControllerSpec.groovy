@@ -12,6 +12,7 @@ import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
@@ -29,6 +30,7 @@ class ContextRelationshipControllerSpec extends Specification {
     @Inject UserRepository userRepository
     @Inject SupportedLocaleRepository localeRepository
     @Inject ContextRelationshipRepository contextRelationshipRepository
+    @Inject BoundedContextRepository boundedContextRepository
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
 
@@ -41,6 +43,7 @@ class ContextRelationshipControllerSpec extends Specification {
 
     def cleanup() {
         contextRelationshipRepository.deleteAll()
+        boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
         userRepository.deleteAll()
@@ -77,6 +80,13 @@ class ContextRelationshipControllerSpec extends Specification {
         resp.body().key
     }
 
+    private String createBoundedContext(String adminToken, String domainKey, String name) {
+        def body = [names: [[locale: "en", text: name]]]
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/business-domains/${domainKey}/bounded-contexts", body).bearerAuth(adminToken), Map)
+        resp.body().key
+    }
+
     // ─── GET /context-relationships ──────────────────────────────────────────
 
     def "GET /context-relationships returns empty list initially"() {
@@ -100,14 +110,16 @@ class ContextRelationshipControllerSpec extends Specification {
     def "POST /context-relationships creates relationship for admin"() {
         given:
         def adminToken = createAdminToken()
-        def upKey = createDomain(adminToken, "Upstream Domain")
-        def downKey = createDomain(adminToken, "Downstream Domain")
+        def upDomainKey = createDomain(adminToken, "Upstream Domain")
+        def downDomainKey = createDomain(adminToken, "Downstream Domain")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Upstream Core")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Downstream Core")
 
         def body = [
-            upstreamDomainKey  : upKey,
-            downstreamDomainKey: downKey,
-            relationshipType   : "CUSTOMER_SUPPLIER",
-            description        : "Test relationship"
+            upstreamBoundedContextKey  : upKey,
+            downstreamBoundedContextKey: downKey,
+            relationshipType           : "CUSTOMER_SUPPLIER",
+            description                : "Test relationship"
         ]
 
         when:
@@ -121,24 +133,26 @@ class ContextRelationshipControllerSpec extends Specification {
         def rel = response.body()
         rel.id != null
         rel.relationshipType == "CUSTOMER_SUPPLIER"
-        rel.upstreamDomain.key == upKey
-        rel.downstreamDomain.key == downKey
+        rel.upstreamBoundedContext.key == upKey
+        rel.downstreamBoundedContext.key == downKey
         rel.description == "Test relationship"
     }
 
     def "POST /context-relationships returns 403 for non-admin"() {
         given:
         def adminToken = createAdminToken()
-        def upKey = createDomain(adminToken, "Up Domain 403")
-        def downKey = createDomain(adminToken, "Down Domain 403")
+        def upDomainKey = createDomain(adminToken, "Up Domain 403")
+        def downDomainKey = createDomain(adminToken, "Down Domain 403")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Up Core 403")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Down Core 403")
 
         def userData = createUserWithToken("ctx-user2@test.com", "ctxUser2")
         def userToken = userData.token
 
         def body = [
-            upstreamDomainKey  : upKey,
-            downstreamDomainKey: downKey,
-            relationshipType   : "PARTNERSHIP"
+            upstreamBoundedContextKey  : upKey,
+            downstreamBoundedContextKey: downKey,
+            relationshipType           : "PARTNERSHIP"
         ]
 
         when:
@@ -157,13 +171,15 @@ class ContextRelationshipControllerSpec extends Specification {
     def "PUT /context-relationships/{id} updates relationship type"() {
         given:
         def adminToken = createAdminToken()
-        def upKey = createDomain(adminToken, "Up Domain PUT")
-        def downKey = createDomain(adminToken, "Down Domain PUT")
+        def upDomainKey = createDomain(adminToken, "Up Domain PUT")
+        def downDomainKey = createDomain(adminToken, "Down Domain PUT")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Up Core PUT")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Down Core PUT")
 
         def createBody = [
-            upstreamDomainKey  : upKey,
-            downstreamDomainKey: downKey,
-            relationshipType   : "PARTNERSHIP"
+            upstreamBoundedContextKey  : upKey,
+            downstreamBoundedContextKey: downKey,
+            relationshipType           : "PARTNERSHIP"
         ]
         def created = client.toBlocking().exchange(
             HttpRequest.POST("/context-relationships", createBody).bearerAuth(adminToken), Map)
@@ -189,13 +205,15 @@ class ContextRelationshipControllerSpec extends Specification {
     def "DELETE /context-relationships/{id} removes relationship"() {
         given:
         def adminToken = createAdminToken()
-        def upKey = createDomain(adminToken, "Up Domain DEL")
-        def downKey = createDomain(adminToken, "Down Domain DEL")
+        def upDomainKey = createDomain(adminToken, "Up Domain DEL")
+        def downDomainKey = createDomain(adminToken, "Down Domain DEL")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Up Core DEL")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Down Core DEL")
 
         def createBody = [
-            upstreamDomainKey  : upKey,
-            downstreamDomainKey: downKey,
-            relationshipType   : "SHARED_KERNEL"
+            upstreamBoundedContextKey  : upKey,
+            downstreamBoundedContextKey: downKey,
+            relationshipType           : "SHARED_KERNEL"
         ]
         def created = client.toBlocking().exchange(
             HttpRequest.POST("/context-relationships", createBody).bearerAuth(adminToken), Map)

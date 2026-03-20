@@ -3,60 +3,6 @@
 
 ---
 
-## Batch 5 · Context mapping
-*One backend flush: new `context_relationships` table, CRUD endpoints, context relationship section on domain detail, and a context map diagram page using xyflow. Self-contained — no dependencies.*
-
-**Alignment with [ContextMapper](https://contextmapper.org/):** Léargon's relationship types and diagram notation must follow the ContextMapper standard, which implements the DDD strategic patterns from Eric Evans and Vaughn Vernon exactly. This enables interoperability (`.cml` export), ensures architects recognise the vocabulary immediately, and avoids reinventing terminology.
-
-**Relationship types (as defined by ContextMapper):**
-- `PARTNERSHIP` — two contexts collaborate with a mutual success dependency
-- `SHARED_KERNEL` — two teams share a subset of the domain model; changes require joint agreement
-- `CUSTOMER_SUPPLIER` — upstream supplies the downstream; downstream has influence on the upstream's planning
-- `CONFORMIST` — upstream supplies, downstream conforms entirely with no negotiating power
-- `ANTICORRUPTION_LAYER` — downstream isolates itself from an upstream model via a translation layer
-- `OPEN_HOST_SERVICE` — upstream publishes a well-defined protocol for integration by multiple consumers
-- `PUBLISHED_LANGUAGE` — OHS uses a shared, documented interchange language (often combined with OHS)
-- `BIG_BALL_OF_MUD` — context with no clear boundaries; treated as a legacy integration point
-
-**Upstream/downstream roles** must be captured on the relationship (not just relationship type), since e.g. a CUSTOMER\_SUPPLIER relationship has a directionality. The diagram should render upstream left, downstream right by convention.
-
-**Export:** Léargon should be able to generate a `.cml` (ContextMapper DSL) file from the context map so architects can import it into the ContextMapper IDE plugin for further refactoring or diagram generation.
-
-#### USER STORY 'Create context relationship between two domains'
-**AS AN** admin\
-**IF** both domains exist\
-**I WANT** to create a directed context relationship from one bounded context (domain) to another, selecting the ContextMapper relationship type (Partnership, Shared Kernel, Customer-Supplier, Conformist, Anticorruption Layer, Open-Host Service, Published Language, Big Ball of Mud) and the upstream/downstream roles where applicable, with an optional description\
-**SO THAT** the integration pattern and power dynamic between the two bounded contexts is formally documented using the standard DDD vocabulary
-
-#### USER STORY 'Update context relationship'
-**AS AN** admin\
-**IF** the context relationship exists\
-**I WANT** to change the relationship type, upstream/downstream assignment, or description of a context relationship between two domains\
-**SO THAT** the context map stays accurate as the integration evolves
-
-#### USER STORY 'Delete context relationship'
-**AS AN** admin\
-**IF** the context relationship exists\
-**I WANT** to remove a context relationship between two domains\
-**SO THAT** obsolete or incorrect integrations are no longer shown on the context map
-
-#### USER STORY 'View context relationships on domain detail'
-**AS A** logged in user\
-**I WANT** to see all incoming and outgoing context relationships for a domain on its detail page, including relationship type, upstream/downstream role, and the partner domain\
-**SO THAT** I can understand which domains this domain depends on, which depend on it, and how data flows across the boundary
-
-#### USER STORY 'View context map diagram'
-**AS A** logged in user\
-**I WANT** to view an interactive context map diagram of all domains and their relationships, using ContextMapper visual conventions — directed edges with relationship type labels, upstream/downstream annotations (U/D), bounded context shapes, and domain type colouring (core, business, support, generic)\
-**SO THAT** I can see the full strategic architecture of the organisation at a glance and identify integration hotspots
-
-#### USER STORY 'Export context map as ContextMapper DSL (.cml)'
-**AS AN** admin\
-**I WANT** to export the context map as a `.cml` file in ContextMapper DSL format\
-**SO THAT** I can import it into the ContextMapper IDE plugin (VS Code / IntelliJ) for further analysis, refactoring simulation, or architecture documentation
-
----
-
 ## Batch 17 · Full-text search
 *Self-contained: add MySQL FULLTEXT indexes (or a search index), one search endpoint, one global search bar component. Can be done independently at any point. Disproportionate UX improvement for the effort — the pain of navigating large catalogues without search is felt from day one.*
 
@@ -70,29 +16,6 @@
 **IF** a search has returned results\
 **I WANT** to filter the results by entity type, business domain, classification, or owner\
 **SO THAT** I can narrow down large result sets to the subset that is relevant to my task
-
----
-
-## Batch 6 · Cross-domain translation links
-*Very small flush: extends the existing `BusinessEntityRelationship` with a TRANSLATION type, adds a conflict-detection query. Can be done in a day. Makes the Ubiquitous Language view functional — the same concept called "Customer" in one domain and "Client" in another is made explicit.*
-
-#### USER STORY 'Create cross-domain translation link between two business entities'
-**AS AN** admin or data owner\
-**IF** both entities exist and belong to different domains\
-**I WANT** to create a translation link between two business entities in different domains, with an optional note describing the semantic difference\
-**SO THAT** it is explicitly documented that these two entities represent the same real-world concept under different names in their respective bounded contexts
-
-#### USER STORY 'Remove cross-domain translation link'
-**AS AN** admin or data owner\
-**IF** a translation link exists between two entities\
-**I WANT** to remove the translation link\
-**SO THAT** the equivalence mapping is no longer shown when it is no longer accurate
-
-#### USER STORY 'View translation links on business entity'
-**AS A** logged in user\
-**IF** translation links exist for a business entity\
-**I WANT** to see all entities in other domains that are linked as translations of this entity, including the semantic difference note\
-**SO THAT** I know immediately which concept in a partner domain this entity corresponds to
 
 ---
 
@@ -168,39 +91,6 @@
 **IF** processing activities are documented with controller identity, purposes, data categories, recipient categories, retention periods, and cross-border transfers\
 **I WANT** to generate a draft privacy notice from the catalogue data covering all Art. 19 revDSG required elements\
 **SO THAT** the duty to inform data subjects is grounded in the same authoritative catalogue and stays consistent with the processing register
-
----
-
-## Batch 7 · Domain events
-*One backend flush: new `domain_events` table, M2M consuming-domains join table, process-link join table, CRUD endpoints, event section on domain detail, and an event flow diagram page. Self-contained — no dependencies. Completes the DDD picture alongside Batch 5 (context map) and Batch 6 (translation links).*
-
-#### USER STORY 'Define domain event'
-**AS AN** admin or process owner\
-**I WANT** to define a domain event by providing a name, description, and the publishing domain\
-**SO THAT** the significant state changes that one domain signals to others are formally documented
-
-#### USER STORY 'Assign consuming domains to a domain event'
-**AS AN** admin\
-**IF** the domain event exists\
-**I WANT** to assign one or more domains as consumers of a domain event\
-**SO THAT** it is visible which domains react to or depend on this event
-
-#### USER STORY 'Link domain event to a business process'
-**AS AN** admin or process owner\
-**IF** the domain event and process exist\
-**I WANT** to link a domain event to a business process, marking whether the process triggers or handles the event\
-**SO THAT** the relationship between process execution and domain event flow is documented
-
-#### USER STORY 'View domain events on domain detail'
-**AS A** logged in user\
-**I WANT** to see all domain events published by a domain and all events it consumes on the domain detail page\
-**SO THAT** I understand the event-driven integration surface of that domain
-
-#### USER STORY 'View domain event flow diagram'
-**AS A** logged in user\
-**IF** domain events are defined\
-**I WANT** to view a diagram of all domains and the events flowing between them as directed labelled arrows\
-**SO THAT** I can see the full asynchronous integration landscape and trace event-driven dependencies across the organisation
 
 ---
 
@@ -343,6 +233,53 @@
 **AS AN** admin\
 **I WANT** to see a list of business entities that are used as inputs or outputs in an unusually high number of processes across multiple domains, ranked by process count\
 **SO THAT** I can identify hidden shared kernels, potential single points of failure, and entities that may need to be extracted into a dedicated shared domain
+
+---
+
+## Batch 20 · DDD guided discovery
+*Read-heavy analytics flush — no new tables beyond what Batch 5 and Batch 13 introduce. Léargon already holds the data needed to surface most of these insights: entity hierarchies, process-entity assignments, version histories, domain type fields, and org unit relationships. Each story produces an actionable suggestion with supporting evidence, not just a raw metric. Depends on Batch 5 (context relationships) and benefits from Batch 13 (coupling scores). Stories involving domain events depend on Batch 7.*
+
+#### USER STORY 'Detect aggregate candidates within a domain'
+**AS AN** admin or data owner\
+**IF** a domain contains multiple business entities\
+**I WANT** to see a suggested grouping of entities within a domain into aggregate candidates, based on which entities are consistently used together as inputs or outputs across the same processes\
+**SO THAT** I can identify natural aggregate boundaries, decide which entity should be the aggregate root, and restructure the entity hierarchy accordingly
+
+#### USER STORY 'Validate subdomain classification'
+**AS AN** admin\
+**IF** a domain has its type set (Core, Supporting, Generic)\
+**I WANT** Léargon to evaluate each domain against heuristics — process count, entity count unique to the domain, team focus from the Conway matrix, and reuse across other domains' processes — and flag domains whose stated type does not match the evidence\
+**SO THAT** I can review and correct misclassified subdomains before they mislead strategic investment decisions
+
+#### USER STORY 'Detect undocumented context relationships'
+**AS AN** admin\
+**IF** processes in one domain consume entities owned by another domain\
+**I WANT** to see a list of domain pairs that have significant cross-domain entity usage but no context relationship documented between them\
+**SO THAT** I can consciously decide whether to formalise the dependency as a context relationship or refactor the entity assignment
+
+#### USER STORY 'Suggest shared kernel extraction'
+**AS AN** admin\
+**IF** the same business entities are referenced as inputs or outputs across processes in three or more distinct domains\
+**I WANT** Léargon to identify these widely shared entities and suggest extracting them into a dedicated shared domain with SHARED_KERNEL relationships to each consumer domain\
+**SO THAT** shared concepts are explicitly managed rather than silently duplicated or implicitly coupled across domain boundaries
+
+#### USER STORY 'Detect volatile aggregate candidates'
+**AS AN** admin\
+**IF** version history is available\
+**I WANT** to see a list of business entities that have a high rate of change (many versions in a rolling window) while also being used as inputs or outputs in a large number of processes\
+**SO THAT** I can identify aggregates that are both unstable and widely depended on — the highest-risk combination — and consider extracting their volatile parts into a separate, more isolated entity
+
+#### USER STORY 'Validate interface and implementation domain boundaries'
+**AS AN** admin\
+**IF** entity interface/implementation links exist across domain boundaries\
+**I WANT** to see a report of cases where an entity interface lives in one domain and one or more of its implementations live in a different domain, without a corresponding OPEN_HOST_SERVICE, SHARED_KERNEL, or similar context relationship documented between those domains\
+**SO THAT** implicit cross-domain structural dependencies are made visible and can be formalised or resolved
+
+#### USER STORY 'Validate domain event boundaries'
+**AS AN** admin\
+**IF** domain events are defined (Batch 7)\
+**I WANT** to see an analysis of which domains publish events consumed by many others (event sources, likely strong natural boundaries) and which domains only consume events without publishing (event sinks, potential merge candidates)\
+**SO THAT** the event-driven coupling structure of the system corroborates or challenges the domain boundaries drawn on the context map
 
 ---
 

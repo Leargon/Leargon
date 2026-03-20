@@ -27,8 +27,8 @@ import { useTranslation } from 'react-i18next';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
-import { SHARED_NODE_TYPES, type EntityNodeData } from './sharedNodes';
-import { applyDagreLayout, domainColor, cardinalityLabel } from './diagramUtils';
+import { SHARED_NODE_TYPES, type EntityNodeData, type GroupNodeData } from './sharedNodes';
+import { applyDagreLayout, layoutGroups, domainColor, cardinalityLabel } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
 /** SVG marker definitions for UML realization (implements) arrow */
@@ -60,58 +60,14 @@ const UmlMarkers: React.FC = () => {
   );
 };
 
-function buildGraph(
-  entities: BusinessEntityResponse[],
-  showDomainLayer: boolean,
-  getLocalizedText: (texts: { locale: string; text: string }[]) => string,
-): { nodes: Node[]; edges: Edge[] } {
-  // Keys that are children of another entity — shown in parent's compartment, not as separate nodes
-  const childKeys = new Set(
-    entities.flatMap((e) => (e.children ?? []).map((c) => c.key)),
-  );
-
-  // Only root entities become diagram nodes
-  const rootEntities = entities.filter((e) => !childKeys.has(e.key));
-
-  const domainKeys = Array.from(
-    new Set(rootEntities.map((e) => e.businessDomain?.key).filter(Boolean) as string[]),
-  );
-  const domainColorMap = new Map(domainKeys.map((dk, i) => [dk, domainColor(i)]));
-
-  const nodes: Node[] = rootEntities.map((entity) => {
-    const color = entity.businessDomain?.key
-      ? domainColorMap.get(entity.businessDomain.key)
-      : undefined;
-    const childrenToShow = entity.children ?? [];
-    const domainHeight = showDomainLayer && entity.businessDomain ? 18 : 0;
-    const childrenHeight = childrenToShow.length > 0 ? 8 + childrenToShow.length * 19 : 0;
-    const height = 48 + domainHeight + childrenHeight;
-
-    return {
-      id: entity.key,
-      type: 'entityNode',
-      position: { x: 0, y: 0 },
-      width: 180,
-      height,
-      data: {
-        label: getLocalizedText(entity.names),
-        domainName: showDomainLayer ? entity.businessDomain?.name : undefined,
-        domainColor: showDomainLayer ? color : undefined,
-        children: childrenToShow.map((c) => ({ key: c.key, name: c.name })),
-      } satisfies EntityNodeData,
-    };
-  });
-
+function buildEdges(rootEntities: BusinessEntityResponse[], childKeys: Set<string>): Edge[] {
   const seen = new Set<string>();
   const edges: Edge[] = [];
-
   rootEntities.forEach((entity) => {
-    // Relationship edges (cardinality)
     (entity.relationships ?? []).forEach((rel) => {
       const items = rel.cardinality ?? [];
       if (items.length !== 2) return;
       const [a, b] = items;
-      // Skip if either endpoint is a child entity (no separate node for it)
       if (childKeys.has(a.businessEntity.key) || childKeys.has(b.businessEntity.key)) return;
       const edgeId = [a.businessEntity.key, b.businessEntity.key].sort().join('__rel__') + (rel.id ?? '');
       if (seen.has(edgeId)) return;
@@ -127,8 +83,6 @@ function buildGraph(
         labelBgStyle: { fillOpacity: 0.9 },
       });
     });
-
-    // UML realization edges (implements interface) — no parent-child edges, those are now compartments
     (entity.interfacesEntities ?? []).forEach((iface) => {
       if (childKeys.has(iface.key)) return;
       const edgeId = `iface__${entity.key}__${iface.key}`;
@@ -144,9 +98,89 @@ function buildGraph(
       });
     });
   });
+  return edges;
+}
 
-  const laidNodes = applyDagreLayout(nodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 });
-  return { nodes: laidNodes, edges };
+function entityHeight(entity: BusinessEntityResponse): number {
+  const childrenHeight = (entity.children ?? []).length > 0 ? 8 + (entity.children ?? []).length * 19 : 0;
+  return 48 + childrenHeight;
+}
+
+function buildGraph(
+  entities: BusinessEntityResponse[],
+  showDomainLayer: boolean,
+  getLocalizedText: (texts: { locale: string; text: string }[]) => string,
+): { nodes: Node[]; edges: Edge[] } {
+  const childKeys = new Set(entities.flatMap((e) => (e.children ?? []).map((c) => c.key)));
+  const rootEntities = entities.filter((e) => !childKeys.has(e.key));
+  const edges = buildEdges(rootEntities, childKeys);
+
+  if (!showDomainLayer) {
+    // Flat layout — no containers
+    const nodes: Node[] = rootEntities.map((entity) => ({
+      id: entity.key,
+      type: 'entityNode',
+      position: { x: 0, y: 0 },
+      width: 180,
+      height: entityHeight(entity),
+      data: {
+        label: getLocalizedText(entity.names),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+      } satisfies EntityNodeData,
+    }));
+    return { nodes: applyDagreLayout(nodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 }), edges };
+  }
+
+  // Container layout — group by bounded context
+  const bcKeys = Array.from(new Set(rootEntities.map((e) => e.boundedContext?.key).filter(Boolean) as string[]));
+  const colorMap = new Map(bcKeys.map((k, i) => [k, domainColor(i)]));
+
+  const groupNodes: Node[] = bcKeys.map((bcKey) => {
+    const sample = rootEntities.find((e) => e.boundedContext?.key === bcKey);
+    const color = colorMap.get(bcKey)!;
+    return {
+      id: `group__${bcKey}`,
+      type: 'domainGroupNode',
+      position: { x: 0, y: 0 },
+      data: { label: sample?.boundedContext?.name ?? bcKey, color } satisfies GroupNodeData,
+    };
+  });
+
+  const childNodes: Node[] = rootEntities
+    .filter((e) => e.boundedContext?.key)
+    .map((entity) => ({
+      id: entity.key,
+      type: 'entityNode',
+      parentId: `group__${entity.boundedContext!.key}`,
+      position: { x: 0, y: 0 },
+      width: 180,
+      height: entityHeight(entity),
+      data: {
+        label: getLocalizedText(entity.names),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+      } satisfies EntityNodeData,
+    }));
+
+  const ungroupedNodes: Node[] = rootEntities
+    .filter((e) => !e.boundedContext?.key)
+    .map((entity) => ({
+      id: entity.key,
+      type: 'entityNode',
+      position: { x: 0, y: 0 },
+      width: 180,
+      height: entityHeight(entity),
+      data: {
+        label: getLocalizedText(entity.names),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+      } satisfies EntityNodeData,
+    }));
+
+  const laidNodes = layoutGroups(groupNodes, childNodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 });
+  const laidUngrouped = ungroupedNodes.length > 0
+    ? applyDagreLayout(ungroupedNodes, [], { rankdir: 'LR', nodesep: 60, ranksep: 130 })
+    : [];
+
+  return { nodes: [...laidNodes, ...laidUngrouped], edges };
 }
 
 const EntityMapDiagram: React.FC = () => {
@@ -154,7 +188,7 @@ const EntityMapDiagram: React.FC = () => {
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const [showDomainLayer, setShowDomainLayer] = useState(true);
-  const { canvasSx, miniMapProps } = useReactFlowTheme();
+  const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
 
   const { data: entitiesResponse, isLoading, isError } = useGetAllBusinessEntities();
   const entities = (entitiesResponse?.data as BusinessEntityResponse[] | undefined) ?? undefined;
@@ -179,11 +213,11 @@ const EntityMapDiagram: React.FC = () => {
     const childKeys = new Set(entities.flatMap((e) => (e.children ?? []).map((c) => c.key)));
     const rootEntities = entities.filter((e) => !childKeys.has(e.key));
     const domainKeys = Array.from(
-      new Set(rootEntities.map((e) => e.businessDomain?.key).filter(Boolean) as string[]),
+      new Set(rootEntities.map((e) => e.boundedContext?.key).filter(Boolean) as string[]),
     );
     return domainKeys.map((dk, i) => {
-      const entity = rootEntities.find((e) => e.businessDomain?.key === dk);
-      return { name: entity?.businessDomain?.name ?? dk, color: domainColor(i) };
+      const entity = rootEntities.find((e) => e.boundedContext?.key === dk);
+      return { name: entity?.boundedContext?.name ?? dk, color: domainColor(i) };
     });
   }, [entities, showDomainLayer]);
 
@@ -278,6 +312,7 @@ const EntityMapDiagram: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           nodeTypes={SHARED_NODE_TYPES}
+          colorMode={colorMode}
           fitView
           fitViewOptions={{ padding: 0.12 }}
           minZoom={0.05}

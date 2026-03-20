@@ -36,7 +36,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AssignBusinessDomainRequest,
+  AssignBoundedContextRequest,
   BusinessEntityResponse,
   BusinessEntityTreeResponse,
   BusinessEntityVersionResponse,
@@ -932,72 +932,72 @@ export const useUpdateBusinessEntityDescriptions = <TError = ErrorResponse | voi
       return useMutation(getUpdateBusinessEntityDescriptionsMutationOptions(options), queryClient);
     }
     /**
- * Assigns a business domain to an business entity. Only the Data Owner or an Administrator can assign domains.
- * @summary Assign business domain to business entity
+ * Assigns a bounded context to a business entity. Only the Data Owner or an Administrator can assign.
+ * @summary Assign bounded context to business entity
  */
-export type assignBusinessDomainToBusinessEntityResponse200 = {
+export type assignBoundedContextToBusinessEntityResponse200 = {
   data: BusinessEntityResponse
   status: 200
 }
 
-export type assignBusinessDomainToBusinessEntityResponse400 = {
+export type assignBoundedContextToBusinessEntityResponse400 = {
   data: ErrorResponse
   status: 400
 }
 
-export type assignBusinessDomainToBusinessEntityResponse401 = {
+export type assignBoundedContextToBusinessEntityResponse401 = {
   data: void
   status: 401
 }
 
-export type assignBusinessDomainToBusinessEntityResponse403 = {
+export type assignBoundedContextToBusinessEntityResponse403 = {
   data: ErrorResponse
   status: 403
 }
 
-export type assignBusinessDomainToBusinessEntityResponse404 = {
+export type assignBoundedContextToBusinessEntityResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type assignBusinessDomainToBusinessEntityResponseSuccess = (assignBusinessDomainToBusinessEntityResponse200) & {
+export type assignBoundedContextToBusinessEntityResponseSuccess = (assignBoundedContextToBusinessEntityResponse200) & {
   headers: Headers;
 };
-export type assignBusinessDomainToBusinessEntityResponseError = (assignBusinessDomainToBusinessEntityResponse400 | assignBusinessDomainToBusinessEntityResponse401 | assignBusinessDomainToBusinessEntityResponse403 | assignBusinessDomainToBusinessEntityResponse404) & {
+export type assignBoundedContextToBusinessEntityResponseError = (assignBoundedContextToBusinessEntityResponse400 | assignBoundedContextToBusinessEntityResponse401 | assignBoundedContextToBusinessEntityResponse403 | assignBoundedContextToBusinessEntityResponse404) & {
   headers: Headers;
 };
 
-export type assignBusinessDomainToBusinessEntityResponse = (assignBusinessDomainToBusinessEntityResponseSuccess | assignBusinessDomainToBusinessEntityResponseError)
+export type assignBoundedContextToBusinessEntityResponse = (assignBoundedContextToBusinessEntityResponseSuccess | assignBoundedContextToBusinessEntityResponseError)
 
-export const getAssignBusinessDomainToBusinessEntityUrl = (key: string,) => {
+export const getAssignBoundedContextToBusinessEntityUrl = (key: string,) => {
 
 
   
 
-  return `/business-entities/${key}/domain`
+  return `/business-entities/${key}/bounded-context`
 }
 
-export const assignBusinessDomainToBusinessEntity = async (key: string,
-    assignBusinessDomainRequest: AssignBusinessDomainRequest, options?: RequestInit): Promise<assignBusinessDomainToBusinessEntityResponse> => {
+export const assignBoundedContextToBusinessEntity = async (key: string,
+    assignBoundedContextRequest: AssignBoundedContextRequest, options?: RequestInit): Promise<assignBoundedContextToBusinessEntityResponse> => {
   
-  return customAxios<assignBusinessDomainToBusinessEntityResponse>(getAssignBusinessDomainToBusinessEntityUrl(key),
+  return customAxios<assignBoundedContextToBusinessEntityResponse>(getAssignBoundedContextToBusinessEntityUrl(key),
   {      
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      assignBusinessDomainRequest,)
+      assignBoundedContextRequest,)
   }
 );}
   
 
 
 
-export const getAssignBusinessDomainToBusinessEntityMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext> => {
+export const getAssignBoundedContextToBusinessEntityMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext> => {
 
-const mutationKey = ['assignBusinessDomainToBusinessEntity'];
+const mutationKey = ['assignBoundedContextToBusinessEntity'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1007,10 +1007,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, {key: string;data: AssignBusinessDomainRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>, {key: string;data: AssignBoundedContextRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  assignBusinessDomainToBusinessEntity(key,data,requestOptions)
+          return  assignBoundedContextToBusinessEntity(key,data,requestOptions)
         }
 
 
@@ -1020,22 +1020,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type AssignBusinessDomainToBusinessEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>>
-    export type AssignBusinessDomainToBusinessEntityMutationBody = AssignBusinessDomainRequest
-    export type AssignBusinessDomainToBusinessEntityMutationError = ErrorResponse | void
+    export type AssignBoundedContextToBusinessEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>>
+    export type AssignBoundedContextToBusinessEntityMutationBody = AssignBoundedContextRequest
+    export type AssignBoundedContextToBusinessEntityMutationError = ErrorResponse | void
 
     /**
- * @summary Assign business domain to business entity
+ * @summary Assign bounded context to business entity
  */
-export const useAssignBusinessDomainToBusinessEntity = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>, TError,{key: string;data: AssignBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+export const useAssignBoundedContextToBusinessEntity = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>, TError,{key: string;data: AssignBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignBusinessDomainToBusinessEntity>>,
+        Awaited<ReturnType<typeof assignBoundedContextToBusinessEntity>>,
         TError,
-        {key: string;data: AssignBusinessDomainRequest},
+        {key: string;data: AssignBoundedContextRequest},
         TContext
       > => {
-      return useMutation(getAssignBusinessDomainToBusinessEntityMutationOptions(options), queryClient);
+      return useMutation(getAssignBoundedContextToBusinessEntityMutationOptions(options), queryClient);
     }
     /**
  * Updates the interface entities of a business entity. Only the Data Owner or an Administrator can edit an entity.

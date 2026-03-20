@@ -28,7 +28,7 @@ open class ProcessMapper(
             when {
                 fieldName == "names" -> process.names.isNotEmpty()
                 fieldName == "descriptions" -> process.descriptions.isNotEmpty()
-                fieldName == "businessDomain" -> process.businessDomain != null
+                fieldName == "boundedContext" -> process.boundedContext != null
                 fieldName == "processOwner" -> process.processOwner != null
                 fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
                 fieldName == "legalBasis" -> process.legalBasis != null
@@ -58,7 +58,7 @@ open class ProcessMapper(
         )
             .code(process.code)
             .processType(toProcessType(process.processType))
-            .businessDomain(BusinessDomainMapper.toBusinessDomainSummary(process.businessDomain))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
             .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
             .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
             .executingUnits(toOrgUnitSummaryList(process.executingUnits))

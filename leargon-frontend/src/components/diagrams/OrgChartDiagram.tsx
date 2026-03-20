@@ -74,7 +74,7 @@ const OrgChartDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const { canvasSx, miniMapProps } = useReactFlowTheme();
+  const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
   const [showProcessCount, setShowProcessCount] = useState(true);
 
   const { data: unitsResponse, isLoading: unitsLoading, isError: unitsError } = useGetAllOrganisationalUnits();
@@ -154,6 +154,7 @@ const OrgChartDiagram: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           nodeTypes={SHARED_NODE_TYPES}
+          colorMode={colorMode}
           fitView
           fitViewOptions={{ padding: 0.15 }}
           minZoom={0.05}

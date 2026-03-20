@@ -13,6 +13,7 @@ import org.leargon.backend.model.CreateProcessRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -39,6 +40,7 @@ class AnalyticsControllerSpec extends Specification {
     @Inject OrganisationalUnitRepository organisationalUnitRepository
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
+    @Inject BoundedContextRepository boundedContextRepository
     @Inject SupportedLocaleRepository localeRepository
 
     def setup() {
@@ -54,6 +56,7 @@ class AnalyticsControllerSpec extends Specification {
         organisationalUnitRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
         businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.deleteAll()
         userRepository.deleteAll()
@@ -109,15 +112,23 @@ class AnalyticsControllerSpec extends Specification {
         resp.body().key
     }
 
+    private String createBoundedContext(String adminToken, String domainKey, String name) {
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/business-domains/${domainKey}/bounded-contexts",
+                [names: [[locale: "en", text: name]]])
+                .bearerAuth(adminToken), Map)
+        resp.body().key
+    }
+
     private void assignOrgUnit(String token, String processKey, String... orgUnitKeys) {
         client.toBlocking().exchange(
             HttpRequest.PUT("/processes/${processKey}/executing-units", [keys: orgUnitKeys.toList()])
                 .bearerAuth(token), Map)
     }
 
-    private void assignDomain(String token, String processKey, String domainKey) {
+    private void assignBoundedContext(String token, String processKey, String boundedContextKey) {
         client.toBlocking().exchange(
-            HttpRequest.PUT("/processes/${processKey}/domain", [businessDomainKey: domainKey])
+            HttpRequest.PUT("/processes/${processKey}/bounded-context", [boundedContextKey: boundedContextKey])
                 .bearerAuth(token), Map)
     }
 
@@ -219,21 +230,24 @@ class AnalyticsControllerSpec extends Specification {
         String token = userData.token
         String adminToken = createAdminToken("adminbottleneck@analytics.com", "adminbottleneck")
 
-        and: "create 3 domains"
+        and: "create 3 domains with bounded contexts"
         String domain1Key = createBusinessDomain(adminToken, "Domain Alpha")
         String domain2Key = createBusinessDomain(adminToken, "Domain Beta")
         String domain3Key = createBusinessDomain(adminToken, "Domain Gamma")
+        String bc1Key = createBoundedContext(adminToken, domain1Key, "Alpha Core")
+        String bc2Key = createBoundedContext(adminToken, domain2Key, "Beta Core")
+        String bc3Key = createBoundedContext(adminToken, domain3Key, "Gamma Core")
 
-        and: "create 1 org unit and 3 processes each in a different domain"
+        and: "create 1 org unit and 3 processes each in a different bounded context"
         String unitKey = createOrgUnit(adminToken, "Cross Domain Team")
         String proc1Key = createProcess(token, "Process Alpha")
         String proc2Key = createProcess(token, "Process Beta")
         String proc3Key = createProcess(token, "Process Gamma")
 
-        and: "assign domain and org unit to each process"
-        assignDomain(token, proc1Key, domain1Key)
-        assignDomain(token, proc2Key, domain2Key)
-        assignDomain(token, proc3Key, domain3Key)
+        and: "assign bounded context and org unit to each process"
+        assignBoundedContext(token, proc1Key, bc1Key)
+        assignBoundedContext(token, proc2Key, bc2Key)
+        assignBoundedContext(token, proc3Key, bc3Key)
         assignOrgUnit(token, proc1Key, unitKey)
         assignOrgUnit(token, proc2Key, unitKey)
         assignOrgUnit(token, proc3Key, unitKey)
@@ -260,17 +274,18 @@ class AnalyticsControllerSpec extends Specification {
         String token = userData.token
         String adminToken = createAdminToken("adminnobottleneck@analytics.com", "adminnobottleneck")
 
-        and: "create 1 domain"
+        and: "create 1 domain with a bounded context"
         String domainKey = createBusinessDomain(adminToken, "Single Domain")
+        String bcKey = createBoundedContext(adminToken, domainKey, "Single Core")
 
-        and: "create 1 org unit and 2 processes both in the same domain"
+        and: "create 1 org unit and 2 processes both in the same bounded context"
         String unitKey = createOrgUnit(adminToken, "Single Domain Team")
         String proc1Key = createProcess(token, "Process Single 1")
         String proc2Key = createProcess(token, "Process Single 2")
 
         and:
-        assignDomain(token, proc1Key, domainKey)
-        assignDomain(token, proc2Key, domainKey)
+        assignBoundedContext(token, proc1Key, bcKey)
+        assignBoundedContext(token, proc2Key, bcKey)
         assignOrgUnit(token, proc1Key, unitKey)
         assignOrgUnit(token, proc2Key, unitKey)
 

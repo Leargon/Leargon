@@ -134,3 +134,25 @@ export const updateCrossBorderTransfers = (
     { transfers },
     as,
   );
+
+export const createBoundedContext = (
+  domainKey: string,
+  name: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(
+    `/business-domains/${domainKey}/bounded-contexts`,
+    'POST',
+    { names: [{ locale: 'en', text: name }] },
+    as,
+  );
+
+export const createDomainEvent = (
+  publishingBoundedContextKey: string,
+  name: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch('/domain-events', 'POST', {
+    publishingBoundedContextKey,
+    names: [{ locale: 'en', text: name }],
+  }, as);

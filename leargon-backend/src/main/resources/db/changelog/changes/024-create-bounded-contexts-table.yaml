@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 024-create-bounded-contexts-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: bounded_contexts
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: domain_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: names
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descriptions
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: context_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: bounded_contexts
+            baseColumnNames: domain_id
+            constraintName: fk_bounded_contexts_domain_id
+            referencedTableName: business_domains
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: bounded_contexts
+            baseColumnNames: created_by_id
+            constraintName: fk_bounded_contexts_created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - createIndex:
+            indexName: idx_bounded_contexts_domain_id
+            tableName: bounded_contexts
+            columns:
+              - column:
+                  name: domain_id

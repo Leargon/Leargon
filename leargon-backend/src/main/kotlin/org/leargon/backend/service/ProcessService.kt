@@ -20,6 +20,7 @@ import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.VersionDiffResponse
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
@@ -34,6 +35,7 @@ open class ProcessService(
     private val processVersionRepository: ProcessVersionRepository,
     private val businessEntityRepository: BusinessEntityRepository,
     private val businessDomainRepository: BusinessDomainRepository,
+    private val boundedContextRepository: BoundedContextRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val userRepository: UserRepository,
     private val localeService: LocaleService,
@@ -267,22 +269,22 @@ open class ProcessService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
-    open fun assignBusinessDomain(key: String, domainKey: String?, currentUser: User): ProcessResponse {
+    open fun assignBoundedContext(key: String, boundedContextKey: String?, currentUser: User): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        val oldDomainName = process.businessDomain?.getName("en") ?: "none"
+        val oldName = process.boundedContext?.getName("en") ?: "none"
 
-        process.businessDomain = if (domainKey != null) {
-            businessDomainRepository.findByKey(domainKey)
-                .orElseThrow { ResourceNotFoundException("Business domain not found") }
+        process.boundedContext = if (boundedContextKey != null) {
+            boundedContextRepository.findByKey(boundedContextKey)
+                .orElseThrow { ResourceNotFoundException("Bounded context not found") }
         } else null
 
         process = processRepository.update(process)
 
-        val newDomainName = process.businessDomain?.getName("en") ?: "none"
+        val newName = process.boundedContext?.getName("en") ?: "none"
         createProcessVersion(process, currentUser, "UPDATE",
-            "Domain assignment changed from '$oldDomainName' to '$newDomainName'")
+            "BoundedContext assignment changed from '$oldName' to '$newName'")
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)

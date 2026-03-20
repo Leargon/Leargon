@@ -1,0 +1,142 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-create-domain-events-tables
+      author: leargon
+      changes:
+        - createTable:
+            tableName: domain_events
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: publishing_bounded_context_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: names
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descriptions
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: domain_events
+            baseColumnNames: publishing_bounded_context_id
+            constraintName: fk_domain_events_publishing_bc
+            referencedTableName: bounded_contexts
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: domain_events
+            baseColumnNames: created_by_id
+            constraintName: fk_domain_events_created_by
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - createTable:
+            tableName: domain_event_consumers
+            columns:
+              - column:
+                  name: event_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bounded_context_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: domain_event_consumers
+            columnNames: event_id, bounded_context_id
+            constraintName: pk_domain_event_consumers
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_consumers
+            baseColumnNames: event_id
+            constraintName: fk_domain_event_consumers_event
+            referencedTableName: domain_events
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_consumers
+            baseColumnNames: bounded_context_id
+            constraintName: fk_domain_event_consumers_bc
+            referencedTableName: bounded_contexts
+            referencedColumnNames: id
+        - createTable:
+            tableName: domain_event_process_links
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: link_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_process_links
+            baseColumnNames: event_id
+            constraintName: fk_domain_event_process_links_event
+            referencedTableName: domain_events
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_process_links
+            baseColumnNames: process_id
+            constraintName: fk_domain_event_process_links_process
+            referencedTableName: processes
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: domain_event_process_links
+            columnNames: event_id, process_id
+            constraintName: uq_domain_event_process_links

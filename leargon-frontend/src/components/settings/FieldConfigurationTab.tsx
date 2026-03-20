@@ -42,7 +42,7 @@ const ENTITY_TYPE_TO_ASSIGNABLE: Record<string, ClassificationAssignableTo> = {
 
 const FIELD_LABELS: Record<string, string> = {
   retentionPeriod: 'Retention Period',
-  businessDomain: 'Business Domain',
+  boundedContext: 'Bounded Context',
   type: 'Type',
   executingUnits: 'Executing Units',
   unitType: 'Unit Type',
@@ -51,13 +51,13 @@ const FIELD_LABELS: Record<string, string> = {
 const BASE_FIELDS: Record<string, Array<{ value: string; label: string }>> = {
   BUSINESS_ENTITY: [
     { value: 'retentionPeriod', label: 'Retention Period' },
-    { value: 'businessDomain', label: 'Business Domain' },
+    { value: 'boundedContext', label: 'Bounded Context' },
   ],
   BUSINESS_DOMAIN: [
     { value: 'type', label: 'Type' },
   ],
   BUSINESS_PROCESS: [
-    { value: 'businessDomain', label: 'Business Domain' },
+    { value: 'boundedContext', label: 'Bounded Context' },
     { value: 'executingUnits', label: 'Executing Units' },
   ],
   ORGANISATIONAL_UNIT: [

@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-update-business-entities-for-bounded-contexts
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: bounded_context_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: business_entities
+            baseColumnNames: bounded_context_id
+            constraintName: fk_business_entities_bounded_context_id
+            referencedTableName: bounded_contexts
+            referencedColumnNames: id
+            onDelete: SET NULL
+        - dropForeignKeyConstraint:
+            baseTableName: business_entities
+            constraintName: fk_business_entities_business_domain_id
+        - dropIndex:
+            tableName: business_entities
+            indexName: idx_business_entities_business_domain
+        - dropColumn:
+            tableName: business_entities
+            columnName: business_domain_id
+        - createIndex:
+            indexName: idx_business_entities_bounded_context
+            tableName: business_entities
+            columns:
+              - column:
+                  name: bounded_context_id

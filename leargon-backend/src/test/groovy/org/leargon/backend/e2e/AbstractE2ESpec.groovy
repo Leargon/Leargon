@@ -118,6 +118,16 @@ abstract class AbstractE2ESpec extends Specification implements TestPropertyProv
         return response.body()
     }
 
+    /** Create a bounded context for a domain and return the response body as Map. */
+    protected Map createBoundedContext(String token, String domainKey, String name, Map extras = [:]) {
+        def body = [names: [[locale: "en", text: name]]] + extras
+        def response = client.toBlocking().exchange(
+                HttpRequest.POST("/business-domains/${domainKey}/bounded-contexts", body).bearerAuth(token),
+                Map
+        )
+        return response.body()
+    }
+
     /** Create a classification and return the response body as Map. */
     protected Map createClassification(String token, String name, String assignableTo = "BUSINESS_ENTITY",
                                        List<Map> values = []) {

@@ -4,7 +4,7 @@ import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } fro
 import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
-  BubbleChart, AccountTreeOutlined, Schema, Share,
+  BubbleChart, AccountTreeOutlined, Schema, Share, FlashOn,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -41,6 +41,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
       { label: 'Ubiquitous Language', path: '/entities', icon: <Hub /> },
       { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
       { label: 'Context Map', path: '/diagrams/context-map', icon: <Share /> },
+      { label: 'Event Flow', path: '/diagrams/event-flow', icon: <FlashOn /> },
     ],
   },
   orgdev: {
