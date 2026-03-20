@@ -68,7 +68,7 @@ open class BoundedContextService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = bc.names.find { it.locale == defaultLocale?.localeCode }?.text
         val slug = SlugUtil.slugify(defaultName)
-        bc.key = "$domainKey/$slug"
+        bc.key = "$domainKey.$slug"
 
         return boundedContextRepository.save(bc)
     }
@@ -82,7 +82,7 @@ open class BoundedContextService(
         bc.domain = domain
         bc.createdBy = currentUser
         bc.names = mutableListOf()
-        bc.key = "${domain.key}/default"
+        bc.key = "${domain.key}.default"
         return boundedContextRepository.save(bc)
     }
 

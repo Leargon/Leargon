@@ -1,6 +1,7 @@
 package org.leargon.backend.repository
 
 import io.micronaut.data.annotation.Join
+import io.micronaut.data.annotation.Query
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
 import org.leargon.backend.domain.Process
@@ -40,4 +41,12 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     fun findByProcessOwnerId(processOwnerId: Long): List<Process>
 
     fun findByExecutingUnitsId(organisationalUnitId: Long): List<Process>
+
+    @Query(
+        value =
+            "SELECT * FROM processes WHERE LOWER(names) LIKE :query" +
+                " OR LOWER(descriptions) LIKE :query LIMIT 20",
+        nativeQuery = true,
+    )
+    fun searchByQuery(query: String): List<Process>
 }

@@ -56,4 +56,12 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     fun findByDataOwnerId(dataOwnerId: Long): List<BusinessEntity>
 
     fun findByParentIsNull(): List<BusinessEntity>
+
+    @Query(
+        value =
+            "SELECT * FROM business_entities WHERE LOWER(names) LIKE :query" +
+                " OR LOWER(descriptions) LIKE :query LIMIT 20",
+        nativeQuery = true,
+    )
+    fun searchByQuery(query: String): List<BusinessEntity>
 }

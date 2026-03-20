@@ -18,6 +18,7 @@ import {
 import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
+import GlobalSearch from './GlobalSearch';
 import { useThemeMode } from '../../context/ThemeContext';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -71,7 +72,7 @@ const TopNav: React.FC = () => {
       />
 
       {/* Perspective tabs */}
-      <Box sx={{ display: 'flex', gap: 0.5, flexGrow: 1 }}>
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
         {PERSPECTIVES.map((p) => (
           <Button
             key={p.id}
@@ -93,6 +94,11 @@ const TopNav: React.FC = () => {
             {p.labelKey}
           </Button>
         ))}
+      </Box>
+
+      {/* Global search */}
+      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', px: 2 }}>
+        <GlobalSearch />
       </Box>
 
       <Divider orientation="vertical" flexItem sx={{ borderColor: 'grey.700', mx: 1 }} />

@@ -72,6 +72,8 @@ tags:
   description: Domain Event management endpoints
 - name: ItSystem
   description: IT System management endpoints
+- name: Search
+  description: Full-text catalogue search endpoint
 paths:
   /administration/users:
     get:
@@ -1296,6 +1298,24 @@ paths:
         '404':
           description: Entity not found
   /translation-links:
+    get:
+      tags:
+      - TranslationLink
+      summary: Get all translation links
+      operationId: getAllTranslationLinks
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of translation links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TranslationLinkResponse'
+        '401':
+          description: Not authenticated
     post:
       tags:
       - TranslationLink
@@ -5230,6 +5250,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /search:
+    get:
+      tags:
+      - Search
+      summary: Search across the catalogue
+      description: Search business entities, domains, processes, and organisational units by name or description.
+      operationId: search
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: true
+        description: Search query (minimum 2 characters)
+        schema:
+          type: string
+          minLength: 2
+      - name: types
+        in: query
+        required: false
+        description: Filter by entity types (defaults to all types if omitted)
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultType'
+        style: form
+        explode: true
+      - name: limit
+        in: query
+        required: false
+        description: Maximum total number of results (default 20, max 50)
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+          maximum: 50
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Query too short (minimum 2 characters)
+        '401':
+          description: Not authenticated
 components:
   securitySchemes:
     bearerAuth:
@@ -7915,3 +7982,38 @@ components:
           items:
             type: string
           description: Keys of business entities to link
+    SearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        totalCount:
+          type: integer
+          format: int32
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultResponse'
+    SearchResultResponse:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SearchResultType'
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        matchedIn:
+          type: string
+          enum:
+          - NAME
+          - DESCRIPTION
+    SearchResultType:
+      type: string
+      enum:
+      - BUSINESS_ENTITY
+      - BUSINESS_DOMAIN
+      - BUSINESS_PROCESS
+      - ORGANISATIONAL_UNIT

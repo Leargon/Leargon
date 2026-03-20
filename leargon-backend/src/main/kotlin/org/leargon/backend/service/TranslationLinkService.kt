@@ -20,6 +20,14 @@ open class TranslationLinkService(
     private val translationLinkMapper: TranslationLinkMapper
 ) {
     @Transactional
+    open fun getAll(): List<TranslationLinkResponse> {
+        val mapper = translationLinkMapper
+        return translationLinkRepository.findAll().map { link ->
+            mapper.toResponse(link, link.firstEntity!!)
+        }
+    }
+
+    @Transactional
     open fun getForEntity(entityKey: String): List<TranslationLinkResponse> {
         val entity =
             businessEntityRepository
