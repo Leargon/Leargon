@@ -38,4 +38,12 @@ interface BusinessDomainRepository : JpaRepository<BusinessDomain, Long> {
     @Join(value = "boundedContexts", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     fun findByKey(key: String): Optional<BusinessDomain>
+
+    @Query(
+        value =
+            "SELECT * FROM business_domains WHERE LOWER(names) LIKE :query" +
+                " OR LOWER(descriptions) LIKE :query LIMIT 20",
+        nativeQuery = true,
+    )
+    fun searchByQuery(query: String): List<BusinessDomain>
 }

@@ -62,7 +62,7 @@ open class DomainEventService(
         }
 
         val slug = SlugUtil.slugify(event.getName("en").ifBlank { event.names.firstOrNull()?.text ?: "event" })
-        event.key = "${publishingBc.key}/$slug"
+        event.key = "${publishingBc.key}.$slug"
 
         return domainEventRepository.save(event)
     }

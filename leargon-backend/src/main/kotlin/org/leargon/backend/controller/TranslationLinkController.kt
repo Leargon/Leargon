@@ -28,6 +28,8 @@ open class TranslationLinkController(
     private val userService: UserService,
     private val securityService: SecurityService
 ) : TranslationLinkApi {
+    override fun getAllTranslationLinks(): List<TranslationLinkResponse> = translationLinkService.getAll()
+
     override fun getEntityTranslationLinks(key: String): List<TranslationLinkResponse> = translationLinkService.getForEntity(key)
 
     override fun createTranslationLink(

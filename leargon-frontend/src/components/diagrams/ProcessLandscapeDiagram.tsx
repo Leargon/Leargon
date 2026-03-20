@@ -273,7 +273,7 @@ const ProcessLandscapeDiagram: React.FC = () => {
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
-  const [layers, setLayers] = useState<Set<LayerOption>>(new Set(['domain', 'entities']));
+  const [layers, setLayers] = useState<Set<LayerOption>>(new Set());
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   const { data: processesResponse, isLoading, isError } = useGetAllProcesses();

@@ -131,15 +131,20 @@ wipe('classifications', '/classifications',
 print('[3/7] Processes (clear diagrams, deepest children first)...')
 processes = api('GET', '/processes', token=T)
 if isinstance(processes, list):
-    minimal_diagram = {
-        'elements': [
-            {'elementId': 'wipe-start', 'elementType': 'NONE_START_EVENT', 'sortOrder': 0},
-            {'elementId': 'wipe-end',   'elementType': 'NONE_END_EVENT',   'sortOrder': 1},
-        ],
-        'flows': [{'flowId': 'wipe-flow', 'sourceElementId': 'wipe-start', 'targetElementId': 'wipe-end'}],
-    }
+    minimal_bpmn = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"'
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+        ' targetNamespace="http://bpmn.io/schema/bpmn">'
+        '<process id="wipe-process" isExecutable="false">'
+        '<startEvent id="wipe-start"/>'
+        '<endEvent id="wipe-end"/>'
+        '<sequenceFlow id="wipe-flow" sourceRef="wipe-start" targetRef="wipe-end"/>'
+        '</process>'
+        '</definitions>'
+    )
     for p in processes:
-        api('PUT', f'/processes/{p["key"]}/diagram', minimal_diagram, T)
+        api('PUT', f'/processes/{p["key"]}/diagram', {'bpmnXml': minimal_bpmn}, T)
     # Sort deepest children first so parents can be deleted after
     procs_by_key = {p['key']: p for p in processes}
     def proc_depth(p):
@@ -554,10 +559,10 @@ def dk(en_name):
     return domain_keys.get(en_name, en_name.lower().replace(' ', '-'))
 
 def bck(en_name):
-    """Bounded context key for a domain: {domainKey}/{domainSlug}"""
+    """Bounded context key for a domain: {domainKey}.{domainSlug}"""
     dkey = dk(en_name)
     bc_slug = dkey.rsplit('.', 1)[-1]
-    return f"{dkey}/{bc_slug}"
+    return f"{dkey}.{bc_slug}"
 
 
 # ── 6. Business entities ────────────────────────────────────────────────────────
@@ -565,7 +570,7 @@ print('\n[6/9] Business entities...')
 
 # (en_name, parent_en, domain_en, names, descriptions, data_owner_username)
 entity_data = [
-    ('Natural Person', None, 'Customer Care',
+    ('Natural Person', None, None,
      n4('Natural Person', 'Natürliche Person', 'Personne physique', 'Persona fisica', 'Persona física'),
      n4('A human individual with legal capacity. Acts as the shared base identity for customers and employees.',
         'Eine natürliche Person mit Rechtshandlungsfähigkeit. Gemeinsame Basisidentität für Kunden und Mitarbeiter.',
@@ -864,6 +869,206 @@ process_data = [
         'Il personale del magazzino preleva gli articoli ordinati e li imballa in colli per la spedizione.',
         'El personal del almacén recoge los artículos pedidos del stock y los empaca en paquetes para su envío.'),
      ['logistics'], 'marco.rossi'),
+
+    # ── Sub-tasks: Customer Registration ───────────────────────────────────────
+    ('Collect Personal Data', 'Customer Registration', None,
+     n4('Collect Personal Data', 'Personendaten erfassen', 'Collecter les donnees personnelles'),
+     n4('Collects name, address and contact details from the new customer.'),
+     ['operations'], 'lisa.chen'),
+    ('Activate Account', 'Customer Registration', None,
+     n4('Activate Account', 'Konto aktivieren', 'Activer le compte'),
+     n4('Activates the customer account after successful validation and email confirmation.'),
+     ['operations'], 'lisa.chen'),
+
+    # ── Sub-tasks: Validate Customer Data ──────────────────────────────────────
+    ('Check Required Fields', 'Validate Customer Data', None,
+     n4('Check Required Fields', 'Pflichtfelder prüfen', 'Verifier les champs obligatoires'),
+     n4('Verifies that all mandatory profile fields have been provided.'),
+     ['operations'], 'lisa.chen'),
+    ('Validate Format', 'Validate Customer Data', None,
+     n4('Validate Format', 'Format validieren', 'Valider le format'),
+     n4('Checks that field values conform to expected formats (e-mail, phone, postal code).'),
+     ['operations'], 'lisa.chen'),
+    ('Request Missing Data', 'Validate Customer Data', None,
+     n4('Request Missing Data', 'Fehlende Daten anfordern', 'Demander les donnees manquantes'),
+     n4('Notifies the customer that required fields are missing and requests correction.'),
+     ['operations'], 'lisa.chen'),
+
+    # ── Sub-tasks: Confirm Email Address ───────────────────────────────────────
+    ('Generate One-Time Token', 'Confirm Email Address', None,
+     n4('Generate One-Time Token', 'Einmaltoken generieren', 'Generer un jeton unique'),
+     n4('Creates a cryptographically secure one-time verification token for the customer.'),
+     ['operations'], 'lisa.chen'),
+    ('Send Verification Email', 'Confirm Email Address', None,
+     n4('Send Verification Email', 'Bestätigungs-E-Mail senden', "Envoyer l'e-mail de verification"),
+     n4('Sends the verification link containing the one-time token to the customer.'),
+     ['operations'], 'lisa.chen'),
+    ('Mark Email Confirmed', 'Confirm Email Address', None,
+     n4('Mark Email Confirmed', 'E-Mail als bestätigt markieren', "Marquer l'e-mail comme confirme"),
+     n4('Marks the customer e-mail address as confirmed in the system.'),
+     ['operations'], 'lisa.chen'),
+    ('Send Reminder Email', 'Confirm Email Address', None,
+     n4('Send Reminder Email', 'Erinnerungs-E-Mail senden', "Envoyer l'e-mail de rappel"),
+     n4('Sends a reminder when the verification token has expired without being used.'),
+     ['operations'], 'lisa.chen'),
+
+    # ── Sub-tasks: Place an Order ───────────────────────────────────────────────
+    ('Send Order Confirmation', 'Place an Order', None,
+     n4('Send Order Confirmation', 'Auftragsbestätigung senden', "Envoyer la confirmation de commande"),
+     n4('Sends an order confirmation e-mail to the customer after successful checkout.'),
+     ['operations'], 'sarah.mitchell'),
+
+    # ── Sub-tasks: Search for Product ──────────────────────────────────────────
+    ('Enter Search Query', 'Search for Product', None,
+     n4('Enter Search Query', 'Suchanfrage eingeben', 'Saisir la requete de recherche'),
+     n4('Customer enters keywords or browses a category to initiate a product search.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Query Product Catalogue', 'Search for Product', None,
+     n4('Query Product Catalogue', 'Produktkatalog abfragen', 'Interroger le catalogue produits'),
+     n4('Executes the search query against the product catalogue and retrieves matching results.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Apply Filters', 'Search for Product', None,
+     n4('Apply Filters', 'Filter anwenden', 'Appliquer les filtres'),
+     n4('Applies customer-selected filters (price, category, brand) to narrow search results.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Display Results', 'Search for Product', None,
+     n4('Display Results', 'Ergebnisse anzeigen', 'Afficher les resultats'),
+     n4('Renders the filtered and sorted product list on the storefront.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Customer Selects Product', 'Search for Product', None,
+     n4('Customer Selects Product', 'Kunde wählt Produkt aus', 'Le client selectionne un produit'),
+     n4('Customer clicks on a product to view its detail page and proceed to cart.'),
+     ['operations'], 'sarah.mitchell'),
+
+    # ── Sub-tasks: Add to Cart ──────────────────────────────────────────────────
+    ('Check Stock Availability', 'Add to Cart', None,
+     n4('Check Stock Availability', 'Lagerverfügbarkeit prüfen', 'Verifier la disponibilite en stock'),
+     n4('Verifies that the requested quantity of the product is available in stock.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Add Item to Cart', 'Add to Cart', None,
+     n4('Add Item to Cart', 'Artikel in den Warenkorb legen', "Ajouter l'article au panier"),
+     n4('Adds the selected product and quantity to the customer active shopping cart.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Update Cart Total', 'Add to Cart', None,
+     n4('Update Cart Total', 'Warenkorbsumme aktualisieren', 'Mettre a jour le total du panier'),
+     n4('Recalculates the cart subtotal, taxes and estimated shipping after adding an item.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Show Out-of-Stock Notice', 'Add to Cart', None,
+     n4('Show Out-of-Stock Notice', 'Nicht-vorrätig-Hinweis anzeigen', 'Afficher le message de rupture de stock'),
+     n4('Displays an out-of-stock message when the requested item is unavailable.'),
+     ['operations'], 'sarah.mitchell'),
+
+    # ── Sub-tasks: Checkout ─────────────────────────────────────────────────────
+    ('Review Cart', 'Checkout', None,
+     n4('Review Cart', 'Warenkorb prüfen', 'Verifier le panier'),
+     n4('Customer reviews cart contents, quantities and totals before proceeding to checkout.'),
+     ['operations'], 'sarah.mitchell'),
+    ('Confirm Order', 'Checkout', None,
+     n4('Confirm Order', 'Bestellung bestätigen', 'Confirmer la commande'),
+     n4('Creates the confirmed order record after successful payment and address validation.'),
+     ['operations', 'finance'], 'sarah.mitchell'),
+
+    # ── Sub-tasks: Validate Shipping Address ───────────────────────────────────
+    ('Parse Address Fields', 'Validate Shipping Address', None,
+     n4('Parse Address Fields', 'Adressfelder parsen', "Analyser les champs d'adresse"),
+     n4('Breaks down the raw address input into structured fields (street, city, postcode, country).'),
+     ['operations', 'logistics'], 'lisa.chen'),
+    ('Check Completeness', 'Validate Shipping Address', None,
+     n4('Check Completeness', 'Vollständigkeit prüfen', 'Verifier la completude'),
+     n4('Verifies that all mandatory address fields are present and non-empty.'),
+     ['operations', 'logistics'], 'lisa.chen'),
+    ('Verify Deliverability', 'Validate Shipping Address', None,
+     n4('Verify Deliverability', 'Zustellbarkeit prüfen', 'Verifier la livraison'),
+     n4('Checks with the carrier API whether the address is within the delivery zone.'),
+     ['logistics'], 'lisa.chen'),
+    ('Return Validation Error', 'Validate Shipping Address', None,
+     n4('Return Validation Error', 'Validierungsfehler zurückgeben', 'Retourner une erreur de validation'),
+     n4('Returns a structured validation error with details about the invalid address fields.'),
+     ['operations'], 'lisa.chen'),
+
+    # ── Sub-tasks: Process Payment ─────────────────────────────────────────────
+    ('Tokenise Card Data', 'Process Payment', None,
+     n4('Tokenise Card Data', 'Kartendaten tokenisieren', 'Tokeniser les donnees de carte'),
+     n4('Replaces sensitive card data with a secure token via the PCI-DSS tokenisation service.'),
+     ['payment', 'finance'], 'tom.wagner'),
+    ('Submit to Payment Gateway', 'Process Payment', None,
+     n4('Submit to Payment Gateway', 'An Zahlungsgateway senden', 'Soumettre au passerelle de paiement'),
+     n4('Sends the payment authorisation request to the payment gateway with tokenised card data.'),
+     ['payment', 'finance'], 'tom.wagner'),
+    ('Capture Payment', 'Process Payment', None,
+     n4('Capture Payment', 'Zahlung einziehen', 'Capturer le paiement'),
+     n4('Captures the authorised payment amount from the gateway to complete the transaction.'),
+     ['payment', 'finance'], 'tom.wagner'),
+    ('Record Transaction', 'Process Payment', None,
+     n4('Record Transaction', 'Transaktion aufzeichnen', 'Enregistrer la transaction'),
+     n4('Persists the payment transaction record in the financial ledger.'),
+     ['finance'], 'tom.wagner'),
+    ('Decline Transaction', 'Process Payment', None,
+     n4('Decline Transaction', 'Transaktion ablehnen', 'Decliner la transaction'),
+     n4('Logs the declined payment and notifies the customer to retry with a different method.'),
+     ['payment', 'finance'], 'tom.wagner'),
+
+    # ── Sub-tasks: Send Invoice ─────────────────────────────────────────────────
+    ('Generate Invoice', 'Send Invoice', None,
+     n4('Generate Invoice', 'Rechnung generieren', 'Generer la facture'),
+     n4('Creates the invoice document from the confirmed order and payment transaction data.'),
+     ['finance'], 'tom.wagner'),
+    ('Render as PDF', 'Send Invoice', None,
+     n4('Render as PDF', 'Als PDF rendern', 'Rendre en PDF'),
+     n4('Converts the invoice data into a formatted PDF document for delivery.'),
+     ['finance'], 'tom.wagner'),
+    ('Send Email to Customer', 'Send Invoice', None,
+     n4('Send Email to Customer', 'E-Mail an Kunden senden', "Envoyer l'e-mail au client"),
+     n4('Delivers the PDF invoice to the customer via e-mail.'),
+     ['finance'], 'tom.wagner'),
+    ('Log Delivery Status', 'Send Invoice', None,
+     n4('Log Delivery Status', 'Lieferstatus protokollieren', 'Journaliser le statut de livraison'),
+     n4('Records the invoice delivery status and timestamp in the audit log.'),
+     ['finance'], 'tom.wagner'),
+
+    # ── Sub-tasks: Ship Order ───────────────────────────────────────────────────
+    ('Assign Carrier', 'Ship Order', None,
+     n4('Assign Carrier', 'Spediteur zuweisen', 'Attribuer le transporteur'),
+     n4('Selects and assigns a carrier based on destination, weight and service level.'),
+     ['logistics', 'supply-chain'], 'marco.rossi'),
+    ('Create Shipping Label', 'Ship Order', None,
+     n4('Create Shipping Label', 'Versandetikett erstellen', "Creer l'etiquette d'expedition"),
+     n4('Generates and prints the carrier shipping label with tracking barcode.'),
+     ['logistics'], 'marco.rossi'),
+    ('Hand Over to Carrier', 'Ship Order', None,
+     n4('Hand Over to Carrier', 'An Spediteur übergeben', 'Remettre au transporteur'),
+     n4('Transfers the sealed parcel to the carrier and records the pickup confirmation.'),
+     ['logistics'], 'marco.rossi'),
+    ('Update Tracking Status', 'Ship Order', None,
+     n4('Update Tracking Status', 'Tracking-Status aktualisieren', 'Mettre a jour le statut de suivi'),
+     n4('Updates the order tracking status to Dispatched and notifies the customer.'),
+     ['logistics'], 'marco.rossi'),
+
+    # ── Sub-tasks: Pick and Pack ────────────────────────────────────────────────
+    ('Retrieve Order Manifest', 'Pick and Pack', None,
+     n4('Retrieve Order Manifest', 'Auftragsmanifest abrufen', "Recuperer le manifeste de commande"),
+     n4('Pulls the picking list from the warehouse management system for the given order.'),
+     ['logistics'], 'marco.rossi'),
+    ('Pick Items from Shelves', 'Pick and Pack', None,
+     n4('Pick Items from Shelves', 'Artikel aus Regalen entnehmen', 'Prelever les articles des rayons'),
+     n4('Warehouse staff physically locate and collect each item from the designated shelf location.'),
+     ['logistics'], 'marco.rossi'),
+    ('Pack Items', 'Pick and Pack', None,
+     n4('Pack Items', 'Artikel verpacken', 'Emballer les articles'),
+     n4('Places all picked items into an appropriately sized shipping box with protective packaging.'),
+     ['logistics'], 'marco.rossi'),
+    ('Seal Parcel', 'Pick and Pack', None,
+     n4('Seal Parcel', 'Paket versiegeln', 'Sceller le colis'),
+     n4('Secures and seals the packed box ready for labelling and dispatch.'),
+     ['logistics'], 'marco.rossi'),
+    ('Apply Shipping Label', 'Pick and Pack', None,
+     n4('Apply Shipping Label', 'Versandetikett anbringen', "Apposer l'etiquette d'expedition"),
+     n4('Affixes the carrier shipping label to the sealed parcel.'),
+     ['logistics'], 'marco.rossi'),
+    ('Flag Backorder', 'Pick and Pack', None,
+     n4('Flag Backorder', 'Nachlieferung kennzeichnen', 'Signaler une commande en souffrance'),
+     n4('Marks the order as a backorder in the WMS when one or more items are out of stock.'),
+     ['logistics', 'supply-chain'], 'marco.rossi'),
 ]
 
 # Legal basis per process (Art. 6 GDPR / Art. 31 revDSG)
@@ -1204,6 +1409,448 @@ for proc_en, prio in [
     assign('processes', pk(proc_en), [(PP, prio)])
 
 
+# ── 8c. Process Diagrams ──────────────────────────────────────────────────────
+print('\n[8c/9] Process diagrams...')
+
+from xml.sax.saxutils import escape as _e
+
+
+def _bpmn(pid, nodes, edges, called=None):
+    """
+    Build BPMN 2.0 XML compatible with bpmn-js.
+    nodes: [(id, etype, label, cx, cy), ...]
+      etype: start | end | task | user | service | send | call | xgw | pgw
+    edges: [(src, tgt) | (src, tgt, label), ...]
+    called: {node_id: processKey} — calledElement for callActivity nodes
+    """
+    DIM = {
+        'start':   (36,  36),
+        'end':     (36,  36),
+        'task':    (100, 80),
+        'user':    (100, 80),
+        'service': (100, 80),
+        'send':    (100, 80),
+        'call':    (100, 80),
+        'xgw':     (50,  50),
+        'pgw':     (50,  50),
+    }
+    TAG = {
+        'start':   'startEvent',
+        'end':     'endEvent',
+        'task':    'task',
+        'user':    'userTask',
+        'service': 'serviceTask',
+        'send':    'sendTask',
+        'call':    'callActivity',
+        'xgw':     'exclusiveGateway',
+        'pgw':     'parallelGateway',
+    }
+    nmap = {n[0]: n for n in nodes}
+    proc, shapes, fedges = [], [], []
+
+    for eid, et, lbl, cx, cy in nodes:
+        w, h = DIM[et]
+        ce = f' calledElement="{called[eid]}"' if (et == 'call' and called and eid in called) else ''
+        proc.append(f'<{TAG[et]} id="{eid}" name="{_e(lbl)}"{ce}/>')
+        shapes.append(
+            f'<bpmndi:BPMNShape id="{eid}_di" bpmnElement="{eid}">'
+            f'<dc:Bounds x="{cx - w//2}" y="{cy - h//2}" width="{w}" height="{h}"/>'
+            f'</bpmndi:BPMNShape>'
+        )
+
+    for fi, fl in enumerate(edges, 1):
+        src, tgt = fl[0], fl[1]
+        lbl = fl[2] if len(fl) > 2 else ''
+        fid = f'{pid}_f{fi}'
+        cattr = f' name="{_e(lbl)}"' if lbl else ''
+        proc.append(f'<sequenceFlow id="{fid}" sourceRef="{src}" targetRef="{tgt}"{cattr}/>')
+
+        sn, tn = nmap[src], nmap[tgt]
+        sw, sh = DIM[sn[1]]
+        tw, th = DIM[tn[1]]
+        scx, scy, tcx, tcy = sn[3], sn[4], tn[3], tn[4]
+
+        x1 = scx + sw // 2   # right edge of source
+        y1 = scy
+        x2 = tcx - tw // 2   # left edge of target
+        y2 = tcy
+
+        if abs(y1 - y2) < 5:
+            wps = f'<di:waypoint x="{x1}" y="{y1}"/><di:waypoint x="{x2}" y="{y2}"/>'
+        else:
+            mx = (x1 + x2) // 2
+            wps = (f'<di:waypoint x="{x1}" y="{y1}"/>'
+                   f'<di:waypoint x="{mx}" y="{y1}"/>'
+                   f'<di:waypoint x="{mx}" y="{y2}"/>'
+                   f'<di:waypoint x="{x2}" y="{y2}"/>')
+
+        fedges.append(
+            f'<bpmndi:BPMNEdge id="{fid}_di" bpmnElement="{fid}">{wps}</bpmndi:BPMNEdge>'
+        )
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"'
+        ' xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"'
+        ' xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"'
+        ' xmlns:di="http://www.omg.org/spec/DD/20100524/DI"'
+        f' id="def_{pid}" targetNamespace="http://bpmn.io/schema/bpmn">'
+        f'<process id="{pid}" isExecutable="false">'
+        + ''.join(proc)
+        + '</process>'
+        '<bpmndi:BPMNDiagram id="BPMNDiagram_1">'
+        f'<bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="{pid}">'
+        + ''.join(shapes)
+        + ''.join(fedges)
+        + '</bpmndi:BPMNPlane>'
+        '</bpmndi:BPMNDiagram>'
+        '</definitions>'
+    )
+
+
+# ── Diagram definitions ────────────────────────────────────────────────────────
+
+_D = {
+
+# ── Customer Registration ──────────────────────────────────────────────────────
+# Start → Collect Personal Data → Validate Customer Data (call) →
+# Confirm Email Address (call) → Activate Account → End
+'Customer Registration': _bpmn('p_cust_reg', [
+    ('cr_start',    'start',   'Start',                           175, 100),
+    ('cr_collect',  'call',    'Collect Personal Data',           355, 100),
+    ('cr_validate', 'call',    'Validate Customer Data',          535, 100),
+    ('cr_confirm',  'call',    'Confirm Email Address',           715, 100),
+    ('cr_activate', 'call',    'Activate Account',                895, 100),
+    ('cr_end',      'end',     'End',                            1050, 100),
+], [
+    ('cr_start',    'cr_collect'),
+    ('cr_collect',  'cr_validate'),
+    ('cr_validate', 'cr_confirm'),
+    ('cr_confirm',  'cr_activate'),
+    ('cr_activate', 'cr_end'),
+], called={
+    'cr_collect':  pk('Collect Personal Data'),
+    'cr_validate': pk('Validate Customer Data'),
+    'cr_confirm':  pk('Confirm Email Address'),
+    'cr_activate': pk('Activate Account'),
+}),
+
+# ── Validate Customer Data ─────────────────────────────────────────────────────
+# Start → Check Required Fields → [Data Complete?]
+#   Yes → Validate Format → [Format OK?] → Yes → End (Valid)
+#   No  → Request Missing Data → End (Rejected)
+'Validate Customer Data': _bpmn('p_val_data', [
+    ('vd_start',   'start',   'Start',                175, 120),
+    ('vd_check',   'call',    'Check Required Fields', 355, 120),
+    ('vd_gw1',     'xgw',     'Data Complete?',        535, 120),
+    ('vd_format',  'call',    'Validate Format',       715,  70),
+    ('vd_gw2',     'xgw',     'Format OK?',            895,  70),
+    ('vd_end_ok',  'end',     'Valid',                1055,  70),
+    ('vd_request', 'call',    'Request Missing Data',  715, 200),
+    ('vd_end_rej', 'end',     'Rejected',             1055, 200),
+], [
+    ('vd_start',   'vd_check'),
+    ('vd_check',   'vd_gw1'),
+    ('vd_gw1',     'vd_format',  'Complete'),
+    ('vd_format',  'vd_gw2'),
+    ('vd_gw2',     'vd_end_ok',  'Valid'),
+    ('vd_gw2',     'vd_end_rej', 'Invalid'),
+    ('vd_gw1',     'vd_request', 'Incomplete'),
+    ('vd_request', 'vd_end_rej'),
+], called={
+    'vd_check':   pk('Check Required Fields'),
+    'vd_format':  pk('Validate Format'),
+    'vd_request': pk('Request Missing Data'),
+}),
+
+# ── Confirm Email Address ──────────────────────────────────────────────────────
+# Start → Generate Token → Send Verification Email → [Token Verified?]
+#   Verified → Mark Email Confirmed → End (Confirmed)
+#   Timeout  → Send Reminder → End (Expired)
+'Confirm Email Address': _bpmn('p_conf_email', [
+    ('ce_start',    'start',   'Start',                     175, 120),
+    ('ce_token',    'call',    'Generate One-Time Token',   355, 120),
+    ('ce_send',     'call',    'Send Verification Email',   535, 120),
+    ('ce_gw',       'xgw',     'Token Verified?',           715, 120),
+    ('ce_confirm',  'call',    'Mark Email Confirmed',      895,  70),
+    ('ce_end_ok',   'end',     'Confirmed',                1050,  70),
+    ('ce_remind',   'call',    'Send Reminder Email',       895, 200),
+    ('ce_end_exp',  'end',     'Expired',                  1050, 200),
+], [
+    ('ce_start',   'ce_token'),
+    ('ce_token',   'ce_send'),
+    ('ce_send',    'ce_gw'),
+    ('ce_gw',      'ce_confirm', 'Token Received'),
+    ('ce_confirm', 'ce_end_ok'),
+    ('ce_gw',      'ce_remind',  'Timeout'),
+    ('ce_remind',  'ce_end_exp'),
+], called={
+    'ce_token':   pk('Generate One-Time Token'),
+    'ce_send':    pk('Send Verification Email'),
+    'ce_confirm': pk('Mark Email Confirmed'),
+    'ce_remind':  pk('Send Reminder Email'),
+}),
+
+# ── Place an Order ─────────────────────────────────────────────────────────────
+# Start → Search for Product (call) → Add to Cart (call) → Checkout (call) →
+# Send Order Confirmation → End
+'Place an Order': _bpmn('p_place_order', [
+    ('po_start',   'start',   'Start',                     175, 100),
+    ('po_search',  'call',    'Search for Product',        355, 100),
+    ('po_cart',    'call',    'Add to Cart',               535, 100),
+    ('po_checkout','call',    'Checkout',                  715, 100),
+    ('po_confirm', 'call',    'Send Order Confirmation',   895, 100),
+    ('po_end',     'end',     'Order Confirmed',          1050, 100),
+], [
+    ('po_start',    'po_search'),
+    ('po_search',   'po_cart'),
+    ('po_cart',     'po_checkout'),
+    ('po_checkout', 'po_confirm'),
+    ('po_confirm',  'po_end'),
+], called={
+    'po_search':   pk('Search for Product'),
+    'po_cart':     pk('Add to Cart'),
+    'po_checkout': pk('Checkout'),
+    'po_confirm':  pk('Send Order Confirmation'),
+}),
+
+# ── Search for Product ─────────────────────────────────────────────────────────
+# Start → Enter Search Query → Query Product Catalogue → Apply Filters →
+# Display Results → Customer Selects Product → End
+'Search for Product': _bpmn('p_search', [
+    ('sp_start',   'start',   'Start',                    175, 100),
+    ('sp_query',   'call',    'Enter Search Query',       355, 100),
+    ('sp_fetch',   'call',    'Query Product Catalogue',  535, 100),
+    ('sp_filter',  'call',    'Apply Filters',            715, 100),
+    ('sp_display', 'call',    'Display Results',          895, 100),
+    ('sp_select',  'call',    'Customer Selects Product', 1075, 100),
+    ('sp_end',     'end',     'Product Selected',         1230, 100),
+], [
+    ('sp_start',   'sp_query'),
+    ('sp_query',   'sp_fetch'),
+    ('sp_fetch',   'sp_filter'),
+    ('sp_filter',  'sp_display'),
+    ('sp_display', 'sp_select'),
+    ('sp_select',  'sp_end'),
+], called={
+    'sp_query':   pk('Enter Search Query'),
+    'sp_fetch':   pk('Query Product Catalogue'),
+    'sp_filter':  pk('Apply Filters'),
+    'sp_display': pk('Display Results'),
+    'sp_select':  pk('Customer Selects Product'),
+}),
+
+# ── Add to Cart ────────────────────────────────────────────────────────────────
+# Start → Check Stock → [In Stock?]
+#   Yes → Add to Cart → Update Cart Total → End (Added)
+#   No  → Show Out-of-Stock Notice → End (Unavailable)
+'Add to Cart': _bpmn('p_add_cart', [
+    ('ac_start',  'start',   'Start',                    175, 120),
+    ('ac_stock',  'call',    'Check Stock Availability',  355, 120),
+    ('ac_gw',     'xgw',     'In Stock?',                535, 120),
+    ('ac_add',    'call',    'Add Item to Cart',          695,  70),
+    ('ac_total',  'call',    'Update Cart Total',         875,  70),
+    ('ac_end_ok', 'end',     'Item Added',               1010,  70),
+    ('ac_notice', 'call',    'Show Out-of-Stock Notice',  695, 200),
+    ('ac_end_no', 'end',     'Unavailable',              1010, 200),
+], [
+    ('ac_start',  'ac_stock'),
+    ('ac_stock',  'ac_gw'),
+    ('ac_gw',     'ac_add',    'In Stock'),
+    ('ac_add',    'ac_total'),
+    ('ac_total',  'ac_end_ok'),
+    ('ac_gw',     'ac_notice', 'Out of Stock'),
+    ('ac_notice', 'ac_end_no'),
+], called={
+    'ac_stock':  pk('Check Stock Availability'),
+    'ac_add':    pk('Add Item to Cart'),
+    'ac_total':  pk('Update Cart Total'),
+    'ac_notice': pk('Show Out-of-Stock Notice'),
+}),
+
+# ── Checkout ───────────────────────────────────────────────────────────────────
+# Start → Review Cart → Validate Shipping Address (call) →
+# [PGW split] → Process Payment (call) ──┐
+#              → Send Invoice (call)     ─┤
+# [PGW join]  → Confirm Order → End
+'Checkout': _bpmn('p_checkout', [
+    ('co_start',   'start',   'Start',                        175, 130),
+    ('co_review',  'call',    'Review Cart',                  355, 130),
+    ('co_addr',    'call',    'Validate Shipping Address',    535, 130),
+    ('co_split',   'pgw',     '',                             715, 130),
+    ('co_payment', 'call',    'Process Payment',              895,  70),
+    ('co_invoice', 'call',    'Send Invoice',                 895, 210),
+    ('co_join',    'pgw',     '',                            1095, 130),
+    ('co_confirm', 'call',    'Confirm Order',               1255, 130),
+    ('co_end',     'end',     'Order Placed',                1415, 130),
+], [
+    ('co_start',   'co_review'),
+    ('co_review',  'co_addr'),
+    ('co_addr',    'co_split'),
+    ('co_split',   'co_payment'),
+    ('co_split',   'co_invoice'),
+    ('co_payment', 'co_join'),
+    ('co_invoice', 'co_join'),
+    ('co_join',    'co_confirm'),
+    ('co_confirm', 'co_end'),
+], called={
+    'co_review':  pk('Review Cart'),
+    'co_addr':    pk('Validate Shipping Address'),
+    'co_payment': pk('Process Payment'),
+    'co_invoice': pk('Send Invoice'),
+    'co_confirm': pk('Confirm Order'),
+}),
+
+# ── Validate Shipping Address ──────────────────────────────────────────────────
+# Start → Parse Address → Check Completeness → [Valid?]
+#   Valid   → Verify Deliverability → End (Validated)
+#   Invalid → Return Validation Error → End (Rejected)
+'Validate Shipping Address': _bpmn('p_val_addr', [
+    ('va_start',   'start',   'Start',                      175, 120),
+    ('va_parse',   'call',    'Parse Address Fields',        355, 120),
+    ('va_check',   'call',    'Check Completeness',          535, 120),
+    ('va_gw',      'xgw',     'Address Valid?',              715, 120),
+    ('va_deliver', 'call',    'Verify Deliverability',       895,  70),
+    ('va_end_ok',  'end',     'Address Validated',          1050,  70),
+    ('va_error',   'call',    'Return Validation Error',     895, 200),
+    ('va_end_rej', 'end',     'Rejected',                   1050, 200),
+], [
+    ('va_start',   'va_parse'),
+    ('va_parse',   'va_check'),
+    ('va_check',   'va_gw'),
+    ('va_gw',      'va_deliver', 'Valid'),
+    ('va_deliver', 'va_end_ok'),
+    ('va_gw',      'va_error',   'Invalid'),
+    ('va_error',   'va_end_rej'),
+], called={
+    'va_parse':   pk('Parse Address Fields'),
+    'va_check':   pk('Check Completeness'),
+    'va_deliver': pk('Verify Deliverability'),
+    'va_error':   pk('Return Validation Error'),
+}),
+
+# ── Process Payment ────────────────────────────────────────────────────────────
+# Start → Tokenise Card Data → Submit to Payment Gateway → [Authorised?]
+#   Authorised → Capture Payment → Record Transaction → End (Success)
+#   Declined   → Decline Transaction → End (Failed)
+'Process Payment': _bpmn('p_proc_pay', [
+    ('pp_start',    'start',   'Start',                        175, 120),
+    ('pp_token',    'call',    'Tokenise Card Data',           355, 120),
+    ('pp_submit',   'call',    'Submit to Payment Gateway',    535, 120),
+    ('pp_gw',       'xgw',     'Authorised?',                  715, 120),
+    ('pp_capture',  'call',    'Capture Payment',              895,  70),
+    ('pp_record',   'call',    'Record Transaction',          1075,  70),
+    ('pp_end_ok',   'end',     'Payment Successful',          1230,  70),
+    ('pp_decline',  'call',    'Decline Transaction',          895, 200),
+    ('pp_end_fail', 'end',     'Payment Failed',              1230, 200),
+], [
+    ('pp_start',   'pp_token'),
+    ('pp_token',   'pp_submit'),
+    ('pp_submit',  'pp_gw'),
+    ('pp_gw',      'pp_capture',  'Authorised'),
+    ('pp_capture', 'pp_record'),
+    ('pp_record',  'pp_end_ok'),
+    ('pp_gw',      'pp_decline',  'Declined'),
+    ('pp_decline', 'pp_end_fail'),
+], called={
+    'pp_token':   pk('Tokenise Card Data'),
+    'pp_submit':  pk('Submit to Payment Gateway'),
+    'pp_capture': pk('Capture Payment'),
+    'pp_record':  pk('Record Transaction'),
+    'pp_decline': pk('Decline Transaction'),
+}),
+
+# ── Send Invoice ───────────────────────────────────────────────────────────────
+# Start → Generate Invoice → Render as PDF → Send Email → Log Delivery → End
+'Send Invoice': _bpmn('p_invoice', [
+    ('si_start',  'start',   'Start',                  175, 100),
+    ('si_gen',    'call',    'Generate Invoice',        355, 100),
+    ('si_pdf',    'call',    'Render as PDF',           535, 100),
+    ('si_send',   'call',    'Send Email to Customer',  715, 100),
+    ('si_log',    'call',    'Log Delivery Status',     895, 100),
+    ('si_end',    'end',     'Invoice Sent',           1050, 100),
+], [
+    ('si_start', 'si_gen'),
+    ('si_gen',   'si_pdf'),
+    ('si_pdf',   'si_send'),
+    ('si_send',  'si_log'),
+    ('si_log',   'si_end'),
+], called={
+    'si_gen':  pk('Generate Invoice'),
+    'si_pdf':  pk('Render as PDF'),
+    'si_send': pk('Send Email to Customer'),
+    'si_log':  pk('Log Delivery Status'),
+}),
+
+# ── Ship Order ─────────────────────────────────────────────────────────────────
+# Start → Pick and Pack (call) → Assign Carrier → Create Shipping Label →
+# Hand Over to Carrier → Update Tracking Status → End
+'Ship Order': _bpmn('p_ship', [
+    ('sh_start',    'start',   'Start',                   175, 100),
+    ('sh_pack',     'call',    'Pick and Pack',            355, 100),
+    ('sh_carrier',  'call',    'Assign Carrier',           535, 100),
+    ('sh_label',    'call',    'Create Shipping Label',    715, 100),
+    ('sh_handover', 'call',    'Hand Over to Carrier',     895, 100),
+    ('sh_tracking', 'call',    'Update Tracking Status',  1075, 100),
+    ('sh_end',      'end',     'Order Shipped',           1230, 100),
+], [
+    ('sh_start',    'sh_pack'),
+    ('sh_pack',     'sh_carrier'),
+    ('sh_carrier',  'sh_label'),
+    ('sh_label',    'sh_handover'),
+    ('sh_handover', 'sh_tracking'),
+    ('sh_tracking', 'sh_end'),
+], called={
+    'sh_pack':     pk('Pick and Pack'),
+    'sh_carrier':  pk('Assign Carrier'),
+    'sh_label':    pk('Create Shipping Label'),
+    'sh_handover': pk('Hand Over to Carrier'),
+    'sh_tracking': pk('Update Tracking Status'),
+}),
+
+# ── Pick and Pack ──────────────────────────────────────────────────────────────
+# Start → Retrieve Order Manifest → Pick Items from Shelves → [All Items Available?]
+#   Yes → Pack Items → Seal Parcel → Apply Shipping Label → End (Ready)
+#   No  → Flag Backorder → End (Partial / Backorder)
+'Pick and Pack': _bpmn('p_pick_pack', [
+    ('pap_start',    'start',  'Start',                      175, 120),
+    ('pap_manifest', 'call',   'Retrieve Order Manifest',    355, 120),
+    ('pap_pick',     'call',   'Pick Items from Shelves',    535, 120),
+    ('pap_gw',       'xgw',    'All Items Available?',       715, 120),
+    ('pap_pack',     'call',   'Pack Items',                 895,  70),
+    ('pap_seal',     'call',   'Seal Parcel',               1075,  70),
+    ('pap_label',    'call',   'Apply Shipping Label',      1255,  70),
+    ('pap_end_ok',   'end',    'Parcel Ready',              1410,  70),
+    ('pap_backorder','call',   'Flag Backorder',             895, 200),
+    ('pap_end_bo',   'end',    'Backorder Created',         1075, 200),
+], [
+    ('pap_start',    'pap_manifest'),
+    ('pap_manifest', 'pap_pick'),
+    ('pap_pick',     'pap_gw'),
+    ('pap_gw',       'pap_pack',      'All Available'),
+    ('pap_pack',     'pap_seal'),
+    ('pap_seal',     'pap_label'),
+    ('pap_label',    'pap_end_ok'),
+    ('pap_gw',       'pap_backorder', 'Items Missing'),
+    ('pap_backorder','pap_end_bo'),
+], called={
+    'pap_manifest':  pk('Retrieve Order Manifest'),
+    'pap_pick':      pk('Pick Items from Shelves'),
+    'pap_pack':      pk('Pack Items'),
+    'pap_seal':      pk('Seal Parcel'),
+    'pap_label':     pk('Apply Shipping Label'),
+    'pap_backorder': pk('Flag Backorder'),
+}),
+
+}  # end _D
+
+
+for proc_en, bpmn_xml in _D.items():
+    pkey = pk(proc_en)
+    ok(f'diagram: {proc_en}',
+       api('PUT', f'/processes/{pkey}/diagram', {'bpmnXml': bpmn_xml}, T))
+
+
 # ── Field Configurations (Mandatory Fields) ─────────────────────────────────────
 print('\n[14] Field configurations (mandatory fields)...')
 
@@ -1538,10 +2185,10 @@ if '_error' not in dhl:
     # DHL team reads Order and Parcel, writes (manipulates) Parcel
     ok('Logistics data access entities',
        api('PUT', f'/organisational-units/{logistics_key}/data-access-entities',
-           {'businessEntityKeys': [ek('Order'), ek('Parcel')]}, T))
+           {'entityKeys': [ek('Order'), ek('Parcel')]}, T))
     ok('Logistics data manipulation entities',
        api('PUT', f'/organisational-units/{logistics_key}/data-manipulation-entities',
-           {'businessEntityKeys': [ek('Parcel')]}, T))
+           {'entityKeys': [ek('Parcel')]}, T))
 else:
     print('  SKIP external org unit (DHL data processor not created)')
 
@@ -1557,10 +2204,10 @@ if '_error' not in stripe:
     # Payment team reads Invoice, writes Payment Transaction
     ok('Payment data access entities',
        api('PUT', f'/organisational-units/{payment_key}/data-access-entities',
-           {'businessEntityKeys': [ek('Invoice')]}, T))
+           {'entityKeys': [ek('Invoice')]}, T))
     ok('Payment data manipulation entities',
        api('PUT', f'/organisational-units/{payment_key}/data-manipulation-entities',
-           {'businessEntityKeys': [ek('Payment Transaction')]}, T))
+           {'entityKeys': [ek('Payment Transaction')]}, T))
 else:
     print('  SKIP external org unit (Stripe data processor not created)')
 

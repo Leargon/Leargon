@@ -41,4 +41,12 @@ interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long>
     override fun findById(id: Long): Optional<OrganisationalUnit>
 
     fun findByLeadId(leadId: Long): List<OrganisationalUnit>
+
+    @Query(
+        value =
+            "SELECT * FROM organisational_units WHERE LOWER(names) LIKE :query" +
+                " OR LOWER(descriptions) LIKE :query LIMIT 20",
+        nativeQuery = true,
+    )
+    fun searchByQuery(query: String): List<OrganisationalUnit>
 }

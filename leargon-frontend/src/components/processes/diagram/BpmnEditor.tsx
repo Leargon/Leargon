@@ -8,6 +8,7 @@ import { Alert, Box, Button, CircularProgress, Snackbar } from '@mui/material';
 import { Save } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useThemeMode } from '../../../context/ThemeContext';
 import {
   useGetProcessDiagram,
   useSaveProcessDiagram,
@@ -58,6 +59,7 @@ interface Props {
 
 const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const { t } = useTranslation();
+  const { effectiveMode } = useThemeMode();
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | BpmnViewer | null>(null);
@@ -80,20 +82,25 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       : new BpmnViewer({ container: containerRef.current });
 
     modelerRef.current = instance;
-    instance.importXML(xml).catch(console.error);
 
-    if (canEdit) {
-      // Listen for newly added shapes — open dialog for tasks / sub-processes
-      // bpmn-js uses a didi injector; cast through unknown to reach .get()
-      type BpmnInstance = { get: (name: string) => unknown };
-      type EventBus = { on: (event: string, cb: (e: { element: { id: string; type: string } }) => void) => void };
-      const eventBus = (instance as unknown as BpmnInstance).get('eventBus') as EventBus;
-      eventBus.on('shape.added', (event) => {
-        if (LINKABLE_TYPES.has(event.element.type)) {
-          setPending({ element: event.element });
-        }
-      });
-    }
+    // Register the shape.added listener only AFTER importXML resolves so that
+    // every event fired during XML loading has already settled.  Registering
+    // inside .then() is race-condition-free; the importDone-flag approach is
+    // not because bpmn-js can fire shape.added events in microtasks that run
+    // after the promise resolves.
+    instance.importXML(xml)
+      .then(() => {
+        if (!canEdit) return;
+        type BpmnInstance = { get: (name: string) => unknown };
+        type EventBus = { on: (event: string, cb: (e: { element: { id: string; type: string } }) => void) => void };
+        const eventBus = (instance as unknown as BpmnInstance).get('eventBus') as EventBus;
+        eventBus.on('shape.added', (event) => {
+          if (LINKABLE_TYPES.has(event.element.type)) {
+            setPending({ element: event.element });
+          }
+        });
+      })
+      .catch(console.error);
 
     return () => {
       instance.destroy();
@@ -174,6 +181,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       {/* bpmn-js mounts here */}
       <Box
         ref={containerRef}
+        data-color-scheme={effectiveMode}
         sx={{
           height: 500,
           border: 1,
