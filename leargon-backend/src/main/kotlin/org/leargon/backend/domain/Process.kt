@@ -113,6 +113,9 @@ class Process {
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
     var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
 
+    @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
+    var itSystems: MutableSet<ItSystem> = mutableSetOf()
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

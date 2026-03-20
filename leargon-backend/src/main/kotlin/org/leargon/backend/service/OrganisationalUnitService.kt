@@ -10,6 +10,9 @@ import org.leargon.backend.mapper.OrganisationalUnitMapper
 import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
+import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
+import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.UserRepository
@@ -21,7 +24,9 @@ open class OrganisationalUnitService(
     private val processRepository: ProcessRepository,
     private val userRepository: UserRepository,
     private val localeService: LocaleService,
-    private val organisationalUnitMapper: OrganisationalUnitMapper
+    private val organisationalUnitMapper: OrganisationalUnitMapper,
+    private val dataProcessorRepository: DataProcessorRepository,
+    private val businessEntityRepository: BusinessEntityRepository
 ) {
 
     @Transactional
@@ -148,6 +153,40 @@ open class OrganisationalUnitService(
             }
         }
 
+        unit = organisationalUnitRepository.update(unit)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun updateExternalFields(key: String, request: UpdateOrgUnitExternalFieldsRequest): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        if (request.isExternal != null) unit.isExternal = request.isExternal
+        unit.externalCompanyName = request.externalCompanyName
+        unit.countryOfExecution = request.countryOfExecution
+        unit.linkedDataProcessor = if (request.linkedDataProcessorKey != null) {
+            dataProcessorRepository.findByKey(request.linkedDataProcessorKey)
+                .orElseThrow { ResourceNotFoundException("Data processor not found: ${request.linkedDataProcessorKey}") }
+        } else {
+            null
+        }
+        unit = organisationalUnitRepository.update(unit)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun updateDataAccessEntities(key: String, entityKeys: List<String>): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        val repo = businessEntityRepository
+        unit.dataAccessEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
+        unit = organisationalUnitRepository.update(unit)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun updateDataManipulationEntities(key: String, entityKeys: List<String>): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        val repo = businessEntityRepository
+        unit.dataManipulationEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
         unit = organisationalUnitRepository.update(unit)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }

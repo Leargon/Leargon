@@ -27,6 +27,7 @@ import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
 import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
+import org.leargon.backend.model.UpdateProcessItSystemsRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessLegalBasisRequest
 import org.leargon.backend.model.UpdateProcessPurposeRequest
@@ -36,6 +37,7 @@ import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.DataProcessorService
 import org.leargon.backend.service.DpiaService
+import org.leargon.backend.service.ItSystemService
 import org.leargon.backend.service.ProcessDiagramService
 import org.leargon.backend.service.ProcessService
 import org.leargon.backend.service.UserService
@@ -50,7 +52,8 @@ open class ProcessController(
     private val securityService: SecurityService,
     private val processMapper: ProcessMapper,
     private val dataProcessorService: DataProcessorService,
-    private val dpiaService: DpiaService
+    private val dpiaService: DpiaService,
+    private val itSystemService: ItSystemService
 ) : ProcessApi {
 
     override fun getAllProcesses(): List<ProcessResponse> =
@@ -165,6 +168,11 @@ open class ProcessController(
     @Secured("ROLE_ADMIN")
     override fun updateProcessDataProcessors(key: String, @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest): HttpResponse<Void> {
         dataProcessorService.updateProcessDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
+        return HttpResponse.noContent()
+    }
+
+    override fun updateProcessItSystems(key: String, @Valid @Body updateProcessItSystemsRequest: UpdateProcessItSystemsRequest): HttpResponse<Void> {
+        itSystemService.updateProcessItSystems(key, updateProcessItSystemsRequest)
         return HttpResponse.noContent()
     }
 

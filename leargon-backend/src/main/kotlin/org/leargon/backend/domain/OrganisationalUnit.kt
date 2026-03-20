@@ -62,6 +62,35 @@ class OrganisationalUnit {
     @ManyToMany(mappedBy = "parents", fetch = FetchType.LAZY)
     var children: MutableSet<OrganisationalUnit> = mutableSetOf()
 
+    @Column(name = "is_external", nullable = false)
+    var isExternal: Boolean = false
+
+    @Column(name = "external_company_name", length = 500)
+    var externalCompanyName: String? = null
+
+    @Column(name = "country_of_execution", length = 2)
+    var countryOfExecution: String? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linked_data_processor_id")
+    var linkedDataProcessor: DataProcessor? = null
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "org_unit_data_access_entities",
+        joinColumns = [JoinColumn(name = "org_unit_id")],
+        inverseJoinColumns = [JoinColumn(name = "business_entity_id")]
+    )
+    var dataAccessEntities: MutableSet<BusinessEntity> = mutableSetOf()
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "org_unit_data_manipulation_entities",
+        joinColumns = [JoinColumn(name = "org_unit_id")],
+        inverseJoinColumns = [JoinColumn(name = "business_entity_id")]
+    )
+    var dataManipulationEntities: MutableSet<BusinessEntity> = mutableSetOf()
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

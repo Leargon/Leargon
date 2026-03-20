@@ -4,6 +4,7 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
+import org.leargon.backend.model.ItSystemSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessSummaryResponse
@@ -70,6 +71,7 @@ open class ProcessMapper(
             .securityMeasures(process.securityMeasures)
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
             .dataProcessors(process.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
     }

@@ -16,15 +16,30 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText';
+import type { ProcessSummaryResponse } from './processSummaryResponse';
 
-export interface OrganisationalUnitSummaryResponse {
-  /** Organisational unit key */
+export interface ItSystemResponse {
+  /** IT system key */
   key: string;
-  /** Organisational unit name in default locale */
-  name: string;
+  names: LocalizedText[];
+  descriptions: LocalizedText[];
   /**
-   * Whether this is an external unit (body leasing / contractor)
+   * Software vendor / provider name
    * @nullable
    */
-  isExternal?: boolean | null;
+  vendor?: string | null;
+  /**
+   * URL for documentation or system login
+   * @nullable
+   */
+  systemUrl?: string | null;
+  /**
+   * Processes that use this IT system
+   * @nullable
+   */
+  linkedProcesses?: ProcessSummaryResponse[] | null;
+  createdAt: string;
+  /** @nullable */
+  updatedAt: string | null;
 }

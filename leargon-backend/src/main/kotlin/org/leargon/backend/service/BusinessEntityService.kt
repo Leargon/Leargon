@@ -27,6 +27,7 @@ import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRelationshipRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.TranslationLinkRepository
 import org.leargon.backend.repository.UserRepository
 import org.leargon.backend.util.SlugUtil
 
@@ -38,6 +39,7 @@ open class BusinessEntityService(
     private val userRepository: UserRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val boundedContextRepository: BoundedContextRepository,
+    private val translationLinkRepository: TranslationLinkRepository,
     private val localeService: LocaleService,
     private val businessEntityMapper: BusinessEntityMapper
 ) {
@@ -268,6 +270,18 @@ open class BusinessEntityService(
             businessEntityRepository.update(child)
         }
         entity.children.clear()
+
+        // Clear interface/implementation relationships from both sides to prevent FK violations
+        entity.implementationEntities.toList().forEach { impl ->
+            impl.interfaceEntities.remove(entity)
+            businessEntityRepository.update(impl)
+        }
+        entity.interfaceEntities.clear()
+        businessEntityRepository.update(entity)
+
+        // Delete translation links referencing this entity
+        translationLinkRepository.deleteByFirstEntityId(entity.id!!)
+        translationLinkRepository.deleteBySecondEntityId(entity.id!!)
 
         businessEntityRepository.delete(entity)
     }

@@ -2,7 +2,7 @@
 seed-demo.py — Reset and seed the Léargon e-commerce demo.
 
 Phase 1 (WIPE): Deletes all business data + non-admin users in safe FK order:
-  classifications → processes → entities → domains → org units → users
+  IT systems → data processors → classifications → processes → entities → domains → org units → users
 
 Phase 2 (SEED): Creates fresh e-commerce demo data:
   locales · users · classifications · org units (+ hierarchy + leads) · domains
@@ -10,12 +10,16 @@ Phase 2 (SEED): Creates fresh e-commerce demo data:
   processes (+ hierarchy + bounded-contexts + owners + executing units) ·
   relationships · classification assignments · field configurations (mandatory fields) ·
   data processors (Art. 9 revDSG) · cross-border transfers (Art. 16-17 revDSG) ·
-  context relationships · domain events (+ consumers + process links) · translation links
+  context relationships · domain events (+ consumers + process links) · translation links ·
+  IT systems (+ linked processes) · external org units (body-leasing, DPA link, data access)
 
 Usage:
   python3 seed-demo.py
 """
 import urllib.request, json, sys
+
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 BASE           = 'http://localhost:8081'
 ADMIN_EMAIL    = 'admin@leargon.local'
@@ -114,14 +118,17 @@ def wipe(label, list_path, delete_path_fn, sort_key=None):
     print(f'  deleted {len(items)} {label}')
 
 
-print('\n[0/6] Data processors...')
+print('\n[0/7] IT systems...')
+wipe('IT systems', '/it-systems', lambda k: f'/it-systems/{k}')
+
+print('\n[1/7] Data processors...')
 wipe('data processors', '/data-processors', lambda k: f'/data-processors/{k}')
 
-print('\n[1/6] Classifications...')
+print('\n[2/7] Classifications...')
 wipe('classifications', '/classifications',
      lambda k: f'/classifications/{k}')
 
-print('[2/6] Processes (clear diagrams, deepest children first)...')
+print('[3/7] Processes (clear diagrams, deepest children first)...')
 processes = api('GET', '/processes', token=T)
 if isinstance(processes, list):
     minimal_diagram = {
@@ -147,22 +154,40 @@ if isinstance(processes, list):
         api('DELETE', f'/processes/{p["key"]}', token=T)
     print(f'  deleted {len(processes_sorted)} processes')
 
-print('[3/6] Business entities (children first)...')
+print('[4a/7] Translation links...')
+wipe('translation links', '/translation-links', lambda k: f'/translation-links/{k}')
+
+print('[4/7] Business entities (children first)...')
 wipe('entities', '/business-entities',
      lambda k: f'/business-entities/{k}',
      sort_key=lambda e: -e['key'].count('.'))
 
-print('[4/6] Business domains (children first)...')
+print('[5a/7] Domain events...')
+wipe('domain events', '/domain-events', lambda k: f'/domain-events/{k}')
+
+print('[5b/7] Context relationships...')
+wipe('context relationships', '/context-relationships', lambda k: f'/context-relationships/{k}')
+
+print('[5c/7] Bounded contexts (per domain)...')
+all_domains = api('GET', '/business-domains', token=T)
+if isinstance(all_domains, list):
+    for domain in all_domains:
+        bcs = api('GET', f'/business-domains/{domain["key"]}/bounded-contexts', token=T)
+        if isinstance(bcs, list):
+            for bc in bcs:
+                api('DELETE', f'/bounded-contexts/{bc["key"]}', token=T)
+
+print('[5/7] Business domains (children first)...')
 wipe('domains', '/business-domains',
      lambda k: f'/business-domains/{k}',
      sort_key=lambda d: -d['key'].count('.'))
 
-print('[5/6] Organisational units...')
+print('[6/7] Organisational units...')
 wipe('org units', '/organisational-units',
      lambda k: f'/organisational-units/{k}',
      sort_key=lambda o: -o['key'].count('.'))
 
-print('[6/6] Non-admin users...')
+print('[7/7] Non-admin users...')
 all_users = api('GET', '/administration/users', token=T)
 if isinstance(all_users, list):
     deleted = 0
@@ -519,6 +544,8 @@ for (en_name, parent_en, domain_type, nms, descs) in domain_data:
         if en_name in domain_vision:
             api('PUT', f'/business-domains/{dkey}/vision-statement',
                 {'visionStatement': domain_vision[en_name]}, T)
+        api('POST', f'/business-domains/{dkey}/bounded-contexts',
+            {'names': [{'locale': 'en', 'text': en_name}]}, T)
         ok(f'{en_name} (type={domain_type})', result)
     else:
         domain_keys[en_name] = en_name.lower().replace(' ', '-')
@@ -527,8 +554,10 @@ def dk(en_name):
     return domain_keys.get(en_name, en_name.lower().replace(' ', '-'))
 
 def bck(en_name):
-    """Default bounded context key for a domain: {domainKey}/default"""
-    return dk(en_name) + '/default'
+    """Bounded context key for a domain: {domainKey}/{domainSlug}"""
+    dkey = dk(en_name)
+    bc_slug = dkey.rsplit('.', 1)[-1]
+    return f"{dkey}/{bc_slug}"
 
 
 # ── 6. Business entities ────────────────────────────────────────────────────────
@@ -1408,6 +1437,132 @@ for (first_en, second_en, note) in translation_links:
            'secondEntityKey': ek(second_en),
            'semanticDifferenceNote': note,
        }, T))
+
+
+# ── IT Systems ───────────────────────────────────────────────────────────────────
+print('\n[19] IT systems...')
+
+# (en_name, vendor, system_url, linked_process_en_names)
+it_system_defs = [
+    (
+        'Shopify', 'Shopify Inc.',
+        'https://admin.shopify.com',
+        n4('Shopify', 'Shopify', 'Shopify', 'Shopify', 'Shopify'),
+        n4('E-commerce storefront platform for product catalogue, cart and checkout.',
+           'E-Commerce-Plattform für Produktkatalog, Warenkorb und Checkout.',
+           "Plateforme e-commerce pour le catalogue produits, le panier et le paiement.",
+           "Piattaforma e-commerce per catalogo prodotti, carrello e checkout.",
+           'Plataforma de comercio electrónico para catálogo, carrito y pago.'),
+        ['Search for Product', 'Add to Cart', 'Checkout', 'Place an Order'],
+    ),
+    (
+        'Stripe', 'Stripe Inc.',
+        'https://dashboard.stripe.com',
+        n4('Stripe', 'Stripe', 'Stripe', 'Stripe', 'Stripe'),
+        n4('Payment gateway for card processing, refunds and financial reconciliation.',
+           'Zahlungs-Gateway für Kartenabwicklung, Rückerstattungen und Abstimmung.',
+           'Passerelle de paiement pour le traitement des cartes et la réconciliation.',
+           'Gateway di pagamento per carte, rimborsi e riconciliazione finanziaria.',
+           'Pasarela de pago para tarjetas, reembolsos y conciliación financiera.'),
+        ['Process Payment', 'Send Invoice'],
+    ),
+    (
+        'Klaviyo', 'Klaviyo Inc.',
+        'https://www.klaviyo.com',
+        n4('Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo'),
+        n4('Email and SMS marketing automation platform for customer lifecycle campaigns.',
+           'E-Mail- und SMS-Marketing-Automatisierung für Kundenkampagnen.',
+           "Plateforme d'automatisation marketing email et SMS pour les campagnes clients.",
+           'Piattaforma di automazione marketing email e SMS per campagne clienti.',
+           'Plataforma de automatización de marketing por email y SMS para campañas.'),
+        ['Customer Registration', 'Confirm Email Address'],
+    ),
+    (
+        'Manhattan WMS', 'Manhattan Associates',
+        'https://manh.com',
+        n4('Manhattan WMS', 'Manhattan WMS', 'Manhattan WMS', 'Manhattan WMS', 'Manhattan WMS'),
+        n4('Warehouse Management System for stock control, pick/pack and parcel dispatch.',
+           'Lagerverwaltungssystem für Bestandskontrolle, Kommissionierung und Paketversand.',
+           "Système de gestion d'entrepôt pour le contrôle des stocks et l'expédition.",
+           'Sistema di gestione magazzino per controllo scorte, prelievo e spedizione.',
+           'Sistema de gestión de almacén para control de stock, picking y expedición.'),
+        ['Pick and Pack', 'Ship Order'],
+    ),
+    (
+        'SAP S/4HANA', 'SAP SE',
+        'https://www.sap.com/products/erp/s4hana.html',
+        n4('SAP S/4HANA', 'SAP S/4HANA', 'SAP S/4HANA', 'SAP S/4HANA', 'SAP S/4HANA'),
+        n4('Enterprise resource planning system for financial accounting and invoice management.',
+           'ERP-System für Finanzbuchhaltung und Rechnungsverwaltung.',
+           "Système ERP pour la comptabilité financière et la gestion des factures.",
+           'Sistema ERP per contabilità finanziaria e gestione delle fatture.',
+           'Sistema ERP para contabilidad financiera y gestión de facturas.'),
+        ['Send Invoice'],
+    ),
+]
+
+it_system_keys = {}
+for (short_name, vendor, url, nms, descs, linked_procs) in it_system_defs:
+    result = api('POST', '/it-systems', {
+        'names': nms, 'descriptions': descs,
+        'vendor': vendor, 'systemUrl': url,
+    }, T)
+    if '_error' not in result:
+        isk = result['key']
+        it_system_keys[short_name] = isk
+        if linked_procs:
+            proc_keys = [pk(p) for p in linked_procs]
+            ok(f'{short_name} linked processes',
+               api('PUT', f'/it-systems/{isk}/linked-processes',
+                   {'processKeys': proc_keys}, T))
+        ok(f'IT system: {short_name} (vendor={vendor})', result)
+    else:
+        it_system_keys[short_name] = short_name.lower().replace(' ', '-').replace('/', '-')
+
+
+# ── External Org Units ────────────────────────────────────────────────────────────
+print('\n[20] External org units (body leasing)...')
+
+logistics_key = ou_keys.get('Logistics', 'logistics')
+payment_key   = ou_keys.get('Payment', 'payment')
+
+# Mark Logistics as an external unit (body-leased to DHL)
+if '_error' not in dhl:
+    ok('Logistics → external (DHL Logistics GmbH)',
+       api('PUT', f'/organisational-units/{logistics_key}/external-fields', {
+           'isExternal': True,
+           'externalCompanyName': 'DHL Logistics GmbH',
+           'countryOfExecution': 'DE',
+           'linkedDataProcessorKey': dhl['key'],
+       }, T))
+    # DHL team reads Order and Parcel, writes (manipulates) Parcel
+    ok('Logistics data access entities',
+       api('PUT', f'/organisational-units/{logistics_key}/data-access-entities',
+           {'businessEntityKeys': [ek('Order'), ek('Parcel')]}, T))
+    ok('Logistics data manipulation entities',
+       api('PUT', f'/organisational-units/{logistics_key}/data-manipulation-entities',
+           {'businessEntityKeys': [ek('Parcel')]}, T))
+else:
+    print('  SKIP external org unit (DHL data processor not created)')
+
+# Mark Payment as an external unit (outsourced payment operations team)
+if '_error' not in stripe:
+    ok('Payment → external (Stripe Managed Services)',
+       api('PUT', f'/organisational-units/{payment_key}/external-fields', {
+           'isExternal': True,
+           'externalCompanyName': 'Stripe Managed Services Ltd.',
+           'countryOfExecution': 'IE',
+           'linkedDataProcessorKey': stripe['key'],
+       }, T))
+    # Payment team reads Invoice, writes Payment Transaction
+    ok('Payment data access entities',
+       api('PUT', f'/organisational-units/{payment_key}/data-access-entities',
+           {'businessEntityKeys': [ek('Invoice')]}, T))
+    ok('Payment data manipulation entities',
+       api('PUT', f'/organisational-units/{payment_key}/data-manipulation-entities',
+           {'businessEntityKeys': [ek('Payment Transaction')]}, T))
+else:
+    print('  SKIP external org unit (Stripe data processor not created)')
 
 
 # ── Summary ─────────────────────────────────────────────────────────────────────

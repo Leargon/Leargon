@@ -52,6 +52,7 @@ import type {
   UpdateLinkedDataProcessorsRequest,
   UpdateOrgUnitParentsRequest,
   UpdateProcessCodeRequest,
+  UpdateProcessItSystemsRequest,
   UpdateProcessLegalBasisRequest,
   UpdateProcessOwnerRequest,
   UpdateProcessPurposeRequest,
@@ -3049,5 +3050,106 @@ export const useUpdateProcessDataProcessors = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateProcessDataProcessorsMutationOptions(options), queryClient);
+    }
+    /**
+ * Replaces the list of IT systems for a process. Requires process owner or ROLE_ADMIN.
+ * @summary Update IT systems for process
+ */
+export type updateProcessItSystemsResponse204 = {
+  data: void
+  status: 204
+}
+
+export type updateProcessItSystemsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessItSystemsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessItSystemsResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateProcessItSystemsResponseSuccess = (updateProcessItSystemsResponse204) & {
+  headers: Headers;
+};
+export type updateProcessItSystemsResponseError = (updateProcessItSystemsResponse401 | updateProcessItSystemsResponse403 | updateProcessItSystemsResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessItSystemsResponse = (updateProcessItSystemsResponseSuccess | updateProcessItSystemsResponseError)
+
+export const getUpdateProcessItSystemsUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/it-systems`
+}
+
+export const updateProcessItSystems = async (key: string,
+    updateProcessItSystemsRequest: UpdateProcessItSystemsRequest, options?: RequestInit): Promise<updateProcessItSystemsResponse> => {
+  
+  return customAxios<updateProcessItSystemsResponse>(getUpdateProcessItSystemsUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessItSystemsRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessItSystemsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessItSystems>>, TError,{key: string;data: UpdateProcessItSystemsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessItSystems>>, TError,{key: string;data: UpdateProcessItSystemsRequest}, TContext> => {
+
+const mutationKey = ['updateProcessItSystems'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessItSystems>>, {key: string;data: UpdateProcessItSystemsRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessItSystems(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessItSystemsMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessItSystems>>>
+    export type UpdateProcessItSystemsMutationBody = UpdateProcessItSystemsRequest
+    export type UpdateProcessItSystemsMutationError = void
+
+    /**
+ * @summary Update IT systems for process
+ */
+export const useUpdateProcessItSystems = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessItSystems>>, TError,{key: string;data: UpdateProcessItSystemsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessItSystems>>,
+        TError,
+        {key: string;data: UpdateProcessItSystemsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessItSystemsMutationOptions(options), queryClient);
     }
     

@@ -51,8 +51,15 @@ import {
   useGetAllContextRelationships,
   getGetAllContextRelationshipsQueryKey,
   useCreateContextRelationship,
+  useUpdateContextRelationship,
   useDeleteContextRelationship,
 } from '../../api/generated/context-relationship/context-relationship';
+import {
+  useGetAllDomainEvents,
+  getGetAllDomainEventsQueryKey,
+  useCreateDomainEvent,
+  useDeleteDomainEvent,
+} from '../../api/generated/domain-event/domain-event';
 import {
   useGetBoundedContextsForDomain,
   getGetBoundedContextsForDomainQueryKey,
@@ -77,6 +84,7 @@ import type {
   ClassificationResponse,
   ContextRelationshipResponse,
   BoundedContextResponse,
+  DomainEventResponse,
 } from '../../api/generated/model';
 import type { ContextMapperRelationshipType } from '../../api/generated/model/contextMapperRelationshipType';
 
@@ -161,10 +169,93 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const [addRelError, setAddRelError] = useState<string | null>(null);
 
   const createRel = useCreateContextRelationship();
+  const updateRel = useUpdateContextRelationship();
   const deleteRel = useDeleteContextRelationship();
 
   const invalidateRels = () => {
     queryClient.invalidateQueries({ queryKey: getGetAllContextRelationshipsQueryKey() });
+  };
+
+  // Edit relationship state
+  const [editRelOpen, setEditRelOpen] = useState(false);
+  const [editRelId, setEditRelId] = useState<number | null>(null);
+  const [editRelType, setEditRelType] = useState<ContextMapperRelationshipType>('CUSTOMER_SUPPLIER');
+  const [editRelUpstreamRole, setEditRelUpstreamRole] = useState('');
+  const [editRelDownstreamRole, setEditRelDownstreamRole] = useState('');
+  const [editRelDescription, setEditRelDescription] = useState('');
+  const [editRelError, setEditRelError] = useState<string | null>(null);
+
+  const handleOpenEditRel = (rel: ContextRelationshipResponse) => {
+    setEditRelId(rel.id as number);
+    setEditRelType(rel.relationshipType as ContextMapperRelationshipType);
+    setEditRelUpstreamRole(rel.upstreamRole || '');
+    setEditRelDownstreamRole(rel.downstreamRole || '');
+    setEditRelDescription(rel.description || '');
+    setEditRelError(null);
+    setEditRelOpen(true);
+  };
+
+  const handleSaveEditRel = async () => {
+    if (!editRelId) return;
+    setEditRelError(null);
+    try {
+      await updateRel.mutateAsync({
+        id: editRelId,
+        data: {
+          relationshipType: editRelType,
+          upstreamRole: editRelUpstreamRole || undefined,
+          downstreamRole: editRelDownstreamRole || undefined,
+          description: editRelDescription || undefined,
+        },
+      });
+      invalidateRels();
+      setEditRelOpen(false);
+    } catch (e) {
+      setEditRelError((e as Error).message);
+    }
+  };
+
+  // Domain events
+  const { data: allEventsResponse } = useGetAllDomainEvents();
+  const allEvents = (allEventsResponse?.data as DomainEventResponse[] | undefined) || [];
+  const bcKeys = new Set(boundedContexts.map((bc) => bc.key));
+  const domainEventsList = allEvents.filter(
+    (ev) => ev.publishingBoundedContext && bcKeys.has(ev.publishingBoundedContext.key),
+  );
+
+  const createDomainEvent = useCreateDomainEvent();
+  const deleteDomainEvent = useDeleteDomainEvent();
+
+  const [addEventOpen, setAddEventOpen] = useState(false);
+  const [addEventBcKey, setAddEventBcKey] = useState<string | null>(null);
+  const [addEventName, setAddEventName] = useState('');
+  const [addEventError, setAddEventError] = useState('');
+
+  const invalidateEvents = () => {
+    queryClient.invalidateQueries({ queryKey: getGetAllDomainEventsQueryKey() });
+  };
+
+  const handleAddEvent = async () => {
+    if (!addEventBcKey || !addEventName.trim()) return;
+    setAddEventError('');
+    try {
+      await createDomainEvent.mutateAsync({
+        data: {
+          publishingBoundedContextKey: addEventBcKey,
+          names: [{ locale: 'en', text: addEventName.trim() }],
+        },
+      });
+      invalidateEvents();
+      setAddEventOpen(false);
+      setAddEventName('');
+    } catch {
+      setAddEventError('Failed to create domain event');
+    }
+  };
+
+  const handleDeleteEvent = async (key: string) => {
+    await deleteDomainEvent.mutateAsync({ key });
+    invalidateEvents();
   };
 
   const handleAddRel = async () => {
@@ -657,6 +748,15 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 {isAdmin && (
                   <IconButton
                     size="small"
+                    onClick={() => handleOpenEditRel(rel)}
+                    title={t('domain.editRelationship')}
+                  >
+                    <Edit fontSize="small" />
+                  </IconButton>
+                )}
+                {isAdmin && (
+                  <IconButton
+                    size="small"
                     color="error"
                     onClick={() => rel.id && handleDeleteRel(rel.id as number)}
                     title={t('domain.deleteRelationship')}
@@ -667,6 +767,51 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               </Paper>
             );
           })}
+        </Box>
+      )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Domain Events */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <Typography variant="subtitle2">{t('boundedContext.domainEvents')}</Typography>
+        {isAdmin && boundedContexts.length > 0 && (
+          <Button
+            size="small"
+            startIcon={<Add />}
+            onClick={() => {
+              setAddEventBcKey(boundedContexts[0]?.key || null);
+              setAddEventName('');
+              setAddEventError('');
+              setAddEventOpen(true);
+            }}
+          >
+            {t('domainEvent.create')}
+          </Button>
+        )}
+      </Box>
+      {domainEventsList.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('boundedContext.noDomainEvents')}</Typography>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          {domainEventsList.map((ev) => (
+            <Paper key={ev.key} variant="outlined" sx={{ p: 1.5, mb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={500}>{getLocalizedText(ev.names, ev.key)}</Typography>
+                <Typography variant="caption" color="text.secondary">{ev.publishingBoundedContext?.name}</Typography>
+              </Box>
+              {isAdmin && (
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleDeleteEvent(ev.key)}
+                  title={t('domainEvent.deleteEvent')}
+                >
+                  <Delete fontSize="small" />
+                </IconButton>
+              )}
+            </Paper>
+          ))}
         </Box>
       )}
 
@@ -923,6 +1068,70 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             disabled={!addRelUpstreamBcKey || !addRelDownstreamBcKey || createRel.isPending}
           >
             {createRel.isPending ? t('common.saving') : t('common.create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Context Relationship Dialog */}
+      <Dialog open={editRelOpen} onClose={() => setEditRelOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domain.editRelationship')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          <FormControl size="small">
+            <InputLabel>{t('domain.relationshipType')}</InputLabel>
+            <Select
+              value={editRelType}
+              onChange={(e: SelectChangeEvent) => setEditRelType(e.target.value as ContextMapperRelationshipType)}
+              label={t('domain.relationshipType')}
+            >
+              {RELATIONSHIP_TYPES.map((rt) => (
+                <MenuItem key={rt} value={rt}>{t(`contextRelationshipType.${rt}` as never)}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField size="small" label={t('domain.upstreamRole')} value={editRelUpstreamRole} onChange={(e) => setEditRelUpstreamRole(e.target.value)} />
+          <TextField size="small" label={t('domain.downstreamRole')} value={editRelDownstreamRole} onChange={(e) => setEditRelDownstreamRole(e.target.value)} />
+          <TextField size="small" label={t('domain.description')} value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)} multiline rows={2} />
+          {editRelError && <Alert severity="error">{editRelError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditRelOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleSaveEditRel} variant="contained" disabled={updateRel.isPending}>
+            {updateRel.isPending ? t('common.saving') : t('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Domain Event Dialog */}
+      <Dialog open={addEventOpen} onClose={() => setAddEventOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domainEvent.create')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          <Autocomplete
+            options={boundedContexts}
+            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
+            value={boundedContexts.find((bc) => bc.key === addEventBcKey) || null}
+            onChange={(_, newVal) => setAddEventBcKey(newVal?.key || null)}
+            renderInput={(params) => <TextField {...params} size="small" label={t('domainEvent.publishingBoundedContext')} />}
+            isOptionEqualToValue={(option, value) => option.key === value.key}
+            size="small"
+          />
+          <TextField
+            size="small"
+            label="Event Name (English)"
+            value={addEventName}
+            onChange={(e) => setAddEventName(e.target.value)}
+            fullWidth
+            autoFocus
+          />
+          {addEventError && <Alert severity="error">{addEventError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddEventOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={handleAddEvent}
+            variant="contained"
+            disabled={!addEventBcKey || !addEventName.trim() || createDomainEvent.isPending}
+          >
+            {createDomainEvent.isPending ? t('common.saving') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

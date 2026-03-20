@@ -17,14 +17,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export interface OrganisationalUnitSummaryResponse {
-  /** Organisational unit key */
-  key: string;
-  /** Organisational unit name in default locale */
-  name: string;
-  /**
-   * Whether this is an external unit (body leasing / contractor)
-   * @nullable
-   */
-  isExternal?: boolean | null;
+export interface UpdateOrgUnitEntityLinksRequest {
+  /** Keys of business entities to link */
+  entityKeys: string[];
 }

@@ -24,4 +24,6 @@ interface BoundedContextRepository : JpaRepository<BoundedContext, Long> {
     fun existsByKey(key: String): Boolean
 
     fun countByDomainId(domainId: Long): Long
+
+    fun deleteByDomainId(domainId: Long)
 }

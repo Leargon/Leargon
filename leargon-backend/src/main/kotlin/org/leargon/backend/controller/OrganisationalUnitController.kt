@@ -19,6 +19,8 @@ import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
+import org.leargon.backend.model.UpdateOrgUnitEntityLinksRequest
+import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
@@ -102,6 +104,18 @@ open class OrganisationalUnitController(
         classificationService.assignClassificationsToOrgUnit(key, classificationAssignmentRequest, currentUser)
         return organisationalUnitService.getByKeyAsResponse(key)
     }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateOrgUnitExternalFields(key: String, @Valid @Body updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest): OrganisationalUnitResponse =
+        organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest)
+
+    @Secured("ROLE_ADMIN")
+    override fun updateOrgUnitDataAccessEntities(key: String, @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest): OrganisationalUnitResponse =
+        organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+
+    @Secured("ROLE_ADMIN")
+    override fun updateOrgUnitDataManipulationEntities(key: String, @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest): OrganisationalUnitResponse =
+        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
 
     private fun getCurrentUser(): User {
         val email = securityService.username()

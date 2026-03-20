@@ -25,4 +25,6 @@ interface DomainEventRepository : JpaRepository<DomainEvent, Long> {
     override fun findById(id: Long): Optional<DomainEvent>
 
     fun findByPublishingBoundedContextKey(key: String): List<DomainEvent>
+
+    fun deleteByPublishingBoundedContextId(boundedContextId: Long)
 }

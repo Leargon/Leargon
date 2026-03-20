@@ -30,6 +30,7 @@ import ProcessLandscapePage from './pages/ProcessLandscapePage';
 import OrgChartPage from './pages/OrgChartPage';
 import ContextMapPage from './pages/ContextMapPage';
 import EventFlowPage from './pages/EventFlowPage';
+import ItSystemsPage from './pages/ItSystemsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,6 +100,8 @@ const ThemedRoutes: React.FC = () => {
                   <Route path="/diagrams/organisation" element={<OrgChartPage />} />
                   <Route path="/diagrams/context-map" element={<ContextMapPage />} />
                   <Route path="/diagrams/event-flow" element={<EventFlowPage />} />
+                  <Route path="/it-systems" element={<ItSystemsPage />} />
+                  <Route path="/it-systems/:key" element={<ItSystemsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                 </Route>
 

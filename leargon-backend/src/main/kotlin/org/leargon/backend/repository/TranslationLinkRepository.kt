@@ -24,4 +24,8 @@ interface TranslationLinkRepository : JpaRepository<TranslationLink, Long> {
     override fun findById(id: Long): java.util.Optional<TranslationLink>
 
     fun existsByFirstEntityIdAndSecondEntityId(firstEntityId: Long, secondEntityId: Long): Boolean
+
+    fun deleteByFirstEntityId(entityId: Long)
+
+    fun deleteBySecondEntityId(entityId: Long)
 }

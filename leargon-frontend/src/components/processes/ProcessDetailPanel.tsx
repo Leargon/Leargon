@@ -68,6 +68,10 @@ import { useGetAllBusinessDomains } from '../../api/generated/business-domain/bu
 
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
+import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
+import {
+  useUpdateProcessItSystems,
+} from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -90,6 +94,7 @@ import type {
   UserResponse,
   OrganisationalUnitResponse,
   CrossBorderTransferEntry,
+  ItSystemResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
@@ -158,6 +163,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
   const { data: allOrgUnitsResponse } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
+  const { data: allItSystemsResponse } = useGetAllItSystems();
+  const allItSystems = (allItSystemsResponse?.data as ItSystemResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetProcessDpia(processKey, {
     query: { retry: false },
   });
@@ -206,6 +213,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateCrossBorderTransfers = useUpdateProcessCrossBorderTransfers();
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
+  const updateItSystems = useUpdateProcessItSystems();
 
   // Cross-border transfers dialog state
   const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
@@ -308,6 +316,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // IT Systems inline edit
+  const itSystemsEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateItSystems.mutateAsync({ key: processKey, data: { itSystemKeys: keys } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different process
   useEffect(() => {
     namesEdit.cancel();
@@ -320,6 +336,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     execUnitsEdit.cancel();
     purposeEdit.cancel();
     securityMeasuresEdit.cancel();
+    itSystemsEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
 
@@ -741,6 +758,63 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </Box>
         ) : (
           <Typography variant="body2" color="text.secondary">No data processors linked</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* IT Systems */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">{t('itSystem.pageTitle')}</Typography>
+        {isOwnerOrAdmin && !itSystemsEdit.isEditing && (
+          <IconButton size="small" onClick={() => itSystemsEdit.startEdit((process.itSystems ?? []).map((s) => s.key))}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
+        {itSystemsEdit.isEditing && (
+          <>
+            <IconButton size="small" onClick={itSystemsEdit.save} disabled={itSystemsEdit.isSaving} color="primary">
+              {itSystemsEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+            </IconButton>
+            <IconButton size="small" onClick={itSystemsEdit.cancel} disabled={itSystemsEdit.isSaving}>
+              <Close fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        {itSystemsEdit.isEditing && itSystemsEdit.editValue !== null ? (
+          <Box>
+            <Autocomplete
+              multiple
+              options={allItSystems}
+              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+              value={allItSystems.filter((s) => itSystemsEdit.editValue!.includes(s.key))}
+              onChange={(_, val) => itSystemsEdit.setEditValue(val.map((v) => v.key))}
+              renderInput={(params) => <TextField {...params} size="small" label={t('itSystem.pageTitle')} />}
+              renderTags={(val, getTagProps) =>
+                val.map((option, index) => (
+                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                ))
+              }
+            />
+            {itSystemsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{itSystemsEdit.error}</Alert>}
+          </Box>
+        ) : (process.itSystems ?? []).length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {(process.itSystems ?? []).map((s) => (
+              <Chip
+                key={s.key}
+                label={s.name || s.key}
+                size="small"
+                variant="outlined"
+                onClick={() => navigate(`/it-systems/${s.key}`)}
+                clickable
+              />
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">{t('itSystem.noLinkedProcesses')}</Typography>
         )}
       </Box>
 

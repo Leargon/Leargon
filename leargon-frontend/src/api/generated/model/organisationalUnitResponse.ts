@@ -16,7 +16,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
+import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
@@ -38,6 +40,33 @@ export interface OrganisationalUnitResponse {
   children?: OrganisationalUnitSummaryResponse[];
   /** Processes where this unit is set as an executing unit */
   executingProcesses?: ProcessSummaryResponse[];
+  /**
+   * Whether this is an external unit (body leasing / contractor)
+   * @nullable
+   */
+  isExternal?: boolean | null;
+  /**
+   * Company name for external units
+   * @nullable
+   */
+  externalCompanyName?: string | null;
+  /**
+   * ISO 3166-1 alpha-2 country code where external work is performed
+   * @nullable
+   */
+  countryOfExecution?: string | null;
+  /** Data processor (DPA) linked to this external unit */
+  linkedDataProcessor?: DataProcessorSummaryResponse | null;
+  /**
+   * Business entities this external unit has read access to
+   * @nullable
+   */
+  dataAccessEntities?: BusinessEntitySummaryResponse[] | null;
+  /**
+   * Business entities this external unit has write/manipulation access to
+   * @nullable
+   */
+  dataManipulationEntities?: BusinessEntitySummaryResponse[] | null;
   /** Classification assignments for this organisational unit */
   classificationAssignments?: ClassificationAssignmentResponse[];
   /**

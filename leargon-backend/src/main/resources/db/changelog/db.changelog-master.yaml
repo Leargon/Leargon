@@ -57,3 +57,7 @@ databaseChangeLog:
       file: db/changelog/changes/028-create-translation-links-table.yaml
   - include:
       file: db/changelog/changes/029-create-domain-events-tables.yaml
+  - include:
+      file: db/changelog/changes/030-create-it-system-tables.yaml
+  - include:
+      file: db/changelog/changes/031-add-external-fields-to-org-units.yaml

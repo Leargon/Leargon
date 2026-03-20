@@ -16,14 +16,18 @@ import org.leargon.backend.model.CreateBusinessDomainRequest
 import org.leargon.backend.model.FieldChange
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.model.VersionDiffResponse
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
+import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
 open class BusinessDomainService(
     private val businessDomainRepository: BusinessDomainRepository,
     private val businessDomainVersionRepository: BusinessDomainVersionRepository,
+    private val boundedContextRepository: BoundedContextRepository,
+    private val domainEventRepository: DomainEventRepository,
     private val localeService: LocaleService,
     private val businessDomainMapper: BusinessDomainMapper
 ) {
@@ -180,6 +184,12 @@ open class BusinessDomainService(
             businessDomainRepository.update(child)
         }
         domain.children.clear()
+
+        val boundedContexts = boundedContextRepository.findByDomainKey(domainKey)
+        boundedContexts.forEach { bc ->
+            domainEventRepository.deleteByPublishingBoundedContextId(bc.id!!)
+            boundedContextRepository.delete(bc)
+        }
 
         businessDomainRepository.delete(domain)
     }

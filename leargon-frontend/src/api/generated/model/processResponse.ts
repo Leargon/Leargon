@@ -21,6 +21,7 @@ import type { BusinessEntitySummaryResponse } from './businessEntitySummaryRespo
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
 import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
+import type { ItSystemSummaryResponse } from './itSystemSummaryResponse';
 import type { LegalBasis } from './legalBasis';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
@@ -69,6 +70,11 @@ export interface ProcessResponse {
    * @nullable
    */
   dataProcessors?: DataProcessorSummaryResponse[] | null;
+  /**
+   * IT systems used in this process
+   * @nullable
+   */
+  itSystems?: ItSystemSummaryResponse[] | null;
   /**
    * List of mandatory fields that are currently missing values
    * @nullable

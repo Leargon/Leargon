@@ -42,6 +42,8 @@ import type {
   LocalizedText,
   OrganisationalUnitResponse,
   OrganisationalUnitTreeResponse,
+  UpdateOrgUnitEntityLinksRequest,
+  UpdateOrgUnitExternalFieldsRequest,
   UpdateOrgUnitLeadRequest,
   UpdateOrgUnitParentsRequest,
   UpdateOrgUnitTypeRequest
@@ -1192,5 +1194,308 @@ export const useAssignClassificationsToOrgUnit = <TError = void,
         TContext
       > => {
       return useMutation(getAssignClassificationsToOrgUnitMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates isExternal, externalCompanyName, countryOfExecution, and linkedDataProcessorKey. Requires ROLE_ADMIN.
+ * @summary Update external/body-leasing fields
+ */
+export type updateOrgUnitExternalFieldsResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrgUnitExternalFieldsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrgUnitExternalFieldsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrgUnitExternalFieldsResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrgUnitExternalFieldsResponseSuccess = (updateOrgUnitExternalFieldsResponse200) & {
+  headers: Headers;
+};
+export type updateOrgUnitExternalFieldsResponseError = (updateOrgUnitExternalFieldsResponse401 | updateOrgUnitExternalFieldsResponse403 | updateOrgUnitExternalFieldsResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrgUnitExternalFieldsResponse = (updateOrgUnitExternalFieldsResponseSuccess | updateOrgUnitExternalFieldsResponseError)
+
+export const getUpdateOrgUnitExternalFieldsUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/external-fields`
+}
+
+export const updateOrgUnitExternalFields = async (key: string,
+    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options?: RequestInit): Promise<updateOrgUnitExternalFieldsResponse> => {
+  
+  return customAxios<updateOrgUnitExternalFieldsResponse>(getUpdateOrgUnitExternalFieldsUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitExternalFieldsRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrgUnitExternalFieldsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext> => {
+
+const mutationKey = ['updateOrgUnitExternalFields'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, {key: string;data: UpdateOrgUnitExternalFieldsRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrgUnitExternalFields(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitExternalFieldsMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>>
+    export type UpdateOrgUnitExternalFieldsMutationBody = UpdateOrgUnitExternalFieldsRequest
+    export type UpdateOrgUnitExternalFieldsMutationError = void
+
+    /**
+ * @summary Update external/body-leasing fields
+ */
+export const useUpdateOrgUnitExternalFields = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitExternalFields>>,
+        TError,
+        {key: string;data: UpdateOrgUnitExternalFieldsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitExternalFieldsMutationOptions(options), queryClient);
+    }
+    /**
+ * Sets the business entities this external unit has read access to. Requires ROLE_ADMIN.
+ * @summary Update data access entities
+ */
+export type updateOrgUnitDataAccessEntitiesResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrgUnitDataAccessEntitiesResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrgUnitDataAccessEntitiesResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrgUnitDataAccessEntitiesResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrgUnitDataAccessEntitiesResponseSuccess = (updateOrgUnitDataAccessEntitiesResponse200) & {
+  headers: Headers;
+};
+export type updateOrgUnitDataAccessEntitiesResponseError = (updateOrgUnitDataAccessEntitiesResponse401 | updateOrgUnitDataAccessEntitiesResponse403 | updateOrgUnitDataAccessEntitiesResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrgUnitDataAccessEntitiesResponse = (updateOrgUnitDataAccessEntitiesResponseSuccess | updateOrgUnitDataAccessEntitiesResponseError)
+
+export const getUpdateOrgUnitDataAccessEntitiesUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/data-access-entities`
+}
+
+export const updateOrgUnitDataAccessEntities = async (key: string,
+    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: RequestInit): Promise<updateOrgUnitDataAccessEntitiesResponse> => {
+  
+  return customAxios<updateOrgUnitDataAccessEntitiesResponse>(getUpdateOrgUnitDataAccessEntitiesUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitEntityLinksRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrgUnitDataAccessEntitiesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext> => {
+
+const mutationKey = ['updateOrgUnitDataAccessEntities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, {key: string;data: UpdateOrgUnitEntityLinksRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrgUnitDataAccessEntities(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitDataAccessEntitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>>
+    export type UpdateOrgUnitDataAccessEntitiesMutationBody = UpdateOrgUnitEntityLinksRequest
+    export type UpdateOrgUnitDataAccessEntitiesMutationError = void
+
+    /**
+ * @summary Update data access entities
+ */
+export const useUpdateOrgUnitDataAccessEntities = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>,
+        TError,
+        {key: string;data: UpdateOrgUnitEntityLinksRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitDataAccessEntitiesMutationOptions(options), queryClient);
+    }
+    /**
+ * Sets the business entities this external unit has write access to. Requires ROLE_ADMIN.
+ * @summary Update data manipulation entities
+ */
+export type updateOrgUnitDataManipulationEntitiesResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrgUnitDataManipulationEntitiesResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrgUnitDataManipulationEntitiesResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrgUnitDataManipulationEntitiesResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrgUnitDataManipulationEntitiesResponseSuccess = (updateOrgUnitDataManipulationEntitiesResponse200) & {
+  headers: Headers;
+};
+export type updateOrgUnitDataManipulationEntitiesResponseError = (updateOrgUnitDataManipulationEntitiesResponse401 | updateOrgUnitDataManipulationEntitiesResponse403 | updateOrgUnitDataManipulationEntitiesResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrgUnitDataManipulationEntitiesResponse = (updateOrgUnitDataManipulationEntitiesResponseSuccess | updateOrgUnitDataManipulationEntitiesResponseError)
+
+export const getUpdateOrgUnitDataManipulationEntitiesUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/data-manipulation-entities`
+}
+
+export const updateOrgUnitDataManipulationEntities = async (key: string,
+    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: RequestInit): Promise<updateOrgUnitDataManipulationEntitiesResponse> => {
+  
+  return customAxios<updateOrgUnitDataManipulationEntitiesResponse>(getUpdateOrgUnitDataManipulationEntitiesUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitEntityLinksRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrgUnitDataManipulationEntitiesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext> => {
+
+const mutationKey = ['updateOrgUnitDataManipulationEntities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, {key: string;data: UpdateOrgUnitEntityLinksRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrgUnitDataManipulationEntities(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitDataManipulationEntitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>>
+    export type UpdateOrgUnitDataManipulationEntitiesMutationBody = UpdateOrgUnitEntityLinksRequest
+    export type UpdateOrgUnitDataManipulationEntitiesMutationError = void
+
+    /**
+ * @summary Update data manipulation entities
+ */
+export const useUpdateOrgUnitDataManipulationEntities = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>,
+        TError,
+        {key: string;data: UpdateOrgUnitEntityLinksRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitDataManipulationEntitiesMutationOptions(options), queryClient);
     }
     

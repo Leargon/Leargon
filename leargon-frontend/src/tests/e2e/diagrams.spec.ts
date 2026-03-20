@@ -21,7 +21,7 @@ test.describe('Entity Map diagram', () => {
   test('page loads with diagram toolbar', async ({ page }) => {
     await page.goto('/diagrams/entities');
     await expect(page.getByText('Entity Relationship Map')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Domain colours')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Domain layer')).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows entity node after entity is created', async ({ page }) => {

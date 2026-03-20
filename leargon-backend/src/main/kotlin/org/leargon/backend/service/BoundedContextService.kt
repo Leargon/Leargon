@@ -15,12 +15,14 @@ import org.leargon.backend.model.UpdateBoundedContextDescriptionsRequest
 import org.leargon.backend.model.UpdateBoundedContextNamesRequest
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
+import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
 open class BoundedContextService(
     private val boundedContextRepository: BoundedContextRepository,
     private val businessDomainRepository: BusinessDomainRepository,
+    private val domainEventRepository: DomainEventRepository,
     private val localeService: LocaleService,
     private val boundedContextMapper: BoundedContextMapper
 ) {
@@ -100,6 +102,7 @@ open class BoundedContextService(
         if (!currentUser.roles.contains("ROLE_ADMIN")) {
             throw ForbiddenOperationException("Only admins can delete bounded contexts")
         }
+        domainEventRepository.deleteByPublishingBoundedContextId(bc.id!!)
         boundedContextRepository.delete(bc)
     }
 }

@@ -70,6 +70,8 @@ tags:
   description: Cross-domain Translation Link endpoints
 - name: DomainEvent
   description: Domain Event management endpoints
+- name: ItSystem
+  description: IT System management endpoints
 paths:
   /administration/users:
     get:
@@ -3226,6 +3228,111 @@ paths:
           description: Organisational unit not found
         '401':
           description: Not authenticated
+  /organisational-units/{key}/external-fields:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update external/body-leasing fields
+      description: Updates isExternal, externalCompanyName, countryOfExecution, and linkedDataProcessorKey. Requires ROLE_ADMIN.
+      operationId: updateOrgUnitExternalFields
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitExternalFieldsRequest'
+      responses:
+        '200':
+          description: External fields updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /organisational-units/{key}/data-access-entities:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update data access entities
+      description: Sets the business entities this external unit has read access to. Requires ROLE_ADMIN.
+      operationId: updateOrgUnitDataAccessEntities
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitEntityLinksRequest'
+      responses:
+        '200':
+          description: Data access entities updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /organisational-units/{key}/data-manipulation-entities:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update data manipulation entities
+      description: Sets the business entities this external unit has write access to. Requires ROLE_ADMIN.
+      operationId: updateOrgUnitDataManipulationEntities
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitEntityLinksRequest'
+      responses:
+        '200':
+          description: Data manipulation entities updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /processes/{key}/executing-units:
     put:
       tags:
@@ -4523,6 +4630,196 @@ paths:
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
+  /it-systems:
+    get:
+      tags:
+      - ItSystem
+      summary: Get all IT systems
+      operationId: getAllItSystems
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of IT systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ItSystemResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - ItSystem
+      summary: Create IT system
+      description: Creates a new IT system. Requires ROLE_ADMIN.
+      operationId: createItSystem
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItSystemRequest'
+      responses:
+        '201':
+          description: IT system created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItSystemResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /it-systems/{key}:
+    get:
+      tags:
+      - ItSystem
+      summary: Get IT system by key
+      operationId: getItSystem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: IT system found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItSystemResponse'
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - ItSystem
+      summary: Update IT system
+      description: Updates IT system details. Requires ROLE_ADMIN.
+      operationId: updateItSystem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItSystemRequest'
+      responses:
+        '200':
+          description: IT system updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItSystemResponse'
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    delete:
+      tags:
+      - ItSystem
+      summary: Delete IT system
+      description: Deletes an IT system. Requires ROLE_ADMIN.
+      operationId: deleteItSystem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: IT system deleted
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /it-systems/{key}/linked-processes:
+    put:
+      tags:
+      - ItSystem
+      summary: Update linked processes
+      description: Replaces the list of linked processes for an IT system. Requires ROLE_ADMIN.
+      operationId: updateItSystemLinkedProcesses
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItSystemLinkedProcessesRequest'
+      responses:
+        '204':
+          description: Linked processes updated
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /processes/{key}/it-systems:
+    put:
+      tags:
+      - Process
+      summary: Update IT systems for process
+      description: Replaces the list of IT systems for a process. Requires process owner or ROLE_ADMIN.
+      operationId: updateProcessItSystems
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessItSystemsRequest'
+      responses:
+        '204':
+          description: IT systems updated
+        '404':
+          description: Process not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions
   /setup/complete:
     post:
       tags:
@@ -5996,6 +6293,34 @@ components:
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
           description: Processes where this unit is set as an executing unit
+        isExternal:
+          type: boolean
+          nullable: true
+          description: Whether this is an external unit (body leasing / contractor)
+        externalCompanyName:
+          type: string
+          nullable: true
+          description: Company name for external units
+        countryOfExecution:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 country code where external work is performed
+        linkedDataProcessor:
+          $ref: '#/components/schemas/DataProcessorSummaryResponse'
+          nullable: true
+          description: Data processor (DPA) linked to this external unit
+        dataAccessEntities:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+          description: Business entities this external unit has read access to
+        dataManipulationEntities:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+          description: Business entities this external unit has write/manipulation access to
         classificationAssignments:
           type: array
           items:
@@ -6059,6 +6384,10 @@ components:
           type: string
           description: Organisational unit name in default locale
           example: Engineering
+        isExternal:
+          type: boolean
+          nullable: true
+          description: Whether this is an external unit (body leasing / contractor)
     CreateOrganisationalUnitRequest:
       type: object
       required:
@@ -6193,6 +6522,12 @@ components:
           items:
             $ref: '#/components/schemas/DataProcessorSummaryResponse'
           description: Data processors linked to this process
+        itSystems:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ItSystemSummaryResponse'
+          description: IT systems used in this process
         missingMandatoryFields:
           type: array
           nullable: true
@@ -7440,3 +7775,143 @@ components:
           type: string
         linkType:
           $ref: '#/components/schemas/DomainEventLinkType'
+    ItSystemSummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: IT system key
+        name:
+          type: string
+          description: IT system name in default locale
+    ItSystemResponse:
+      type: object
+      required:
+      - key
+      - names
+      - descriptions
+      - createdAt
+      - updatedAt
+      properties:
+        key:
+          type: string
+          description: IT system key
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        vendor:
+          type: string
+          nullable: true
+          description: Software vendor / provider name
+        systemUrl:
+          type: string
+          nullable: true
+          description: URL for documentation or system login
+        linkedProcesses:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
+          description: Processes that use this IT system
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateItSystemRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        vendor:
+          type: string
+          nullable: true
+        systemUrl:
+          type: string
+          nullable: true
+    UpdateItSystemRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        vendor:
+          type: string
+          nullable: true
+        systemUrl:
+          type: string
+          nullable: true
+    UpdateItSystemLinkedProcessesRequest:
+      type: object
+      required:
+      - processKeys
+      properties:
+        processKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of processes to link to this IT system
+    UpdateProcessItSystemsRequest:
+      type: object
+      required:
+      - itSystemKeys
+      properties:
+        itSystemKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of IT systems used by this process
+    UpdateOrgUnitExternalFieldsRequest:
+      type: object
+      properties:
+        isExternal:
+          type: boolean
+          nullable: true
+        externalCompanyName:
+          type: string
+          nullable: true
+        countryOfExecution:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 country code
+        linkedDataProcessorKey:
+          type: string
+          nullable: true
+          description: Key of the data processor (DPA) for this external unit
+    UpdateOrgUnitEntityLinksRequest:
+      type: object
+      required:
+      - entityKeys
+      properties:
+        entityKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of business entities to link

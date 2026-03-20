@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 031-add-external-fields-to-org-units
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: is_external
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: external_company_name
+                  type: VARCHAR(500)
+              - column:
+                  name: country_of_execution
+                  type: VARCHAR(2)
+              - column:
+                  name: linked_data_processor_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: organisational_units
+            baseColumnNames: linked_data_processor_id
+            referencedTableName: data_processors
+            referencedColumnNames: id
+            constraintName: fk_org_unit_linked_data_processor
+            onDelete: SET NULL
+        - createTable:
+            tableName: org_unit_data_access_entities
+            columns:
+              - column:
+                  name: org_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: org_unit_data_access_entities
+            columnNames: org_unit_id, business_entity_id
+            constraintName: pk_org_unit_data_access_entities
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_data_access_entities
+            baseColumnNames: org_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            constraintName: fk_org_unit_data_access_org_unit
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_data_access_entities
+            baseColumnNames: business_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            constraintName: fk_org_unit_data_access_entity
+            onDelete: CASCADE
+        - createTable:
+            tableName: org_unit_data_manipulation_entities
+            columns:
+              - column:
+                  name: org_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: org_unit_data_manipulation_entities
+            columnNames: org_unit_id, business_entity_id
+            constraintName: pk_org_unit_data_manipulation_entities
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_data_manipulation_entities
+            baseColumnNames: org_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            constraintName: fk_org_unit_data_manipulation_org_unit
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_data_manipulation_entities
+            baseColumnNames: business_entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            constraintName: fk_org_unit_data_manipulation_entity
+            onDelete: CASCADE

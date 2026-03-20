@@ -17,14 +17,19 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export interface OrganisationalUnitSummaryResponse {
-  /** Organisational unit key */
-  key: string;
-  /** Organisational unit name in default locale */
-  name: string;
+export interface UpdateOrgUnitExternalFieldsRequest {
+  /** @nullable */
+  isExternal?: boolean | null;
+  /** @nullable */
+  externalCompanyName?: string | null;
   /**
-   * Whether this is an external unit (body leasing / contractor)
+   * ISO 3166-1 alpha-2 country code
    * @nullable
    */
-  isExternal?: boolean | null;
+  countryOfExecution?: string | null;
+  /**
+   * Key of the data processor (DPA) for this external unit
+   * @nullable
+   */
+  linkedDataProcessorKey?: string | null;
 }

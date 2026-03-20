@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-create-it-system-tables
+      author: leargon
+      changes:
+        - createTable:
+            tableName: it_systems
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: names
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descriptions
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: vendor
+                  type: VARCHAR(500)
+              - column:
+                  name: system_url
+                  type: VARCHAR(1000)
+              - column:
+                  name: created_at
+                  type: DATETIME(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME(6)
+        - createTable:
+            tableName: it_system_processes
+            columns:
+              - column:
+                  name: it_system_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: it_system_processes
+            columnNames: it_system_id, process_id
+            constraintName: pk_it_system_processes
+        - addForeignKeyConstraint:
+            baseTableName: it_system_processes
+            baseColumnNames: it_system_id
+            referencedTableName: it_systems
+            referencedColumnNames: id
+            constraintName: fk_it_system_processes_it_system
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: it_system_processes
+            baseColumnNames: process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            constraintName: fk_it_system_processes_process
+            onDelete: CASCADE

@@ -27,6 +27,7 @@ import {
   TableHead,
   Select,
   MenuItem,
+  Switch,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { Edit, Check, Close, Delete, ExpandMore, Add } from '@mui/icons-material';
@@ -44,7 +45,12 @@ import {
   useDeleteOrganisationalUnit,
   useGetAllOrganisationalUnits,
   useAssignClassificationsToOrgUnit,
+  useUpdateOrgUnitExternalFields,
+  useUpdateOrgUnitDataAccessEntities,
+  useUpdateOrgUnitDataManipulationEntities,
 } from '../../api/generated/organisational-unit/organisational-unit';
+import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
+import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
@@ -60,7 +66,19 @@ import type {
   UserResponse,
   ClassificationAssignmentRequest,
   ClassificationResponse,
+  DataProcessorResponse,
+  BusinessEntityResponse,
 } from '../../api/generated/model';
+
+const COUNTRY_NAMES: Record<string, string> = {
+  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
+  CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
+  FI: 'Finland', FR: 'France', GB: 'United Kingdom', IE: 'Ireland', IN: 'India',
+  IT: 'Italy', JP: 'Japan', LI: 'Liechtenstein', LU: 'Luxembourg', NL: 'Netherlands',
+  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', SE: 'Sweden',
+  SG: 'Singapore', US: 'United States',
+};
+const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
 
 interface OrgUnitDetailPanelProps {
   unitKey: string;
@@ -84,6 +102,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const users = (usersResponse?.data as UserResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'ORGANISATIONAL_UNIT' });
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
+  const { data: dataProcessorsResponse } = useGetAllDataProcessors();
+  const allDataProcessors = (dataProcessorsResponse?.data as DataProcessorResponse[] | undefined) || [];
+  const { data: allEntitiesResponse } = useGetAllBusinessEntities();
+  const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
 
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isLeadOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
@@ -113,6 +135,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const updateParents = useUpdateOrganisationalUnitParents();
   const assignClassifications = useAssignClassificationsToOrgUnit();
   const deleteUnit = useDeleteOrganisationalUnit();
+  const updateExternalFields = useUpdateOrgUnitExternalFields();
+  const updateDataAccessEntities = useUpdateOrgUnitDataAccessEntities();
+  const updateDataManipulationEntities = useUpdateOrgUnitDataManipulationEntities();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitByKeyQueryKey(unitKey) });
@@ -167,6 +192,43 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     },
   });
 
+  // Inline edit for external fields
+  const externalFieldsEdit = useInlineEdit<{
+    isExternal: boolean;
+    externalCompanyName: string;
+    countryOfExecution: string;
+    linkedDataProcessorKey: string;
+  }>({
+    onSave: async (val) => {
+      await updateExternalFields.mutateAsync({
+        key: unitKey,
+        data: {
+          isExternal: val.isExternal,
+          externalCompanyName: val.externalCompanyName || null,
+          countryOfExecution: val.countryOfExecution || null,
+          linkedDataProcessorKey: val.linkedDataProcessorKey || null,
+        },
+      });
+      invalidate();
+    },
+  });
+
+  // Inline edit for data access entities
+  const dataAccessEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateDataAccessEntities.mutateAsync({ key: unitKey, data: { entityKeys: keys } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for data manipulation entities
+  const dataManipulationEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateDataManipulationEntities.mutateAsync({ key: unitKey, data: { entityKeys: keys } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different unit
   useEffect(() => {
     namesEdit.cancel();
@@ -174,6 +236,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     leadEdit.cancel();
     parentsEdit.cancel();
     classEdit.cancel();
+    externalFieldsEdit.cancel();
+    dataAccessEdit.cancel();
+    dataManipulationEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unitKey]);
 
@@ -477,6 +542,182 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               />
             ))}
           </Box>
+          <Divider sx={{ my: 2 }} />
+        </>
+      )}
+
+      {/* External Party Details */}
+      {(isAdmin || unit.isExternal) && (
+        <>
+          <SectionHeader
+            title="External Party Details"
+            canEdit={isAdmin}
+            isEditing={externalFieldsEdit.isEditing}
+            onEdit={() => externalFieldsEdit.startEdit({
+              isExternal: unit.isExternal ?? false,
+              externalCompanyName: unit.externalCompanyName ?? '',
+              countryOfExecution: unit.countryOfExecution ?? '',
+              linkedDataProcessorKey: unit.linkedDataProcessor?.key ?? '',
+            })}
+            onSave={externalFieldsEdit.save}
+            onCancel={externalFieldsEdit.cancel}
+            isSaving={externalFieldsEdit.isSaving}
+          />
+          <Box sx={{ mb: 2 }}>
+            {externalFieldsEdit.isEditing && externalFieldsEdit.editValue !== null ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ minWidth: 180 }}>External Unit:</Typography>
+                  <Switch
+                    checked={externalFieldsEdit.editValue.isExternal}
+                    onChange={(e) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, isExternal: e.target.checked })}
+                    size="small"
+                  />
+                </Box>
+                {externalFieldsEdit.editValue.isExternal && (
+                  <>
+                    <TextField
+                      label="Company Name"
+                      size="small"
+                      value={externalFieldsEdit.editValue.externalCompanyName}
+                      onChange={(e) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, externalCompanyName: e.target.value })}
+                      sx={{ width: 300 }}
+                    />
+                    <Autocomplete
+                      options={COUNTRY_OPTIONS}
+                      getOptionLabel={(o) => `${o.code} – ${o.name}`}
+                      value={COUNTRY_OPTIONS.find((c) => c.code === externalFieldsEdit.editValue!.countryOfExecution) || null}
+                      onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, countryOfExecution: val?.code ?? '' })}
+                      renderInput={(params) => <TextField {...params} size="small" label="Country of Execution" sx={{ width: 300 }} />}
+                    />
+                    <Autocomplete
+                      options={allDataProcessors}
+                      getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                      value={allDataProcessors.find((dp) => dp.key === externalFieldsEdit.editValue!.linkedDataProcessorKey) || null}
+                      onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, linkedDataProcessorKey: val?.key ?? '' })}
+                      renderInput={(params) => <TextField {...params} size="small" label="Linked Data Processor (DPA)" sx={{ width: 300 }} />}
+                      isOptionEqualToValue={(o, v) => o.key === v.key}
+                    />
+                  </>
+                )}
+                {externalFieldsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{externalFieldsEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>External Unit:</Typography>
+                  <Chip label={unit.isExternal ? 'Yes' : 'No'} size="small" color={unit.isExternal ? 'warning' : 'default'} />
+                </Box>
+                {unit.isExternal && (
+                  <>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>Company Name:</Typography>
+                      <Typography variant="body2">{unit.externalCompanyName ?? '—'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>Country of Execution:</Typography>
+                      <Typography variant="body2">
+                        {unit.countryOfExecution
+                          ? `${COUNTRY_NAMES[unit.countryOfExecution] ?? unit.countryOfExecution} (${unit.countryOfExecution})`
+                          : '—'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>Linked Data Processor:</Typography>
+                      {unit.linkedDataProcessor ? (
+                        <Chip label={getLocalizedText(unit.linkedDataProcessor.names ?? [], unit.linkedDataProcessor.key)} size="small" variant="outlined" />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">Not linked</Typography>
+                      )}
+                    </Box>
+                  </>
+                )}
+              </Box>
+            )}
+          </Box>
+
+          {unit.isExternal && (
+            <>
+              {/* Data Access Entities (Read) */}
+              <SectionHeader
+                title="Data Access Entities (Read)"
+                canEdit={isAdmin}
+                isEditing={dataAccessEdit.isEditing}
+                onEdit={() => dataAccessEdit.startEdit((unit.dataAccessEntities ?? []).map((e) => e.key))}
+                onSave={dataAccessEdit.save}
+                onCancel={dataAccessEdit.cancel}
+                isSaving={dataAccessEdit.isSaving}
+              />
+              <Box sx={{ mb: 2 }}>
+                {dataAccessEdit.isEditing && dataAccessEdit.editValue !== null ? (
+                  <Box>
+                    <Autocomplete
+                      multiple
+                      options={allEntities}
+                      getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                      value={allEntities.filter((e) => dataAccessEdit.editValue!.includes(e.key))}
+                      onChange={(_, val) => dataAccessEdit.setEditValue(val.map((v) => v.key))}
+                      renderInput={(params) => <TextField {...params} size="small" label="Data Access Entities" />}
+                      renderTags={(val, getTagProps) =>
+                        val.map((option, index) => (
+                          <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                        ))
+                      }
+                    />
+                    {dataAccessEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataAccessEdit.error}</Alert>}
+                  </Box>
+                ) : (unit.dataAccessEntities ?? []).length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(unit.dataAccessEntities ?? []).map((e) => (
+                      <Chip key={e.key} label={e.name || e.key} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">No data access entities defined</Typography>
+                )}
+              </Box>
+
+              {/* Data Manipulation Entities (Write) */}
+              <SectionHeader
+                title="Data Manipulation Entities (Write)"
+                canEdit={isAdmin}
+                isEditing={dataManipulationEdit.isEditing}
+                onEdit={() => dataManipulationEdit.startEdit((unit.dataManipulationEntities ?? []).map((e) => e.key))}
+                onSave={dataManipulationEdit.save}
+                onCancel={dataManipulationEdit.cancel}
+                isSaving={dataManipulationEdit.isSaving}
+              />
+              <Box sx={{ mb: 2 }}>
+                {dataManipulationEdit.isEditing && dataManipulationEdit.editValue !== null ? (
+                  <Box>
+                    <Autocomplete
+                      multiple
+                      options={allEntities}
+                      getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                      value={allEntities.filter((e) => dataManipulationEdit.editValue!.includes(e.key))}
+                      onChange={(_, val) => dataManipulationEdit.setEditValue(val.map((v) => v.key))}
+                      renderInput={(params) => <TextField {...params} size="small" label="Data Manipulation Entities" />}
+                      renderTags={(val, getTagProps) =>
+                        val.map((option, index) => (
+                          <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                        ))
+                      }
+                    />
+                    {dataManipulationEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataManipulationEdit.error}</Alert>}
+                  </Box>
+                ) : (unit.dataManipulationEntities ?? []).length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(unit.dataManipulationEntities ?? []).map((e) => (
+                      <Chip key={e.key} label={e.name || e.key} size="small" variant="outlined" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">No data manipulation entities defined</Typography>
+                )}
+              </Box>
+            </>
+          )}
+
           <Divider sx={{ my: 2 }} />
         </>
       )}

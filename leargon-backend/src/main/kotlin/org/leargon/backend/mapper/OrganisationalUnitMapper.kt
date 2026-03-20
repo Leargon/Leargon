@@ -12,9 +12,12 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
+
+
 @Singleton
 open class OrganisationalUnitMapper(
-    private val fieldConfigurationService: FieldConfigurationService
+    private val fieldConfigurationService: FieldConfigurationService,
+    private val dataProcessorMapper: DataProcessorMapper
 ) {
 
     fun toResponse(unit: OrganisationalUnit, executingProcesses: List<Process> = emptyList()): OrganisationalUnitResponse {
@@ -52,6 +55,12 @@ open class OrganisationalUnitMapper(
             .parents(toSummaryList(unit.parents))
             .children(toSummaryList(unit.children))
             .executingProcesses(toProcessSummaryList(executingProcesses))
+            .isExternal(unit.isExternal)
+            .externalCompanyName(unit.externalCompanyName)
+            .countryOfExecution(unit.countryOfExecution)
+            .linkedDataProcessor(unit.linkedDataProcessor?.let { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .dataAccessEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataAccessEntities))
+            .dataManipulationEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataManipulationEntities))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
