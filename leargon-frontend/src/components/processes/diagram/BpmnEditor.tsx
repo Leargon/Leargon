@@ -461,29 +461,24 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       let el = elementRegistry.get(pending.element.id);
       let effectiveType = pending.element.type;
 
-      if (el && linkedProcessKey && (TASK_TYPES.has(pending.element.type) || pending.element.type === 'bpmn:SubProcess')) {
-        // Task + linked process with diagram → promote to collapsed SubProcess
-        // SubProcess + linked process without diagram → demote to Task
+      // Task + linked process with diagram → promote to collapsed SubProcess.
+      // We do NOT demote SubProcess → Task here: the user explicitly placed a SubProcess
+      // shape and we respect that choice regardless of whether the linked process has a
+      // diagram yet (they may add one later).
+      if (el && linkedProcessKey && TASK_TYPES.has(pending.element.type)) {
         try {
           const diagResponse = await getProcessDiagram(linkedProcessKey);
           const hasDiagram = !!(diagResponse.data as ProcessDiagramResponse | undefined)?.bpmnXml;
-          const isTask = TASK_TYPES.has(pending.element.type);
-          const isSubProcess = pending.element.type === 'bpmn:SubProcess';
-          const shouldPromote = isTask && hasDiagram;
-          const shouldDemote = isSubProcess && !hasDiagram;
-          if (shouldPromote || shouldDemote) {
-            const targetType = shouldPromote ? 'bpmn:SubProcess' : 'bpmn:Task';
-            const targetAttrs: Record<string, unknown> = { type: targetType };
-            if (shouldPromote) targetAttrs.isExpanded = false;
+          if (hasDiagram) {
             isReplacingShapeRef.current = true;
             try {
-              el = modeling.replaceShape(el, targetAttrs);
-              effectiveType = targetType;
+              el = modeling.replaceShape(el, { type: 'bpmn:SubProcess', isExpanded: false });
+              effectiveType = 'bpmn:SubProcess';
             } finally {
               isReplacingShapeRef.current = false;
             }
           }
-        } catch { /* diagram fetch failed — keep original shape type */ }
+        } catch { /* diagram fetch failed — keep original task type */ }
       }
 
       if (el) {
