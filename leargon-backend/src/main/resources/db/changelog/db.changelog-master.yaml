@@ -61,3 +61,5 @@ databaseChangeLog:
       file: db/changelog/changes/030-create-it-system-tables.yaml
   - include:
       file: db/changelog/changes/031-add-external-fields-to-org-units.yaml
+  - include:
+      file: db/changelog/changes/032-add-unique-constraint-classification-value-key.yaml

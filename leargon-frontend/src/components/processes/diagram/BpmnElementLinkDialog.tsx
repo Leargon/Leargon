@@ -73,12 +73,19 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
 
   const elementLabel = TASK_ELEMENT_TYPES[elementType] ?? elementType;
 
+  const resetState = () => {
+    setSelectedProcess(null);
+    setNewName('');
+    setTab('existing');
+    setError('');
+  };
+
   const handleConfirm = async () => {
     setError('');
     if (tab === 'existing' && selectedProcess) {
       const name = getLocalizedText(selectedProcess.names);
       onConfirm(name, selectedProcess.key);
-      handleClose();
+      resetState();
     } else if (tab === 'new' && newName.trim()) {
       setCreating(true);
       try {
@@ -88,7 +95,7 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
         await queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
         const createdProcess = res.data as ProcessResponse;
         onConfirm(newName.trim(), createdProcess.key);
-        handleClose();
+        resetState();
       } catch {
         setError(t('processDiagram.createProcessError'));
       } finally {
@@ -98,10 +105,7 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
   };
 
   const handleClose = () => {
-    setSelectedProcess(null);
-    setNewName('');
-    setTab('existing');
-    setError('');
+    resetState();
     onCancel();
   };
 

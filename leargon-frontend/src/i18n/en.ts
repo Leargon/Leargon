@@ -317,6 +317,13 @@ const en = {
     unsavedChanges: 'Unsaved changes',
     unsavedChangesHint: 'You have unsaved changes in the diagram. Do you want to discard them and leave?',
     discardAndLeave: 'Discard & leave',
+    expand: 'Expand',
+    expandHint: 'Expand linked sub-process inline',
+    collapse: 'Collapse',
+    collapseHint: 'Collapse to compact sub-process shape',
+    expandNoContent: 'Linked process has no diagram yet',
+    expandError: 'Failed to expand sub-process',
+    noLinkedProcess: 'This sub-process has no linked process',
   },
 } as const;
 

@@ -15,8 +15,9 @@ import {
   DialogContentText,
   DialogTitle,
   Snackbar,
+  Tooltip,
 } from '@mui/material';
-import { Edit as EditIcon, Save, Cancel } from '@mui/icons-material';
+import { Edit as EditIcon, Save, Cancel, UnfoldMore, UnfoldLess } from '@mui/icons-material';
 import { useBlocker } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -26,11 +27,19 @@ import {
   useSaveProcessDiagram,
   getGetProcessDiagramQueryKey,
   useGetAllProcesses,
+  getProcessDiagram,
 } from '../../../api/generated/process/process';
 import type { ProcessDiagramResponse } from '../../../api/generated/model/processDiagramResponse';
 import type { ProcessResponse } from '../../../api/generated/model/processResponse';
 import { useLocale } from '../../../context/LocaleContext';
 import BpmnElementLinkDialog from './BpmnElementLinkDialog';
+import CustomPaletteProvider from './CustomPaletteProvider';
+import {
+  LPK_PREFIX,
+  readLinkedProcessKeyFromBo,
+  expandSubProcessInXml,
+  collapseSubProcessInXml,
+} from './bpmnSubProcessUtils';
 
 const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -63,6 +72,9 @@ const LINKABLE_TYPES = new Set([
   'bpmn:CallActivity',
 ]);
 
+/** Element types that support expand/collapse of a linked process */
+const EXPANDABLE_TYPES = new Set(['bpmn:SubProcess', 'bpmn:CallActivity']);
+
 interface PendingElement {
   element: { id: string; type: string };
 }
@@ -79,8 +91,17 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
   const modelerRef = useRef<BpmnModeler | BpmnViewer | null>(null);
+  /** True while importXML() is in progress — suppresses shape.added dialog and element.changed expand */
+  const isReimportingRef = useRef(false);
+  /** When true, fit the viewport to content after the next importXML completes */
+  const fitAfterImportRef = useRef(false);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
   const [pending, setPending] = useState<PendingElement | null>(null);
+
+  // Linked SubProcess expand/collapse
+  const [selectedLinkedSP, setSelectedLinkedSP] = useState<{ id: string; isExpanded: boolean; lpk: string } | null>(null);
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [pendingNativeExpand, setPendingNativeExpand] = useState<{ id: string; lpk: string } | null>(null);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -95,9 +116,11 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const bpmnXml = (diagramResponse?.data as ProcessDiagramResponse | undefined)?.bpmnXml ?? null;
   // What the viewer/modeler actually renders
   const effectiveXml = overrideXml ?? bpmnXml;
+  useEffect(() => { effectiveXmlRef.current = effectiveXml; }, [effectiveXml]);
 
   // Keep a ref so the importXML callback always sees the latest process list
   const processesRef = useRef<ProcessResponse[]>([]);
+  const effectiveXmlRef = useRef<string | null>(null);
   const getLocalizedTextRef = useRef(getLocalizedText);
   useEffect(() => { getLocalizedTextRef.current = getLocalizedText; });
   useEffect(() => {
@@ -146,15 +169,23 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isEditing]);
 
-  // Create/destroy the bpmn-js instance when isEditing or displayed XML changes
+  // Create/destroy the bpmn-js instance when isEditing, theme or displayed XML changes
   useEffect(() => {
     if (!containerRef.current || isLoading) return;
 
     const xml = effectiveXml ?? EMPTY_BPMN;
 
+    const bpmnColors = effectiveMode === 'dark'
+      ? { defaultFillColor: 'hsl(225,10%,22%)', defaultStrokeColor: 'hsl(225,10%,75%)', defaultLabelColor: 'hsl(225,10%,85%)' }
+      : {};
+
     const instance = isEditing
-      ? new BpmnModeler({ container: containerRef.current })
-      : new BpmnViewer({ container: containerRef.current });
+      ? new BpmnModeler({
+          container: containerRef.current,
+          additionalModules: [{ __init__: ['customPaletteProvider'], customPaletteProvider: ['type', CustomPaletteProvider] }],
+          ...bpmnColors,
+        })
+      : new BpmnViewer({ container: containerRef.current, ...bpmnColors });
 
     modelerRef.current = instance;
 
@@ -167,9 +198,17 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           on: (event: string, cb: (e: any) => void) => void;
           fire: (event: string, props: Record<string, unknown>) => void;
         };
+        type Canvas = { zoom: (fit: string, center?: string) => void };
         const bpmn = instance as unknown as BpmnInstance;
         const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
         const eventBus = bpmn.get('eventBus') as EventBus;
+        const canvas = bpmn.get('canvas') as Canvas;
+
+        // Fit viewport after expand/collapse so expanded SubProcess is fully visible
+        if (fitAfterImportRef.current) {
+          fitAfterImportRef.current = false;
+          canvas.zoom('fit-viewport', 'auto');
+        }
 
         // Sync callActivity labels with current process names
         elementRegistry.getAll().forEach((element) => {
@@ -184,12 +223,86 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           }
         });
 
-        if (!isEditing) return;
-        eventBus.on('shape.added', (event) => {
-          if (LINKABLE_TYPES.has(event.element.type)) {
-            setPending({ element: event.element });
-          }
-        });
+        if (isEditing) {
+          eventBus.on('shape.added', (event) => {
+            if (isReimportingRef.current) return;
+            if (LINKABLE_TYPES.has(event.element.type)) {
+              setPending({ element: event.element });
+            }
+          });
+
+          // Track selected linked SubProcess/CallActivity to show expand/collapse toolbar
+          eventBus.on('selection.changed', (event) => {
+            const selected = event.newSelection?.[0];
+            if (EXPANDABLE_TYPES.has(selected?.type)) {
+              const lpk = readLinkedProcessKeyFromBo(selected.businessObject);
+              if (lpk) {
+                setSelectedLinkedSP({
+                  id: selected.id,
+                  isExpanded: selected.businessObject.isExpanded ?? false,
+                  lpk,
+                });
+                return;
+              }
+            }
+            setSelectedLinkedSP(null);
+          });
+
+          // Intercept native bpmn-js "+" click on a linked SubProcess/CallActivity
+          eventBus.on('commandStack.shape.toggleCollapse.postExecuted', (event) => {
+            if (isReimportingRef.current) return;
+            const shape = event.context?.shape;
+            if (!shape || !EXPANDABLE_TYPES.has(shape.type)) return;
+            const lpk = readLinkedProcessKeyFromBo(shape.businessObject);
+            if (!lpk) return;
+            const isNowExpanded = shape.businessObject.isExpanded ?? false;
+            setSelectedLinkedSP({ id: shape.id, isExpanded: isNowExpanded, lpk });
+            if (isNowExpanded) {
+              const hasEmbedded = (shape.children ?? []).some(
+                (c: { id: string }) => c.id?.startsWith(shape.id + '$'),
+              );
+              if (!hasEmbedded) {
+                setPendingNativeExpand({ id: shape.id, lpk });
+              }
+            }
+          });
+        } else {
+          // View mode: clicking a linked SubProcess (or any child inside one) toggles expand/collapse
+          // NOTE: `collapsed` is the authoritative bpmn-js field (inverse of DI isExpanded).
+          //       businessObject.isExpanded is NOT set by the importer — it lives on the DI shape.
+          type BpmnEl = { type?: string; id?: string; businessObject?: Record<string, unknown>; parent?: BpmnEl; collapsed?: boolean };
+          eventBus.on('element.click', (event) => {
+            const el = event.element as BpmnEl;
+
+            // Direct click on an expandable element
+            if (EXPANDABLE_TYPES.has(el?.type ?? '')) {
+              const lpk = readLinkedProcessKeyFromBo(el.businessObject ?? {});
+              if (!lpk) {
+                setSnackbar({ message: t('processDiagram.noLinkedProcess'), severity: 'error' });
+                return;
+              }
+              const id = el.id as string;
+              // collapsed===false → shape is currently expanded; anything else → collapsed
+              const isExpanded = el.collapsed === false;
+              setSelectedLinkedSP({ id, isExpanded, lpk });
+              if (isExpanded) {
+                doCollapse(id);
+              } else {
+                doExpand(id, lpk);
+              }
+              return;
+            }
+
+            // Click on a child inside an expanded linked SubProcess → collapse the parent
+            const parent = el?.parent;
+            if (parent && EXPANDABLE_TYPES.has(parent.type ?? '')) {
+              const lpk = readLinkedProcessKeyFromBo(parent.businessObject ?? {});
+              if (lpk && parent.collapsed === false) {
+                doCollapse(parent.id as string);
+              }
+            }
+          });
+        }
       })
       .catch(console.error);
 
@@ -198,7 +311,98 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       modelerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, effectiveXml, isLoading]);
+  }, [isEditing, effectiveXml, isLoading, effectiveMode]);
+
+  const doExpand = useCallback(async (id: string, lpk: string) => {
+    setIsExpanding(true);
+    try {
+      let parentXml: string | null | undefined;
+      if (isEditing && modelerRef.current) {
+        ({ xml: parentXml } = await (modelerRef.current as BpmnModeler).saveXML({ format: true }));
+      } else {
+        parentXml = effectiveXmlRef.current;
+      }
+      const childResponse = await getProcessDiagram(lpk);
+      const childXml = (childResponse.data as ProcessDiagramResponse | undefined)?.bpmnXml;
+      if (!childXml || !parentXml) {
+        setSnackbar({ message: t('processDiagram.expandNoContent'), severity: 'error' });
+        return;
+      }
+      const merged = expandSubProcessInXml(parentXml, childXml, id);
+      setSelectedLinkedSP((prev) => (prev ? { ...prev, isExpanded: true } : null));
+      fitAfterImportRef.current = true;
+      if (isEditing && modelerRef.current) {
+        isReimportingRef.current = true;
+        try {
+          await (modelerRef.current as BpmnModeler).importXML(merged);
+          // For edit mode the effect doesn't re-run; fit viewport directly
+          type BpmnInstance = { get: (name: string) => unknown };
+          type Canvas = { zoom: (fit: string, center?: string) => void };
+          const canvas = (modelerRef.current as unknown as BpmnInstance).get('canvas') as Canvas;
+          fitAfterImportRef.current = false;
+          canvas.zoom('fit-viewport', 'auto');
+        } finally {
+          isReimportingRef.current = false;
+        }
+      } else {
+        setOverrideXml(merged);
+      }
+    } catch {
+      setSnackbar({ message: t('processDiagram.expandError'), severity: 'error' });
+    } finally {
+      setIsExpanding(false);
+    }
+  }, [t, isEditing]);
+
+  const doCollapse = useCallback(async (id: string) => {
+    try {
+      let currentXml: string | null | undefined;
+      if (isEditing && modelerRef.current) {
+        ({ xml: currentXml } = await (modelerRef.current as BpmnModeler).saveXML({ format: true }));
+      } else {
+        currentXml = effectiveXmlRef.current;
+      }
+      if (!currentXml) return;
+      const collapsed = collapseSubProcessInXml(currentXml, id);
+      setSelectedLinkedSP((prev) => (prev ? { ...prev, isExpanded: false } : null));
+      fitAfterImportRef.current = true;
+      if (isEditing && modelerRef.current) {
+        isReimportingRef.current = true;
+        try {
+          await (modelerRef.current as BpmnModeler).importXML(collapsed);
+          type BpmnInstance = { get: (name: string) => unknown };
+          type Canvas = { zoom: (fit: string, center?: string) => void };
+          const canvas = (modelerRef.current as unknown as BpmnInstance).get('canvas') as Canvas;
+          fitAfterImportRef.current = false;
+          canvas.zoom('fit-viewport', 'auto');
+        } finally {
+          isReimportingRef.current = false;
+        }
+      } else {
+        setOverrideXml(collapsed);
+      }
+    } catch {
+      setSnackbar({ message: t('processDiagram.saveError'), severity: 'error' });
+    }
+  }, [isEditing, t]);
+
+  const handleExpand = useCallback(async () => {
+    if (!selectedLinkedSP) return;
+    await doExpand(selectedLinkedSP.id, selectedLinkedSP.lpk);
+  }, [selectedLinkedSP, doExpand]);
+
+  const handleCollapse = useCallback(async () => {
+    if (!selectedLinkedSP) return;
+    await doCollapse(selectedLinkedSP.id);
+  }, [selectedLinkedSP, doCollapse]);
+
+  // Process native bpmn-js expand triggered by clicking "+" on the SubProcess shape
+  useEffect(() => {
+    if (!pendingNativeExpand) return;
+    const { id, lpk } = pendingNativeExpand;
+    setPendingNativeExpand(null);
+    doExpand(id, lpk);
+  }, [pendingNativeExpand, doExpand]);
 
   const enterEditMode = useCallback(() => {
     setOriginalXml(bpmnXml);
@@ -210,6 +414,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     setIsEditing(false);
     setOverrideXml(originalXml);
     setPending(null);
+    setSelectedLinkedSP(null);
   }, [originalXml]);
 
   const handleSave = async () => {
@@ -220,6 +425,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       await queryClient.invalidateQueries({ queryKey: getGetProcessDiagramQueryKey(processKey) as readonly unknown[] });
       setIsEditing(false);
       setOverrideXml(null);
+      setSelectedLinkedSP(null);
       setSnackbar({ message: t('processDiagram.saved'), severity: 'success' });
     } catch {
       setSnackbar({ message: t('processDiagram.saveError'), severity: 'error' });
@@ -228,10 +434,13 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   type BpmnInstance = { get: (name: string) => unknown };
   type ElementRegistry = { get: (id: string) => unknown };
+  type Shape = { children?: unknown[]; businessObject?: { isExpanded?: boolean } };
   type Modeling = {
     updateProperties: (element: unknown, props: Record<string, unknown>) => void;
     removeElements: (elements: unknown[]) => void;
+    toggleCollapse: (element: unknown) => void;
   };
+  type BpmnFactory = { create: (type: string, props?: Record<string, unknown>) => unknown };
 
   const handleDialogConfirm = useCallback(
     (name: string, linkedProcessKey?: string) => {
@@ -239,11 +448,36 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       const bpmn = modelerRef.current as unknown as BpmnInstance;
       const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
       const modeling = bpmn.get('modeling') as Modeling;
+      const bpmnFactory = bpmn.get('bpmnFactory') as BpmnFactory;
       const el = elementRegistry.get(pending.element.id);
       if (el) {
         const props: Record<string, unknown> = { name };
-        if (linkedProcessKey) props.calledElement = linkedProcessKey;
+        if (linkedProcessKey) {
+          if (pending.element.type === 'bpmn:CallActivity') {
+            // calledElement is standard BPMN for CallActivity and serializes correctly
+            props.calledElement = linkedProcessKey;
+          } else if (pending.element.type === 'bpmn:SubProcess') {
+            // calledElement is not in the SubProcess metamodel and is dropped on
+            // serialization — store the link in bpmn:Documentation instead
+            props.documentation = [
+              bpmnFactory.create('bpmn:Documentation', { text: `${LPK_PREFIX}${linkedProcessKey}` }),
+            ];
+          }
+        }
         modeling.updateProperties(el, props);
+
+        // For a linked SubProcess: remove the auto-created children (default start event)
+        // and collapse it so it shows as the "+" compact shape ready to expand
+        if (pending.element.type === 'bpmn:SubProcess' && linkedProcessKey) {
+          const shape = el as Shape;
+          const children = [...(shape.children ?? [])];
+          if (children.length > 0) {
+            modeling.removeElements(children);
+          }
+          if ((shape.businessObject?.isExpanded ?? true) !== false) {
+            modeling.toggleCollapse(el);
+          }
+        }
       }
       setPending(null);
     },
@@ -273,7 +507,27 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {/* Toolbar */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+        {/* Expand / Collapse — shown when a linked SubProcess is selected in edit mode */}
+        {isEditing && selectedLinkedSP ? (
+          selectedLinkedSP.isExpanded ? (
+            <Tooltip title={t('processDiagram.collapseHint')}>
+              <Button size="small" variant="outlined" startIcon={<UnfoldLess />} onClick={handleCollapse}>
+                {t('processDiagram.collapse')}
+              </Button>
+            </Tooltip>
+          ) : (
+            <Tooltip title={t('processDiagram.expandHint')}>
+              <Button size="small" variant="outlined" startIcon={<UnfoldMore />} onClick={handleExpand} disabled={isExpanding}>
+                {t('processDiagram.expand')}
+              </Button>
+            </Tooltip>
+          )
+        ) : (
+          <Box />
+        )}
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
         {canEdit && !isEditing && (
           <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={enterEditMode}>
             {t('common.edit')}
@@ -295,6 +549,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
             </Button>
           </>
         )}
+        </Box>
       </Box>
 
       {/* bpmn-js mounts here */}

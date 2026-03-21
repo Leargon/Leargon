@@ -50,13 +50,13 @@
 
 #### USER STORY 'Automatically render linked process as collapsed sub-process shape'
 **AS A** process modeller\
-**IF** a task-like element in the BPMN diagram has a `calledElement` that references a process which has child processes or a saved BPMN diagram\
+**IF** a task-like element in the BPMN diagram has a `calledElement` that references a process which has a saved BPMN diagram\
 **I WANT** the element to be automatically displayed as a collapsed `bpmn:SubProcess` shape (compact box with `+` marker) rather than a plain task rectangle\
 **SO THAT** the visual shape immediately communicates navigable depth without requiring any manual shape replacement
 
 #### USER STORY 'Automatically render linked process as plain task when it has no depth'
 **AS A** process modeller\
-**IF** a sub-process shape links via `calledElement` to a process that has no child processes and no saved BPMN diagram content\
+**IF** a sub-process shape links via `calledElement` to a process that has no saved BPMN diagram content\
 **I WANT** the element to be displayed as a plain task rectangle with no `+` marker\
 **SO THAT** the diagram never implies navigable depth where none exists and stays visually accurate
 

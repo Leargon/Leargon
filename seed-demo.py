@@ -131,20 +131,17 @@ wipe('classifications', '/classifications',
 print('[3/7] Processes (clear diagrams, deepest children first)...')
 processes = api('GET', '/processes', token=T)
 if isinstance(processes, list):
-    minimal_bpmn = (
+    processes = [p for p in processes if p.get('key')]
+    # Clear all BPMN diagrams first so no calledElement references block deletion
+    empty_bpmn = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"'
-        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
         ' targetNamespace="http://bpmn.io/schema/bpmn">'
-        '<process id="wipe-process" isExecutable="false">'
-        '<startEvent id="wipe-start"/>'
-        '<endEvent id="wipe-end"/>'
-        '<sequenceFlow id="wipe-flow" sourceRef="wipe-start" targetRef="wipe-end"/>'
-        '</process>'
+        '<process id="wipe-process" isExecutable="false"/>'
         '</definitions>'
     )
     for p in processes:
-        api('PUT', f'/processes/{p["key"]}/diagram', {'bpmnXml': minimal_bpmn}, T)
+        api('PUT', f'/processes/{p["key"]}/diagram', {'bpmnXml': empty_bpmn}, T)
     # Sort deepest children first so parents can be deleted after
     procs_by_key = {p['key']: p for p in processes}
     def proc_depth(p):
@@ -1415,13 +1412,20 @@ print('\n[8c/9] Process diagrams...')
 from xml.sax.saxutils import escape as _e
 
 
+LPK_PREFIX = 'leargon-lpk:'
+
+
 def _bpmn(pid, nodes, edges, called=None):
     """
     Build BPMN 2.0 XML compatible with bpmn-js.
     nodes: [(id, etype, label, cx, cy), ...]
-      etype: start | end | task | user | service | send | call | xgw | pgw
+      etype: start | end | task | user | service | send | call | sub | xgw | pgw
+        call — callActivity: stores linked process key via calledElement (standard BPMN attribute)
+        sub  — subProcess:   stores linked process key via bpmn:Documentation with leargon-lpk:
+                             prefix (calledElement is not in the SubProcess metamodel and is
+                             silently dropped on serialisation by bpmn-js)
     edges: [(src, tgt) | (src, tgt, label), ...]
-    called: {node_id: processKey} — calledElement for callActivity nodes
+    called: {node_id: processKey} — linked process key for call/sub nodes
     """
     DIM = {
         'start':   (36,  36),
@@ -1431,6 +1435,7 @@ def _bpmn(pid, nodes, edges, called=None):
         'service': (100, 80),
         'send':    (100, 80),
         'call':    (100, 80),
+        'sub':     (100, 80),
         'xgw':     (50,  50),
         'pgw':     (50,  50),
     }
@@ -1442,6 +1447,7 @@ def _bpmn(pid, nodes, edges, called=None):
         'service': 'serviceTask',
         'send':    'sendTask',
         'call':    'callActivity',
+        'sub':     'subProcess',
         'xgw':     'exclusiveGateway',
         'pgw':     'parallelGateway',
     }
@@ -1450,11 +1456,20 @@ def _bpmn(pid, nodes, edges, called=None):
 
     for eid, et, lbl, cx, cy in nodes:
         w, h = DIM[et]
-        ce = f' calledElement="{called[eid]}"' if (et == 'call' and called and eid in called) else ''
-        proc.append(f'<{TAG[et]} id="{eid}" name="{_e(lbl)}"{ce}/>')
+        if et == 'sub' and called and eid in called:
+            # subProcess: store link in documentation (calledElement not serialised for subProcess)
+            proc.append(
+                f'<subProcess id="{eid}" name="{_e(lbl)}" isExpanded="false">'
+                f'<documentation>{LPK_PREFIX}{called[eid]}</documentation>'
+                f'</subProcess>'
+            )
+        else:
+            ce = f' calledElement="{called[eid]}"' if (et == 'call' and called and eid in called) else ''
+            proc.append(f'<{TAG[et]} id="{eid}" name="{_e(lbl)}"{ce}/>')
         shapes.append(
-            f'<bpmndi:BPMNShape id="{eid}_di" bpmnElement="{eid}">'
-            f'<dc:Bounds x="{cx - w//2}" y="{cy - h//2}" width="{w}" height="{h}"/>'
+            f'<bpmndi:BPMNShape id="{eid}_di" bpmnElement="{eid}"'
+            + (' isExpanded="false"' if et == 'sub' else '')
+            + f'><dc:Bounds x="{cx - w//2}" y="{cy - h//2}" width="{w}" height="{h}"/>'
             f'</bpmndi:BPMNShape>'
         )
 

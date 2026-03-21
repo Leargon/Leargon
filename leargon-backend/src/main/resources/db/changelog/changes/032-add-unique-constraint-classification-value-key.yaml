@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 032-add-unique-constraint-classification-value-key
+      author: leargon
+      changes:
+        - addUniqueConstraint:
+            tableName: classification_values
+            columnNames: classification_id, key
+            constraintName: uq_classification_value_key

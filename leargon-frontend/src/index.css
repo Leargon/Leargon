@@ -89,3 +89,31 @@ body {
   color: hsl(225, 10%, 75%);
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* Hide the bpmn-js drill-down button on expanded SubProcesses — we use our own expand/collapse */
+.bjs-drilldown {
+  display: none !important;
+}
+
+/* ── bpmn-js SVG diagram element dark mode overrides ────────────────────── */
+
+/* Sequence flow and message flow lines */
+[data-color-scheme="dark"] .djs-connection .djs-visual > path,
+[data-color-scheme="dark"] .djs-connection .djs-visual > polyline {
+  stroke: hsl(225, 10%, 75%) !important;
+}
+
+/*
+ * Arrowhead markers use fill:context-stroke (SVG 2), so they inherit the
+ * stroke color of the referencing path above automatically.
+ * If a browser does not support context-stroke, fall back via explicit fill:
+ */
+[data-color-scheme="dark"] .djs-connection .djs-visual > path[marker-end],
+[data-color-scheme="dark"] .djs-connection .djs-visual > path[marker-start] {
+  fill: hsl(225, 10%, 75%) !important;
+}
+
+/* External labels: event names, gateway labels, connection condition text */
+[data-color-scheme="dark"] .djs-label .djs-visual text {
+  fill: hsl(225, 10%, 85%) !important;
+}
