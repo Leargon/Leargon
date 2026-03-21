@@ -93,6 +93,8 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const modelerRef = useRef<BpmnModeler | BpmnViewer | null>(null);
   /** True while importXML() is in progress — suppresses shape.added dialog and element.changed expand */
   const isReimportingRef = useRef(false);
+  /** True while replaceShape() is in flight — suppresses the shape.added re-trigger */
+  const isReplacingShapeRef = useRef(false);
   /** When true, fit the viewport to content after the next importXML completes */
   const fitAfterImportRef = useRef(false);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
@@ -207,7 +209,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         // Fit viewport after expand/collapse so expanded SubProcess is fully visible
         if (fitAfterImportRef.current) {
           fitAfterImportRef.current = false;
-          canvas.zoom('fit-viewport', 'auto');
+          canvas.zoom('fit-viewport');
         }
 
         // Sync callActivity labels with current process names
@@ -225,7 +227,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
         if (isEditing) {
           eventBus.on('shape.added', (event) => {
-            if (isReimportingRef.current) return;
+            if (isReimportingRef.current || isReplacingShapeRef.current) return;
             if (LINKABLE_TYPES.has(event.element.type)) {
               setPending({ element: event.element });
             }
@@ -340,7 +342,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           type Canvas = { zoom: (fit: string, center?: string) => void };
           const canvas = (modelerRef.current as unknown as BpmnInstance).get('canvas') as Canvas;
           fitAfterImportRef.current = false;
-          canvas.zoom('fit-viewport', 'auto');
+          canvas.zoom('fit-viewport');
         } finally {
           isReimportingRef.current = false;
         }
@@ -374,7 +376,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           type Canvas = { zoom: (fit: string, center?: string) => void };
           const canvas = (modelerRef.current as unknown as BpmnInstance).get('canvas') as Canvas;
           fitAfterImportRef.current = false;
-          canvas.zoom('fit-viewport', 'auto');
+          canvas.zoom('fit-viewport');
         } finally {
           isReimportingRef.current = false;
         }
@@ -434,29 +436,62 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   type BpmnInstance = { get: (name: string) => unknown };
   type ElementRegistry = { get: (id: string) => unknown };
-  type Shape = { children?: unknown[]; businessObject?: { isExpanded?: boolean } };
+  type Shape = { children?: unknown[]; collapsed?: boolean; businessObject?: { isExpanded?: boolean } };
   type Modeling = {
     updateProperties: (element: unknown, props: Record<string, unknown>) => void;
     removeElements: (elements: unknown[]) => void;
     toggleCollapse: (element: unknown) => void;
+    replaceShape: (element: unknown, attrs: Record<string, unknown>) => unknown;
   };
   type BpmnFactory = { create: (type: string, props?: Record<string, unknown>) => unknown };
 
+  /** Task element types that can be auto-promoted to SubProcess when linked process has a diagram */
+  const TASK_TYPES = new Set([
+    'bpmn:Task', 'bpmn:UserTask', 'bpmn:ServiceTask', 'bpmn:ScriptTask',
+    'bpmn:ManualTask', 'bpmn:BusinessRuleTask', 'bpmn:SendTask', 'bpmn:ReceiveTask',
+  ]);
+
   const handleDialogConfirm = useCallback(
-    (name: string, linkedProcessKey?: string) => {
+    async (name: string, linkedProcessKey?: string) => {
       if (!pending || !modelerRef.current) { setPending(null); return; }
       const bpmn = modelerRef.current as unknown as BpmnInstance;
       const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
       const modeling = bpmn.get('modeling') as Modeling;
       const bpmnFactory = bpmn.get('bpmnFactory') as BpmnFactory;
-      const el = elementRegistry.get(pending.element.id);
+      let el = elementRegistry.get(pending.element.id);
+      let effectiveType = pending.element.type;
+
+      if (el && linkedProcessKey && (TASK_TYPES.has(pending.element.type) || pending.element.type === 'bpmn:SubProcess')) {
+        // Task + linked process with diagram → promote to collapsed SubProcess
+        // SubProcess + linked process without diagram → demote to Task
+        try {
+          const diagResponse = await getProcessDiagram(linkedProcessKey);
+          const hasDiagram = !!(diagResponse.data as ProcessDiagramResponse | undefined)?.bpmnXml;
+          const isTask = TASK_TYPES.has(pending.element.type);
+          const isSubProcess = pending.element.type === 'bpmn:SubProcess';
+          const shouldPromote = isTask && hasDiagram;
+          const shouldDemote = isSubProcess && !hasDiagram;
+          if (shouldPromote || shouldDemote) {
+            const targetType = shouldPromote ? 'bpmn:SubProcess' : 'bpmn:Task';
+            const targetAttrs: Record<string, unknown> = { type: targetType };
+            if (shouldPromote) targetAttrs.isExpanded = false;
+            isReplacingShapeRef.current = true;
+            try {
+              el = modeling.replaceShape(el, targetAttrs);
+              effectiveType = targetType;
+            } finally {
+              isReplacingShapeRef.current = false;
+            }
+          }
+        } catch { /* diagram fetch failed — keep original shape type */ }
+      }
+
       if (el) {
         const props: Record<string, unknown> = { name };
         if (linkedProcessKey) {
-          if (pending.element.type === 'bpmn:CallActivity') {
-            // calledElement is standard BPMN for CallActivity and serializes correctly
+          if (effectiveType === 'bpmn:CallActivity') {
             props.calledElement = linkedProcessKey;
-          } else if (pending.element.type === 'bpmn:SubProcess') {
+          } else if (effectiveType === 'bpmn:SubProcess') {
             // calledElement is not in the SubProcess metamodel and is dropped on
             // serialization — store the link in bpmn:Documentation instead
             props.documentation = [
@@ -466,21 +501,21 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         }
         modeling.updateProperties(el, props);
 
-        // For a linked SubProcess: remove the auto-created children (default start event)
-        // and collapse it so it shows as the "+" compact shape ready to expand
-        if (pending.element.type === 'bpmn:SubProcess' && linkedProcessKey) {
+        // For a linked SubProcess: remove any auto-created inner children and ensure it is collapsed.
+        // Use shape.collapsed (the actual bpmn-js field) — businessObject.isExpanded is always
+        // undefined for SubProcess because isExpanded lives on the DI shape, not the model object.
+        // collapsed===false means the shape is currently expanded; collapsed===true means collapsed.
+        if (effectiveType === 'bpmn:SubProcess' && linkedProcessKey) {
           const shape = el as Shape;
-          const children = [...(shape.children ?? [])];
-          if (children.length > 0) {
-            modeling.removeElements(children);
-          }
-          if ((shape.businessObject?.isExpanded ?? true) !== false) {
-            modeling.toggleCollapse(el);
-          }
+          // Filter out labels — only remove real inner process elements
+          const innerChildren = (shape.children ?? []).filter((c) => (c as { type?: string }).type !== 'label');
+          if (innerChildren.length > 0) modeling.removeElements(innerChildren);
+          if (shape.collapsed === false) modeling.toggleCollapse(el);
         }
       }
       setPending(null);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [pending],
   );
 

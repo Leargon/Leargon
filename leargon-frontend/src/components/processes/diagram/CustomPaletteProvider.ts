@@ -2,14 +2,21 @@
  * Custom bpmn-js palette provider.
  *
  * Uses the "updater function" pattern: getPaletteEntries() returns a function
- * that receives the already-accumulated entries from lower-priority providers and
- * mutates them.  This is the only reliable way to REMOVE default entries.
+ * that receives the already-accumulated entries from higher-priority providers
+ * and mutates them.  This is the only reliable way to REMOVE default entries.
+ *
+ * Priority ordering in bpmn-js / diagram-js:
+ *   The 'palette.getProviders' event fires listeners in descending priority order
+ *   (highest first).  The providers array is then reduced left-to-right via
+ *   addPaletteEntries().  Therefore a provider registered at priority 500 is
+ *   appended LAST and its updater function receives the fully-accumulated entries
+ *   from all higher-priority (default 1000) providers — allowing deletes.
  *
  * Allowed palette:
  *   tools  : hand, lasso, space, global-connect
  *   events : start, end
  *   gateway: exclusive
- *   tasks  : task, user-task, service-task, script-task, manual-task, business-rule-task, send-task, receive-task, call-activity
+ *   tasks  : task (type can be changed via context-pad)
  *   sub    : collapsed subprocess (replaces the default expanded one)
  *
  * Removed: pools (participant-expanded), data objects, data stores, groups,
@@ -38,22 +45,19 @@ export default class CustomPaletteProvider {
     this.create = create;
     this.elementFactory = elementFactory;
     this.translate = translate;
-    // 1500 > default 1000 — our updater runs last and wins
-    palette.registerProvider(1500, this);
+    // 500 < default 1000 → our provider is processed LAST in the reduce,
+    // so the updater function sees all default entries and can delete them.
+    palette.registerProvider(500, this);
   }
 
   getPaletteEntries() {
     const { create, elementFactory, translate } = this;
 
-    // bpmn-js calls this function with the accumulated entries from all
-    // lower-priority providers; we modify and return them.
     return function updater(entries: Record<string, any>) {
-      // Remove unwanted entries
       for (const key of ENTRIES_TO_REMOVE) {
         delete entries[key];
       }
 
-      // Add collapsed subprocess
       const startCollapsed = (event: any) => {
         const shape = elementFactory.createShape({ type: 'bpmn:SubProcess', isExpanded: false });
         create.start(event, shape);
