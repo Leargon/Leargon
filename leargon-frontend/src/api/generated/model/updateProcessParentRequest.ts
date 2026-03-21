@@ -17,10 +17,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export interface UpdateProcessCodeRequest {
+export interface UpdateProcessParentRequest {
   /**
-   * New process code (null or empty to clear the code without changing the key)
+   * Key of the new parent process (null to make top-level)
    * @nullable
    */
-  code?: string | null;
+  parentKey?: string | null;
 }

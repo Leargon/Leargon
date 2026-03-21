@@ -16,11 +16,13 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText';
+import type { SearchResultResponseMatchedIn } from './searchResultResponseMatchedIn';
+import type { SearchResultType } from './searchResultType';
 
-export interface UpdateProcessCodeRequest {
-  /**
-   * New process code (null or empty to clear the code without changing the key)
-   * @nullable
-   */
-  code?: string | null;
+export interface SearchResultResponse {
+  type?: SearchResultType;
+  key?: string;
+  names?: LocalizedText[];
+  matchedIn?: SearchResultResponseMatchedIn;
 }

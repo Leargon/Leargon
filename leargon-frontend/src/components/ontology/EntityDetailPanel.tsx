@@ -70,6 +70,7 @@ import {
   getGetEntityTranslationLinksQueryKey,
   useCreateTranslationLink,
   useDeleteTranslationLink,
+  useUpdateTranslationLink,
 } from '../../api/generated/translation-link/translation-link';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllProcesses } from '../../api/generated/process/process';
@@ -157,6 +158,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
   // Translation link dialog state
   const [tlDialogOpen, setTlDialogOpen] = useState(false);
+  const [tlEditingId, setTlEditingId] = useState<number | null>(null);
   const [tlTargetEntityKey, setTlTargetEntityKey] = useState<string | null>(null);
   const [tlSemanticNote, setTlSemanticNote] = useState('');
   const [tlError, setTlError] = useState('');
@@ -206,6 +208,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateParent = useUpdateBusinessEntityParent();
   const assignBoundedContext = useAssignBoundedContextToBusinessEntity();
   const createTranslationLink = useCreateTranslationLink();
+  const updateTranslationLink = useUpdateTranslationLink();
   const deleteTranslationLink = useDeleteTranslationLink();
   const updateInterfaces = useUpdateBusinessEntityInterfaces();
   const assignClassifications = useAssignClassificationsToEntity();
@@ -803,7 +806,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('entity.translationLinks')}</Typography>
         {isOwnerOrAdmin && (
-          <IconButton size="small" onClick={() => { setTlTargetEntityKey(null); setTlSemanticNote(''); setTlError(''); setTlDialogOpen(true); }} color="primary">
+          <IconButton size="small" onClick={() => { setTlEditingId(null); setTlTargetEntityKey(null); setTlSemanticNote(''); setTlError(''); setTlDialogOpen(true); }} color="primary">
             <Add fontSize="small" />
           </IconButton>
         )}
@@ -829,13 +832,25 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   <TableCell>{link.semanticDifferenceNote || '—'}</TableCell>
                   <TableCell align="right">
                     {isOwnerOrAdmin && (
-                      <IconButton size="small" color="error"
-                        onClick={async () => {
-                          await deleteTranslationLink.mutateAsync({ id: link.id! });
-                          queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
-                        }}>
-                        <Delete fontSize="small" />
-                      </IconButton>
+                      <>
+                        <IconButton size="small"
+                          onClick={() => {
+                            setTlEditingId(link.id!);
+                            setTlTargetEntityKey(link.linkedEntity?.key ?? null);
+                            setTlSemanticNote(link.semanticDifferenceNote ?? '');
+                            setTlError('');
+                            setTlDialogOpen(true);
+                          }}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error"
+                          onClick={async () => {
+                            await deleteTranslationLink.mutateAsync({ id: link.id! });
+                            queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
+                          }}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -1177,7 +1192,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Translation Link Dialog */}
       <Dialog open={tlDialogOpen} onClose={() => setTlDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('entity.addTranslationLink')}</DialogTitle>
+        <DialogTitle>{tlEditingId ? t('entity.editTranslationLink') : t('entity.addTranslationLink')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Autocomplete
@@ -1190,6 +1205,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               )}
               isOptionEqualToValue={(option, value) => option.key === value.key}
               size="small"
+              disabled={!!tlEditingId}
             />
             <TextField
               label={t('entity.semanticDifferenceNote')}
@@ -1208,26 +1224,35 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Button onClick={() => setTlDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             onClick={async () => {
-              if (!tlTargetEntityKey) return;
               setTlError('');
               try {
-                await createTranslationLink.mutateAsync({
-                  data: {
-                    firstEntityKey: entityKey,
-                    secondEntityKey: tlTargetEntityKey,
-                    semanticDifferenceNote: tlSemanticNote || undefined,
-                  },
-                });
+                if (tlEditingId) {
+                  await updateTranslationLink.mutateAsync({
+                    id: tlEditingId,
+                    data: { semanticDifferenceNote: tlSemanticNote || null },
+                  });
+                } else {
+                  if (!tlTargetEntityKey) return;
+                  await createTranslationLink.mutateAsync({
+                    data: {
+                      firstEntityKey: entityKey,
+                      secondEntityKey: tlTargetEntityKey,
+                      semanticDifferenceNote: tlSemanticNote || undefined,
+                    },
+                  });
+                }
                 queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
                 setTlDialogOpen(false);
               } catch {
-                setTlError('Failed to create translation link');
+                setTlError(tlEditingId ? 'Failed to update translation link' : 'Failed to create translation link');
               }
             }}
             variant="contained"
-            disabled={!tlTargetEntityKey || createTranslationLink.isPending}
+            disabled={(!tlEditingId && !tlTargetEntityKey) || createTranslationLink.isPending || updateTranslationLink.isPending}
           >
-            {createTranslationLink.isPending ? t('common.saving') : t('common.create')}
+            {(createTranslationLink.isPending || updateTranslationLink.isPending)
+              ? t('common.saving')
+              : tlEditingId ? t('common.save') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

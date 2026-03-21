@@ -207,7 +207,7 @@ open class DpiaService(
         dpia: Dpia,
         currentUser: User
     ) {
-        val isAdmin = currentUser.roles?.contains("ROLE_ADMIN") == true
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         val isTriggeredBy = dpia.triggeredBy?.id == currentUser.id
         if (!isAdmin && !isTriggeredBy) {
             throw ForbiddenOperationException("Only the user who triggered the DPIA or an admin can edit it")

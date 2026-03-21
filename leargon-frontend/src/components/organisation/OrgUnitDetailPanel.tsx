@@ -163,7 +163,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   // Inline edit for type
   const typeEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
-      await updateType.mutateAsync({ key: unitKey, data: { unitType: val || undefined } });
+      await updateType.mutateAsync({ key: unitKey, data: { unitType: val } });
       invalidate();
     },
   });
@@ -425,6 +425,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         onSave={leadEdit.save}
         onCancel={leadEdit.cancel}
         isSaving={leadEdit.isSaving}
+        isMandatory={isMandatory('lead')}
       />
       <Box sx={{ mb: 2 }}>
         {leadEdit.isEditing ? (
@@ -732,6 +733,38 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.map((c) => {
+            if (c.multiValue) {
+              const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
+              return (
+                <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="body2" sx={{ minWidth: 120 }}>{getLocalizedText(c.names, c.key)}:</Typography>
+                  <Select<string[]>
+                    multiple
+                    value={currentValues}
+                    onChange={(e) => {
+                      const selected = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                      const otherAssignments = classEdit.editValue!.filter((a) => a.classificationKey !== c.key);
+                      classEdit.setEditValue([...otherAssignments, ...selected.map((v) => ({ classificationKey: c.key, valueKey: v }))]);
+                    }}
+                    size="small"
+                    displayEmpty
+                    sx={{ minWidth: 200 }}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((v) => {
+                          const val = c.values?.find((cv) => cv.key === v);
+                          return <Chip key={v} label={val ? getLocalizedText(val.names, v) : v} size="small" />;
+                        })}
+                      </Box>
+                    )}
+                  >
+                    {c.values?.map((v) => (
+                      <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              );
+            }
             const currentValue = classEdit.editValue!.find((a) => a.classificationKey === c.key)?.valueKey || '';
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -757,8 +790,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       ) : (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.length > 0 ? availableClassifications.map((c) => {
-            const assignment = unit.classificationAssignments?.find((a) => a.classificationKey === c.key);
-            const value = assignment ? c.values?.find((v) => v.key === assignment.valueKey) : null;
+            const assignments = unit.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                 <Typography variant="body2" sx={{ minWidth: 120 }}>
@@ -768,8 +800,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   )}
                   :
                 </Typography>
-                {value ? (
-                  <Chip label={getLocalizedText(value.names, value.key)} size="small" />
+                {assignments.length > 0 ? (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {assignments.map((a) => {
+                      const value = c.values?.find((v) => v.key === a.valueKey);
+                      return value ? <Chip key={a.valueKey} label={getLocalizedText(value.names, value.key)} size="small" /> : null;
+                    })}
+                  </Box>
                 ) : (
                   <Typography variant="body2" color="text.secondary">—</Typography>
                 )}

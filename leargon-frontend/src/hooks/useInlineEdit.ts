@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 
+const UNSET = Symbol('UNSET');
+
 interface UseInlineEditOptions<T> {
   onSave: (value: T) => Promise<void>;
 }
@@ -17,30 +19,34 @@ interface UseInlineEditReturn<T> {
 
 export function useInlineEdit<T>({ onSave }: UseInlineEditOptions<T>): UseInlineEditReturn<T> {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState<T | null>(null);
+  const [editValue, setEditValueState] = useState<T | typeof UNSET>(UNSET);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const startEdit = useCallback((currentValue: T) => {
-    setEditValue(currentValue);
+    setEditValueState(currentValue);
     setIsEditing(true);
     setError(null);
   }, []);
 
   const cancel = useCallback(() => {
     setIsEditing(false);
-    setEditValue(null);
+    setEditValueState(UNSET);
     setError(null);
   }, []);
 
+  const setEditValue = useCallback((value: T) => {
+    setEditValueState(value);
+  }, []);
+
   const save = useCallback(async () => {
-    if (editValue === null) return;
+    if (editValue === UNSET) return;
     setIsSaving(true);
     setError(null);
     try {
-      await onSave(editValue);
+      await onSave(editValue as T);
       setIsEditing(false);
-      setEditValue(null);
+      setEditValueState(UNSET);
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Save failed');
     } finally {
@@ -48,5 +54,14 @@ export function useInlineEdit<T>({ onSave }: UseInlineEditOptions<T>): UseInline
     }
   }, [editValue, onSave]);
 
-  return { isEditing, editValue, isSaving, error, startEdit, setEditValue, save, cancel };
+  return {
+    isEditing,
+    editValue: editValue === UNSET ? null : (editValue as T | null),
+    isSaving,
+    error,
+    startEdit,
+    setEditValue,
+    save,
+    cancel,
+  };
 }

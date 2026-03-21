@@ -22,6 +22,11 @@ interface TranslationLinkRepository : JpaRepository<TranslationLink, Long> {
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): java.util.Optional<TranslationLink>
 
+    @Join(value = "firstEntity", type = Join.Type.LEFT_FETCH)
+    @Join(value = "secondEntity", type = Join.Type.LEFT_FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
+    override fun findAll(): List<TranslationLink>
+
     fun existsByFirstEntityIdAndSecondEntityId(
         firstEntityId: Long,
         secondEntityId: Long

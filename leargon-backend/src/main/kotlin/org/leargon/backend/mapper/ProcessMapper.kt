@@ -73,6 +73,7 @@ open class ProcessMapper(
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .calledProcessKeys(extractCalledProcessKeys(process.bpmnXml))
     }
 
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
@@ -102,6 +103,14 @@ open class ProcessMapper(
             }.sortedBy { it.key }
 
     companion object {
+        private val CALLED_ELEMENT_REGEX = Regex("""calledElement="([^"]+)"""")
+
+        @JvmStatic
+        fun extractCalledProcessKeys(bpmnXml: String?): List<String> {
+            if (bpmnXml.isNullOrBlank()) return emptyList()
+            return CALLED_ELEMENT_REGEX.findAll(bpmnXml).map { it.groupValues[1] }.toList()
+        }
+
         @JvmStatic
         fun toOrgUnitSummaryList(units: Collection<OrganisationalUnit>?): List<OrganisationalUnitSummaryResponse> {
             if (units == null) return emptyList()

@@ -55,6 +55,7 @@ import type {
   UpdateProcessItSystemsRequest,
   UpdateProcessLegalBasisRequest,
   UpdateProcessOwnerRequest,
+  UpdateProcessParentRequest,
   UpdateProcessPurposeRequest,
   UpdateProcessSecurityMeasuresRequest,
   UpdateProcessTypeRequest,
@@ -923,6 +924,107 @@ export const useUpdateProcessCode = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateProcessCodeMutationOptions(options), queryClient);
+    }
+    /**
+ * Assigns or removes the parent process. Only the process owner or an admin can update.
+ * @summary Update process parent
+ */
+export type updateProcessParentResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessParentResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessParentResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessParentResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessParentResponseSuccess = (updateProcessParentResponse200) & {
+  headers: Headers;
+};
+export type updateProcessParentResponseError = (updateProcessParentResponse401 | updateProcessParentResponse403 | updateProcessParentResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessParentResponse = (updateProcessParentResponseSuccess | updateProcessParentResponseError)
+
+export const getUpdateProcessParentUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/parent`
+}
+
+export const updateProcessParent = async (key: string,
+    updateProcessParentRequest: UpdateProcessParentRequest, options?: RequestInit): Promise<updateProcessParentResponse> => {
+  
+  return customAxios<updateProcessParentResponse>(getUpdateProcessParentUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessParentRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessParentMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessParent>>, TError,{key: string;data: UpdateProcessParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessParent>>, TError,{key: string;data: UpdateProcessParentRequest}, TContext> => {
+
+const mutationKey = ['updateProcessParent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessParent>>, {key: string;data: UpdateProcessParentRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessParent(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessParent>>>
+    export type UpdateProcessParentMutationBody = UpdateProcessParentRequest
+    export type UpdateProcessParentMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process parent
+ */
+export const useUpdateProcessParent = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessParent>>, TError,{key: string;data: UpdateProcessParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessParent>>,
+        TError,
+        {key: string;data: UpdateProcessParentRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessParentMutationOptions(options), queryClient);
     }
     /**
  * Updates the localized descriptions of a process. Only the process owner or an admin can update.

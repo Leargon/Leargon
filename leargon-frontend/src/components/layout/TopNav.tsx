@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import {
 import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
+import GlobalSearch from './GlobalSearch';
 import { useThemeMode } from '../../context/ThemeContext';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -32,6 +33,8 @@ const PERSPECTIVES: { id: Perspective; labelKey: string; icon: React.ReactNode; 
 
 const TopNav: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
   const { effectiveMode, toggleMode } = useThemeMode();
@@ -71,7 +74,7 @@ const TopNav: React.FC = () => {
       />
 
       {/* Perspective tabs */}
-      <Box sx={{ display: 'flex', gap: 0.5, flexGrow: 1 }}>
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
         {PERSPECTIVES.map((p) => (
           <Button
             key={p.id}
@@ -79,12 +82,12 @@ const TopNav: React.FC = () => {
             onClick={() => handlePerspectiveClick(p)}
             size="small"
             sx={{
-              color: perspective === p.id ? 'white' : 'grey.400',
-              bgcolor: perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: !isSettingsRoute && perspective === p.id ? 'white' : 'grey.400',
+              bgcolor: !isSettingsRoute && perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
               borderRadius: 1,
               px: 1.5,
               textTransform: 'none',
-              fontWeight: perspective === p.id ? 600 : 400,
+              fontWeight: !isSettingsRoute && perspective === p.id ? 600 : 400,
               fontSize: '0.8rem',
               whiteSpace: 'nowrap',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
@@ -93,6 +96,11 @@ const TopNav: React.FC = () => {
             {p.labelKey}
           </Button>
         ))}
+      </Box>
+
+      {/* Global search */}
+      <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', px: 2 }}>
+        <GlobalSearch />
       </Box>
 
       <Divider orientation="vertical" flexItem sx={{ borderColor: 'grey.700', mx: 1 }} />
@@ -126,7 +134,16 @@ const TopNav: React.FC = () => {
       {/* Settings (admin only) */}
       {isAdmin && (
         <Tooltip title="Settings">
-          <IconButton size="small" onClick={() => navigate('/settings/users')} sx={{ color: 'grey.400', '&:hover': { color: 'white' } }}>
+          <IconButton
+            size="small"
+            onClick={() => navigate('/settings/users')}
+            sx={{
+              color: isSettingsRoute ? 'white' : 'grey.400',
+              bgcolor: isSettingsRoute ? 'rgba(255,255,255,0.12)' : 'transparent',
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
+            }}
+          >
             <Settings fontSize="small" />
           </IconButton>
         </Tooltip>

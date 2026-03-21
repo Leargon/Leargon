@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   Autocomplete,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,8 +13,11 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useGetAllProcesses } from '../../../api/generated/process/process';
+import { useGetAllProcesses, useCreateProcess, getGetAllProcessesQueryKey } from '../../../api/generated/process/process';
+import { useGetSupportedLocales } from '../../../api/generated/locale/locale';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ProcessResponse } from '../../../api/generated/model/processResponse';
+import type { SupportedLocaleResponse } from '../../../api/generated/model/supportedLocaleResponse';
 import { useLocale } from '../../../context/LocaleContext';
 
 interface Props {
@@ -46,12 +50,20 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<'existing' | 'new'>('existing');
   const [selectedProcess, setSelectedProcess] = useState<ProcessResponse | null>(null);
   const [newName, setNewName] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
 
   const { data: processesResponse } = useGetAllProcesses();
+  const { data: localesResponse } = useGetSupportedLocales();
   const allProcesses = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
+  const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
+
+  const createProcess = useCreateProcess();
 
   // Exclude the current process itself from the list
   const availableProcesses = useMemo(
@@ -61,12 +73,27 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
 
   const elementLabel = TASK_ELEMENT_TYPES[elementType] ?? elementType;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    setError('');
     if (tab === 'existing' && selectedProcess) {
       const name = getLocalizedText(selectedProcess.names);
       onConfirm(name, selectedProcess.key);
+      handleClose();
     } else if (tab === 'new' && newName.trim()) {
-      onConfirm(newName.trim());
+      setCreating(true);
+      try {
+        const res = await createProcess.mutateAsync({
+          data: { names: [{ locale: defaultLocale, text: newName.trim() }] },
+        });
+        await queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
+        const createdProcess = res.data as ProcessResponse;
+        onConfirm(newName.trim(), createdProcess.key);
+        handleClose();
+      } catch {
+        setError(t('processDiagram.createProcessError'));
+      } finally {
+        setCreating(false);
+      }
     }
   };
 
@@ -74,6 +101,7 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
     setSelectedProcess(null);
     setNewName('');
     setTab('existing');
+    setError('');
     onCancel();
   };
 
@@ -137,20 +165,25 @@ const BpmnElementLinkDialog: React.FC<Props> = ({
               size="small"
               fullWidth
               autoFocus
-              onKeyDown={(e) => { if (e.key === 'Enter' && canConfirm) handleConfirm(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && canConfirm && !creating) handleConfirm(); }}
             />
+            {error && (
+              <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                {error}
+              </Typography>
+            )}
           </>
         )}
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose}>{t('common.cancel')}</Button>
+        <Button onClick={handleClose} disabled={creating}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handleConfirm}
-          disabled={!canConfirm}
+          disabled={!canConfirm || creating}
         >
-          {t('common.apply')}
+          {creating ? <CircularProgress size={16} /> : t('common.apply')}
         </Button>
       </DialogActions>
     </Dialog>

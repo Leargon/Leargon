@@ -10,6 +10,7 @@ interface TranslationEditorProps {
   onDescriptionsChange: (descriptions: LocalizedText[]) => void;
   disabled?: boolean;
   nameErrors?: Record<string, string>;
+  hideDescriptions?: boolean;
 }
 
 const TranslationEditor: React.FC<TranslationEditorProps> = ({
@@ -20,6 +21,7 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
   onDescriptionsChange,
   disabled = false,
   nameErrors = {},
+  hideDescriptions = false,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -90,16 +92,18 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
                 helperText={nameErrors[locale.localeCode]}
                 inputProps={{ maxLength: 255 }}
               />
-              <TextField
-                label={`Description (${locale.displayName})`}
-                value={getDescription(locale.localeCode)}
-                onChange={(e) => updateDescription(locale.localeCode, e.target.value)}
-                fullWidth
-                size="small"
-                multiline
-                rows={3}
-                disabled={disabled}
-              />
+              {!hideDescriptions && (
+                <TextField
+                  label={`Description (${locale.displayName})`}
+                  value={getDescription(locale.localeCode)}
+                  onChange={(e) => updateDescription(locale.localeCode, e.target.value)}
+                  fullWidth
+                  size="small"
+                  multiline
+                  rows={3}
+                  disabled={disabled}
+                />
+              )}
             </Box>
           )}
         </Box>

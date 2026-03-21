@@ -16,11 +16,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { SearchResultResponse } from './searchResultResponse';
 
-export interface UpdateProcessCodeRequest {
-  /**
-   * New process code (null or empty to clear the code without changing the key)
-   * @nullable
-   */
-  code?: string | null;
+export interface SearchResponse {
+  query?: string;
+  totalCount?: number;
+  results?: SearchResultResponse[];
 }

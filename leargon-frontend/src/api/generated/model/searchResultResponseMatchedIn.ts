@@ -17,10 +17,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export interface UpdateProcessCodeRequest {
-  /**
-   * New process code (null or empty to clear the code without changing the key)
-   * @nullable
-   */
-  code?: string | null;
-}
+export type SearchResultResponseMatchedIn = typeof SearchResultResponseMatchedIn[keyof typeof SearchResultResponseMatchedIn];
+
+
+export const SearchResultResponseMatchedIn = {
+  NAME: 'NAME',
+  DESCRIPTION: 'DESCRIPTION',
+} as const;

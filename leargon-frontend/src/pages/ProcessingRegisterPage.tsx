@@ -168,6 +168,9 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           sx={canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
           {editingField === 'legalBasis' ? (
             <ClickAwayListener onClickAway={() => setEditingField(null)}>
+              {/* stopPropagation prevents portal click events from bubbling to the
+                  TableCell's onClick and re-opening the select immediately */}
+              <span onClick={(e) => e.stopPropagation()}>
               <Select
                 autoFocus
                 open
@@ -183,6 +186,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
                   <MenuItem key={lb} value={lb}>{t(`legalBasis.${lb}` as Parameters<typeof t>[0])}</MenuItem>
                 ))}
               </Select>
+              </span>
             </ClickAwayListener>
           ) : saving && editingField === null ? (
             <CircularProgress size={14} />

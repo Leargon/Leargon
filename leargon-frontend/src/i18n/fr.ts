@@ -41,6 +41,7 @@ const fr = {
     topLevel: 'Niveau supérieur',
     apply: 'Appliquer',
     noOptions: 'Aucune option',
+    open: 'Ouvrir',
   },
   tabs: {
     compliance: 'Compliance',
@@ -68,6 +69,7 @@ const fr = {
     translationLinks: 'Liens de traduction',
     noTranslationLinks: 'Aucun lien de traduction enregistré',
     addTranslationLink: 'Ajouter un lien de traduction',
+    editTranslationLink: 'Modifier le lien de traduction',
     linkedEntity: 'Entité liée',
     semanticDifferenceNote: 'Note de différence sémantique',
   },
@@ -305,11 +307,15 @@ const fr = {
     selectExisting: 'Sélectionner un processus existant',
     nameNew: 'Saisir un nom',
     selectExistingHint: 'Associer cet élément à un processus existant dans le registre.',
-    nameNewHint: 'Saisir un libellé pour cet élément. La liaison peut être faite ultérieurement.',
+    nameNewHint: 'Saisir un nom pour le nouveau processus. Il sera créé dans le registre et lié à cet élément.',
     searchProcess: 'Rechercher un processus…',
     selectedKey: 'Clé',
     topLevel: 'Processus de premier niveau',
     elementName: "Nom de l'élément",
+    createProcessError: 'Impossible de créer le processus',
+    unsavedChanges: 'Modifications non enregistrées',
+    unsavedChangesHint: 'Le diagramme contient des modifications non enregistrées. Les ignorer et quitter ?',
+    discardAndLeave: 'Ignorer et quitter',
   },
 };
 

@@ -171,6 +171,123 @@ export function useGetEntityTranslationLinks<TData = Awaited<ReturnType<typeof g
 
 
 /**
+ * @summary Get all translation links
+ */
+export type getAllTranslationLinksResponse200 = {
+  data: TranslationLinkResponse[]
+  status: 200
+}
+
+export type getAllTranslationLinksResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getAllTranslationLinksResponseSuccess = (getAllTranslationLinksResponse200) & {
+  headers: Headers;
+};
+export type getAllTranslationLinksResponseError = (getAllTranslationLinksResponse401) & {
+  headers: Headers;
+};
+
+export type getAllTranslationLinksResponse = (getAllTranslationLinksResponseSuccess | getAllTranslationLinksResponseError)
+
+export const getGetAllTranslationLinksUrl = () => {
+
+
+  
+
+  return `/translation-links`
+}
+
+export const getAllTranslationLinks = async ( options?: RequestInit): Promise<getAllTranslationLinksResponse> => {
+  
+  return customAxios<getAllTranslationLinksResponse>(getGetAllTranslationLinksUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetAllTranslationLinksQueryKey = () => {
+    return [
+    `/translation-links`
+    ] as const;
+    }
+
+    
+export const getGetAllTranslationLinksQueryOptions = <TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllTranslationLinksQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllTranslationLinks>>> = ({ signal }) => getAllTranslationLinks({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAllTranslationLinksQueryResult = NonNullable<Awaited<ReturnType<typeof getAllTranslationLinks>>>
+export type GetAllTranslationLinksQueryError = void
+
+
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getAllTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getAllTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all translation links
+ */
+
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllTranslationLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * @summary Create a translation link between two entities
  */
 export type createTranslationLinkResponse201 = {

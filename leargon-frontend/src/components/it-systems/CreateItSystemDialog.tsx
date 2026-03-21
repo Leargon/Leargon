@@ -83,6 +83,7 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
           descriptions={[]}
           onNamesChange={setNames}
           onDescriptionsChange={() => {}}
+          hideDescriptions
         />
         <TextField
           label="Vendor"

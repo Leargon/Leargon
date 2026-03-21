@@ -22,6 +22,8 @@ import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.DomainEventProcessLinkRepository
+import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
@@ -39,7 +41,9 @@ open class ProcessService(
     private val userRepository: UserRepository,
     private val localeService: LocaleService,
     private val processMapper: ProcessMapper,
-    private val businessEntityService: BusinessEntityService
+    private val businessEntityService: BusinessEntityService,
+    private val domainEventProcessLinkRepository: DomainEventProcessLinkRepository,
+    private val dpiaRepository: DpiaRepository
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -156,8 +160,11 @@ open class ProcessService(
             process.key = SlugUtil.slugify(defaultName)
         }
 
+        val newKey = process.key
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated names")
+
+        if (newKey != key) updateDiagramReferences(key, newKey)
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
@@ -261,6 +268,29 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun updateProcessParent(
+        key: String,
+        parentKey: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        if (parentKey != null) {
+            if (parentKey == key) throw IllegalArgumentException("A process cannot be its own parent")
+            val newParent = getProcessByKey(parentKey)
+            process.parent = newParent
+        } else {
+            process.parent = null
+        }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Changed parent to ${parentKey ?: "none"}")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessOwner(
         key: String,
         ownerUsername: String,
@@ -290,17 +320,24 @@ open class ProcessService(
     @Transactional
     open fun updateProcessCode(
         key: String,
-        code: String,
+        code: String?,
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        process.code = code
-        process.key = SlugUtil.slugify(code)
+        if (!code.isNullOrBlank()) {
+            process.code = code
+            process.key = SlugUtil.slugify(code)
+        } else {
+            process.code = null
+        }
 
+        val newKey = process.key
         process = processRepository.update(process)
-        createProcessVersion(process, currentUser, "UPDATE", "Updated code to '$code'")
+        createProcessVersion(process, currentUser, "UPDATE", "Updated code to '${code ?: "none"}'")
+
+        if (newKey != key) updateDiagramReferences(key, newKey)
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
@@ -482,6 +519,27 @@ open class ProcessService(
             )
         }
 
+        // Block deletion if referenced in another process's BPMN diagram
+        val referencingDiagrams =
+            processRepository
+                .findByBpmnXmlContaining("%calledElement=\"${process.key}\"%")
+                .filter { it.id != process.id && it.bpmnXml != null }
+        if (referencingDiagrams.isNotEmpty()) {
+            val names = referencingDiagrams.take(3).joinToString(", ") { it.key }
+            throw IllegalArgumentException(
+                "Cannot delete process '${process.key}': it is referenced in the BPMN diagram of: $names"
+            )
+        }
+
+        // Nullify DPIA process reference if any
+        dpiaRepository.findByProcessId(process.id!!).ifPresent { dpia ->
+            dpia.process = null
+            dpiaRepository.update(dpia)
+        }
+
+        // Remove domain event links referencing this process
+        domainEventProcessLinkRepository.deleteByProcessId(process.id!!)
+
         processRepository.delete(process)
     }
 
@@ -575,6 +633,18 @@ open class ProcessService(
                     "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required"
                 )
             }
+        }
+    }
+
+    private fun updateDiagramReferences(
+        oldKey: String,
+        newKey: String
+    ) {
+        processRepository.findByBpmnXmlContaining("%calledElement=\"$oldKey\"%").forEach { diagramProcess ->
+            diagramProcess.bpmnXml =
+                diagramProcess.bpmnXml!!
+                    .replace("calledElement=\"$oldKey\"", "calledElement=\"$newKey\"")
+            processRepository.update(diagramProcess)
         }
     }
 
