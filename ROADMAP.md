@@ -20,6 +20,68 @@
 
 ---
 
+## Priority · BPMN Sub-process Inline Expansion
+
+*Inline expand/collapse of linked call-activity sub-processes directly inside the process BPMN diagram — no navigation away, no popup. The expanded sub-process content is rendered as a nested read-only plane within the same canvas; the parent diagram remains visible and navigable. Screenshots to be provided by user before implementation.*
+
+*Also covers automatic element-type switching: a task element that gains a linked or child process is promoted to a sub-process shape; a sub-process whose linked process has no children and no diagram content is demoted back to a plain task. This keeps the visual model honest without manual shape replacement.*
+
+#### USER STORY 'Expand sub-process inline in BPMN diagram'
+**AS A** process modeller\
+**IF** I am viewing a BPMN diagram that contains a call-activity element linked to another process\
+**I WANT** to click an expand control on that call-activity and see the referenced sub-process diagram rendered inline, nested within the same canvas view, without leaving the page or opening a popup\
+**SO THAT** I can read the full process flow — parent and child — in one continuous view without context-switching
+
+#### USER STORY 'Collapse inline sub-process expansion'
+**AS A** process modeller\
+**IF** a sub-process is currently expanded inline in the BPMN canvas\
+**I WANT** to click a collapse control on that expanded sub-process and have it shrink back to a compact call-activity shape\
+**SO THAT** I can reduce visual noise and return to the high-level parent view without reloading the diagram
+
+#### USER STORY 'Expand and collapse multiple sub-processes independently'
+**AS A** process modeller\
+**IF** a BPMN diagram contains more than one call-activity linked to different processes\
+**I WANT** to expand and collapse each sub-process independently of the others\
+**SO THAT** I can compare selected parts of the hierarchy side by side without being forced into a single drill-down path
+
+#### USER STORY 'Automatically promote task to sub-process shape'
+**AS A** process modeller\
+**IF** a task element in the BPMN diagram has a `calledElement` linking it to a process that has child processes or its own BPMN diagram content\
+**I WANT** the element to automatically display as a sub-process shape (collapsed, with the expand "+" marker) rather than a plain task box\
+**SO THAT** the visual shape always reflects whether the linked process has navigable depth, without requiring a manual shape change
+
+#### USER STORY 'Automatically demote sub-process to task shape'
+**AS A** process modeller\
+**IF** a call-activity sub-process shape links to a process that has no child processes and no BPMN diagram content\
+**I WANT** the element to automatically display as a plain task shape instead of a sub-process shape\
+**SO THAT** the diagram does not suggest navigable depth where none exists, keeping the model accurate
+
+---
+
+## Backlog · BPMN Pools for IT Systems, Executing Units & Subcontractors
+
+*Swim-lane pools in process BPMN diagrams to visualise which IT system, org unit, or external sub-processor is responsible for each task. Depends on IT Systems, Org Units, and Data Processors being linked to a process (already implemented). Requires design decision on pool assignment storage.*
+
+#### USER STORY 'Show IT system lanes in BPMN diagram'
+**AS A** process modeller\
+**IF** one or more IT systems are linked to the process\
+**I WANT** to see a BPMN swim-lane pool per IT system automatically added to the diagram canvas\
+**SO THAT** I can assign tasks to the system that executes them and visualise the tool landscape inline with the process model
+
+#### USER STORY 'Show executing unit lanes in BPMN diagram'
+**AS A** process modeller\
+**IF** one or more executing organisational units are assigned to the process\
+**I WANT** to see a BPMN swim-lane pool per executing unit automatically added to the diagram canvas\
+**SO THAT** the responsible team is visually associated with the tasks they own
+
+#### USER STORY 'Show subcontractor lanes in BPMN diagram'
+**AS A** process modeller\
+**IF** one or more data processors (subcontractors) are linked to the process\
+**I WANT** to see a BPMN swim-lane pool per data processor automatically added to the diagram canvas\
+**SO THAT** tasks delegated to external processors are clearly separated from internally executed tasks
+
+---
+
 ## Batch 2 · Privacy notice generation
 *Single story. Depends on Batches 1–2 (done) producing complete processing register data. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
 *⏱ Sessions: 1 · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*

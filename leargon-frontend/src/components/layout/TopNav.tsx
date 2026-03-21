@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -33,6 +33,8 @@ const PERSPECTIVES: { id: Perspective; labelKey: string; icon: React.ReactNode; 
 
 const TopNav: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
   const { effectiveMode, toggleMode } = useThemeMode();
@@ -80,12 +82,12 @@ const TopNav: React.FC = () => {
             onClick={() => handlePerspectiveClick(p)}
             size="small"
             sx={{
-              color: perspective === p.id ? 'white' : 'grey.400',
-              bgcolor: perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: !isSettingsRoute && perspective === p.id ? 'white' : 'grey.400',
+              bgcolor: !isSettingsRoute && perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
               borderRadius: 1,
               px: 1.5,
               textTransform: 'none',
-              fontWeight: perspective === p.id ? 600 : 400,
+              fontWeight: !isSettingsRoute && perspective === p.id ? 600 : 400,
               fontSize: '0.8rem',
               whiteSpace: 'nowrap',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
@@ -132,7 +134,16 @@ const TopNav: React.FC = () => {
       {/* Settings (admin only) */}
       {isAdmin && (
         <Tooltip title="Settings">
-          <IconButton size="small" onClick={() => navigate('/settings/users')} sx={{ color: 'grey.400', '&:hover': { color: 'white' } }}>
+          <IconButton
+            size="small"
+            onClick={() => navigate('/settings/users')}
+            sx={{
+              color: isSettingsRoute ? 'white' : 'grey.400',
+              bgcolor: isSettingsRoute ? 'rgba(255,255,255,0.12)' : 'transparent',
+              borderRadius: 1,
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
+            }}
+          >
             <Settings fontSize="small" />
           </IconButton>
         </Tooltip>

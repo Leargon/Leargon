@@ -30,6 +30,7 @@ import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessItSystemsRequest
 import org.leargon.backend.model.UpdateProcessLegalBasisRequest
 import org.leargon.backend.model.UpdateProcessOwnerRequest
+import org.leargon.backend.model.UpdateProcessParentRequest
 import org.leargon.backend.model.UpdateProcessPurposeRequest
 import org.leargon.backend.model.UpdateProcessSecurityMeasuresRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
@@ -138,6 +139,14 @@ open class ProcessController(
     ): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.updateProcessCode(key, request.code, currentUser)
+    }
+
+    override fun updateProcessParent(
+        key: String,
+        @Valid @Body request: UpdateProcessParentRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessParent(key, request.parentKey, currentUser)
     }
 
     override fun assignBoundedContextToProcess(

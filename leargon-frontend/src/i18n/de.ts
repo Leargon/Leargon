@@ -42,6 +42,7 @@ const de = {
     topLevel: 'Oberste Ebene',
     apply: 'Übernehmen',
     noOptions: 'Keine Optionen',
+    open: 'Öffnen',
   },
   tabs: {
     compliance: 'Compliance',
@@ -69,6 +70,7 @@ const de = {
     translationLinks: 'Übersetzungsverknüpfungen',
     noTranslationLinks: 'Keine Übersetzungsverknüpfungen erfasst',
     addTranslationLink: 'Übersetzungsverknüpfung hinzufügen',
+    editTranslationLink: 'Übersetzungsverknüpfung bearbeiten',
     linkedEntity: 'Verknüpfte Entität',
     semanticDifferenceNote: 'Semantische Unterschiedsbemerkung',
   },
@@ -306,11 +308,15 @@ const de = {
     selectExisting: 'Vorhandenen Prozess auswählen',
     nameNew: 'Name eingeben',
     selectExistingHint: 'Dieses Element mit einem vorhandenen Prozess verknüpfen.',
-    nameNewHint: 'Name für dieses Element eingeben. Verknüpfung kann später erfolgen.',
+    nameNewHint: 'Name für den neuen Prozess eingeben. Er wird im Register erstellt und mit diesem Element verknüpft.',
     searchProcess: 'Prozess suchen…',
     selectedKey: 'Schlüssel',
     topLevel: 'Hauptprozesse',
     elementName: 'Elementname',
+    createProcessError: 'Prozess konnte nicht erstellt werden',
+    unsavedChanges: 'Ungespeicherte Änderungen',
+    unsavedChangesHint: 'Im Diagramm gibt es ungespeicherte Änderungen. Verwerfen und verlassen?',
+    discardAndLeave: 'Verwerfen & verlassen',
   },
 };
 

@@ -85,6 +85,11 @@ export interface ProcessResponse {
    * @nullable
    */
   mandatoryFields?: string[] | null;
+  /**
+   * Keys of processes referenced as callActivity in this process's BPMN diagram
+   * @nullable
+   */
+  calledProcessKeys?: string[] | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

@@ -82,7 +82,8 @@ function buildGraph(
   const rawProcessNodes: Node[] = [];
   const processInfoMap = new Map<string, { bcKey?: string; bcName?: string; orgKey?: string; orgName?: string }>();
   const processEdges: Edge[] = [];
-  const entityNodes: Node[] = [];
+  // Deduplicated entity nodes: keyed by `input__${entity.key}` or `output__${entity.key}`
+  const entityNodeMap = new Map<string, Node>();
   const entityEdges: Edge[] = [];
   const seen = new Set<string>();
 
@@ -126,42 +127,50 @@ function buildGraph(
 
     if (showEntities) {
       (p.inputEntities ?? []).forEach((entity) => {
-        const eid = `input__${p.key}__${entity.key}`;
-        entityNodes.push({
-          id: eid,
-          type: 'dataEntityNode',
-          position: { x: 0, y: 0 },
-          width: 150,
-          height: 50,
-          data: { label: entity.name, direction: 'input' } satisfies DataEntityNodeData,
-        });
+        const eid = `entity__${entity.key}`;
+        if (!entityNodeMap.has(eid)) {
+          entityNodeMap.set(eid, {
+            id: eid,
+            type: 'dataEntityNode',
+            position: { x: 0, y: 0 },
+            width: 150,
+            height: 44,
+            data: { label: entity.name } satisfies DataEntityNodeData,
+          });
+        }
         entityEdges.push({
-          id: `edge__${eid}`,
+          id: `edge_in__${entity.key}__${p.key}`,
           source: eid,
           target: p.key,
           type: 'default',
-          style: { stroke: '#0097a7', strokeWidth: 1.5 },
-          markerEnd: { type: 'arrowclosed' as const, color: '#0097a7' },
+          label: 'in',
+          labelStyle: { fontSize: 9, fill: '#0097a7' },
+          style: { stroke: '#0097a7', strokeWidth: 2 },
+          markerEnd: { type: 'arrowclosed' as const, color: '#0097a7', width: 16, height: 16 },
         });
       });
 
       (p.outputEntities ?? []).forEach((entity) => {
-        const eid = `output__${p.key}__${entity.key}`;
-        entityNodes.push({
-          id: eid,
-          type: 'dataEntityNode',
-          position: { x: 0, y: 0 },
-          width: 150,
-          height: 50,
-          data: { label: entity.name, direction: 'output' } satisfies DataEntityNodeData,
-        });
+        const eid = `entity__${entity.key}`;
+        if (!entityNodeMap.has(eid)) {
+          entityNodeMap.set(eid, {
+            id: eid,
+            type: 'dataEntityNode',
+            position: { x: 0, y: 0 },
+            width: 150,
+            height: 44,
+            data: { label: entity.name } satisfies DataEntityNodeData,
+          });
+        }
         entityEdges.push({
-          id: `edge__${eid}`,
+          id: `edge_out__${p.key}__${entity.key}`,
           source: p.key,
           target: eid,
           type: 'default',
-          style: { stroke: '#f57c00', strokeWidth: 1.5 },
-          markerEnd: { type: 'arrowclosed' as const, color: '#f57c00' },
+          label: 'out',
+          labelStyle: { fontSize: 9, fill: '#f57c00' },
+          style: { stroke: '#f57c00', strokeWidth: 2 },
+          markerEnd: { type: 'arrowclosed' as const, color: '#f57c00', width: 16, height: 16 },
         });
       });
     }
@@ -185,6 +194,30 @@ function buildGraph(
   }
 
   roots.forEach(addProcess);
+  const entityNodes = Array.from(entityNodeMap.values());
+
+  // Add dashed cross-reference edges for callActivity references between different trees
+  const visibleKeys = new Set(seen);
+  processes.forEach((p) => {
+    if (!visibleKeys.has(p.key)) return;
+    (p.calledProcessKeys ?? []).forEach((targetKey) => {
+      if (!visibleKeys.has(targetKey)) return;
+      // Only show if the target is not already a child of this process
+      const isChild = (p.childProcesses ?? []).some((c) => c.key === targetKey);
+      if (isChild) return;
+      processEdges.push({
+        id: `call__${p.key}__${targetKey}`,
+        source: p.key,
+        target: targetKey,
+        type: 'default',
+        animated: true,
+        style: { stroke: '#ff9800', strokeWidth: 1.5, strokeDasharray: '6 3' },
+        markerEnd: { type: 'arrowclosed' as const, color: '#ff9800' },
+        label: 'calls',
+        labelStyle: { fontSize: 10, fill: '#ff9800' },
+      });
+    });
+  });
 
   // --- Step 2: flat layout (no containers) ----------------------------------------
   if (!useContainers) {
@@ -309,8 +342,9 @@ const ProcessLandscapeDiagram: React.FC = () => {
           navigate(`/processes/${node.id}`);
         }
       } else if (node.type === 'dataEntityNode') {
-        const parts = node.id.split('__');
-        if (parts.length === 3) navigate(`/entities/${parts[2]}`);
+        // id format: "entity__entityKey"
+        const entityKey = node.id.replace(/^entity__/, '');
+        navigate(`/entities/${entityKey}`);
       }
     },
     [navigate],

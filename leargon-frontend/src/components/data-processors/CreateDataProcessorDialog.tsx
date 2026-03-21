@@ -95,6 +95,7 @@ const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ o
           descriptions={[]}
           onNamesChange={setNames}
           onDescriptionsChange={() => {}}
+          hideDescriptions
         />
         <Autocomplete
           multiple

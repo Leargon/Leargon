@@ -105,9 +105,19 @@ open class ItSystemService(
             processRepository.findByKey(processKey).orElseThrow {
                 ResourceNotFoundException("Process not found: $processKey")
             }
-        val repo = itSystemRepository
-        val itSystems = request.itSystemKeys.mapNotNull { repo.findByKey(it) }.toMutableSet()
-        process.itSystems = itSystems
-        processRepository.update(process)
+
+        // Process.itSystems is the inverse side of the ManyToMany (mappedBy = "linkedProcesses").
+        // Persisting requires updating the owning side: ItSystem.linkedProcesses.
+        val currentOwners = itSystemRepository.findByLinkedProcessesKey(processKey)
+        currentOwners.forEach { itSystem ->
+            itSystem.linkedProcesses.removeIf { it.key == processKey }
+            itSystemRepository.update(itSystem)
+        }
+
+        val newItSystems = request.itSystemKeys.mapNotNull { itSystemRepository.findByKey(it) }
+        newItSystems.forEach { itSystem ->
+            itSystem.linkedProcesses.add(process)
+            itSystemRepository.update(itSystem)
+        }
     }
 }

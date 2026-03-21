@@ -168,6 +168,7 @@ export * from './updateProcessCodeRequest';
 export * from './updateProcessItSystemsRequest';
 export * from './updateProcessLegalBasisRequest';
 export * from './updateProcessOwnerRequest';
+export * from './updateProcessParentRequest';
 export * from './updateProcessPurposeRequest';
 export * from './updateProcessSecurityMeasuresRequest';
 export * from './updateProcessTypeRequest';
