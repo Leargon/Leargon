@@ -30,3 +30,22 @@ In a world of siloed information, seeing the "Big Picture" is a monumental chall
 ## 🚀 Awakening the Guardian
 * Check out [DEPLOYMENT.md](https://github.com/Leargon/Leargon/blob/main/DEPLOYMENT.md) for deployment instructions
 * Check out [ARCHITECTURE.md](https://github.com/Leargon/Leargon/blob/main/ARCHITECTURE.md) for architecture diagrams
+
+---
+
+## ⚖️ License & Attribution
+
+**Léargon is a non-commercial, open-source project.**
+
+This software is provided free of charge and is not intended for commercial use.
+
+### Third-party libraries
+
+Léargon builds on the shoulders of excellent open-source projects. The following libraries deserve explicit acknowledgment:
+
+| Library | Use in Léargon | License |
+|---------|---------------|---------|
+| **[bpmn-js](https://github.com/bpmn-io/bpmn-js)** by Camunda | BPMN process diagram rendering and editing | [bpmn.io license](https://github.com/bpmn-io/bpmn-js/blob/develop/LICENSE) (non-commercial use permitted) |
+| **[Context Mapper](https://contextmapper.org/)** | Inspiration and vocabulary for DDD context mapping (Bounded Contexts, Context Relationships, Domain Events) | Apache 2.0 |
+
+> **Note on bpmn-js:** bpmn-js is free for non-commercial use under the [bpmn.io license](https://bpmn.io/license/). Commercial use requires a separate license from Camunda. Léargon is a non-commercial tool and uses bpmn-js in accordance with this license.
