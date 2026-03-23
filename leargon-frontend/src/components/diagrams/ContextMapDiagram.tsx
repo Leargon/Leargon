@@ -35,6 +35,7 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
   OPEN_HOST_SERVICE: '#4caf50',
   PUBLISHED_LANGUAGE: '#00bcd4',
   BIG_BALL_OF_MUD: '#795548',
+  SEPARATE_WAYS: '#9e9e9e',
 };
 
 const RELATIONSHIP_ABBR: Record<string, string> = {
@@ -46,6 +47,7 @@ const RELATIONSHIP_ABBR: Record<string, string> = {
   OPEN_HOST_SERVICE: 'OHS',
   PUBLISHED_LANGUAGE: 'PL',
   BIG_BALL_OF_MUD: 'BBM',
+  SEPARATE_WAYS: 'SW',
 };
 
 const DOMAIN_TYPE_COLORS: Record<string, string> = {
@@ -154,6 +156,7 @@ function buildGraph(
       const relType = r.relationshipType as string;
       const color = RELATIONSHIP_COLORS[relType] ?? '#aaa';
       const abbr = RELATIONSHIP_ABBR[relType] ?? relType;
+      const isSeparateWays = relType === 'SEPARATE_WAYS';
       const isBidirectional = relType === 'PARTNERSHIP' || relType === 'SHARED_KERNEL' || relType === 'BIG_BALL_OF_MUD';
       return {
         id: `rel-${r.id ?? i}`,
@@ -163,10 +166,11 @@ function buildGraph(
         type: 'default',
         style: {
           stroke: color,
-          strokeWidth: 2,
-          strokeDasharray: isBidirectional ? '6,4' : undefined,
+          strokeWidth: isSeparateWays ? 1.5 : 2,
+          strokeDasharray: isSeparateWays ? '8,6' : isBidirectional ? '6,4' : undefined,
+          opacity: isSeparateWays ? 0.6 : 1,
         },
-        markerEnd: isBidirectional ? undefined : { type: 'arrowclosed' as const, color },
+        markerEnd: isBidirectional || isSeparateWays ? undefined : { type: 'arrowclosed' as const, color },
         markerStart: isBidirectional ? { type: 'arrowclosed' as const, color } : undefined,
         labelStyle: { fill: color, fontWeight: 700, fontSize: 11 },
         labelBgStyle: { fillOpacity: 0.85 },

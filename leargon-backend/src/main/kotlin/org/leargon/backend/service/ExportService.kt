@@ -1,6 +1,7 @@
 package org.leargon.backend.service
 
 import jakarta.inject.Singleton
+import org.leargon.backend.domain.BusinessDataQualityRule
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.Process
 import org.leargon.backend.repository.ContextRelationshipRepository
@@ -175,6 +176,7 @@ open class ExportService(
                     "OPEN_HOST_SERVICE" -> "  $upId [U, OHS] -> [D] $downId : Open-Host-Service"
                     "PUBLISHED_LANGUAGE" -> "  $upId [U, OHS, PL] -> [D] $downId : Published-Language"
                     "BIG_BALL_OF_MUD" -> "  $upId [BBM] <-> [BBM] $downId : Big-Ball-Of-Mud"
+                    "SEPARATE_WAYS" -> "  $upId [SW] <-> [SW] $downId : Separate-Ways"
                     else -> "  $upId -> $downId"
                 }
             sb.appendLine(line)
@@ -192,6 +194,32 @@ open class ExportService(
     }
 
     private fun toCmlIdentifier(name: String): String = name.replace(Regex("[^A-Za-z0-9]"), "_").replace(Regex("_+"), "_").trim('_')
+
+    fun exportBusinessDataQualityRules(rules: List<BusinessDataQualityRule>): String {
+        val sb = StringBuilder()
+        sb.appendLine(
+            csvRow(
+                "Entity Key",
+                "Entity Name",
+                "Description",
+                "Severity"
+            )
+        )
+        for (rule in rules) {
+            val entity = rule.businessEntity
+            val entityKey = entity?.key ?: ""
+            val entityName = entity?.names?.firstOrNull()?.text ?: entityKey
+            sb.appendLine(
+                csvRow(
+                    entityKey,
+                    entityName,
+                    rule.description,
+                    rule.severity
+                )
+            )
+        }
+        return sb.toString()
+    }
 
     fun exportDpiaRegister(): String {
         val sb = StringBuilder()

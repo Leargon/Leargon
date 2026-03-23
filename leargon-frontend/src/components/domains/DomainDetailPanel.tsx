@@ -30,6 +30,8 @@ import {
   TableHead,
   FormControl,
   InputLabel,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
@@ -65,7 +67,9 @@ import {
   getGetBoundedContextsForDomainQueryKey,
   useCreateBoundedContext,
   useDeleteBoundedContext,
+  useUpdateBoundedContextOwningTeam,
 } from '../../api/generated/bounded-context/bounded-context';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useUpdateBusinessDomainVisionStatement } from '../../api/generated/business-domain/business-domain';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
@@ -74,6 +78,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateDomainDialog from './CreateDomainDialog';
+import BoundedContextULPanel from './BoundedContextULPanel';
 import type {
   LocalizedText,
   BusinessDomainType,
@@ -85,6 +90,7 @@ import type {
   ContextRelationshipResponse,
   BoundedContextResponse,
   DomainEventResponse,
+  OrganisationalUnitSummaryResponse,
 } from '../../api/generated/model';
 import type { ContextMapperRelationshipType } from '../../api/generated/model/contextMapperRelationshipType';
 
@@ -97,6 +103,7 @@ const RELATIONSHIP_TYPES: ContextMapperRelationshipType[] = [
   'OPEN_HOST_SERVICE',
   'PUBLISHED_LANGUAGE',
   'BIG_BALL_OF_MUD',
+  'SEPARATE_WAYS',
 ];
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
@@ -108,6 +115,7 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
   OPEN_HOST_SERVICE: '#4caf50',
   PUBLISHED_LANGUAGE: '#00bcd4',
   BIG_BALL_OF_MUD: '#795548',
+  SEPARATE_WAYS: '#9e9e9e',
 };
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
@@ -149,9 +157,18 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const [addBcOpen, setAddBcOpen] = useState(false);
   const [addBcName, setAddBcName] = useState('');
   const [addBcError, setAddBcError] = useState('');
+  const [selectedBcKey, setSelectedBcKey] = useState<string | null>(null);
 
   const createBoundedContext = useCreateBoundedContext();
   const deleteBoundedContext = useDeleteBoundedContext();
+  const updateBcOwningTeam = useUpdateBoundedContextOwningTeam();
+
+  const { data: allOrgUnitsData } = useGetAllOrganisationalUnits();
+  const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitSummaryResponse[] | undefined) ?? [];
+
+  const [owningTeamEditBcKey, setOwningTeamEditBcKey] = useState<string | null>(null);
+  const [owningTeamEditValue, setOwningTeamEditValue] = useState<OrganisationalUnitSummaryResponse | null>(null);
+  const [owningTeamSaving, setOwningTeamSaving] = useState(false);
 
   const invalidateBcs = () => {
     queryClient.invalidateQueries({ queryKey: getGetBoundedContextsForDomainQueryKey(domainKey) });
@@ -685,21 +702,103 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {boundedContexts.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('domain.noBoundedContexts')}</Typography>
       ) : (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
           {boundedContexts.map((bc) => (
             <Chip
               key={bc.key}
               label={getLocalizedText(bc.names, bc.key)}
               size="small"
-              variant="outlined"
-              onDelete={isAdmin ? async () => {
+              variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
+              color={selectedBcKey === bc.key ? 'primary' : 'default'}
+              onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
+              onDelete={isAdmin ? async (e: React.MouseEvent) => {
+                e.stopPropagation();
                 await deleteBoundedContext.mutateAsync({ key: bc.key });
+                if (selectedBcKey === bc.key) setSelectedBcKey(null);
                 invalidateBcs();
               } : undefined}
             />
           ))}
         </Box>
       )}
+      {selectedBcKey && (() => {
+        const selectedBc = boundedContexts.find((bc) => bc.key === selectedBcKey);
+        return (
+          <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+              <Tabs value={0}>
+                <Tab label={t('boundedContextUL.title')} />
+              </Tabs>
+            </Box>
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+              {selectedBc ? getLocalizedText(selectedBc.names, selectedBc.key) : selectedBcKey}
+            </Typography>
+            {/* Owning Team */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100 }}>
+                {t('boundedContext.owningTeam')}:
+              </Typography>
+              {owningTeamEditBcKey === selectedBcKey ? (
+                <>
+                  <Autocomplete
+                    size="small"
+                    options={allOrgUnits}
+                    getOptionLabel={(opt) => opt.name}
+                    value={owningTeamEditValue}
+                    onChange={(_e, val) => setOwningTeamEditValue(val)}
+                    renderInput={(params) => <TextField {...params} size="small" sx={{ minWidth: 200 }} />}
+                    isOptionEqualToValue={(a, b) => a.key === b.key}
+                  />
+                  <IconButton
+                    size="small"
+                    disabled={owningTeamSaving}
+                    onClick={async () => {
+                      setOwningTeamSaving(true);
+                      try {
+                        await updateBcOwningTeam.mutateAsync({
+                          key: selectedBcKey,
+                          data: { owningTeamKey: owningTeamEditValue?.key ?? null },
+                        });
+                        invalidateBcs();
+                        setOwningTeamEditBcKey(null);
+                      } finally {
+                        setOwningTeamSaving(false);
+                      }
+                    }}
+                  >
+                    <Check fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => setOwningTeamEditBcKey(null)}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  {selectedBc?.owningTeam ? (
+                    <Chip label={selectedBc.owningTeam.name} size="small" variant="outlined" />
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      {t('boundedContext.noOwningTeam')}
+                    </Typography>
+                  )}
+                  {isAdmin && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setOwningTeamEditValue(selectedBc?.owningTeam ?? null);
+                        setOwningTeamEditBcKey(selectedBcKey);
+                      }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  )}
+                </>
+              )}
+            </Box>
+            <BoundedContextULPanel bcKey={selectedBcKey} />
+          </Paper>
+        );
+      })()}
 
       <Divider sx={{ my: 2 }} />
 

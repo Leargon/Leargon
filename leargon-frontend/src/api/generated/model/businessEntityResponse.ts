@@ -17,6 +17,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
+import type { BusinessDataQualityRuleResponse } from './businessDataQualityRuleResponse';
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
@@ -64,6 +65,11 @@ export interface BusinessEntityResponse {
    * @nullable
    */
   mandatoryFields?: string[] | null;
+  /**
+   * Data quality rules defined for this entity
+   * @nullable
+   */
+  qualityRules?: BusinessDataQualityRuleResponse[] | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

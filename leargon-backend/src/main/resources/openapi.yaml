@@ -72,6 +72,8 @@ tags:
   description: Domain Event management endpoints
 - name: ItSystem
   description: IT System management endpoints
+- name: BusinessDataQualityRule
+  description: Business Data Quality Rule management endpoints
 - name: Search
   description: Full-text catalogue search endpoint
 paths:
@@ -1270,6 +1272,39 @@ paths:
           description: Not found
         '401':
           description: Not authenticated
+  /bounded-contexts/{key}/owning-team:
+    put:
+      tags:
+      - BoundedContext
+      summary: Update bounded context owning team
+      operationId: updateBoundedContextOwningTeam
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBoundedContextOwningTeamRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
   /business-entities/{key}/translation-links:
     get:
       tags:
@@ -1297,6 +1332,124 @@ paths:
           description: Not authenticated
         '404':
           description: Entity not found
+  /business-entities/{key}/quality-rules:
+    get:
+      tags:
+      - BusinessDataQualityRule
+      summary: Get all quality rules for a business entity
+      operationId: getQualityRulesForEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of quality rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessDataQualityRuleResponse'
+        '404':
+          description: Business entity not found
+    post:
+      tags:
+      - BusinessDataQualityRule
+      summary: Create a quality rule for a business entity
+      operationId: createQualityRule
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessDataQualityRuleRequest'
+      responses:
+        '201':
+          description: Quality rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDataQualityRuleResponse'
+        '403':
+          description: Forbidden (not data owner or admin)
+        '404':
+          description: Business entity not found
+  /business-entities/{key}/quality-rules/{ruleId}:
+    put:
+      tags:
+      - BusinessDataQualityRule
+      summary: Update a quality rule
+      operationId: updateQualityRule
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessDataQualityRuleRequest'
+      responses:
+        '200':
+          description: Quality rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDataQualityRuleResponse'
+        '403':
+          description: Forbidden (not data owner or admin)
+        '404':
+          description: Rule or entity not found
+    delete:
+      tags:
+      - BusinessDataQualityRule
+      summary: Delete a quality rule
+      operationId: deleteQualityRule
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: ruleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Quality rule deleted
+        '403':
+          description: Forbidden (not data owner or admin)
+        '404':
+          description: Rule or entity not found
   /translation-links:
     get:
       tags:
@@ -5220,6 +5373,23 @@ paths:
           description: Not authenticated
         '403':
           description: Requires ROLE_ADMIN
+  /export/business-data-quality-rules:
+    get:
+      tags:
+      - Export
+      summary: Export all business data quality rules as CSV
+      operationId: exportBusinessDataQualityRules
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: CSV export of all business data quality rules
+          content:
+            text/csv:
+              schema:
+                type: string
+        '403':
+          description: Requires ROLE_ADMIN
   /analytics/team-insights:
     get:
       tags:
@@ -5544,6 +5714,9 @@ components:
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
+        owningTeam:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -5573,6 +5746,10 @@ components:
           - SYSTEM
           - TEAM
           - SHARED_KERNEL
+        owningTeamKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit that owns this bounded context
     UpdateBoundedContextNamesRequest:
       type: object
       required:
@@ -5592,6 +5769,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+    UpdateBoundedContextOwningTeamRequest:
+      type: object
+      properties:
+        owningTeamKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit that owns this bounded context, or null to unset
     BusinessDomainSummaryResponse:
       type: object
       required:
@@ -5792,6 +5976,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        qualityRules:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/BusinessDataQualityRuleResponse'
+          description: Data quality rules defined for this entity
         createdAt:
           type: string
           format: date-time
@@ -5802,6 +5992,56 @@ components:
           format: date-time
           description: Last update timestamp
           example: '2024-01-15T10:30:00Z'
+    BusinessDataQualityRuleResponse:
+      type: object
+      required:
+      - id
+      - description
+      - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+          description: Freetext description of the data quality rule
+          example: An active customer must have had at least one transaction in the last 6 months
+        severity:
+          type: string
+          nullable: true
+          enum: [MUST, SHOULD, MAY]
+          description: Optional severity level of the rule
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateBusinessDataQualityRuleRequest:
+      type: object
+      required:
+      - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+        severity:
+          type: string
+          nullable: true
+          enum: [MUST, SHOULD, MAY]
+    UpdateBusinessDataQualityRuleRequest:
+      type: object
+      required:
+      - description
+      properties:
+        description:
+          type: string
+          minLength: 1
+        severity:
+          type: string
+          nullable: true
+          enum: [MUST, SHOULD, MAY]
     BusinessEntitySummaryResponse:
       type: object
       required:
@@ -7652,6 +7892,7 @@ components:
       - OPEN_HOST_SERVICE
       - PUBLISHED_LANGUAGE
       - BIG_BALL_OF_MUD
+      - SEPARATE_WAYS
     ContextRelationshipResponse:
       type: object
       required:

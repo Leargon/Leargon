@@ -14,6 +14,7 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
 import spock.lang.Specification
@@ -28,6 +29,7 @@ class BoundedContextControllerSpec extends Specification {
     @Inject BoundedContextRepository boundedContextRepository
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
+    @Inject OrganisationalUnitRepository orgUnitRepository
 
     def setup() {
         if (localeRepository.count() == 0) {
@@ -40,6 +42,7 @@ class BoundedContextControllerSpec extends Specification {
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
+        orgUnitRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -83,6 +86,13 @@ class BoundedContextControllerSpec extends Specification {
 
     private String encodedKey(String key) {
         URLEncoder.encode(key as String, "UTF-8")
+    }
+
+    private Map createOrgUnit(String adminToken, String name) {
+        def body = [names: [[locale: "en", text: name]]]
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/organisational-units", body).bearerAuth(adminToken), Map)
+        resp.body()
     }
 
     // ─── GET /business-domains/{key}/bounded-contexts ────────────────────────
@@ -408,5 +418,104 @@ class BoundedContextControllerSpec extends Specification {
         then:
         response.status == HttpStatus.OK
         response.body().boundedContexts.size() == 2
+    }
+
+    // ─── PUT /bounded-contexts/{key}/owning-team ─────────────────────────────
+
+    def "PUT /bounded-contexts/{key}/owning-team sets owning team for admin"() {
+        given:
+        def adminToken = createAdminToken()
+        def domainKey = createDomain(adminToken, "Domain For Owning Team")
+        def bc = createBoundedContext(adminToken, domainKey, "Context With Team")
+        def encodedKey = encodedKey(bc.key as String)
+
+        def orgUnit = createOrgUnit(adminToken, "Dev Team")
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.PUT("/bounded-contexts/${encodedKey}/owning-team",
+                [owningTeamKey: orgUnit.key]).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().owningTeam != null
+        response.body().owningTeam.key == orgUnit.key
+        response.body().owningTeam.name == "Dev Team"
+    }
+
+    def "PUT /bounded-contexts/{key}/owning-team with null clears owning team"() {
+        given:
+        def adminToken = createAdminToken()
+        def domainKey = createDomain(adminToken, "Domain For Clear Team")
+        def bc = createBoundedContext(adminToken, domainKey, "Context Clear Team")
+        def encodedKey = encodedKey(bc.key as String)
+
+        def orgUnit = createOrgUnit(adminToken, "Clear Team")
+
+        // First set the owning team
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/bounded-contexts/${encodedKey}/owning-team",
+                [owningTeamKey: orgUnit.key]).bearerAuth(adminToken),
+            Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.PUT("/bounded-contexts/${encodedKey}/owning-team",
+                [owningTeamKey: null]).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().owningTeam == null
+    }
+
+    def "PUT /bounded-contexts/{key}/owning-team returns 403 for non-admin"() {
+        given:
+        def adminToken = createAdminToken()
+        def domainKey = createDomain(adminToken, "Domain For Team 403")
+        def bc = createBoundedContext(adminToken, domainKey, "Context Team 403")
+        def encodedKey = encodedKey(bc.key as String)
+        def userData = createUserWithToken("bc-team-nonadmin@test.com", "bcTeamNonAdmin")
+
+        def orgUnit = createOrgUnit(adminToken, "Forbidden Team")
+
+        when:
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/bounded-contexts/${encodedKey}/owning-team",
+                [owningTeamKey: orgUnit.key]).bearerAuth(userData.token),
+            Map
+        )
+
+        then:
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "POST creates bounded context with owningTeamKey"() {
+        given:
+        def adminToken = createAdminToken()
+        def domainKey = createDomain(adminToken, "Domain Create With Team")
+
+        def orgUnit = createOrgUnit(adminToken, "Create Team")
+
+        def body = [
+            names        : [[locale: "en", text: "Context With Team From Create"]],
+            owningTeamKey: orgUnit.key
+        ]
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.POST("/business-domains/${domainKey}/bounded-contexts", body).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.CREATED
+        response.body().owningTeam != null
+        response.body().owningTeam.key == orgUnit.key
     }
 }

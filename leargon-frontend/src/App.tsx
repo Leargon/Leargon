@@ -31,6 +31,7 @@ import OrgChartPage from './pages/OrgChartPage';
 import ContextMapPage from './pages/ContextMapPage';
 import EventFlowPage from './pages/EventFlowPage';
 import ItSystemsPage from './pages/ItSystemsPage';
+import UbiquitousLanguagePage from './pages/UbiquitousLanguagePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
       { path: 'diagrams/event-flow', element: <EventFlowPage /> },
       { path: 'it-systems', element: <ItSystemsPage /> },
       { path: 'it-systems/:key', element: <ItSystemsPage /> },
+      { path: 'ubiquitous-language', element: <UbiquitousLanguagePage /> },
       { path: 'profile', element: <ProfilePage /> },
     ],
   },

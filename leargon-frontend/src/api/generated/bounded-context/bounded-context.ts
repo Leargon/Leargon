@@ -39,7 +39,8 @@ import type {
   BoundedContextResponse,
   CreateBoundedContextRequest,
   UpdateBoundedContextDescriptionsRequest,
-  UpdateBoundedContextNamesRequest
+  UpdateBoundedContextNamesRequest,
+  UpdateBoundedContextOwningTeamRequest
 } from '../model';
 
 import { customAxios } from '../../customAxios';
@@ -690,5 +691,105 @@ export const useUpdateBoundedContextDescriptions = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateBoundedContextDescriptionsMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Update bounded context owning team
+ */
+export type updateBoundedContextOwningTeamResponse200 = {
+  data: BoundedContextResponse
+  status: 200
+}
+
+export type updateBoundedContextOwningTeamResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBoundedContextOwningTeamResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBoundedContextOwningTeamResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBoundedContextOwningTeamResponseSuccess = (updateBoundedContextOwningTeamResponse200) & {
+  headers: Headers;
+};
+export type updateBoundedContextOwningTeamResponseError = (updateBoundedContextOwningTeamResponse401 | updateBoundedContextOwningTeamResponse403 | updateBoundedContextOwningTeamResponse404) & {
+  headers: Headers;
+};
+
+export type updateBoundedContextOwningTeamResponse = (updateBoundedContextOwningTeamResponseSuccess | updateBoundedContextOwningTeamResponseError)
+
+export const getUpdateBoundedContextOwningTeamUrl = (key: string,) => {
+
+
+  
+
+  return `/bounded-contexts/${key}/owning-team`
+}
+
+export const updateBoundedContextOwningTeam = async (key: string,
+    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options?: RequestInit): Promise<updateBoundedContextOwningTeamResponse> => {
+  
+  return customAxios<updateBoundedContextOwningTeamResponse>(getUpdateBoundedContextOwningTeamUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateBoundedContextOwningTeamRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBoundedContextOwningTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext> => {
+
+const mutationKey = ['updateBoundedContextOwningTeam'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, {key: string;data: UpdateBoundedContextOwningTeamRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBoundedContextOwningTeam(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBoundedContextOwningTeamMutationResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>>
+    export type UpdateBoundedContextOwningTeamMutationBody = UpdateBoundedContextOwningTeamRequest
+    export type UpdateBoundedContextOwningTeamMutationError = void
+
+    /**
+ * @summary Update bounded context owning team
+ */
+export const useUpdateBoundedContextOwningTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>,
+        TError,
+        {key: string;data: UpdateBoundedContextOwningTeamRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBoundedContextOwningTeamMutationOptions(options), queryClient);
     }
     

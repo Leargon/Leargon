@@ -80,6 +80,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
+import QualityRulesSection from './QualityRulesSection';
 import CreateEntityDialog from './CreateEntityDialog';
 import type {
   LocalizedText,
@@ -1019,6 +1020,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           )}
         </Box>
       )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Quality Rules */}
+      <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={isOwnerOrAdmin} />
 
       <Divider sx={{ my: 2 }} />
 

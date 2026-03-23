@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 034-add-owning-team-to-bounded-contexts
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: bounded_contexts
+            columns:
+              - column:
+                  name: owning_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_bounded_context_owning_unit
+                    references: organisational_units(id)

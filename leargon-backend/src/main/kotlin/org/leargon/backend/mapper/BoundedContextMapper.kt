@@ -1,5 +1,6 @@
 package org.leargon.backend.mapper
 
+import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.model.BoundedContextResponse
@@ -9,6 +10,9 @@ import java.time.ZoneOffset
 
 @Singleton
 open class BoundedContextMapper {
+    @Inject
+    lateinit var organisationalUnitMapper: OrganisationalUnitMapper
+
     fun toResponse(bc: BoundedContext): BoundedContextResponse {
         val domainSummary = BusinessDomainMapper.toBusinessDomainSummary(bc.domain)
         val response =
@@ -21,6 +25,7 @@ open class BoundedContextMapper {
             )
         response.descriptions = LocalizedTextMapper.toModel(bc.descriptions)
         response.createdBy = UserMapper.toUserSummary(bc.createdBy)
+        response.owningTeam = organisationalUnitMapper.toSummaryResponse(bc.owningUnit)
         if (bc.contextType != null) {
             response.contextType = BoundedContextResponseContextType.fromValue(bc.contextType!!)
         }

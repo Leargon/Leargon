@@ -1,22 +1,23 @@
 # Léargon Roadmap
 *Ordered by value/effort score (value 1–10 ÷ sessions). Done batches removed.*
 
-| # | Batch | Sessions | Weekly | Value | Score |
-|---|-------|---------|--------|-------|-------|
-| 2 | Privacy notice generation | 1 | 10% | 8/10 | **8.0** |
-| 3 | DSG/GDPR compliance guided setup | 2 | 20% | 9/10 | **4.5** |
-| 4 | Personal dashboard | 2 | 20% | 8/10 | **4.0** |
-| 5 | Data governance guided setup | 2 | 20% | 8/10 | **4.0** |
-| 6 | DDD guided setup | 2 | 20% | 8/10 | **4.0** |
-| 7 | Catalogue insights | 3 | 30% | 8/10 | **2.7** |
-| 8 | Quality check rules | 3 | 30% | 7/10 | **2.3** |
-| 9 | Impact analysis & domain coupling | 4 | 40% | 8/10 | **2.0** |
-| 10 | DDD guided discovery | 4 | 40% | 7/10 | **1.8** |
-| 11 | Import & integration | 4 | 40% | 7/10 | **1.8** |
-| 12 | Watch & notifications | 4 | 40% | 6/10 | **1.5** |
-| 13 | Review cycles | 4 | 40% | 6/10 | **1.5** |
-| 14 | Stewards | 5 | 50% | 7/10 | **1.4** |
-| 15 | Compliance metrics dashboard | 7 | 70% | 8/10 | **1.1** |
+| #  | Batch                             | Sessions | Weekly | Value | Score   |
+|----|-----------------------------------|----------|--------|-------|---------|
+| 2  | Privacy notice generation         | 1        | 10%    | 8/10  | **8.0** |
+| 3  | DSG/GDPR compliance guided setup  | 2        | 20%    | 9/10  | **4.5** |
+| 4  | Personal dashboard                | 2        | 20%    | 8/10  | **4.0** |
+| 5  | Data governance guided setup      | 2        | 20%    | 8/10  | **4.0** |
+| 6  | DDD guided setup                  | 2        | 20%    | 8/10  | **4.0** |
+| 7  | Catalogue insights                | 3        | 30%    | 8/10  | **2.7** |
+| 8  | Business data quality rules       | 3        | 30%    | 8/10  | **2.7** |
+| 9  | Catalogue quality rules           | 3        | 30%    | 7/10  | **2.3** |
+| 10 | Impact analysis & domain coupling | 4        | 40%    | 8/10  | **2.0** |
+| 11 | Compliance metrics dashboard      | 4        | 40%    | 8/10  | **2.0** |
+| 12 | DDD guided discovery              | 4        | 40%    | 7/10  | **1.8** |
+| 13 | Import & integration              | 4        | 40%    | 7/10  | **1.8** |
+| 14 | Watch & notifications             | 4        | 40%    | 6/10  | **1.5** |
+| 15 | Review cycles                     | 4        | 40%    | 6/10  | **1.5** |
+| 16 | Stewards                          | 5        | 50%    | 7/10  | **1.4** |
 
 ---
 
@@ -313,30 +314,51 @@
 
 ---
 
-## Batch 8 · Quality check rules
-*One backend flush: new `quality_rules` and `quality_check_results` tables, a rule evaluation engine that runs on a configurable schedule and stores results — not computed on entity load. Rule management UI on entity detail, quality summary admin page. Self-contained.*
-*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
+## Batch 8 · Business data quality rules
+*Rules about the actual business data represented by entities in Léargon — e.g. a Customer entity must have age ≥ 18, an Order entity must have amount > 0. These are governance artefacts: Léargon documents the rule and records check results; it does not evaluate rules against source system data directly. Self-contained, no dependencies.*
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 8/10 · Score: 2.7*
 
-#### USER STORY 'Define quality check rule for a business entity'
+#### USER STORY 'Define business data quality rule for an entity field'
 **AS A** data owner or admin\
-**I WANT** to define a quality check rule for a business entity, specifying a condition (e.g. a field must be filled, a classification must be assigned, or a relationship must exist)\
-**SO THAT** the expected quality standard for that entity is formally documented and can be evaluated automatically
+**I WANT** to define a business data quality rule on a business entity, specifying the field name, constraint type (min value, max value, not null, regex pattern, allowed values), and a human-readable description\
+**SO THAT** the expected data quality standard for that business object is formally documented as part of its governance record
 
-#### USER STORY 'View quality check results for a business entity'
+#### USER STORY 'View business data quality rules on entity detail'
 **AS A** logged in user\
-**IF** quality check rules are defined for a business entity\
-**I WANT** to see the result of each quality check rule on the entity detail page, showing whether each rule is passing or failing\
-**SO THAT** I can immediately identify where the entity does not meet its defined quality standards
+**IF** business data quality rules are defined for a business entity\
+**I WANT** to see the list of rules on the entity detail page, each showing the field, constraint, and description\
+**SO THAT** I have a clear overview of the quality expectations defined for that entity
 
-#### USER STORY 'View quality check summary across all entities'
+#### USER STORY 'Export business data quality rules'
 **AS AN** admin\
-**IF** quality check rules are defined\
-**I WANT** to see a summary showing the quality check pass rate across all business entities, ranked by the number of failing checks\
-**SO THAT** I can identify which entities have the most outstanding quality issues and prioritise remediation
+**I WANT** to export all business data quality rules across all entities as a CSV or JSON file\
+**SO THAT** the rule catalogue can be consumed by external data quality tools, shared with engineering teams, or used as a reference during audits
 
 ---
 
-## Batch 9 · Impact analysis & domain coupling
+## Batch 9 · Catalogue quality rules
+*Rules about the completeness and correctness of metadata entered in Léargon — e.g. every entity must have a description, a data owner, and a classification assigned. Rules are evaluated live on the entity detail page; the admin summary uses pre-computed results from the scheduler (Batch 11). Self-contained.*
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
+
+#### USER STORY 'Define catalogue quality rule for a business entity'
+**AS A** data owner or admin\
+**I WANT** to define a catalogue quality rule for a business entity, specifying a condition (a field must be filled, a classification must be assigned, or a relationship must exist)\
+**SO THAT** the expected metadata completeness standard for that entity is formally documented and evaluated automatically
+
+#### USER STORY 'View catalogue quality check results on entity detail'
+**AS A** logged in user\
+**IF** catalogue quality rules are defined for a business entity\
+**I WANT** to see the pass/fail result of each rule on the entity detail page, evaluated live on load\
+**SO THAT** I can immediately see which metadata gaps exist without waiting for a scheduled run
+
+#### USER STORY 'View catalogue quality summary across all entities'
+**AS AN** admin\
+**I WANT** to see a summary of catalogue quality pass rates across all business entities, ranked by number of failing rules\
+**SO THAT** I can identify which entities have the most outstanding metadata gaps and prioritise remediation
+
+---
+
+## Batch 10 · Impact analysis & domain coupling
 *Analytics flush — graph traversal and aggregation queries on existing data. All scores and detections are computed on a configurable schedule and stored as snapshots. New "Domain Analysis" section in the frontend. Depends on Batch 5 (context relationships add coupling signal).*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 8/10 · Score: 2.0*
 
@@ -378,8 +400,46 @@
 
 ---
 
-## Batch 10 · DDD guided discovery
-*Read-heavy analytics flush — no new tables beyond what Batch 5 and Batch 9 introduce. Léargon already holds the data needed to surface most of these insights: entity hierarchies, process-entity assignments, version histories, domain type fields, and org unit relationships. Each story produces an actionable suggestion with supporting evidence, not just a raw metric. Depends on Batch 5 (context relationships) and benefits from Batch 9 (coupling scores). Stories involving domain events depend on Batch 7.*
+## Batch 11 · Compliance metrics dashboard
+*Scheduled computation of key governance and compliance metrics stored as timestamped snapshots. Results displayed on an admin metrics dashboard with trend history. The scheduler introduced here is also the foundation for the catalogue quality rule summary (Batch 9). Depends on Batch 9 (catalogue quality rules) for full coverage.*
+*⏱ Sessions: 4 · Weekly effort: ~40% · Value: 8/10 · Score: 2.0*
+
+#### USER STORY 'Configure analytics computation schedule'
+**AS AN** admin\
+**I WANT** to configure a global schedule (e.g. nightly, every 6 hours) on which Léargon recomputes all catalogue quality scores and compliance metrics and stores the results as a new snapshot\
+**SO THAT** all insight pages always reflect a recent state of the catalogue without requiring live queries on page load
+
+#### USER STORY 'View last computed timestamp on insight pages'
+**AS A** logged in user\
+**IF** analytics are computed on a schedule\
+**I WANT** to see when the displayed results were last computed on every insight and analytics page\
+**SO THAT** I know how fresh the data is before making a decision
+
+#### USER STORY 'Trigger manual analytics recomputation'
+**AS AN** admin\
+**I WANT** to trigger an immediate recomputation of all analytics outside the regular schedule\
+**SO THAT** I can get up-to-date results before an audit or after a large batch of catalogue changes
+
+#### USER STORY 'Define compliance metric'
+**AS AN** admin\
+**I WANT** to define a statistical compliance metric with a name and a calculation rule (e.g. percentage of entities with a retention period set, percentage of processes with a legal basis)\
+**SO THAT** the metric is calculated automatically on a schedule and its trend can be tracked over time
+
+#### USER STORY 'View compliance metrics dashboard'
+**AS AN** admin\
+**IF** at least one compliance metric is defined\
+**I WANT** to view a dashboard showing the current value of each metric alongside its historical trend as a chart\
+**SO THAT** I can assess catalogue completeness and compliance health at a glance and over time
+
+#### USER STORY 'View catalogue completeness score'
+**AS AN** admin\
+**I WANT** to see an overall catalogue completeness score showing the percentage of mandatory fields filled across all entities, processes, and domains\
+**SO THAT** I have a single top-level indicator of data catalogue quality
+
+---
+
+## Batch 12 · DDD guided discovery
+*Read-heavy analytics flush — no new tables beyond what Batch 5 and Batch 10 introduce. Léargon already holds the data needed to surface most of these insights: entity hierarchies, process-entity assignments, version histories, domain type fields, and org unit relationships. Each story produces an actionable suggestion with supporting evidence, not just a raw metric. Depends on Batch 5 (context relationships) and benefits from Batch 10 (coupling scores). Stories involving domain events depend on Batch 7.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 7/10 · Score: 1.8*
 
 #### USER STORY 'Detect aggregate candidates within a domain'
@@ -426,7 +486,7 @@
 
 ---
 
-## Batch 11 · Import & integration
+## Batch 13 · Import & integration
 *Infrastructure-heavy flush: file upload handling, CSV parsing, column mapping UI, and a webhook receiver. Useful for initial catalogue seeding but not required for ongoing operation.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 7/10 · Score: 1.8*
 
@@ -458,7 +518,7 @@
 
 ---
 
-## Batch 12 · Watch & notifications
+## Batch 14 · Watch & notifications
 *One backend flush: new `watches` table, an event-dispatch pipeline, SMTP and Teams webhook integrations, notification settings UI. Core watch functionality is self-contained; review-cycle notifications are additive once Batch 13 is shipped.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 6/10 · Score: 1.5*
 
@@ -497,7 +557,7 @@
 
 ---
 
-## Batch 13 · Review cycles
+## Batch 15 · Review cycles
 *One backend flush: new `review_cycles` and `review_confirmations` tables, a scheduled job that computes due dates, review section on all detail pages, and an overdue-reviews admin page. Deprioritised — the core use case can be covered with external calendar reminders; the main value add over external tooling is the timestamped audit trail attached to each item, which matters primarily for formal compliance audits.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 6/10 · Score: 1.5*
 
@@ -542,7 +602,7 @@
 
 ---
 
-## Batch 14 · Stewards
+## Batch 16 · Stewards
 *Adds a new permission layer across all four entity types — touches every service and detail page. Wide blast radius; ship as one complete feature.*
 *⏱ Sessions: 5 · Weekly effort: ~50% · Value: 7/10 · Score: 1.4*
 
@@ -602,46 +662,3 @@
 
 ---
 
-## Batch 15 · Compliance metrics dashboard & company view
-*Heavier flush: introduces the shared scheduler/job infrastructure that analytics batches (7, 8, 9, 10) also depend on. Results for all analytics are stored as timestamped snapshots and refreshed on this shared schedule.*
-*⏱ Sessions: 7 · Weekly effort: ~70% · Value: 8/10 · Score: 1.1*
-
-**Framework: Quarkus.** The scheduler and job infrastructure in this batch are implemented as a separate **Quarkus** service (not Micronaut). Quarkus is chosen for its superior scheduled-job support, native compilation, and low idle memory footprint — appropriate for a background worker that runs infrequently but must be reliable. The Quarkus service reads from the same MySQL database as the Micronaut backend and writes snapshot results into shared tables that the Micronaut API then exposes to the frontend.
-
-#### USER STORY 'Configure analytics computation schedule'
-**AS AN** admin\
-**I WANT** to configure a global schedule (e.g. nightly, every 6 hours) on which Léargon recomputes all analytics and stores the results as a new snapshot\
-**SO THAT** all insight pages always reflect a recent state of the catalogue without requiring live queries on page load
-
-#### USER STORY 'View last computed timestamp on insight pages'
-**AS A** logged in user\
-**IF** analytics are computed on a schedule\
-**I WANT** to see when the displayed results were last computed on every insight and analytics page\
-**SO THAT** I know how fresh the data is before making an important decision
-
-#### USER STORY 'Trigger manual analytics recomputation'
-**AS AN** admin\
-**I WANT** to trigger an immediate recomputation of all analytics outside the regular schedule\
-**SO THAT** I can get up-to-date results before an audit or after a large batch of catalogue changes
-
-#### USER STORY 'View catalogue completeness score'
-**AS AN** admin\
-**IF** mandatory fields are configured\
-**I WANT** to see an overall catalogue completeness score showing the percentage of mandatory fields that are filled across all entities, processes, and domains\
-**SO THAT** I have a single top-level indicator of data catalogue quality
-
-#### USER STORY 'Define compliance metric'
-**AS AN** admin\
-**I WANT** to define a statistical compliance metric with a name and a calculation rule (e.g. percentage of entities with a retention period set)\
-**SO THAT** the metric is calculated automatically on a schedule and its trend can be tracked over time
-
-#### USER STORY 'View compliance metrics dashboard'
-**AS AN** admin\
-**IF** at least one compliance metric is defined\
-**I WANT** to view a dashboard showing the current value of each metric alongside its historical trend as a chart\
-**SO THAT** I can assess catalogue completeness and compliance health at a glance and over time
-
-#### USER STORY 'View company combined view'
-**AS A** logged in user\
-**I WANT** to see a combined view of entity–process, entity–domain, process–domain, and process–org unit relationships across the whole company\
-**SO THAT** I can reflect on the relationships and dependencies of the entire data landscape
