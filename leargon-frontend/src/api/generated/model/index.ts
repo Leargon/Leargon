@@ -60,6 +60,7 @@ export * from './conwaysLawAlignment';
 export * from './conwaysLawAlignmentDomainNames';
 export * from './conwaysLawAlignmentOrgUnitNames';
 export * from './conwaysLawCell';
+export * from './conwaysLawMisalignmentItem';
 export * from './createBoundedContextRequest';
 export * from './createBoundedContextRequestContextType';
 export * from './createBusinessDataQualityRuleRequest';

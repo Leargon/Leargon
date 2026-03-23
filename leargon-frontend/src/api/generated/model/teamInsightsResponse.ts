@@ -18,6 +18,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 import type { BottleneckTeamItem } from './bottleneckTeamItem';
 import type { ConwaysLawAlignment } from './conwaysLawAlignment';
+import type { ConwaysLawMisalignmentItem } from './conwaysLawMisalignmentItem';
 import type { OrgUnitProcessLoadItem } from './orgUnitProcessLoadItem';
 import type { SplitDomainItem } from './splitDomainItem';
 import type { UserOwnershipWorkloadItem } from './userOwnershipWorkloadItem';
@@ -30,4 +31,6 @@ export interface TeamInsightsResponse {
   wronglyPlacedTeams: WronglyPlacedTeamItem[];
   splitDomains: SplitDomainItem[];
   conwaysLawAlignment: ConwaysLawAlignment;
+  /** @nullable */
+  conwaysLawMisalignments?: ConwaysLawMisalignmentItem[] | null;
 }

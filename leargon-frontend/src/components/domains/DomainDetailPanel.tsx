@@ -90,7 +90,7 @@ import type {
   ContextRelationshipResponse,
   BoundedContextResponse,
   DomainEventResponse,
-  OrganisationalUnitSummaryResponse,
+  OrganisationalUnitResponse,
 } from '../../api/generated/model';
 import type { ContextMapperRelationshipType } from '../../api/generated/model/contextMapperRelationshipType';
 
@@ -164,10 +164,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const updateBcOwningTeam = useUpdateBoundedContextOwningTeam();
 
   const { data: allOrgUnitsData } = useGetAllOrganisationalUnits();
-  const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitSummaryResponse[] | undefined) ?? [];
+  const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitResponse[] | undefined) ?? [];
 
   const [owningTeamEditBcKey, setOwningTeamEditBcKey] = useState<string | null>(null);
-  const [owningTeamEditValue, setOwningTeamEditValue] = useState<OrganisationalUnitSummaryResponse | null>(null);
+  const [owningTeamEditValue, setOwningTeamEditValue] = useState<OrganisationalUnitResponse | null>(null);
   const [owningTeamSaving, setOwningTeamSaving] = useState(false);
 
   const invalidateBcs = () => {
@@ -743,7 +743,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   <Autocomplete
                     size="small"
                     options={allOrgUnits}
-                    getOptionLabel={(opt) => opt.name}
+                    getOptionLabel={(opt) => getLocalizedText(opt.names, opt.key)}
                     value={owningTeamEditValue}
                     onChange={(_e, val) => setOwningTeamEditValue(val)}
                     renderInput={(params) => <TextField {...params} size="small" sx={{ minWidth: 200 }} />}
@@ -785,7 +785,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     <IconButton
                       size="small"
                       onClick={() => {
-                        setOwningTeamEditValue(selectedBc?.owningTeam ?? null);
+                        setOwningTeamEditValue(allOrgUnits.find((u) => u.key === selectedBc?.owningTeam?.key) ?? null);
                         setOwningTeamEditBcKey(selectedBcKey);
                       }}
                     >

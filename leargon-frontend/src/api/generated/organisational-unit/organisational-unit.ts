@@ -36,6 +36,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BoundedContextSummaryResponse,
   ClassificationAssignmentRequest,
   CreateOrganisationalUnitRequest,
   ErrorResponse,
@@ -1498,4 +1499,126 @@ export const useUpdateOrgUnitDataManipulationEntities = <TError = void,
       > => {
       return useMutation(getUpdateOrgUnitDataManipulationEntitiesMutationOptions(options), queryClient);
     }
+    /**
+ * Returns all bounded contexts whose owning team is this organisational unit.
+ * @summary Get bounded contexts owned by this org unit
+ */
+export type getOwnedBoundedContextsByOrgUnitResponse200 = {
+  data: BoundedContextSummaryResponse[]
+  status: 200
+}
+
+export type getOwnedBoundedContextsByOrgUnitResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getOwnedBoundedContextsByOrgUnitResponse404 = {
+  data: void
+  status: 404
+}
+
+export type getOwnedBoundedContextsByOrgUnitResponseSuccess = (getOwnedBoundedContextsByOrgUnitResponse200) & {
+  headers: Headers;
+};
+export type getOwnedBoundedContextsByOrgUnitResponseError = (getOwnedBoundedContextsByOrgUnitResponse401 | getOwnedBoundedContextsByOrgUnitResponse404) & {
+  headers: Headers;
+};
+
+export type getOwnedBoundedContextsByOrgUnitResponse = (getOwnedBoundedContextsByOrgUnitResponseSuccess | getOwnedBoundedContextsByOrgUnitResponseError)
+
+export const getGetOwnedBoundedContextsByOrgUnitUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/bounded-contexts`
+}
+
+export const getOwnedBoundedContextsByOrgUnit = async (key: string, options?: RequestInit): Promise<getOwnedBoundedContextsByOrgUnitResponse> => {
+  
+  return customAxios<getOwnedBoundedContextsByOrgUnitResponse>(getGetOwnedBoundedContextsByOrgUnitUrl(key),
+  {      
+    ...options,
+    method: 'GET'
     
+    
+  }
+);}
+  
+
+
+
+
+export const getGetOwnedBoundedContextsByOrgUnitQueryKey = (key: string,) => {
+    return [
+    `/organisational-units/${key}/bounded-contexts`
+    ] as const;
+    }
+
+    
+export const getGetOwnedBoundedContextsByOrgUnitQueryOptions = <TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOwnedBoundedContextsByOrgUnitQueryKey(key);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>> = ({ signal }) => getOwnedBoundedContextsByOrgUnit(key, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetOwnedBoundedContextsByOrgUnitQueryResult = NonNullable<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>>
+export type GetOwnedBoundedContextsByOrgUnitQueryError = void
+
+
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>,
+          TError,
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>,
+          TError,
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get bounded contexts owned by this org unit
+ */
+
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOwnedBoundedContextsByOrgUnitQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+

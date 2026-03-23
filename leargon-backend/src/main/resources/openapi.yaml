@@ -3506,6 +3506,35 @@ paths:
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
+  /organisational-units/{key}/bounded-contexts:
+    get:
+      tags:
+      - OrganisationalUnit
+      summary: Get bounded contexts owned by this org unit
+      description: Returns all bounded contexts whose owning team is this organisational unit.
+      operationId: getOwnedBoundedContextsByOrgUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of bounded contexts owned by this org unit
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoundedContextSummaryResponse'
+        '401':
+          description: Not authenticated
+        '404':
+          description: Organisational unit not found
   /processes/{key}/executing-units:
     put:
       tags:
@@ -7767,6 +7796,32 @@ components:
             $ref: '#/components/schemas/SplitDomainItem'
         conwaysLawAlignment:
           $ref: '#/components/schemas/ConwaysLawAlignment'
+        conwaysLawMisalignments:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ConwaysLawMisalignmentItem'
+    ConwaysLawMisalignmentItem:
+      type: object
+      required: [processKey, processName, boundedContextKey, boundedContextName, executingUnitKey, executingUnitName, teamBoundedContextKey, teamBoundedContextName]
+      properties:
+        processKey:
+          type: string
+        processName:
+          type: string
+        boundedContextKey:
+          type: string
+        boundedContextName:
+          type: string
+        executingUnitKey:
+          type: string
+        executingUnitName:
+          type: string
+        teamBoundedContextKey:
+          type: string
+          description: The bounded context the team is formally assigned to
+        teamBoundedContextName:
+          type: string
     UserOwnershipWorkloadItem:
       type: object
       required: [userId, username, displayName, entityCount, processCount, totalCount]

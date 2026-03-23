@@ -14,6 +14,7 @@ import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.OrganisationalUnitMapper
+import org.leargon.backend.model.BoundedContextSummaryResponse
 import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
@@ -120,6 +121,9 @@ open class OrganisationalUnitController(
         classificationService.assignClassificationsToOrgUnit(key, classificationAssignmentRequest, currentUser)
         return organisationalUnitService.getByKeyAsResponse(key)
     }
+
+    override fun getOwnedBoundedContextsByOrgUnit(key: String): List<BoundedContextSummaryResponse> =
+        organisationalUnitService.getOwnedBoundedContexts(key)
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitExternalFields(

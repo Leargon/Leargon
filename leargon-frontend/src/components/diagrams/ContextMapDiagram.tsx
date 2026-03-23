@@ -113,22 +113,27 @@ function buildGraph(
   rels: ContextRelationshipResponse[],
   allDomains: BusinessDomainResponse[],
 ): { nodes: Node[]; edges: Edge[] } {
-  // Collect all bounded context summaries that appear in relationships
+  // Always include all bounded contexts from all domains
   const bcMap = new Map<string, BoundedContextSummaryResponse>();
-  rels.forEach((r) => {
-    if (r.upstreamBoundedContext) bcMap.set(r.upstreamBoundedContext.key, r.upstreamBoundedContext);
-    if (r.downstreamBoundedContext) bcMap.set(r.downstreamBoundedContext.key, r.downstreamBoundedContext);
-  });
-
-  // If no relationships, show all bounded contexts from all domains
-  const allBcs: BoundedContextSummaryResponse[] = bcMap.size > 0
-    ? Array.from(bcMap.values())
-    : allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({
+  allDomains.forEach((d) => {
+    (d.boundedContexts || []).forEach((bc) => {
+      bcMap.set(bc.key, {
         key: bc.key,
         name: bc.name,
         domainKey: d.key,
         domainName: bc.domainName || d.key,
-      })));
+      });
+    });
+  });
+  // Also add any BCs from relationships not already covered by a domain
+  rels.forEach((r) => {
+    if (r.upstreamBoundedContext && !bcMap.has(r.upstreamBoundedContext.key))
+      bcMap.set(r.upstreamBoundedContext.key, r.upstreamBoundedContext);
+    if (r.downstreamBoundedContext && !bcMap.has(r.downstreamBoundedContext.key))
+      bcMap.set(r.downstreamBoundedContext.key, r.downstreamBoundedContext);
+  });
+
+  const allBcs: BoundedContextSummaryResponse[] = Array.from(bcMap.values());
 
   // Build domain type map for coloring
   const domainTypeMap = new Map(allDomains.map((d) => [d.key, d.effectiveType ?? d.type ?? null]));

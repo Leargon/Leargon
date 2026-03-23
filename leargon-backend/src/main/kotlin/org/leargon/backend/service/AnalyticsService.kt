@@ -1,22 +1,28 @@
 package org.leargon.backend.service
 
 import jakarta.inject.Singleton
+import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.model.BottleneckTeamItem
 import org.leargon.backend.model.ConwaysLawAlignment
 import org.leargon.backend.model.ConwaysLawCell
+import org.leargon.backend.model.ConwaysLawMisalignmentItem
 import org.leargon.backend.model.OrgUnitProcessLoadItem
 import org.leargon.backend.model.SplitDomainItem
 import org.leargon.backend.model.TeamInsightsResponse
 import org.leargon.backend.model.UserOwnershipWorkloadItem
 import org.leargon.backend.model.WronglyPlacedTeamItem
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 
 @Singleton
 open class AnalyticsService(
     private val processRepository: ProcessRepository,
     private val businessEntityRepository: BusinessEntityRepository,
+    private val boundedContextRepository: BoundedContextRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
 ) {
     fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
         // Capture for AOP proxy safety
@@ -165,13 +171,70 @@ open class AnalyticsService(
                 cells
             )
 
-        return TeamInsightsResponse(
-            userOwnershipWorkload,
-            orgUnitProcessLoad,
-            bottleneckTeams,
-            wronglyPlacedTeams,
-            splitDomains,
-            conwaysLawAlignment
-        )
+        // 7. Conway's Law misalignments
+        // Pre-load all org units with parents eagerly to avoid lazy-loading issues
+        val allOrgUnits = this.organisationalUnitRepository.findAll()
+        val allOrgUnitByKey = allOrgUnits.associateBy { it.key }
+
+        // Pre-load all bounded contexts and build a map: orgUnitKey -> BC (null if no owning BC)
+        val allBoundedContexts = this.boundedContextRepository.findAll()
+        val bcByOwningUnitKey =
+            allBoundedContexts
+                .filter { it.owningUnit != null }
+                .associateBy { it.owningUnit!!.key }
+
+        val conwaysLawMisalignments = mutableListOf<ConwaysLawMisalignmentItem>()
+
+        fun findOwningBoundedContext(
+            unitKey: String,
+            visited: MutableSet<String> = mutableSetOf()
+        ): BoundedContext? {
+            if (visited.contains(unitKey)) return null
+            visited.add(unitKey)
+
+            val direct = bcByOwningUnitKey[unitKey]
+            if (direct != null) return direct
+
+            val unit = allOrgUnitByKey[unitKey] ?: return null
+            for (parent in unit.parents) {
+                val parentKey = parent.key
+                val parentBc = findOwningBoundedContext(parentKey, visited)
+                if (parentBc != null) return parentBc
+            }
+            return null
+        }
+
+        for (process in processes) {
+            val processBc = process.boundedContext ?: continue
+            for (unit in process.executingUnits) {
+                val teamBc = findOwningBoundedContext(unit.key) ?: continue
+                if (teamBc.id != processBc.id) {
+                    conwaysLawMisalignments.add(
+                        ConwaysLawMisalignmentItem(
+                            process.key,
+                            nameOf(process.names, process.key),
+                            processBc.key,
+                            nameOf(processBc.names, processBc.key),
+                            unit.key,
+                            nameOf(unit.names, unit.key),
+                            teamBc.key,
+                            nameOf(teamBc.names, teamBc.key)
+                        )
+                    )
+                }
+            }
+        }
+
+        val response =
+            TeamInsightsResponse(
+                userOwnershipWorkload,
+                orgUnitProcessLoad,
+                bottleneckTeams,
+                wronglyPlacedTeams,
+                splitDomains,
+                conwaysLawAlignment
+            )
+        response.conwaysLawMisalignments = conwaysLawMisalignments
+        return response
     }
 }

@@ -4,6 +4,9 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDataQualityRule
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.Process
+import org.leargon.backend.repository.BoundedContextRepository
+import org.leargon.backend.repository.BusinessDomainRepository
+import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
 import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.DpiaRepository
@@ -18,6 +21,9 @@ open class ExportService(
     private val dpiaRepository: DpiaRepository,
     private val fieldConfigurationService: FieldConfigurationService,
     private val contextRelationshipRepository: ContextRelationshipRepository,
+    private val boundedContextRepository: BoundedContextRepository,
+    private val businessDomainRepository: BusinessDomainRepository,
+    private val businessEntityRepository: BusinessEntityRepository,
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -150,15 +156,15 @@ open class ExportService(
 
     fun exportContextMap(locale: String = "en"): String {
         val rels = contextRelationshipRepository.findAll()
-        val boundedContexts =
-            rels
-                .flatMap { listOfNotNull(it.upstreamBoundedContext, it.downstreamBoundedContext) }
-                .distinctBy { it.key }
+        val allBoundedContexts = boundedContextRepository.findAll()
+        val allDomains = businessDomainRepository.findAll()
 
         val sb = StringBuilder()
+
+        // ContextMap block
         sb.appendLine("ContextMap LeargonContextMap {")
-        if (boundedContexts.isNotEmpty()) {
-            sb.appendLine("  contains ${boundedContexts.joinToString(", ") { toCmlIdentifier(it.getName(locale)) }}")
+        if (allBoundedContexts.isNotEmpty()) {
+            sb.appendLine("  contains ${allBoundedContexts.joinToString(", ") { toCmlIdentifier(it.getName(locale)) }}")
             sb.appendLine()
         }
         for (rel in rels) {
@@ -166,30 +172,113 @@ open class ExportService(
             val down = rel.downstreamBoundedContext ?: continue
             val upId = toCmlIdentifier(up.getName(locale))
             val downId = toCmlIdentifier(down.getName(locale))
+            // SEPARATE_WAYS means no relationship — omit the line
+            if (rel.relationshipType == "SEPARATE_WAYS") continue
             val line =
                 when (rel.relationshipType) {
-                    "PARTNERSHIP" -> "  $upId <-> $downId : Partnership"
-                    "SHARED_KERNEL" -> "  $upId [SK] <-> [SK] $downId : Shared-Kernel"
-                    "CUSTOMER_SUPPLIER" -> "  $upId [U, S] -> [D, C] $downId : Customer-Supplier"
-                    "CONFORMIST" -> "  $upId [U] -> [D, CF] $downId : Conformist"
-                    "ANTICORRUPTION_LAYER" -> "  $upId [U] -> [D, ACL] $downId : Anticorruption-Layer"
-                    "OPEN_HOST_SERVICE" -> "  $upId [U, OHS] -> [D] $downId : Open-Host-Service"
-                    "PUBLISHED_LANGUAGE" -> "  $upId [U, OHS, PL] -> [D] $downId : Published-Language"
-                    "BIG_BALL_OF_MUD" -> "  $upId [BBM] <-> [BBM] $downId : Big-Ball-Of-Mud"
-                    "SEPARATE_WAYS" -> "  $upId [SW] <-> [SW] $downId : Separate-Ways"
+                    "PARTNERSHIP" -> "  $upId Partnership $downId"
+                    "SHARED_KERNEL" -> "  $upId [SK] <-> [SK] $downId"
+                    // BIG_BALL_OF_MUD: no dedicated CML syntax — model as bidirectional with name
+                    "BIG_BALL_OF_MUD" -> "  $upId <-> $downId : BigBallOfMud"
+                    "CUSTOMER_SUPPLIER" -> "  $upId [U,S] -> [D,C] $downId"
+                    "CONFORMIST" -> "  $upId [U] -> [D,CF] $downId"
+                    "ANTICORRUPTION_LAYER" -> "  $upId [U] -> [D,ACL] $downId"
+                    "OPEN_HOST_SERVICE" -> "  $upId [U,OHS] -> [D] $downId"
+                    "PUBLISHED_LANGUAGE" -> "  $upId [U,OHS,PL] -> [D] $downId"
                     else -> "  $upId -> $downId"
                 }
             sb.appendLine(line)
         }
         sb.appendLine("}")
         sb.appendLine()
-        for (bc in boundedContexts) {
-            val id = toCmlIdentifier(bc.getName(locale))
-            sb.appendLine("BoundedContext $id {")
-            if (bc.contextType != null) sb.appendLine("  type = ${bc.contextType!!.lowercase().replaceFirstChar { it.uppercase() }}")
+
+        // Group entities by bounded context key for use in BoundedContext blocks
+        val entitiesByBcKey =
+            businessEntityRepository
+                .findAll()
+                .filter { it.boundedContext != null }
+                .groupBy { it.boundedContext!!.key }
+
+        // Build map: BC key → subdomain identifier (from the domain that contains it)
+        val bcKeyToSubdomainId = mutableMapOf<String, String>()
+        for (domain in allDomains) {
+            for (bc in domain.boundedContexts) {
+                val bcId = toCmlIdentifier(bc.getName(locale))
+                bcKeyToSubdomainId[bc.key] = "${bcId}Subdomain"
+            }
+        }
+
+        // Domain blocks — defined first so subdomains are declared before BoundedContext references them
+        val domainsWithBcs = allDomains.filter { it.boundedContexts.isNotEmpty() }
+        for (domain in domainsWithBcs) {
+            val domainId = toCmlIdentifier(domain.names.firstOrNull()?.text ?: domain.key)
+            sb.appendLine("Domain $domainId {")
+            if (!domain.visionStatement.isNullOrBlank()) {
+                sb.appendLine("  domainVisionStatement = \"${domain.visionStatement!!.replace("\"", "\\\"")}\"")
+            }
+            for (bc in domain.boundedContexts) {
+                val bcId = toCmlIdentifier(bc.getName(locale))
+                sb.appendLine("  Subdomain ${bcId}Subdomain {")
+                when (domain.type?.uppercase()) {
+                    "CORE" -> sb.appendLine("    type = CORE_DOMAIN")
+                    "SUPPORTING" -> sb.appendLine("    type = SUPPORTING_DOMAIN")
+                    "GENERIC" -> sb.appendLine("    type = GENERIC_SUBDOMAIN")
+                }
+                val firstBcDesc = bc.descriptions.firstOrNull()?.text
+                if (!firstBcDesc.isNullOrBlank()) {
+                    sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
+                }
+                // Problem-space entities belonging to this bounded context
+                val subdomainEntities = entitiesByBcKey[bc.key] ?: emptyList()
+                for (entity in subdomainEntities) {
+                    val entityId =
+                        toCmlIdentifier(
+                            entity.names.find { n -> n.locale == locale }?.text ?: entity.names.firstOrNull()?.text ?: entity.key,
+                        )
+                    sb.appendLine("    Entity $entityId { }")
+                }
+                sb.appendLine("  }")
+            }
             sb.appendLine("}")
             sb.appendLine()
         }
+
+        // BoundedContext blocks — implements SubdomainName when a domain mapping exists
+        for (bc in allBoundedContexts) {
+            val id = toCmlIdentifier(bc.getName(locale))
+            val subdomainId = bcKeyToSubdomainId[bc.key]
+            val header = if (subdomainId != null) "BoundedContext $id implements $subdomainId {" else "BoundedContext $id {"
+            sb.appendLine(header)
+            val validContextTypes = setOf("FEATURE", "APPLICATION", "SYSTEM", "TEAM")
+            if (bc.contextType != null && validContextTypes.contains(bc.contextType!!.uppercase())) {
+                sb.appendLine("  type = ${bc.contextType!!.uppercase()}")
+            }
+            val firstDesc = bc.descriptions.firstOrNull()?.text
+            if (!firstDesc.isNullOrBlank()) {
+                sb.appendLine("  domainVisionStatement = \"${firstDesc.replace("\"", "\\\"")}\"")
+            }
+            val owningUnitName =
+                bc.owningUnit?.let { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text }
+            if (!owningUnitName.isNullOrBlank()) {
+                sb.appendLine("  responsibilities = \"${owningUnitName.replace("\"", "\\\"")}\"")
+            }
+            // Aggregates expose the entities defined in the corresponding subdomain (problem space)
+            val bcEntities = entitiesByBcKey[bc.key] ?: emptyList()
+            for (entity in bcEntities) {
+                val entityId =
+                    toCmlIdentifier(
+                        entity.names.find { n -> n.locale == locale }?.text ?: entity.names.firstOrNull()?.text ?: entity.key,
+                    )
+                sb.appendLine("  Aggregate ${entityId}Aggregate {")
+                sb.appendLine("    Entity $entityId {")
+                sb.appendLine("      aggregateRoot")
+                sb.appendLine("    }")
+                sb.appendLine("  }")
+            }
+            sb.appendLine("}")
+            sb.appendLine()
+        }
+
         return sb.toString()
     }
 

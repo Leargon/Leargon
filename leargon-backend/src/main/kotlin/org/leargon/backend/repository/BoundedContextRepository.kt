@@ -11,6 +11,11 @@ interface BoundedContextRepository : JpaRepository<BoundedContext, Long> {
     @Join(value = "domain", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
+    override fun findAll(): List<BoundedContext>
+
+    @Join(value = "domain", type = Join.Type.LEFT_FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
     fun findByDomainKey(key: String): List<BoundedContext>
 
     @Join(value = "domain", type = Join.Type.LEFT_FETCH)
@@ -22,6 +27,11 @@ interface BoundedContextRepository : JpaRepository<BoundedContext, Long> {
     @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<BoundedContext>
+
+    @Join(value = "domain", type = Join.Type.LEFT_FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
+    fun findByOwningUnitKey(key: String): List<BoundedContext>
 
     fun existsByKey(key: String): Boolean
 

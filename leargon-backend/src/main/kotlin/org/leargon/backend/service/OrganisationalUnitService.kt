@@ -6,11 +6,14 @@ import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
+import org.leargon.backend.mapper.BoundedContextMapper
 import org.leargon.backend.mapper.OrganisationalUnitMapper
+import org.leargon.backend.model.BoundedContextSummaryResponse
 import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
@@ -26,7 +29,8 @@ open class OrganisationalUnitService(
     private val localeService: LocaleService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
     private val dataProcessorRepository: DataProcessorRepository,
-    private val businessEntityRepository: BusinessEntityRepository
+    private val businessEntityRepository: BusinessEntityRepository,
+    private val boundedContextRepository: BoundedContextRepository
 ) {
     @Transactional
     open fun getAllAsResponses(): List<OrganisationalUnitResponse> =
@@ -226,6 +230,12 @@ open class OrganisationalUnitService(
         unit.dataManipulationEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
         unit = organisationalUnitRepository.update(unit)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun getOwnedBoundedContexts(unitKey: String): List<BoundedContextSummaryResponse> {
+        val repo = boundedContextRepository
+        return repo.findByOwningUnitKey(unitKey).mapNotNull { BoundedContextMapper.toSummaryResponse(it) }
     }
 
     @Transactional

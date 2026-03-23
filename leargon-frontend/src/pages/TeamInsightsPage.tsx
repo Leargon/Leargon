@@ -18,6 +18,7 @@ import type { SplitDomainItem } from '../api/generated/model/splitDomainItem';
 import type { UserOwnershipWorkloadItem } from '../api/generated/model/userOwnershipWorkloadItem';
 import type { OrgUnitProcessLoadItem } from '../api/generated/model/orgUnitProcessLoadItem';
 import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlignment';
+import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
@@ -365,6 +366,61 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
   );
 };
 
+// ─── 7. Conway's Law Misalignments ───────────────────────────────────────────
+
+const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }> = ({ data }) => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+
+  if (data.length === 0) return (
+    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CheckCircle color="success" fontSize="small" />
+      <Typography variant="body2" color="text.secondary">{t('analytics.noConwaysLawMisalignments')}</Typography>
+    </Box>
+  );
+
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colProcess')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.processBoundedContext')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.executingTeam')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.teamBoundedContext')}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map((row, idx) => (
+            <TableRow key={`${row.processKey}-${row.executingUnitKey}-${idx}`} hover>
+              <TableCell>
+                <Typography variant="body2">{row.processName}</Typography>
+              </TableCell>
+              <TableCell>
+                <Chip
+                  label={row.boundedContextName}
+                  size="small"
+                  sx={{ bgcolor: theme.palette.warning.light, color: theme.palette.warning.contrastText, fontWeight: 600 }}
+                />
+              </TableCell>
+              <TableCell>
+                <Typography variant="body2">{row.executingUnitName}</Typography>
+              </TableCell>
+              <TableCell>
+                <Chip
+                  label={row.teamBoundedContextName}
+                  size="small"
+                  sx={{ bgcolor: theme.palette.warning.light, color: theme.palette.warning.contrastText, fontWeight: 600 }}
+                />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TeamInsightsPage: React.FC = () => {
@@ -390,6 +446,7 @@ const TeamInsightsPage: React.FC = () => {
           const bottleneckTeams = insights.bottleneckTeams ?? [];
           const wronglyPlacedTeams = insights.wronglyPlacedTeams ?? [];
           const splitDomains = insights.splitDomains ?? [];
+          const conwaysLawMisalignments = insights.conwaysLawMisalignments ?? [];
           const conwaysLawAlignment = {
             domainKeys: insights.conwaysLawAlignment?.domainKeys ?? [],
             orgUnitKeys: insights.conwaysLawAlignment?.orgUnitKeys ?? [],
@@ -430,6 +487,12 @@ const TeamInsightsPage: React.FC = () => {
             <Section title={t('analytics.conwayMatrix')} subtitle={t('analytics.conwayHint')}
               icon={<SyncAlt />} defaultExpanded>
               <ConwayMatrix data={conwaysLawAlignment} />
+            </Section>
+
+            <Section title={t('analytics.conwaysLawMisalignments')} subtitle={t('analytics.conwaysLawMisalignmentsHint')}
+              icon={<Warning />} count={conwaysLawMisalignments.length}
+              severity={conwaysLawMisalignments.length > 0 ? 'warning' : 'info'}>
+              <ConwayMisalignmentsTable data={conwaysLawMisalignments} />
             </Section>
           </>;
         })()}

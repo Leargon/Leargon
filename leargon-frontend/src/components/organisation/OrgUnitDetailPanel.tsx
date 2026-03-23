@@ -28,6 +28,9 @@ import {
   Select,
   MenuItem,
   Switch,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { Edit, Check, Close, Delete, ExpandMore, Add } from '@mui/icons-material';
@@ -48,7 +51,11 @@ import {
   useUpdateOrgUnitExternalFields,
   useUpdateOrgUnitDataAccessEntities,
   useUpdateOrgUnitDataManipulationEntities,
+  useGetOwnedBoundedContextsByOrgUnit,
+  getGetOwnedBoundedContextsByOrgUnitQueryKey,
 } from '../../api/generated/organisational-unit/organisational-unit';
+import { useUpdateBoundedContextOwningTeam } from '../../api/generated/bounded-context/bounded-context';
+import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
@@ -68,6 +75,8 @@ import type {
   ClassificationResponse,
   DataProcessorResponse,
   BusinessEntityResponse,
+  BoundedContextSummaryResponse,
+  BusinessDomainResponse,
 } from '../../api/generated/model';
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -106,6 +115,20 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const allDataProcessors = (dataProcessorsResponse?.data as DataProcessorResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
+  const { data: ownedBcsResponse } = useGetOwnedBoundedContextsByOrgUnit(unitKey);
+  const ownedBoundedContexts = (ownedBcsResponse?.data as BoundedContextSummaryResponse[] | undefined) || [];
+  const { data: allDomainsResponse } = useGetAllBusinessDomains();
+  const allDomains = (allDomainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
+  // Flatten all bounded contexts from all domains for the assign dialog
+  const allBoundedContexts: BoundedContextSummaryResponse[] = allDomains.flatMap((d) => {
+    const domainName = getLocalizedText(d.names, d.key);
+    return (d.boundedContexts || []).map((bc) => ({
+      key: bc.key,
+      name: bc.name,
+      domainKey: d.key,
+      domainName: domainName,
+    }));
+  });
 
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isLeadOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
@@ -127,6 +150,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
+  const [assignBcDialogOpen, setAssignBcDialogOpen] = useState(false);
+  const [selectedBcKey, setSelectedBcKey] = useState<string | null>(null);
 
   const updateNames = useUpdateOrganisationalUnitNames();
   const updateDescriptions = useUpdateOrganisationalUnitDescriptions();
@@ -138,11 +163,26 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const updateExternalFields = useUpdateOrgUnitExternalFields();
   const updateDataAccessEntities = useUpdateOrgUnitDataAccessEntities();
   const updateDataManipulationEntities = useUpdateOrgUnitDataManipulationEntities();
+  const updateBcOwningTeam = useUpdateBoundedContextOwningTeam();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitByKeyQueryKey(unitKey) });
     queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitTreeQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetAllOrganisationalUnitsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetOwnedBoundedContextsByOrgUnitQueryKey(unitKey) });
+  };
+
+  const handleUnassignBc = async (bcKey: string) => {
+    await updateBcOwningTeam.mutateAsync({ key: bcKey, data: { owningTeamKey: null } });
+    queryClient.invalidateQueries({ queryKey: getGetOwnedBoundedContextsByOrgUnitQueryKey(unitKey) });
+  };
+
+  const handleAssignBc = async () => {
+    if (!selectedBcKey) return;
+    await updateBcOwningTeam.mutateAsync({ key: selectedBcKey, data: { owningTeamKey: unitKey } });
+    queryClient.invalidateQueries({ queryKey: getGetOwnedBoundedContextsByOrgUnitQueryKey(unitKey) });
+    setAssignBcDialogOpen(false);
+    setSelectedBcKey(null);
   };
 
   // Inline edit for names & descriptions
@@ -239,6 +279,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     externalFieldsEdit.cancel();
     dataAccessEdit.cancel();
     dataManipulationEdit.cancel();
+    setAssignBcDialogOpen(false);
+    setSelectedBcKey(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unitKey]);
 
@@ -454,6 +496,52 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               <span style={{ color: '#888' }}>No lead assigned</span>
             )}
           </Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Bounded Contexts */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">Bounded Contexts</Typography>
+        {isLeadOrAdmin && (
+          <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
+            Assign
+          </Button>
+        )}
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        {ownedBoundedContexts.length > 0 ? (
+          <List dense disablePadding>
+            {ownedBoundedContexts.map((bc) => (
+              <ListItem
+                key={bc.key}
+                disablePadding
+                sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
+                secondaryAction={
+                  isLeadOrAdmin && (
+                    <Button
+                      size="small"
+                      color="warning"
+                      onClick={() => handleUnassignBc(bc.key)}
+                      disabled={updateBcOwningTeam.isPending}
+                    >
+                      Unassign
+                    </Button>
+                  )
+                }
+              >
+                <ListItemText
+                  primary={bc.name}
+                  secondary={bc.domainName}
+                  primaryTypographyProps={{ variant: 'body2' }}
+                  secondaryTypographyProps={{ variant: 'caption' }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary">No bounded contexts owned</Typography>
         )}
       </Box>
 
@@ -840,6 +928,34 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </TableBody>
         </Table>
       </Paper>
+
+      {/* Assign Bounded Context Dialog */}
+      <Dialog open={assignBcDialogOpen} onClose={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }} maxWidth="sm" fullWidth>
+        <DialogTitle>Assign Bounded Context</DialogTitle>
+        <DialogContent>
+          <Autocomplete
+            options={allBoundedContexts}
+            getOptionLabel={(bc) => `${bc.name} (${bc.domainName})`}
+            value={allBoundedContexts.find((bc) => bc.key === selectedBcKey) || null}
+            onChange={(_, newVal) => setSelectedBcKey(newVal?.key || null)}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Select bounded context" sx={{ mt: 1 }} />
+            )}
+            isOptionEqualToValue={(option, value) => option.key === value.key}
+            size="small"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }}>Cancel</Button>
+          <Button
+            onClick={handleAssignBc}
+            variant="contained"
+            disabled={!selectedBcKey || updateBcOwningTeam.isPending}
+          >
+            Assign
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
