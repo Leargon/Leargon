@@ -1,0 +1,108 @@
+ContextMap LeargonContextMap {
+  contains CustomerManagementContext, CustomerSelfServiceContext, PrintingContext, PolicyManagementContext, RiskManagementContext, DebtCollection
+
+  CustomerManagementContext [U,S] -> [D,C] CustomerSelfServiceContext
+  PrintingContext [U] -> [D,ACL] CustomerManagementContext
+  PrintingContext [U] -> [D,ACL] PolicyManagementContext
+  PolicyManagementContext Partnership RiskManagementContext
+  CustomerManagementContext [U] -> [D,CF] PolicyManagementContext
+  PrintingContext [U] -> [D,ACL] DebtCollection
+  PolicyManagementContext [SK] <-> [SK] DebtCollection
+}
+
+Domain Insurance_Domain {
+  Subdomain CustomerManagementContextSubdomain {
+    type = CORE_DOMAIN
+    Entity Customer { }
+    Entity Address { }
+  }
+  Subdomain CustomerSelfServiceContextSubdomain {
+    type = CORE_DOMAIN
+    domainVisionStatement = "This context represents a web application which allows the customer to login and change basic data records like the address."
+  }
+  Subdomain DebtCollectionSubdomain {
+    type = GENERIC_SUBDOMAIN
+    domainVisionStatement = "The debt collection context is responsible for the financial income of the insurance company."
+    Entity Debt { }
+  }
+  Subdomain PolicyManagementContextSubdomain {
+    type = SUPPORT_DOMAIN
+    domainVisionStatement = "This bounded context manages the contracts and policies of the customers."
+    Entity Offer { }
+    Entity Product { }
+    Entity Contract { }
+  }
+  Subdomain PrintingContextSubdomain {
+    type = GENERIC_SUBDOMAIN
+    domainVisionStatement = "An external system which provides printing services to the other Bounded Contexts."
+    Entity PrintingJob { }
+  }
+  Subdomain RiskManagementContextSubdomain {
+    type = GENERIC_SUBDOMAIN
+    domainVisionStatement = "Uses data from PolicyManagement context to calculate risks."
+    Entity CustomerRiskFactor { }
+  }
+}
+
+BoundedContext CustomerManagementContext implements CustomerManagementContextSubdomain {
+  Aggregate CustomerAggregate {
+    Entity Customer {
+      aggregateRoot
+    }
+  }
+  Aggregate AddressAggregate {
+    Entity Address {
+      aggregateRoot
+    }
+  }
+}
+
+BoundedContext CustomerSelfServiceContext implements CustomerSelfServiceContextSubdomain {
+  domainVisionStatement = "This context represents a web application which allows the customer to login and change basic data records like the address."
+}
+
+BoundedContext PrintingContext implements PrintingContextSubdomain {
+  domainVisionStatement = "An external system which provides printing services to the other Bounded Contexts."
+  Aggregate PrintingJobAggregate {
+    Entity PrintingJob {
+      aggregateRoot
+    }
+  }
+}
+
+BoundedContext PolicyManagementContext implements PolicyManagementContextSubdomain {
+  domainVisionStatement = "This bounded context manages the contracts and policies of the customers."
+  Aggregate OfferAggregate {
+    Entity Offer {
+      aggregateRoot
+    }
+  }
+  Aggregate ProductAggregate {
+    Entity Product {
+      aggregateRoot
+    }
+  }
+  Aggregate ContractAggregate {
+    Entity Contract {
+      aggregateRoot
+    }
+  }
+}
+
+BoundedContext RiskManagementContext implements RiskManagementContextSubdomain {
+  domainVisionStatement = "Uses data from PolicyManagement context to calculate risks."
+  Aggregate CustomerRiskFactorAggregate {
+    Entity CustomerRiskFactor {
+      aggregateRoot
+    }
+  }
+}
+
+BoundedContext DebtCollection implements DebtCollectionSubdomain {
+  domainVisionStatement = "The debt collection context is responsible for the financial income of the insurance company."
+  Aggregate DebtAggregate {
+    Entity Debt {
+      aggregateRoot
+    }
+  }
+}

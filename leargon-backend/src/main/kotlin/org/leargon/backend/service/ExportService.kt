@@ -172,13 +172,11 @@ open class ExportService(
             val down = rel.downstreamBoundedContext ?: continue
             val upId = toCmlIdentifier(up.getName(locale))
             val downId = toCmlIdentifier(down.getName(locale))
-            // SEPARATE_WAYS means no relationship — omit the line
             if (rel.relationshipType == "SEPARATE_WAYS") continue
             val line =
                 when (rel.relationshipType) {
                     "PARTNERSHIP" -> "  $upId Partnership $downId"
                     "SHARED_KERNEL" -> "  $upId [SK] <-> [SK] $downId"
-                    // BIG_BALL_OF_MUD: no dedicated CML syntax — model as bidirectional with name
                     "BIG_BALL_OF_MUD" -> "  $upId <-> $downId : BigBallOfMud"
                     "CUSTOMER_SUPPLIER" -> "  $upId [U,S] -> [D,C] $downId"
                     "CONFORMIST" -> "  $upId [U] -> [D,CF] $downId"
@@ -192,52 +190,115 @@ open class ExportService(
         sb.appendLine("}")
         sb.appendLine()
 
-        // Group entities by bounded context key for use in BoundedContext blocks
+        // Group entities by BC key
         val entitiesByBcKey =
             businessEntityRepository
                 .findAll()
                 .filter { it.boundedContext != null }
                 .groupBy { it.boundedContext!!.key }
 
-        // Build map: BC key → subdomain identifier (from the domain that contains it)
+        // Index domains and determine root/child status in-memory
+        val domainByKey = allDomains.associateBy { it.key }
+        val childDomainsByParentKey = allDomains
+            .filter { it.parent != null }
+            .groupBy { it.parent!!.key }
+        val bcsByDomainKey = allBoundedContexts
+            .filter { it.domain != null }
+            .groupBy { it.domain!!.key }
+        val rootDomainKeys = allDomains.filter { it.parent == null }.map { it.key }.toSet()
+
+        // Build map: BC key → CML subdomain identifier
+        // - BC in a child domain  → subdomain name = child domain's own name
+        // - BC directly in a root domain → old-style ${bcName}Subdomain
         val bcKeyToSubdomainId = mutableMapOf<String, String>()
-        for (domain in allDomains) {
-            for (bc in domain.boundedContexts) {
-                val bcId = toCmlIdentifier(bc.getName(locale))
-                bcKeyToSubdomainId[bc.key] = "${bcId}Subdomain"
-            }
+        for (bc in allBoundedContexts) {
+            val domainKey = bc.domain?.key ?: continue
+            bcKeyToSubdomainId[bc.key] =
+                if (domainKey !in rootDomainKeys) {
+                    toCmlIdentifier((domainByKey[domainKey] ?: continue).getName(locale))
+                } else {
+                    "${toCmlIdentifier(bc.getName(locale))}Subdomain"
+                }
         }
 
-        // Domain blocks — defined first so subdomains are declared before BoundedContext references them
-        val domainsWithBcs = allDomains.filter { it.boundedContexts.isNotEmpty() }
-        for (domain in domainsWithBcs) {
-            val domainId = toCmlIdentifier(domain.names.firstOrNull()?.text ?: domain.key)
+        // Domain blocks (root domains only) — defined before BoundedContext blocks
+        val rootDomains = allDomains.filter { it.parent == null }
+        for (rootDomain in rootDomains) {
+            val children = childDomainsByParentKey[rootDomain.key]?.sortedBy { it.getName(locale) } ?: emptyList()
+            val directBcs = bcsByDomainKey[rootDomain.key]?.sortedBy { it.getName(locale) } ?: emptyList()
+            if (children.isEmpty() && directBcs.isEmpty()) continue
+
+            val domainId = toCmlIdentifier(rootDomain.getName(locale))
             sb.appendLine("Domain $domainId {")
-            if (!domain.visionStatement.isNullOrBlank()) {
-                sb.appendLine("  domainVisionStatement = \"${domain.visionStatement!!.replace("\"", "\\\"")}\"")
+            if (!rootDomain.visionStatement.isNullOrBlank()) {
+                sb.appendLine("  domainVisionStatement = \"${rootDomain.visionStatement!!.replace("\"", "\\\"")}\"")
             }
-            for (bc in domain.boundedContexts) {
-                val bcId = toCmlIdentifier(bc.getName(locale))
-                sb.appendLine("  Subdomain ${bcId}Subdomain {")
-                when (domain.type?.uppercase()) {
-                    "CORE" -> sb.appendLine("    type = CORE_DOMAIN")
-                    "SUPPORTING" -> sb.appendLine("    type = SUPPORTING_DOMAIN")
-                    "GENERIC" -> sb.appendLine("    type = GENERIC_SUBDOMAIN")
+
+            if (children.isNotEmpty()) {
+                // Hierarchical model: child domains become CML Subdomains
+                for (child in children) {
+                    val childId = toCmlIdentifier(child.getName(locale))
+                    sb.appendLine("  Subdomain $childId {")
+                    val subdomainTypeLine =
+                        when (child.type?.uppercase()) {
+                            "CORE" -> "    type = CORE_DOMAIN"
+                            "SUPPORTING" -> "    type = SUPPORTING_DOMAIN"
+                            "SUPPORT" -> "    type = SUPPORT_DOMAIN"
+                            "GENERIC" -> "    type = GENERIC_SUBDOMAIN"
+                            else -> null
+                        }
+                    if (subdomainTypeLine != null) sb.appendLine(subdomainTypeLine)
+                    // domainVisionStatement from the first (alphabetically) BC in this child domain
+                    val childBcs = bcsByDomainKey[child.key]?.sortedBy { it.getName(locale) } ?: emptyList()
+                    val firstBcDesc =
+                        childBcs.firstOrNull()?.descriptions?.find { it.locale == locale }?.text
+                            ?: childBcs.firstOrNull()?.descriptions?.firstOrNull()?.text
+                    if (!firstBcDesc.isNullOrBlank()) {
+                        sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
+                    }
+                    // Problem-space entities from all BCs in this child domain
+                    for (bc in childBcs) {
+                        for (entity in entitiesByBcKey[bc.key] ?: emptyList()) {
+                            val entityId =
+                                toCmlIdentifier(
+                                    entity.names.find { n -> n.locale == locale }?.text
+                                        ?: entity.names.firstOrNull()?.text
+                                        ?: entity.key,
+                                )
+                            sb.appendLine("    Entity $entityId { }")
+                        }
+                    }
+                    sb.appendLine("  }")
                 }
-                val firstBcDesc = bc.descriptions.firstOrNull()?.text
-                if (!firstBcDesc.isNullOrBlank()) {
-                    sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
+            } else {
+                // Flat model: BCs directly in the domain become their own Subdomains
+                for (bc in directBcs) {
+                    val bcId = toCmlIdentifier(bc.getName(locale))
+                    sb.appendLine("  Subdomain ${bcId}Subdomain {")
+                    val subdomainTypeLine =
+                        when (rootDomain.type?.uppercase()) {
+                            "CORE" -> "    type = CORE_DOMAIN"
+                            "SUPPORTING" -> "    type = SUPPORTING_DOMAIN"
+                            "SUPPORT" -> "    type = SUPPORT_DOMAIN"
+                            "GENERIC" -> "    type = GENERIC_SUBDOMAIN"
+                            else -> null
+                        }
+                    if (subdomainTypeLine != null) sb.appendLine(subdomainTypeLine)
+                    val firstBcDesc = bc.descriptions.firstOrNull()?.text
+                    if (!firstBcDesc.isNullOrBlank()) {
+                        sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
+                    }
+                    for (entity in entitiesByBcKey[bc.key] ?: emptyList()) {
+                        val entityId =
+                            toCmlIdentifier(
+                                entity.names.find { n -> n.locale == locale }?.text
+                                    ?: entity.names.firstOrNull()?.text
+                                    ?: entity.key,
+                            )
+                        sb.appendLine("    Entity $entityId { }")
+                    }
+                    sb.appendLine("  }")
                 }
-                // Problem-space entities belonging to this bounded context
-                val subdomainEntities = entitiesByBcKey[bc.key] ?: emptyList()
-                for (entity in subdomainEntities) {
-                    val entityId =
-                        toCmlIdentifier(
-                            entity.names.find { n -> n.locale == locale }?.text ?: entity.names.firstOrNull()?.text ?: entity.key,
-                        )
-                    sb.appendLine("    Entity $entityId { }")
-                }
-                sb.appendLine("  }")
             }
             sb.appendLine("}")
             sb.appendLine()
@@ -262,7 +323,6 @@ open class ExportService(
             if (!owningUnitName.isNullOrBlank()) {
                 sb.appendLine("  responsibilities = \"${owningUnitName.replace("\"", "\\\"")}\"")
             }
-            // Aggregates expose the entities defined in the corresponding subdomain (problem space)
             val bcEntities = entitiesByBcKey[bc.key] ?: emptyList()
             for (entity in bcEntities) {
                 val entityId =
