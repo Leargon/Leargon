@@ -323,14 +323,17 @@ const fr = {
   },
   ubiquitousLanguage: {
     title: 'Langage Omniprésent',
-    subtitle: 'Noms de domaine (entités) et verbes (processus) avec leurs affectations de contexte délimité',
+    subtitle: 'Noms de domaine (entités), verbes (processus) et événements avec leurs affectations de contexte délimité',
     nouns: 'Noms — Entités',
     verbs: 'Verbes — Processus',
+    events: 'Événements — Domain Events',
     boundedContext: 'Contexte Délimité',
     domain: 'Domaine',
     description: 'Description',
+    consumers: 'Consommateurs',
     searchNouns: 'Rechercher des entités…',
     searchVerbs: 'Rechercher des processus…',
+    searchEvents: 'Rechercher des événements…',
     noBoundedContext: '—',
   },
   boundedContextUL: {

@@ -324,14 +324,17 @@ const en = {
   },
   ubiquitousLanguage: {
     title: 'Ubiquitous Language',
-    subtitle: 'Domain nouns (entities) and verbs (processes) with their bounded context assignments',
+    subtitle: 'Domain nouns (entities), verbs (processes), and events with their bounded context assignments',
     nouns: 'Nouns — Entities',
     verbs: 'Verbs — Processes',
+    events: 'Events — Domain Events',
     boundedContext: 'Bounded Context',
     domain: 'Domain',
     description: 'Description',
+    consumers: 'Consumers',
     searchNouns: 'Search entities…',
     searchVerbs: 'Search processes…',
+    searchEvents: 'Search events…',
     noBoundedContext: '—',
   },
   boundedContextUL: {

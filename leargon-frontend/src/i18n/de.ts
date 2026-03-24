@@ -324,14 +324,17 @@ const de = {
   },
   ubiquitousLanguage: {
     title: 'Ubiquitäre Sprache',
-    subtitle: 'Domain-Substantive (Entitäten) und Verben (Prozesse) mit ihren Bounded-Context-Zuordnungen',
+    subtitle: 'Domain-Substantive (Entitäten), Verben (Prozesse) und Ereignisse mit ihren Bounded-Context-Zuordnungen',
     nouns: 'Substantive — Entitäten',
     verbs: 'Verben — Prozesse',
+    events: 'Ereignisse — Domain Events',
     boundedContext: 'Bounded Context',
     domain: 'Domäne',
     description: 'Beschreibung',
+    consumers: 'Konsumenten',
     searchNouns: 'Entitäten suchen…',
     searchVerbs: 'Prozesse suchen…',
+    searchEvents: 'Ereignisse suchen…',
     noBoundedContext: '—',
   },
   boundedContextUL: {
