@@ -45,6 +45,8 @@ import {
   useUpdateProcessType,
   useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
+  useUpdateProcessSteward,
+  useUpdateProcessTechnicalCustodian,
   useUpdateProcessCode,
   useUpdateProcessParent,
   useAssignBoundedContextToProcess,
@@ -205,6 +207,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateType = useUpdateProcessType();
   const updateLegalBasis = useUpdateProcessLegalBasis();
   const updateOwner = useUpdateProcessOwner();
+  const updateSteward = useUpdateProcessSteward();
+  const updateTechnicalCustodian = useUpdateProcessTechnicalCustodian();
   const updateCode = useUpdateProcessCode();
   const assignBoundedContext = useAssignBoundedContextToProcess();
   const assignClassifications = useAssignClassificationsToProcess();
@@ -270,6 +274,22 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const ownerEdit = useInlineEdit<string>({
     onSave: async (val) => {
       await updateOwner.mutateAsync({ key: processKey, data: { processOwnerUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Process steward inline edit
+  const stewardEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateSteward.mutateAsync({ key: processKey, data: { processStewardUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Technical custodian inline edit
+  const technicalCustodianEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTechnicalCustodian.mutateAsync({ key: processKey, data: { technicalCustodianUsername: val } });
       invalidate();
     },
   });
@@ -346,6 +366,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     typeEdit.cancel();
     legalBasisEdit.cancel();
     ownerEdit.cancel();
+    stewardEdit.cancel();
+    technicalCustodianEdit.cancel();
     codeEdit.cancel();
     boundedContextEdit.cancel();
     classEdit.cancel();
@@ -524,6 +546,56 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Box>
           ) : (
             <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
+          onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
+          onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
+          {stewardEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
+                onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('process.processSteward')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
+              {process.processSteward
+                ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
+                : t('common.notSet')}
+            </Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+          onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
+          onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
+          {technicalCustodianEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+                onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('process.technicalCustodian')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+              {process.technicalCustodian
+                ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
+                : t('common.notSet')}
+            </Typography>
           )}
         </PropRow>
         <PropRow label={t('process.code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}

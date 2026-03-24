@@ -24,6 +24,8 @@ import org.leargon.backend.model.UpdateOrgUnitEntityLinksRequest
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
+import org.leargon.backend.model.UpdateOrgUnitStewardRequest
+import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
@@ -90,7 +92,27 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateLead(key, request.leadUsername)
+        return organisationalUnitService.updateBusinessOwner(key, request.businessOwnerUsername)
+    }
+
+    override fun updateOrganisationalUnitSteward(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitStewardRequest
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        val unit = organisationalUnitService.getByKey(key)
+        checkEditPermission(unit, currentUser)
+        return organisationalUnitService.updateBusinessSteward(key, request.businessStewardUsername)
+    }
+
+    override fun updateOrganisationalUnitTechnicalCustodian(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitTechnicalCustodianRequest
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        val unit = organisationalUnitService.getByKey(key)
+        checkEditPermission(unit, currentUser)
+        return organisationalUnitService.updateTechnicalCustodian(key, request.technicalCustodianUsername)
     }
 
     override fun updateOrganisationalUnitType(
@@ -165,14 +187,14 @@ open class OrganisationalUnitController(
             throw ForbiddenOperationException("Only admins can create root organisational units")
         }
 
-        val isLeadOfAnyParent =
+        val isOwnerOfAnyParent =
             parentKeys.any { parentKey ->
                 val parent = organisationalUnitService.getByKey(parentKey)
-                parent.lead?.id == currentUser.id
+                parent.businessOwner?.id == currentUser.id
             }
 
-        if (!isLeadOfAnyParent) {
-            throw ForbiddenOperationException("Only the lead of a parent unit or an admin can create child units")
+        if (!isOwnerOfAnyParent) {
+            throw ForbiddenOperationException("Only the business owner of a parent unit or an admin can create child units")
         }
     }
 
@@ -183,9 +205,9 @@ open class OrganisationalUnitController(
             currentUser: User
         ) {
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            val isLead = unit.lead?.id == currentUser.id
-            if (!isAdmin && !isLead) {
-                throw ForbiddenOperationException("Only the lead or an admin can edit this unit")
+            val isOwner = unit.businessOwner?.id == currentUser.id
+            if (!isAdmin && !isOwner) {
+                throw ForbiddenOperationException("Only the business owner or an admin can edit this unit")
             }
         }
     }

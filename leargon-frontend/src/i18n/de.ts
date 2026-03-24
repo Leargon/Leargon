@@ -53,6 +53,8 @@ const de = {
   entity: {
     pageTitle: 'Daten-Ontologie',
     dataOwner: 'Dateneigentümer',
+    dataSteward: 'Daten-Steward',
+    technicalCustodian: 'Technischer Custodian',
     parentEntity: 'Übergeordnete Entität',
     boundedContext: 'Begrenzter Kontext',
     retentionPeriod: 'Aufbewahrungsfrist',
@@ -77,6 +79,8 @@ const de = {
   process: {
     pageTitle: 'Prozesskarte',
     processOwner: 'Prozessverantwortlicher',
+    processSteward: 'Prozess-Steward',
+    technicalCustodian: 'Technischer Custodian',
     code: 'Code',
     processType: 'Prozesstyp',
     legalBasis: 'Rechtsgrundlage',
@@ -176,6 +180,7 @@ const de = {
   },
   domain: {
     visionStatement: 'Visionsbeschreibung',
+    owningUnit: 'Verantwortliche Einheit',
     visionStatementPlaceholder: 'Beschreiben Sie die Vision und den Zweck dieser Domäne...',
     boundedContexts: 'Begrenzte Kontexte',
     noBoundedContexts: 'Keine begrenzten Kontexte definiert',

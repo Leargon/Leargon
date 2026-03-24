@@ -442,15 +442,15 @@ class AdministrationControllerSpec extends Specification {
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    def "DELETE /administration/users/{id} should return 403 when user is lead of an organisational unit"() {
-        given: "a user who leads an organisational unit"
+    def "DELETE /administration/users/{id} should return 403 when user is business owner of an organisational unit"() {
+        given: "a user who is business owner of an organisational unit"
         String adminToken = createAdminToken()
         client.toBlocking().exchange(HttpRequest.POST("/authentication/signup",
                 new SignupRequest("leader@example.com", "leader", "password123", "Lead", "User")))
         def leader = userRepository.findByEmail("leader@example.com").get()
 
         def unitReq = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Unit")])
-        unitReq.leadUsername = "leader"
+        unitReq.businessOwnerUsername = "leader"
         client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", unitReq).bearerAuth(adminToken), Map)
 

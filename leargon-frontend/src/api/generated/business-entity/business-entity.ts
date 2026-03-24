@@ -49,9 +49,11 @@ import type {
   LocalizedBusinessEntityResponse,
   LocalizedText,
   UpdateBusinessEntityDataOwnerRequest,
+  UpdateBusinessEntityDataStewardRequest,
   UpdateBusinessEntityInterfacesRequest,
   UpdateBusinessEntityParentRequest,
   UpdateBusinessEntityRelationshipRequest,
+  UpdateBusinessEntityTechnicalCustodianRequest,
   UpdateCrossBorderTransfersRequest,
   UpdateLinkedDataProcessorsRequest,
   UpdateRetentionPeriodRequest,
@@ -824,6 +826,208 @@ export const useUpdateBusinessEntityDataOwner = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateBusinessEntityDataOwnerMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the data steward of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity data steward
+ */
+export type updateBusinessEntityDataStewardResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type updateBusinessEntityDataStewardResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityDataStewardResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateBusinessEntityDataStewardResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateBusinessEntityDataStewardResponseSuccess = (updateBusinessEntityDataStewardResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessEntityDataStewardResponseError = (updateBusinessEntityDataStewardResponse401 | updateBusinessEntityDataStewardResponse403 | updateBusinessEntityDataStewardResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityDataStewardResponse = (updateBusinessEntityDataStewardResponseSuccess | updateBusinessEntityDataStewardResponseError)
+
+export const getUpdateBusinessEntityDataStewardUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/data-steward`
+}
+
+export const updateBusinessEntityDataSteward = async (key: string,
+    updateBusinessEntityDataStewardRequest: UpdateBusinessEntityDataStewardRequest, options?: RequestInit): Promise<updateBusinessEntityDataStewardResponse> => {
+  
+  return customAxios<updateBusinessEntityDataStewardResponse>(getUpdateBusinessEntityDataStewardUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateBusinessEntityDataStewardRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessEntityDataStewardMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>, TError,{key: string;data: UpdateBusinessEntityDataStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>, TError,{key: string;data: UpdateBusinessEntityDataStewardRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityDataSteward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>, {key: string;data: UpdateBusinessEntityDataStewardRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityDataSteward(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityDataStewardMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>>
+    export type UpdateBusinessEntityDataStewardMutationBody = UpdateBusinessEntityDataStewardRequest
+    export type UpdateBusinessEntityDataStewardMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update business entity data steward
+ */
+export const useUpdateBusinessEntityDataSteward = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>, TError,{key: string;data: UpdateBusinessEntityDataStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityDataSteward>>,
+        TError,
+        {key: string;data: UpdateBusinessEntityDataStewardRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityDataStewardMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the technical custodian of a business entity. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Update business entity technical custodian
+ */
+export type updateBusinessEntityTechnicalCustodianResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type updateBusinessEntityTechnicalCustodianResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityTechnicalCustodianResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateBusinessEntityTechnicalCustodianResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateBusinessEntityTechnicalCustodianResponseSuccess = (updateBusinessEntityTechnicalCustodianResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessEntityTechnicalCustodianResponseError = (updateBusinessEntityTechnicalCustodianResponse401 | updateBusinessEntityTechnicalCustodianResponse403 | updateBusinessEntityTechnicalCustodianResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityTechnicalCustodianResponse = (updateBusinessEntityTechnicalCustodianResponseSuccess | updateBusinessEntityTechnicalCustodianResponseError)
+
+export const getUpdateBusinessEntityTechnicalCustodianUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/technical-custodian`
+}
+
+export const updateBusinessEntityTechnicalCustodian = async (key: string,
+    updateBusinessEntityTechnicalCustodianRequest: UpdateBusinessEntityTechnicalCustodianRequest, options?: RequestInit): Promise<updateBusinessEntityTechnicalCustodianResponse> => {
+  
+  return customAxios<updateBusinessEntityTechnicalCustodianResponse>(getUpdateBusinessEntityTechnicalCustodianUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateBusinessEntityTechnicalCustodianRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessEntityTechnicalCustodianMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>, TError,{key: string;data: UpdateBusinessEntityTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>, TError,{key: string;data: UpdateBusinessEntityTechnicalCustodianRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityTechnicalCustodian'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>, {key: string;data: UpdateBusinessEntityTechnicalCustodianRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityTechnicalCustodian(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityTechnicalCustodianMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>>
+    export type UpdateBusinessEntityTechnicalCustodianMutationBody = UpdateBusinessEntityTechnicalCustodianRequest
+    export type UpdateBusinessEntityTechnicalCustodianMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update business entity technical custodian
+ */
+export const useUpdateBusinessEntityTechnicalCustodian = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>, TError,{key: string;data: UpdateBusinessEntityTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityTechnicalCustodian>>,
+        TError,
+        {key: string;data: UpdateBusinessEntityTechnicalCustodianRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityTechnicalCustodianMutationOptions(options), queryClient);
     }
     /**
  * Replaces all descriptions of a business entity. Only the Data Owner or an Administrator can edit an entity.

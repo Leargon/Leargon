@@ -63,7 +63,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
           names: names.filter((n) => n.text.trim()),
           descriptions: descriptions.filter((d) => d.text.trim()),
           unitType: unitType || undefined,
-          leadUsername: leadUsername || undefined,
+          businessOwnerUsername: leadUsername || undefined,
           parentKeys: parentKey ? [parentKey] : undefined,
         },
       });

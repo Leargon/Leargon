@@ -58,6 +58,8 @@ import type {
   UpdateProcessParentRequest,
   UpdateProcessPurposeRequest,
   UpdateProcessSecurityMeasuresRequest,
+  UpdateProcessStewardRequest,
+  UpdateProcessTechnicalCustodianRequest,
   UpdateProcessTypeRequest,
   VersionDiffResponse
 } from '../model';
@@ -1853,6 +1855,208 @@ export const useUpdateProcessOwner = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateProcessOwnerMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the business steward of a process. Only the process owner or an admin can update.
+ * @summary Update process steward
+ */
+export type updateProcessStewardResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessStewardResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessStewardResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessStewardResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessStewardResponseSuccess = (updateProcessStewardResponse200) & {
+  headers: Headers;
+};
+export type updateProcessStewardResponseError = (updateProcessStewardResponse401 | updateProcessStewardResponse403 | updateProcessStewardResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessStewardResponse = (updateProcessStewardResponseSuccess | updateProcessStewardResponseError)
+
+export const getUpdateProcessStewardUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/process-steward`
+}
+
+export const updateProcessSteward = async (key: string,
+    updateProcessStewardRequest: UpdateProcessStewardRequest, options?: RequestInit): Promise<updateProcessStewardResponse> => {
+  
+  return customAxios<updateProcessStewardResponse>(getUpdateProcessStewardUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessStewardRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessStewardMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext> => {
+
+const mutationKey = ['updateProcessSteward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessSteward>>, {key: string;data: UpdateProcessStewardRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessSteward(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessStewardMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessSteward>>>
+    export type UpdateProcessStewardMutationBody = UpdateProcessStewardRequest
+    export type UpdateProcessStewardMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process steward
+ */
+export const useUpdateProcessSteward = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessSteward>>,
+        TError,
+        {key: string;data: UpdateProcessStewardRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessStewardMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the technical custodian of a process. Only the process owner or an admin can update.
+ * @summary Update process technical custodian
+ */
+export type updateProcessTechnicalCustodianResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessTechnicalCustodianResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessTechnicalCustodianResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessTechnicalCustodianResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessTechnicalCustodianResponseSuccess = (updateProcessTechnicalCustodianResponse200) & {
+  headers: Headers;
+};
+export type updateProcessTechnicalCustodianResponseError = (updateProcessTechnicalCustodianResponse401 | updateProcessTechnicalCustodianResponse403 | updateProcessTechnicalCustodianResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessTechnicalCustodianResponse = (updateProcessTechnicalCustodianResponseSuccess | updateProcessTechnicalCustodianResponseError)
+
+export const getUpdateProcessTechnicalCustodianUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/technical-custodian`
+}
+
+export const updateProcessTechnicalCustodian = async (key: string,
+    updateProcessTechnicalCustodianRequest: UpdateProcessTechnicalCustodianRequest, options?: RequestInit): Promise<updateProcessTechnicalCustodianResponse> => {
+  
+  return customAxios<updateProcessTechnicalCustodianResponse>(getUpdateProcessTechnicalCustodianUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessTechnicalCustodianRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessTechnicalCustodianMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext> => {
+
+const mutationKey = ['updateProcessTechnicalCustodian'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, {key: string;data: UpdateProcessTechnicalCustodianRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessTechnicalCustodian(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessTechnicalCustodianMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>>
+    export type UpdateProcessTechnicalCustodianMutationBody = UpdateProcessTechnicalCustodianRequest
+    export type UpdateProcessTechnicalCustodianMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process technical custodian
+ */
+export const useUpdateProcessTechnicalCustodian = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>,
+        TError,
+        {key: string;data: UpdateProcessTechnicalCustodianRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessTechnicalCustodianMutationOptions(options), queryClient);
     }
     /**
  * Updates the type of a process. Only the process owner or an admin can update.

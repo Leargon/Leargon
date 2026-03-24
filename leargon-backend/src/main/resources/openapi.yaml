@@ -1096,6 +1096,39 @@ paths:
           description: Domain not found
         '401':
           description: Not authenticated
+  /business-domains/{key}/owning-unit:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update domain owning unit
+      operationId: updateBusinessDomainOwningUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainOwningUnitRequest'
+      responses:
+        '200':
+          description: Updated domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Domain or organisational unit not found
+        '401':
+          description: Not authenticated
   /business-domains/{key}/bounded-contexts:
     get:
       tags:
@@ -2024,6 +2057,92 @@ paths:
       responses:
         '200':
           description: Business Entity data owner updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/data-steward:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity data steward
+      description: Updates the data steward of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityDataSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityDataStewardRequest'
+      responses:
+        '200':
+          description: Business Entity data steward updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/technical-custodian:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity technical custodian
+      description: Updates the technical custodian of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Business Entity technical custodian updated successfully
           content:
             application/json:
               schema:
@@ -3288,6 +3407,68 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /organisational-units/{key}/steward:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit steward
+      description: Updates the business steward of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitStewardRequest'
+      responses:
+        '200':
+          description: Steward updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/technical-custodian:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit technical custodian
+      description: Updates the technical custodian of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Technical custodian updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '401':
+          description: Not authenticated
   /organisational-units/{key}/type:
     put:
       tags:
@@ -4151,6 +4332,84 @@ paths:
       responses:
         '200':
           description: Process owner updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/process-steward:
+    put:
+      tags:
+      - Process
+      summary: Update process steward
+      description: Updates the business steward of a process. Only the process owner or an admin can update.
+      operationId: updateProcessSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessStewardRequest'
+      responses:
+        '200':
+          description: Process steward updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/technical-custodian:
+    put:
+      tags:
+      - Process
+      summary: Update process technical custodian
+      description: Updates the technical custodian of a process. Only the process owner or an admin can update.
+      operationId: updateProcessTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Process technical custodian updated
           content:
             application/json:
               schema:
@@ -5676,6 +5935,10 @@ components:
           type: string
           nullable: true
           description: Vision statement for the bounded context
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Organisational unit responsible for this domain
         createdAt:
           type: string
           format: date-time
@@ -5941,6 +6204,14 @@ components:
           example: sales.retail.customer
         dataOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+        dataSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward override (falls back to owning org unit steward)
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian override (falls back to owning org unit technical custodian)
         parent:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         children:
@@ -6105,6 +6376,13 @@ components:
           nullable: true
           description: Name of the root ancestor entity in default locale, null if this entity is itself top-level
           example: Sales
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
+        description:
+          type: string
+          nullable: true
+          description: Description in the default locale
     BusinessEntityTreeResponse:
       type: object
       required:
@@ -6309,6 +6587,10 @@ components:
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Descriptions for the domain
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit responsible for this domain
     CreateBusinessEntityRelationshipRequest:
       type: object
       required:
@@ -6643,8 +6925,16 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
-        lead:
+        businessOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+        businessSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward responsible for data quality and definitions
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian responsible for the systems
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -6783,10 +7073,18 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
-        leadUsername:
+        businessOwnerUsername:
           type: string
           nullable: true
-          description: Username of the unit lead
+          description: Username of the business owner
+        businessStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the business steward
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the technical custodian
         parentKeys:
           type: array
           items:
@@ -6795,10 +7093,24 @@ components:
     UpdateOrgUnitLeadRequest:
       type: object
       properties:
-        leadUsername:
+        businessOwnerUsername:
           type: string
           nullable: true
-          description: Username of the new lead (null to remove)
+          description: Username of the new business owner (null to remove)
+    UpdateOrgUnitStewardRequest:
+      type: object
+      properties:
+        businessStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new business steward (null to remove)
+    UpdateOrgUnitTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateOrgUnitTypeRequest:
       type: object
       properties:
@@ -6850,6 +7162,14 @@ components:
           description: Technical and organisational security measures (TOM)
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+        processSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward override (falls back to owning org unit steward)
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian override (falls back to owning org unit technical custodian)
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -6943,6 +7263,13 @@ components:
           type: string
           description: Process name in default locale
           example: Order Fulfillment
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
+        description:
+          type: string
+          nullable: true
+          description: Description in the default locale
     ProcessTreeResponse:
       type: object
       required:
@@ -7152,6 +7479,20 @@ components:
         dataOwnerUsername:
           type: string
           description: Username of the new data owner
+    UpdateBusinessEntityDataStewardRequest:
+      type: object
+      properties:
+        dataStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new data steward (null to remove)
+    UpdateBusinessEntityTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateBusinessEntityInterfacesRequest:
       type: object
       required:
@@ -7242,6 +7583,20 @@ components:
         processOwnerUsername:
           type: string
           description: Username of the new process owner
+    UpdateProcessStewardRequest:
+      type: object
+      properties:
+        processStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new process steward (null to remove)
+    UpdateProcessTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateProcessLegalBasisRequest:
       type: object
       properties:
@@ -8026,6 +8381,13 @@ components:
         visionStatement:
           type: string
           nullable: true
+    UpdateDomainOwningUnitRequest:
+      type: object
+      properties:
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the owning organisational unit (null to remove)
     TranslationLinkResponse:
       type: object
       required:

@@ -48,6 +48,7 @@ import {
   useAssignClassificationsToDomain,
   useGetBusinessDomainVersions,
   useGetAllBusinessDomains,
+  useUpdateBusinessDomainOwningUnit,
 } from '../../api/generated/business-domain/business-domain';
 import {
   useGetAllContextRelationships,
@@ -333,6 +334,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const updateType = useUpdateBusinessDomainType();
   const updateParent = useUpdateBusinessDomainParent();
   const updateVisionStatement = useUpdateBusinessDomainVisionStatement();
+  const updateOwningUnit = useUpdateBusinessDomainOwningUnit();
   const deleteDomain = useDeleteBusinessDomain();
   const assignClassifications = useAssignClassificationsToDomain();
 
@@ -394,6 +396,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     },
   });
 
+  // Inline edit for owning unit
+  const owningUnitEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateOwningUnit.mutateAsync({ key: domainKey, data: { owningUnitKey: val } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different domain
   useEffect(() => {
     namesEdit.cancel();
@@ -401,6 +411,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     parentEdit.cancel();
     classEdit.cancel();
     visionEdit.cancel();
+    owningUnitEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domainKey]);
 
@@ -687,6 +698,45 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           )}
         </Box>
       )}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Owning Unit */}
+      <SectionHeader
+        title={t('domain.owningUnit')}
+        canEdit={isAdmin}
+        isEditing={owningUnitEdit.isEditing}
+        onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
+        onSave={owningUnitEdit.save}
+        onCancel={owningUnitEdit.cancel}
+        isSaving={owningUnitEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {owningUnitEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={allOrgUnits}
+              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+              value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) || null}
+              onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key || null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for owning unit..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.key === value.key}
+              size="small"
+            />
+            {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Typography variant="body2">
+            {domain.owningUnit ? (
+              <Chip label={domain.owningUnit.name} size="small" />
+            ) : (
+              <span style={{ color: '#888' }}>{t('common.notSet')}</span>
+            )}
+          </Typography>
+        )}
+      </Box>
 
       <Divider sx={{ my: 2 }} />
 

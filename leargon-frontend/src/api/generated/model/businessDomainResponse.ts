@@ -21,6 +21,7 @@ import type { BusinessDomainSummaryResponse } from './businessDomainSummaryRespo
 import type { BusinessDomainType } from './businessDomainType';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
+import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface BusinessDomainResponse {
@@ -50,6 +51,8 @@ export interface BusinessDomainResponse {
    * @nullable
    */
   visionStatement?: string | null;
+  /** Organisational unit responsible for this domain */
+  owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

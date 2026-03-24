@@ -52,6 +52,8 @@ const fr = {
   entity: {
     pageTitle: 'Data Ontology',
     dataOwner: 'Data Owner',
+    dataSteward: 'Gestionnaire des données',
+    technicalCustodian: 'Gardien technique',
     parentEntity: 'Parent Entity',
     boundedContext: 'Contexte délimité',
     retentionPeriod: 'Retention Period',
@@ -76,6 +78,8 @@ const fr = {
   process: {
     pageTitle: 'Process Map',
     processOwner: 'Process Owner',
+    processSteward: 'Responsable du processus',
+    technicalCustodian: 'Gardien technique',
     code: 'Code',
     processType: 'Process Type',
     legalBasis: 'Legal Basis',
@@ -175,6 +179,7 @@ const fr = {
   },
   domain: {
     visionStatement: 'Énoncé de vision',
+    owningUnit: 'Unité responsable',
     visionStatementPlaceholder: 'Décrivez la vision et la finalité de ce domaine...',
     boundedContexts: 'Contextes délimités',
     noBoundedContexts: 'Aucun contexte délimité défini',

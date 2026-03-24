@@ -171,14 +171,14 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.body().descriptions[0].text == "The marketing team"
     }
 
-    def "POST /organisational-units should create unit with lead"() {
+    def "POST /organisational-units should create unit with business owner"() {
         given: "an admin user and another user"
         String adminToken = createAdminToken()
         createUserWithToken("lead@example.com", "leaduser")
 
-        and: "a create request with lead"
+        and: "a create request with business owner"
         def request = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Sales")])
-        request.leadUsername = "leaduser"
+        request.businessOwnerUsername = "leaduser"
 
         when: "creating the unit"
         def response = client.toBlocking().exchange(
@@ -187,9 +187,9 @@ class OrganisationalUnitControllerSpec extends Specification {
                 OrganisationalUnitResponse
         )
 
-        then: "unit has correct lead"
-        response.body().lead != null
-        response.body().lead.username == "leaduser"
+        then: "unit has correct business owner"
+        response.body().businessOwner != null
+        response.body().businessOwner.username == "leaduser"
     }
 
     def "POST /organisational-units should return 400 without default locale"() {
@@ -390,7 +390,7 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.body().unitType == "Custom Squad"
     }
 
-    def "PUT /organisational-units/{key}/lead should update lead"() {
+    def "PUT /organisational-units/{key}/lead should update business owner"() {
         given: "an admin user and another user"
         String adminToken = createAdminToken()
         createUserWithToken("newlead@example.com", "newlead")
@@ -402,17 +402,17 @@ class OrganisationalUnitControllerSpec extends Specification {
         )
         def unitKey = createResponse.body().key
 
-        when: "updating lead"
+        when: "updating business owner"
         def response = client.toBlocking().exchange(
                 HttpRequest.PUT("/organisational-units/${unitKey}/lead",
-                        new UpdateOrgUnitLeadRequest().leadUsername("newlead"))
+                        new UpdateOrgUnitLeadRequest().businessOwnerUsername("newlead"))
                         .bearerAuth(adminToken),
                 OrganisationalUnitResponse
         )
 
-        then: "lead is updated"
-        response.body().lead != null
-        response.body().lead.username == "newlead"
+        then: "business owner is updated"
+        response.body().businessOwner != null
+        response.body().businessOwner.username == "newlead"
     }
 
     def "PUT /organisational-units/{key}/parents should update parents"() {
@@ -498,13 +498,13 @@ class OrganisationalUnitControllerSpec extends Specification {
     // LEAD PERMISSION TESTS
     // =====================
 
-    def "PUT /organisational-units/{key}/names should allow lead to update"() {
-        given: "an admin creates a unit with a lead"
+    def "PUT /organisational-units/{key}/names should allow business owner to update"() {
+        given: "an admin creates a unit with a business owner"
         String adminToken = createAdminToken()
         def leadData = createUserWithToken("lead@example.com", "leaduser")
 
         def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Editable")])
-        createRequest.leadUsername = "leaduser"
+        createRequest.businessOwnerUsername = "leaduser"
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", createRequest)
                         .bearerAuth(adminToken),
@@ -525,13 +525,13 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.body().names.find { it.locale == "en" }.text == "Lead Updated"
     }
 
-    def "PUT /organisational-units/{key}/type should allow lead to update"() {
-        given: "an admin creates a unit with a lead"
+    def "PUT /organisational-units/{key}/type should allow business owner to update"() {
+        given: "an admin creates a unit with a business owner"
         String adminToken = createAdminToken()
         def leadData = createUserWithToken("lead@example.com", "leaduser")
 
         def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Type Unit")])
-        createRequest.leadUsername = "leaduser"
+        createRequest.businessOwnerUsername = "leaduser"
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", createRequest)
                         .bearerAuth(adminToken),
@@ -551,13 +551,13 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.body().unitType == "Lead Squad"
     }
 
-    def "DELETE /organisational-units/{key} should allow lead to delete"() {
-        given: "an admin creates a unit with a lead"
+    def "DELETE /organisational-units/{key} should allow business owner to delete"() {
+        given: "an admin creates a unit with a business owner"
         String adminToken = createAdminToken()
         def leadData = createUserWithToken("lead@example.com", "leaduser")
 
         def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Deletable")])
-        createRequest.leadUsername = "leaduser"
+        createRequest.businessOwnerUsername = "leaduser"
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", createRequest)
                         .bearerAuth(adminToken),
@@ -575,13 +575,13 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.status == HttpStatus.NO_CONTENT
     }
 
-    def "POST /organisational-units should allow lead to create child unit"() {
-        given: "an admin creates a parent unit with a lead"
+    def "POST /organisational-units should allow business owner to create child unit"() {
+        given: "an admin creates a parent unit with a business owner"
         String adminToken = createAdminToken()
         def leadData = createUserWithToken("lead@example.com", "leaduser")
 
         def parentRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Parent For Lead")])
-        parentRequest.leadUsername = "leaduser"
+        parentRequest.businessOwnerUsername = "leaduser"
         def parentResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", parentRequest)
                         .bearerAuth(adminToken),
@@ -748,13 +748,13 @@ class OrganisationalUnitControllerSpec extends Specification {
         body.classificationAssignments[0].valueKey == "low"
     }
 
-    def "PUT /organisational-units/{key}/classifications should allow lead to assign"() {
-        given: "an admin creates a unit with a lead, and a classification"
+    def "PUT /organisational-units/{key}/classifications should allow business owner to assign"() {
+        given: "an admin creates a unit with a business owner, and a classification"
         String adminToken = createAdminToken()
         def leadData = createUserWithToken("lead@example.com", "leaduser")
 
         def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "Lead Classifiable")])
-        createRequest.leadUsername = "leaduser"
+        createRequest.businessOwnerUsername = "leaduser"
         def unitResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/organisational-units", createRequest)
                         .bearerAuth(adminToken),

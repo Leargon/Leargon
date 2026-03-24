@@ -22,6 +22,7 @@ import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.UpdateBusinessDomainParentRequest
 import org.leargon.backend.model.UpdateBusinessDomainTypeRequest
+import org.leargon.backend.model.UpdateDomainOwningUnitRequest
 import org.leargon.backend.model.UpdateDomainVisionStatementRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessDomainService
@@ -127,6 +128,17 @@ open class BusinessDomainController(
         val currentUser = getCurrentUser()
         checkAdministratorRole(currentUser)
         val domain = businessDomainService.updateBusinessDomainDescriptions(key, descriptions, currentUser)
+        return businessDomainMapper.toBusinessDomainResponse(domain)
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateBusinessDomainOwningUnit(
+        key: String,
+        @Valid @Body updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest
+    ): BusinessDomainResponse {
+        val currentUser = getCurrentUser()
+        checkAdministratorRole(currentUser)
+        val domain = businessDomainService.updateOwningUnit(key, updateDomainOwningUnitRequest.owningUnitKey, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 

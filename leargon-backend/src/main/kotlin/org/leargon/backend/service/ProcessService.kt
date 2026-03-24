@@ -318,6 +318,54 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun updateProcessSteward(
+        key: String,
+        stewardUsername: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.processSteward =
+            if (stewardUsername != null) {
+                userRepository
+                    .findByUsername(stewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Process steward user not found: $stewardUsername") }
+            } else {
+                null
+            }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated process steward to ${stewardUsername ?: "none"}")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
+    open fun updateProcessTechnicalCustodian(
+        key: String,
+        custodianUsername: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.technicalCustodian =
+            if (custodianUsername != null) {
+                userRepository
+                    .findByUsername(custodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found: $custodianUsername") }
+            } else {
+                null
+            }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated technical custodian to ${custodianUsername ?: "none"}")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessCode(
         key: String,
         code: String?,

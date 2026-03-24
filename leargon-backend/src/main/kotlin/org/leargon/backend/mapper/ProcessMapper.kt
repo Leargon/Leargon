@@ -56,7 +56,9 @@ open class ProcessMapper(
             LocalizedTextMapper.toModel(process.descriptions),
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
-        ).code(process.code)
+        ).processSteward(UserMapper.toUserSummary(process.processSteward))
+            .technicalCustodian(UserMapper.toUserSummary(process.technicalCustodian))
+            .code(process.code)
             .processType(toProcessType(process.processType))
             .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
             .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
@@ -79,6 +81,8 @@ open class ProcessMapper(
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
         if (process == null) return null
         return ProcessSummaryResponse(process.key, process.getName("en"))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
+            .description(process.descriptions.firstOrNull()?.text)
     }
 
     fun toProcessVersionResponse(version: ProcessVersion): ProcessVersionResponse =

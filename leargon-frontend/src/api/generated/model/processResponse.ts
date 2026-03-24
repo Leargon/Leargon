@@ -50,6 +50,10 @@ export interface ProcessResponse {
    */
   securityMeasures?: string | null;
   processOwner: UserSummaryResponse;
+  /** Business steward override (falls back to owning org unit steward) */
+  processSteward?: UserSummaryResponse | null;
+  /** Technical custodian override (falls back to owning org unit technical custodian) */
+  technicalCustodian?: UserSummaryResponse | null;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions: LocalizedText[];

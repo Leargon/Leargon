@@ -54,7 +54,9 @@ open class BusinessEntityMapper(
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
-        ).parent(toBusinessEntitySummaryResponse(businessEntity.parent))
+        ).dataSteward(UserMapper.toUserSummary(businessEntity.dataSteward))
+            .technicalCustodian(UserMapper.toUserSummary(businessEntity.technicalCustodian))
+            .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext))
             .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities))
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
@@ -149,6 +151,8 @@ open class BusinessEntityMapper(
                 .parentName(entity.parent?.getName("en"))
                 .rootKey(root?.key)
                 .rootName(root?.getName("en"))
+                .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
+                .description(entity.descriptions.firstOrNull()?.text)
         }
 
         @JvmStatic

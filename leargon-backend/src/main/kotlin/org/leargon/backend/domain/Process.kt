@@ -49,6 +49,14 @@ class Process {
     var processOwner: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_steward_id")
+    var processSteward: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_custodian_id")
+    var technicalCustodian: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
 

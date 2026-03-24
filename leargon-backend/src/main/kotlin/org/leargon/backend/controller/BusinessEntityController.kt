@@ -22,9 +22,11 @@ import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
+import org.leargon.backend.model.UpdateBusinessEntityDataStewardRequest
 import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
+import org.leargon.backend.model.UpdateBusinessEntityTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
 import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateRetentionPeriodRequest
@@ -104,6 +106,30 @@ open class BusinessEntityController(
         return businessEntityService.updateBusinessEntityDataOwnerAsResponse(
             key,
             updateBusinessEntityDataOwnerRequest.dataOwnerUsername,
+            currentUser
+        )
+    }
+
+    override fun updateBusinessEntityDataSteward(
+        key: String,
+        @Valid @Body updateBusinessEntityDataStewardRequest: UpdateBusinessEntityDataStewardRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updateBusinessEntityDataSteward(
+            key,
+            updateBusinessEntityDataStewardRequest.dataStewardUsername,
+            currentUser
+        )
+    }
+
+    override fun updateBusinessEntityTechnicalCustodian(
+        key: String,
+        @Valid @Body updateBusinessEntityTechnicalCustodianRequest: UpdateBusinessEntityTechnicalCustodianRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updateBusinessEntityTechnicalCustodian(
+            key,
+            updateBusinessEntityTechnicalCustodianRequest.technicalCustodianUsername,
             currentUser
         )
     }

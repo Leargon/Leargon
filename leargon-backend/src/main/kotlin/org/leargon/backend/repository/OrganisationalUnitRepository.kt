@@ -11,21 +11,21 @@ import java.util.Optional
 interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long> {
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "lead", type = Join.Type.LEFT_FETCH)
+    @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
     @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<OrganisationalUnit>
 
     @Query(
-        "SELECT DISTINCT ou FROM OrganisationalUnit ou LEFT JOIN FETCH ou.children LEFT JOIN FETCH ou.createdBy LEFT JOIN FETCH ou.lead WHERE ou.parents IS EMPTY"
+        "SELECT DISTINCT ou FROM OrganisationalUnit ou LEFT JOIN FETCH ou.children LEFT JOIN FETCH ou.createdBy LEFT JOIN FETCH ou.businessOwner WHERE ou.parents IS EMPTY"
     )
     fun findRoots(): List<OrganisationalUnit>
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "lead", type = Join.Type.LEFT_FETCH)
+    @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
     @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
@@ -34,13 +34,13 @@ interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long>
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
-    @Join(value = "lead", type = Join.Type.LEFT_FETCH)
+    @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
     @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<OrganisationalUnit>
 
-    fun findByLeadId(leadId: Long): List<OrganisationalUnit>
+    fun findByBusinessOwnerId(businessOwnerId: Long): List<OrganisationalUnit>
 
     @Query(
         value =

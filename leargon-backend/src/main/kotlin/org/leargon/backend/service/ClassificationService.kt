@@ -385,10 +385,10 @@ open class ClassificationService(
                 .findByKey(orgUnitKey)
                 .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
 
-        val isLead = unit.lead?.id == currentUser.id
+        val isOwner = unit.businessOwner?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isLead && !isAdmin) {
-            throw ForbiddenOperationException("Only the lead or an admin can assign classifications")
+        if (!isOwner && !isAdmin) {
+            throw ForbiddenOperationException("Only the business owner or an admin can assign classifications")
         }
 
         validateAssignments(assignments, "ORGANISATIONAL_UNIT")

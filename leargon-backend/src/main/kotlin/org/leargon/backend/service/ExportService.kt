@@ -199,12 +199,14 @@ open class ExportService(
 
         // Index domains and determine root/child status in-memory
         val domainByKey = allDomains.associateBy { it.key }
-        val childDomainsByParentKey = allDomains
-            .filter { it.parent != null }
-            .groupBy { it.parent!!.key }
-        val bcsByDomainKey = allBoundedContexts
-            .filter { it.domain != null }
-            .groupBy { it.domain!!.key }
+        val childDomainsByParentKey =
+            allDomains
+                .filter { it.parent != null }
+                .groupBy { it.parent!!.key }
+        val bcsByDomainKey =
+            allBoundedContexts
+                .filter { it.domain != null }
+                .groupBy { it.domain!!.key }
         val rootDomainKeys = allDomains.filter { it.parent == null }.map { it.key }.toSet()
 
         // Build map: BC key → CML subdomain identifier
@@ -251,8 +253,16 @@ open class ExportService(
                     // domainVisionStatement from the first (alphabetically) BC in this child domain
                     val childBcs = bcsByDomainKey[child.key]?.sortedBy { it.getName(locale) } ?: emptyList()
                     val firstBcDesc =
-                        childBcs.firstOrNull()?.descriptions?.find { it.locale == locale }?.text
-                            ?: childBcs.firstOrNull()?.descriptions?.firstOrNull()?.text
+                        childBcs
+                            .firstOrNull()
+                            ?.descriptions
+                            ?.find { it.locale == locale }
+                            ?.text
+                            ?: childBcs
+                                .firstOrNull()
+                                ?.descriptions
+                                ?.firstOrNull()
+                                ?.text
                     if (!firstBcDesc.isNullOrBlank()) {
                         sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
                     }
@@ -279,7 +289,7 @@ open class ExportService(
                         when (rootDomain.type?.uppercase()) {
                             "CORE" -> "    type = CORE_DOMAIN"
                             "SUPPORTING" -> "    type = SUPPORTING_DOMAIN"
-                            "SUPPORT" -> "    type = SUPPORT_DOMAIN"
+                            "SUPPORT" -> "    type = SUPPORTING_DOMAIN"
                             "GENERIC" -> "    type = GENERIC_SUBDOMAIN"
                             else -> null
                         }

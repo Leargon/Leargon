@@ -16,26 +16,11 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BusinessDomainType } from './businessDomainType';
-import type { LocalizedText } from './localizedText';
 
-export interface CreateBusinessDomainRequest {
+export interface UpdateOrgUnitStewardRequest {
   /**
-   * Parent domain key (null for top-level domain)
+   * Username of the new business steward (null to remove)
    * @nullable
    */
-  parentKey?: string | null;
-  type?: BusinessDomainType | null;
-  /**
-   * Names for the domain (at least one required)
-   * @minItems 1
-   */
-  names: LocalizedText[];
-  /** Descriptions for the domain */
-  descriptions?: LocalizedText[];
-  /**
-   * Key of the organisational unit responsible for this domain
-   * @nullable
-   */
-  owningUnitKey?: string | null;
+  businessStewardUsername?: string | null;
 }

@@ -47,6 +47,7 @@ import type {
   LocalizedText,
   UpdateBusinessDomainParentRequest,
   UpdateBusinessDomainTypeRequest,
+  UpdateDomainOwningUnitRequest,
   UpdateDomainVisionStatementRequest,
   VersionDiffResponse
 } from '../model';
@@ -1632,5 +1633,105 @@ export const useUpdateBusinessDomainVisionStatement = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateBusinessDomainVisionStatementMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Update domain owning unit
+ */
+export type updateBusinessDomainOwningUnitResponse200 = {
+  data: BusinessDomainResponse
+  status: 200
+}
+
+export type updateBusinessDomainOwningUnitResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessDomainOwningUnitResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBusinessDomainOwningUnitResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBusinessDomainOwningUnitResponseSuccess = (updateBusinessDomainOwningUnitResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessDomainOwningUnitResponseError = (updateBusinessDomainOwningUnitResponse401 | updateBusinessDomainOwningUnitResponse403 | updateBusinessDomainOwningUnitResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessDomainOwningUnitResponse = (updateBusinessDomainOwningUnitResponseSuccess | updateBusinessDomainOwningUnitResponseError)
+
+export const getUpdateBusinessDomainOwningUnitUrl = (key: string,) => {
+
+
+  
+
+  return `/business-domains/${key}/owning-unit`
+}
+
+export const updateBusinessDomainOwningUnit = async (key: string,
+    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options?: RequestInit): Promise<updateBusinessDomainOwningUnitResponse> => {
+  
+  return customAxios<updateBusinessDomainOwningUnitResponse>(getUpdateBusinessDomainOwningUnitUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateDomainOwningUnitRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateBusinessDomainOwningUnitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessDomainOwningUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, {key: string;data: UpdateDomainOwningUnitRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessDomainOwningUnit(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainOwningUnitMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>>
+    export type UpdateBusinessDomainOwningUnitMutationBody = UpdateDomainOwningUnitRequest
+    export type UpdateBusinessDomainOwningUnitMutationError = void
+
+    /**
+ * @summary Update domain owning unit
+ */
+export const useUpdateBusinessDomainOwningUnit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>,
+        TError,
+        {key: string;data: UpdateDomainOwningUnitRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainOwningUnitMutationOptions(options), queryClient);
     }
     

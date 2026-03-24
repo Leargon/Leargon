@@ -198,6 +198,52 @@ open class BusinessEntityService(
     }
 
     @Transactional
+    open fun updateBusinessEntityDataSteward(
+        entityKey: String,
+        stewardUsername: String?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        entity.dataSteward =
+            if (stewardUsername != null) {
+                userRepository
+                    .findByUsername(stewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Data steward user not found: $stewardUsername") }
+            } else {
+                null
+            }
+
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated data steward to ${stewardUsername ?: "none"}")
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
+    open fun updateBusinessEntityTechnicalCustodian(
+        entityKey: String,
+        custodianUsername: String?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        entity.technicalCustodian =
+            if (custodianUsername != null) {
+                userRepository
+                    .findByUsername(custodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found: $custodianUsername") }
+            } else {
+                null
+            }
+
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated technical custodian to ${custodianUsername ?: "none"}")
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
     open fun updateBusinessEntityNames(
         entityKey: String,
         names: List<org.leargon.backend.model.LocalizedText>,

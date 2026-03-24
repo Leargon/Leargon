@@ -32,7 +32,11 @@ export interface OrganisationalUnitResponse {
    * @nullable
    */
   unitType?: string | null;
-  lead?: UserSummaryResponse;
+  businessOwner?: UserSummaryResponse;
+  /** Business steward responsible for data quality and definitions */
+  businessSteward?: UserSummaryResponse | null;
+  /** Technical custodian responsible for the systems */
+  technicalCustodian?: UserSummaryResponse | null;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];

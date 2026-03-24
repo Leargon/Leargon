@@ -43,6 +43,8 @@ import {
   useUpdateBusinessEntityNames,
   useUpdateBusinessEntityDescriptions,
   useUpdateBusinessEntityDataOwner,
+  useUpdateBusinessEntityDataSteward,
+  useUpdateBusinessEntityTechnicalCustodian,
   useUpdateBusinessEntityParent,
   useAssignBoundedContextToBusinessEntity,
   useUpdateBusinessEntityInterfaces,
@@ -206,6 +208,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateNames = useUpdateBusinessEntityNames();
   const updateDescriptions = useUpdateBusinessEntityDescriptions();
   const updateDataOwner = useUpdateBusinessEntityDataOwner();
+  const updateDataSteward = useUpdateBusinessEntityDataSteward();
+  const updateTechnicalCustodian = useUpdateBusinessEntityTechnicalCustodian();
   const updateParent = useUpdateBusinessEntityParent();
   const assignBoundedContext = useAssignBoundedContextToBusinessEntity();
   const createTranslationLink = useCreateTranslationLink();
@@ -265,6 +269,22 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     },
   });
 
+  // Data steward inline edit
+  const dataStewardEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateDataSteward.mutateAsync({ key: entityKey, data: { dataStewardUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Technical custodian inline edit
+  const technicalCustodianEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTechnicalCustodian.mutateAsync({ key: entityKey, data: { technicalCustodianUsername: val } });
+      invalidate();
+    },
+  });
+
   // Parent inline edit
   const parentEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
@@ -315,6 +335,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   useEffect(() => {
     namesEdit.cancel();
     ownerEdit.cancel();
+    dataStewardEdit.cancel();
+    technicalCustodianEdit.cancel();
     parentEdit.cancel();
     boundedContextEdit.cancel();
     classEdit.cancel();
@@ -538,6 +560,56 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             </Box>
           ) : (
             <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
+          onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
+          onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
+          {dataStewardEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === dataStewardEdit.editValue) || null}
+                onChange={(_, newVal) => dataStewardEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('entity.dataSteward')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {dataStewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataStewardEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={entity.dataSteward ? 'text.primary' : 'text.secondary'}>
+              {entity.dataSteward
+                ? `${entity.dataSteward.firstName} ${entity.dataSteward.lastName} (${entity.dataSteward.username})`
+                : t('common.notSet')}
+            </Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('entity.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+          onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
+          onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
+          {technicalCustodianEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+                onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('entity.technicalCustodian')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={entity.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+              {entity.technicalCustodian
+                ? `${entity.technicalCustodian.firstName} ${entity.technicalCustodian.lastName} (${entity.technicalCustodian.username})`
+                : t('common.notSet')}
+            </Typography>
           )}
         </PropRow>
         <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}

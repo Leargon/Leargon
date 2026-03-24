@@ -35,6 +35,10 @@ class BusinessDomain {
     var children: MutableSet<BusinessDomain> = mutableSetOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owning_unit_id")
+    var owningUnit: OrganisationalUnit? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
 

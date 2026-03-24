@@ -32,10 +32,20 @@ export interface CreateOrganisationalUnitRequest {
    */
   unitType?: string | null;
   /**
-   * Username of the unit lead
+   * Username of the business owner
    * @nullable
    */
-  leadUsername?: string | null;
+  businessOwnerUsername?: string | null;
+  /**
+   * Username of the business steward
+   * @nullable
+   */
+  businessStewardUsername?: string | null;
+  /**
+   * Username of the technical custodian
+   * @nullable
+   */
+  technicalCustodianUsername?: string | null;
   /** Keys of parent organisational units */
   parentKeys?: string[];
 }

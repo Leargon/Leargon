@@ -44,6 +44,8 @@ import {
   useUpdateOrganisationalUnitDescriptions,
   useUpdateOrganisationalUnitType,
   useUpdateOrganisationalUnitLead,
+  useUpdateOrganisationalUnitSteward,
+  useUpdateOrganisationalUnitTechnicalCustodian,
   useUpdateOrganisationalUnitParents,
   useDeleteOrganisationalUnit,
   useGetAllOrganisationalUnits,
@@ -102,7 +104,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
-  const isLeadOrAdmin = isAdmin || (user?.username === unit?.lead?.username);
+  const isLeadOrAdmin = isAdmin || (user?.username === unit?.businessOwner?.username);
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
@@ -157,6 +159,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const updateDescriptions = useUpdateOrganisationalUnitDescriptions();
   const updateType = useUpdateOrganisationalUnitType();
   const updateLead = useUpdateOrganisationalUnitLead();
+  const updateSteward = useUpdateOrganisationalUnitSteward();
+  const updateTechnicalCustodian = useUpdateOrganisationalUnitTechnicalCustodian();
   const updateParents = useUpdateOrganisationalUnitParents();
   const assignClassifications = useAssignClassificationsToOrgUnit();
   const deleteUnit = useDeleteOrganisationalUnit();
@@ -208,10 +212,26 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     },
   });
 
-  // Inline edit for lead
+  // Inline edit for lead (businessOwner)
   const leadEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
-      await updateLead.mutateAsync({ key: unitKey, data: { leadUsername: val } });
+      await updateLead.mutateAsync({ key: unitKey, data: { businessOwnerUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for business steward
+  const stewardEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateSteward.mutateAsync({ key: unitKey, data: { businessStewardUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for technical custodian
+  const technicalCustodianEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTechnicalCustodian.mutateAsync({ key: unitKey, data: { technicalCustodianUsername: val } });
       invalidate();
     },
   });
@@ -274,6 +294,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     namesEdit.cancel();
     typeEdit.cancel();
     leadEdit.cancel();
+    stewardEdit.cancel();
+    technicalCustodianEdit.cancel();
     parentsEdit.cancel();
     classEdit.cancel();
     externalFieldsEdit.cancel();
@@ -458,16 +480,16 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Lead */}
+      {/* Business Owner */}
       <SectionHeader
-        title="Lead"
-        canEdit={isLeadOrAdmin}
+        title="Business Owner"
+        canEdit={isAdmin}
         isEditing={leadEdit.isEditing}
-        onEdit={() => leadEdit.startEdit(unit.lead?.username || null)}
+        onEdit={() => leadEdit.startEdit(unit.businessOwner?.username || null)}
         onSave={leadEdit.save}
         onCancel={leadEdit.cancel}
         isSaving={leadEdit.isSaving}
-        isMandatory={isMandatory('lead')}
+        isMandatory={isMandatory('businessOwner')}
       />
       <Box sx={{ mb: 2 }}>
         {leadEdit.isEditing ? (
@@ -478,7 +500,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               value={users.find((u) => u.username === leadEdit.editValue) || null}
               onChange={(_, newVal) => leadEdit.setEditValue(newVal?.username || null)}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for lead..." sx={{ width: 350 }} />
+                <TextField {...params} size="small" placeholder="Search for business owner..." sx={{ width: 350 }} />
               )}
               isOptionEqualToValue={(option, value) => option.username === value.username}
               size="small"
@@ -487,13 +509,97 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </Box>
         ) : (
           <Typography variant="body2">
-            {unit.lead ? (
+            {unit.businessOwner ? (
               <Chip
-                label={`${unit.lead.firstName} ${unit.lead.lastName}`}
+                label={`${unit.businessOwner.firstName} ${unit.businessOwner.lastName}`}
                 size="small"
               />
             ) : (
-              <span style={{ color: '#888' }}>No lead assigned</span>
+              <span style={{ color: '#888' }}>No business owner assigned</span>
+            )}
+          </Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Business Steward */}
+      <SectionHeader
+        title="Business Steward"
+        canEdit={isAdmin}
+        isEditing={stewardEdit.isEditing}
+        onEdit={() => stewardEdit.startEdit(unit.businessSteward?.username || null)}
+        onSave={stewardEdit.save}
+        onCancel={stewardEdit.cancel}
+        isSaving={stewardEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {stewardEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.username})`}
+              value={users.find((u) => u.username === stewardEdit.editValue) || null}
+              onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for business steward..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.username === value.username}
+              size="small"
+            />
+            {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Typography variant="body2">
+            {unit.businessSteward ? (
+              <Chip
+                label={`${unit.businessSteward.firstName} ${unit.businessSteward.lastName}`}
+                size="small"
+              />
+            ) : (
+              <span style={{ color: '#888' }}>No business steward assigned</span>
+            )}
+          </Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Technical Custodian */}
+      <SectionHeader
+        title="Technical Custodian"
+        canEdit={isAdmin}
+        isEditing={technicalCustodianEdit.isEditing}
+        onEdit={() => technicalCustodianEdit.startEdit(unit.technicalCustodian?.username || null)}
+        onSave={technicalCustodianEdit.save}
+        onCancel={technicalCustodianEdit.cancel}
+        isSaving={technicalCustodianEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {technicalCustodianEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.username})`}
+              value={users.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+              onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for technical custodian..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.username === value.username}
+              size="small"
+            />
+            {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Typography variant="body2">
+            {unit.technicalCustodian ? (
+              <Chip
+                label={`${unit.technicalCustodian.firstName} ${unit.technicalCustodian.lastName}`}
+                size="small"
+              />
+            ) : (
+              <span style={{ color: '#888' }}>No technical custodian assigned</span>
             )}
           </Typography>
         )}

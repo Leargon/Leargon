@@ -65,3 +65,9 @@ databaseChangeLog:
       file: db/changelog/changes/032-create-business-data-quality-rule-tables.yaml
   - include:
       file: db/changelog/changes/034-add-owning-team-to-bounded-contexts.yaml
+  - include:
+      file: db/changelog/changes/035-add-stewardship-roles-to-org-units.yaml
+  - include:
+      file: db/changelog/changes/036-add-owning-unit-to-business-domains.yaml
+  - include:
+      file: db/changelog/changes/037-add-stewardship-overrides-to-entities-and-processes.yaml

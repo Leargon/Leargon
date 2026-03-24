@@ -32,7 +32,15 @@ class OrganisationalUnit {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lead_id")
-    var lead: User? = null
+    var businessOwner: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_steward_id")
+    var businessSteward: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "technical_custodian_id")
+    var technicalCustodian: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

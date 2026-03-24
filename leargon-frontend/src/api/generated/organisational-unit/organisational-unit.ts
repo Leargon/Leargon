@@ -47,6 +47,8 @@ import type {
   UpdateOrgUnitExternalFieldsRequest,
   UpdateOrgUnitLeadRequest,
   UpdateOrgUnitParentsRequest,
+  UpdateOrgUnitStewardRequest,
+  UpdateOrgUnitTechnicalCustodianRequest,
   UpdateOrgUnitTypeRequest
 } from '../model';
 
@@ -897,6 +899,188 @@ export const useUpdateOrganisationalUnitLead = <TError = ErrorResponse | void,
         TContext
       > => {
       return useMutation(getUpdateOrganisationalUnitLeadMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the business steward of an organisational unit. Requires ROLE_ADMIN.
+ * @summary Update organisational unit steward
+ */
+export type updateOrganisationalUnitStewardResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrganisationalUnitStewardResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrganisationalUnitStewardResponseSuccess = (updateOrganisationalUnitStewardResponse200) & {
+  headers: Headers;
+};
+export type updateOrganisationalUnitStewardResponseError = (updateOrganisationalUnitStewardResponse401) & {
+  headers: Headers;
+};
+
+export type updateOrganisationalUnitStewardResponse = (updateOrganisationalUnitStewardResponseSuccess | updateOrganisationalUnitStewardResponseError)
+
+export const getUpdateOrganisationalUnitStewardUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/steward`
+}
+
+export const updateOrganisationalUnitSteward = async (key: string,
+    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options?: RequestInit): Promise<updateOrganisationalUnitStewardResponse> => {
+  
+  return customAxios<updateOrganisationalUnitStewardResponse>(getUpdateOrganisationalUnitStewardUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitStewardRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrganisationalUnitStewardMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext> => {
+
+const mutationKey = ['updateOrganisationalUnitSteward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, {key: string;data: UpdateOrgUnitStewardRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrganisationalUnitSteward(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitStewardMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>>
+    export type UpdateOrganisationalUnitStewardMutationBody = UpdateOrgUnitStewardRequest
+    export type UpdateOrganisationalUnitStewardMutationError = void
+
+    /**
+ * @summary Update organisational unit steward
+ */
+export const useUpdateOrganisationalUnitSteward = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>,
+        TError,
+        {key: string;data: UpdateOrgUnitStewardRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitStewardMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the technical custodian of an organisational unit. Requires ROLE_ADMIN.
+ * @summary Update organisational unit technical custodian
+ */
+export type updateOrganisationalUnitTechnicalCustodianResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrganisationalUnitTechnicalCustodianResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrganisationalUnitTechnicalCustodianResponseSuccess = (updateOrganisationalUnitTechnicalCustodianResponse200) & {
+  headers: Headers;
+};
+export type updateOrganisationalUnitTechnicalCustodianResponseError = (updateOrganisationalUnitTechnicalCustodianResponse401) & {
+  headers: Headers;
+};
+
+export type updateOrganisationalUnitTechnicalCustodianResponse = (updateOrganisationalUnitTechnicalCustodianResponseSuccess | updateOrganisationalUnitTechnicalCustodianResponseError)
+
+export const getUpdateOrganisationalUnitTechnicalCustodianUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/technical-custodian`
+}
+
+export const updateOrganisationalUnitTechnicalCustodian = async (key: string,
+    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options?: RequestInit): Promise<updateOrganisationalUnitTechnicalCustodianResponse> => {
+  
+  return customAxios<updateOrganisationalUnitTechnicalCustodianResponse>(getUpdateOrganisationalUnitTechnicalCustodianUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateOrgUnitTechnicalCustodianRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrganisationalUnitTechnicalCustodianMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext> => {
+
+const mutationKey = ['updateOrganisationalUnitTechnicalCustodian'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, {key: string;data: UpdateOrgUnitTechnicalCustodianRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrganisationalUnitTechnicalCustodian(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>>
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationBody = UpdateOrgUnitTechnicalCustodianRequest
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationError = void
+
+    /**
+ * @summary Update organisational unit technical custodian
+ */
+export const useUpdateOrganisationalUnitTechnicalCustodian = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>,
+        TError,
+        {key: string;data: UpdateOrgUnitTechnicalCustodianRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitTechnicalCustodianMutationOptions(options), queryClient);
     }
     /**
  * Updates the type of an organisational unit. Requires ROLE_ADMIN.

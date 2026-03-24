@@ -34,6 +34,14 @@ class BusinessEntity {
     var dataOwner: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "data_steward_id")
+    var dataSteward: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "data_custodian_id")
+    var technicalCustodian: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
 

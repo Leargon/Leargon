@@ -102,11 +102,11 @@ open class UserService(
                 "Cannot delete user who is process owner of ${ownedProcesses.size} process$suffix. Reassign ownership first."
             )
         }
-        val ledUnits = organisationalUnitRepository.findByLeadId(userId)
-        if (ledUnits.isNotEmpty()) {
-            val suffix = if (ledUnits.size == 1) "" else "s"
+        val ownedUnits = organisationalUnitRepository.findByBusinessOwnerId(userId)
+        if (ownedUnits.isNotEmpty()) {
+            val suffix = if (ownedUnits.size == 1) "" else "s"
             throw ForbiddenOperationException(
-                "Cannot delete user who is lead of ${ledUnits.size} organisational unit$suffix. Reassign lead first."
+                "Cannot delete user who is business owner of ${ownedUnits.size} organisational unit$suffix. Reassign business owner first."
             )
         }
         userRepository.delete(user)

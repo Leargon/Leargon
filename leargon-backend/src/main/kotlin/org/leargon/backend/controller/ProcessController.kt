@@ -33,6 +33,8 @@ import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessParentRequest
 import org.leargon.backend.model.UpdateProcessPurposeRequest
 import org.leargon.backend.model.UpdateProcessSecurityMeasuresRequest
+import org.leargon.backend.model.UpdateProcessStewardRequest
+import org.leargon.backend.model.UpdateProcessTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
@@ -131,6 +133,22 @@ open class ProcessController(
     ): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.updateProcessOwner(key, request.processOwnerUsername, currentUser)
+    }
+
+    override fun updateProcessSteward(
+        key: String,
+        @Valid @Body request: UpdateProcessStewardRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessSteward(key, request.processStewardUsername, currentUser)
+    }
+
+    override fun updateProcessTechnicalCustodian(
+        key: String,
+        @Valid @Body request: UpdateProcessTechnicalCustodianRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessTechnicalCustodian(key, request.technicalCustodianUsername, currentUser)
     }
 
     override fun updateProcessCode(

@@ -19,8 +19,8 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
 export interface UpdateOrgUnitLeadRequest {
   /**
-   * Username of the new lead (null to remove)
+   * Username of the new business owner (null to remove)
    * @nullable
    */
-  leadUsername?: string | null;
+  businessOwnerUsername?: string | null;
 }
