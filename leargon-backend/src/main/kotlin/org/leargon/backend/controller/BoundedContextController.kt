@@ -16,6 +16,7 @@ import org.leargon.backend.model.BoundedContextResponse
 import org.leargon.backend.model.CreateBoundedContextRequest
 import org.leargon.backend.model.UpdateBoundedContextDescriptionsRequest
 import org.leargon.backend.model.UpdateBoundedContextNamesRequest
+import org.leargon.backend.model.UpdateBoundedContextOwningTeamRequest
 import org.leargon.backend.service.BoundedContextService
 import org.leargon.backend.service.UserService
 
@@ -58,6 +59,15 @@ open class BoundedContextController(
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
         return boundedContextService.updateDescriptions(key, updateBoundedContextDescriptionsRequest, currentUser)
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateBoundedContextOwningTeam(
+        key: String,
+        @Valid @Body updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest
+    ): BoundedContextResponse {
+        val currentUser = getCurrentUser()
+        return boundedContextService.updateOwningTeam(key, updateBoundedContextOwningTeamRequest, currentUser)
     }
 
     @Secured("ROLE_ADMIN")

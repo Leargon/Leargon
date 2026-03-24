@@ -426,3 +426,120 @@ export function useExportDpiaRegister<TData = Awaited<ReturnType<typeof exportDp
 
 
 
+/**
+ * @summary Export all business data quality rules as CSV
+ */
+export type exportBusinessDataQualityRulesResponse200 = {
+  data: string
+  status: 200
+}
+
+export type exportBusinessDataQualityRulesResponse403 = {
+  data: void
+  status: 403
+}
+
+export type exportBusinessDataQualityRulesResponseSuccess = (exportBusinessDataQualityRulesResponse200) & {
+  headers: Headers;
+};
+export type exportBusinessDataQualityRulesResponseError = (exportBusinessDataQualityRulesResponse403) & {
+  headers: Headers;
+};
+
+export type exportBusinessDataQualityRulesResponse = (exportBusinessDataQualityRulesResponseSuccess | exportBusinessDataQualityRulesResponseError)
+
+export const getExportBusinessDataQualityRulesUrl = () => {
+
+
+  
+
+  return `/export/business-data-quality-rules`
+}
+
+export const exportBusinessDataQualityRules = async ( options?: RequestInit): Promise<exportBusinessDataQualityRulesResponse> => {
+  
+  return customAxios<exportBusinessDataQualityRulesResponse>(getExportBusinessDataQualityRulesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getExportBusinessDataQualityRulesQueryKey = () => {
+    return [
+    `/export/business-data-quality-rules`
+    ] as const;
+    }
+
+    
+export const getExportBusinessDataQualityRulesQueryOptions = <TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportBusinessDataQualityRulesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>> = ({ signal }) => exportBusinessDataQualityRules({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ExportBusinessDataQualityRulesQueryResult = NonNullable<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>>
+export type ExportBusinessDataQualityRulesQueryError = void
+
+
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>,
+          TError,
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>,
+          TError,
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Export all business data quality rules as CSV
+ */
+
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportBusinessDataQualityRulesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+

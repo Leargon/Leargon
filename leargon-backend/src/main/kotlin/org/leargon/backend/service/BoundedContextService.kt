@@ -13,9 +13,11 @@ import org.leargon.backend.model.BoundedContextResponse
 import org.leargon.backend.model.CreateBoundedContextRequest
 import org.leargon.backend.model.UpdateBoundedContextDescriptionsRequest
 import org.leargon.backend.model.UpdateBoundedContextNamesRequest
+import org.leargon.backend.model.UpdateBoundedContextOwningTeamRequest
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.DomainEventRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -23,6 +25,7 @@ open class BoundedContextService(
     private val boundedContextRepository: BoundedContextRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val domainEventRepository: DomainEventRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val localeService: LocaleService,
     private val boundedContextMapper: BoundedContextMapper
 ) {
@@ -70,6 +73,15 @@ open class BoundedContextService(
         val slug = SlugUtil.slugify(defaultName)
         bc.key = "$domainKey.$slug"
 
+        if (request.owningTeamKey != null) {
+            val unitKey = request.owningTeamKey!!
+            val owningUnit =
+                organisationalUnitRepository
+                    .findByKey(unitKey)
+                    .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found: $unitKey") }
+            bc.owningUnit = owningUnit
+        }
+
         return boundedContextRepository.save(bc)
     }
 
@@ -107,6 +119,28 @@ open class BoundedContextService(
     ): BoundedContextResponse {
         val bc = getByKey(key)
         bc.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
+        val updated = boundedContextRepository.update(bc)
+        val mapper = boundedContextMapper
+        return mapper.toResponse(updated)
+    }
+
+    @Transactional
+    open fun updateOwningTeam(
+        key: String,
+        request: UpdateBoundedContextOwningTeamRequest,
+        currentUser: User
+    ): BoundedContextResponse {
+        val bc = getByKey(key)
+        if (request.owningTeamKey != null) {
+            val unitKey = request.owningTeamKey!!
+            val owningUnit =
+                organisationalUnitRepository
+                    .findByKey(unitKey)
+                    .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found: $unitKey") }
+            bc.owningUnit = owningUnit
+        } else {
+            bc.owningUnit = null
+        }
         val updated = boundedContextRepository.update(bc)
         val mapper = boundedContextMapper
         return mapper.toResponse(updated)

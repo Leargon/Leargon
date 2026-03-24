@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 032-create-business-data-quality-rule-tables
+      author: leargon
+      changes:
+        - createTable:
+            tableName: business_data_quality_rules
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: business_entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_quality_rule_entity
+                    references: business_entities(id)
+              - column:
+                  name: description
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: VARCHAR(10)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createIndex:
+            indexName: idx_quality_rule_entity_id
+            tableName: business_data_quality_rules
+            columns:
+              - column:
+                  name: business_entity_id

@@ -235,6 +235,44 @@ class ContextRelationshipControllerSpec extends Specification {
         listResp.body().isEmpty()
     }
 
+    def "POST /context-relationships creates SEPARATE_WAYS relationship"() {
+        given:
+        def adminToken = createAdminToken()
+        def upDomainKey = createDomain(adminToken, "Domain SW Up")
+        def downDomainKey = createDomain(adminToken, "Domain SW Down")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Context SW A")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Context SW B")
+
+        def body = [
+            upstreamBoundedContextKey  : upKey,
+            downstreamBoundedContextKey: downKey,
+            relationshipType           : "SEPARATE_WAYS",
+            description                : "These contexts decided not to integrate"
+        ]
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.POST("/context-relationships", body).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.CREATED
+        def rel = response.body()
+        rel.id != null
+        rel.relationshipType == "SEPARATE_WAYS"
+        rel.upstreamBoundedContext.key == upKey
+        rel.downstreamBoundedContext.key == downKey
+        rel.description == "These contexts decided not to integrate"
+
+        and: "can be retrieved from the list"
+        def listResp = client.toBlocking().exchange(
+            HttpRequest.GET("/context-relationships").bearerAuth(adminToken),
+            Argument.listOf(Map)
+        )
+        listResp.body().any { it.relationshipType == "SEPARATE_WAYS" }
+    }
+
     def "DELETE /context-relationships/{id} returns 404 for unknown id"() {
         given:
         def adminToken = createAdminToken()

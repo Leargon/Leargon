@@ -1,22 +1,22 @@
 # Léargon Roadmap
-*Ordered by value/effort score (value 1–10 ÷ sessions). Done batches removed.*
+*Ordered by value/effort score (value 1–10 ÷ sessions).*
 
-| # | Batch | Sessions | Weekly | Value | Score |
-|---|-------|---------|--------|-------|-------|
-| 2 | Privacy notice generation | 1 | 10% | 8/10 | **8.0** |
-| 3 | DSG/GDPR compliance guided setup | 2 | 20% | 9/10 | **4.5** |
-| 4 | Personal dashboard | 2 | 20% | 8/10 | **4.0** |
-| 5 | Data governance guided setup | 2 | 20% | 8/10 | **4.0** |
-| 6 | DDD guided setup | 2 | 20% | 8/10 | **4.0** |
-| 7 | Catalogue insights | 3 | 30% | 8/10 | **2.7** |
-| 8 | Quality check rules | 3 | 30% | 7/10 | **2.3** |
-| 9 | Impact analysis & domain coupling | 4 | 40% | 8/10 | **2.0** |
-| 10 | DDD guided discovery | 4 | 40% | 7/10 | **1.8** |
-| 11 | Import & integration | 4 | 40% | 7/10 | **1.8** |
-| 12 | Watch & notifications | 4 | 40% | 6/10 | **1.5** |
-| 13 | Review cycles | 4 | 40% | 6/10 | **1.5** |
-| 14 | Stewards | 5 | 50% | 7/10 | **1.4** |
-| 15 | Compliance metrics dashboard | 7 | 70% | 8/10 | **1.1** |
+| Feature                           | Sessions | Weekly | Value | Score   |
+|-----------------------------------|----------|--------|-------|---------|
+| Privacy notice generation         | 1        | 10%    | 8/10  | **8.0** |
+| DSG/GDPR compliance guided setup  | 2        | 20%    | 9/10  | **4.5** |
+| Personal dashboard                | 2        | 20%    | 8/10  | **4.0** |
+| Data governance guided setup      | 2        | 20%    | 8/10  | **4.0** |
+| DDD guided setup                  | 2        | 20%    | 8/10  | **4.0** |
+| Catalogue insights                | 3        | 30%    | 8/10  | **2.7** |
+| Catalogue quality rules           | 3        | 30%    | 7/10  | **2.3** |
+| Impact analysis & domain coupling | 4        | 40%    | 8/10  | **2.0** |
+| Compliance metrics dashboard      | 4        | 40%    | 8/10  | **2.0** |
+| DDD guided discovery              | 4        | 40%    | 7/10  | **1.8** |
+| Import & integration              | 4        | 40%    | 7/10  | **1.8** |
+| Watch & notifications             | 4        | 40%    | 6/10  | **1.5** |
+| Review cycles                     | 4        | 40%    | 6/10  | **1.5** |
+| Stewards                          | 5        | 50%    | 7/10  | **1.4** |
 
 ---
 
@@ -82,13 +82,13 @@
 
 ---
 
-## Batch 2 · Privacy notice generation
-*Single story. Depends on Batches 1–2 (done) producing complete processing register data. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
+## Privacy notice generation
+*Single story. Depends on processing register data being complete. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
 *⏱ Sessions: 1 · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
 
-**Data model notes (from Batch 3 processing register alignment):**
-- **Data subject categories** = top-level Business Entities (root of the parent-child tree, i.e. `parent == null`) assigned as input/output on a process. Surfaced in the processing register table and CSV export as of Batch 3.
-- **Personal data categories** = all directly assigned input/output entities on a process (may be leaf-level children). Also surfaced in processing register.
+**Data model notes:**
+- **Data subject categories** = top-level Business Entities (root of the parent-child tree, i.e. `parent == null`) assigned as input/output on a process.
+- **Personal data categories** = all directly assigned input/output entities on a process (may be leaf-level children).
 - **Retention duration per processing activity**: currently only modelled on `BusinessEntity` (entity-level retention). There is no per-`Process` retention field — this is a gap candidate for future work before privacy notice generation can be fully automated.
 
 #### USER STORY 'Generate privacy notice draft'
@@ -99,8 +99,8 @@
 
 ---
 
-## Batch 3 · DSG / GDPR compliance guided setup
-*Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. Depends on Batches 1, 2, 3 (processing register, data processors, DPIAs). No new tables beyond what those batches introduced.*
+## DSG / GDPR compliance guided setup
+*Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. No new tables.*
 *⏱ Sessions: 2 · Weekly effort: ~20% · Value: 9/10 · Score: 4.5*
 
 #### USER STORY 'Compliance setup wizard entry point'
@@ -153,8 +153,8 @@
 
 ---
 
-## Batch 4 · Personal dashboard
-*Pure read-only flush — no new tables. The home screen aggregates existing data: owned items, recent activity feed from version history, and (once Batch 12 is shipped) the watchlist. The first two stories are self-contained and can ship independently; the watchlist widget requires Batch 12; the reviews widget requires Batch 13.*
+## Personal dashboard
+*Pure read-only flush — no new tables. The home screen aggregates existing data: owned items, recent activity feed from version history, and (once Watch & notifications is shipped) the watchlist.*
 *⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
 
 #### USER STORY 'View owned items on personal dashboard'
@@ -169,20 +169,20 @@
 
 #### USER STORY 'View watchlist on dashboard'
 **AS A** logged in user\
-**IF** I have watched one or more items (Batch 12)\
+**IF** I have watched one or more items (Watch & notifications)\
 **I WANT** to see a dedicated watchlist section on my dashboard showing all items I am following, with their last-modified date and a quick link to the detail page\
 **SO THAT** I can monitor the items I care about from a single screen without navigating to each one individually
 
 #### USER STORY 'View overdue and upcoming reviews on personal dashboard'
 **AS A** data owner, process owner, or admin\
-**IF** review cycles are configured (Batch 13) and one or more of my owned items has a review that is overdue or due within the next 30 days\
+**IF** review cycles are configured and one or more of my owned items has a review that is overdue or due within the next 30 days\
 **I WANT** to see a review-attention section on my dashboard split into overdue items (highlighted as urgent) and upcoming items (due soon), each showing the item name, type, and due date\
 **SO THAT** I can act on overdue reviews immediately and plan ahead for reviews that are coming up shortly
 
 ---
 
-## Batch 5 · Data governance guided setup
-*Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. All derived from existing catalogue data; no new tables.*
+## Data governance guided setup
+*Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. No new tables.*
 *⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
 
 #### USER STORY 'Governance setup wizard entry point'
@@ -223,8 +223,8 @@
 
 ---
 
-## Batch 6 · DDD guided setup
-*Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. Depends on domains, bounded contexts, domain events, and context relationships being in place (Batches 1, 5, 7). No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
+## DDD guided setup
+*Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
 *⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
 
 #### USER STORY 'DDD setup wizard entry point'
@@ -271,8 +271,8 @@
 
 ---
 
-## Batch 7 · Catalogue insights
-*Pure read-only queries — no new tables. Results are computed on a configurable schedule and stored as snapshots (using quarkus as framework this time); the Insights page displays the last computed result with a timestamp, not a live query. One new "Insights" page in the frontend. No dependencies; data already exists.*
+## Catalogue insights
+*Pure read-only queries — no new tables. Results are computed on a configurable schedule and stored as snapshots; the Insights page displays the last computed result with a timestamp, not a live query.*
 *⏱ Sessions: 3 · Weekly effort: ~30% · Value: 8/10 · Score: 2.7*
 
 #### USER STORY 'Detect processes without a legal basis'
@@ -313,31 +313,30 @@
 
 ---
 
-## Batch 8 · Quality check rules
-*One backend flush: new `quality_rules` and `quality_check_results` tables, a rule evaluation engine that runs on a configurable schedule and stores results — not computed on entity load. Rule management UI on entity detail, quality summary admin page. Self-contained.*
+## Catalogue quality rules
+*Rules about the completeness and correctness of metadata entered in Léargon — e.g. every entity must have a description, a data owner, and a classification assigned. Rules are evaluated live on the entity detail page; the admin summary uses pre-computed results from the scheduler. Self-contained.*
 *⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
 
-#### USER STORY 'Define quality check rule for a business entity'
+#### USER STORY 'Define catalogue quality rule for a business entity'
 **AS A** data owner or admin\
-**I WANT** to define a quality check rule for a business entity, specifying a condition (e.g. a field must be filled, a classification must be assigned, or a relationship must exist)\
-**SO THAT** the expected quality standard for that entity is formally documented and can be evaluated automatically
+**I WANT** to define a catalogue quality rule for a business entity, specifying a condition (a field must be filled, a classification must be assigned, or a relationship must exist)\
+**SO THAT** the expected metadata completeness standard for that entity is formally documented and evaluated automatically
 
-#### USER STORY 'View quality check results for a business entity'
+#### USER STORY 'View catalogue quality check results on entity detail'
 **AS A** logged in user\
-**IF** quality check rules are defined for a business entity\
-**I WANT** to see the result of each quality check rule on the entity detail page, showing whether each rule is passing or failing\
-**SO THAT** I can immediately identify where the entity does not meet its defined quality standards
+**IF** catalogue quality rules are defined for a business entity\
+**I WANT** to see the pass/fail result of each rule on the entity detail page, evaluated live on load\
+**SO THAT** I can immediately see which metadata gaps exist without waiting for a scheduled run
 
-#### USER STORY 'View quality check summary across all entities'
+#### USER STORY 'View catalogue quality summary across all entities'
 **AS AN** admin\
-**IF** quality check rules are defined\
-**I WANT** to see a summary showing the quality check pass rate across all business entities, ranked by the number of failing checks\
-**SO THAT** I can identify which entities have the most outstanding quality issues and prioritise remediation
+**I WANT** to see a summary of catalogue quality pass rates across all business entities, ranked by number of failing rules\
+**SO THAT** I can identify which entities have the most outstanding metadata gaps and prioritise remediation
 
 ---
 
-## Batch 9 · Impact analysis & domain coupling
-*Analytics flush — graph traversal and aggregation queries on existing data. All scores and detections are computed on a configurable schedule and stored as snapshots. New "Domain Analysis" section in the frontend. Depends on Batch 5 (context relationships add coupling signal).*
+## Impact analysis & domain coupling
+*Analytics flush — graph traversal and aggregation queries on existing data. All scores and detections are computed on a configurable schedule and stored as snapshots. Depends on context relationships for coupling signal.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 8/10 · Score: 2.0*
 
 #### USER STORY 'View downstream impact of a business entity'
@@ -378,8 +377,46 @@
 
 ---
 
-## Batch 10 · DDD guided discovery
-*Read-heavy analytics flush — no new tables beyond what Batch 5 and Batch 9 introduce. Léargon already holds the data needed to surface most of these insights: entity hierarchies, process-entity assignments, version histories, domain type fields, and org unit relationships. Each story produces an actionable suggestion with supporting evidence, not just a raw metric. Depends on Batch 5 (context relationships) and benefits from Batch 9 (coupling scores). Stories involving domain events depend on Batch 7.*
+## Compliance metrics dashboard
+*Scheduled computation of key governance and compliance metrics stored as timestamped snapshots. Results displayed on an admin metrics dashboard with trend history. Depends on Catalogue quality rules for full coverage.*
+*⏱ Sessions: 4 · Weekly effort: ~40% · Value: 8/10 · Score: 2.0*
+
+#### USER STORY 'Configure analytics computation schedule'
+**AS AN** admin\
+**I WANT** to configure a global schedule (e.g. nightly, every 6 hours) on which Léargon recomputes all catalogue quality scores and compliance metrics and stores the results as a new snapshot\
+**SO THAT** all insight pages always reflect a recent state of the catalogue without requiring live queries on page load
+
+#### USER STORY 'View last computed timestamp on insight pages'
+**AS A** logged in user\
+**IF** analytics are computed on a schedule\
+**I WANT** to see when the displayed results were last computed on every insight and analytics page\
+**SO THAT** I know how fresh the data is before making a decision
+
+#### USER STORY 'Trigger manual analytics recomputation'
+**AS AN** admin\
+**I WANT** to trigger an immediate recomputation of all analytics outside the regular schedule\
+**SO THAT** I can get up-to-date results before an audit or after a large batch of catalogue changes
+
+#### USER STORY 'Define compliance metric'
+**AS AN** admin\
+**I WANT** to define a statistical compliance metric with a name and a calculation rule (e.g. percentage of entities with a retention period set, percentage of processes with a legal basis)\
+**SO THAT** the metric is calculated automatically on a schedule and its trend can be tracked over time
+
+#### USER STORY 'View compliance metrics dashboard'
+**AS AN** admin\
+**IF** at least one compliance metric is defined\
+**I WANT** to view a dashboard showing the current value of each metric alongside its historical trend as a chart\
+**SO THAT** I can assess catalogue completeness and compliance health at a glance and over time
+
+#### USER STORY 'View catalogue completeness score'
+**AS AN** admin\
+**I WANT** to see an overall catalogue completeness score showing the percentage of mandatory fields filled across all entities, processes, and domains\
+**SO THAT** I have a single top-level indicator of data catalogue quality
+
+---
+
+## DDD guided discovery
+*Read-heavy analytics flush — no new tables. Léargon already holds the data needed to surface most of these insights: entity hierarchies, process-entity assignments, version histories, domain type fields, and org unit relationships. Each story produces an actionable suggestion with supporting evidence. Depends on context relationships and benefits from coupling scores.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 7/10 · Score: 1.8*
 
 #### USER STORY 'Detect aggregate candidates within a domain'
@@ -420,13 +457,13 @@
 
 #### USER STORY 'Validate domain event boundaries'
 **AS AN** admin\
-**IF** domain events are defined (Batch 7)\
+**IF** domain events are defined\
 **I WANT** to see an analysis of which domains publish events consumed by many others (event sources, likely strong natural boundaries) and which domains only consume events without publishing (event sinks, potential merge candidates)\
 **SO THAT** the event-driven coupling structure of the system corroborates or challenges the domain boundaries drawn on the context map
 
 ---
 
-## Batch 11 · Import & integration
+## Import & integration
 *Infrastructure-heavy flush: file upload handling, CSV parsing, column mapping UI, and a webhook receiver. Useful for initial catalogue seeding but not required for ongoing operation.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 7/10 · Score: 1.8*
 
@@ -458,8 +495,8 @@
 
 ---
 
-## Batch 12 · Watch & notifications
-*One backend flush: new `watches` table, an event-dispatch pipeline, SMTP and Teams webhook integrations, notification settings UI. Core watch functionality is self-contained; review-cycle notifications are additive once Batch 13 is shipped.*
+## Watch & notifications
+*One backend flush: new `watches` table, an event-dispatch pipeline, SMTP and Teams webhook integrations, notification settings UI.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 6/10 · Score: 1.5*
 
 #### USER STORY 'Watch a business entity'
@@ -497,8 +534,8 @@
 
 ---
 
-## Batch 13 · Review cycles
-*One backend flush: new `review_cycles` and `review_confirmations` tables, a scheduled job that computes due dates, review section on all detail pages, and an overdue-reviews admin page. Deprioritised — the core use case can be covered with external calendar reminders; the main value add over external tooling is the timestamped audit trail attached to each item, which matters primarily for formal compliance audits.*
+## Review cycles
+*One backend flush: new `review_cycles` and `review_confirmations` tables, a scheduled job that computes due dates, review section on all detail pages, and an overdue-reviews admin page.*
 *⏱ Sessions: 4 · Weekly effort: ~40% · Value: 6/10 · Score: 1.5*
 
 #### USER STORY 'Define review cycle for a business entity'
@@ -542,7 +579,7 @@
 
 ---
 
-## Batch 14 · Stewards
+## Stewards
 *Adds a new permission layer across all four entity types — touches every service and detail page. Wide blast radius; ship as one complete feature.*
 *⏱ Sessions: 5 · Weekly effort: ~50% · Value: 7/10 · Score: 1.4*
 
@@ -599,49 +636,3 @@
 **IF** stewards are assigned\
 **I WANT** to see the list of current stewards on the detail page of a business entity, domain, process, or organisational unit\
 **SO THAT** I know who is responsible for maintaining that item alongside the primary owner or lead
-
----
-
-## Batch 15 · Compliance metrics dashboard & company view
-*Heavier flush: introduces the shared scheduler/job infrastructure that analytics batches (7, 8, 9, 10) also depend on. Results for all analytics are stored as timestamped snapshots and refreshed on this shared schedule.*
-*⏱ Sessions: 7 · Weekly effort: ~70% · Value: 8/10 · Score: 1.1*
-
-**Framework: Quarkus.** The scheduler and job infrastructure in this batch are implemented as a separate **Quarkus** service (not Micronaut). Quarkus is chosen for its superior scheduled-job support, native compilation, and low idle memory footprint — appropriate for a background worker that runs infrequently but must be reliable. The Quarkus service reads from the same MySQL database as the Micronaut backend and writes snapshot results into shared tables that the Micronaut API then exposes to the frontend.
-
-#### USER STORY 'Configure analytics computation schedule'
-**AS AN** admin\
-**I WANT** to configure a global schedule (e.g. nightly, every 6 hours) on which Léargon recomputes all analytics and stores the results as a new snapshot\
-**SO THAT** all insight pages always reflect a recent state of the catalogue without requiring live queries on page load
-
-#### USER STORY 'View last computed timestamp on insight pages'
-**AS A** logged in user\
-**IF** analytics are computed on a schedule\
-**I WANT** to see when the displayed results were last computed on every insight and analytics page\
-**SO THAT** I know how fresh the data is before making an important decision
-
-#### USER STORY 'Trigger manual analytics recomputation'
-**AS AN** admin\
-**I WANT** to trigger an immediate recomputation of all analytics outside the regular schedule\
-**SO THAT** I can get up-to-date results before an audit or after a large batch of catalogue changes
-
-#### USER STORY 'View catalogue completeness score'
-**AS AN** admin\
-**IF** mandatory fields are configured\
-**I WANT** to see an overall catalogue completeness score showing the percentage of mandatory fields that are filled across all entities, processes, and domains\
-**SO THAT** I have a single top-level indicator of data catalogue quality
-
-#### USER STORY 'Define compliance metric'
-**AS AN** admin\
-**I WANT** to define a statistical compliance metric with a name and a calculation rule (e.g. percentage of entities with a retention period set)\
-**SO THAT** the metric is calculated automatically on a schedule and its trend can be tracked over time
-
-#### USER STORY 'View compliance metrics dashboard'
-**AS AN** admin\
-**IF** at least one compliance metric is defined\
-**I WANT** to view a dashboard showing the current value of each metric alongside its historical trend as a chart\
-**SO THAT** I can assess catalogue completeness and compliance health at a glance and over time
-
-#### USER STORY 'View company combined view'
-**AS A** logged in user\
-**I WANT** to see a combined view of entity–process, entity–domain, process–domain, and process–org unit relationships across the whole company\
-**SO THAT** I can reflect on the relationships and dependencies of the entire data landscape

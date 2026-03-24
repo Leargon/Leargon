@@ -16,17 +16,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateBoundedContextRequestContextType } from './createBoundedContextRequestContextType';
-import type { LocalizedText } from './localizedText';
 
-export interface CreateBoundedContextRequest {
-  /** @minItems 1 */
-  names: LocalizedText[];
-  descriptions?: LocalizedText[];
-  /** @nullable */
-  contextType?: CreateBoundedContextRequestContextType;
+export interface UpdateBoundedContextOwningTeamRequest {
   /**
-   * Key of the organisational unit that owns this bounded context
+   * Key of the organisational unit that owns this bounded context, or null to unset
    * @nullable
    */
   owningTeamKey?: string | null;

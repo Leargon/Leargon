@@ -6,12 +6,14 @@ import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.QueryValue
 import io.micronaut.security.annotation.Secured
+import org.leargon.backend.service.BusinessDataQualityRuleService
 import org.leargon.backend.service.ExportService
 
 @Controller("/export")
 @Secured("ROLE_ADMIN")
 open class ExportController(
     private val exportService: ExportService,
+    private val businessDataQualityRuleService: BusinessDataQualityRuleService,
 ) {
     @Get("/processing-register")
     fun exportProcessingRegister(
@@ -42,6 +44,15 @@ open class ExportController(
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
             .header("Content-Disposition", "attachment; filename=\"dpia-register.csv\"")
+    }
+
+    @Get("/business-data-quality-rules")
+    fun exportBusinessDataQualityRules(): HttpResponse<String> {
+        val csv = exportService.exportBusinessDataQualityRules(businessDataQualityRuleService.getAllRules())
+        return HttpResponse
+            .ok(csv)
+            .contentType(MediaType.of("text/csv;charset=UTF-8"))
+            .header("Content-Disposition", "attachment; filename=\"business-data-quality-rules.csv\"")
     }
 
     @Get("/context-map")

@@ -90,6 +90,9 @@ class BusinessEntity {
     @ManyToMany(mappedBy = "linkedBusinessEntities", fetch = FetchType.LAZY)
     var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
 
+    @OneToMany(mappedBy = "businessEntity", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+    var qualityRules: MutableList<BusinessDataQualityRule> = mutableListOf()
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

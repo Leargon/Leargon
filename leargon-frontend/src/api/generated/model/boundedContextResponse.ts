@@ -19,6 +19,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 import type { BoundedContextResponseContextType } from './boundedContextResponseContextType';
 import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse';
 import type { LocalizedText } from './localizedText';
+import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface BoundedContextResponse {
@@ -29,6 +30,7 @@ export interface BoundedContextResponse {
   contextType?: BoundedContextResponseContextType;
   domain: BusinessDomainSummaryResponse;
   createdBy?: UserSummaryResponse | null;
+  owningTeam?: OrganisationalUnitSummaryResponse | null;
   createdAt: string;
   updatedAt: string;
 }

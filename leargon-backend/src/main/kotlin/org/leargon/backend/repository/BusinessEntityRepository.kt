@@ -27,6 +27,7 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     @Join(value = "relationshipsFirst", type = Join.Type.LEFT_FETCH)
     @Join(value = "relationshipsSecond", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "qualityRules", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<BusinessEntity>
 
     @Join(value = "dataOwner", type = Join.Type.FETCH)
@@ -39,6 +40,7 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     @Join(value = "relationshipsFirst", type = Join.Type.LEFT_FETCH)
     @Join(value = "relationshipsSecond", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "qualityRules", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<BusinessEntity>
 
     @Join(value = "dataOwner", type = Join.Type.FETCH)
@@ -51,6 +53,7 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     @Join(value = "relationshipsFirst", type = Join.Type.LEFT_FETCH)
     @Join(value = "relationshipsSecond", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "qualityRules", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<BusinessEntity>
 
     fun findByDataOwnerId(dataOwnerId: Long): List<BusinessEntity>

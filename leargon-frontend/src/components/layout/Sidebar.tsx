@@ -41,7 +41,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     title: 'Domain-Driven Design',
     items: [
       { label: 'Domain Model', path: '/domains', icon: <Category /> },
-      { label: 'Ubiquitous Language', path: '/entities', icon: <Hub /> },
+      { label: 'Ubiquitous Language', path: '/ubiquitous-language', icon: <Hub /> },
       { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
       { label: 'Context Map', path: '/diagrams/context-map', icon: <Share /> },
       { label: 'Event Flow', path: '/diagrams/event-flow', icon: <FlashOn /> },
