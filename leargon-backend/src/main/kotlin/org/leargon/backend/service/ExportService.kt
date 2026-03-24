@@ -243,7 +243,7 @@ open class ExportService(
                         when (child.type?.uppercase()) {
                             "CORE" -> "    type = CORE_DOMAIN"
                             "SUPPORTING" -> "    type = SUPPORTING_DOMAIN"
-                            "SUPPORT" -> "    type = SUPPORT_DOMAIN"
+                            "SUPPORT" -> "    type = SUPPORTING_DOMAIN"
                             "GENERIC" -> "    type = GENERIC_SUBDOMAIN"
                             else -> null
                         }
