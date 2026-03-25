@@ -27,6 +27,7 @@ export interface DpiaResponse {
   riskDescription?: string | null;
   /** @nullable */
   measures?: string | null;
+  initialRisk?: ResidualRisk | null;
   residualRisk?: ResidualRisk | null;
   /** @nullable */
   fdpicConsultationRequired?: boolean | null;

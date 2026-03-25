@@ -73,6 +73,7 @@ open class DpiaMapper {
             dpia.createdAt!!.atZone(ZoneOffset.UTC)
         ).riskDescription(dpia.riskDescription)
             .measures(dpia.measures)
+            .initialRisk(dpia.initialRisk?.let { ResidualRisk.fromValue(it) })
             .residualRisk(dpia.residualRisk?.let { ResidualRisk.fromValue(it) })
             .fdpicConsultationRequired(dpia.fdpicConsultationRequired)
             .fdpicConsultationCompleted(dpia.fdpicConsultationCompleted)

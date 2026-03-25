@@ -50,6 +50,7 @@ open class DpiaController(
         val currentUser = getCurrentUser()
         return dpiaService.updateResidualRisk(
             key,
+            updateDpiaResidualRiskRequest.initialRisk?.value,
             updateDpiaResidualRiskRequest.residualRisk?.value,
             updateDpiaResidualRiskRequest.fdpicConsultationRequired,
             currentUser

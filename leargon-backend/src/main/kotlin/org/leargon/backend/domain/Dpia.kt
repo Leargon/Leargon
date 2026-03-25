@@ -41,6 +41,9 @@ class Dpia {
     @Column(name = "measures", columnDefinition = "TEXT")
     var measures: String? = null
 
+    @Column(name = "initial_risk", length = 10)
+    var initialRisk: String? = null
+
     @Column(name = "residual_risk", length = 10)
     var residualRisk: String? = null
 

@@ -130,6 +130,7 @@ const fr = {
     statusCompleted: 'Terminée',
     riskDescription: 'Description des risques',
     measures: 'Mesures d\'atténuation',
+    initialRisk: 'Risque initial',
     residualRisk: 'Risque résiduel',
     triggeredBy: 'Déclenchée par',
     markCompleted: 'Marquer comme terminée',

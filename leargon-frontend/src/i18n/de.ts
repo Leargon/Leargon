@@ -131,6 +131,7 @@ const de = {
     statusCompleted: 'Abgeschlossen',
     riskDescription: 'Risikobeschreibung',
     measures: 'Abhilfemaßnahmen',
+    initialRisk: 'Anfangsrisiko',
     residualRisk: 'Restrisiko',
     triggeredBy: 'Ausgelöst von',
     markCompleted: 'Als abgeschlossen markieren',

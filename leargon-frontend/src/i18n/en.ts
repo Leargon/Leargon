@@ -131,6 +131,7 @@ const en = {
     statusCompleted: 'Completed',
     riskDescription: 'Risk Description',
     measures: 'Mitigation Measures',
+    initialRisk: 'Initial Risk',
     residualRisk: 'Residual Risk',
     triggeredBy: 'Triggered By',
     markCompleted: 'Mark as Completed',
