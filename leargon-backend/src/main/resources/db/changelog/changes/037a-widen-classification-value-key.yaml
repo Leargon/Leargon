@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037a-widen-classification-value-key
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: classification_values
+            columnName: key
+            newDataType: VARCHAR(200)
+        - dropNotNullConstraint:
+            tableName: classification_values
+            columnName: created_by_id
+            columnDataType: BIGINT
