@@ -77,6 +77,17 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
     },
   });
 
+  const initialRiskEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      if (!dpia) return;
+      await updateResidualRisk({
+        key: dpia.key,
+        data: { initialRisk: val ? (val as 'LOW' | 'MEDIUM' | 'HIGH') : null },
+      });
+      await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
+    },
+  });
+
   const residualRiskEdit = useInlineEdit<string>({
     onSave: async (val) => {
       if (!dpia) return;
@@ -186,6 +197,39 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
               <Typography variant="body2" color={dpia.measures ? 'text.primary' : 'text.secondary'}>
                 {dpia.measures || t('common.notSet')}
               </Typography>
+            )}
+          </PropRow>
+
+          <PropRow
+            label={t('dpia.initialRisk')}
+            canEdit={canEdit && dpia.status !== 'COMPLETED'}
+            isEditing={initialRiskEdit.isEditing}
+            onEdit={() => initialRiskEdit.startEdit(dpia.initialRisk ?? '')}
+            onSave={initialRiskEdit.save}
+            onCancel={initialRiskEdit.cancel}
+            isSaving={initialRiskEdit.isSaving}
+          >
+            {initialRiskEdit.isEditing ? (
+              <Select
+                size="small"
+                value={initialRiskEdit.editValue ?? ''}
+                onChange={(e) => initialRiskEdit.setEditValue(e.target.value)}
+                displayEmpty
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                {RESIDUAL_RISK_VALUES.map((v) => (
+                  <MenuItem key={v} value={v}>{t(`dpia.risk_${v}`)}</MenuItem>
+                ))}
+              </Select>
+            ) : dpia.initialRisk ? (
+              <Chip
+                label={t(`dpia.risk_${dpia.initialRisk}`)}
+                color={RESIDUAL_RISK_COLORS[dpia.initialRisk]}
+                size="small"
+              />
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
             )}
           </PropRow>
 

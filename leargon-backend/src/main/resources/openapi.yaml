@@ -8327,6 +8327,8 @@ components:
         measures:
           type: string
           nullable: true
+        initialRisk:
+          $ref: '#/components/schemas/ResidualRisk'
         residualRisk:
           $ref: '#/components/schemas/ResidualRisk'
         fdpicConsultationRequired:
@@ -8366,6 +8368,8 @@ components:
     UpdateDpiaResidualRiskRequest:
       type: object
       properties:
+        initialRisk:
+          $ref: '#/components/schemas/ResidualRisk'
         residualRisk:
           $ref: '#/components/schemas/ResidualRisk'
         fdpicConsultationRequired:
@@ -8884,6 +8888,10 @@ components:
           type: string
           nullable: true
           description: URL for documentation or system login
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Organisational unit that owns this IT system
         linkedProcesses:
           type: array
           nullable: true
@@ -8917,6 +8925,9 @@ components:
         systemUrl:
           type: string
           nullable: true
+        owningUnitKey:
+          type: string
+          nullable: true
     UpdateItSystemRequest:
       type: object
       required:
@@ -8935,6 +8946,9 @@ components:
           type: string
           nullable: true
         systemUrl:
+          type: string
+          nullable: true
+        owningUnitKey:
           type: string
           nullable: true
     UpdateItSystemLinkedProcessesRequest:

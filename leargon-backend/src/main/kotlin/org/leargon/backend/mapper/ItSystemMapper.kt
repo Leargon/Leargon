@@ -4,6 +4,7 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.ItSystem
 import org.leargon.backend.model.ItSystemResponse
 import org.leargon.backend.model.ItSystemSummaryResponse
+import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import java.time.ZoneOffset
 
@@ -21,6 +22,7 @@ class ItSystemMapper {
             itSystem.updatedAt?.atZone(ZoneOffset.UTC)
         ).vendor(itSystem.vendor)
             .systemUrl(itSystem.systemUrl)
+            .owningUnit(itSystem.owningUnit?.let { u -> OrganisationalUnitSummaryResponse(u.key, u.getName("en")) })
             .linkedProcesses(
                 itSystem.linkedProcesses.map { p ->
                     ProcessSummaryResponse(p.key, p.getName("en"))

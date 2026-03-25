@@ -9,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -37,6 +38,10 @@ class ItSystem {
 
     @Column(name = "system_url", length = 1000)
     var systemUrl: String? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owning_unit_id")
+    var owningUnit: OrganisationalUnit? = null
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

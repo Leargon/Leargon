@@ -18,7 +18,7 @@ databaseChangeLog:
             tableName: classifications
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: personal-data
               - column:
                   name: names
@@ -50,7 +50,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: personal-data--contains
               - column:
                   name: names
@@ -72,7 +72,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: personal-data--not-contains
               - column:
                   name: names
@@ -95,7 +95,7 @@ databaseChangeLog:
             tableName: classifications
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories
               - column:
                   name: names
@@ -127,7 +127,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--health
               - column:
                   name: names
@@ -149,7 +149,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--biometric
               - column:
                   name: names
@@ -171,7 +171,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--genetic
               - column:
                   name: names
@@ -193,7 +193,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--political
               - column:
                   name: names
@@ -215,7 +215,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--religious
               - column:
                   name: names
@@ -237,7 +237,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--trade-union
               - column:
                   name: names
@@ -259,7 +259,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--ethnic
               - column:
                   name: names
@@ -281,7 +281,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--sexual
               - column:
                   name: names
@@ -303,7 +303,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--criminal
               - column:
                   name: names
@@ -325,7 +325,7 @@ databaseChangeLog:
             tableName: classification_values
             columns:
               - column:
-                  name: "`key`"
+                  name: key
                   value: special-categories--none
               - column:
                   name: names

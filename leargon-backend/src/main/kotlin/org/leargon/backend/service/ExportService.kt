@@ -64,23 +64,37 @@ open class ExportService(
 
     private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
 
+    private fun translateLegalBasis(legalBasis: String?): String? =
+        when (legalBasis) {
+            "CONSENT" -> "Consent (Art. 6(1)(a) GDPR)"
+            "CONTRACT" -> "Contract (Art. 6(1)(b) GDPR)"
+            "LEGAL_OBLIGATION" -> "Legal Obligation (Art. 6(1)(c) GDPR)"
+            "VITAL_INTEREST" -> "Vital Interests (Art. 6(1)(d) GDPR)"
+            "PUBLIC_TASK" -> "Public Task (Art. 6(1)(e) GDPR)"
+            "LEGITIMATE_INTEREST" -> "Legitimate Interests (Art. 6(1)(f) GDPR)"
+            else -> legalBasis
+        }
+
     fun exportProcessingRegister(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
                 "Process Name",
+                "Process Owner",
                 "Legal Basis",
                 "Purpose",
                 "Security Measures",
                 "Data Subject Categories",
                 "Personal Data Categories",
+                "Retention Periods",
                 "Service Providers",
                 "Cross-border Transfers"
             )
         )
-        val processes = processRepository.findAll()
+        val processes = processRepository.findAll().filter { it.legalBasis != null }
         for (process in processes) {
             val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
+            val processOwnerName = process.processOwner?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
             val allEntities = (process.inputEntities + process.outputEntities).distinctBy { it.key }
             val dataSubjectCategories =
                 allEntities
@@ -90,6 +104,13 @@ open class ExportService(
             val personalDataCategories =
                 allEntities
                     .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+            val retentionPeriods =
+                allEntities
+                    .filter { !it.retentionPeriod.isNullOrBlank() }
+                    .joinToString("; ") { e ->
+                        val entityName = e.names.find { n -> n.locale == locale }?.text ?: e.names.firstOrNull()?.text ?: e.key
+                        "$entityName: ${e.retentionPeriod}"
+                    }
             val dataProcessors =
                 process.serviceProviders.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
@@ -101,11 +122,13 @@ open class ExportService(
             sb.appendLine(
                 csvRow(
                     name,
-                    process.legalBasis,
+                    processOwnerName,
+                    translateLegalBasis(process.legalBasis),
                     process.purpose,
                     process.securityMeasures,
                     dataSubjectCategories,
                     personalDataCategories,
+                    retentionPeriods,
                     dataProcessors,
                     transfers
                 )
@@ -141,8 +164,8 @@ open class ExportService(
                     name,
                     processor.serviceProviderType,
                     countries,
-                    processor.processorAgreementInPlace.toString(),
-                    processor.subProcessorsApproved.toString(),
+                    if (processor.processorAgreementInPlace) "Yes" else "No",
+                    if (processor.subProcessorsApproved) "Yes" else "No",
                     linkedProcesses
                 )
             )
@@ -384,13 +407,14 @@ open class ExportService(
                 "Related Resource Key",
                 "Related Resource Type",
                 "Status",
+                "Initial Risk",
                 "Residual Risk",
                 "Measures",
                 "Risk Description",
-                "FDPIC Consultation Required",
-                "FDPIC Consultation Completed",
-                "FDPIC Consultation Date",
-                "FDPIC Consultation Outcome",
+                "DPA Consultation Required",
+                "DPA Consultation Completed",
+                "DPA Consultation Date",
+                "DPA Consultation Outcome",
                 "Triggered By",
                 "Created At"
             )
@@ -406,17 +430,38 @@ open class ExportService(
             val triggeredBy = dpia.triggeredBy?.let { "${it.firstName} ${it.lastName} (${it.username})" } ?: ""
             val createdAt = dpia.createdAt?.atZone(ZoneOffset.UTC)?.format(dateFormatter) ?: ""
             val fdpicDate = dpia.fdpicConsultationDate?.format(dateFormatter) ?: ""
+            val statusLabel =
+                when (dpia.status) {
+                    "IN_PROGRESS" -> "In Progress"
+                    "COMPLETED" -> "Completed"
+                    else -> dpia.status
+                }
+            val riskLabel =
+                when (dpia.residualRisk) {
+                    "LOW" -> "Low"
+                    "MEDIUM" -> "Medium"
+                    "HIGH" -> "High"
+                    else -> dpia.residualRisk
+                }
+            val initialRiskLabel =
+                when (dpia.initialRisk) {
+                    "LOW" -> "Low"
+                    "MEDIUM" -> "Medium"
+                    "HIGH" -> "High"
+                    else -> dpia.initialRisk
+                }
             sb.appendLine(
                 csvRow(
                     dpia.key,
                     relatedKey,
                     relatedType,
-                    dpia.status,
-                    dpia.residualRisk,
+                    statusLabel,
+                    initialRiskLabel,
+                    riskLabel,
                     dpia.measures,
                     dpia.riskDescription,
-                    dpia.fdpicConsultationRequired?.toString(),
-                    dpia.fdpicConsultationCompleted?.toString(),
+                    dpia.fdpicConsultationRequired?.let { if (it) "Yes" else "No" },
+                    dpia.fdpicConsultationCompleted?.let { if (it) "Yes" else "No" },
                     fdpicDate,
                     dpia.fdpicConsultationOutcome,
                     triggeredBy,

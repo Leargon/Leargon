@@ -111,7 +111,11 @@ class ExportControllerSpec extends Specification {
     def "GET /export/processing-register returns 200 with CSV content for admin"() {
         given:
         String adminToken = createAdminToken()
-        createProcess(adminToken, "Export Test Process")
+        String processKey = createProcess(adminToken, "Export Test Process")
+        // Set a legal basis so the process is included in the personal data register
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/processes/${processKey}/legal-basis",
+                [legalBasis: "CONSENT"]).bearerAuth(adminToken), Map)
 
         when:
         def response = client.toBlocking().exchange(
@@ -205,7 +209,7 @@ class ExportControllerSpec extends Specification {
         def body = response.body()
         body.contains("DPIA Key")
         body.contains("Status")
-        body.contains("IN_PROGRESS")
+        body.contains("In Progress")
     }
 
     def "GET /export/dpia-register returns empty CSV (headers only) when no DPIAs exist"() {

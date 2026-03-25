@@ -26,4 +26,6 @@ export interface CreateItSystemRequest {
   vendor?: string | null;
   /** @nullable */
   systemUrl?: string | null;
+  /** @nullable */
+  owningUnitKey?: string | null;
 }

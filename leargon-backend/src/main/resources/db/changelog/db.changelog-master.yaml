@@ -81,3 +81,7 @@ databaseChangeLog:
       file: db/changelog/changes/041-create-capability-tables.yaml
   - include:
       file: db/changelog/changes/042-create-domain-event-entity-links.yaml
+  - include:
+      file: db/changelog/changes/043-add-owning-unit-to-it-systems.yaml
+  - include:
+      file: db/changelog/changes/044-add-initial-risk-to-dpia.yaml

@@ -13,6 +13,7 @@ import org.leargon.backend.model.UpdateItSystemLinkedProcessesRequest
 import org.leargon.backend.model.UpdateItSystemRequest
 import org.leargon.backend.model.UpdateProcessItSystemsRequest
 import org.leargon.backend.repository.ItSystemRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import java.time.Instant
 
@@ -20,6 +21,7 @@ import java.time.Instant
 open class ItSystemService(
     private val itSystemRepository: ItSystemRepository,
     private val processRepository: ProcessRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val itSystemMapper: ItSystemMapper
 ) {
     @Transactional
@@ -45,6 +47,12 @@ open class ItSystemService(
         if (itSystemRepository.existsByKey(key)) {
             throw DuplicateResourceException("IT system with key '$key' already exists")
         }
+        val owningUnit =
+            request.owningUnitKey?.let {
+                organisationalUnitRepository.findByKey(it).orElseThrow {
+                    ResourceNotFoundException("Organisational unit not found: $it")
+                }
+            }
         val itSystem =
             ItSystem().apply {
                 this.key = key
@@ -52,6 +60,7 @@ open class ItSystemService(
                 this.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
                 this.vendor = request.vendor
                 this.systemUrl = request.systemUrl
+                this.owningUnit = owningUnit
             }
         itSystemRepository.save(itSystem)
         return itSystemMapper.toItSystemResponse(itSystem)
@@ -69,6 +78,12 @@ open class ItSystemService(
         itSystem.descriptions = (request.descriptions ?: emptyList()).map { LocalizedText(it.locale, it.text) }.toMutableList()
         itSystem.vendor = request.vendor
         itSystem.systemUrl = request.systemUrl
+        itSystem.owningUnit =
+            request.owningUnitKey?.let {
+                organisationalUnitRepository.findByKey(it).orElseThrow {
+                    ResourceNotFoundException("Organisational unit not found: $it")
+                }
+            }
         itSystem.updatedAt = Instant.now()
         itSystemRepository.update(itSystem)
         return itSystemMapper.toItSystemResponse(itSystem)

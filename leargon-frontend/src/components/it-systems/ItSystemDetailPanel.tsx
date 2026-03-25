@@ -27,6 +27,7 @@ import {
   useUpdateItSystemLinkedProcesses,
 } from '../../api/generated/it-system/it-system';
 import { useGetAllProcesses } from '../../api/generated/process/process';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
@@ -34,6 +35,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
   LocalizedText,
+  OrganisationalUnitResponse,
   ProcessResponse,
   SupportedLocaleResponse,
   ItSystemResponse,
@@ -84,6 +86,8 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const { data: processesResponse } = useGetAllProcesses();
   const allProcesses = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
+  const { data: orgUnitsResponse } = useGetAllOrganisationalUnits();
+  const allOrgUnits = (orgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
 
   const updateSystem = useUpdateItSystem();
   const deleteSystem = useDeleteItSystem();
@@ -129,6 +133,22 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const processesEdit = useInlineEdit<string[]>({
     onSave: async (keys) => {
       await updateLinkedProcesses.mutateAsync({ key: systemKey, data: { processKeys: keys } });
+      invalidate();
+    },
+  });
+
+  const owningUnitEdit = useInlineEdit<string | null>({
+    onSave: async (unitKey) => {
+      await updateSystem.mutateAsync({
+        key: systemKey,
+        data: {
+          names: system!.names,
+          descriptions: system!.descriptions,
+          vendor: system!.vendor ?? undefined,
+          systemUrl: system!.systemUrl ?? undefined,
+          owningUnitKey: unitKey ?? undefined,
+        },
+      });
       invalidate();
     },
   });
@@ -252,6 +272,44 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
               )}
             </Box>
           </Box>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Owning Unit */}
+      <SectionHeader
+        title="Owning Unit"
+        canEdit={isAdmin}
+        isEditing={owningUnitEdit.isEditing}
+        onEdit={() => owningUnitEdit.startEdit(system.owningUnit?.key ?? null)}
+        onSave={owningUnitEdit.save}
+        onCancel={owningUnitEdit.cancel}
+        isSaving={owningUnitEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {owningUnitEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={allOrgUnits}
+              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+              value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
+              onChange={(_, val) => owningUnitEdit.setEditValue(val?.key ?? null)}
+              renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" />}
+              sx={{ width: 350 }}
+            />
+            {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+          </Box>
+        ) : system.owningUnit ? (
+          <Chip
+            label={system.owningUnit.name || system.owningUnit.key}
+            size="small"
+            variant="outlined"
+            onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
+            clickable
+          />
+        ) : (
+          <Typography variant="body2" color="text.secondary">Not assigned</Typography>
         )}
       </Box>
 

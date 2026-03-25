@@ -9,6 +9,7 @@ import {
   TextField,
   CircularProgress,
   Alert,
+  Autocomplete,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,8 +17,9 @@ import {
   getGetAllItSystemsQueryKey,
 } from '../../api/generated/it-system/it-system';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import TranslationEditor from '../common/TranslationEditor';
-import type { LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
+import type { LocalizedText, OrganisationalUnitResponse, SupportedLocaleResponse } from '../../api/generated/model';
 import type { ItSystemResponse } from '../../api/generated/model';
 
 interface CreateItSystemDialogProps {
@@ -30,11 +32,14 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
+  const { data: orgUnitsResponse } = useGetAllOrganisationalUnits();
+  const allOrgUnits = (orgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
   const createItSystem = useCreateItSystem();
 
   const [names, setNames] = useState<LocalizedText[]>([]);
   const [vendor, setVendor] = useState('');
   const [systemUrl, setSystemUrl] = useState('');
+  const [owningUnitKey, setOwningUnitKey] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -44,6 +49,7 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
     setNames([]);
     setVendor('');
     setSystemUrl('');
+    setOwningUnitKey(null);
     setError('');
     onClose();
   };
@@ -60,6 +66,7 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
           descriptions: [],
           vendor: vendor || undefined,
           systemUrl: systemUrl || undefined,
+          owningUnitKey: owningUnitKey ?? undefined,
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetAllItSystemsQueryKey() });
@@ -102,6 +109,14 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
           fullWidth
           sx={{ mt: 2 }}
           placeholder="https://..."
+        />
+        <Autocomplete
+          options={allOrgUnits}
+          getOptionLabel={(o) => `${o.names.find((n) => n.locale === 'en')?.text ?? o.key} (${o.key})`}
+          value={allOrgUnits.find((u) => u.key === owningUnitKey) ?? null}
+          onChange={(_, val) => setOwningUnitKey((val as OrganisationalUnitResponse | null)?.key ?? null)}
+          renderInput={(params) => <TextField {...params} label="Owning Unit" size="small" />}
+          sx={{ mt: 2 }}
         />
       </DialogContent>
       <DialogActions>
