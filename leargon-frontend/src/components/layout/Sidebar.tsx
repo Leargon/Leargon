@@ -5,7 +5,7 @@ import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
   BubbleChart, AccountTreeOutlined, Schema, Share, FlashOn, Computer,
-  People, Language, Label, Tune, AutoAwesomeMosaic,
+  People, Language, Label, Tune, AutoAwesomeMosaic, Layers, GridView,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -18,6 +18,15 @@ interface NavItem {
 }
 
 const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> = {
+  bcm: {
+    title: 'Business Capability Model',
+    items: [
+      { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
+      { label: 'Capability Map', path: '/diagrams/capability-map', icon: <GridView /> },
+      { label: 'Strategic Map', path: '/diagrams/strategic-map', icon: <Layers /> },
+      { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
+    ],
+  },
   gdpr: {
     title: 'DSG / GDPR',
     items: [
@@ -34,8 +43,6 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
       { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
       { label: 'Process Landscape', path: '/diagrams/processes', icon: <Schema /> },
-      { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
-      { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
     ],
   },
   ddd: {

@@ -66,6 +66,8 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
@@ -101,6 +103,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
+  const sections = ORG_UNIT_SECTIONS_BY_PERSPECTIVE[perspective];
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
@@ -486,9 +490,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </Box>
       )}
 
-      <Divider sx={{ my: 2 }} />
+      {sections.stewardship && <Divider sx={{ my: 2 }} />}
 
-      {/* Business Owner */}
+      {sections.stewardship && <>{/* Business Owner */}
       <SectionHeader
         title="Business Owner"
         canEdit={isAdmin}
@@ -612,7 +616,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </Typography>
         )}
       </Box>
+      </>}
 
+      {sections.boundedContexts && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Bounded Contexts */}
@@ -658,6 +664,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <Typography variant="body2" color="text.secondary">No bounded contexts owned</Typography>
         )}
       </Box>
+      </>)}
 
       <Divider sx={{ my: 2 }} />
 
@@ -750,7 +757,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       )}
 
       {/* External Party Details */}
-      {(isAdmin || unit.isExternal) && (
+      {sections.externalFields && (isAdmin || unit.isExternal) && (
         <>
           <SectionHeader
             title="External Party Details"
@@ -909,47 +916,49 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       )}
 
       {/* Service Providers */}
-      <SectionHeader
-        title="Service Providers"
-        canEdit={isAdmin}
-        isEditing={serviceProvidersEdit.isEditing}
-        onEdit={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))}
-        onSave={serviceProvidersEdit.save}
-        onCancel={serviceProvidersEdit.cancel}
-        isSaving={serviceProvidersEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
-          <Box>
-            <Autocomplete
-              multiple
-              options={allServiceProviders}
-              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-              value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
-              onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
-              renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
-              renderTags={(val, getTagProps) =>
-                val.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
-                ))
-              }
-            />
-            {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
-          </Box>
-        ) : (unit.serviceProviders ?? []).length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(unit.serviceProviders ?? []).map((sp) => (
-              <Chip key={sp.key} label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
+      {sections.serviceProviders && (<>
+        <SectionHeader
+          title="Service Providers"
+          canEdit={isAdmin}
+          isEditing={serviceProvidersEdit.isEditing}
+          onEdit={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))}
+          onSave={serviceProvidersEdit.save}
+          onCancel={serviceProvidersEdit.cancel}
+          isSaving={serviceProvidersEdit.isSaving}
+        />
+        <Box sx={{ mb: 2 }}>
+          {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+            <Box>
+              <Autocomplete
+                multiple
+                options={allServiceProviders}
+                getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+                onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+                renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+                renderTags={(val, getTagProps) =>
+                  val.map((option, index) => (
+                    <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                  ))
+                }
+              />
+              {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+            </Box>
+          ) : (unit.serviceProviders ?? []).length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {(unit.serviceProviders ?? []).map((sp) => (
+                <Chip key={sp.key} label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
+          )}
+        </Box>
+        <Divider sx={{ my: 2 }} />
+      </>)}
 
       {/* Classifications */}
+      {sections.classifications && (<>
       <SectionHeader title="Classifications" canEdit={isLeadOrAdmin} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
@@ -1043,6 +1052,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </Box>
       )}
+      </>)}
 
       <Divider sx={{ my: 2 }} />
 

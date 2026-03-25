@@ -75,6 +75,8 @@ import { useGetAllBusinessDomains } from '../../api/generated/business-domain/bu
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { ENTITY_TABS_BY_PERSPECTIVE, defaultEntityTab } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
@@ -117,7 +119,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+
+  const visibleTabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
 
   const { data: entityResponse, isLoading, error } = useGetBusinessEntityByKey(entityKey);
   const entity = entityResponse?.data as BusinessEntityResponse | undefined;
@@ -146,7 +151,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => defaultEntityTab(perspective));
+
+  useEffect(() => {
+    const tabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
+    if (!tabs.includes(activeTab as typeof tabs[0])) {
+      setActiveTab(tabs[0]);
+    }
+  }, [perspective]);
 
   // Translation link dialog state
   const [tlDialogOpen, setTlDialogOpen] = useState(false);
@@ -664,11 +676,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       </Paper>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label={t('tabs.compliance')} />
-        <Tab label={t('tabs.relationships')} />
-        <Tab label={t('tabs.governance')} />
-        <Tab label={t('diagrams.lineageTab')} />
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as typeof visibleTabs[0])} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        {visibleTabs.includes(0) && <Tab value={0} label={t('tabs.compliance')} />}
+        {visibleTabs.includes(1) && <Tab value={1} label={t('tabs.relationships')} />}
+        {visibleTabs.includes(2) && <Tab value={2} label={t('tabs.governance')} />}
+        {visibleTabs.includes(3) && <Tab value={3} label={t('diagrams.lineageTab')} />}
       </Tabs>
 
       {activeTab === 0 && <>

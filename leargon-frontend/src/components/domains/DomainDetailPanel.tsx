@@ -76,6 +76,8 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateDomainDialog from './CreateDomainDialog';
@@ -130,6 +132,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
+  const sections = DOMAIN_SECTIONS_BY_PERSPECTIVE[perspective];
   const { t } = useTranslation();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
@@ -555,189 +559,200 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      <Divider sx={{ my: 2 }} />
-
-      {/* Type */}
-      <SectionHeader
-        title="Type"
-        canEdit={isAdmin}
-        isEditing={typeEdit.isEditing}
-        onEdit={() => typeEdit.startEdit(domain.type || null)}
-        onSave={typeEdit.save}
-        onCancel={typeEdit.cancel}
-        isSaving={typeEdit.isSaving}
-        isMandatory={isMandatory('type')}
-      />
-      {typeEdit.isEditing ? (
-        <Box sx={{ mb: 2 }}>
-          <Select
-            value={typeEdit.editValue || ''}
-            onChange={(e: SelectChangeEvent) => typeEdit.setEditValue((e.target.value || null) as BusinessDomainType | null)}
-            size="small"
-            displayEmpty
-            sx={{ minWidth: 200 }}
-          >
-            <MenuItem value="">
-              <em>None (inherit from parent)</em>
-            </MenuItem>
-            {DOMAIN_TYPE_VALUES.map((t) => (
-              <MenuItem key={t} value={t}>{t}</MenuItem>
-            ))}
-          </Select>
-          {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
-        </Box>
-      ) : (
-        <Box sx={{ mb: 2 }}>
-          {domain.type ? (
-            <Chip label={domain.type} color="primary" size="small" />
-          ) : domain.effectiveType ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip label={domain.effectiveType} variant="outlined" size="small" />
-              <Typography variant="caption" color="text.secondary">(inherited from parent)</Typography>
+      {sections.type && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          {/* Type */}
+          <SectionHeader
+            title="Type"
+            canEdit={isAdmin}
+            isEditing={typeEdit.isEditing}
+            onEdit={() => typeEdit.startEdit(domain.type || null)}
+            onSave={typeEdit.save}
+            onCancel={typeEdit.cancel}
+            isSaving={typeEdit.isSaving}
+            isMandatory={isMandatory('type')}
+          />
+          {typeEdit.isEditing ? (
+            <Box sx={{ mb: 2 }}>
+              <Select
+                value={typeEdit.editValue || ''}
+                onChange={(e: SelectChangeEvent) => typeEdit.setEditValue((e.target.value || null) as BusinessDomainType | null)}
+                size="small"
+                displayEmpty
+                sx={{ minWidth: 200 }}
+              >
+                <MenuItem value="">
+                  <em>None (inherit from parent)</em>
+                </MenuItem>
+                {DOMAIN_TYPE_VALUES.map((t) => (
+                  <MenuItem key={t} value={t}>{t}</MenuItem>
+                ))}
+              </Select>
+              {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary">Not set</Typography>
-          )}
-        </Box>
-      )}
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Parent */}
-      <SectionHeader
-        title="Parent Domain"
-        canEdit={isAdmin}
-        isEditing={parentEdit.isEditing}
-        onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
-        onSave={parentEdit.save}
-        onCancel={parentEdit.cancel}
-        isSaving={parentEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {parentEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={parentCandidates}
-              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-              value={parentCandidates.find((d) => d.key === parentEdit.editValue) || null}
-              onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
-              renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for parent domain..." sx={{ width: 350 }} />
+            <Box sx={{ mb: 2 }}>
+              {domain.type ? (
+                <Chip label={domain.type} color="primary" size="small" />
+              ) : domain.effectiveType ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Chip label={domain.effectiveType} variant="outlined" size="small" />
+                  <Typography variant="caption" color="text.secondary">(inherited from parent)</Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">Not set</Typography>
               )}
-              isOptionEqualToValue={(option, value) => option.key === value.key}
-              size="small"
-            />
-            {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
-          </Box>
-        ) : (
-          <Typography variant="body2">
-            {domain.parent ? (
-              <Chip
-                label={domain.parent.name}
-                size="small"
-                onClick={() => navigate(`/domains/${domain.parent!.key}`)}
-                clickable
-              />
-            ) : (
-              <span style={{ color: '#888' }}>Top-level domain</span>
-            )}
-          </Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Subdomains (read-only) */}
-      {domain.subdomains && domain.subdomains.length > 0 && (
-        <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Subdomains</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-            {domain.subdomains.map((sub) => (
-              <Chip
-                key={sub.key}
-                label={sub.name}
-                size="small"
-                onClick={() => navigate(`/domains/${sub.key}`)}
-                clickable
-              />
-            ))}
-          </Box>
-          <Divider sx={{ my: 2 }} />
+            </Box>
+          )}
         </>
       )}
 
-      {/* Vision Statement */}
-      <SectionHeader
-        title={t('domain.visionStatement')}
-        canEdit={isAdmin}
-        isEditing={visionEdit.isEditing}
-        onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
-        onSave={visionEdit.save}
-        onCancel={visionEdit.cancel}
-        isSaving={visionEdit.isSaving}
-      />
-      {visionEdit.isEditing ? (
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            value={visionEdit.editValue ?? ''}
-            onChange={(e) => visionEdit.setEditValue(e.target.value)}
-            size="small"
-            multiline
-            rows={3}
-            fullWidth
-            placeholder={t('domain.visionStatementPlaceholder')}
+      {sections.parent && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          {/* Parent */}
+          <SectionHeader
+            title="Parent Domain"
+            canEdit={isAdmin}
+            isEditing={parentEdit.isEditing}
+            onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
+            onSave={parentEdit.save}
+            onCancel={parentEdit.cancel}
+            isSaving={parentEdit.isSaving}
           />
-          {visionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{visionEdit.error}</Alert>}
-        </Box>
-      ) : (
-        <Box sx={{ mb: 2 }}>
-          {domain.visionStatement ? (
-            <Typography variant="body2">{domain.visionStatement}</Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>{t('common.notSet')}</Typography>
+          <Box sx={{ mb: 2 }}>
+            {parentEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={parentCandidates}
+                  getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                  value={parentCandidates.find((d) => d.key === parentEdit.editValue) || null}
+                  onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder="Search for parent domain..." sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.key === value.key}
+                  size="small"
+                />
+                {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2">
+                {domain.parent ? (
+                  <Chip
+                    label={domain.parent.name}
+                    size="small"
+                    onClick={() => navigate(`/domains/${domain.parent!.key}`)}
+                    clickable
+                  />
+                ) : (
+                  <span style={{ color: '#888' }}>Top-level domain</span>
+                )}
+              </Typography>
+            )}
+          </Box>
+          {/* Subdomains (read-only) */}
+          {domain.subdomains && domain.subdomains.length > 0 && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Subdomains</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                {domain.subdomains.map((sub) => (
+                  <Chip
+                    key={sub.key}
+                    label={sub.name}
+                    size="small"
+                    onClick={() => navigate(`/domains/${sub.key}`)}
+                    clickable
+                  />
+                ))}
+              </Box>
+            </>
           )}
-        </Box>
+        </>
       )}
 
-      <Divider sx={{ my: 2 }} />
-
-      {/* Owning Unit */}
-      <SectionHeader
-        title={t('domain.owningUnit')}
-        canEdit={isAdmin}
-        isEditing={owningUnitEdit.isEditing}
-        onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
-        onSave={owningUnitEdit.save}
-        onCancel={owningUnitEdit.cancel}
-        isSaving={owningUnitEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {owningUnitEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={allOrgUnits}
-              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-              value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) || null}
-              onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key || null)}
-              renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for owning unit..." sx={{ width: 350 }} />
+      {sections.visionStatement && (
+        <>
+          {/* Vision Statement */}
+          <SectionHeader
+            title={t('domain.visionStatement')}
+            canEdit={isAdmin}
+            isEditing={visionEdit.isEditing}
+            onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
+            onSave={visionEdit.save}
+            onCancel={visionEdit.cancel}
+            isSaving={visionEdit.isSaving}
+          />
+          {visionEdit.isEditing ? (
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                value={visionEdit.editValue ?? ''}
+                onChange={(e) => visionEdit.setEditValue(e.target.value)}
+                size="small"
+                multiline
+                rows={3}
+                fullWidth
+                placeholder={t('domain.visionStatementPlaceholder')}
+              />
+              {visionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{visionEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Box sx={{ mb: 2 }}>
+              {domain.visionStatement ? (
+                <Typography variant="body2">{domain.visionStatement}</Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>{t('common.notSet')}</Typography>
               )}
-              isOptionEqualToValue={(option, value) => option.key === value.key}
-              size="small"
-            />
-            {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
-          </Box>
-        ) : (
-          <Typography variant="body2">
-            {domain.owningUnit ? (
-              <Chip label={domain.owningUnit.name} size="small" />
-            ) : (
-              <span style={{ color: '#888' }}>{t('common.notSet')}</span>
-            )}
-          </Typography>
-        )}
-      </Box>
+            </Box>
+          )}
+        </>
+      )}
 
+      {sections.owningUnit && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          {/* Owning Unit */}
+          <SectionHeader
+            title={t('domain.owningUnit')}
+            canEdit={isAdmin}
+            isEditing={owningUnitEdit.isEditing}
+            onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
+            onSave={owningUnitEdit.save}
+            onCancel={owningUnitEdit.cancel}
+            isSaving={owningUnitEdit.isSaving}
+          />
+          <Box sx={{ mb: 2 }}>
+            {owningUnitEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allOrgUnits}
+                  getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                  value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) || null}
+                  onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key || null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder="Search for owning unit..." sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.key === value.key}
+                  size="small"
+                />
+                {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2">
+                {domain.owningUnit ? (
+                  <Chip label={domain.owningUnit.name} size="small" />
+                ) : (
+                  <span style={{ color: '#888' }}>{t('common.notSet')}</span>
+                )}
+              </Typography>
+            )}
+          </Box>
+        </>
+      )}
+
+      {sections.boundedContexts && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Bounded Contexts */}
@@ -849,7 +864,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           </Paper>
         );
       })()}
+      </>)}
 
+      {sections.contextRelationships && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Context Relationships (between bounded contexts in this domain) */}
@@ -963,7 +980,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           ))}
         </Box>
       )}
+      </>)}
 
+      {sections.classifications && (
+      <>
       {/* Classifications */}
       <SectionHeader
         title="Classifications"
@@ -1079,6 +1099,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           )}
         </Box>
       )}
+      </>)}
 
       <Divider sx={{ my: 2 }} />
 

@@ -33,6 +33,8 @@ import EventFlowPage from './pages/EventFlowPage';
 import ItSystemsPage from './pages/ItSystemsPage';
 import UbiquitousLanguagePage from './pages/UbiquitousLanguagePage';
 import CapabilitiesPage from './pages/CapabilitiesPage';
+import CapabilityMapPage from './pages/CapabilityMapPage';
+import StrategicMapPage from './pages/StrategicMapPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,7 +58,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Navigate to="/entities" replace /> },
+      { index: true, element: <Navigate to="/capabilities" replace /> },
       { path: 'domains', element: <DomainsPage /> },
       { path: 'domains/:key', element: <DomainsPage /> },
       { path: 'entities', element: <OntologyPage /> },
@@ -84,6 +86,8 @@ const router = createBrowserRouter([
       { path: 'ubiquitous-language', element: <UbiquitousLanguagePage /> },
       { path: 'capabilities', element: <CapabilitiesPage /> },
       { path: 'capabilities/:key', element: <CapabilitiesPage /> },
+      { path: 'diagrams/capability-map', element: <CapabilityMapPage /> },
+      { path: 'diagrams/strategic-map', element: <StrategicMapPage /> },
       { path: 'profile', element: <ProfilePage /> },
     ],
   },

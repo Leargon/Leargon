@@ -80,6 +80,8 @@ import {
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { PROCESS_TABS_BY_PERSPECTIVE, defaultProcessTab } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
@@ -152,7 +154,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+
+  const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
 
   const { data: processResponse, isLoading, error } = useGetProcessByKey(processKey);
   const process = processResponse?.data as ProcessResponse | undefined;
@@ -186,7 +191,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => defaultProcessTab(perspective));
+
+  useEffect(() => {
+    const tabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
+    if (!tabs.includes(activeTab as typeof tabs[0])) {
+      setActiveTab(tabs[0]);
+    }
+  }, [perspective]);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -712,10 +724,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Paper>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label={t('tabs.dataAndTeams')} />
-        <Tab label={t('tabs.compliance')} />
-        <Tab label={t('tabs.governance')} />
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as typeof visibleTabs[0])} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        {visibleTabs.includes(0) && <Tab value={0} label={t('tabs.dataAndTeams')} />}
+        {visibleTabs.includes(1) && <Tab value={1} label={t('tabs.compliance')} />}
+        {visibleTabs.includes(2) && <Tab value={2} label={t('tabs.governance')} />}
       </Tabs>
 
       {activeTab === 0 && <>
