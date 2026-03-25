@@ -16,29 +16,8 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { LocalizedText } from './localizedText';
-import type { ProcessSummaryResponse } from './processSummaryResponse';
 
-export interface DataProcessorResponse {
-  /** Data processor key */
-  key: string;
-  names: LocalizedText[];
-  /** List of ISO 3166-1 alpha-2 country codes where data is processed */
-  processingCountries: string[];
-  /** Whether a data processing agreement is in place */
-  processorAgreementInPlace: boolean;
-  /** Whether sub-processors have been approved */
-  subProcessorsApproved: boolean;
-  /**
-   * Processes linked to this processor
-   * @nullable
-   */
-  linkedProcesses?: ProcessSummaryResponse[] | null;
-  /** Creation timestamp */
-  createdAt: string;
-  /**
-   * Last update timestamp
-   * @nullable
-   */
-  updatedAt?: string | null;
+export interface UpdateStorageLocationsRequest {
+  /** ISO 3166-1 alpha-2 country codes where data is stored */
+  locations: string[];
 }

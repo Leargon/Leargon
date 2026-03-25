@@ -31,7 +31,7 @@ class OrganisationalUnit {
     var unitType: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lead_id")
+    @JoinColumn(name = "owner_id")
     var businessOwner: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)

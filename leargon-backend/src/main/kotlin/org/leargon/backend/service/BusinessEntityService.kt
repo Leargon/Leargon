@@ -322,21 +322,16 @@ open class BusinessEntityService(
     }
 
     @Transactional
-    open fun updateCrossBorderTransfers(
+    open fun updateStorageLocations(
         entityKey: String,
-        transfers: List<org.leargon.backend.model.CrossBorderTransferEntry>,
+        locations: List<String>,
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
-        entity.crossBorderTransfers =
-            transfers
-                .map {
-                    org.leargon.backend.mapper.DataProcessorMapper
-                        .fromCrossBorderTransferEntry(it)
-                }.toMutableList()
+        entity.storageLocations = locations.toMutableList()
         entity = businessEntityRepository.update(entity)
-        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated cross-border transfers")
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated storage locations")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 

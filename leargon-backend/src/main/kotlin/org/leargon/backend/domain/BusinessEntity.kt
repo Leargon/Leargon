@@ -92,11 +92,8 @@ class BusinessEntity {
     var retentionPeriod: String? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "cross_border_transfers", columnDefinition = "JSON")
-    var crossBorderTransfers: MutableList<CrossBorderTransfer>? = null
-
-    @ManyToMany(mappedBy = "linkedBusinessEntities", fetch = FetchType.LAZY)
-    var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
+    @Column(name = "storage_locations", columnDefinition = "JSON")
+    var storageLocations: MutableList<String>? = null
 
     @OneToMany(mappedBy = "businessEntity", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     var qualityRules: MutableList<BusinessDataQualityRule> = mutableListOf()

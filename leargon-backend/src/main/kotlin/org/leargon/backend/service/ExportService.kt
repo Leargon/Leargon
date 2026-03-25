@@ -123,8 +123,7 @@ open class ExportService(
                 "Processing Countries",
                 "Processor Agreement In Place",
                 "Sub-processors Approved",
-                "Linked Processes",
-                "Linked Business Entities"
+                "Linked Processes"
             )
         )
         val processors = dataProcessorRepository.findAll()
@@ -135,10 +134,6 @@ open class ExportService(
                 processor.linkedProcesses.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
-            val linkedEntities =
-                processor.linkedBusinessEntities.joinToString("; ") {
-                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
-                }
             sb.appendLine(
                 csvRow(
                     processor.key,
@@ -146,8 +141,7 @@ open class ExportService(
                     countries,
                     processor.processorAgreementInPlace.toString(),
                     processor.subProcessorsApproved.toString(),
-                    linkedProcesses,
-                    linkedEntities
+                    linkedProcesses
                 )
             )
         }

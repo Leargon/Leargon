@@ -11,7 +11,6 @@ import jakarta.validation.Valid
 import org.leargon.backend.api.DataProcessorApi
 import org.leargon.backend.model.CreateDataProcessorRequest
 import org.leargon.backend.model.DataProcessorResponse
-import org.leargon.backend.model.UpdateDataProcessorEntityLinksRequest
 import org.leargon.backend.model.UpdateDataProcessorProcessLinksRequest
 import org.leargon.backend.model.UpdateDataProcessorRequest
 import org.leargon.backend.service.DataProcessorService
@@ -45,15 +44,6 @@ open class DataProcessorController(
     @Secured("ROLE_ADMIN")
     override fun deleteDataProcessor(key: String): HttpResponse<Void> {
         dataProcessorService.delete(key)
-        return HttpResponse.noContent()
-    }
-
-    @Secured("ROLE_ADMIN")
-    override fun updateDataProcessorLinkedEntities(
-        key: String,
-        @Valid @Body updateDataProcessorEntityLinksRequest: UpdateDataProcessorEntityLinksRequest
-    ): HttpResponse<Void> {
-        dataProcessorService.updateLinkedEntities(key, updateDataProcessorEntityLinksRequest.businessEntityKeys ?: emptyList())
         return HttpResponse.noContent()
     }
 

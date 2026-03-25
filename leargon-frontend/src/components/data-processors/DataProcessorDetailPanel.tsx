@@ -26,10 +26,8 @@ import {
   getGetAllDataProcessorsQueryKey,
   useUpdateDataProcessor,
   useDeleteDataProcessor,
-  useUpdateDataProcessorLinkedEntities,
   useUpdateDataProcessorLinkedProcesses,
 } from '../../api/generated/data-processor/data-processor';
-import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
@@ -38,7 +36,6 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
   LocalizedText,
-  BusinessEntityResponse,
   ProcessResponse,
   SupportedLocaleResponse,
 } from '../../api/generated/model';
@@ -98,14 +95,11 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
-  const { data: entitiesResponse } = useGetAllBusinessEntities();
-  const allEntities = (entitiesResponse?.data as BusinessEntityResponse[] | undefined) ?? [];
   const { data: processesResponse } = useGetAllProcesses();
   const allProcesses = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
 
   const updateProcessor = useUpdateDataProcessor();
   const deleteProcessor = useDeleteDataProcessor();
-  const updateLinkedEntities = useUpdateDataProcessorLinkedEntities();
   const updateLinkedProcesses = useUpdateDataProcessorLinkedProcesses();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -156,13 +150,6 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
           subProcessorsApproved: val.subProcessors,
         },
       });
-      invalidate();
-    },
-  });
-
-  const entitiesEdit = useInlineEdit<string[]>({
-    onSave: async (keys) => {
-      await updateLinkedEntities.mutateAsync({ key: processorKey, data: { businessEntityKeys: keys } });
       invalidate();
     },
   });
@@ -334,47 +321,6 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
               color={processor.subProcessorsApproved ? 'success' : 'default'}
             />
           </Box>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Linked Business Entities */}
-      <SectionHeader
-        title="Linked Business Entities"
-        canEdit={isAdmin}
-        isEditing={entitiesEdit.isEditing}
-        onEdit={() => entitiesEdit.startEdit((processor.linkedBusinessEntities ?? []).map((e) => e.key))}
-        onSave={entitiesEdit.save}
-        onCancel={entitiesEdit.cancel}
-        isSaving={entitiesEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {entitiesEdit.isEditing && entitiesEdit.editValue !== null ? (
-          <Box>
-            <Autocomplete
-              multiple
-              options={allEntities}
-              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-              value={allEntities.filter((e) => entitiesEdit.editValue!.includes(e.key))}
-              onChange={(_, val) => entitiesEdit.setEditValue(val.map((v) => v.key))}
-              renderInput={(params) => <TextField {...params} size="small" label="Business Entities" />}
-              renderTags={(val, getTagProps) =>
-                val.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
-                ))
-              }
-            />
-            {entitiesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{entitiesEdit.error}</Alert>}
-          </Box>
-        ) : (processor.linkedBusinessEntities ?? []).length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(processor.linkedBusinessEntities ?? []).map((e) => (
-              <Chip key={e.key} label={e.name} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" color="text.secondary">No business entities linked</Typography>
         )}
       </Box>
 

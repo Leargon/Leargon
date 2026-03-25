@@ -27,13 +27,11 @@ import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
 import org.leargon.backend.model.UpdateBusinessEntityTechnicalCustodianRequest
-import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
-import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
 import org.leargon.backend.model.UpdateRetentionPeriodRequest
+import org.leargon.backend.model.UpdateStorageLocationsRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessEntityService
 import org.leargon.backend.service.ClassificationService
-import org.leargon.backend.service.DataProcessorService
 import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.UserService
 
@@ -44,7 +42,6 @@ open class BusinessEntityController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val dataProcessorService: DataProcessorService,
     private val dpiaService: DpiaService
 ) : BusinessEntityApi {
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> = businessEntityService.getAllBusinessEntitiesAsResponses()
@@ -202,21 +199,12 @@ open class BusinessEntityController(
         return businessEntityService.updateRetentionPeriod(key, updateRetentionPeriodRequest.retentionPeriod, currentUser)
     }
 
-    override fun updateBusinessEntityCrossBorderTransfers(
+    override fun updateBusinessEntityStorageLocations(
         key: String,
-        @Valid @Body updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest
+        @Valid @Body updateStorageLocationsRequest: UpdateStorageLocationsRequest
     ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        return businessEntityService.updateCrossBorderTransfers(key, updateCrossBorderTransfersRequest.transfers, currentUser)
-    }
-
-    @Secured("ROLE_ADMIN")
-    override fun updateBusinessEntityDataProcessors(
-        key: String,
-        @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest
-    ): HttpResponse<Void> {
-        dataProcessorService.updateEntityDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
-        return HttpResponse.noContent()
+        return businessEntityService.updateStorageLocations(key, updateStorageLocationsRequest.locations, currentUser)
     }
 
     override fun getEntityDpia(key: String): DpiaResponse = dpiaService.getDpiaForEntity(key)

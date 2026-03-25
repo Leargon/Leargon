@@ -2700,13 +2700,13 @@ paths:
           description: Business entity not found
         '401':
           description: Not authenticated
-  /business-entities/{key}/cross-border-transfers:
+  /business-entities/{key}/storage-locations:
     put:
       tags:
       - BusinessEntity
-      summary: Update cross-border transfers
-      description: Sets the list of cross-border transfers for a business entity. Requires data owner or admin.
-      operationId: updateBusinessEntityCrossBorderTransfers
+      summary: Update storage locations
+      description: Sets the list of storage locations (ISO country codes) for a business entity. Requires data owner or admin.
+      operationId: updateBusinessEntityStorageLocations
       security:
       - bearerAuth: []
       parameters:
@@ -2721,7 +2721,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateCrossBorderTransfersRequest'
+              $ref: '#/components/schemas/UpdateStorageLocationsRequest'
       responses:
         '200':
           description: Updated business entity
@@ -4782,37 +4782,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /business-entities/{key}/data-processors:
-    put:
-      tags:
-      - BusinessEntity
-      summary: Update linked data processors
-      description: Replaces the set of data processors linked to a business entity. Admin only.
-      operationId: updateBusinessEntityDataProcessors
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: key
-        in: path
-        required: true
-        description: Business Entity key
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
-      responses:
-        '204':
-          description: Updated
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '401':
-          description: Not authenticated
   /processes/{key}/dpia:
     get:
       tags:
@@ -5062,37 +5031,6 @@ paths:
       responses:
         '204':
           description: Data processor deleted
-        '404':
-          description: Data processor not found
-        '401':
-          description: Not authenticated
-        '403':
-          description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}/linked-entities:
-    put:
-      tags:
-      - DataProcessor
-      summary: Update linked business entities
-      description: Replaces the list of linked business entities for a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessorLinkedEntities
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: key
-        in: path
-        required: true
-        description: Data processor key
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateDataProcessorEntityLinksRequest'
-      responses:
-        '204':
-          description: Linked entities updated
         '404':
           description: Data processor not found
         '401':
@@ -6252,18 +6190,12 @@ components:
           nullable: true
           description: Retention period description for the entity
           example: 7 years
-        crossBorderTransfers:
+        storageLocations:
           type: array
           nullable: true
           items:
-            $ref: '#/components/schemas/CrossBorderTransferEntry'
-          description: List of cross-border data transfers for this entity
-        dataProcessors:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/DataProcessorSummaryResponse'
-          description: Data processors linked to this entity
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where this entity's data is stored
         missingMandatoryFields:
           type: array
           nullable: true
@@ -7863,6 +7795,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CrossBorderTransferEntry'
+    UpdateStorageLocationsRequest:
+      type: object
+      required:
+      - locations
+      properties:
+        locations:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where data is stored
     DataProcessorSummaryResponse:
       type: object
       required:
@@ -7914,12 +7856,6 @@ components:
         subProcessorsApproved:
           type: boolean
           description: Whether sub-processors have been approved
-        linkedBusinessEntities:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
-          description: Business entities linked to this processor
         linkedProcesses:
           type: array
           nullable: true

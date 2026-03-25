@@ -188,6 +188,7 @@ export * from './updateProcessStewardRequest';
 export * from './updateProcessTechnicalCustodianRequest';
 export * from './updateProcessTypeRequest';
 export * from './updateRetentionPeriodRequest';
+export * from './updateStorageLocationsRequest';
 export * from './updateSupportedLocaleRequest';
 export * from './updateTranslationLinkRequest';
 export * from './updateUserRequest';

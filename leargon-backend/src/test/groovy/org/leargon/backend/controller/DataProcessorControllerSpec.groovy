@@ -296,47 +296,6 @@ class DataProcessorControllerSpec extends Specification {
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    // ─── LINK ENTITIES ────────────────────────────────────────────────────────
-
-    def "PUT /data-processors/{key}/linked-entities should link business entities"() {
-        given:
-        def adminToken = createAdminToken()
-        def processor = createProcessor(adminToken, "Entity Processor")
-        def entity = createEntity(adminToken, "Customer Data")
-
-        when:
-        def linkResp = client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${processor.key}/linked-entities",
-                [businessEntityKeys: [entity.key]]).bearerAuth(adminToken))
-
-        then:
-        linkResp.status == HttpStatus.NO_CONTENT
-
-        when: "fetching the processor"
-        def getResp = client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors/${processor.key}").bearerAuth(adminToken),
-            DataProcessorResponse)
-
-        then: "linked entity is present"
-        getResp.body().linkedBusinessEntities?.any { it.key == entity.key }
-    }
-
-    def "PUT /data-processors/{key}/linked-entities should return 403 for non-admin"() {
-        given:
-        def adminToken = createAdminToken()
-        def processor = createProcessor(adminToken, "Restricted Processor")
-        def userData = createUserWithToken("user3@dp.com", "dpUser3")
-
-        when:
-        client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${processor.key}/linked-entities",
-                [businessEntityKeys: []]).bearerAuth(userData.token))
-
-        then:
-        def ex = thrown(HttpClientResponseException)
-        ex.status == HttpStatus.FORBIDDEN
-    }
-
     // ─── LINK PROCESSES ───────────────────────────────────────────────────────
 
     def "PUT /data-processors/{key}/linked-processes should link processes"() {
@@ -362,52 +321,25 @@ class DataProcessorControllerSpec extends Specification {
         getResp.body().linkedProcesses?.any { it.key == process.key }
     }
 
-    // ─── LINKED PROCESSOR ON ENTITY RESPONSE ─────────────────────────────────
+    // ─── STORAGE LOCATIONS ON ENTITY ─────────────────────────────────────────
 
-    def "linked data processor should appear on business entity response"() {
-        given:
-        def adminToken = createAdminToken()
-        def processor = createProcessor(adminToken, "AWS")
-        def entity = createEntity(adminToken, "Storage Data")
-
-        when:
-        client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${processor.key}/linked-entities",
-                [businessEntityKeys: [entity.key]]).bearerAuth(adminToken))
-
-        then:
-        def entityResp = client.toBlocking().exchange(
-            HttpRequest.GET("/business-entities/${entity.key}").bearerAuth(adminToken),
-            BusinessEntityResponse)
-        entityResp.body().dataProcessors?.any { it.key == processor.key }
-    }
-
-    // ─── CROSS-BORDER TRANSFERS ON ENTITY ────────────────────────────────────
-
-    def "PUT /business-entities/{key}/cross-border-transfers should update transfers as owner"() {
+    def "PUT /business-entities/{key}/storage-locations should update storage locations as owner"() {
         given:
         def ownerData = createUserWithToken("owner@dp.com", "dpOwner")
-        def entity = createEntity(ownerData.token, "Transfer Entity")
-        def transfers = [
-            [destinationCountry: "DE", safeguard: "ADEQUACY_DECISION"],
-            [destinationCountry: "US", safeguard: "STANDARD_CONTRACTUAL_CLAUSES", notes: "Signed SCCs 2024"]
-        ]
+        def entity = createEntity(ownerData.token, "Storage Entity")
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.PUT("/business-entities/${entity.key}/cross-border-transfers",
-                [transfers: transfers]).bearerAuth(ownerData.token),
+            HttpRequest.PUT("/business-entities/${entity.key}/storage-locations",
+                [locations: ["DE", "CH"]]).bearerAuth(ownerData.token),
             BusinessEntityResponse)
 
         then:
         resp.status == HttpStatus.OK
-        def body = resp.body()
-        body.crossBorderTransfers?.size() == 2
-        body.crossBorderTransfers?.any { it.destinationCountry == "DE" && it.safeguard.toString() == "ADEQUACY_DECISION" }
-        body.crossBorderTransfers?.any { it.destinationCountry == "US" && it.notes == "Signed SCCs 2024" }
+        resp.body().storageLocations?.containsAll(["DE", "CH"])
     }
 
-    def "PUT /business-entities/{key}/cross-border-transfers should return 403 for non-owner non-admin"() {
+    def "PUT /business-entities/{key}/storage-locations should return 403 for non-owner non-admin"() {
         given:
         def ownerData = createUserWithToken("owner2@dp.com", "dpOwner2")
         def entity = createEntity(ownerData.token, "Protected Entity")
@@ -415,8 +347,8 @@ class DataProcessorControllerSpec extends Specification {
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.PUT("/business-entities/${entity.key}/cross-border-transfers",
-                [transfers: []]).bearerAuth(otherData.token),
+            HttpRequest.PUT("/business-entities/${entity.key}/storage-locations",
+                [locations: []]).bearerAuth(otherData.token),
             BusinessEntityResponse)
 
         then:
@@ -424,21 +356,21 @@ class DataProcessorControllerSpec extends Specification {
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    def "PUT /business-entities/{key}/cross-border-transfers should succeed as admin even if not owner"() {
+    def "PUT /business-entities/{key}/storage-locations should succeed as admin even if not owner"() {
         given:
         def ownerData = createUserWithToken("owner3@dp.com", "dpOwner3")
-        def entity = createEntity(ownerData.token, "Admin Transfer Entity")
+        def entity = createEntity(ownerData.token, "Admin Storage Entity")
         def adminToken = createAdminToken()
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.PUT("/business-entities/${entity.key}/cross-border-transfers",
-                [transfers: [[destinationCountry: "CH", safeguard: "ADEQUACY_DECISION"]]]).bearerAuth(adminToken),
+            HttpRequest.PUT("/business-entities/${entity.key}/storage-locations",
+                [locations: ["US"]]).bearerAuth(adminToken),
             BusinessEntityResponse)
 
         then:
         resp.status == HttpStatus.OK
-        resp.body().crossBorderTransfers?.any { it.destinationCountry == "CH" }
+        resp.body().storageLocations?.contains("US")
     }
 
     // ─── CROSS-BORDER TRANSFERS ON PROCESS ───────────────────────────────────

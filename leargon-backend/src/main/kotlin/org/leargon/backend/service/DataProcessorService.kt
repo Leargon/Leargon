@@ -10,7 +10,6 @@ import org.leargon.backend.mapper.DataProcessorMapper
 import org.leargon.backend.model.CreateDataProcessorRequest
 import org.leargon.backend.model.DataProcessorResponse
 import org.leargon.backend.model.UpdateDataProcessorRequest
-import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.util.SlugUtil
@@ -19,7 +18,6 @@ import java.time.Instant
 @Singleton
 open class DataProcessorService(
     private val dataProcessorRepository: DataProcessorRepository,
-    private val businessEntityRepository: BusinessEntityRepository,
     private val processRepository: ProcessRepository,
     private val dataProcessorMapper: DataProcessorMapper,
     private val localeService: LocaleService
@@ -96,28 +94,6 @@ open class DataProcessorService(
     }
 
     @Transactional
-    open fun updateLinkedEntities(
-        key: String,
-        entityKeys: List<String>
-    ) {
-        val dp =
-            dataProcessorRepository
-                .findByKey(key)
-                .orElseThrow { ResourceNotFoundException("DataProcessor not found: $key") }
-
-        val newEntities =
-            entityKeys.map { entityKey ->
-                businessEntityRepository
-                    .findByKey(entityKey)
-                    .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
-            }
-
-        dp.linkedBusinessEntities.clear()
-        dp.linkedBusinessEntities.addAll(newEntities)
-        dataProcessorRepository.update(dp)
-    }
-
-    @Transactional
     open fun updateLinkedProcesses(
         key: String,
         processKeys: List<String>
@@ -137,35 +113,6 @@ open class DataProcessorService(
         dp.linkedProcesses.clear()
         dp.linkedProcesses.addAll(newProcesses)
         dataProcessorRepository.update(dp)
-    }
-
-    @Transactional
-    open fun updateEntityDataProcessors(
-        entityKey: String,
-        dpKeys: List<String>
-    ) {
-        val entity =
-            businessEntityRepository
-                .findByKey(entityKey)
-                .orElseThrow { ResourceNotFoundException("BusinessEntity not found: $entityKey") }
-
-        val desired =
-            dpKeys
-                .map { dpKey ->
-                    dataProcessorRepository
-                        .findByKey(dpKey)
-                        .orElseThrow { ResourceNotFoundException("DataProcessor not found: $dpKey") }
-                }.toSet()
-
-        val current = dataProcessorRepository.findByLinkedBusinessEntitiesKey(entityKey)
-        current.forEach { dp ->
-            dp.linkedBusinessEntities.remove(entity)
-            dataProcessorRepository.update(dp)
-        }
-        desired.forEach { dp ->
-            dp.linkedBusinessEntities.add(entity)
-            dataProcessorRepository.update(dp)
-        }
     }
 
     @Transactional

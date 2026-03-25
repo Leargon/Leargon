@@ -38,7 +38,6 @@ import type {
 import type {
   CreateDataProcessorRequest,
   DataProcessorResponse,
-  UpdateDataProcessorEntityLinksRequest,
   UpdateDataProcessorProcessLinksRequest,
   UpdateDataProcessorRequest
 } from '../model';
@@ -585,107 +584,6 @@ export const useDeleteDataProcessor = <TError = void,
         TContext
       > => {
       return useMutation(getDeleteDataProcessorMutationOptions(options), queryClient);
-    }
-    /**
- * Replaces the list of linked business entities for a data processor. Requires ROLE_ADMIN.
- * @summary Update linked business entities
- */
-export type updateDataProcessorLinkedEntitiesResponse204 = {
-  data: void
-  status: 204
-}
-
-export type updateDataProcessorLinkedEntitiesResponse401 = {
-  data: void
-  status: 401
-}
-
-export type updateDataProcessorLinkedEntitiesResponse403 = {
-  data: void
-  status: 403
-}
-
-export type updateDataProcessorLinkedEntitiesResponse404 = {
-  data: void
-  status: 404
-}
-
-export type updateDataProcessorLinkedEntitiesResponseSuccess = (updateDataProcessorLinkedEntitiesResponse204) & {
-  headers: Headers;
-};
-export type updateDataProcessorLinkedEntitiesResponseError = (updateDataProcessorLinkedEntitiesResponse401 | updateDataProcessorLinkedEntitiesResponse403 | updateDataProcessorLinkedEntitiesResponse404) & {
-  headers: Headers;
-};
-
-export type updateDataProcessorLinkedEntitiesResponse = (updateDataProcessorLinkedEntitiesResponseSuccess | updateDataProcessorLinkedEntitiesResponseError)
-
-export const getUpdateDataProcessorLinkedEntitiesUrl = (key: string,) => {
-
-
-  
-
-  return `/data-processors/${key}/linked-entities`
-}
-
-export const updateDataProcessorLinkedEntities = async (key: string,
-    updateDataProcessorEntityLinksRequest: UpdateDataProcessorEntityLinksRequest, options?: RequestInit): Promise<updateDataProcessorLinkedEntitiesResponse> => {
-  
-  return customAxios<updateDataProcessorLinkedEntitiesResponse>(getUpdateDataProcessorLinkedEntitiesUrl(key),
-  {      
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      updateDataProcessorEntityLinksRequest,)
-  }
-);}
-  
-
-
-
-export const getUpdateDataProcessorLinkedEntitiesMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>, TError,{key: string;data: UpdateDataProcessorEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>, TError,{key: string;data: UpdateDataProcessorEntityLinksRequest}, TContext> => {
-
-const mutationKey = ['updateDataProcessorLinkedEntities'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>, {key: string;data: UpdateDataProcessorEntityLinksRequest}> = (props) => {
-          const {key,data} = props ?? {};
-
-          return  updateDataProcessorLinkedEntities(key,data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateDataProcessorLinkedEntitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>>
-    export type UpdateDataProcessorLinkedEntitiesMutationBody = UpdateDataProcessorEntityLinksRequest
-    export type UpdateDataProcessorLinkedEntitiesMutationError = void
-
-    /**
- * @summary Update linked business entities
- */
-export const useUpdateDataProcessorLinkedEntities = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>, TError,{key: string;data: UpdateDataProcessorEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateDataProcessorLinkedEntities>>,
-        TError,
-        {key: string;data: UpdateDataProcessorEntityLinksRequest},
-        TContext
-      > => {
-      return useMutation(getUpdateDataProcessorLinkedEntitiesMutationOptions(options), queryClient);
     }
     /**
  * Replaces the list of linked processes for a data processor. Requires ROLE_ADMIN.

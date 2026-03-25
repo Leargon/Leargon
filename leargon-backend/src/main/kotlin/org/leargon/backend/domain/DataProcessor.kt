@@ -40,14 +40,6 @@ class DataProcessor {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "data_processor_business_entities",
-        joinColumns = [JoinColumn(name = "data_processor_id")],
-        inverseJoinColumns = [JoinColumn(name = "business_entity_id")]
-    )
-    var linkedBusinessEntities: MutableSet<BusinessEntity> = mutableSetOf()
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
         name = "data_processor_processes",
         joinColumns = [JoinColumn(name = "data_processor_id")],
         inverseJoinColumns = [JoinColumn(name = "process_id")]

@@ -3,7 +3,6 @@ package org.leargon.backend.mapper
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.CrossBorderTransfer
 import org.leargon.backend.domain.DataProcessor
-import org.leargon.backend.model.BusinessEntitySummaryResponse
 import org.leargon.backend.model.CrossBorderTransferEntry
 import org.leargon.backend.model.CrossBorderTransferSafeguard
 import org.leargon.backend.model.DataProcessorResponse
@@ -22,11 +21,7 @@ class DataProcessorMapper {
             dp.subProcessorsApproved,
             dp.createdAt.atZone(ZoneOffset.UTC)
         ).updatedAt(dp.updatedAt?.atZone(ZoneOffset.UTC))
-            .linkedBusinessEntities(
-                dp.linkedBusinessEntities.map {
-                    BusinessEntitySummaryResponse(it.key, it.getName("en"))
-                }
-            ).linkedProcesses(
+            .linkedProcesses(
                 dp.linkedProcesses.map {
                     ProcessSummaryResponse(it.key, it.getName("en"))
                 }

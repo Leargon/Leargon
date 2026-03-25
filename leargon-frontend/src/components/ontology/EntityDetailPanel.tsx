@@ -34,7 +34,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, CheckCircle as CheckCircleIcon, Warning as WarningIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetBusinessEntityByKey,
@@ -56,14 +56,11 @@ import {
   useUpdateBusinessEntityRelationship,
   useGetAllBusinessEntities,
   useUpdateBusinessEntityRetentionPeriod,
-  useUpdateBusinessEntityCrossBorderTransfers,
-  useUpdateBusinessEntityDataProcessors,
+  useUpdateBusinessEntityStorageLocations,
   useGetEntityDpia,
   useTriggerEntityDpia,
   getGetEntityDpiaQueryKey,
 } from '../../api/generated/business-entity/business-entity';
-import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
-import type { DataProcessorResponse } from '../../api/generated/model';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
@@ -95,10 +92,8 @@ import type {
   BusinessDomainResponse,
   ProcessResponse,
   UserResponse,
-  CrossBorderTransferEntry,
   TranslationLinkResponse,
 } from '../../api/generated/model';
-import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
 const COUNTRY_NAMES: Record<string, string> = {
   AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
@@ -111,12 +106,6 @@ const COUNTRY_NAMES: Record<string, string> = {
 
 const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
 
-const SAFEGUARD_LABELS: Record<string, string> = {
-  ADEQUACY_DECISION: 'Adequacy Decision',
-  STANDARD_CONTRACTUAL_CLAUSES: 'Standard Contractual Clauses',
-  BINDING_CORPORATE_RULES: 'Binding Corporate Rules',
-  EXCEPTION: 'Exception',
-};
 
 interface EntityDetailPanelProps {
   entityKey: string;
@@ -222,24 +211,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const createRelationship = useCreateBusinessEntityRelationship();
   const updateRelationship = useUpdateBusinessEntityRelationship();
   const updateRetentionPeriod = useUpdateBusinessEntityRetentionPeriod();
-  const updateCrossBorderTransfers = useUpdateBusinessEntityCrossBorderTransfers();
-  const updateDataProcessors = useUpdateBusinessEntityDataProcessors();
+  const updateStorageLocations = useUpdateBusinessEntityStorageLocations();
 
-  const { data: allProcessorsResponse } = useGetAllDataProcessors();
-  const allProcessors = (allProcessorsResponse?.data as DataProcessorResponse[] | undefined) ?? [];
-
-  // Data processors dialog state
-  const [dpDialogOpen, setDpDialogOpen] = useState(false);
-  const [editDpKeys, setEditDpKeys] = useState<string[]>([]);
-  const [dpError, setDpError] = useState('');
-
-  // Cross-border transfers dialog state
-  const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
-  const [editTransfers, setEditTransfers] = useState<CrossBorderTransferEntry[]>([]);
-  const [transfersError, setTransfersError] = useState('');
-  const [newTransferCountry, setNewTransferCountry] = useState<{ code: string; name: string } | null>(null);
-  const [newTransferSafeguard, setNewTransferSafeguard] = useState('');
-  const [newTransferNotes, setNewTransferNotes] = useState('');
+  // Storage locations dialog state
+  const [locationsDialogOpen, setLocationsDialogOpen] = useState(false);
+  const [editLocations, setEditLocations] = useState<string[]>([]);
+  const [locationsError, setLocationsError] = useState('');
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
@@ -696,57 +673,17 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {activeTab === 0 && <>
 
-      {/* Data Processors */}
+      {/* Storage Locations */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Data Processors</Typography>
-        {isAdmin && (
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => {
-              setEditDpKeys((entity.dataProcessors ?? []).map((dp) => dp.key));
-              setDpError('');
-              setDpDialogOpen(true);
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
-        {entity.dataProcessors && entity.dataProcessors.length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {entity.dataProcessors.map((dp) => (
-              <Chip
-                key={dp.key}
-                label={getLocalizedText(dp.names, dp.key)}
-                icon={dp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
-                size="small"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" color="text.secondary">No data processors linked</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Cross-border Transfers */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Cross-border Transfers</Typography>
+        <Typography variant="subtitle2">Storage Locations</Typography>
         {isOwnerOrAdmin && (
           <IconButton
             size="small"
             color="primary"
             onClick={() => {
-              setEditTransfers(entity.crossBorderTransfers || []);
-              setTransfersError('');
-              setNewTransferCountry(null);
-              setNewTransferSafeguard('');
-              setNewTransferNotes('');
-              setTransfersDialogOpen(true);
+              setEditLocations(entity.storageLocations || []);
+              setLocationsError('');
+              setLocationsDialogOpen(true);
             }}
           >
             <EditIcon fontSize="small" />
@@ -754,18 +691,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         )}
       </Box>
       <Box sx={{ mb: 2 }}>
-        {entity.crossBorderTransfers && entity.crossBorderTransfers.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {entity.crossBorderTransfers.map((t, i) => (
-              <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Chip label={COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} size="small" />
-                <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                {t.notes && <Typography variant="caption" color="text.secondary">{t.notes}</Typography>}
-              </Box>
+        {entity.storageLocations && entity.storageLocations.length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {entity.storageLocations.map((code) => (
+              <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" />
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No cross-border transfers recorded</Typography>
+          <Typography variant="body2" color="text.secondary">No storage locations recorded</Typography>
         )}
       </Box>
 
@@ -1336,135 +1269,44 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       </Dialog>
 
       {/* Data Processors Dialog */}
-      <Dialog open={dpDialogOpen} onClose={() => setDpDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Data Processors</DialogTitle>
+      {/* Storage Locations Dialog */}
+      <Dialog open={locationsDialogOpen} onClose={() => setLocationsDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Storage Locations</DialogTitle>
         <DialogContent>
-          {dpError && <Alert severity="error" sx={{ mb: 1 }}>{dpError}</Alert>}
+          {locationsError && <Alert severity="error" sx={{ mb: 1 }}>{locationsError}</Alert>}
           <Autocomplete
             multiple
             sx={{ mt: 1 }}
-            options={allProcessors}
-            getOptionLabel={(o) => getLocalizedText(o.names, o.key)}
-            value={allProcessors.filter((p) => editDpKeys.includes(p.key))}
-            onChange={(_, val) => setEditDpKeys(val.map((v) => v.key))}
-            renderInput={(params) => <TextField {...params} label="Data Processors" size="small" />}
+            options={COUNTRY_OPTIONS}
+            getOptionLabel={(o) => `${o.name} (${o.code})`}
+            value={COUNTRY_OPTIONS.filter((o) => editLocations.includes(o.code))}
+            onChange={(_, val) => setEditLocations(val.map((v) => v.code))}
+            isOptionEqualToValue={(o, v) => o.code === v.code}
+            renderInput={(params) => <TextField {...params} label="Countries where data is stored" size="small" />}
             renderTags={(val, getTagProps) =>
               val.map((option, index) => (
-                <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                <Chip {...getTagProps({ index })} key={option.code} label={`${option.name} (${option.code})`} size="small" />
               ))
             }
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDpDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setLocationsDialogOpen(false)}>Cancel</Button>
           <Button
             variant="contained"
-            disabled={updateDataProcessors.isPending}
+            disabled={updateStorageLocations.isPending}
             onClick={async () => {
+              setLocationsError('');
               try {
-                await updateDataProcessors.mutateAsync({ key: entityKey, data: { dataProcessorKeys: editDpKeys } });
-                setDpDialogOpen(false);
-                queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
-              } catch {
-                setDpError('Failed to update data processors');
-              }
-            }}
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Cross-border Transfers Dialog */}
-      <Dialog open={transfersDialogOpen} onClose={() => setTransfersDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Cross-border Transfers</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            {editTransfers.length > 0 && (
-              <Box>
-                {editTransfers.map((t, i) => (
-                  <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <Typography variant="body2" sx={{ flex: 1 }}>
-                      {COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
-                      {t.notes && ` (${t.notes})`}
-                    </Typography>
-                    <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'flex-start', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>Add transfer</Typography>
-              <Autocomplete
-                options={COUNTRY_OPTIONS}
-                getOptionLabel={(o) => `${o.name} (${o.code})`}
-                value={newTransferCountry}
-                onChange={(_, v) => setNewTransferCountry(v)}
-                renderInput={(params) => <TextField {...params} size="small" label="Country" sx={{ width: 250 }} />}
-                size="small"
-                isOptionEqualToValue={(o, v) => o.code === v.code}
-              />
-              <Select
-                value={newTransferSafeguard}
-                onChange={(e: SelectChangeEvent) => setNewTransferSafeguard(e.target.value)}
-                size="small"
-                displayEmpty
-                sx={{ minWidth: 240 }}
-              >
-                <MenuItem value=""><em>Select safeguard</em></MenuItem>
-                {Object.entries(SAFEGUARD_LABELS).map(([value, label]) => (
-                  <MenuItem key={value} value={value}>{label}</MenuItem>
-                ))}
-              </Select>
-              <TextField
-                value={newTransferNotes}
-                onChange={(e) => setNewTransferNotes(e.target.value)}
-                size="small"
-                placeholder="Notes (optional)"
-                sx={{ flex: 1, minWidth: 150 }}
-              />
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  if (newTransferCountry && newTransferSafeguard) {
-                    setEditTransfers((prev) => [...prev, {
-                      destinationCountry: newTransferCountry.code,
-                      safeguard: newTransferSafeguard as CrossBorderTransferSafeguard,
-                      notes: newTransferNotes || undefined,
-                    }]);
-                    setNewTransferCountry(null);
-                    setNewTransferSafeguard('');
-                    setNewTransferNotes('');
-                  }
-                }}
-                disabled={!newTransferCountry || !newTransferSafeguard}
-              >
-                Add
-              </Button>
-            </Box>
-            {transfersError && <Alert severity="error">{transfersError}</Alert>}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setTransfersDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            disabled={updateCrossBorderTransfers.isPending}
-            onClick={async () => {
-              setTransfersError('');
-              try {
-                await updateCrossBorderTransfers.mutateAsync({ key: entityKey, data: { transfers: editTransfers } });
+                await updateStorageLocations.mutateAsync({ key: entityKey, data: { locations: editLocations } });
                 invalidate();
-                setTransfersDialogOpen(false);
+                setLocationsDialogOpen(false);
               } catch {
-                setTransfersError('Failed to save cross-border transfers');
+                setLocationsError('Failed to save storage locations');
               }
             }}
           >
-            {updateCrossBorderTransfers.isPending ? 'Saving...' : 'Save'}
+            {updateStorageLocations.isPending ? 'Saving...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -21,8 +21,6 @@ import type { BusinessDataQualityRuleResponse } from './businessDataQualityRuleR
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
-import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
-import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
@@ -50,15 +48,10 @@ export interface BusinessEntityResponse {
    */
   retentionPeriod?: string | null;
   /**
-   * List of cross-border data transfers for this entity
+   * ISO 3166-1 alpha-2 country codes where this entity's data is stored
    * @nullable
    */
-  crossBorderTransfers?: CrossBorderTransferEntry[] | null;
-  /**
-   * Data processors linked to this entity
-   * @nullable
-   */
-  dataProcessors?: DataProcessorSummaryResponse[] | null;
+  storageLocations?: string[] | null;
   /**
    * List of mandatory fields that are currently missing values
    * @nullable
