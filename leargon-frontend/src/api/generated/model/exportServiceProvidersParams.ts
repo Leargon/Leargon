@@ -17,14 +17,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export interface UpdateOrgUnitExternalFieldsRequest {
-  /** @nullable */
-  isExternal?: boolean | null;
-  /** @nullable */
-  externalCompanyName?: string | null;
-  /**
-   * ISO 3166-1 alpha-2 country code
-   * @nullable
-   */
-  countryOfExecution?: string | null;
-}
+export type ExportServiceProvidersParams = {
+/**
+ * Locale code for localised names
+ */
+locale?: string;
+};

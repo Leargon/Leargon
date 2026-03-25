@@ -75,3 +75,5 @@ databaseChangeLog:
       file: db/changelog/changes/038-add-system-classifications.yaml
   - include:
       file: db/changelog/changes/039-phase1-model-corrections.yaml
+  - include:
+      file: db/changelog/changes/040-rename-data-processor-to-service-provider.yaml

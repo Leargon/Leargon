@@ -402,7 +402,7 @@ open class ProcessService(
         process.crossBorderTransfers =
             transfers
                 .map {
-                    org.leargon.backend.mapper.DataProcessorMapper
+                    org.leargon.backend.mapper.CrossBorderTransferMapper
                         .fromCrossBorderTransferEntry(it)
                 }.toMutableList()
         process = processRepository.update(process)

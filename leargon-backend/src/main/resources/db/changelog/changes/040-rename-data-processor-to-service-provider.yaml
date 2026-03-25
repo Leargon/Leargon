@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 040-rename-data-processors-table
+      author: leargon
+      changes:
+        - renameTable:
+            oldTableName: data_processors
+            newTableName: service_providers
+
+  - changeSet:
+      id: 040-add-service-provider-type-column
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: service_providers
+            columns:
+              - column:
+                  name: service_provider_type
+                  type: VARCHAR(30)
+                  defaultValue: DATA_PROCESSOR
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 040-rename-data-processor-processes-table
+      author: leargon
+      changes:
+        - renameTable:
+            oldTableName: data_processor_processes
+            newTableName: service_provider_processes
+
+  - changeSet:
+      id: 040-rename-fk-column-in-service-provider-processes
+      author: leargon
+      changes:
+        - renameColumn:
+            tableName: service_provider_processes
+            oldColumnName: data_processor_id
+            newColumnName: service_provider_id
+            columnDataType: BIGINT
+
+  - changeSet:
+      id: 040-drop-linked-data-processor-from-org-units
+      author: leargon
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: organisational_units
+            constraintName: FK_org_unit_linked_data_processor
+        - dropColumn:
+            tableName: organisational_units
+            columnName: linked_data_processor_id
+
+  - changeSet:
+      id: 040-create-org-unit-service-providers-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: org_unit_service_providers
+            columns:
+              - column:
+                  name: org_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_provider_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: org_unit_service_providers
+            columnNames: org_unit_id, service_provider_id
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_service_providers
+            baseColumnNames: org_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            constraintName: FK_org_unit_service_providers_unit
+        - addForeignKeyConstraint:
+            baseTableName: org_unit_service_providers
+            baseColumnNames: service_provider_id
+            referencedTableName: service_providers
+            referencedColumnNames: id
+            constraintName: FK_org_unit_service_providers_provider

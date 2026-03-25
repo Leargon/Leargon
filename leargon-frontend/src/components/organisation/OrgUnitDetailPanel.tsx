@@ -55,10 +55,11 @@ import {
   useUpdateOrgUnitDataManipulationEntities,
   useGetOwnedBoundedContextsByOrgUnit,
   getGetOwnedBoundedContextsByOrgUnitQueryKey,
+  useUpdateOrgUnitServiceProviders,
 } from '../../api/generated/organisational-unit/organisational-unit';
 import { useUpdateBoundedContextOwningTeam } from '../../api/generated/bounded-context/bounded-context';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
-import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -75,7 +76,7 @@ import type {
   UserResponse,
   ClassificationAssignmentRequest,
   ClassificationResponse,
-  DataProcessorResponse,
+  ServiceProviderResponse,
   BusinessEntityResponse,
   BoundedContextSummaryResponse,
   BusinessDomainResponse,
@@ -113,8 +114,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const users = (usersResponse?.data as UserResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'ORGANISATIONAL_UNIT' });
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
-  const { data: dataProcessorsResponse } = useGetAllDataProcessors();
-  const allDataProcessors = (dataProcessorsResponse?.data as DataProcessorResponse[] | undefined) || [];
+  const { data: serviceProvidersResponse } = useGetAllServiceProviders();
+  const allServiceProviders = (serviceProvidersResponse?.data as ServiceProviderResponse[] | undefined) || [];
+  const updateOrgUnitServiceProviders = useUpdateOrgUnitServiceProviders();
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: ownedBcsResponse } = useGetOwnedBoundedContextsByOrgUnit(unitKey);
@@ -257,7 +259,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     isExternal: boolean;
     externalCompanyName: string;
     countryOfExecution: string;
-    linkedDataProcessorKey: string;
   }>({
     onSave: async (val) => {
       await updateExternalFields.mutateAsync({
@@ -266,9 +267,16 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           isExternal: val.isExternal,
           externalCompanyName: val.externalCompanyName || null,
           countryOfExecution: val.countryOfExecution || null,
-          linkedDataProcessorKey: val.linkedDataProcessorKey || null,
         },
       });
+      invalidate();
+    },
+  });
+
+  // Inline edit for service providers
+  const serviceProvidersEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateOrgUnitServiceProviders.mutateAsync({ key: unitKey, data: { serviceProviderKeys: keys } });
       invalidate();
     },
   });
@@ -752,7 +760,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               isExternal: unit.isExternal ?? false,
               externalCompanyName: unit.externalCompanyName ?? '',
               countryOfExecution: unit.countryOfExecution ?? '',
-              linkedDataProcessorKey: unit.linkedDataProcessor?.key ?? '',
             })}
             onSave={externalFieldsEdit.save}
             onCancel={externalFieldsEdit.cancel}
@@ -785,14 +792,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, countryOfExecution: val?.code ?? '' })}
                       renderInput={(params) => <TextField {...params} size="small" label="Country of Execution" sx={{ width: 300 }} />}
                     />
-                    <Autocomplete
-                      options={allDataProcessors}
-                      getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-                      value={allDataProcessors.find((dp) => dp.key === externalFieldsEdit.editValue!.linkedDataProcessorKey) || null}
-                      onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, linkedDataProcessorKey: val?.key ?? '' })}
-                      renderInput={(params) => <TextField {...params} size="small" label="Linked Data Processor (DPA)" sx={{ width: 300 }} />}
-                      isOptionEqualToValue={(o, v) => o.key === v.key}
-                    />
                   </>
                 )}
                 {externalFieldsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{externalFieldsEdit.error}</Alert>}
@@ -816,14 +815,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                           ? `${COUNTRY_NAMES[unit.countryOfExecution] ?? unit.countryOfExecution} (${unit.countryOfExecution})`
                           : '—'}
                       </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>Linked Data Processor:</Typography>
-                      {unit.linkedDataProcessor ? (
-                        <Chip label={getLocalizedText(unit.linkedDataProcessor.names ?? [], unit.linkedDataProcessor.key)} size="small" variant="outlined" />
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">Not linked</Typography>
-                      )}
                     </Box>
                   </>
                 )}
@@ -916,6 +907,47 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <Divider sx={{ my: 2 }} />
         </>
       )}
+
+      {/* Service Providers */}
+      <SectionHeader
+        title="Service Providers"
+        canEdit={isAdmin}
+        isEditing={serviceProvidersEdit.isEditing}
+        onEdit={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))}
+        onSave={serviceProvidersEdit.save}
+        onCancel={serviceProvidersEdit.cancel}
+        isSaving={serviceProvidersEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+          <Box>
+            <Autocomplete
+              multiple
+              options={allServiceProviders}
+              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+              value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+              onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+              renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+              renderTags={(val, getTagProps) =>
+                val.map((option, index) => (
+                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                ))
+              }
+            />
+            {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+          </Box>
+        ) : (unit.serviceProviders ?? []).length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {(unit.serviceProviders ?? []).map((sp) => (
+              <Chip key={sp.key} label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
 
       {/* Classifications */}
       <SectionHeader title="Classifications" canEdit={isLeadOrAdmin} isEditing={classEdit.isEditing}

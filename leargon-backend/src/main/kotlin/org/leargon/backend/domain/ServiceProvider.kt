@@ -15,8 +15,8 @@ import org.hibernate.type.SqlTypes
 import java.time.Instant
 
 @Entity
-@Table(name = "data_processors")
-class DataProcessor {
+@Table(name = "service_providers")
+class ServiceProvider {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -27,6 +27,9 @@ class DataProcessor {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSON", nullable = false)
     var names: MutableList<LocalizedText> = mutableListOf()
+
+    @Column(name = "service_provider_type", nullable = false, length = 30)
+    var serviceProviderType: String = "DATA_PROCESSOR"
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "processing_countries", columnDefinition = "JSON", nullable = false)
@@ -40,8 +43,8 @@ class DataProcessor {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "data_processor_processes",
-        joinColumns = [JoinColumn(name = "data_processor_id")],
+        name = "service_provider_processes",
+        joinColumns = [JoinColumn(name = "service_provider_id")],
         inverseJoinColumns = [JoinColumn(name = "process_id")]
     )
     var linkedProcesses: MutableSet<Process> = mutableSetOf()

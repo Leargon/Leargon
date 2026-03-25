@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -17,17 +17,21 @@ import {
   CircularProgress,
   Switch,
   FormControlLabel,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, CheckCircle, Warning } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useGetDataProcessor,
-  getGetDataProcessorQueryKey,
-  getGetAllDataProcessorsQueryKey,
-  useUpdateDataProcessor,
-  useDeleteDataProcessor,
-  useUpdateDataProcessorLinkedProcesses,
-} from '../../api/generated/data-processor/data-processor';
+  useGetServiceProvider,
+  getGetServiceProviderQueryKey,
+  getGetAllServiceProvidersQueryKey,
+  useUpdateServiceProvider,
+  useDeleteServiceProvider,
+  useUpdateServiceProviderLinkedProcesses,
+} from '../../api/generated/service-provider/service-provider';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
@@ -39,9 +43,8 @@ import type {
   ProcessResponse,
   SupportedLocaleResponse,
 } from '../../api/generated/model';
-import { useState } from 'react';
+import { ServiceProviderType } from '../../api/generated/model';
 
-// Country options
 const COUNTRY_NAMES: Record<string, string> = {
   AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
   CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
@@ -51,6 +54,14 @@ const COUNTRY_NAMES: Record<string, string> = {
   SG: 'Singapore', US: 'United States',
 };
 const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
+
+const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  DATA_PROCESSOR: 'Data Processor',
+  BODYLEASE: 'Body Lease',
+  MANAGED_SERVICE: 'Managed Service',
+  CONSULTANT: 'Consultant',
+  OTHER: 'Other',
+};
 
 interface SectionHeaderProps {
   title: string;
@@ -79,45 +90,62 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
   </Box>
 );
 
-interface DataProcessorDetailPanelProps {
-  processorKey: string;
+interface ServiceProviderDetailPanelProps {
+  providerKey: string;
 }
 
-const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ processorKey }) => {
+const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({ providerKey }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
-  const { data: response, isLoading, error } = useGetDataProcessor(processorKey);
-  const processor = response?.data;
+  const { data: response, isLoading, error } = useGetServiceProvider(providerKey);
+  const provider = response?.data;
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const { data: processesResponse } = useGetAllProcesses();
   const allProcesses = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
 
-  const updateProcessor = useUpdateDataProcessor();
-  const deleteProcessor = useDeleteDataProcessor();
-  const updateLinkedProcesses = useUpdateDataProcessorLinkedProcesses();
+  const updateProvider = useUpdateServiceProvider();
+  const deleteProvider = useDeleteServiceProvider();
+  const updateLinkedProcesses = useUpdateServiceProviderLinkedProcesses();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getGetDataProcessorQueryKey(processorKey) });
-    queryClient.invalidateQueries({ queryKey: getGetAllDataProcessorsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetServiceProviderQueryKey(providerKey) });
+    queryClient.invalidateQueries({ queryKey: getGetAllServiceProvidersQueryKey() });
   };
 
   const namesEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (names) => {
-      await updateProcessor.mutateAsync({
-        key: processorKey,
+      await updateProvider.mutateAsync({
+        key: providerKey,
         data: {
           names,
-          processingCountries: processor!.processingCountries,
-          processorAgreementInPlace: processor!.processorAgreementInPlace,
-          subProcessorsApproved: processor!.subProcessorsApproved,
+          serviceProviderType: provider!.serviceProviderType,
+          processingCountries: provider!.processingCountries,
+          processorAgreementInPlace: provider!.processorAgreementInPlace,
+          subProcessorsApproved: provider!.subProcessorsApproved,
+        },
+      });
+      invalidate();
+    },
+  });
+
+  const typeEdit = useInlineEdit<string>({
+    onSave: async (val) => {
+      await updateProvider.mutateAsync({
+        key: providerKey,
+        data: {
+          names: provider!.names,
+          serviceProviderType: val as ServiceProviderType,
+          processingCountries: provider!.processingCountries,
+          processorAgreementInPlace: provider!.processorAgreementInPlace,
+          subProcessorsApproved: provider!.subProcessorsApproved,
         },
       });
       invalidate();
@@ -126,13 +154,14 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
 
   const countriesEdit = useInlineEdit<string[]>({
     onSave: async (countries) => {
-      await updateProcessor.mutateAsync({
-        key: processorKey,
+      await updateProvider.mutateAsync({
+        key: providerKey,
         data: {
-          names: processor!.names,
+          names: provider!.names,
+          serviceProviderType: provider!.serviceProviderType,
           processingCountries: countries,
-          processorAgreementInPlace: processor!.processorAgreementInPlace,
-          subProcessorsApproved: processor!.subProcessorsApproved,
+          processorAgreementInPlace: provider!.processorAgreementInPlace,
+          subProcessorsApproved: provider!.subProcessorsApproved,
         },
       });
       invalidate();
@@ -141,11 +170,12 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
 
   const agreementEdit = useInlineEdit<{ agreement: boolean; subProcessors: boolean }>({
     onSave: async (val) => {
-      await updateProcessor.mutateAsync({
-        key: processorKey,
+      await updateProvider.mutateAsync({
+        key: providerKey,
         data: {
-          names: processor!.names,
-          processingCountries: processor!.processingCountries,
+          names: provider!.names,
+          serviceProviderType: provider!.serviceProviderType,
+          processingCountries: provider!.processingCountries,
           processorAgreementInPlace: val.agreement,
           subProcessorsApproved: val.subProcessors,
         },
@@ -156,15 +186,15 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
 
   const processesEdit = useInlineEdit<string[]>({
     onSave: async (keys) => {
-      await updateLinkedProcesses.mutateAsync({ key: processorKey, data: { processKeys: keys } });
+      await updateLinkedProcesses.mutateAsync({ key: providerKey, data: { processKeys: keys } });
       invalidate();
     },
   });
 
   const handleDelete = async () => {
-    await deleteProcessor.mutateAsync({ key: processorKey });
-    queryClient.invalidateQueries({ queryKey: getGetAllDataProcessorsQueryKey() });
-    navigate('/data-processors');
+    await deleteProvider.mutateAsync({ key: providerKey });
+    queryClient.invalidateQueries({ queryKey: getGetAllServiceProvidersQueryKey() });
+    navigate('/service-providers');
   };
 
   if (isLoading) {
@@ -175,10 +205,10 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
     );
   }
 
-  if (error || !processor) {
+  if (error || !provider) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Data processor not found or failed to load.</Alert>
+        <Alert severity="error">Service provider not found or failed to load.</Alert>
       </Box>
     );
   }
@@ -188,8 +218,8 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
         <Box>
-          <Typography variant="h5">{getLocalizedText(processor.names, processor.key)}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {processor.key}</Typography>
+          <Typography variant="h5">{getLocalizedText(provider.names, provider.key)}</Typography>
+          <Typography variant="body2" color="text.secondary">Key: {provider.key}</Typography>
         </Box>
         {isAdmin && (
           <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
@@ -203,7 +233,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         title="Names"
         canEdit={isAdmin}
         isEditing={namesEdit.isEditing}
-        onEdit={() => namesEdit.startEdit([...processor.names])}
+        onEdit={() => namesEdit.startEdit([...provider.names])}
         onSave={namesEdit.save}
         onCancel={namesEdit.cancel}
         isSaving={namesEdit.isSaving}
@@ -223,10 +253,44 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {processor.names.map((n) => (
+            {provider.names.map((n) => (
               <Chip key={n.locale} label={`${n.locale}: ${n.text}`} size="small" variant="outlined" />
             ))}
           </Box>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Provider Type */}
+      <SectionHeader
+        title="Provider Type"
+        canEdit={isAdmin}
+        isEditing={typeEdit.isEditing}
+        onEdit={() => typeEdit.startEdit(provider.serviceProviderType as string)}
+        onSave={typeEdit.save}
+        onCancel={typeEdit.cancel}
+        isSaving={typeEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {typeEdit.isEditing && typeEdit.editValue !== null ? (
+          <Box>
+            <FormControl size="small" sx={{ width: 240 }}>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={typeEdit.editValue}
+                label="Type"
+                onChange={(e) => typeEdit.setEditValue(e.target.value)}
+              >
+                {Object.entries(PROVIDER_TYPE_LABELS).map(([val, label]) => (
+                  <MenuItem key={val} value={val}>{label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Chip label={PROVIDER_TYPE_LABELS[provider.serviceProviderType as string] ?? provider.serviceProviderType} size="small" />
         )}
       </Box>
 
@@ -237,7 +301,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         title="Processing Countries"
         canEdit={isAdmin}
         isEditing={countriesEdit.isEditing}
-        onEdit={() => countriesEdit.startEdit([...(processor.processingCountries ?? [])])}
+        onEdit={() => countriesEdit.startEdit([...(provider.processingCountries ?? [])])}
         onSave={countriesEdit.save}
         onCancel={countriesEdit.cancel}
         isSaving={countriesEdit.isSaving}
@@ -260,9 +324,9 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
             />
             {countriesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{countriesEdit.error}</Alert>}
           </Box>
-        ) : (processor.processingCountries ?? []).length > 0 ? (
+        ) : (provider.processingCountries ?? []).length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(processor.processingCountries ?? []).map((code) => (
+            {(provider.processingCountries ?? []).map((code) => (
               <Chip key={code} label={`${code} – ${COUNTRY_NAMES[code] ?? code}`} size="small" />
             ))}
           </Box>
@@ -278,7 +342,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         title="Agreement Status"
         canEdit={isAdmin}
         isEditing={agreementEdit.isEditing}
-        onEdit={() => agreementEdit.startEdit({ agreement: processor.processorAgreementInPlace, subProcessors: processor.subProcessorsApproved })}
+        onEdit={() => agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved })}
         onSave={agreementEdit.save}
         onCancel={agreementEdit.cancel}
         isSaving={agreementEdit.isSaving}
@@ -309,16 +373,16 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         ) : (
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Chip
-              icon={processor.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-              label={processor.processorAgreementInPlace ? 'DPA in place' : 'No DPA'}
+              icon={provider.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
+              label={provider.processorAgreementInPlace ? 'DPA in place' : 'No DPA'}
               size="small"
-              color={processor.processorAgreementInPlace ? 'success' : 'warning'}
+              color={provider.processorAgreementInPlace ? 'success' : 'warning'}
             />
             <Chip
-              icon={processor.subProcessorsApproved ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-              label={processor.subProcessorsApproved ? 'Sub-processors approved' : 'Sub-processors not approved'}
+              icon={provider.subProcessorsApproved ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
+              label={provider.subProcessorsApproved ? 'Sub-processors approved' : 'Sub-processors not approved'}
               size="small"
-              color={processor.subProcessorsApproved ? 'success' : 'default'}
+              color={provider.subProcessorsApproved ? 'success' : 'default'}
             />
           </Box>
         )}
@@ -331,7 +395,7 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
         title="Linked Processes"
         canEdit={isAdmin}
         isEditing={processesEdit.isEditing}
-        onEdit={() => processesEdit.startEdit((processor.linkedProcesses ?? []).map((p) => p.key))}
+        onEdit={() => processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key))}
         onSave={processesEdit.save}
         onCancel={processesEdit.cancel}
         isSaving={processesEdit.isSaving}
@@ -354,9 +418,9 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
             />
             {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
           </Box>
-        ) : (processor.linkedProcesses ?? []).length > 0 ? (
+        ) : (provider.linkedProcesses ?? []).length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(processor.linkedProcesses ?? []).map((p) => (
+            {(provider.linkedProcesses ?? []).map((p) => (
               <Chip key={p.key} label={p.name} size="small" variant="outlined" />
             ))}
           </Box>
@@ -367,14 +431,14 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Data Processor</DialogTitle>
+        <DialogTitle>Delete Service Provider</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete <strong>{getLocalizedText(processor.names, processor.key)}</strong>? This cannot be undone.</Typography>
+          <Typography>Are you sure you want to delete <strong>{getLocalizedText(provider.names, provider.key)}</strong>? This cannot be undone.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleteProcessor.isPending}>
-            {deleteProcessor.isPending ? <CircularProgress size={16} /> : 'Delete'}
+          <Button color="error" variant="contained" onClick={handleDelete} disabled={deleteProvider.isPending}>
+            {deleteProvider.isPending ? <CircularProgress size={16} /> : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -382,4 +446,4 @@ const DataProcessorDetailPanel: React.FC<DataProcessorDetailPanelProps> = ({ pro
   );
 };
 
-export default DataProcessorDetailPanel;
+export default ServiceProviderDetailPanel;

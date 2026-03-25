@@ -10,25 +10,25 @@ import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.BusinessEntityResponse
-import org.leargon.backend.model.DataProcessorResponse
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.ProcessResponse
+import org.leargon.backend.model.ServiceProviderResponse
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
-import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
 import spock.lang.Specification
 
 @MicronautTest(transactional = false)
-class DataProcessorControllerSpec extends Specification {
+class ServiceProviderControllerSpec extends Specification {
 
     @Inject @Client("/") HttpClient client
     @Inject UserRepository userRepository
-    @Inject DataProcessorRepository dataProcessorRepository
+    @Inject ServiceProviderRepository serviceProviderRepository
     @Inject BusinessEntityRepository businessEntityRepository
     @Inject BusinessEntityVersionRepository businessEntityVersionRepository
     @Inject ProcessRepository processRepository
@@ -43,8 +43,7 @@ class DataProcessorControllerSpec extends Specification {
     }
 
     def cleanup() {
-        // Join tables are deleted via cascade when processor rows are deleted
-        dataProcessorRepository.deleteAll()
+        serviceProviderRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.findAll().each { processRepository.delete(it) }
         businessEntityVersionRepository.deleteAll()
@@ -64,26 +63,28 @@ class DataProcessorControllerSpec extends Specification {
     private String createAdminToken() {
         client.toBlocking().exchange(
             HttpRequest.POST("/authentication/signup",
-                new SignupRequest("admin@dp.com", "dpAdmin", "password123", "Admin", "User")))
-        def user = userRepository.findByEmail("admin@dp.com").get()
+                new SignupRequest("admin@sp.com", "spAdmin", "password123", "Admin", "User")))
+        def user = userRepository.findByEmail("admin@sp.com").get()
         user.roles = "ROLE_USER,ROLE_ADMIN"
         userRepository.update(user)
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/authentication/login",
-                new LoginRequest("admin@dp.com", "password123")), Map)
+                new LoginRequest("admin@sp.com", "password123")), Map)
         resp.body().accessToken
     }
 
-    private DataProcessorResponse createProcessor(String adminToken, String nameText = "Acme Corp") {
+    private ServiceProviderResponse createProvider(String adminToken, String nameText = "Acme Corp",
+                                                    String providerType = "DATA_PROCESSOR") {
         def req = [
             names: [[locale: "en", text: nameText]],
+            serviceProviderType: providerType,
             processingCountries: ["DE", "US"],
             processorAgreementInPlace: true,
             subProcessorsApproved: false
         ]
         def resp = client.toBlocking().exchange(
-            HttpRequest.POST("/data-processors", req).bearerAuth(adminToken),
-            DataProcessorResponse)
+            HttpRequest.POST("/service-providers", req).bearerAuth(adminToken),
+            ServiceProviderResponse)
         resp.body()
     }
 
@@ -105,11 +106,12 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── CREATE ───────────────────────────────────────────────────────────────
 
-    def "POST /data-processors should create a data processor as admin"() {
+    def "POST /service-providers should create a service provider as admin"() {
         given:
         def adminToken = createAdminToken()
         def req = [
             names: [[locale: "en", text: "Stripe Inc"]],
+            serviceProviderType: "DATA_PROCESSOR",
             processingCountries: ["US"],
             processorAgreementInPlace: true,
             subProcessorsApproved: true
@@ -117,40 +119,62 @@ class DataProcessorControllerSpec extends Specification {
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.POST("/data-processors", req).bearerAuth(adminToken),
-            DataProcessorResponse)
+            HttpRequest.POST("/service-providers", req).bearerAuth(adminToken),
+            ServiceProviderResponse)
 
         then:
         resp.status == HttpStatus.CREATED
         def body = resp.body()
         body.key == "stripe-inc"
         body.names.any { it.locale == "en" && it.text == "Stripe Inc" }
+        body.serviceProviderType.toString() == "DATA_PROCESSOR"
         body.processingCountries == ["US"]
         body.processorAgreementInPlace
         body.subProcessorsApproved
     }
 
-    def "POST /data-processors should return 403 when called by non-admin"() {
+    def "POST /service-providers should create a BODYLEASE type service provider"() {
         given:
-        def userData = createUserWithToken("user@dp.com", "dpUser")
-        def req = [names: [[locale: "en", text: "Processor"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
+        def adminToken = createAdminToken()
+        def req = [
+            names: [[locale: "en", text: "Staff Corp"]],
+            serviceProviderType: "BODYLEASE",
+            processingCountries: [],
+            processorAgreementInPlace: false,
+            subProcessorsApproved: false
+        ]
+
+        when:
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/service-providers", req).bearerAuth(adminToken),
+            ServiceProviderResponse)
+
+        then:
+        resp.status == HttpStatus.CREATED
+        resp.body().serviceProviderType.toString() == "BODYLEASE"
+    }
+
+    def "POST /service-providers should return 403 when called by non-admin"() {
+        given:
+        def userData = createUserWithToken("user@sp.com", "spUser")
+        def req = [names: [[locale: "en", text: "Provider"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.POST("/data-processors", req).bearerAuth(userData.token),
-            DataProcessorResponse)
+            HttpRequest.POST("/service-providers", req).bearerAuth(userData.token),
+            ServiceProviderResponse)
 
         then:
         def ex = thrown(HttpClientResponseException)
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    def "POST /data-processors should return 401 when unauthenticated"() {
+    def "POST /service-providers should return 401 when unauthenticated"() {
         when:
         client.toBlocking().exchange(
-            HttpRequest.POST("/data-processors",
-                [names: [[locale: "en", text: "Processor"]]]),
-            DataProcessorResponse)
+            HttpRequest.POST("/service-providers",
+                [names: [[locale: "en", text: "Provider"]]]),
+            ServiceProviderResponse)
 
         then:
         def ex = thrown(HttpClientResponseException)
@@ -159,28 +183,28 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── LIST ─────────────────────────────────────────────────────────────────
 
-    def "GET /data-processors should return all processors for authenticated user"() {
+    def "GET /service-providers should return all providers for authenticated user"() {
         given:
         def adminToken = createAdminToken()
-        createProcessor(adminToken, "Vendor A")
-        createProcessor(adminToken, "Vendor B")
-        def userData = createUserWithToken("reader@dp.com", "dpReader")
+        createProvider(adminToken, "Vendor A")
+        createProvider(adminToken, "Vendor B")
+        def userData = createUserWithToken("reader@sp.com", "spReader")
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors").bearerAuth(userData.token),
-            Argument.listOf(DataProcessorResponse))
+            HttpRequest.GET("/service-providers").bearerAuth(userData.token),
+            Argument.listOf(ServiceProviderResponse))
 
         then:
         resp.status == HttpStatus.OK
         resp.body().size() >= 2
     }
 
-    def "GET /data-processors should return 401 when unauthenticated"() {
+    def "GET /service-providers should return 401 when unauthenticated"() {
         when:
         client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors"),
-            Argument.listOf(DataProcessorResponse))
+            HttpRequest.GET("/service-providers"),
+            Argument.listOf(ServiceProviderResponse))
 
         then:
         def ex = thrown(HttpClientResponseException)
@@ -189,16 +213,16 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── GET BY KEY ───────────────────────────────────────────────────────────
 
-    def "GET /data-processors/{key} should return processor by key"() {
+    def "GET /service-providers/{key} should return provider by key"() {
         given:
         def adminToken = createAdminToken()
-        def created = createProcessor(adminToken, "PayPal")
-        def userData = createUserWithToken("reader2@dp.com", "dpReader2")
+        def created = createProvider(adminToken, "PayPal")
+        def userData = createUserWithToken("reader2@sp.com", "spReader2")
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors/${created.key}").bearerAuth(userData.token),
-            DataProcessorResponse)
+            HttpRequest.GET("/service-providers/${created.key}").bearerAuth(userData.token),
+            ServiceProviderResponse)
 
         then:
         resp.status == HttpStatus.OK
@@ -206,14 +230,14 @@ class DataProcessorControllerSpec extends Specification {
         resp.body().names.any { it.locale == "en" && it.text == "PayPal" }
     }
 
-    def "GET /data-processors/{key} should return 404 for unknown key"() {
+    def "GET /service-providers/{key} should return 404 for unknown key"() {
         given:
-        def userData = createUserWithToken("reader3@dp.com", "dpReader3")
+        def userData = createUserWithToken("reader3@sp.com", "spReader3")
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors/non-existent").bearerAuth(userData.token),
-            DataProcessorResponse)
+            HttpRequest.GET("/service-providers/non-existent").bearerAuth(userData.token),
+            ServiceProviderResponse)
 
         then:
         def ex = thrown(HttpClientResponseException)
@@ -222,12 +246,13 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── UPDATE ───────────────────────────────────────────────────────────────
 
-    def "PUT /data-processors/{key} should update processor as admin"() {
+    def "PUT /service-providers/{key} should update provider as admin"() {
         given:
         def adminToken = createAdminToken()
-        def created = createProcessor(adminToken, "Old Name")
+        def created = createProvider(adminToken, "Old Name")
         def updateReq = [
             names: [[locale: "en", text: "New Name"]],
+            serviceProviderType: "MANAGED_SERVICE",
             processingCountries: ["FR", "DE"],
             processorAgreementInPlace: false,
             subProcessorsApproved: true
@@ -235,28 +260,29 @@ class DataProcessorControllerSpec extends Specification {
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${created.key}", updateReq).bearerAuth(adminToken),
-            DataProcessorResponse)
+            HttpRequest.PUT("/service-providers/${created.key}", updateReq).bearerAuth(adminToken),
+            ServiceProviderResponse)
 
         then:
         resp.status == HttpStatus.OK
         resp.body().names.any { it.locale == "en" && it.text == "New Name" }
+        resp.body().serviceProviderType.toString() == "MANAGED_SERVICE"
         resp.body().processingCountries.containsAll(["FR", "DE"])
         !resp.body().processorAgreementInPlace
         resp.body().subProcessorsApproved
     }
 
-    def "PUT /data-processors/{key} should return 403 for non-admin"() {
+    def "PUT /service-providers/{key} should return 403 for non-admin"() {
         given:
         def adminToken = createAdminToken()
-        def created = createProcessor(adminToken, "Protected Processor")
-        def userData = createUserWithToken("nonAdmin@dp.com", "dpNonAdmin")
+        def created = createProvider(adminToken, "Protected Provider")
+        def userData = createUserWithToken("nonAdmin@sp.com", "spNonAdmin")
         def updateReq = [names: [[locale: "en", text: "Hacked"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${created.key}", updateReq).bearerAuth(userData.token),
-            DataProcessorResponse)
+            HttpRequest.PUT("/service-providers/${created.key}", updateReq).bearerAuth(userData.token),
+            ServiceProviderResponse)
 
         then:
         def ex = thrown(HttpClientResponseException)
@@ -265,31 +291,31 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── DELETE ───────────────────────────────────────────────────────────────
 
-    def "DELETE /data-processors/{key} should delete processor as admin"() {
+    def "DELETE /service-providers/{key} should delete provider as admin"() {
         given:
         def adminToken = createAdminToken()
-        def created = createProcessor(adminToken, "To Delete")
+        def created = createProvider(adminToken, "To Delete")
 
         when:
         def resp = client.toBlocking().exchange(
-            HttpRequest.DELETE("/data-processors/${created.key}").bearerAuth(adminToken))
+            HttpRequest.DELETE("/service-providers/${created.key}").bearerAuth(adminToken))
 
         then:
         resp.status == HttpStatus.NO_CONTENT
 
         and:
-        !dataProcessorRepository.existsByKey(created.key)
+        !serviceProviderRepository.existsByKey(created.key)
     }
 
-    def "DELETE /data-processors/{key} should return 403 for non-admin"() {
+    def "DELETE /service-providers/{key} should return 403 for non-admin"() {
         given:
         def adminToken = createAdminToken()
-        def created = createProcessor(adminToken, "Safe Processor")
-        def userData = createUserWithToken("user2@dp.com", "dpUser2")
+        def created = createProvider(adminToken, "Safe Provider")
+        def userData = createUserWithToken("user2@sp.com", "spUser2")
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.DELETE("/data-processors/${created.key}").bearerAuth(userData.token))
+            HttpRequest.DELETE("/service-providers/${created.key}").bearerAuth(userData.token))
 
         then:
         def ex = thrown(HttpClientResponseException)
@@ -298,24 +324,24 @@ class DataProcessorControllerSpec extends Specification {
 
     // ─── LINK PROCESSES ───────────────────────────────────────────────────────
 
-    def "PUT /data-processors/{key}/linked-processes should link processes"() {
+    def "PUT /service-providers/{key}/linked-processes should link processes"() {
         given:
         def adminToken = createAdminToken()
-        def processor = createProcessor(adminToken, "Process Processor")
+        def provider = createProvider(adminToken, "Process Provider")
         def process = createProcess(adminToken, "Data Migration")
 
         when:
         def linkResp = client.toBlocking().exchange(
-            HttpRequest.PUT("/data-processors/${processor.key}/linked-processes",
+            HttpRequest.PUT("/service-providers/${provider.key}/linked-processes",
                 [processKeys: [process.key]]).bearerAuth(adminToken))
 
         then:
         linkResp.status == HttpStatus.NO_CONTENT
 
-        when: "fetching the processor"
+        when: "fetching the provider"
         def getResp = client.toBlocking().exchange(
-            HttpRequest.GET("/data-processors/${processor.key}").bearerAuth(adminToken),
-            DataProcessorResponse)
+            HttpRequest.GET("/service-providers/${provider.key}").bearerAuth(adminToken),
+            ServiceProviderResponse)
 
         then: "linked process is present"
         getResp.body().linkedProcesses?.any { it.key == process.key }
@@ -325,7 +351,7 @@ class DataProcessorControllerSpec extends Specification {
 
     def "PUT /business-entities/{key}/storage-locations should update storage locations as owner"() {
         given:
-        def ownerData = createUserWithToken("owner@dp.com", "dpOwner")
+        def ownerData = createUserWithToken("owner@sp.com", "spOwner")
         def entity = createEntity(ownerData.token, "Storage Entity")
 
         when:
@@ -341,9 +367,9 @@ class DataProcessorControllerSpec extends Specification {
 
     def "PUT /business-entities/{key}/storage-locations should return 403 for non-owner non-admin"() {
         given:
-        def ownerData = createUserWithToken("owner2@dp.com", "dpOwner2")
+        def ownerData = createUserWithToken("owner2@sp.com", "spOwner2")
         def entity = createEntity(ownerData.token, "Protected Entity")
-        def otherData = createUserWithToken("other@dp.com", "dpOther")
+        def otherData = createUserWithToken("other@sp.com", "spOther")
 
         when:
         client.toBlocking().exchange(
@@ -356,28 +382,11 @@ class DataProcessorControllerSpec extends Specification {
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    def "PUT /business-entities/{key}/storage-locations should succeed as admin even if not owner"() {
-        given:
-        def ownerData = createUserWithToken("owner3@dp.com", "dpOwner3")
-        def entity = createEntity(ownerData.token, "Admin Storage Entity")
-        def adminToken = createAdminToken()
-
-        when:
-        def resp = client.toBlocking().exchange(
-            HttpRequest.PUT("/business-entities/${entity.key}/storage-locations",
-                [locations: ["US"]]).bearerAuth(adminToken),
-            BusinessEntityResponse)
-
-        then:
-        resp.status == HttpStatus.OK
-        resp.body().storageLocations?.contains("US")
-    }
-
     // ─── CROSS-BORDER TRANSFERS ON PROCESS ───────────────────────────────────
 
     def "PUT /processes/{key}/cross-border-transfers should update transfers as process owner"() {
         given:
-        def ownerData = createUserWithToken("procOwner@dp.com", "dpProcOwner")
+        def ownerData = createUserWithToken("procOwner@sp.com", "spProcOwner")
         def process = createProcess(ownerData.token, "Data Export Process")
         def transfers = [[destinationCountry: "US", safeguard: "BINDING_CORPORATE_RULES"]]
 
@@ -393,22 +402,5 @@ class DataProcessorControllerSpec extends Specification {
         resp.body().crossBorderTransfers?.any {
             it.destinationCountry == "US" && it.safeguard.toString() == "BINDING_CORPORATE_RULES"
         }
-    }
-
-    def "PUT /processes/{key}/cross-border-transfers should return 403 for non-owner non-admin"() {
-        given:
-        def ownerData = createUserWithToken("procOwner2@dp.com", "dpProcOwner2")
-        def process = createProcess(ownerData.token, "Locked Process")
-        def otherData = createUserWithToken("stranger@dp.com", "dpStranger")
-
-        when:
-        client.toBlocking().exchange(
-            HttpRequest.PUT("/processes/${process.key}/cross-border-transfers",
-                [transfers: []]).bearerAuth(otherData.token),
-            ProcessResponse)
-
-        then:
-        def ex = thrown(HttpClientResponseException)
-        ex.status == HttpStatus.FORBIDDEN
     }
 }

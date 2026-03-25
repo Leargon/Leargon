@@ -13,26 +13,26 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Search, CheckCircle, Warning } from '@mui/icons-material';
-import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import type { DataProcessorResponse } from '../../api/generated/model';
+import type { ServiceProviderResponse } from '../../api/generated/model';
 
-interface DataProcessorListPanelProps {
+interface ServiceProviderListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
 }
 
-const DataProcessorListPanel: React.FC<DataProcessorListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ selectedKey, onCreateClick }) => {
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
-  const { data: response, isLoading } = useGetAllDataProcessors();
-  const processors = (response?.data as DataProcessorResponse[] | undefined) ?? [];
+  const { data: response, isLoading } = useGetAllServiceProviders();
+  const providers = (response?.data as ServiceProviderResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
 
-  const filtered = processors
+  const filtered = providers
     .filter((p) => {
       if (!filter) return true;
       return (
@@ -47,7 +47,7 @@ const DataProcessorListPanel: React.FC<DataProcessorListPanelProps> = ({ selecte
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search processors..."
+          placeholder="Search providers..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -75,7 +75,7 @@ const DataProcessorListPanel: React.FC<DataProcessorListPanelProps> = ({ selecte
           </Box>
         ) : filtered.length === 0 ? (
           <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
-            {filter ? 'No results' : 'No data processors yet'}
+            {filter ? 'No results' : 'No service providers yet'}
           </Typography>
         ) : (
           <List disablePadding>
@@ -83,7 +83,7 @@ const DataProcessorListPanel: React.FC<DataProcessorListPanelProps> = ({ selecte
               <ListItemButton
                 key={p.key}
                 selected={p.key === selectedKey}
-                onClick={() => navigate(`/data-processors/${p.key}`)}
+                onClick={() => navigate(`/service-providers/${p.key}`)}
                 sx={{ borderRadius: 0 }}
               >
                 <ListItemText
@@ -108,4 +108,4 @@ const DataProcessorListPanel: React.FC<DataProcessorListPanelProps> = ({ selecte
   );
 };
 
-export default DataProcessorListPanel;
+export default ServiceProviderListPanel;

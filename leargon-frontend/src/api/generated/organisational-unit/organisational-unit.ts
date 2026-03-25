@@ -43,6 +43,7 @@ import type {
   LocalizedText,
   OrganisationalUnitResponse,
   OrganisationalUnitTreeResponse,
+  UpdateLinkedServiceProvidersRequest,
   UpdateOrgUnitEntityLinksRequest,
   UpdateOrgUnitExternalFieldsRequest,
   UpdateOrgUnitLeadRequest,
@@ -1381,7 +1382,7 @@ export const useAssignClassificationsToOrgUnit = <TError = void,
       return useMutation(getAssignClassificationsToOrgUnitMutationOptions(options), queryClient);
     }
     /**
- * Updates isExternal, externalCompanyName, countryOfExecution, and linkedDataProcessorKey. Requires ROLE_ADMIN.
+ * Updates isExternal, externalCompanyName, and countryOfExecution. Requires ROLE_ADMIN.
  * @summary Update external/body-leasing fields
  */
 export type updateOrgUnitExternalFieldsResponse200 = {
@@ -1480,6 +1481,107 @@ export const useUpdateOrgUnitExternalFields = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateOrgUnitExternalFieldsMutationOptions(options), queryClient);
+    }
+    /**
+ * Replaces the set of service providers linked to this org unit. Requires ROLE_ADMIN.
+ * @summary Update linked service providers
+ */
+export type updateOrgUnitServiceProvidersResponse204 = {
+  data: void
+  status: 204
+}
+
+export type updateOrgUnitServiceProvidersResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrgUnitServiceProvidersResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrgUnitServiceProvidersResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrgUnitServiceProvidersResponseSuccess = (updateOrgUnitServiceProvidersResponse204) & {
+  headers: Headers;
+};
+export type updateOrgUnitServiceProvidersResponseError = (updateOrgUnitServiceProvidersResponse401 | updateOrgUnitServiceProvidersResponse403 | updateOrgUnitServiceProvidersResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrgUnitServiceProvidersResponse = (updateOrgUnitServiceProvidersResponseSuccess | updateOrgUnitServiceProvidersResponseError)
+
+export const getUpdateOrgUnitServiceProvidersUrl = (key: string,) => {
+
+
+  
+
+  return `/organisational-units/${key}/service-providers`
+}
+
+export const updateOrgUnitServiceProviders = async (key: string,
+    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: RequestInit): Promise<updateOrgUnitServiceProvidersResponse> => {
+  
+  return customAxios<updateOrgUnitServiceProvidersResponse>(getUpdateOrgUnitServiceProvidersUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateLinkedServiceProvidersRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateOrgUnitServiceProvidersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext> => {
+
+const mutationKey = ['updateOrgUnitServiceProviders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, {key: string;data: UpdateLinkedServiceProvidersRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrgUnitServiceProviders(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitServiceProvidersMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>>
+    export type UpdateOrgUnitServiceProvidersMutationBody = UpdateLinkedServiceProvidersRequest
+    export type UpdateOrgUnitServiceProvidersMutationError = void
+
+    /**
+ * @summary Update linked service providers
+ */
+export const useUpdateOrgUnitServiceProviders = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>,
+        TError,
+        {key: string;data: UpdateLinkedServiceProvidersRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitServiceProvidersMutationOptions(options), queryClient);
     }
     /**
  * Sets the business entities this external unit has read access to. Requires ROLE_ADMIN.

@@ -74,12 +74,12 @@ export const createOrgUnit = (
     as,
   );
 
-export const createDataProcessor = (
+export const createServiceProvider = (
   name: string,
   processingCountries: string[] = ['DE'],
 ): Promise<Record<string, unknown>> =>
   apiFetch(
-    '/data-processors',
+    '/service-providers',
     'POST',
     {
       names: [{ locale: 'en', text: name }],
@@ -87,17 +87,6 @@ export const createDataProcessor = (
       processorAgreementInPlace: true,
       subProcessorsApproved: false,
     },
-    ADMIN,
-  );
-
-export const linkDataProcessorEntities = (
-  processorKey: string,
-  entityKeys: string[],
-): Promise<Record<string, unknown>> =>
-  apiFetch(
-    `/data-processors/${processorKey}/linked-entities`,
-    'PUT',
-    { businessEntityKeys: entityKeys },
     ADMIN,
   );
 

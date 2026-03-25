@@ -288,7 +288,7 @@ const de = {
     colDataSubjectCategories: 'Betroffene Personen',
     colPersonalDataCategories: 'Datenkategorien',
     colDomain: 'Domäne',
-    colDataProcessors: 'Datenverarbeiter',
+    colServiceProviders: 'Dienstleister',
     colCrossBorder: 'Grenzüberschreitende Übermittlungen',
     colPersonalData: 'Personenbezogene Daten',
     colCompleteness: 'Vollständigkeit',

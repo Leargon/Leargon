@@ -288,7 +288,7 @@ const en = {
     colDataSubjectCategories: 'Data Subject Categories',
     colPersonalDataCategories: 'Personal Data Categories',
     colDomain: 'Domain',
-    colDataProcessors: 'Data Processors',
+    colServiceProviders: 'Service Providers',
     colCrossBorder: 'Cross-border Transfers',
     colPersonalData: 'Personal Data',
     colCompleteness: 'Completeness',

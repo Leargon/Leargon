@@ -6,11 +6,11 @@ import {
   withToken,
   createEntity,
   createProcess,
-  createDataProcessor,
+  createServiceProvider,
   ApiError,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
-import type { DataProcessorResponse } from '@/api/generated/model/dataProcessorResponse';
+import type { ServiceProviderResponse } from '@/api/generated/model/serviceProviderResponse';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
 
@@ -20,7 +20,7 @@ function getBackendUrl(): string {
   return url;
 }
 
-describe('Data Processor API', () => {
+describe('Service Provider API', () => {
   let adminClient: AxiosInstance;
   let userClient: AxiosInstance;
   let adminToken: string;
@@ -31,20 +31,20 @@ describe('Data Processor API', () => {
     userClient = createClient(baseUrl);
 
     const adminAuth = await signupAdmin(adminClient, {
-      email: 'dp-admin@example.com',
-      username: 'dpadmin',
+      email: 'sp-admin@example.com',
+      username: 'spadmin',
       password: 'password123',
-      firstName: 'DP',
+      firstName: 'SP',
       lastName: 'Admin',
     });
     adminToken = adminAuth.accessToken;
     withToken(adminClient, adminToken);
 
     const userAuth = await signup(userClient, {
-      email: 'dp-user@example.com',
-      username: 'dpuser',
+      email: 'sp-user@example.com',
+      username: 'spuser',
       password: 'password123',
-      firstName: 'DP',
+      firstName: 'SP',
       lastName: 'User',
     });
     withToken(userClient, userAuth.accessToken);
@@ -52,12 +52,13 @@ describe('Data Processor API', () => {
 
   // ─── CREATE ────────────────────────────────────────────────────────────
 
-  it('admin can create a data processor', async () => {
-    const res = await adminClient.post<DataProcessorResponse>('/data-processors', {
+  it('admin can create a service provider', async () => {
+    const res = await adminClient.post<ServiceProviderResponse>('/service-providers', {
       names: [{ locale: 'en', text: 'AWS Integration' }],
       processingCountries: ['US', 'DE'],
       processorAgreementInPlace: true,
       subProcessorsApproved: true,
+      serviceProviderType: 'DATA_PROCESSOR',
     });
     expect(res.status).toBe(201);
     expect(res.data.key).toBe('aws-integration');
@@ -65,58 +66,72 @@ describe('Data Processor API', () => {
     expect(res.data.processingCountries).toContain('US');
     expect(res.data.processorAgreementInPlace).toBe(true);
     expect(res.data.subProcessorsApproved).toBe(true);
+    expect(res.data.serviceProviderType).toBe('DATA_PROCESSOR');
   });
 
-  it('non-admin cannot create a data processor', async () => {
-    const res = await userClient.post('/data-processors', {
-      names: [{ locale: 'en', text: 'Unauthorized Processor' }],
+  it('admin can create a service provider with BODYLEASE type', async () => {
+    const res = await adminClient.post<ServiceProviderResponse>('/service-providers', {
+      names: [{ locale: 'en', text: 'Staff Augmentation Partner' }],
+      processingCountries: ['DE'],
+      processorAgreementInPlace: false,
+      subProcessorsApproved: false,
+      serviceProviderType: 'BODYLEASE',
+    });
+    expect(res.status).toBe(201);
+    expect(res.data.serviceProviderType).toBe('BODYLEASE');
+  });
+
+  it('non-admin cannot create a service provider', async () => {
+    const res = await userClient.post('/service-providers', {
+      names: [{ locale: 'en', text: 'Unauthorized Provider' }],
     });
     expect(res.status).toBe(403);
   });
 
   // ─── READ ──────────────────────────────────────────────────────────────
 
-  it('authenticated user can list all data processors', async () => {
-    await createDataProcessor(adminClient, 'List Test Processor A');
-    await createDataProcessor(adminClient, 'List Test Processor B');
+  it('authenticated user can list all service providers', async () => {
+    await createServiceProvider(adminClient, 'List Test Provider A');
+    await createServiceProvider(adminClient, 'List Test Provider B');
 
-    const res = await userClient.get<DataProcessorResponse[]>('/data-processors');
+    const res = await userClient.get<ServiceProviderResponse[]>('/service-providers');
     expect(res.status).toBe(200);
     expect(res.data.length).toBeGreaterThanOrEqual(2);
   });
 
   it('unauthenticated request is rejected', async () => {
     const anonClient = createClient(getBackendUrl());
-    const res = await anonClient.get('/data-processors');
+    const res = await anonClient.get('/service-providers');
     expect(res.status).toBe(401);
   });
 
-  it('can get data processor by key', async () => {
-    const created = await createDataProcessor(adminClient, 'Stripe Billing');
-    const res = await userClient.get<DataProcessorResponse>(
-      `/data-processors/${created.key}`,
+  it('can get service provider by key', async () => {
+    const created = await createServiceProvider(adminClient, 'Stripe Billing');
+    const res = await userClient.get<ServiceProviderResponse>(
+      `/service-providers/${created.key}`,
     );
     expect(res.status).toBe(200);
     expect(res.data.key).toBe(created.key);
     expect(res.data.names[0].text).toBe('Stripe Billing');
   });
 
-  it('returns 404 for non-existent processor', async () => {
-    const res = await userClient.get('/data-processors/non-existent-key');
+  it('returns 404 for non-existent service provider', async () => {
+    const res = await userClient.get('/service-providers/non-existent-key');
     expect(res.status).toBe(404);
   });
 
   // ─── UPDATE ────────────────────────────────────────────────────────────
 
-  it('admin can update a data processor', async () => {
-    const created = await createDataProcessor(adminClient, 'Old Vendor Name');
-    const res = await adminClient.put<DataProcessorResponse>(
-      `/data-processors/${created.key}`,
+  it('admin can update a service provider', async () => {
+    const created = await createServiceProvider(adminClient, 'Old Vendor Name');
+    const res = await adminClient.put<ServiceProviderResponse>(
+      `/service-providers/${created.key}`,
       {
         names: [{ locale: 'en', text: 'New Vendor Name' }],
         processingCountries: ['FR'],
         processorAgreementInPlace: false,
         subProcessorsApproved: true,
+        serviceProviderType: 'MANAGED_SERVICE',
       },
     );
     expect(res.status).toBe(200);
@@ -124,86 +139,54 @@ describe('Data Processor API', () => {
     expect(res.data.processingCountries).toContain('FR');
     expect(res.data.processorAgreementInPlace).toBe(false);
     expect(res.data.subProcessorsApproved).toBe(true);
+    expect(res.data.serviceProviderType).toBe('MANAGED_SERVICE');
   });
 
-  it('non-admin cannot update a data processor', async () => {
-    const created = await createDataProcessor(adminClient, 'Protected Vendor');
-    const res = await userClient.put(`/data-processors/${created.key}`, {
+  it('non-admin cannot update a service provider', async () => {
+    const created = await createServiceProvider(adminClient, 'Protected Vendor');
+    const res = await userClient.put(`/service-providers/${created.key}`, {
       names: [{ locale: 'en', text: 'Hacked' }],
       processingCountries: [],
       processorAgreementInPlace: false,
       subProcessorsApproved: false,
+      serviceProviderType: 'OTHER',
     });
     expect(res.status).toBe(403);
   });
 
   // ─── DELETE ────────────────────────────────────────────────────────────
 
-  it('admin can delete a data processor', async () => {
-    const created = await createDataProcessor(adminClient, 'Deletable Vendor');
-    const del = await adminClient.delete(`/data-processors/${created.key}`);
+  it('admin can delete a service provider', async () => {
+    const created = await createServiceProvider(adminClient, 'Deletable Vendor');
+    const del = await adminClient.delete(`/service-providers/${created.key}`);
     expect(del.status).toBe(204);
 
-    const get = await userClient.get(`/data-processors/${created.key}`);
+    const get = await userClient.get(`/service-providers/${created.key}`);
     expect(get.status).toBe(404);
   });
 
-  it('non-admin cannot delete a data processor', async () => {
-    const created = await createDataProcessor(adminClient, 'Safe Vendor');
-    const res = await userClient.delete(`/data-processors/${created.key}`);
-    expect(res.status).toBe(403);
-  });
-
-  // ─── LINK ENTITIES ─────────────────────────────────────────────────────
-
-  it('admin can link business entities to a processor', async () => {
-    const processor = await createDataProcessor(adminClient, 'Entity Linker');
-    const entity = await createEntity(adminClient, 'DP Linked Entity');
-
-    const linkRes = await adminClient.put(
-      `/data-processors/${processor.key}/linked-entities`,
-      { businessEntityKeys: [entity.key] },
-    );
-    expect(linkRes.status).toBe(204);
-
-    // Processor should reference the entity
-    const getProcessor = await adminClient.get<DataProcessorResponse>(
-      `/data-processors/${processor.key}`,
-    );
-    expect(getProcessor.data.linkedBusinessEntities?.some((e) => e.key === entity.key)).toBe(true);
-
-    // Entity response should reference the processor
-    const getEntity = await userClient.get<BusinessEntityResponse>(
-      `/business-entities/${entity.key}`,
-    );
-    expect(getEntity.data.dataProcessors?.some((p) => p.key === processor.key)).toBe(true);
-  });
-
-  it('non-admin cannot link entities to a processor', async () => {
-    const processor = await createDataProcessor(adminClient, 'Locked Processor');
-    const res = await userClient.put(
-      `/data-processors/${processor.key}/linked-entities`,
-      { businessEntityKeys: [] },
-    );
+  it('non-admin cannot delete a service provider', async () => {
+    const created = await createServiceProvider(adminClient, 'Safe Vendor');
+    const res = await userClient.delete(`/service-providers/${created.key}`);
     expect(res.status).toBe(403);
   });
 
   // ─── LINK PROCESSES ────────────────────────────────────────────────────
 
-  it('admin can link processes to a processor', async () => {
-    const processor = await createDataProcessor(adminClient, 'Process Linker');
-    const process = await createProcess(adminClient, 'DP Linked Process');
+  it('admin can link processes to a service provider', async () => {
+    const provider = await createServiceProvider(adminClient, 'Process Linker');
+    const process = await createProcess(adminClient, 'SP Linked Process');
 
     const linkRes = await adminClient.put(
-      `/data-processors/${processor.key}/linked-processes`,
+      `/service-providers/${provider.key}/linked-processes`,
       { processKeys: [process.key] },
     );
     expect(linkRes.status).toBe(204);
 
-    const getProcessor = await adminClient.get<DataProcessorResponse>(
-      `/data-processors/${processor.key}`,
+    const getProvider = await adminClient.get<ServiceProviderResponse>(
+      `/service-providers/${provider.key}`,
     );
-    expect(getProcessor.data.linkedProcesses?.some((p) => p.key === process.key)).toBe(true);
+    expect(getProvider.data.linkedProcesses?.some((p) => p.key === process.key)).toBe(true);
   });
 
   // ─── CROSS-BORDER TRANSFERS ON ENTITY ──────────────────────────────────

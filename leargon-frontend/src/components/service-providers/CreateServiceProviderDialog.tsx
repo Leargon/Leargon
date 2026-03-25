@@ -13,15 +13,21 @@ import {
   Switch,
   CircularProgress,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Box,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useCreateDataProcessor,
-  getGetAllDataProcessorsQueryKey,
-} from '../../api/generated/data-processor/data-processor';
+  useCreateServiceProvider,
+  getGetAllServiceProvidersQueryKey,
+} from '../../api/generated/service-provider/service-provider';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
+import { ServiceProviderType } from '../../api/generated/model';
 
 const COUNTRY_OPTIONS = [
   { code: 'AT', name: 'Austria' }, { code: 'AU', name: 'Australia' }, { code: 'BE', name: 'Belgium' },
@@ -35,19 +41,28 @@ const COUNTRY_OPTIONS = [
   { code: 'SE', name: 'Sweden' }, { code: 'SG', name: 'Singapore' }, { code: 'US', name: 'United States' },
 ];
 
-interface CreateDataProcessorDialogProps {
+const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  DATA_PROCESSOR: 'Data Processor',
+  BODYLEASE: 'Body Lease',
+  MANAGED_SERVICE: 'Managed Service',
+  CONSULTANT: 'Consultant',
+  OTHER: 'Other',
+};
+
+interface CreateServiceProviderDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ open, onClose }) => {
+const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = ({ open, onClose }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
-  const createProcessor = useCreateDataProcessor();
+  const createProvider = useCreateServiceProvider();
 
   const [names, setNames] = useState<LocalizedText[]>([]);
+  const [providerType, setProviderType] = useState<string>('DATA_PROCESSOR');
   const [countries, setCountries] = useState<string[]>([]);
   const [agreement, setAgreement] = useState(false);
   const [subProcessors, setSubProcessors] = useState(false);
@@ -58,6 +73,7 @@ const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ o
 
   const handleClose = () => {
     setNames([]);
+    setProviderType('DATA_PROCESSOR');
     setCountries([]);
     setAgreement(false);
     setSubProcessors(false);
@@ -71,22 +87,28 @@ const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ o
       return;
     }
     try {
-      const res = await createProcessor.mutateAsync({
-        data: { names, processingCountries: countries, processorAgreementInPlace: agreement, subProcessorsApproved: subProcessors },
+      const res = await createProvider.mutateAsync({
+        data: {
+          names,
+          serviceProviderType: providerType as ServiceProviderType,
+          processingCountries: countries,
+          processorAgreementInPlace: agreement,
+          subProcessorsApproved: subProcessors,
+        },
       });
-      queryClient.invalidateQueries({ queryKey: getGetAllDataProcessorsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetAllServiceProvidersQueryKey() });
       handleClose();
       if (res.status === 201) {
-        navigate(`/data-processors/${res.data.key}`);
+        navigate(`/service-providers/${res.data.key}`);
       }
     } catch {
-      setError('Failed to create data processor');
+      setError('Failed to create service provider');
     }
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Data Processor</DialogTitle>
+      <DialogTitle>New Service Provider</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <TranslationEditor
@@ -97,6 +119,20 @@ const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ o
           onDescriptionsChange={() => {}}
           hideDescriptions
         />
+        <Box sx={{ mt: 2 }}>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Provider Type</InputLabel>
+            <Select
+              value={providerType}
+              label="Provider Type"
+              onChange={(e) => setProviderType(e.target.value)}
+            >
+              {Object.entries(PROVIDER_TYPE_LABELS).map(([val, label]) => (
+                <MenuItem key={val} value={val}>{label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <Autocomplete
           multiple
           options={COUNTRY_OPTIONS}
@@ -123,12 +159,12 @@ const CreateDataProcessorDialog: React.FC<CreateDataProcessorDialogProps> = ({ o
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={handleCreate} variant="contained" disabled={createProcessor.isPending}>
-          {createProcessor.isPending ? <CircularProgress size={16} /> : 'Create'}
+        <Button onClick={handleCreate} variant="contained" disabled={createProvider.isPending}>
+          {createProvider.isPending ? <CircularProgress size={16} /> : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default CreateDataProcessorDialog;
+export default CreateServiceProviderDialog;

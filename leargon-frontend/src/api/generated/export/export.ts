@@ -32,8 +32,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ExportDataProcessorsParams,
-  ExportProcessingRegisterParams
+  ExportProcessingRegisterParams,
+  ExportServiceProvidersParams
 } from '../model';
 
 import { customAxios } from '../../customAxios';
@@ -174,34 +174,34 @@ export function useExportProcessingRegister<TData = Awaited<ReturnType<typeof ex
 
 
 /**
- * Returns a CSV export of all data processors with linked processes and entities. Requires ROLE_ADMIN.
- * @summary Export sub-processor register (Auftragsverarbeiter)
+ * Returns a CSV export of all service providers with linked processes. Requires ROLE_ADMIN.
+ * @summary Export service provider register
  */
-export type exportDataProcessorsResponse200 = {
+export type exportServiceProvidersResponse200 = {
   data: string
   status: 200
 }
 
-export type exportDataProcessorsResponse401 = {
+export type exportServiceProvidersResponse401 = {
   data: void
   status: 401
 }
 
-export type exportDataProcessorsResponse403 = {
+export type exportServiceProvidersResponse403 = {
   data: void
   status: 403
 }
 
-export type exportDataProcessorsResponseSuccess = (exportDataProcessorsResponse200) & {
+export type exportServiceProvidersResponseSuccess = (exportServiceProvidersResponse200) & {
   headers: Headers;
 };
-export type exportDataProcessorsResponseError = (exportDataProcessorsResponse401 | exportDataProcessorsResponse403) & {
+export type exportServiceProvidersResponseError = (exportServiceProvidersResponse401 | exportServiceProvidersResponse403) & {
   headers: Headers;
 };
 
-export type exportDataProcessorsResponse = (exportDataProcessorsResponseSuccess | exportDataProcessorsResponseError)
+export type exportServiceProvidersResponse = (exportServiceProvidersResponseSuccess | exportServiceProvidersResponseError)
 
-export const getExportDataProcessorsUrl = (params?: ExportDataProcessorsParams,) => {
+export const getExportServiceProvidersUrl = (params?: ExportServiceProvidersParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -213,12 +213,12 @@ export const getExportDataProcessorsUrl = (params?: ExportDataProcessorsParams,)
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/export/data-processors?${stringifiedParams}` : `/export/data-processors`
+  return stringifiedParams.length > 0 ? `/export/service-providers?${stringifiedParams}` : `/export/service-providers`
 }
 
-export const exportDataProcessors = async (params?: ExportDataProcessorsParams, options?: RequestInit): Promise<exportDataProcessorsResponse> => {
+export const exportServiceProviders = async (params?: ExportServiceProvidersParams, options?: RequestInit): Promise<exportServiceProvidersResponse> => {
   
-  return customAxios<exportDataProcessorsResponse>(getExportDataProcessorsUrl(params),
+  return customAxios<exportServiceProvidersResponse>(getExportServiceProvidersUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -231,69 +231,69 @@ export const exportDataProcessors = async (params?: ExportDataProcessorsParams, 
 
 
 
-export const getExportDataProcessorsQueryKey = (params?: ExportDataProcessorsParams,) => {
+export const getExportServiceProvidersQueryKey = (params?: ExportServiceProvidersParams,) => {
     return [
-    `/export/data-processors`, ...(params ? [params] : [])
+    `/export/service-providers`, ...(params ? [params] : [])
     ] as const;
     }
 
     
-export const getExportDataProcessorsQueryOptions = <TData = Awaited<ReturnType<typeof exportDataProcessors>>, TError = void>(params?: ExportDataProcessorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+export const getExportServiceProvidersQueryOptions = <TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getExportDataProcessorsQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getExportServiceProvidersQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportDataProcessors>>> = ({ signal }) => exportDataProcessors(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportServiceProviders>>> = ({ signal }) => exportServiceProviders(params, { signal, ...requestOptions });
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ExportDataProcessorsQueryResult = NonNullable<Awaited<ReturnType<typeof exportDataProcessors>>>
-export type ExportDataProcessorsQueryError = void
+export type ExportServiceProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof exportServiceProviders>>>
+export type ExportServiceProvidersQueryError = void
 
 
-export function useExportDataProcessors<TData = Awaited<ReturnType<typeof exportDataProcessors>>, TError = void>(
- params: undefined |  ExportDataProcessorsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData>> & Pick<
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params: undefined |  ExportServiceProvidersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportDataProcessors>>,
+          Awaited<ReturnType<typeof exportServiceProviders>>,
           TError,
-          Awaited<ReturnType<typeof exportDataProcessors>>
+          Awaited<ReturnType<typeof exportServiceProviders>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useExportDataProcessors<TData = Awaited<ReturnType<typeof exportDataProcessors>>, TError = void>(
- params?: ExportDataProcessorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData>> & Pick<
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportDataProcessors>>,
+          Awaited<ReturnType<typeof exportServiceProviders>>,
           TError,
-          Awaited<ReturnType<typeof exportDataProcessors>>
+          Awaited<ReturnType<typeof exportServiceProviders>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useExportDataProcessors<TData = Awaited<ReturnType<typeof exportDataProcessors>>, TError = void>(
- params?: ExportDataProcessorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Export sub-processor register (Auftragsverarbeiter)
+ * @summary Export service provider register
  */
 
-export function useExportDataProcessors<TData = Awaited<ReturnType<typeof exportDataProcessors>>, TError = void>(
- params?: ExportDataProcessorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDataProcessors>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getExportDataProcessorsQueryOptions(params,options)
+  const queryOptions = getExportServiceProvidersQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

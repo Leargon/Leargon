@@ -20,6 +20,7 @@ import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
+import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitEntityLinksRequest
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
@@ -29,6 +30,7 @@ import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
+import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -38,7 +40,8 @@ open class OrganisationalUnitController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val organisationalUnitMapper: OrganisationalUnitMapper
+    private val organisationalUnitMapper: OrganisationalUnitMapper,
+    private val serviceProviderService: ServiceProviderService
 ) : OrganisationalUnitApi {
     override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> = organisationalUnitService.getAllAsResponses()
 
@@ -165,6 +168,15 @@ open class OrganisationalUnitController(
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
     ): OrganisationalUnitResponse =
         organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+
+    @Secured("ROLE_ADMIN")
+    override fun updateOrgUnitServiceProviders(
+        key: String,
+        @Valid @Body updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest
+    ): HttpResponse<Void> {
+        serviceProviderService.updateOrgUnitServiceProviders(key, updateLinkedServiceProvidersRequest.serviceProviderKeys)
+        return HttpResponse.noContent()
+    }
 
     private fun getCurrentUser(): User {
         val email =

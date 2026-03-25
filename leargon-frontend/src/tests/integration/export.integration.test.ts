@@ -69,28 +69,29 @@ describe('Export API', () => {
     expect(res.status).toBe(401);
   });
 
-  // ─── Data Processors ─────────────────────────────────────────────────────
+  // ─── Service Providers ───────────────────────────────────────────────────
 
-  it('admin can export data processors register as CSV', async () => {
-    await adminClient.post('/data-processors', {
-      names: [{ locale: 'en', text: 'CSV Test Processor' }],
+  it('admin can export service providers register as CSV', async () => {
+    await adminClient.post('/service-providers', {
+      names: [{ locale: 'en', text: 'CSV Test Provider' }],
       processingCountries: ['DE', 'US'],
       processorAgreementInPlace: true,
       subProcessorsApproved: false,
+      serviceProviderType: 'DATA_PROCESSOR',
     });
 
-    const res = await adminClient.get<string>('/export/data-processors', {
+    const res = await adminClient.get<string>('/export/service-providers', {
       responseType: 'text',
     });
 
     expect(res.status).toBe(200);
-    expect(res.data).toContain('Processor Key');
-    expect(res.data).toContain('Processor Name');
-    expect(res.data).toContain('CSV Test Processor');
+    expect(res.data).toContain('Service Provider Key');
+    expect(res.data).toContain('Service Provider Name');
+    expect(res.data).toContain('CSV Test Provider');
   });
 
-  it('non-admin cannot export data processors', async () => {
-    const res = await userClient.get('/export/data-processors');
+  it('non-admin cannot export service providers', async () => {
+    const res = await userClient.get('/export/service-providers');
     expect(res.status).toBe(403);
   });
 

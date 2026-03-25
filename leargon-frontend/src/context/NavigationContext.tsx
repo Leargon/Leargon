@@ -10,7 +10,7 @@ const STORAGE_KEY = 'leargon_perspective';
 // are intentionally absent so the current perspective is preserved.
 const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
   '/compliance': 'gdpr',
-  '/data-processors': 'gdpr',
+  '/service-providers': 'gdpr',
   '/dpia': 'gdpr',
   '/domains': 'ddd',
   '/diagrams/context-map': 'ddd',

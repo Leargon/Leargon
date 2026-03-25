@@ -75,7 +75,9 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import {
   useUpdateProcessItSystems,
+  useUpdateProcessServiceProviders,
 } from '../../api/generated/process/process';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -99,6 +101,7 @@ import type {
   OrganisationalUnitResponse,
   CrossBorderTransferEntry,
   ItSystemResponse,
+  ServiceProviderResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
@@ -169,6 +172,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: allItSystemsResponse } = useGetAllItSystems();
   const allItSystems = (allItSystemsResponse?.data as ItSystemResponse[] | undefined) || [];
+  const { data: allServiceProvidersResponse } = useGetAllServiceProviders();
+  const allServiceProviders = (allServiceProvidersResponse?.data as ServiceProviderResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetProcessDpia(processKey, {
@@ -222,6 +227,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
   const updateItSystems = useUpdateProcessItSystems();
+  const updateServiceProviders = useUpdateProcessServiceProviders();
   const updateParent = useUpdateProcessParent();
 
   // Cross-border transfers dialog state
@@ -360,6 +366,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Service Providers inline edit
+  const serviceProvidersEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateServiceProviders.mutateAsync({ key: processKey, data: { serviceProviderKeys: keys } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different process
   useEffect(() => {
     namesEdit.cancel();
@@ -375,6 +389,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     purposeEdit.cancel();
     securityMeasuresEdit.cancel();
     itSystemsEdit.cancel();
+    serviceProvidersEdit.cancel();
     parentEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
@@ -830,23 +845,57 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Data Processors */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Data Processors</Typography>
+      {/* Service Providers */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">Service Providers</Typography>
+        {isOwnerOrAdmin && !serviceProvidersEdit.isEditing && (
+          <IconButton size="small" onClick={() => serviceProvidersEdit.startEdit((process.serviceProviders ?? []).map((s) => s.key))}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
+        {serviceProvidersEdit.isEditing && (
+          <>
+            <IconButton size="small" onClick={serviceProvidersEdit.save} disabled={serviceProvidersEdit.isSaving} color="primary">
+              {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+            </IconButton>
+            <IconButton size="small" onClick={serviceProvidersEdit.cancel} disabled={serviceProvidersEdit.isSaving}>
+              <Close fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </Box>
       <Box sx={{ mb: 2 }}>
-        {process.dataProcessors && process.dataProcessors.length > 0 ? (
+        {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+          <Box>
+            <Autocomplete
+              multiple
+              options={allServiceProviders}
+              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+              value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+              onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+              renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+              renderTags={(val, getTagProps) =>
+                val.map((option, index) => (
+                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                ))
+              }
+            />
+            {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+          </Box>
+        ) : (process.serviceProviders ?? []).length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {process.dataProcessors.map((dp) => (
+            {(process.serviceProviders ?? []).map((sp) => (
               <Chip
-                key={dp.key}
-                label={getLocalizedText(dp.names, dp.key)}
-                icon={dp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
+                key={sp.key}
+                label={getLocalizedText(sp.names, sp.key)}
+                icon={sp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
                 size="small"
                 variant="outlined"
               />
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No data processors linked</Typography>
+          <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
         )}
       </Box>
 

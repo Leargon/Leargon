@@ -118,7 +118,7 @@ class Process {
     var crossBorderTransfers: MutableList<CrossBorderTransfer>? = null
 
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
-    var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
+    var serviceProviders: MutableSet<ServiceProvider> = mutableSetOf()
 
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
     var itSystems: MutableSet<ItSystem> = mutableSetOf()

@@ -18,7 +18,7 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
-    @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "itSystems", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<Process>
 
@@ -31,7 +31,7 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
-    @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "itSystems", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<Process>
 

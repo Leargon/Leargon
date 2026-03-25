@@ -22,7 +22,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     title: 'DSG / GDPR',
     items: [
       { label: 'Processing Register', path: '/compliance', icon: <FactCheck /> },
-      { label: 'Sub-processor List', path: '/data-processors', icon: <Handshake /> },
+      { label: 'Service Providers', path: '/service-providers', icon: <Handshake /> },
       { label: 'DPIA Register', path: '/dpia', icon: <GppGood /> },
       { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
     ],

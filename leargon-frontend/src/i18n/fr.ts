@@ -287,7 +287,7 @@ const fr = {
     colDataSubjectCategories: 'Catégories de personnes',
     colPersonalDataCategories: 'Catégories de données',
     colDomain: 'Domaine',
-    colDataProcessors: 'Sous-traitants',
+    colServiceProviders: 'Prestataires',
     colCrossBorder: 'Transferts transfrontaliers',
     colPersonalData: 'Données personnelles',
     colCompleteness: 'Complétude',

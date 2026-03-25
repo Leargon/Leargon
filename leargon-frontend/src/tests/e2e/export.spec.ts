@@ -36,16 +36,16 @@ test.describe('Compliance Exports (Admin)', () => {
     expect(download.suggestedFilename()).toBe('processing-register.csv');
   });
 
-  test('clicking sub-processor register export triggers download', async ({ page }) => {
-    await page.goto('/compliance');
+  test('clicking service providers export triggers download', async ({ page }) => {
+    await page.goto('/service-providers');
     await page.waitForLoadState('networkidle');
 
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: /export/i }).click();
-    await page.getByRole('menuitem', { name: /sub-processor/i }).click();
+    await page.getByRole('menuitem', { name: /service provider/i }).click();
 
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe('data-processors.csv');
+    expect(download.suggestedFilename()).toBe('service-providers.csv');
   });
 
   test('clicking DPIA register export triggers download', async ({ page }) => {

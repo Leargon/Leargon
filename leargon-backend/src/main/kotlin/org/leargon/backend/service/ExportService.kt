@@ -8,16 +8,16 @@ import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
-import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Singleton
 open class ExportService(
     private val processRepository: ProcessRepository,
-    private val dataProcessorRepository: DataProcessorRepository,
+    private val serviceProviderRepository: ServiceProviderRepository,
     private val dpiaRepository: DpiaRepository,
     private val fieldConfigurationService: FieldConfigurationService,
     private val contextRelationshipRepository: ContextRelationshipRepository,
@@ -74,7 +74,7 @@ open class ExportService(
                 "Security Measures",
                 "Data Subject Categories",
                 "Personal Data Categories",
-                "Data Processors",
+                "Service Providers",
                 "Cross-border Transfers"
             )
         )
@@ -91,7 +91,7 @@ open class ExportService(
                 allEntities
                     .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
             val dataProcessors =
-                process.dataProcessors.joinToString("; ") {
+                process.serviceProviders.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
             val transfers =
@@ -114,19 +114,20 @@ open class ExportService(
         return sb.toString()
     }
 
-    fun exportDataProcessors(locale: String = "en"): String {
+    fun exportServiceProviders(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
-                "Processor Key",
-                "Processor Name",
+                "Service Provider Key",
+                "Service Provider Name",
+                "Service Provider Type",
                 "Processing Countries",
                 "Processor Agreement In Place",
                 "Sub-processors Approved",
                 "Linked Processes"
             )
         )
-        val processors = dataProcessorRepository.findAll()
+        val processors = serviceProviderRepository.findAll()
         for (processor in processors) {
             val name = processor.names.find { it.locale == locale }?.text ?: processor.names.firstOrNull()?.text ?: processor.key
             val countries = processor.processingCountries.joinToString("; ")
@@ -138,6 +139,7 @@ open class ExportService(
                 csvRow(
                     processor.key,
                     name,
+                    processor.serviceProviderType,
                     countries,
                     processor.processorAgreementInPlace.toString(),
                     processor.subProcessorsApproved.toString(),

@@ -26,15 +26,15 @@ open class ExportController(
             .header("Content-Disposition", "attachment; filename=\"processing-register.csv\"")
     }
 
-    @Get("/data-processors")
-    fun exportDataProcessors(
+    @Get("/service-providers")
+    fun exportServiceProviders(
         @QueryValue(defaultValue = "en") locale: String
     ): HttpResponse<String> {
-        val csv = exportService.exportDataProcessors(locale)
+        val csv = exportService.exportServiceProviders(locale)
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
-            .header("Content-Disposition", "attachment; filename=\"data-processors.csv\"")
+            .header("Content-Disposition", "attachment; filename=\"service-providers.csv\"")
     }
 
     @Get("/dpia-register")

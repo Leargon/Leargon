@@ -20,13 +20,13 @@ import type { BoundedContextSummaryResponse } from './boundedContextSummaryRespo
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
-import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { ItSystemSummaryResponse } from './itSystemSummaryResponse';
 import type { LegalBasis } from './legalBasis';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
 import type { ProcessType } from './processType';
+import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface ProcessResponse {
@@ -70,10 +70,10 @@ export interface ProcessResponse {
    */
   crossBorderTransfers?: CrossBorderTransferEntry[] | null;
   /**
-   * Data processors linked to this process
+   * Service providers linked to this process
    * @nullable
    */
-  dataProcessors?: DataProcessorSummaryResponse[] | null;
+  serviceProviders?: ServiceProviderSummaryResponse[] | null;
   /**
    * IT systems used in this process
    * @nullable

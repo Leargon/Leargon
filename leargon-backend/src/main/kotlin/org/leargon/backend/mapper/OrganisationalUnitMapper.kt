@@ -15,7 +15,7 @@ import java.time.ZonedDateTime
 @Singleton
 open class OrganisationalUnitMapper(
     private val fieldConfigurationService: FieldConfigurationService,
-    private val dataProcessorMapper: DataProcessorMapper
+    private val serviceProviderMapper: ServiceProviderMapper
 ) {
     fun toResponse(
         unit: OrganisationalUnit,
@@ -60,7 +60,7 @@ open class OrganisationalUnitMapper(
             .isExternal(unit.isExternal)
             .externalCompanyName(unit.externalCompanyName)
             .countryOfExecution(unit.countryOfExecution)
-            .linkedDataProcessor(unit.linkedDataProcessor?.let { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .serviceProviders(unit.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .dataAccessEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataAccessEntities))
             .dataManipulationEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataManipulationEntities))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))

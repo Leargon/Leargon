@@ -48,8 +48,8 @@ tags:
   description: Organisational Unit management endpoints
 - name: Process
   description: Business Process management endpoints
-- name: DataProcessor
-  description: Data Processor management endpoints
+- name: ServiceProvider
+  description: Service Provider management endpoints
 - name: Dpia
   description: Data Protection Impact Assessment management endpoints
 - name: Export
@@ -3587,7 +3587,7 @@ paths:
       tags:
       - OrganisationalUnit
       summary: Update external/body-leasing fields
-      description: Updates isExternal, externalCompanyName, countryOfExecution, and linkedDataProcessorKey. Requires ROLE_ADMIN.
+      description: Updates isExternal, externalCompanyName, and countryOfExecution. Requires ROLE_ADMIN.
       operationId: updateOrgUnitExternalFields
       security:
       - bearerAuth: []
@@ -3611,6 +3611,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /organisational-units/{key}/service-providers:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update linked service providers
+      description: Replaces the set of service providers linked to this org unit. Requires ROLE_ADMIN.
+      operationId: updateOrgUnitServiceProviders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkedServiceProvidersRequest'
+      responses:
+        '204':
+          description: Service providers updated
         '404':
           description: Organisational unit not found
         '401':
@@ -4876,13 +4907,13 @@ paths:
           description: Process not found
         '401':
           description: Not authenticated
-  /processes/{key}/data-processors:
+  /processes/{key}/service-providers:
     put:
       tags:
       - Process
-      summary: Update linked data processors
-      description: Replaces the set of data processors linked to a process. Admin only.
-      operationId: updateProcessDataProcessors
+      summary: Update linked service providers
+      description: Replaces the set of service providers linked to a process. Admin only.
+      operationId: updateProcessServiceProviders
       security:
       - bearerAuth: []
       parameters:
@@ -4897,7 +4928,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
+              $ref: '#/components/schemas/UpdateLinkedServiceProvidersRequest'
       responses:
         '204':
           description: Updated
@@ -4907,32 +4938,32 @@ paths:
           description: Not found
         '401':
           description: Not authenticated
-  /data-processors:
+  /service-providers:
     get:
       tags:
-      - DataProcessor
-      summary: Get all data processors
-      description: Returns a list of all data processors. Requires authentication.
-      operationId: getAllDataProcessors
+      - ServiceProvider
+      summary: Get all service providers
+      description: Returns a list of all service providers. Requires authentication.
+      operationId: getAllServiceProviders
       security:
       - bearerAuth: []
       responses:
         '200':
-          description: List of data processors
+          description: List of service providers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DataProcessorResponse'
+                  $ref: '#/components/schemas/ServiceProviderResponse'
         '401':
           description: Not authenticated
     post:
       tags:
-      - DataProcessor
-      summary: Create a data processor
-      description: Creates a new data processor entry. Requires ROLE_ADMIN.
-      operationId: createDataProcessor
+      - ServiceProvider
+      summary: Create a service provider
+      description: Creates a new service provider entry. Requires ROLE_ADMIN.
+      operationId: createServiceProvider
       security:
       - bearerAuth: []
       requestBody:
@@ -4940,58 +4971,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDataProcessorRequest'
+              $ref: '#/components/schemas/CreateServiceProviderRequest'
       responses:
         '201':
-          description: Data processor created
+          description: Service provider created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}:
+  /service-providers/{key}:
     get:
       tags:
-      - DataProcessor
-      summary: Get a data processor by key
-      description: Returns a single data processor. Requires authentication.
-      operationId: getDataProcessor
+      - ServiceProvider
+      summary: Get a service provider by key
+      description: Returns a single service provider. Requires authentication.
+      operationId: getServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       responses:
         '200':
-          description: Data processor
+          description: Service provider
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
     put:
       tags:
-      - DataProcessor
-      summary: Update a data processor
-      description: Updates a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessor
+      - ServiceProvider
+      summary: Update a service provider
+      description: Updates a service provider. Requires ROLE_ADMIN.
+      operationId: updateServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       requestBody:
@@ -4999,58 +5030,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDataProcessorRequest'
+              $ref: '#/components/schemas/UpdateServiceProviderRequest'
       responses:
         '200':
-          description: Updated data processor
+          description: Updated service provider
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
     delete:
       tags:
-      - DataProcessor
-      summary: Delete a data processor
-      description: Deletes a data processor. Requires ROLE_ADMIN.
-      operationId: deleteDataProcessor
+      - ServiceProvider
+      summary: Delete a service provider
+      description: Deletes a service provider. Requires ROLE_ADMIN.
+      operationId: deleteServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       responses:
         '204':
-          description: Data processor deleted
+          description: Service provider deleted
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}/linked-processes:
+  /service-providers/{key}/linked-processes:
     put:
       tags:
-      - DataProcessor
+      - ServiceProvider
       summary: Update linked processes
-      description: Replaces the list of linked processes for a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessorLinkedProcesses
+      description: Replaces the list of linked processes for a service provider. Requires ROLE_ADMIN.
+      operationId: updateServiceProviderLinkedProcesses
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       requestBody:
@@ -5058,12 +5089,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDataProcessorProcessLinksRequest'
+              $ref: '#/components/schemas/UpdateServiceProviderProcessLinksRequest'
       responses:
         '204':
           description: Linked processes updated
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
@@ -5551,13 +5582,13 @@ paths:
           description: Not authenticated
         '403':
           description: Requires ROLE_ADMIN
-  /export/data-processors:
+  /export/service-providers:
     get:
       tags:
       - Export
-      summary: Export sub-processor register (Auftragsverarbeiter)
-      description: Returns a CSV export of all data processors with linked processes and entities. Requires ROLE_ADMIN.
-      operationId: exportDataProcessors
+      summary: Export service provider register
+      description: Returns a CSV export of all service providers with linked processes. Requires ROLE_ADMIN.
+      operationId: exportServiceProviders
       security:
       - bearerAuth: []
       parameters:
@@ -6907,10 +6938,12 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code where external work is performed
-        linkedDataProcessor:
-          $ref: '#/components/schemas/DataProcessorSummaryResponse'
+        serviceProviders:
+          type: array
           nullable: true
-          description: Data processor (DPA) linked to this external unit
+          items:
+            $ref: '#/components/schemas/ServiceProviderSummaryResponse'
+          description: Service providers (DPA, bodylease, consultants, etc.) linked to this org unit
         dataAccessEntities:
           type: array
           nullable: true
@@ -7148,12 +7181,12 @@ components:
           items:
             $ref: '#/components/schemas/CrossBorderTransferEntry'
           description: List of cross-border data transfers for this process
-        dataProcessors:
+        serviceProviders:
           type: array
           nullable: true
           items:
-            $ref: '#/components/schemas/DataProcessorSummaryResponse'
-          description: Data processors linked to this process
+            $ref: '#/components/schemas/ServiceProviderSummaryResponse'
+          description: Service providers linked to this process
         itSystems:
           type: array
           nullable: true
@@ -7805,33 +7838,46 @@ components:
           items:
             type: string
           description: ISO 3166-1 alpha-2 country codes where data is stored
-    DataProcessorSummaryResponse:
+    ServiceProviderType:
+      type: string
+      enum:
+        - DATA_PROCESSOR
+        - BODYLEASE
+        - MANAGED_SERVICE
+        - CONSULTANT
+        - OTHER
+      description: Type of service provider
+    ServiceProviderSummaryResponse:
       type: object
       required:
       - key
       - names
+      - serviceProviderType
       - processorAgreementInPlace
       - subProcessorsApproved
       properties:
         key:
           type: string
-          description: Data processor key
+          description: Service provider key
           example: aws-eu-west-1
         names:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processorAgreementInPlace:
           type: boolean
           description: Whether a data processing agreement is in place
         subProcessorsApproved:
           type: boolean
           description: Whether sub-processors have been approved
-    DataProcessorResponse:
+    ServiceProviderResponse:
       type: object
       required:
       - key
       - names
+      - serviceProviderType
       - processingCountries
       - processorAgreementInPlace
       - subProcessorsApproved
@@ -7839,12 +7885,14 @@ components:
       properties:
         key:
           type: string
-          description: Data processor key
+          description: Service provider key
           example: aws-eu-west-1
         names:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7861,7 +7909,7 @@ components:
           nullable: true
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
-          description: Processes linked to this processor
+          description: Processes linked to this service provider
         createdAt:
           type: string
           format: date-time
@@ -7871,7 +7919,7 @@ components:
           format: date-time
           nullable: true
           description: Last update timestamp
-    CreateDataProcessorRequest:
+    CreateServiceProviderRequest:
       type: object
       required:
       - names
@@ -7880,6 +7928,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7889,7 +7939,7 @@ components:
           type: boolean
         subProcessorsApproved:
           type: boolean
-    UpdateDataProcessorRequest:
+    UpdateServiceProviderRequest:
       type: object
       required:
       - names
@@ -7898,6 +7948,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7907,25 +7959,17 @@ components:
           type: boolean
         subProcessorsApproved:
           type: boolean
-    UpdateLinkedDataProcessorsRequest:
+    UpdateLinkedServiceProvidersRequest:
       type: object
       required:
-      - dataProcessorKeys
+      - serviceProviderKeys
       properties:
-        dataProcessorKeys:
+        serviceProviderKeys:
           type: array
           items:
             type: string
-          description: Keys of data processors to link
-    UpdateDataProcessorEntityLinksRequest:
-      type: object
-      properties:
-        businessEntityKeys:
-          type: array
-          items:
-            type: string
-          description: Keys of business entities to link
-    UpdateDataProcessorProcessLinksRequest:
+          description: Keys of service providers to link
+    UpdateServiceProviderProcessLinksRequest:
       type: object
       properties:
         processKeys:
@@ -8618,10 +8662,6 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code
-        linkedDataProcessorKey:
-          type: string
-          nullable: true
-          description: Key of the data processor (DPA) for this external unit
     UpdateOrgUnitEntityLinksRequest:
       type: object
       required:

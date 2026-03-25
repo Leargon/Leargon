@@ -16,15 +16,14 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText';
+import type { ServiceProviderType } from './serviceProviderType';
 
-export interface UpdateOrgUnitExternalFieldsRequest {
-  /** @nullable */
-  isExternal?: boolean | null;
-  /** @nullable */
-  externalCompanyName?: string | null;
-  /**
-   * ISO 3166-1 alpha-2 country code
-   * @nullable
-   */
-  countryOfExecution?: string | null;
+export interface UpdateServiceProviderRequest {
+  names: LocalizedText[];
+  serviceProviderType?: ServiceProviderType;
+  /** ISO 3166-1 alpha-2 country codes */
+  processingCountries?: string[];
+  processorAgreementInPlace?: boolean;
+  subProcessorsApproved?: boolean;
 }

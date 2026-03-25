@@ -73,7 +73,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const hasChildren = children.length > 0;
   const completeness = getCompleteness(process);
   const hasMissing = (process.missingMandatoryFields?.length ?? 0) > 0;
-  const processorCount = process.dataProcessors?.length ?? 0;
+  const processorCount = process.serviceProviders?.length ?? 0;
   const transferCount = process.crossBorderTransfers?.length ?? 0;
 
   const handleLegalBasisChange = useCallback(async (value: string) => {
@@ -472,7 +472,7 @@ const ProcessingRegisterPage: React.FC = () => {
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalData')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataSubjectCategories')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalDataCategories')}</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataProcessors')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colServiceProviders')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colCrossBorder')}</TableCell>
               <TableCell sx={{ fontWeight: 600, minWidth: 120 }}>{t('compliance.colCompleteness')}</TableCell>
             </TableRow>

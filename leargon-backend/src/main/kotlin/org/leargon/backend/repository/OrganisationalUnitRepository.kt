@@ -12,7 +12,7 @@ interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long>
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
-    @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<OrganisationalUnit>
@@ -26,7 +26,7 @@ interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long>
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
-    @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<OrganisationalUnit>
@@ -35,7 +35,7 @@ interface OrganisationalUnitRepository : JpaRepository<OrganisationalUnit, Long>
     @Join(value = "parents", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "businessOwner", type = Join.Type.LEFT_FETCH)
-    @Join(value = "linkedDataProcessor", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataAccessEntities", type = Join.Type.LEFT_FETCH)
     @Join(value = "dataManipulationEntities", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<OrganisationalUnit>

@@ -17,7 +17,7 @@ import OntologyPage from './pages/OntologyPage';
 import ProcessesPage from './pages/ProcessesPage';
 import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
-import DataProcessorsPage from './pages/DataProcessorsPage';
+import ServiceProvidersPage from './pages/ServiceProvidersPage';
 import ProcessingRegisterPage from './pages/ProcessingRegisterPage';
 import DpiaListPage from './pages/DpiaListPage';
 import ProfilePage from './pages/ProfilePage';
@@ -68,8 +68,8 @@ const router = createBrowserRouter([
       { path: 'settings/locales', element: <SettingsPage /> },
       { path: 'settings/classifications', element: <SettingsPage /> },
       { path: 'settings/field-configurations', element: <SettingsPage /> },
-      { path: 'data-processors', element: <DataProcessorsPage /> },
-      { path: 'data-processors/:key', element: <DataProcessorsPage /> },
+      { path: 'service-providers', element: <ServiceProvidersPage /> },
+      { path: 'service-providers/:key', element: <ServiceProvidersPage /> },
       { path: 'compliance', element: <ProcessingRegisterPage /> },
       { path: 'dpia', element: <DpiaListPage /> },
       { path: 'team-insights', element: <TeamInsightsPage /> },
