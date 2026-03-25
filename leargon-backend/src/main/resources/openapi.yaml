@@ -2101,6 +2101,42 @@ paths:
         '401':
           description: Not authenticated
   /business-entities/{key}/data-owner:
+    delete:
+      tags:
+      - BusinessEntity
+      summary: Clear explicit data owner override
+      description: Clears the explicit data owner override, reverting to computed owner from the bounded context owning unit. Only the Data Owner or an Administrator can edit an entity.
+      operationId: clearBusinessEntityDataOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Business Entity data owner override cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
     put:
       tags:
       - BusinessEntity
@@ -4407,6 +4443,38 @@ paths:
         '401':
           description: Not authenticated
   /processes/{key}/owner:
+    delete:
+      tags:
+      - Process
+      summary: Clear explicit process owner override
+      description: Clears the explicit process owner override, reverting to computed owner from the bounded context owning unit. Only the current owner or an admin can perform this.
+      operationId: clearProcessOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process owner override cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
     put:
       tags:
       - Process
@@ -6209,6 +6277,10 @@ components:
           type: string
           description: Parent domain name in default locale
           example: Sales Domain
+        owningUnitName:
+          type: string
+          nullable: true
+          description: Name of the owning organisational unit (used for computed owner/steward/custodian display)
     BoundedContextResponse:
       type: object
       required:
@@ -6427,12 +6499,12 @@ components:
       type: object
       required:
       - key
-      - dataOwner
       - createdBy
       - names
       - descriptions
       - createdAt
       - updatedAt
+      - ownerIsExplicit
       properties:
         key:
           type: string
@@ -6440,6 +6512,11 @@ components:
           example: sales.retail.customer
         dataOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+        ownerIsExplicit:
+          type: boolean
+          description: True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context
         dataSteward:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
@@ -7370,12 +7447,12 @@ components:
       type: object
       required:
       - key
-      - processOwner
       - createdBy
       - names
       - descriptions
       - createdAt
       - updatedAt
+      - ownerIsExplicit
       properties:
         key:
           type: string
@@ -7400,6 +7477,11 @@ components:
           description: Technical and organisational security measures (TOM)
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+        ownerIsExplicit:
+          type: boolean
+          description: True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context
         processSteward:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true

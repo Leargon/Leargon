@@ -27,7 +27,10 @@ import type { UserSummaryResponse } from './userSummaryResponse';
 export interface BusinessEntityResponse {
   /** BusinessEntity key (hierarchical slug) */
   key: string;
-  dataOwner: UserSummaryResponse;
+  /** Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  dataOwner?: UserSummaryResponse | null;
+  /** True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context */
+  ownerIsExplicit: boolean;
   /** Business steward override (falls back to owning org unit steward) */
   dataSteward?: UserSummaryResponse | null;
   /** Technical custodian override (falls back to owning org unit technical custodian) */

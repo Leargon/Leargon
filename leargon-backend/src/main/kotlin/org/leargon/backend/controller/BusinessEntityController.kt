@@ -95,6 +95,11 @@ open class BusinessEntityController(
         return businessEntityService.updateBusinessEntityParentAsResponse(key, updateBusinessEntityParentRequest.parentKey, currentUser)
     }
 
+    override fun clearBusinessEntityDataOwner(key: String): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.clearBusinessEntityDataOwner(key, currentUser)
+    }
+
     override fun updateBusinessEntityDataOwner(
         key: String,
         @Valid @Body updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest
@@ -102,7 +107,7 @@ open class BusinessEntityController(
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityDataOwnerAsResponse(
             key,
-            updateBusinessEntityDataOwnerRequest.dataOwnerUsername,
+            updateBusinessEntityDataOwnerRequest.dataOwnerUsername!!,
             currentUser
         )
     }

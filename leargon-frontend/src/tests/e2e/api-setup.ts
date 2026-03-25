@@ -136,6 +136,13 @@ export const createBoundedContext = (
     as,
   );
 
+export const createCapability = (
+  name: string,
+  extras?: Record<string, unknown>,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch('/capabilities', 'POST', { names: [{ locale: 'en', text: name }], ...extras }, as);
+
 export const createDomainEvent = (
   publishingBoundedContextKey: string,
   name: string,

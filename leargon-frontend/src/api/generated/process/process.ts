@@ -1756,6 +1756,105 @@ export const useRemoveProcessOutput = <TError = void | ErrorResponse,
       return useMutation(getRemoveProcessOutputMutationOptions(options), queryClient);
     }
     /**
+ * Clears the explicit process owner override, reverting to computed owner from the bounded context owning unit. Only the current owner or an admin can perform this.
+ * @summary Clear explicit process owner override
+ */
+export type clearProcessOwnerResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type clearProcessOwnerResponse401 = {
+  data: void
+  status: 401
+}
+
+export type clearProcessOwnerResponse403 = {
+  data: void
+  status: 403
+}
+
+export type clearProcessOwnerResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type clearProcessOwnerResponseSuccess = (clearProcessOwnerResponse200) & {
+  headers: Headers;
+};
+export type clearProcessOwnerResponseError = (clearProcessOwnerResponse401 | clearProcessOwnerResponse403 | clearProcessOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type clearProcessOwnerResponse = (clearProcessOwnerResponseSuccess | clearProcessOwnerResponseError)
+
+export const getClearProcessOwnerUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/owner`
+}
+
+export const clearProcessOwner = async (key: string, options?: RequestInit): Promise<clearProcessOwnerResponse> => {
+  
+  return customAxios<clearProcessOwnerResponse>(getClearProcessOwnerUrl(key),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+
+
+export const getClearProcessOwnerMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext> => {
+
+const mutationKey = ['clearProcessOwner'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearProcessOwner>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
+
+          return  clearProcessOwner(key,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearProcessOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof clearProcessOwner>>>
+    
+    export type ClearProcessOwnerMutationError = void | ErrorResponse
+
+    /**
+ * @summary Clear explicit process owner override
+ */
+export const useClearProcessOwner = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearProcessOwner>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getClearProcessOwnerMutationOptions(options), queryClient);
+    }
+    /**
  * Updates the owner of a process. Only the current process owner or an admin can update.
  * @summary Update process owner
  */

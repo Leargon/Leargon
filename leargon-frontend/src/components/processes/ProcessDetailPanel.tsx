@@ -45,6 +45,7 @@ import {
   useUpdateProcessType,
   useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
+  useClearProcessOwner,
   useUpdateProcessSteward,
   useUpdateProcessTechnicalCustodian,
   useUpdateProcessCode,
@@ -224,6 +225,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateType = useUpdateProcessType();
   const updateLegalBasis = useUpdateProcessLegalBasis();
   const updateOwner = useUpdateProcessOwner();
+  const clearOwnerMutation = useClearProcessOwner();
   const updateSteward = useUpdateProcessSteward();
   const updateTechnicalCustodian = useUpdateProcessTechnicalCustodian();
   const updateCode = useUpdateProcessCode();
@@ -295,6 +297,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       invalidate();
     },
   });
+  const clearOwnerOverride = async () => {
+    await clearOwnerMutation.mutateAsync({ key: processKey });
+    invalidate();
+  };
 
   // Process steward inline edit
   const stewardEdit = useInlineEdit<string | null>({
@@ -555,7 +561,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
         <PropRow label={t('process.processOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
-          onEdit={() => ownerEdit.startEdit(process.processOwner.username)} onSave={ownerEdit.save}
+          onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
             <Box>
@@ -572,7 +578,21 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {process.processOwner ? (
+                <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary">{t('common.unassigned')}</Typography>
+              )}
+              {!process.ownerIsExplicit && process.processOwner && (
+                <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+              )}
+              {process.ownerIsExplicit && isAdmin && (
+                <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                  {t('common.clearOverride')}
+                </Button>
+              )}
+            </Box>
           )}
         </PropRow>
         <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}

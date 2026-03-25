@@ -50,7 +50,10 @@ export interface ProcessResponse {
    * @nullable
    */
   securityMeasures?: string | null;
-  processOwner: UserSummaryResponse;
+  /** Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  processOwner?: UserSummaryResponse | null;
+  /** True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context */
+  ownerIsExplicit: boolean;
   /** Business steward override (falls back to owning org unit steward) */
   processSteward?: UserSummaryResponse | null;
   /** Technical custodian override (falls back to owning org unit technical custodian) */

@@ -318,6 +318,21 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun clearProcessOwner(
+        key: String,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.processOwner = null
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "OWNER_CHANGE", "Cleared explicit process owner (reverted to computed)")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessSteward(
         key: String,
         stewardUsername: String?,
@@ -714,7 +729,7 @@ open class ProcessService(
                 "code" to process.code,
                 "processType" to process.processType,
                 "legalBasis" to process.legalBasis,
-                "processOwnerUsername" to process.processOwner!!.username,
+                "processOwnerUsername" to process.processOwner?.username,
                 "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
                 "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
             )
@@ -745,7 +760,8 @@ open class ProcessService(
             process: Process,
             currentUser: User
         ) {
-            val isOwner = process.processOwner!!.id == currentUser.id
+            val effectiveOwner = process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner
+            val isOwner = effectiveOwner?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the process owner or an admin can edit this process")

@@ -43,6 +43,7 @@ import {
   useUpdateBusinessEntityNames,
   useUpdateBusinessEntityDescriptions,
   useUpdateBusinessEntityDataOwner,
+  useClearBusinessEntityDataOwner,
   useUpdateBusinessEntityDataSteward,
   useUpdateBusinessEntityTechnicalCustodian,
   useUpdateBusinessEntityParent,
@@ -209,6 +210,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateNames = useUpdateBusinessEntityNames();
   const updateDescriptions = useUpdateBusinessEntityDescriptions();
   const updateDataOwner = useUpdateBusinessEntityDataOwner();
+  const clearDataOwnerMutation = useClearBusinessEntityDataOwner();
   const updateDataSteward = useUpdateBusinessEntityDataSteward();
   const updateTechnicalCustodian = useUpdateBusinessEntityTechnicalCustodian();
   const updateParent = useUpdateBusinessEntityParent();
@@ -257,6 +259,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       invalidate();
     },
   });
+  const clearOwnerOverride = async () => {
+    await clearDataOwnerMutation.mutateAsync({ key: entityKey });
+    invalidate();
+  };
 
   // Data steward inline edit
   const dataStewardEdit = useInlineEdit<string | null>({
@@ -531,7 +537,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
         <PropRow label={t('entity.dataOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
-          onEdit={() => ownerEdit.startEdit(entity.dataOwner.username)} onSave={ownerEdit.save}
+          onEdit={() => ownerEdit.startEdit(entity.dataOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
             <Box>
@@ -548,7 +554,21 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {entity.dataOwner ? (
+                <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary">{t('common.unassigned')}</Typography>
+              )}
+              {!entity.ownerIsExplicit && entity.dataOwner && (
+                <Chip label={t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+              )}
+              {entity.ownerIsExplicit && isAdmin && (
+                <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                  {t('common.clearOverride')}
+                </Button>
+              )}
+            </Box>
           )}
         </PropRow>
         <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}

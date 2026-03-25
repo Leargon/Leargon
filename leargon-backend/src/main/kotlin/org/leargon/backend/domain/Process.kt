@@ -45,7 +45,7 @@ class Process {
     var securityMeasures: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "process_owner_id", nullable = false)
+    @JoinColumn(name = "process_owner_id", nullable = true)
     var processOwner: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)

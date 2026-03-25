@@ -31,7 +31,7 @@ open class ProcessMapper(
                     fieldName == "names" -> process.names.isNotEmpty()
                     fieldName == "descriptions" -> process.descriptions.isNotEmpty()
                     fieldName == "boundedContext" -> process.boundedContext != null
-                    fieldName == "processOwner" -> process.processOwner != null
+                    fieldName == "processOwner" -> (process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner) != null
                     fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
                     fieldName == "legalBasis" -> process.legalBasis != null
                     fieldName.startsWith("names.") -> {
@@ -49,16 +49,21 @@ open class ProcessMapper(
                     else -> true
                 }
             }
+        val owningUnit = process.boundedContext?.owningUnit
+        val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
+        val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
+        val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian
         return ProcessResponse(
             process.key,
-            UserMapper.toUserSummary(process.processOwner),
+            process.processOwner != null,
             UserMapper.toUserSummary(process.createdBy),
             LocalizedTextMapper.toModel(process.names),
             LocalizedTextMapper.toModel(process.descriptions),
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
-        ).processSteward(UserMapper.toUserSummary(process.processSteward))
-            .technicalCustodian(UserMapper.toUserSummary(process.technicalCustodian))
+        ).processOwner(UserMapper.toUserSummary(effectiveOwner))
+            .processSteward(UserMapper.toUserSummary(effectiveSteward))
+            .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
             .code(process.code)
             .processType(toProcessType(process.processType))
             .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))

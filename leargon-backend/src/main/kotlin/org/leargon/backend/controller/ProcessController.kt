@@ -127,12 +127,17 @@ open class ProcessController(
         return processService.updateSecurityMeasures(key, request.securityMeasures, currentUser)
     }
 
+    override fun clearProcessOwner(key: String): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.clearProcessOwner(key, currentUser)
+    }
+
     override fun updateProcessOwner(
         key: String,
         @Valid @Body request: UpdateProcessOwnerRequest
     ): ProcessResponse {
         val currentUser = getCurrentUser()
-        return processService.updateProcessOwner(key, request.processOwnerUsername, currentUser)
+        return processService.updateProcessOwner(key, request.processOwnerUsername!!, currentUser)
     }
 
     override fun updateProcessSteward(

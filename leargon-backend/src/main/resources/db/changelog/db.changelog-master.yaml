@@ -87,3 +87,7 @@ databaseChangeLog:
       file: db/changelog/changes/043-add-owning-unit-to-it-systems.yaml
   - include:
       file: db/changelog/changes/044-add-initial-risk-to-dpia.yaml
+  - include:
+      file: db/changelog/changes/045-clear-incompatible-storage-locations.yaml
+  - include:
+      file: db/changelog/changes/046-make-owner-nullable.yaml

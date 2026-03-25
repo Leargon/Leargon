@@ -726,6 +726,105 @@ export const useAssignClassificationsToEntity = <TError = ErrorResponse | void,
       return useMutation(getAssignClassificationsToEntityMutationOptions(options), queryClient);
     }
     /**
+ * Clears the explicit data owner override, reverting to computed owner from the bounded context owning unit. Only the Data Owner or an Administrator can edit an entity.
+ * @summary Clear explicit data owner override
+ */
+export type clearBusinessEntityDataOwnerResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type clearBusinessEntityDataOwnerResponse401 = {
+  data: void
+  status: 401
+}
+
+export type clearBusinessEntityDataOwnerResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type clearBusinessEntityDataOwnerResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type clearBusinessEntityDataOwnerResponseSuccess = (clearBusinessEntityDataOwnerResponse200) & {
+  headers: Headers;
+};
+export type clearBusinessEntityDataOwnerResponseError = (clearBusinessEntityDataOwnerResponse401 | clearBusinessEntityDataOwnerResponse403 | clearBusinessEntityDataOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type clearBusinessEntityDataOwnerResponse = (clearBusinessEntityDataOwnerResponseSuccess | clearBusinessEntityDataOwnerResponseError)
+
+export const getClearBusinessEntityDataOwnerUrl = (key: string,) => {
+
+
+  
+
+  return `/business-entities/${key}/data-owner`
+}
+
+export const clearBusinessEntityDataOwner = async (key: string, options?: RequestInit): Promise<clearBusinessEntityDataOwnerResponse> => {
+  
+  return customAxios<clearBusinessEntityDataOwnerResponse>(getClearBusinessEntityDataOwnerUrl(key),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+
+
+export const getClearBusinessEntityDataOwnerMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>, TError,{key: string}, TContext> => {
+
+const mutationKey = ['clearBusinessEntityDataOwner'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
+
+          return  clearBusinessEntityDataOwner(key,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearBusinessEntityDataOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>>
+    
+    export type ClearBusinessEntityDataOwnerMutationError = void | ErrorResponse
+
+    /**
+ * @summary Clear explicit data owner override
+ */
+export const useClearBusinessEntityDataOwner = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearBusinessEntityDataOwner>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getClearBusinessEntityDataOwnerMutationOptions(options), queryClient);
+    }
+    /**
  * Updates the data owner of a business entity. Only the Data Owner or an Administrator can edit an entity.
  * @summary Update business entity data owner
  */

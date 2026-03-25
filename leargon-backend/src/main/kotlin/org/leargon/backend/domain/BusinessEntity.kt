@@ -30,7 +30,7 @@ class BusinessEntity {
     var key: String = ""
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "data_owner_id", nullable = false)
+    @JoinColumn(name = "data_owner_id", nullable = true)
     var dataOwner: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)

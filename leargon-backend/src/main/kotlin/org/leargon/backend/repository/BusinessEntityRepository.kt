@@ -17,7 +17,11 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     )
     fun countByLocaleInTranslations(localeCode: String): Long
 
-    @Join(value = "dataOwner", type = Join.Type.FETCH)
+    @Join(value = "dataOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
@@ -29,7 +33,11 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     @Join(value = "qualityRules", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<BusinessEntity>
 
-    @Join(value = "dataOwner", type = Join.Type.FETCH)
+    @Join(value = "dataOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
@@ -41,7 +49,11 @@ interface BusinessEntityRepository : JpaRepository<BusinessEntity, Long> {
     @Join(value = "qualityRules", type = Join.Type.LEFT_FETCH)
     override fun findById(id: Long): Optional<BusinessEntity>
 
-    @Join(value = "dataOwner", type = Join.Type.FETCH)
+    @Join(value = "dataOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
