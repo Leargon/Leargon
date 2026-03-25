@@ -563,7 +563,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               {!entity.ownerIsExplicit && entity.dataOwner && (
                 <Chip label={t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
               )}
-              {entity.ownerIsExplicit && isAdmin && (
+              {entity.ownerIsExplicit && isAdmin && entity.boundedContext?.owningUnitName && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>

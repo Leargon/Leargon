@@ -325,6 +325,11 @@ open class ProcessService(
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
+        if (process.boundedContext?.owningUnit?.businessOwner == null) {
+            throw IllegalArgumentException(
+                "Cannot clear explicit process owner: no computed owner available from the bounded context's owning unit"
+            )
+        }
         process.processOwner = null
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "OWNER_CHANGE", "Cleared explicit process owner (reverted to computed)")

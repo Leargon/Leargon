@@ -200,6 +200,11 @@ open class BusinessEntityService(
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
 
+        if (entity.boundedContext?.owningUnit?.businessOwner == null) {
+            throw IllegalArgumentException(
+                "Cannot clear explicit data owner: no computed owner available from the bounded context's owning unit"
+            )
+        }
         entity.dataOwner = null
         entity = businessEntityRepository.update(entity)
         createBusinessEntityVersion(entity, currentUser, "OWNER_CHANGE", "Cleared explicit data owner (reverted to computed)")

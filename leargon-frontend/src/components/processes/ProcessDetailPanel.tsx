@@ -587,7 +587,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {!process.ownerIsExplicit && process.processOwner && (
                 <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
               )}
-              {process.ownerIsExplicit && isAdmin && (
+              {process.ownerIsExplicit && isAdmin && process.boundedContext?.owningUnitName && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
