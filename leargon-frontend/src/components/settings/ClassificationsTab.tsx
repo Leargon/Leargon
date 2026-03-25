@@ -28,7 +28,9 @@ import {
   Delete as DeleteIcon,
   ExpandMore,
   ChevronRight,
+  Lock as LockIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetClassifications,
@@ -50,6 +52,7 @@ import type {
 
 const ClassificationsTab: React.FC = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { data: classificationsResponse } = useGetClassifications();
   const classifications = [...((classificationsResponse?.data as ClassificationResponse[] | undefined) || [])].sort((a, b) => a.key.localeCompare(b.key));
@@ -215,21 +218,34 @@ const ClassificationsTab: React.FC = () => {
                     <Typography variant="subtitle1" fontWeight={500}>
                       {getLocalizedText(c.names, c.key)}
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
                       <Chip label={c.assignableTo.replace('BUSINESS_', '')} size="small" variant="outlined" />
                       <Chip label={`${(c.values ?? []).length} values`} size="small" variant="outlined" />
                       {c.multiValue && <Chip label="multi-value" size="small" color="primary" variant="outlined" />}
+                      {c.isSystem && (
+                        <Tooltip title={t('classifications.systemTooltip')}>
+                          <Chip
+                            icon={<LockIcon sx={{ fontSize: '14px !important' }} />}
+                            label={t('classifications.systemBadge')}
+                            size="small"
+                            color="warning"
+                            variant="outlined"
+                          />
+                        </Tooltip>
+                      )}
                     </Box>
                   </Box>
-                  <Tooltip title="Delete classification">
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => { e.stopPropagation(); handleDeleteClassification(c.key); }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  {!c.isSystem && (
+                    <Tooltip title="Delete classification">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteClassification(c.key); }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
 
                 <Collapse in={isExpanded}>
@@ -237,13 +253,15 @@ const ClassificationsTab: React.FC = () => {
                   <Box sx={{ p: 1.5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                       <Typography variant="body2" fontWeight={500}>Values</Typography>
-                      <Button
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => { resetValueForm(); setValueParentKey(c.key); setCreateValueOpen(true); }}
-                      >
-                        Add Value
-                      </Button>
+                      {!c.isSystem && (
+                        <Button
+                          size="small"
+                          startIcon={<AddIcon />}
+                          onClick={() => { resetValueForm(); setValueParentKey(c.key); setCreateValueOpen(true); }}
+                        >
+                          Add Value
+                        </Button>
+                      )}
                     </Box>
                     {!c.values?.length ? (
                       <Typography variant="body2" color="text.secondary">No values defined.</Typography>
@@ -253,9 +271,11 @@ const ClassificationsTab: React.FC = () => {
                           <ListItem
                             key={v.key}
                             secondaryAction={
-                              <IconButton edge="end" size="small" color="error" onClick={() => handleDeleteValue(c.key, v.key)}>
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
+                              !c.isSystem ? (
+                                <IconButton edge="end" size="small" color="error" onClick={() => handleDeleteValue(c.key, v.key)}>
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              ) : undefined
                             }
                           >
                             <ListItemText

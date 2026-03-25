@@ -96,6 +96,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(key)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification cannot be modified")
 
         if (!request.names.isNullOrEmpty()) {
             validateTranslations(request.names)
@@ -128,6 +129,7 @@ open class ClassificationService(
     ) {
         checkAdminRole(currentUser)
         val classification = getClassificationByKey(key)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification cannot be deleted")
 
         // Remove assignments from entities
         businessEntityRepository.findAll().forEach { entity ->
@@ -172,6 +174,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be modified")
 
         if (classification.values.any { it.key == request.key }) {
             throw IllegalArgumentException("Value key '${request.key}' already exists in this classification")
@@ -204,6 +207,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be modified")
 
         val value =
             classification.values.find { it.key == valueKey }
@@ -233,6 +237,7 @@ open class ClassificationService(
     ) {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be deleted")
 
         val value =
             classification.values.find { it.key == valueKey }

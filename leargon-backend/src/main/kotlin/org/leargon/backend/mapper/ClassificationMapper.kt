@@ -19,6 +19,7 @@ open class ClassificationMapper {
             classification.key,
             ClassificationAssignableTo.fromValue(classification.assignableTo),
             classification.multiValue,
+            classification.isSystem,
             UserMapper.toUserSummary(classification.createdBy),
             LocalizedTextMapper.toModel(classification.names),
             toClassificationValueResponses(classification.values),

@@ -290,6 +290,7 @@ const de = {
     colDomain: 'Domäne',
     colDataProcessors: 'Datenverarbeiter',
     colCrossBorder: 'Grenzüberschreitende Übermittlungen',
+    colPersonalData: 'Personenbezogene Daten',
     colCompleteness: 'Vollständigkeit',
     noLegalBasis: 'Nicht gesetzt',
     complete: 'Vollständig',
@@ -380,6 +381,10 @@ const de = {
     unsavedChanges: 'Ungespeicherte Änderungen',
     unsavedChangesHint: 'Im Diagramm gibt es ungespeicherte Änderungen. Verwerfen und verlassen?',
     discardAndLeave: 'Verwerfen & verlassen',
+  },
+  classifications: {
+    systemBadge: 'System',
+    systemTooltip: 'Für DSG/DSGVO-Compliance erforderlich — kann nicht geändert oder gelöscht werden',
   },
 };
 

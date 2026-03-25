@@ -6500,6 +6500,7 @@ components:
       - names
       - values
       - multiValue
+      - isSystem
       - createdAt
       - updatedAt
       properties:
@@ -6512,6 +6513,10 @@ components:
         multiValue:
           type: boolean
           description: Whether multiple values of this classification can be assigned to a single entity
+          default: false
+        isSystem:
+          type: boolean
+          description: System classifications are required for DSG/GDPR compliance and cannot be modified or deleted
           default: false
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'

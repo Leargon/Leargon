@@ -263,6 +263,23 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           )}
         </TableCell>
 
+        {/* Personal Data — computed from process classification assignments */}
+        <TableCell>
+          {(() => {
+            const hasPersonalData = (process.classificationAssignments ?? []).some(
+              (a) => a.classificationKey === 'personal-data' && a.valueKey === 'personal-data--contains',
+            );
+            return (
+              <Chip
+                label={hasPersonalData ? 'Yes' : 'No'}
+                size="small"
+                color={hasPersonalData ? 'success' : 'default'}
+                variant={hasPersonalData ? 'filled' : 'outlined'}
+              />
+            );
+          })()}
+        </TableCell>
+
         {/* Data Subject Categories — read-only (root ancestor of each input/output entity) */}
         <TableCell>
           {(() => {
@@ -452,6 +469,7 @@ const ProcessingRegisterPage: React.FC = () => {
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colLegalBasis')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPurpose')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colSecurityMeasures')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalData')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataSubjectCategories')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalDataCategories')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataProcessors')}</TableCell>
@@ -462,11 +480,11 @@ const ProcessingRegisterPage: React.FC = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9}><LinearProgress /></TableCell>
+                <TableCell colSpan={10}><LinearProgress /></TableCell>
               </TableRow>
             ) : topLevelProcesses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">
+                <TableCell colSpan={10} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>{t('common.noResults')}</Typography>
                 </TableCell>
               </TableRow>

@@ -850,6 +850,197 @@ class ClassificationControllerSpec extends Specification {
         response.body().multiValue == true
     }
 
+    // =====================
+    // SYSTEM CLASSIFICATION PROTECTION
+    // =====================
+
+    def "PUT /classifications/{key} should return 403 for system classification"() {
+        given: "a system classification created directly via repository"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Personal Data")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        and: "mark it as a system classification"
+        def classification = classificationRepository.findByKey(key).get()
+        classification.isSystem = true
+        classificationRepository.update(classification)
+
+        when: "trying to update the system classification"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/classifications/${key}",
+                        new UpdateClassificationRequest().names([new LocalizedText("en", "Modified")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /classifications/{key} should return 403 for system classification"() {
+        given: "a system classification"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Personal Data")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        def classification = classificationRepository.findByKey(key).get()
+        classification.isSystem = true
+        classificationRepository.update(classification)
+
+        when: "trying to delete the system classification"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/classifications/${key}").bearerAuth(token)
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "POST /classifications/{key}/values should return 403 for system classification"() {
+        given: "a system classification"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Personal Data")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        def classification = classificationRepository.findByKey(key).get()
+        classification.isSystem = true
+        classificationRepository.update(classification)
+
+        when: "trying to add a value to system classification"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${key}/values",
+                        new CreateClassificationValueRequest("new-value", [new LocalizedText("en", "New")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /classifications/{key}/values/{valueKey} should return 403 for system classification"() {
+        given: "a system classification with a value"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Personal Data")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${key}/values",
+                        new CreateClassificationValueRequest("contains", [new LocalizedText("en", "Contains")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        def classification = classificationRepository.findByKey(key).get()
+        classification.isSystem = true
+        classificationRepository.update(classification)
+
+        when: "trying to update a value of system classification"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/classifications/${key}/values/contains",
+                        new UpdateClassificationValueRequest().names([new LocalizedText("en", "Modified")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /classifications/{key}/values/{valueKey} should return 403 for system classification"() {
+        given: "a system classification with a value"
+        String token = createAdminToken()
+
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Personal Data")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+        String key = createResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications/${key}/values",
+                        new CreateClassificationValueRequest("contains", [new LocalizedText("en", "Contains")])
+                ).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        def classification = classificationRepository.findByKey(key).get()
+        classification.isSystem = true
+        classificationRepository.update(classification)
+
+        when: "trying to delete a value of system classification"
+        client.toBlocking().exchange(
+                HttpRequest.DELETE("/classifications/${key}/values/contains").bearerAuth(token)
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "GET /classifications should include isSystem=false for user-created classifications"() {
+        given: "a user-created classification"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.POST("/classifications",
+                        new CreateClassificationRequest(
+                                [new LocalizedText("en", "Sensitivity")],
+                                ClassificationAssignableTo.BUSINESS_ENTITY
+                        )).bearerAuth(token),
+                ClassificationResponse
+        )
+
+        when: "listing classifications"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/classifications").bearerAuth(token),
+                Argument.listOf(ClassificationResponse)
+        )
+
+        then: "isSystem is false"
+        response.body().every { !it.isSystem }
+    }
+
     def "DELETE /classifications/{key} should cascade-remove assignments (cascade delete test)"() {
         given: "a classification assigned to an entity"
         String token = createAdminToken()

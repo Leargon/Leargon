@@ -289,6 +289,7 @@ const fr = {
     colDomain: 'Domaine',
     colDataProcessors: 'Sous-traitants',
     colCrossBorder: 'Transferts transfrontaliers',
+    colPersonalData: 'Données personnelles',
     colCompleteness: 'Complétude',
     noLegalBasis: 'Not set',
     complete: 'Complete',
@@ -379,6 +380,10 @@ const fr = {
     unsavedChanges: 'Modifications non enregistrées',
     unsavedChangesHint: 'Le diagramme contient des modifications non enregistrées. Les ignorer et quitter ?',
     discardAndLeave: 'Ignorer et quitter',
+  },
+  classifications: {
+    systemBadge: 'Système',
+    systemTooltip: 'Requis pour la conformité DSG/RGPD — ne peut pas être modifié ou supprimé',
   },
 };
 

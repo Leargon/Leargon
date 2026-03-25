@@ -290,6 +290,7 @@ const en = {
     colDomain: 'Domain',
     colDataProcessors: 'Data Processors',
     colCrossBorder: 'Cross-border Transfers',
+    colPersonalData: 'Personal Data',
     colCompleteness: 'Completeness',
     noLegalBasis: 'Not set',
     complete: 'Complete',
@@ -380,6 +381,10 @@ const en = {
     unsavedChanges: 'Unsaved changes',
     unsavedChangesHint: 'You have unsaved changes in the diagram. Do you want to discard them and leave?',
     discardAndLeave: 'Discard & leave',
+  },
+  classifications: {
+    systemBadge: 'System',
+    systemTooltip: 'Required for DSG/GDPR compliance — cannot be modified or deleted',
   },
 } as const;
 

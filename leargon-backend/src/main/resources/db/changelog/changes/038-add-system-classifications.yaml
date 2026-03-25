@@ -1,0 +1,344 @@
+databaseChangeLog:
+  - changeSet:
+      id: 038-add-system-classifications
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: classifications
+            columns:
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+        # Personal Data classification
+        - insert:
+            tableName: classifications
+            columns:
+              - column:
+                  name: "`key`"
+                  value: personal-data
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Personal Data"},{"locale":"de","text":"Personenbezogene Daten"},{"locale":"fr","text":"Données Personnelles"}]'
+              - column:
+                  name: descriptions
+                  value: '[{"locale":"en","text":"Indicates whether this entity contains personal data as defined by DSG/GDPR Art. 4."}]'
+              - column:
+                  name: assignable_to
+                  value: BUSINESS_ENTITY
+              - column:
+                  name: multi_value
+                  valueBoolean: false
+              - column:
+                  name: is_system
+                  valueBoolean: true
+              - column:
+                  name: created_by_id
+                  valueComputed: "(SELECT id FROM users WHERE is_fallback_administrator = true LIMIT 1)"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        # Personal Data values
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: personal-data--contains
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Contains Personal Data"},{"locale":"de","text":"Enthält personenbezogene Daten"},{"locale":"fr","text":"Contient des données personnelles"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'personal-data')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: personal-data--not-contains
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Does Not Contain Personal Data"},{"locale":"de","text":"Enthält keine personenbezogenen Daten"},{"locale":"fr","text":"Ne contient pas de données personnelles"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'personal-data')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        # Special Categories (Art. 9 GDPR) classification
+        - insert:
+            tableName: classifications
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Special Categories (Art. 9 GDPR)"},{"locale":"de","text":"Besondere Kategorien (Art. 9 DSGVO)"},{"locale":"fr","text":"Catégories Spéciales (Art. 9 RGPD)"}]'
+              - column:
+                  name: descriptions
+                  value: '[{"locale":"en","text":"Special categories of personal data as defined by Art. 9 GDPR / DSG requiring heightened protection."}]'
+              - column:
+                  name: assignable_to
+                  value: BUSINESS_ENTITY
+              - column:
+                  name: multi_value
+                  valueBoolean: true
+              - column:
+                  name: is_system
+                  valueBoolean: true
+              - column:
+                  name: created_by_id
+                  valueComputed: "(SELECT id FROM users WHERE is_fallback_administrator = true LIMIT 1)"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        # Special Categories values
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--health
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Health Data"},{"locale":"de","text":"Gesundheitsdaten"},{"locale":"fr","text":"Données de santé"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--biometric
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Biometric Data"},{"locale":"de","text":"Biometrische Daten"},{"locale":"fr","text":"Données biométriques"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--genetic
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Genetic Data"},{"locale":"de","text":"Genetische Daten"},{"locale":"fr","text":"Données génétiques"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--political
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Political Opinion"},{"locale":"de","text":"Politische Meinung"},{"locale":"fr","text":"Opinion politique"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--religious
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Religious Belief"},{"locale":"de","text":"Religiöse Überzeugung"},{"locale":"fr","text":"Conviction religieuse"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--trade-union
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Trade Union Membership"},{"locale":"de","text":"Gewerkschaftszugehörigkeit"},{"locale":"fr","text":"Appartenance syndicale"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--ethnic
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Racial or Ethnic Origin"},{"locale":"de","text":"Rassische oder ethnische Herkunft"},{"locale":"fr","text":"Origine raciale ou ethnique"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--sexual
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Sexual Orientation"},{"locale":"de","text":"Sexuelle Orientierung"},{"locale":"fr","text":"Orientation sexuelle"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--criminal
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Criminal Convictions"},{"locale":"de","text":"Strafrechtliche Verurteilungen"},{"locale":"fr","text":"Condamnations pénales"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: "`key`"
+                  value: special-categories--none
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"None"},{"locale":"de","text":"Keine"},{"locale":"fr","text":"Aucune"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'special-categories')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
