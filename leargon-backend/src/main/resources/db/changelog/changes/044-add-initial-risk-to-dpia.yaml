@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 044-add-initial-risk-to-dpia
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: dpia
+            columns:
+              - column:
+                  name: initial_risk
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: true
