@@ -77,3 +77,7 @@ databaseChangeLog:
       file: db/changelog/changes/039-phase1-model-corrections.yaml
   - include:
       file: db/changelog/changes/040-rename-data-processor-to-service-provider.yaml
+  - include:
+      file: db/changelog/changes/041-create-capability-tables.yaml
+  - include:
+      file: db/changelog/changes/042-create-domain-event-entity-links.yaml

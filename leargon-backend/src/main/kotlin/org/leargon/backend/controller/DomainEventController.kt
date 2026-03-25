@@ -12,6 +12,7 @@ import org.leargon.backend.api.DomainEventApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.DomainEventMapper
+import org.leargon.backend.model.AddDomainEventEntityLinkRequest
 import org.leargon.backend.model.AddDomainEventProcessLinkRequest
 import org.leargon.backend.model.CreateDomainEventRequest
 import org.leargon.backend.model.DomainEventResponse
@@ -80,6 +81,24 @@ open class DomainEventController(
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
         return domainEventService.removeProcessLink(key, linkId, currentUser)
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun addDomainEventEntityLink(
+        key: String,
+        @Valid @Body addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest
+    ): DomainEventResponse {
+        val currentUser = getCurrentUser()
+        return domainEventService.addEntityLink(key, addDomainEventEntityLinkRequest, currentUser)
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun removeDomainEventEntityLink(
+        key: String,
+        linkId: Long
+    ): DomainEventResponse {
+        val currentUser = getCurrentUser()
+        return domainEventService.removeEntityLink(key, linkId, currentUser)
     }
 
     @Secured("ROLE_ADMIN")

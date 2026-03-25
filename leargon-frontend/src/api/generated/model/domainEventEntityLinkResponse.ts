@@ -16,22 +16,11 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
-import type { DomainEventEntityLinkResponse } from './domainEventEntityLinkResponse';
-import type { DomainEventProcessLinkResponse } from './domainEventProcessLinkResponse';
-import type { LocalizedText } from './localizedText';
-import type { UserSummaryResponse } from './userSummaryResponse';
+import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
+import type { DomainEventEntityLinkType } from './domainEventEntityLinkType';
 
-export interface DomainEventResponse {
+export interface DomainEventEntityLinkResponse {
   id: number;
-  key: string;
-  names: LocalizedText[];
-  descriptions: LocalizedText[];
-  publishingBoundedContext: BoundedContextSummaryResponse;
-  consumers: BoundedContextSummaryResponse[];
-  processLinks: DomainEventProcessLinkResponse[];
-  entityLinks: DomainEventEntityLinkResponse[];
-  createdBy?: UserSummaryResponse | null;
-  createdAt: string;
-  updatedAt: string;
+  entity: BusinessEntitySummaryResponse;
+  linkType: DomainEventEntityLinkType;
 }

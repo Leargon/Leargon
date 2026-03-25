@@ -17,6 +17,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './addDomainEventEntityLinkRequest';
 export * from './addDomainEventProcessLinkRequest';
 export * from './addProcessEntityRequest';
 export * from './administrationChangePasswordRequest';
@@ -48,6 +49,8 @@ export * from './businessEntityTranslationResponse';
 export * from './businessEntityTreeResponse';
 export * from './businessEntityVersionResponse';
 export * from './businessEntityVersionResponseChangeType';
+export * from './capabilityResponse';
+export * from './capabilitySummaryResponse';
 export * from './changePasswordRequest';
 export * from './classificationAssignableTo';
 export * from './classificationAssignmentRequest';
@@ -68,6 +71,7 @@ export * from './createBusinessDataQualityRuleRequestSeverity';
 export * from './createBusinessDomainRequest';
 export * from './createBusinessEntityRelationshipRequest';
 export * from './createBusinessEntityRequest';
+export * from './createCapabilityRequest';
 export * from './createClassificationRequest';
 export * from './createClassificationValueRequest';
 export * from './createContextRelationshipRequest';
@@ -83,6 +87,8 @@ export * from './crossBorderTransferEntry';
 export * from './crossBorderTransferSafeguard';
 export * from './dataProcessorResponse';
 export * from './dataProcessorSummaryResponse';
+export * from './domainEventEntityLinkResponse';
+export * from './domainEventEntityLinkType';
 export * from './domainEventLinkType';
 export * from './domainEventProcessLinkResponse';
 export * from './domainEventResponse';
@@ -159,6 +165,8 @@ export * from './updateBusinessEntityParentRequest';
 export * from './updateBusinessEntityRelationshipRequest';
 export * from './updateBusinessEntityRequest';
 export * from './updateBusinessEntityTechnicalCustodianRequest';
+export * from './updateCapabilityProcessLinksRequest';
+export * from './updateCapabilityRequest';
 export * from './updateClassificationRequest';
 export * from './updateClassificationValueRequest';
 export * from './updateContextRelationshipRequest';

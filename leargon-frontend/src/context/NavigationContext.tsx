@@ -9,6 +9,7 @@ const STORAGE_KEY = 'leargon_perspective';
 // Shared routes (/entities, /processes, /diagrams/entities, /diagrams/processes)
 // are intentionally absent so the current perspective is preserved.
 const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
+  '/capabilities': 'governance',
   '/compliance': 'gdpr',
   '/service-providers': 'gdpr',
   '/dpia': 'gdpr',

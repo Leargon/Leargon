@@ -43,6 +43,7 @@ const de = {
     apply: 'Übernehmen',
     noOptions: 'Keine Optionen',
     open: 'Öffnen',
+    close: 'Schließen',
   },
   tabs: {
     compliance: 'Compliance',
@@ -234,6 +235,11 @@ const de = {
     addConsumer: 'Konsument hinzufügen',
     addProcessLink: 'Prozessverknüpfung hinzufügen',
     deleteEvent: 'Ereignis löschen',
+    entityLinks: 'Datenobjekte',
+    noEntityLinks: 'Keine verknüpften Datenobjekte',
+    addEntityLink: 'Datenobjekt verknüpfen',
+    PRODUCES: 'Erzeugt',
+    CONSUMES: 'Konsumiert',
   },
   contextRelationshipType: {
     PARTNERSHIP: 'Partnerschaft',

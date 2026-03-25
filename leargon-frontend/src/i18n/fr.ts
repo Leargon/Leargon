@@ -42,6 +42,7 @@ const fr = {
     apply: 'Appliquer',
     noOptions: 'Aucune option',
     open: 'Ouvrir',
+    close: 'Fermer',
   },
   tabs: {
     compliance: 'Compliance',
@@ -233,6 +234,11 @@ const fr = {
     addConsumer: 'Ajouter un consommateur',
     addProcessLink: 'Ajouter un lien de processus',
     deleteEvent: 'Supprimer l\'événement',
+    entityLinks: 'Entités de données',
+    noEntityLinks: 'Aucune entité liée',
+    addEntityLink: 'Lier une entité',
+    PRODUCES: 'Produit',
+    CONSUMES: 'Consomme',
   },
   contextRelationshipType: {
     PARTNERSHIP: 'Partenariat',

@@ -43,6 +43,7 @@ const en = {
     apply: 'Apply',
     noOptions: 'No options',
     open: 'Open',
+    close: 'Close',
   },
   tabs: {
     compliance: 'Compliance',
@@ -234,6 +235,11 @@ const en = {
     addConsumer: 'Add Consumer',
     addProcessLink: 'Add Process Link',
     deleteEvent: 'Delete Event',
+    entityLinks: 'Data Entities',
+    noEntityLinks: 'No linked entities',
+    addEntityLink: 'Link Entity',
+    PRODUCES: 'Produces',
+    CONSUMES: 'Consumes',
   },
   contextRelationshipType: {
     PARTNERSHIP: 'Partnership',

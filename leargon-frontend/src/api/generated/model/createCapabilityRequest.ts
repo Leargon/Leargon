@@ -16,22 +16,27 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
-import type { DomainEventEntityLinkResponse } from './domainEventEntityLinkResponse';
-import type { DomainEventProcessLinkResponse } from './domainEventProcessLinkResponse';
 import type { LocalizedText } from './localizedText';
-import type { UserSummaryResponse } from './userSummaryResponse';
 
-export interface DomainEventResponse {
-  id: number;
-  key: string;
+export interface CreateCapabilityRequest {
+  /**
+   * Names for the capability (at least one required)
+   * @minItems 1
+   */
   names: LocalizedText[];
-  descriptions: LocalizedText[];
-  publishingBoundedContext: BoundedContextSummaryResponse;
-  consumers: BoundedContextSummaryResponse[];
-  processLinks: DomainEventProcessLinkResponse[];
-  entityLinks: DomainEventEntityLinkResponse[];
-  createdBy?: UserSummaryResponse | null;
-  createdAt: string;
-  updatedAt: string;
+  /**
+   * Descriptions for the capability
+   * @nullable
+   */
+  descriptions?: LocalizedText[] | null;
+  /**
+   * Key of the parent capability (for creating child capabilities)
+   * @nullable
+   */
+  parentCapabilityKey?: string | null;
+  /**
+   * Key of the organisational unit that owns this capability
+   * @nullable
+   */
+  owningUnitKey?: string | null;
 }

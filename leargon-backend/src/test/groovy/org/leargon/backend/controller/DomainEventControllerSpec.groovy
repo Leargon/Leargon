@@ -14,6 +14,9 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
+import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.DomainEventEntityLinkRepository
 import org.leargon.backend.repository.DomainEventProcessLinkRepository
 import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.repository.ProcessRepository
@@ -31,9 +34,12 @@ class DomainEventControllerSpec extends Specification {
     @Inject SupportedLocaleRepository localeRepository
     @Inject DomainEventRepository domainEventRepository
     @Inject DomainEventProcessLinkRepository domainEventProcessLinkRepository
+    @Inject DomainEventEntityLinkRepository domainEventEntityLinkRepository
     @Inject BoundedContextRepository boundedContextRepository
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
+    @Inject BusinessEntityRepository businessEntityRepository
+    @Inject BusinessEntityVersionRepository businessEntityVersionRepository
     @Inject ProcessRepository processRepository
     @Inject ProcessVersionRepository processVersionRepository
 
@@ -45,10 +51,13 @@ class DomainEventControllerSpec extends Specification {
     }
 
     def cleanup() {
+        domainEventEntityLinkRepository.deleteAll()
         domainEventProcessLinkRepository.deleteAll()
         domainEventRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.deleteAll()
+        businessEntityVersionRepository.deleteAll()
+        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
@@ -107,6 +116,13 @@ class DomainEventControllerSpec extends Specification {
         def body = [names: [[locale: "en", text: name]]]
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/processes", body).bearerAuth(token), Map)
+        resp.body().key
+    }
+
+    private String createBusinessEntity(String token, String name) {
+        def body = [names: [[locale: "en", text: name]]]
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/business-entities", body).bearerAuth(token), Map)
         resp.body().key
     }
 
@@ -531,5 +547,121 @@ class DomainEventControllerSpec extends Specification {
         response.body().size() == 2
         response.body().every { it.publishingBoundedContext != null }
         response.body().every { it.publishingBoundedContext.key == bcKey }
+    }
+
+    // ─── POST /domain-events/{key}/entity-links ────────────────────────────────
+
+    def "admin can add entity link PRODUCES to a domain event"() {
+        given:
+        def adminToken = createAdminToken()
+        def userData = createUserWithToken("de-elink@test.com", "deElink")
+        def domainKey = createDomain(adminToken, "Domain For Entity Link DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC For Entity Link DE")
+        def event = createDomainEvent(userData.token, bcKey, "Order Created Event")
+        def encKey = encodedKey(event.key as String)
+        def entityKey = createBusinessEntity(adminToken, "Order")
+
+        def body = [entityKey: entityKey, linkType: "PRODUCES"]
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.POST("/domain-events/${encKey}/entity-links", body).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().entityLinks.size() == 1
+        response.body().entityLinks[0].entity.key == entityKey
+        response.body().entityLinks[0].linkType == "PRODUCES"
+    }
+
+    def "admin can add entity link CONSUMES to a domain event"() {
+        given:
+        def adminToken = createAdminToken()
+        def userData = createUserWithToken("de-elink-cons@test.com", "deElinkCons")
+        def domainKey = createDomain(adminToken, "Domain For Consumes Link DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC For Consumes Link DE")
+        def event = createDomainEvent(userData.token, bcKey, "Invoice Processed Event")
+        def encKey = encodedKey(event.key as String)
+        def entityKey = createBusinessEntity(adminToken, "Invoice")
+
+        def body = [entityKey: entityKey, linkType: "CONSUMES"]
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.POST("/domain-events/${encKey}/entity-links", body).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().entityLinks.size() == 1
+        response.body().entityLinks[0].linkType == "CONSUMES"
+    }
+
+    def "non-admin cannot add entity link to a domain event"() {
+        given:
+        def adminToken = createAdminToken()
+        def userData = createUserWithToken("de-elink-403@test.com", "deElink403")
+        def domainKey = createDomain(adminToken, "Domain ELink 403 DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC ELink 403 DE")
+        def event = createDomainEvent(userData.token, bcKey, "Protected Entity Event")
+        def encKey = encodedKey(event.key as String)
+        def entityKey = createBusinessEntity(adminToken, "Product")
+
+        def body = [entityKey: entityKey, linkType: "PRODUCES"]
+
+        when:
+        client.toBlocking().exchange(
+            HttpRequest.POST("/domain-events/${encKey}/entity-links", body).bearerAuth(userData.token),
+            Map
+        )
+
+        then:
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "adding entity link returns 404 for unknown entity"() {
+        given:
+        def adminToken = createAdminToken()
+        def domainKey = createDomain(adminToken, "Domain ELink 404 DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC ELink 404 DE")
+        def event = createDomainEvent(adminToken, bcKey, "Event With No Entity")
+        def encKey = encodedKey(event.key as String)
+
+        def body = [entityKey: "nonexistent-entity", linkType: "PRODUCES"]
+
+        when:
+        client.toBlocking().exchange(
+            HttpRequest.POST("/domain-events/${encKey}/entity-links", body).bearerAuth(adminToken),
+            Map
+        )
+
+        then:
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.NOT_FOUND
+    }
+
+    def "GET /domain-events response has no entityLinks when none exist"() {
+        given:
+        def adminToken = createAdminToken()
+        def userData = createUserWithToken("de-no-elinks@test.com", "deNoElinks")
+        def domainKey = createDomain(adminToken, "Domain No ELinks DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC No ELinks DE")
+        def event = createDomainEvent(userData.token, bcKey, "Event No Entity Links")
+        def encKey = encodedKey(event.key as String)
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/domain-events/${encKey}").bearerAuth(userData.token),
+            Map
+        )
+
+        then:
+        response.status == HttpStatus.OK
+        // Empty arrays are omitted from JSON serialization; either null or absent maps to no entity links
+        !response.body().entityLinks
     }
 }

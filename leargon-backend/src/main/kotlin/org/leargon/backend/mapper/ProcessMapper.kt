@@ -21,7 +21,8 @@ import java.time.ZonedDateTime
 @Singleton
 open class ProcessMapper(
     private val fieldConfigurationService: FieldConfigurationService,
-    private val serviceProviderMapper: ServiceProviderMapper
+    private val serviceProviderMapper: ServiceProviderMapper,
+    private val capabilityMapper: CapabilityMapper
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
         val fc =
@@ -72,6 +73,7 @@ open class ProcessMapper(
             .securityMeasures(process.securityMeasures)
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
+            .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)

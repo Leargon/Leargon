@@ -18,6 +18,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
+import type { CapabilitySummaryResponse } from './capabilitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
 import type { ItSystemSummaryResponse } from './itSystemSummaryResponse';
@@ -74,6 +75,11 @@ export interface ProcessResponse {
    * @nullable
    */
   serviceProviders?: ServiceProviderSummaryResponse[] | null;
+  /**
+   * Capabilities realized by this process
+   * @nullable
+   */
+  capabilities?: CapabilitySummaryResponse[] | null;
   /**
    * IT systems used in this process
    * @nullable

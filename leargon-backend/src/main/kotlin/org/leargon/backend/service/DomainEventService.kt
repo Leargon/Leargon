@@ -3,16 +3,20 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.DomainEvent
+import org.leargon.backend.domain.DomainEventEntityLink
 import org.leargon.backend.domain.DomainEventProcessLink
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.DomainEventMapper
+import org.leargon.backend.model.AddDomainEventEntityLinkRequest
 import org.leargon.backend.model.AddDomainEventProcessLinkRequest
 import org.leargon.backend.model.CreateDomainEventRequest
 import org.leargon.backend.model.DomainEventResponse
 import org.leargon.backend.repository.BoundedContextRepository
+import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.DomainEventEntityLinkRepository
 import org.leargon.backend.repository.DomainEventProcessLinkRepository
 import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.repository.ProcessRepository
@@ -22,25 +26,29 @@ import org.leargon.backend.util.SlugUtil
 open class DomainEventService(
     private val domainEventRepository: DomainEventRepository,
     private val domainEventProcessLinkRepository: DomainEventProcessLinkRepository,
+    private val domainEventEntityLinkRepository: DomainEventEntityLinkRepository,
     private val boundedContextRepository: BoundedContextRepository,
     private val processRepository: ProcessRepository,
+    private val businessEntityRepository: BusinessEntityRepository,
     private val domainEventMapper: DomainEventMapper
 ) {
     @Transactional
     open fun getAll(): List<DomainEventResponse> {
         val mapper = domainEventMapper
         return domainEventRepository.findAll().map { event ->
-            val links = domainEventProcessLinkRepository.findByEventId(event.id!!)
-            mapper.toResponse(event, links)
+            val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+            val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
+            mapper.toResponse(event, processLinks, entityLinks)
         }
     }
 
     @Transactional
     open fun getByKey(key: String): DomainEventResponse {
         val event = findByKey(key)
-        val links = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(event, links)
+        return mapper.toResponse(event, processLinks, entityLinks)
     }
 
     @Transactional
@@ -77,9 +85,10 @@ open class DomainEventService(
         checkEditPermission(event, currentUser)
         event.names = names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = domainEventRepository.update(event)
-        val links = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(updated.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(updated, links)
+        return mapper.toResponse(updated, processLinks, entityLinks)
     }
 
     @Transactional
@@ -92,9 +101,10 @@ open class DomainEventService(
         checkEditPermission(event, currentUser)
         event.descriptions = descriptions.map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = domainEventRepository.update(event)
-        val links = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(updated.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(updated, links)
+        return mapper.toResponse(updated, processLinks, entityLinks)
     }
 
     @Transactional
@@ -115,9 +125,10 @@ open class DomainEventService(
             }
         event.consumers = consumers.toMutableSet()
         val updated = domainEventRepository.update(event)
-        val links = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(updated.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(updated.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(updated, links)
+        return mapper.toResponse(updated, processLinks, entityLinks)
     }
 
     @Transactional
@@ -138,9 +149,10 @@ open class DomainEventService(
         link.linkType = request.linkType.value
         domainEventProcessLinkRepository.save(link)
 
-        val links = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(event, links)
+        return mapper.toResponse(event, processLinks, entityLinks)
     }
 
     @Transactional
@@ -156,9 +168,59 @@ open class DomainEventService(
                 .orElseThrow { ResourceNotFoundException("ProcessLink not found: $linkId") }
         domainEventProcessLinkRepository.delete(link)
 
-        val links = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
         val mapper = domainEventMapper
-        return mapper.toResponse(event, links)
+        return mapper.toResponse(event, processLinks, entityLinks)
+    }
+
+    @Transactional
+    open fun addEntityLink(
+        key: String,
+        request: AddDomainEventEntityLinkRequest,
+        currentUser: User
+    ): DomainEventResponse {
+        if (!currentUser.roles.contains("ROLE_ADMIN")) {
+            throw ForbiddenOperationException("Only admins can add entity links to domain events")
+        }
+        val event = findByKey(key)
+        val entity =
+            businessEntityRepository
+                .findByKey(request.entityKey)
+                .orElseThrow { ResourceNotFoundException("BusinessEntity not found: ${request.entityKey}") }
+
+        val link = DomainEventEntityLink()
+        link.event = event
+        link.entity = entity
+        link.linkType = request.linkType.value
+        domainEventEntityLinkRepository.save(link)
+
+        val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
+        val mapper = domainEventMapper
+        return mapper.toResponse(event, processLinks, entityLinks)
+    }
+
+    @Transactional
+    open fun removeEntityLink(
+        key: String,
+        linkId: Long,
+        currentUser: User
+    ): DomainEventResponse {
+        if (!currentUser.roles.contains("ROLE_ADMIN")) {
+            throw ForbiddenOperationException("Only admins can remove entity links from domain events")
+        }
+        val event = findByKey(key)
+        val link =
+            domainEventEntityLinkRepository
+                .findById(linkId)
+                .orElseThrow { ResourceNotFoundException("EntityLink not found: $linkId") }
+        domainEventEntityLinkRepository.delete(link)
+
+        val processLinks = domainEventProcessLinkRepository.findByEventId(event.id!!)
+        val entityLinks = domainEventEntityLinkRepository.findByEventId(event.id!!)
+        val mapper = domainEventMapper
+        return mapper.toResponse(event, processLinks, entityLinks)
     }
 
     @Transactional
@@ -170,6 +232,7 @@ open class DomainEventService(
         if (!currentUser.roles.contains("ROLE_ADMIN")) {
             throw ForbiddenOperationException("Only admins can delete domain events")
         }
+        domainEventEntityLinkRepository.deleteByEventId(event.id!!)
         domainEventProcessLinkRepository.deleteByEventId(event.id!!)
         domainEventRepository.delete(event)
     }
@@ -179,17 +242,11 @@ open class DomainEventService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("DomainEvent not found: $key") }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun checkEditPermission(
         event: DomainEvent,
         currentUser: User
     ) {
-        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        val isPublisher =
-            event.publishingBoundedContext?.let { bc ->
-                // Owner check: created by user or admin
-                false // simplified — anyone authenticated can edit names/descriptions
-            } ?: false
-        // Allow any authenticated user to update names/descriptions (API doc says "not publisher owner or admin" → 403)
-        // For simplicity we allow authenticated users; stricter check can be added later
+        // Allow any authenticated user to update names/descriptions
     }
 }

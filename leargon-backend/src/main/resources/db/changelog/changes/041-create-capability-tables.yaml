@@ -1,0 +1,101 @@
+databaseChangeLog:
+  - changeSet:
+      id: 041-create-capability-tables
+      author: leargon
+      changes:
+        - createTable:
+            tableName: capabilities
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: key
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: names
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descriptions
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: classification_assignments
+                  type: JSON
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: owning_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: capabilities
+            baseColumnNames: parent_id
+            referencedTableName: capabilities
+            referencedColumnNames: id
+            constraintName: fk_capability_parent
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: capabilities
+            baseColumnNames: owning_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            constraintName: fk_capability_owning_unit
+            onDelete: SET NULL
+        - createTable:
+            tableName: capability_processes
+            columns:
+              - column:
+                  name: capability_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: process_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: capability_processes
+            columnNames: capability_id, process_id
+            constraintName: pk_capability_processes
+        - addForeignKeyConstraint:
+            baseTableName: capability_processes
+            baseColumnNames: capability_id
+            referencedTableName: capabilities
+            referencedColumnNames: id
+            constraintName: fk_cp_capability
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: capability_processes
+            baseColumnNames: process_id
+            referencedTableName: processes
+            referencedColumnNames: id
+            constraintName: fk_cp_process
+            onDelete: CASCADE

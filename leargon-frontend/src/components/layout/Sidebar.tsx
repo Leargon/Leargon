@@ -5,7 +5,7 @@ import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
   BubbleChart, AccountTreeOutlined, Schema, Share, FlashOn, Computer,
-  People, Language, Label, Tune,
+  People, Language, Label, Tune, AutoAwesomeMosaic,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -34,6 +34,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
       { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
       { label: 'Process Landscape', path: '/diagrams/processes', icon: <Schema /> },
+      { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
       { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
     ],
   },

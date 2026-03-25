@@ -17,13 +17,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
-export type ClassificationAssignableTo = typeof ClassificationAssignableTo[keyof typeof ClassificationAssignableTo];
+export type DomainEventEntityLinkType = typeof DomainEventEntityLinkType[keyof typeof DomainEventEntityLinkType];
 
 
-export const ClassificationAssignableTo = {
-  BUSINESS_DOMAIN: 'BUSINESS_DOMAIN',
-  BUSINESS_ENTITY: 'BUSINESS_ENTITY',
-  BUSINESS_PROCESS: 'BUSINESS_PROCESS',
-  ORGANISATIONAL_UNIT: 'ORGANISATIONAL_UNIT',
-  CAPABILITY: 'CAPABILITY',
+export const DomainEventEntityLinkType = {
+  PRODUCES: 'PRODUCES',
+  CONSUMES: 'CONSUMES',
 } as const;

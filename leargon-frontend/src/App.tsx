@@ -32,6 +32,7 @@ import ContextMapPage from './pages/ContextMapPage';
 import EventFlowPage from './pages/EventFlowPage';
 import ItSystemsPage from './pages/ItSystemsPage';
 import UbiquitousLanguagePage from './pages/UbiquitousLanguagePage';
+import CapabilitiesPage from './pages/CapabilitiesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,8 @@ const router = createBrowserRouter([
       { path: 'it-systems', element: <ItSystemsPage /> },
       { path: 'it-systems/:key', element: <ItSystemsPage /> },
       { path: 'ubiquitous-language', element: <UbiquitousLanguagePage /> },
+      { path: 'capabilities', element: <CapabilitiesPage /> },
+      { path: 'capabilities/:key', element: <CapabilitiesPage /> },
       { path: 'profile', element: <ProfilePage /> },
     ],
   },

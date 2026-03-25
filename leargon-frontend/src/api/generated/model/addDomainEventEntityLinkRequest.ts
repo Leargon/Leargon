@@ -16,14 +16,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { DomainEventEntityLinkType } from './domainEventEntityLinkType';
 
-export type ClassificationAssignableTo = typeof ClassificationAssignableTo[keyof typeof ClassificationAssignableTo];
-
-
-export const ClassificationAssignableTo = {
-  BUSINESS_DOMAIN: 'BUSINESS_DOMAIN',
-  BUSINESS_ENTITY: 'BUSINESS_ENTITY',
-  BUSINESS_PROCESS: 'BUSINESS_PROCESS',
-  ORGANISATIONAL_UNIT: 'ORGANISATIONAL_UNIT',
-  CAPABILITY: 'CAPABILITY',
-} as const;
+export interface AddDomainEventEntityLinkRequest {
+  entityKey: string;
+  linkType: DomainEventEntityLinkType;
+}
