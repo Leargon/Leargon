@@ -53,9 +53,17 @@ open class ProcessMapper(
         val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
         val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
         val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian
+        val allProcessEntities = process.inputEntities + process.outputEntities
+        val containsPersonalData =
+            allProcessEntities.any { entity ->
+                entity.classificationAssignments.any {
+                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                }
+            }
         return ProcessResponse(
             process.key,
             process.processOwner != null,
+            containsPersonalData,
             UserMapper.toUserSummary(process.createdBy),
             LocalizedTextMapper.toModel(process.names),
             LocalizedTextMapper.toModel(process.descriptions),

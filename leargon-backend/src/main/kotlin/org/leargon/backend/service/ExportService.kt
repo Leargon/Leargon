@@ -101,9 +101,16 @@ open class ExportService(
                     .map { rootEntity(it) }
                     .distinctBy { it.key }
                     .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+            val personalEntities =
+                allEntities.filter { entity ->
+                    entity.classificationAssignments.any {
+                        it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                    }
+                }
             val personalDataCategories =
-                allEntities
-                    .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+                personalEntities.joinToString("; ") {
+                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
+                }
             val retentionPeriods =
                 allEntities
                     .filter { !it.retentionPeriod.isNullOrBlank() }

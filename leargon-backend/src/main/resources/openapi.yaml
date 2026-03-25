@@ -7453,6 +7453,7 @@ components:
       - createdAt
       - updatedAt
       - ownerIsExplicit
+      - containsPersonalData
       properties:
         key:
           type: string
@@ -7482,6 +7483,9 @@ components:
         ownerIsExplicit:
           type: boolean
           description: True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context
+        containsPersonalData:
+          type: boolean
+          description: True if any input or output entity of this process is classified as containing personal data
         processSteward:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true

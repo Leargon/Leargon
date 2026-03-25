@@ -263,21 +263,14 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           )}
         </TableCell>
 
-        {/* Personal Data — computed from process classification assignments */}
+        {/* Personal Data — true if any input/output entity is classified as containing personal data */}
         <TableCell>
-          {(() => {
-            const hasPersonalData = (process.classificationAssignments ?? []).some(
-              (a) => a.classificationKey === 'personal-data' && a.valueKey === 'personal-data--contains',
-            );
-            return (
-              <Chip
-                label={hasPersonalData ? 'Yes' : 'No'}
-                size="small"
-                color={hasPersonalData ? 'success' : 'default'}
-                variant={hasPersonalData ? 'filled' : 'outlined'}
-              />
-            );
-          })()}
+          <Chip
+            label={process.containsPersonalData ? 'Yes' : 'No'}
+            size="small"
+            color={process.containsPersonalData ? 'success' : 'default'}
+            variant={process.containsPersonalData ? 'filled' : 'outlined'}
+          />
         </TableCell>
 
         {/* Data Subject Categories — read-only (root ancestor of each input/output entity) */}

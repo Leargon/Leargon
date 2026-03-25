@@ -54,6 +54,8 @@ export interface ProcessResponse {
   processOwner?: UserSummaryResponse | null;
   /** True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context */
   ownerIsExplicit: boolean;
+  /** True if any input or output entity of this process is classified as containing personal data */
+  containsPersonalData: boolean;
   /** Business steward override (falls back to owning org unit steward) */
   processSteward?: UserSummaryResponse | null;
   /** Technical custodian override (falls back to owning org unit technical custodian) */
