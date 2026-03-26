@@ -35,6 +35,7 @@ import UbiquitousLanguagePage from './pages/UbiquitousLanguagePage';
 import CapabilitiesPage from './pages/CapabilitiesPage';
 import CapabilityMapPage from './pages/CapabilityMapPage';
 import StrategicMapPage from './pages/StrategicMapPage';
+import HomePage from './pages/HomePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,7 +59,8 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Navigate to="/capabilities" replace /> },
+      { index: true, element: <Navigate to="/home" replace /> },
+      { path: 'home', element: <HomePage /> },
       { path: 'domains', element: <DomainsPage /> },
       { path: 'domains/:key', element: <DomainsPage /> },
       { path: 'entities', element: <OntologyPage /> },

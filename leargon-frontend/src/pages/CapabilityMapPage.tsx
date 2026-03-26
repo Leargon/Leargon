@@ -108,7 +108,7 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
   );
 };
 
-const CapabilityMapPage: React.FC = () => {
+export const CapabilityMapContent: React.FC<{ onNavigate?: (key: string) => void }> = ({ onNavigate }) => {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetAllCapabilities();
   const capabilities = useMemo(
@@ -116,6 +116,14 @@ const CapabilityMapPage: React.FC = () => {
     [data],
   );
   const roots = useMemo(() => buildTree(capabilities), [capabilities]);
+
+  const handleClick = (key: string) => {
+    if (onNavigate) {
+      onNavigate(key);
+    } else {
+      navigate(`/capabilities/${key}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -130,6 +138,28 @@ const CapabilityMapPage: React.FC = () => {
   }
 
   return (
+    <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+      {roots.length === 0 ? (
+        <Alert severity="info">
+          No capabilities defined yet. Use the Capabilities page to create your first capability.
+        </Alert>
+      ) : (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' }}>
+          {roots.map((root) => (
+            <CapabilityBox
+              key={root.key}
+              node={root}
+              onClick={handleClick}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const CapabilityMapPage: React.FC = () => {
+  return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" fontWeight={600}>Capability Map</Typography>
@@ -138,23 +168,7 @@ const CapabilityMapPage: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-        {roots.length === 0 ? (
-          <Alert severity="info">
-            No capabilities defined yet. Use the Capabilities page to create your first capability.
-          </Alert>
-        ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' }}>
-            {roots.map((root) => (
-              <CapabilityBox
-                key={root.key}
-                node={root}
-                onClick={(key) => navigate(`/capabilities/${key}`)}
-              />
-            ))}
-          </Box>
-        )}
-      </Box>
+      <CapabilityMapContent />
     </Box>
   );
 };

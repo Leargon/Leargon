@@ -9,6 +9,10 @@ import java.util.Optional
 @Repository
 interface ProcessVersionRepository : JpaRepository<ProcessVersion, Long> {
     @Join(value = "changedBy", type = Join.Type.FETCH)
+    @Join(value = "process", type = Join.Type.FETCH)
+    override fun findAll(): List<ProcessVersion>
+
+    @Join(value = "changedBy", type = Join.Type.FETCH)
     fun findByProcessIdOrderByVersionNumberDesc(processId: Long): List<ProcessVersion>
 
     @Join(value = "changedBy", type = Join.Type.FETCH)

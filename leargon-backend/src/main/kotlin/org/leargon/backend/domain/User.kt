@@ -63,4 +63,7 @@ class User {
 
     @Column(name = "auth_provider", length = 20)
     var authProvider: String? = null
+
+    @Column(name = "preferred_role", length = 20)
+    var preferredRole: String? = null
 }

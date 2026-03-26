@@ -16,6 +16,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { UserResponsePreferredRole } from './userResponsePreferredRole';
 
 export interface UserResponse {
   /** User ID */
@@ -52,4 +53,9 @@ export interface UserResponse {
    * @nullable
    */
   authProvider?: string | null;
+  /**
+   * User's preferred role/view
+   * @nullable
+   */
+  preferredRole?: UserResponsePreferredRole;
 }

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, Button, Menu, MenuItem } from '@mui/material';
+import { Button, Menu, MenuItem } from '@mui/material';
 import { Handshake, FileDownload, ArrowDropDown } from '@mui/icons-material';
 import ServiceProviderListPanel from '../components/service-providers/ServiceProviderListPanel';
 import ServiceProviderDetailPanel from '../components/service-providers/ServiceProviderDetailPanel';
 import CreateServiceProviderDialog from '../components/service-providers/CreateServiceProviderDialog';
+import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 
@@ -16,16 +17,11 @@ const ServiceProvidersPage: React.FC = () => {
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Page header */}
-      <Box sx={{
-        display: 'flex', alignItems: 'center', px: 2, py: 1,
-        borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', gap: 2,
-      }}>
-        <Typography variant="subtitle1" fontWeight={600}>Service Providers</Typography>
-        <Typography variant="body2" color="text.secondary">Art. 28 GDPR / Art. 10a revDSG</Typography>
-        <Box sx={{ flex: 1 }} />
-        {isAdmin && (
+    <SplitPageLayout
+      title="Service Providers"
+      subtitle="Art. 28 GDPR / Art. 10a revDSG"
+      actions={
+        isAdmin ? (
           <>
             <Button
               variant="outlined"
@@ -41,61 +37,42 @@ const ServiceProvidersPage: React.FC = () => {
               open={Boolean(exportAnchorEl)}
               onClose={() => setExportAnchorEl(null)}
             >
-              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/service-providers', 'service-providers.csv'); }}>
+              <MenuItem
+                onClick={() => {
+                  setExportAnchorEl(null);
+                  downloadExport('/export/service-providers', 'service-providers.csv');
+                }}
+              >
                 Export Service Provider Register (CSV)
               </MenuItem>
             </Menu>
           </>
-        )}
-      </Box>
-
-      {/* Split panel */}
-      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-        {/* List panel */}
-        <Box
-          sx={{
-            width: '35%',
-            minWidth: 260,
-            maxWidth: 400,
-            borderRight: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <ServiceProviderListPanel
-            selectedKey={key}
-            onCreateClick={() => setCreateDialogOpen(true)}
+        ) : undefined
+      }
+      list={
+        <ServiceProviderListPanel
+          selectedKey={key}
+          onCreateClick={() => setCreateDialogOpen(true)}
+        />
+      }
+      detail={
+        key ? (
+          <ServiceProviderDetailPanel providerKey={key} />
+        ) : (
+          <EmptyDetailState
+            icon={<Handshake sx={{ fontSize: 64 }} />}
+            title="Select a service provider"
+            subtitle="Choose a provider from the list to view its details"
           />
-        </Box>
-
-        {/* Detail panel */}
-        <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-          {key ? (
-            <ServiceProviderDetailPanel providerKey={key} />
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                color: 'text.secondary',
-              }}
-            >
-              <Handshake sx={{ fontSize: 64, mb: 2, opacity: 0.3 }} />
-              <Typography variant="h6">Select a service provider</Typography>
-              <Typography variant="body2">Choose a provider from the list to view its details</Typography>
-            </Box>
-          )}
-        </Box>
-      </Box>
-
+        )
+      }
+      hasSelection={!!key}
+    >
       <CreateServiceProviderDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
       />
-    </Box>
+    </SplitPageLayout>
   );
 };
 

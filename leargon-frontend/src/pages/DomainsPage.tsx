@@ -1,61 +1,69 @@
-import React, { useState } from 'react';
+import React, { lazy, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
-import { Category } from '@mui/icons-material';
+import { Button } from '@mui/material';
+import { Category, Share, FormatListBulleted, Download } from '@mui/icons-material';
 import DomainTreePanel from '../components/domains/DomainTreePanel';
 import DomainDetailPanel from '../components/domains/DomainDetailPanel';
 import CreateDomainDialog from '../components/domains/CreateDomainDialog';
+import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import { tokenStorage } from '../utils/tokenStorage';
+
+const ContextMapDiagram = lazy(() => import('../components/diagrams/ContextMapDiagram'));
 
 const DomainsPage: React.FC = () => {
   const { key } = useParams<{ key: string }>();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [view, setView] = useState('list');
+
+  const handleExportCml = async () => {
+    const token = tokenStorage.getToken();
+    const res = await fetch('/api/export/context-map', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'context-map.cml';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <Box sx={{ display: 'flex', height: '100%' }}>
-      {/* Tree panel */}
-      <Box
-        sx={{
-          width: '35%',
-          minWidth: 260,
-          maxWidth: 400,
-          borderRight: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <DomainTreePanel
-          selectedKey={key}
-          onCreateClick={() => setCreateDialogOpen(true)}
-        />
-      </Box>
-
-      {/* Detail panel */}
-      <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-        {key ? (
+    <SplitPageLayout
+      title="Domain Model"
+      subtitle="Business Domains & Bounded Contexts"
+      views={[
+        { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'context-map', label: 'Context Map', icon: <Share sx={{ fontSize: 16, mr: 0.5 }} /> },
+      ]}
+      currentView={view}
+      onViewChange={setView}
+      actions={
+        view === 'context-map' ? (
+          <Button size="small" startIcon={<Download />} onClick={handleExportCml} variant="outlined">
+            Export CML
+          </Button>
+        ) : undefined
+      }
+      list={<DomainTreePanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      detail={
+        key ? (
           <DomainDetailPanel domainKey={key} />
         ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'text.secondary',
-            }}
-          >
-            <Category sx={{ fontSize: 64, mb: 2, opacity: 0.3 }} />
-            <Typography variant="h6">Select a domain</Typography>
-            <Typography variant="body2">Choose a domain from the tree to view its details</Typography>
-          </Box>
-        )}
-      </Box>
-
-      <CreateDomainDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-      />
-    </Box>
+          <EmptyDetailState
+            icon={<Category sx={{ fontSize: 64 }} />}
+            title="Select a domain"
+            subtitle="Choose a domain from the tree to view its details"
+          />
+        )
+      }
+      hasSelection={!!key}
+      diagrams={{ 'context-map': <ContextMapDiagram /> }}
+    >
+      <CreateDomainDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+    </SplitPageLayout>
   );
 };
 

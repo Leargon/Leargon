@@ -336,11 +336,11 @@ const UbiquitousLanguagePage: React.FC = () => {
                       <TableCell>{event.publishingBoundedContext?.name ?? noBc}</TableCell>
                       <TableCell>{event.publishingBoundedContext?.domainName ?? noBc}</TableCell>
                       <TableCell>
-                        {event.consumers.length === 0 ? (
+                        {(event.consumers ?? []).length === 0 ? (
                           <Typography variant="body2" color="text.disabled">—</Typography>
                         ) : (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {event.consumers.map((c) => (
+                            {(event.consumers ?? []).map((c) => (
                               <Chip key={c.key} size="small" label={c.name} sx={{ fontSize: '0.7rem', height: 20 }} />
                             ))}
                           </Box>

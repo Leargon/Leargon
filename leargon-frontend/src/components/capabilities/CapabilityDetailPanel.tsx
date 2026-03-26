@@ -10,18 +10,16 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Divider,
   Alert,
   CircularProgress,
-  Paper,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
   Autocomplete,
   TextField,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { Edit, Check, Close, Delete } from '@mui/icons-material';
+import { Edit, Check, Close, Delete, ExpandMore } from '@mui/icons-material';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetCapabilityByKey,
@@ -163,211 +161,202 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
   const linkedProcessKeys = capability.linkedProcesses?.map((p) => p.key) ?? [];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto' }}>
-      {/* Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          px: 3,
-          py: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          gap: 1,
-        }}
-      >
-        <Typography variant="h6" fontWeight={600} sx={{ flexGrow: 1 }}>
-          {capabilityName}
-        </Typography>
-        {isAdmin && (
-          <Button
-            size="small"
-            color="error"
-            startIcon={<Delete />}
-            onClick={() => setDeleteOpen(true)}
-          >
-            Delete
-          </Button>
-        )}
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={capabilityName}
+        itemKey={capability.key}
+        chips={
+          capability.owningUnit ? (
+            <Chip label={capability.owningUnit.name} size="small" variant="outlined" />
+          ) : undefined
+        }
+        actions={
+          isAdmin ? (
+            <Button size="small" color="error" startIcon={<Delete />} onClick={() => setDeleteOpen(true)}>
+              Delete
+            </Button>
+          ) : undefined
+        }
+      />
 
-      {/* Content */}
-      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Name */}
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+        {/* Names */}
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Name</Typography>
-            {isAdmin && !namesEdit.isEditing && (
-              <Button size="small" startIcon={<Edit />} onClick={() => namesEdit.startEdit(capability.names)}>
-                Edit
-              </Button>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+              {isAdmin && !namesEdit.isEditing && (
+                <Button size="small" startIcon={<Edit />} onClick={() => namesEdit.startEdit(capability.names)}>
+                  Edit
+                </Button>
+              )}
+            </Box>
+            {namesEdit.isEditing ? (
+              <>
+                <TranslationEditor
+                  locales={locales}
+                  names={namesEdit.editValue ?? []}
+                  descriptions={[]}
+                  onNamesChange={(v) => namesEdit.startEdit(v)}
+                  onDescriptionsChange={() => {}}
+                  hideDescriptions
+                />
+                {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
+                <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                  <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>Save</Button>
+                  <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>Cancel</Button>
+                </Box>
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">{capabilityName}</Typography>
             )}
-          </Box>
-          {namesEdit.isEditing ? (
-            <>
-              <TranslationEditor
-                locales={locales}
-                names={namesEdit.editValue ?? []}
-                descriptions={[]}
-                onNamesChange={(v) => namesEdit.startEdit(v)}
-                onDescriptionsChange={() => {}}
-                hideDescriptions
-              />
-              {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>Save</Button>
-                <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>Cancel</Button>
-              </Box>
-            </>
-          ) : (
-            <Typography variant="body2" color="text.secondary">{capabilityName}</Typography>
-          )}
-        </Paper>
+          </AccordionDetails>
+        </Accordion>
 
         {/* Properties */}
-        <Paper variant="outlined">
-          <Table size="small">
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, width: 160 }}>Key</TableCell>
-                <TableCell><Typography variant="body2" fontFamily="monospace">{capability.key}</Typography></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">Properties</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box>
+              <Typography variant="caption" color="text.secondary">Parent Capability</Typography>
+              <Box sx={{ mt: 0.5 }}>
+                {parentEdit.isEditing ? (
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Autocomplete
+                      size="small"
+                      options={allCapabilities.filter((c) => c.key !== capabilityKey)}
+                      getOptionLabel={(c) => getLocalizedText(c.names, c.key)}
+                      value={allCapabilities.find((c) => c.key === parentEdit.editValue) ?? null}
+                      onChange={(_, val) => parentEdit.startEdit(val?.key ?? null)}
+                      renderInput={(params) => <TextField {...params} size="small" label="Parent" sx={{ minWidth: 200 }} />}
+                    />
+                    <Button size="small" variant="contained" onClick={parentEdit.save} disabled={parentEdit.isSaving}><Check fontSize="small" /></Button>
+                    <Button size="small" onClick={parentEdit.cancel}><Close fontSize="small" /></Button>
+                  </Box>
+                ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    Parent Capability
-                    {isAdmin && !parentEdit.isEditing && (
+                    <Typography variant="body2" color="text.secondary">
+                      {capability.parent ? getLocalizedText(capability.parent ? (allCapabilities.find((c) => c.key === capability.parent!.key)?.names ?? []) : [], capability.parent.key) : '—'}
+                    </Typography>
+                    {isAdmin && (
                       <Button size="small" onClick={() => parentEdit.startEdit(capability.parent?.key ?? null)}>
                         <Edit fontSize="small" />
                       </Button>
                     )}
                   </Box>
-                </TableCell>
-                <TableCell>
-                  {parentEdit.isEditing ? (
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <Autocomplete
-                        size="small"
-                        options={allCapabilities.filter((c) => c.key !== capabilityKey)}
-                        getOptionLabel={(c) => getLocalizedText(c.names, c.key)}
-                        value={allCapabilities.find((c) => c.key === parentEdit.editValue) ?? null}
-                        onChange={(_, val) => parentEdit.startEdit(val?.key ?? null)}
-                        renderInput={(params) => <TextField {...params} size="small" label="Parent" sx={{ minWidth: 200 }} />}
-                      />
-                      <Button size="small" variant="contained" onClick={parentEdit.save} disabled={parentEdit.isSaving}><Check fontSize="small" /></Button>
-                      <Button size="small" onClick={parentEdit.cancel}><Close fontSize="small" /></Button>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      {capability.parent ? getLocalizedText(capability.parent ? (allCapabilities.find((c) => c.key === capability.parent!.key)?.names ?? []) : [], capability.parent.key) : '—'}
-                    </Typography>
-                  )}
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>
+                )}
+              </Box>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">Owning Unit</Typography>
+              <Box sx={{ mt: 0.5 }}>
+                {owningUnitEdit.isEditing ? (
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Autocomplete
+                      size="small"
+                      options={allUnits}
+                      getOptionLabel={(u) => getLocalizedText(u.names, u.key)}
+                      value={allUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
+                      onChange={(_, val) => owningUnitEdit.startEdit(val?.key ?? null)}
+                      renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" sx={{ minWidth: 200 }} />}
+                    />
+                    <Button size="small" variant="contained" onClick={owningUnitEdit.save} disabled={owningUnitEdit.isSaving}><Check fontSize="small" /></Button>
+                    <Button size="small" onClick={owningUnitEdit.cancel}><Close fontSize="small" /></Button>
+                  </Box>
+                ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    Owning Unit
-                    {isAdmin && !owningUnitEdit.isEditing && (
+                    <Typography variant="body2" color="text.secondary">
+                      {capability.owningUnit?.name ?? '—'}
+                    </Typography>
+                    {isAdmin && (
                       <Button size="small" onClick={() => owningUnitEdit.startEdit(capability.owningUnit?.key ?? null)}>
                         <Edit fontSize="small" />
                       </Button>
                     )}
                   </Box>
-                </TableCell>
-                <TableCell>
-                  {owningUnitEdit.isEditing ? (
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                      <Autocomplete
-                        size="small"
-                        options={allUnits}
-                        getOptionLabel={(u) => getLocalizedText(u.names, u.key)}
-                        value={allUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
-                        onChange={(_, val) => owningUnitEdit.startEdit(val?.key ?? null)}
-                        renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" sx={{ minWidth: 200 }} />}
-                      />
-                      <Button size="small" variant="contained" onClick={owningUnitEdit.save} disabled={owningUnitEdit.isSaving}><Check fontSize="small" /></Button>
-                      <Button size="small" onClick={owningUnitEdit.cancel}><Close fontSize="small" /></Button>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      {capability.owningUnit?.name ?? '—'}
-                    </Typography>
-                  )}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </Paper>
-
-        {/* Children */}
-        {(capability.children?.length ?? 0) > 0 && (
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Sub-capabilities</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {capability.children!.map((child) => (
-                <Chip
-                  key={child.key}
-                  label={child.name}
-                  size="small"
-                  onClick={() => navigate(`/capabilities/${child.key}`)}
-                  clickable
-                />
-              ))}
+                )}
+              </Box>
             </Box>
-          </Paper>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Sub-capabilities */}
+        {(capability.children?.length ?? 0) > 0 && (
+          <Accordion disableGutters>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">Sub-capabilities ({capability.children!.length})</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {capability.children!.map((child) => (
+                  <Chip
+                    key={child.key}
+                    label={child.name}
+                    size="small"
+                    onClick={() => navigate(`/capabilities/${child.key}`)}
+                    clickable
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
         )}
 
-        <Divider />
-
         {/* Linked Processes */}
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Realized by Processes</Typography>
-            {isAdmin && !processesEdit.isEditing && (
-              <Button size="small" startIcon={<Edit />} onClick={() => processesEdit.startEdit(linkedProcessKeys)}>
-                Edit
-              </Button>
-            )}
-          </Box>
-          {processesEdit.isEditing ? (
-            <>
-              <Autocomplete
-                multiple
-                options={allProcesses}
-                getOptionLabel={(p) => getLocalizedText(p.names, p.key)}
-                value={allProcesses.filter((p) => processesEdit.editValue?.includes(p.key))}
-                onChange={(_, val) => processesEdit.startEdit(val.map((p) => p.key))}
-                renderInput={(params) => <TextField {...params} size="small" label="Select processes" />}
-                renderTags={(val, getTagProps) =>
-                  val.map((option, index) => (
-                    <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
-                  ))
-                }
-              />
-              {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>Save</Button>
-                <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>Cancel</Button>
-              </Box>
-            </>
-          ) : linkedProcessKeys.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">No processes linked</Typography>
-          ) : (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {capability.linkedProcesses!.map((p) => (
-                <Chip
-                  key={p.key}
-                  label={p.name}
-                  size="small"
-                  onClick={() => navigate(`/processes/${p.key}`)}
-                  clickable
-                />
-              ))}
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+              {isAdmin && !processesEdit.isEditing && (
+                <Button size="small" startIcon={<Edit />} onClick={() => processesEdit.startEdit(linkedProcessKeys)}>
+                  Edit
+                </Button>
+              )}
             </Box>
-          )}
-        </Paper>
+            {processesEdit.isEditing ? (
+              <>
+                <Autocomplete
+                  multiple
+                  options={allProcesses}
+                  getOptionLabel={(p) => getLocalizedText(p.names, p.key)}
+                  value={allProcesses.filter((p) => processesEdit.editValue?.includes(p.key))}
+                  onChange={(_, val) => processesEdit.startEdit(val.map((p) => p.key))}
+                  renderInput={(params) => <TextField {...params} size="small" label="Select processes" />}
+                  renderTags={(val, getTagProps) =>
+                    val.map((option, index) => (
+                      <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                    ))
+                  }
+                />
+                {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
+                <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                  <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>Save</Button>
+                  <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>Cancel</Button>
+                </Box>
+              </>
+            ) : linkedProcessKeys.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">No processes linked</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {capability.linkedProcesses!.map((p) => (
+                  <Chip
+                    key={p.key}
+                    label={p.name}
+                    size="small"
+                    onClick={() => navigate(`/processes/${p.key}`)}
+                    clickable
+                  />
+                ))}
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
       </Box>
 
       {/* Delete dialog */}

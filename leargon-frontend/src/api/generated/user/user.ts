@@ -38,6 +38,7 @@ import type {
 import type {
   ChangePasswordRequest,
   ErrorResponse,
+  UpdateProfileRequest,
   UserResponse
 } from '../model';
 
@@ -167,6 +168,96 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
 
 
 /**
+ * Allows a user to update their own profile settings (preferred role, preferred language).
+ * @summary Update own profile
+ */
+export type updateProfileResponse200 = {
+  data: UserResponse
+  status: 200
+}
+
+export type updateProfileResponse401 = {
+  data: ErrorResponse
+  status: 401
+}
+
+export type updateProfileResponseSuccess = (updateProfileResponse200) & {
+  headers: Headers;
+};
+export type updateProfileResponseError = (updateProfileResponse401) & {
+  headers: Headers;
+};
+
+export type updateProfileResponse = (updateProfileResponseSuccess | updateProfileResponseError)
+
+export const getUpdateProfileUrl = () => {
+
+
+  
+
+  return `/users/me`
+}
+
+export const updateProfile = async (updateProfileRequest: UpdateProfileRequest, options?: RequestInit): Promise<updateProfileResponse> => {
+  
+  return customAxios<updateProfileResponse>(getUpdateProfileUrl(),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProfileRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProfileMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext> => {
+
+const mutationKey = ['updateProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProfile>>, {data: UpdateProfileRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateProfile(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateProfile>>>
+    export type UpdateProfileMutationBody = UpdateProfileRequest
+    export type UpdateProfileMutationError = ErrorResponse
+
+    /**
+ * @summary Update own profile
+ */
+export const useUpdateProfile = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProfile>>,
+        TError,
+        {data: UpdateProfileRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProfileMutationOptions(options), queryClient);
+    }
+    /**
  * Allows a user to change their own password. Requires the current password for verification.
  * @summary Change own password
  */

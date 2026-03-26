@@ -1,61 +1,45 @@
-import React, { useState } from 'react';
+import React, { lazy, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
-import { AccountTree } from '@mui/icons-material';
+import { AccountTree, BubbleChart, FormatListBulleted } from '@mui/icons-material';
 import EntityTreePanel from '../components/ontology/EntityTreePanel';
 import EntityDetailPanel from '../components/ontology/EntityDetailPanel';
 import CreateEntityDialog from '../components/ontology/CreateEntityDialog';
+import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+
+const EntityMapDiagram = lazy(() => import('../components/diagrams/EntityMapDiagram'));
 
 const OntologyPage: React.FC = () => {
   const { key } = useParams<{ key: string }>();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [view, setView] = useState('list');
 
   return (
-    <Box sx={{ display: 'flex', height: '100%' }}>
-      {/* Tree panel */}
-      <Box
-        sx={{
-          width: '35%',
-          minWidth: 260,
-          maxWidth: 400,
-          borderRight: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <EntityTreePanel
-          selectedKey={key}
-          onCreateClick={() => setCreateDialogOpen(true)}
-        />
-      </Box>
-
-      {/* Detail panel */}
-      <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-        {key ? (
+    <SplitPageLayout
+      title="Data Ontology"
+      subtitle="Business Entities"
+      views={[
+        { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'map', label: 'Entity Map', icon: <BubbleChart sx={{ fontSize: 16, mr: 0.5 }} /> },
+      ]}
+      currentView={view}
+      onViewChange={setView}
+      list={<EntityTreePanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      detail={
+        key ? (
           <EntityDetailPanel entityKey={key} />
         ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'text.secondary',
-            }}
-          >
-            <AccountTree sx={{ fontSize: 64, mb: 2, opacity: 0.3 }} />
-            <Typography variant="h6">Select an entity</Typography>
-            <Typography variant="body2">Choose an entity from the tree to view its details</Typography>
-          </Box>
-        )}
-      </Box>
-
-      <CreateEntityDialog
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
-      />
-    </Box>
+          <EmptyDetailState
+            icon={<AccountTree sx={{ fontSize: 64 }} />}
+            title="Select an entity"
+            subtitle="Choose an entity from the tree to view its details"
+          />
+        )
+      }
+      hasSelection={!!key}
+      diagrams={{ map: <EntityMapDiagram /> }}
+    >
+      <CreateEntityDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+    </SplitPageLayout>
   );
 };
 

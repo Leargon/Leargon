@@ -9,8 +9,8 @@ const NotFoundPage: React.FC = () => {
       <Typography variant="body1" color="text.secondary">
         The page you are looking for does not exist.
       </Typography>
-      <Button variant="contained" component={RouterLink} to="/domains">
-        Go to Domains
+      <Button variant="contained" component={RouterLink} to="/home">
+        Go to Home
       </Button>
     </Box>
   );

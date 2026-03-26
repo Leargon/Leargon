@@ -29,8 +29,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   TableHead,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, Remove, CheckCircle as CheckCircleIcon, Warning as WarningIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
@@ -82,9 +80,10 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { PROCESS_TABS_BY_PERSPECTIVE, defaultProcessTab } from '../../utils/perspectiveFilter';
+import { PROCESS_TABS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 
@@ -192,14 +191,6 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => defaultProcessTab(perspective));
-
-  useEffect(() => {
-    const tabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
-    if (!tabs.includes(activeTab as typeof tabs[0])) {
-      setActiveTab(tabs[0]);
-    }
-  }, [perspective]);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -475,26 +466,33 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const outputCandidates = allEntities.filter((e) => !outputEntityKeys.has(e.key));
 
   return (
-    <Box sx={{ p: 3, overflow: 'auto', height: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">{getLocalizedText(process.names, 'Unnamed Process')}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {process.key}</Typography>
-        </Box>
-        {isOwnerOrAdmin && (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={getLocalizedText(process.names, 'Unnamed Process')}
+        itemKey={process.key}
+        chips={<>
+          {process.processOwner ? (
+            <Chip label={process.processOwner.username} size="small" variant="outlined" color="primary" />
+          ) : isOwnerOrAdmin ? (
+            <Chip icon={<WarningIcon fontSize="small" />} label="No owner" size="small" color="warning" />
+          ) : null}
+          {process.legalBasis ? (
+            <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} size="small" color="secondary" variant="outlined" />
+          ) : isOwnerOrAdmin ? (
+            <Chip icon={<WarningIcon fontSize="small" />} label="No legal basis" size="small" color="warning" />
+          ) : null}
+          {isOwnerOrAdmin && (process.missingMandatoryFields?.length ?? 0) > 0 && (
+            <Chip icon={<WarningIcon fontSize="small" />} label={`${process.missingMandatoryFields!.length} missing`} size="small" color="warning" />
+          )}
+          {dpia && <Chip label="DPIA active" size="small" color="secondary" />}
+        </>}
+        actions={isOwnerOrAdmin ? (
           <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
             Delete
           </Button>
-        )}
-      </Box>
-
-      {/* Missing mandatory fields warning — only visible to owner/admin */}
-      {isOwnerOrAdmin && process.missingMandatoryFields && process.missingMandatoryFields.length > 0 && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Missing mandatory fields: {process.missingMandatoryFields.join(', ')}
-        </Alert>
-      )}
+        ) : undefined}
+      />
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
 
       {/* Names & Descriptions */}
       <SectionHeader title={t('process.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
@@ -743,14 +741,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </PropRow>
       </Paper>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as typeof visibleTabs[0])} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        {visibleTabs.includes(0) && <Tab value={0} label={t('tabs.dataAndTeams')} />}
-        {visibleTabs.includes(1) && <Tab value={1} label={t('tabs.compliance')} />}
-        {visibleTabs.includes(2) && <Tab value={2} label={t('tabs.governance')} />}
-      </Tabs>
-
-      {activeTab === 0 && <>
+      {visibleTabs.includes(0) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 0} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.dataAndTeams')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Input Entities */}
       <EntityListSection
@@ -825,9 +821,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         )}
       </Box>
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
-      {activeTab === 1 && <>
+      {visibleTabs.includes(1) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 1} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.compliance')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
@@ -1039,9 +1042,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         invalidateKey={getGetProcessDpiaQueryKey(processKey) as readonly unknown[]}
       />
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
-      {activeTab === 2 && <>
+      {visibleTabs.includes(2) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 2} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.governance')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Classifications */}
       <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
@@ -1272,7 +1282,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </Paper>
       )}
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>
@@ -1384,6 +1396,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </Button>
         </DialogActions>
       </Dialog>
+      </Box>
     </Box>
   );
 };

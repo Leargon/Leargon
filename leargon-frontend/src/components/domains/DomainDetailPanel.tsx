@@ -33,7 +33,7 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
+import { Edit, Check, Close, Delete, ExpandMore, ChevronRight, Add, Warning as WarningIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -80,6 +80,7 @@ import { useNavigation } from '../../context/NavigationContext';
 import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import CreateDomainDialog from './CreateDomainDialog';
 import BoundedContextULPanel from './BoundedContextULPanel';
 import type {
@@ -450,44 +451,38 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const parentCandidates = allDomains.filter((d) => d.key !== domainKey);
 
   return (
-    <Box sx={{ p: 3, overflow: 'auto', height: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">{getLocalizedText(domain.names, 'Unnamed Domain')}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {domain.key}</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          {isAdmin && (
-            <Button
-              variant="outlined"
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={getLocalizedText(domain.names, 'Unnamed Domain')}
+        itemKey={domain.key}
+        chips={<>
+          {(domain.type || domain.effectiveType) && (
+            <Chip
+              label={domain.type ?? domain.effectiveType}
               size="small"
-              startIcon={<Add />}
-              onClick={() => setCreateSubdomainOpen(true)}
-            >
+              color="primary"
+              variant={domain.type ? 'filled' : 'outlined'}
+            />
+          )}
+          {domain.owningUnit?.name && (
+            <Chip label={domain.owningUnit.name} size="small" variant="outlined" />
+          )}
+          {isAdmin && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
+            <Chip icon={<WarningIcon fontSize="small" />} label={`${domain.missingMandatoryFields!.length} missing`} size="small" color="warning" />
+          )}
+        </>}
+        actions={isAdmin ? (
+          <>
+            <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateSubdomainOpen(true)}>
               Add Subdomain
             </Button>
-          )}
-          {isAdmin && (
-            <Button
-              color="error"
-              variant="outlined"
-              size="small"
-              startIcon={<Delete />}
-              onClick={() => setDeleteDialogOpen(true)}
-            >
+            <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               Delete
             </Button>
-          )}
-        </Box>
-      </Box>
-
-      {/* Missing mandatory fields warning — only visible to admin */}
-      {isAdmin && domain.missingMandatoryFields && domain.missingMandatoryFields.length > 0 && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Missing mandatory fields: {domain.missingMandatoryFields.join(', ')}
-        </Alert>
-      )}
+          </>
+        ) : undefined}
+      />
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
 
       {/* Names & Descriptions */}
       <SectionHeader
@@ -1356,6 +1351,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
+      </Box>
     </Box>
   );
 };

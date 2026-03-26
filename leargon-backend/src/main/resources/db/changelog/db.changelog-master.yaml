@@ -91,3 +91,5 @@ databaseChangeLog:
       file: db/changelog/changes/045-clear-incompatible-storage-locations.yaml
   - include:
       file: db/changelog/changes/046-make-owner-nullable.yaml
+  - include:
+      file: db/changelog/changes/047-add-preferred-role-to-users.yaml

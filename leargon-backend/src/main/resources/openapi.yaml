@@ -5800,6 +5800,23 @@ paths:
                 $ref: '#/components/schemas/TeamInsightsResponse'
         '401':
           description: Unauthorized
+  /dashboard:
+    get:
+      tags:
+      - Dashboard
+      summary: Get role-specific dashboard data
+      operationId: getDashboard
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data for the current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          description: Unauthorized
   /users/me:
     get:
       tags:
@@ -5812,6 +5829,33 @@ paths:
       responses:
         '200':
           description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+      - User
+      summary: Update own profile
+      description: Allows a user to update their own profile settings (preferred role, preferred language).
+      operationId: updateProfile
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
           content:
             application/json:
               schema:
@@ -8008,6 +8052,22 @@ components:
           example:
           - ROLE_USER
           - ROLE_ADMIN
+    UpdateProfileRequest:
+      type: object
+      properties:
+        preferredRole:
+          type: string
+          nullable: true
+          description: User's preferred role/view
+          enum:
+          - COMPLIANCE
+          - ARCHITECTURE
+          - OPERATIONS
+          - ADMIN
+        preferredLanguage:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
     UserResponse:
       type: object
       required:
@@ -8090,6 +8150,16 @@ components:
           nullable: true
           description: Authentication provider (e.g., AZURE for Azure Entra ID users)
           example: null
+        preferredRole:
+          type: string
+          nullable: true
+          description: User's preferred role/view
+          enum:
+          - COMPLIANCE
+          - ARCHITECTURE
+          - OPERATIONS
+          - ADMIN
+          example: ARCHITECTURE
     UserSummaryResponse:
       type: object
       required:
@@ -9241,3 +9311,93 @@ components:
           items:
             type: string
           description: Keys of processes that realize this capability
+    DashboardResponse:
+      type: object
+      required:
+      - needsAttention
+      - recentActivity
+      - myResponsibilities
+      properties:
+        needsAttention:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttentionItem'
+        recentActivity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityItem'
+        myResponsibilities:
+          $ref: '#/components/schemas/MyResponsibilitiesResponse'
+    AttentionItem:
+      type: object
+      required:
+      - resourceType
+      - key
+      - name
+      - issueCode
+      - severity
+      properties:
+        resourceType:
+          type: string
+          enum:
+          - ENTITY
+          - PROCESS
+          - DOMAIN
+          - DPIA
+        key:
+          type: string
+        name:
+          type: string
+        issueCode:
+          type: string
+          description: Machine-readable issue code
+          enum:
+          - NO_LEGAL_BASIS
+          - DPIA_IN_PROGRESS
+          - MISSING_OWNER
+        severity:
+          type: string
+          enum:
+          - WARNING
+          - ERROR
+    ActivityItem:
+      type: object
+      required:
+      - resourceType
+      - key
+      - name
+      - changeType
+      - changedAt
+      properties:
+        resourceType:
+          type: string
+          enum:
+          - ENTITY
+          - PROCESS
+          - DOMAIN
+        key:
+          type: string
+        name:
+          type: string
+        changeType:
+          type: string
+        changedBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+        changedAt:
+          type: string
+          format: date-time
+    MyResponsibilitiesResponse:
+      type: object
+      required:
+      - entities
+      - processes
+      properties:
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
