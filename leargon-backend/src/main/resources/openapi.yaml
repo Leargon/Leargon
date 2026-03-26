@@ -5800,6 +5800,25 @@ paths:
                 $ref: '#/components/schemas/TeamInsightsResponse'
         '401':
           description: Unauthorized
+  /dashboard/maturity:
+    get:
+      tags:
+      - Dashboard
+      summary: Get governance maturity metrics (admin only)
+      operationId: getMaturityMetrics
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Governance maturity metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaturityMetricsResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
   /dashboard:
     get:
       tags:
@@ -9311,6 +9330,39 @@ components:
           items:
             type: string
           description: Keys of processes that realize this capability
+    MaturityMetricItem:
+      type: object
+      required:
+      - key
+      - label
+      - covered
+      - total
+      - percentage
+      properties:
+        key:
+          type: string
+          description: Machine-readable metric key
+        label:
+          type: string
+          description: Human-readable label
+        covered:
+          type: integer
+          description: Number of items that satisfy the metric
+        total:
+          type: integer
+          description: Total number of items in scope
+        percentage:
+          type: integer
+          description: Covered / total * 100, or 100 if total is 0
+    MaturityMetricsResponse:
+      type: object
+      required:
+      - metrics
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaturityMetricItem'
     DashboardResponse:
       type: object
       required:

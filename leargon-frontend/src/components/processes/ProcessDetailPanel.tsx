@@ -86,6 +86,9 @@ import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
+import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import NudgeBanner from '../common/NudgeBanner';
+import WhatNextBanner from '../common/WhatNextBanner';
 
 const BpmnEditor = lazy(() => import('./diagram/BpmnEditor'));
 import type {
@@ -494,6 +497,38 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
 
+      {/* Item 1: Missing fields banner */}
+      <MissingFieldsBanner
+        missingFields={process.missingMandatoryFields ?? []}
+        ownerOrAdmin={isOwnerOrAdmin}
+      />
+
+      {/* Item 3: Owner resolution warning */}
+      {isOwnerOrAdmin && !process.processOwner && (
+        <NudgeBanner
+          title={t('nudge.process.noOwnerTitle')}
+          message={t('nudge.process.noOwnerMessage')}
+          actions={[{ label: t('nudge.process.assignOwner'), onClick: () => ownerEdit.startEdit('') }]}
+          learnMore={t('nudge.process.noOwnerLearnMore')}
+        />
+      )}
+
+      {/* Item 5: Compliance health indicator — shown for processes with personal data */}
+      {process.containsPersonalData && isOwnerOrAdmin && (() => {
+        const missing = [];
+        if (!process.legalBasis) missing.push(t('nudge.missingFields.fields.legalBasis'));
+        if (!process.purpose) missing.push(t('nudge.missingFields.fields.purpose'));
+        if (!dpia && !isDpiaLoading) missing.push('DPIA');
+        if (!missing.length) return null;
+        return (
+          <NudgeBanner
+            severity="warning"
+            title={t('nudge.process.complianceTitle', { fields: missing.join(', ') })}
+            message={t('nudge.process.complianceMessage')}
+          />
+        );
+      })()}
+
       {/* Names & Descriptions */}
       <SectionHeader title={t('process.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...process.names], descriptions: [...(process.descriptions || [])] })}
@@ -815,7 +850,20 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">None</Typography>
+              <>
+                <Typography variant="body2" color="text.secondary">None</Typography>
+                {/* Item 9: No executing unit nudge */}
+                {isOwnerOrAdmin && (
+                  <NudgeBanner
+                    severity="info"
+                    title={t('nudge.process.noUnitTitle')}
+                    message={t('nudge.process.noUnitMessage')}
+                    actions={[{ label: t('nudge.process.assignUnit'), onClick: () => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || []) }]}
+                    learnMore={t('nudge.process.noUnitLearnMore')}
+                    sx={{ mt: 1 }}
+                  />
+                )}
+              </>
             )}
           </>
         )}
@@ -1030,6 +1078,28 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Box>
 
       <Divider sx={{ my: 2 }} />
+
+      {/* Item 4: Legal basis nudge — personal data process with no legal basis */}
+      {process.containsPersonalData && !process.legalBasis && isOwnerOrAdmin && (
+        <NudgeBanner
+          title={t('nudge.process.legalBasisTitle')}
+          message={t('nudge.process.legalBasisMessage')}
+          actions={[{ label: t('nudge.process.setLegalBasis'), onClick: () => legalBasisEdit.startEdit(process.legalBasis || '') }]}
+          learnMore={t('nudge.process.legalBasisLearnMore')}
+        />
+      )}
+
+      {/* Item 2: DPIA suggestion nudge — personal data process without DPIA */}
+      {process.containsPersonalData && !dpia && !isDpiaLoading && isOwnerOrAdmin && (
+        <NudgeBanner
+          severity="info"
+          title={t('nudge.process.dpiaTitle')}
+          message={t('nudge.process.dpiaMessage')}
+          actions={[{ label: t('nudge.process.triggerDpia'), onClick: async () => { await triggerDpia({ key: processKey }); await queryClient.invalidateQueries({ queryKey: getGetProcessDpiaQueryKey(processKey) }); } }]}
+          learnMore={t('nudge.process.dpiaLearnMore')}
+          dismissible
+        />
+      )}
 
       <DpiaSection
         resourceKey={processKey}
@@ -1285,6 +1355,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </AccordionDetails>
       </Accordion>
       )}
+
+      {/* Item 6: What's next suggestion */}
+      {isOwnerOrAdmin && (() => {
+        const steps = [];
+        if (!process.processOwner) steps.push({ description: t('nudge.process.nextAssignOwnerDesc'), actionLabel: t('nudge.process.assignOwner'), onClick: () => ownerEdit.startEdit('') });
+        else if (process.containsPersonalData && !process.legalBasis) steps.push({ description: t('nudge.process.nextSetLegalBasisDesc'), actionLabel: t('nudge.process.setLegalBasis'), onClick: () => legalBasisEdit.startEdit('') });
+        else if (!process.executingUnits?.length) steps.push({ description: t('nudge.process.nextAssignUnitDesc'), actionLabel: t('nudge.process.assignUnitShort'), onClick: () => execUnitsEdit.startEdit([]) });
+        else if (process.containsPersonalData && !dpia && !isDpiaLoading) steps.push({ description: t('nudge.process.nextCheckDpiaDesc'), actionLabel: t('nudge.process.checkDpia'), onClick: async () => {} });
+        return <WhatNextBanner steps={steps} />;
+      })()}
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>

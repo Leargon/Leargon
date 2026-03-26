@@ -7,6 +7,7 @@ import io.micronaut.security.utils.SecurityService
 import org.leargon.backend.api.DashboardApi
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.DashboardResponse
+import org.leargon.backend.model.MaturityMetricsResponse
 import org.leargon.backend.service.DashboardService
 
 @Controller
@@ -22,4 +23,8 @@ open class DashboardController(
                 .orElseThrow { ResourceNotFoundException("User not authenticated") }
         return dashboardService.getDashboard(email)
     }
+
+    @Secured("ROLE_ADMIN")
+    override fun getMaturityMetrics(): MaturityMetricsResponse =
+        dashboardService.getMaturityMetrics()
 }

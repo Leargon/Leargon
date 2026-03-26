@@ -82,6 +82,9 @@ import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 import QualityRulesSection from './QualityRulesSection';
+import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import NudgeBanner from '../common/NudgeBanner';
+import WhatNextBanner from '../common/WhatNextBanner';
 import CreateEntityDialog from './CreateEntityDialog';
 import type {
   LocalizedText,
@@ -464,6 +467,37 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </>}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+
+      {/* Item 1: Missing fields banner */}
+      <MissingFieldsBanner
+        missingFields={entity.missingMandatoryFields ?? []}
+        ownerOrAdmin={isOwnerOrAdmin}
+      />
+
+      {/* Item 3: Owner resolution warning — no owner at all (neither explicit nor computed) */}
+      {isOwnerOrAdmin && !entity.dataOwner && (
+        <NudgeBanner
+          title={t('nudge.entity.noOwnerTitle')}
+          message={t('nudge.entity.noOwnerMessage')}
+          actions={[
+            { label: t('nudge.entity.assignOwner'), onClick: () => ownerEdit.startEdit('') },
+          ]}
+          learnMore={t('nudge.entity.noOwnerLearnMore')}
+        />
+      )}
+
+      {/* Item 8: Orphaned entity — no bounded context */}
+      {isOwnerOrAdmin && !entity.boundedContext && (
+        <NudgeBanner
+          severity="info"
+          title={t('nudge.entity.noBcTitle')}
+          message={t('nudge.entity.noBcMessage')}
+          actions={[
+            { label: t('nudge.entity.assignBc'), onClick: () => boundedContextEdit.startEdit(null) },
+          ]}
+          learnMore={t('nudge.entity.noBcLearnMore')}
+        />
+      )}
 
       {/* Names & Descriptions */}
       <SectionHeader title={t('entity.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
@@ -1137,6 +1171,15 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </AccordionDetails>
       </Accordion>
       )}
+
+      {/* Item 6: What's next suggestion */}
+      {isOwnerOrAdmin && (() => {
+        const steps = [];
+        if (!entity.boundedContext) steps.push({ description: t('nudge.entity.nextAssignBcDesc'), actionLabel: t('nudge.entity.assignBc'), onClick: () => boundedContextEdit.startEdit(null) });
+        else if (!entity.dataOwner) steps.push({ description: t('nudge.entity.nextAssignOwnerDesc'), actionLabel: t('nudge.entity.assignOwner'), onClick: () => ownerEdit.startEdit('') });
+        else if ((entity.missingMandatoryFields?.length ?? 0) > 0) steps.push({ description: t('nudge.entity.nextFillFields', { count: entity.missingMandatoryFields!.length }), actionLabel: t('nudge.entity.showFields'), onClick: () => {} });
+        return <WhatNextBanner steps={steps} />;
+      })()}
 
       {/* Create Child Entity Dialog */}
       <CreateEntityDialog

@@ -23,6 +23,7 @@ import {
 import { useGetDashboard } from '../api/generated/dashboard/dashboard';
 import type { AttentionItem, ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
+import MaturityOverview from '../components/dashboard/MaturityOverview';
 
 function formatRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -198,6 +199,7 @@ function ResponsibilitiesSection({ items, type }: { items: Array<{ key: string; 
 
 const HomePage: React.FC = () => {
   const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: response, isLoading } = useGetDashboard();
   const dashboard = (response?.data) as import('../api/generated/model').DashboardResponse | undefined;
 
@@ -211,6 +213,9 @@ const HomePage: React.FC = () => {
           Here&apos;s an overview of items that need your attention.
         </Typography>
       </Box>
+
+      {/* Item 11: Governance Maturity Overview — admin only */}
+      {isAdmin && <Box sx={{ mb: 3 }}><MaturityOverview /></Box>}
 
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
 

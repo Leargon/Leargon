@@ -32,13 +32,136 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  DashboardResponse
+  DashboardResponse,
+  MaturityMetricsResponse
 } from '../model';
 
 import { customAxios } from '../../customAxios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * @summary Get governance maturity metrics (admin only)
+ */
+export type getMaturityMetricsResponse200 = {
+  data: MaturityMetricsResponse
+  status: 200
+}
+
+export type getMaturityMetricsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getMaturityMetricsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type getMaturityMetricsResponseSuccess = (getMaturityMetricsResponse200) & {
+  headers: Headers;
+};
+export type getMaturityMetricsResponseError = (getMaturityMetricsResponse401 | getMaturityMetricsResponse403) & {
+  headers: Headers;
+};
+
+export type getMaturityMetricsResponse = (getMaturityMetricsResponseSuccess | getMaturityMetricsResponseError)
+
+export const getGetMaturityMetricsUrl = () => {
+
+
+  
+
+  return `/dashboard/maturity`
+}
+
+export const getMaturityMetrics = async ( options?: RequestInit): Promise<getMaturityMetricsResponse> => {
+  
+  return customAxios<getMaturityMetricsResponse>(getGetMaturityMetricsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+  
+
+
+
+
+export const getGetMaturityMetricsQueryKey = () => {
+    return [
+    `/dashboard/maturity`
+    ] as const;
+    }
+
+    
+export const getGetMaturityMetricsQueryOptions = <TData = Awaited<ReturnType<typeof getMaturityMetrics>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMaturityMetricsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMaturityMetrics>>> = ({ signal }) => getMaturityMetrics({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMaturityMetricsQueryResult = NonNullable<Awaited<ReturnType<typeof getMaturityMetrics>>>
+export type GetMaturityMetricsQueryError = void
+
+
+export function useGetMaturityMetrics<TData = Awaited<ReturnType<typeof getMaturityMetrics>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMaturityMetrics>>,
+          TError,
+          Awaited<ReturnType<typeof getMaturityMetrics>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMaturityMetrics<TData = Awaited<ReturnType<typeof getMaturityMetrics>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMaturityMetrics>>,
+          TError,
+          Awaited<ReturnType<typeof getMaturityMetrics>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMaturityMetrics<TData = Awaited<ReturnType<typeof getMaturityMetrics>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get governance maturity metrics (admin only)
+ */
+
+export function useGetMaturityMetrics<TData = Awaited<ReturnType<typeof getMaturityMetrics>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMaturityMetrics>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMaturityMetricsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 
 
 
