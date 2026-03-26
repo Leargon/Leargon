@@ -41,6 +41,9 @@ class Classification {
     @Column(name = "multi_value", nullable = false)
     var multiValue: Boolean = false
 
+    @Column(name = "is_system", nullable = false)
+    var isSystem: Boolean = false
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id", nullable = false)
     var createdBy: User? = null

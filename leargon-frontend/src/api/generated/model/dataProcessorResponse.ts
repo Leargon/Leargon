@@ -16,7 +16,6 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
 
@@ -30,11 +29,6 @@ export interface DataProcessorResponse {
   processorAgreementInPlace: boolean;
   /** Whether sub-processors have been approved */
   subProcessorsApproved: boolean;
-  /**
-   * Business entities linked to this processor
-   * @nullable
-   */
-  linkedBusinessEntities?: BusinessEntitySummaryResponse[] | null;
   /**
    * Processes linked to this processor
    * @nullable

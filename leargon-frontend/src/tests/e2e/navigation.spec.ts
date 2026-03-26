@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 
 // Uses admin auth via project config (storageState: '.auth/admin.json')
 
-test('after login, / redirects to /domains', async ({ page }) => {
+test('after login, / redirects to /capabilities', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveURL(/\/domains/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/capabilities/, { timeout: 10_000 });
 });
 
 test('can navigate to /entities', async ({ page }) => {

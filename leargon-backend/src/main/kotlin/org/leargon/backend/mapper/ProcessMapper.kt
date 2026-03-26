@@ -21,7 +21,8 @@ import java.time.ZonedDateTime
 @Singleton
 open class ProcessMapper(
     private val fieldConfigurationService: FieldConfigurationService,
-    private val dataProcessorMapper: DataProcessorMapper
+    private val serviceProviderMapper: ServiceProviderMapper,
+    private val capabilityMapper: CapabilityMapper
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
         val fc =
@@ -30,7 +31,7 @@ open class ProcessMapper(
                     fieldName == "names" -> process.names.isNotEmpty()
                     fieldName == "descriptions" -> process.descriptions.isNotEmpty()
                     fieldName == "boundedContext" -> process.boundedContext != null
-                    fieldName == "processOwner" -> process.processOwner != null
+                    fieldName == "processOwner" -> (process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner) != null
                     fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
                     fieldName == "legalBasis" -> process.legalBasis != null
                     fieldName.startsWith("names.") -> {
@@ -48,15 +49,30 @@ open class ProcessMapper(
                     else -> true
                 }
             }
+        val owningUnit = process.boundedContext?.owningUnit
+        val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
+        val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
+        val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian
+        val allProcessEntities = process.inputEntities + process.outputEntities
+        val containsPersonalData =
+            allProcessEntities.any { entity ->
+                entity.classificationAssignments.any {
+                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                }
+            }
         return ProcessResponse(
             process.key,
-            UserMapper.toUserSummary(process.processOwner),
+            process.processOwner != null,
+            containsPersonalData,
             UserMapper.toUserSummary(process.createdBy),
             LocalizedTextMapper.toModel(process.names),
             LocalizedTextMapper.toModel(process.descriptions),
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
-        ).code(process.code)
+        ).processOwner(UserMapper.toUserSummary(effectiveOwner))
+            .processSteward(UserMapper.toUserSummary(effectiveSteward))
+            .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
+            .code(process.code)
             .processType(toProcessType(process.processType))
             .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
             .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
@@ -68,8 +84,9 @@ open class ProcessMapper(
             .legalBasis(toLegalBasis(process.legalBasis))
             .purpose(process.purpose)
             .securityMeasures(process.securityMeasures)
-            .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
-            .dataProcessors(process.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
+            .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
+            .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
@@ -79,6 +96,8 @@ open class ProcessMapper(
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
         if (process == null) return null
         return ProcessSummaryResponse(process.key, process.getName("en"))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
+            .description(process.descriptions.firstOrNull()?.text)
     }
 
     fun toProcessVersionResponse(version: ProcessVersion): ProcessVersionResponse =

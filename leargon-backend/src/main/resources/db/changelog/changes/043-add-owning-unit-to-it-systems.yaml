@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 043-add-owning-unit-to-it-systems
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: it_systems
+            columns:
+              - column:
+                  name: owning_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: it_systems
+            baseColumnNames: owning_unit_id
+            referencedTableName: organisational_units
+            referencedColumnNames: id
+            constraintName: fk_it_system_owning_unit
+            onDelete: SET NULL

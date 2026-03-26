@@ -41,7 +41,7 @@ open class BoundedContextMapper {
                 bc.getName("en"),
                 bc.domain?.key ?: "",
                 bc.domain?.getName("en") ?: ""
-            )
+            ).owningUnitName(bc.owningUnit?.getName("en"))
         }
 
         @JvmStatic

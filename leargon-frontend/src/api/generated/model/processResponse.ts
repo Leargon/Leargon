@@ -18,15 +18,16 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
+import type { CapabilitySummaryResponse } from './capabilitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
-import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { ItSystemSummaryResponse } from './itSystemSummaryResponse';
 import type { LegalBasis } from './legalBasis';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
 import type { ProcessType } from './processType';
+import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface ProcessResponse {
@@ -49,7 +50,16 @@ export interface ProcessResponse {
    * @nullable
    */
   securityMeasures?: string | null;
-  processOwner: UserSummaryResponse;
+  /** Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  processOwner?: UserSummaryResponse | null;
+  /** True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context */
+  ownerIsExplicit: boolean;
+  /** True if any input or output entity of this process is classified as containing personal data */
+  containsPersonalData: boolean;
+  /** Business steward override (falls back to owning org unit steward) */
+  processSteward?: UserSummaryResponse | null;
+  /** Technical custodian override (falls back to owning org unit technical custodian) */
+  technicalCustodian?: UserSummaryResponse | null;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions: LocalizedText[];
@@ -66,10 +76,15 @@ export interface ProcessResponse {
    */
   crossBorderTransfers?: CrossBorderTransferEntry[] | null;
   /**
-   * Data processors linked to this process
+   * Service providers linked to this process
    * @nullable
    */
-  dataProcessors?: DataProcessorSummaryResponse[] | null;
+  serviceProviders?: ServiceProviderSummaryResponse[] | null;
+  /**
+   * Capabilities realized by this process
+   * @nullable
+   */
+  capabilities?: CapabilitySummaryResponse[] | null;
   /**
    * IT systems used in this process
    * @nullable

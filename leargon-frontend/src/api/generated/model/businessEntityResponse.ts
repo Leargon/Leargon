@@ -21,15 +21,20 @@ import type { BusinessDataQualityRuleResponse } from './businessDataQualityRuleR
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
-import type { CrossBorderTransferEntry } from './crossBorderTransferEntry';
-import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface BusinessEntityResponse {
   /** BusinessEntity key (hierarchical slug) */
   key: string;
-  dataOwner: UserSummaryResponse;
+  /** Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  dataOwner?: UserSummaryResponse | null;
+  /** True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context */
+  ownerIsExplicit: boolean;
+  /** Business steward override (falls back to owning org unit steward) */
+  dataSteward?: UserSummaryResponse | null;
+  /** Technical custodian override (falls back to owning org unit technical custodian) */
+  technicalCustodian?: UserSummaryResponse | null;
   parent?: BusinessEntitySummaryResponse;
   children?: BusinessEntitySummaryResponse[];
   createdBy: UserSummaryResponse;
@@ -46,15 +51,10 @@ export interface BusinessEntityResponse {
    */
   retentionPeriod?: string | null;
   /**
-   * List of cross-border data transfers for this entity
+   * ISO 3166-1 alpha-2 country codes where this entity's data is stored
    * @nullable
    */
-  crossBorderTransfers?: CrossBorderTransferEntry[] | null;
-  /**
-   * Data processors linked to this entity
-   * @nullable
-   */
-  dataProcessors?: DataProcessorSummaryResponse[] | null;
+  storageLocations?: string[] | null;
   /**
    * List of mandatory fields that are currently missing values
    * @nullable

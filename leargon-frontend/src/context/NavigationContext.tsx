@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-export type Perspective = 'gdpr' | 'governance' | 'ddd' | 'orgdev';
+export type Perspective = 'gdpr' | 'governance' | 'ddd' | 'orgdev' | 'bcm';
 
 const STORAGE_KEY = 'leargon_perspective';
 
@@ -9,8 +9,11 @@ const STORAGE_KEY = 'leargon_perspective';
 // Shared routes (/entities, /processes, /diagrams/entities, /diagrams/processes)
 // are intentionally absent so the current perspective is preserved.
 const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
+  '/capabilities': 'bcm',
+  '/diagrams/capability-map': 'bcm',
+  '/diagrams/strategic-map': 'bcm',
   '/compliance': 'gdpr',
-  '/data-processors': 'gdpr',
+  '/service-providers': 'gdpr',
   '/dpia': 'gdpr',
   '/domains': 'ddd',
   '/diagrams/context-map': 'ddd',
@@ -33,7 +36,7 @@ interface NavigationContextValue {
 }
 
 const NavigationContext = createContext<NavigationContextValue>({
-  perspective: 'governance',
+  perspective: 'bcm',
   setPerspective: () => {},
 });
 
@@ -42,7 +45,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [perspective, setPerspectiveState] = useState<Perspective>(() => {
     const inferred = inferPerspective(location.pathname);
     if (inferred) return inferred;
-    return (sessionStorage.getItem(STORAGE_KEY) as Perspective) ?? 'governance';
+    return (sessionStorage.getItem(STORAGE_KEY) as Perspective) ?? 'bcm';
   });
 
   useEffect(() => {

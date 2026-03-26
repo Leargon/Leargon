@@ -26,4 +26,9 @@ export interface BoundedContextSummaryResponse {
   domainKey: string;
   /** Parent domain name in default locale */
   domainName: string;
+  /**
+   * Name of the owning organisational unit (used for computed owner/steward/custodian display)
+   * @nullable
+   */
+  owningUnitName?: string | null;
 }

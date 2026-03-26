@@ -8,16 +8,16 @@ import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
-import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Singleton
 open class ExportService(
     private val processRepository: ProcessRepository,
-    private val dataProcessorRepository: DataProcessorRepository,
+    private val serviceProviderRepository: ServiceProviderRepository,
     private val dpiaRepository: DpiaRepository,
     private val fieldConfigurationService: FieldConfigurationService,
     private val contextRelationshipRepository: ContextRelationshipRepository,
@@ -64,34 +64,62 @@ open class ExportService(
 
     private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
 
+    private fun translateLegalBasis(legalBasis: String?): String? =
+        when (legalBasis) {
+            "CONSENT" -> "Consent (Art. 6(1)(a) GDPR)"
+            "CONTRACT" -> "Contract (Art. 6(1)(b) GDPR)"
+            "LEGAL_OBLIGATION" -> "Legal Obligation (Art. 6(1)(c) GDPR)"
+            "VITAL_INTEREST" -> "Vital Interests (Art. 6(1)(d) GDPR)"
+            "PUBLIC_TASK" -> "Public Task (Art. 6(1)(e) GDPR)"
+            "LEGITIMATE_INTEREST" -> "Legitimate Interests (Art. 6(1)(f) GDPR)"
+            else -> legalBasis
+        }
+
     fun exportProcessingRegister(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
                 "Process Name",
+                "Process Owner",
                 "Legal Basis",
                 "Purpose",
                 "Security Measures",
                 "Data Subject Categories",
                 "Personal Data Categories",
-                "Data Processors",
+                "Retention Periods",
+                "Service Providers",
                 "Cross-border Transfers"
             )
         )
-        val processes = processRepository.findAll()
+        val processes = processRepository.findAll().filter { it.legalBasis != null }
         for (process in processes) {
             val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
+            val processOwnerName = process.processOwner?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
             val allEntities = (process.inputEntities + process.outputEntities).distinctBy { it.key }
             val dataSubjectCategories =
                 allEntities
                     .map { rootEntity(it) }
                     .distinctBy { it.key }
                     .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+            val personalEntities =
+                allEntities.filter { entity ->
+                    entity.classificationAssignments.any {
+                        it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                    }
+                }
             val personalDataCategories =
+                personalEntities.joinToString("; ") {
+                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
+                }
+            val retentionPeriods =
                 allEntities
-                    .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+                    .filter { !it.retentionPeriod.isNullOrBlank() }
+                    .joinToString("; ") { e ->
+                        val entityName = e.names.find { n -> n.locale == locale }?.text ?: e.names.firstOrNull()?.text ?: e.key
+                        "$entityName: ${e.retentionPeriod}"
+                    }
             val dataProcessors =
-                process.dataProcessors.joinToString("; ") {
+                process.serviceProviders.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
             val transfers =
@@ -101,11 +129,13 @@ open class ExportService(
             sb.appendLine(
                 csvRow(
                     name,
-                    process.legalBasis,
+                    processOwnerName,
+                    translateLegalBasis(process.legalBasis),
                     process.purpose,
                     process.securityMeasures,
                     dataSubjectCategories,
                     personalDataCategories,
+                    retentionPeriods,
                     dataProcessors,
                     transfers
                 )
@@ -114,20 +144,20 @@ open class ExportService(
         return sb.toString()
     }
 
-    fun exportDataProcessors(locale: String = "en"): String {
+    fun exportServiceProviders(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
-                "Processor Key",
-                "Processor Name",
+                "Service Provider Key",
+                "Service Provider Name",
+                "Service Provider Type",
                 "Processing Countries",
                 "Processor Agreement In Place",
                 "Sub-processors Approved",
-                "Linked Processes",
-                "Linked Business Entities"
+                "Linked Processes"
             )
         )
-        val processors = dataProcessorRepository.findAll()
+        val processors = serviceProviderRepository.findAll()
         for (processor in processors) {
             val name = processor.names.find { it.locale == locale }?.text ?: processor.names.firstOrNull()?.text ?: processor.key
             val countries = processor.processingCountries.joinToString("; ")
@@ -135,19 +165,15 @@ open class ExportService(
                 processor.linkedProcesses.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
-            val linkedEntities =
-                processor.linkedBusinessEntities.joinToString("; ") {
-                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
-                }
             sb.appendLine(
                 csvRow(
                     processor.key,
                     name,
+                    processor.serviceProviderType,
                     countries,
-                    processor.processorAgreementInPlace.toString(),
-                    processor.subProcessorsApproved.toString(),
-                    linkedProcesses,
-                    linkedEntities
+                    if (processor.processorAgreementInPlace) "Yes" else "No",
+                    if (processor.subProcessorsApproved) "Yes" else "No",
+                    linkedProcesses
                 )
             )
         }
@@ -199,12 +225,14 @@ open class ExportService(
 
         // Index domains and determine root/child status in-memory
         val domainByKey = allDomains.associateBy { it.key }
-        val childDomainsByParentKey = allDomains
-            .filter { it.parent != null }
-            .groupBy { it.parent!!.key }
-        val bcsByDomainKey = allBoundedContexts
-            .filter { it.domain != null }
-            .groupBy { it.domain!!.key }
+        val childDomainsByParentKey =
+            allDomains
+                .filter { it.parent != null }
+                .groupBy { it.parent!!.key }
+        val bcsByDomainKey =
+            allBoundedContexts
+                .filter { it.domain != null }
+                .groupBy { it.domain!!.key }
         val rootDomainKeys = allDomains.filter { it.parent == null }.map { it.key }.toSet()
 
         // Build map: BC key → CML subdomain identifier
@@ -251,8 +279,16 @@ open class ExportService(
                     // domainVisionStatement from the first (alphabetically) BC in this child domain
                     val childBcs = bcsByDomainKey[child.key]?.sortedBy { it.getName(locale) } ?: emptyList()
                     val firstBcDesc =
-                        childBcs.firstOrNull()?.descriptions?.find { it.locale == locale }?.text
-                            ?: childBcs.firstOrNull()?.descriptions?.firstOrNull()?.text
+                        childBcs
+                            .firstOrNull()
+                            ?.descriptions
+                            ?.find { it.locale == locale }
+                            ?.text
+                            ?: childBcs
+                                .firstOrNull()
+                                ?.descriptions
+                                ?.firstOrNull()
+                                ?.text
                     if (!firstBcDesc.isNullOrBlank()) {
                         sb.appendLine("    domainVisionStatement = \"${firstBcDesc.replace("\"", "\\\"")}\"")
                     }
@@ -279,7 +315,7 @@ open class ExportService(
                         when (rootDomain.type?.uppercase()) {
                             "CORE" -> "    type = CORE_DOMAIN"
                             "SUPPORTING" -> "    type = SUPPORTING_DOMAIN"
-                            "SUPPORT" -> "    type = SUPPORT_DOMAIN"
+                            "SUPPORT" -> "    type = SUPPORTING_DOMAIN"
                             "GENERIC" -> "    type = GENERIC_SUBDOMAIN"
                             else -> null
                         }
@@ -378,13 +414,14 @@ open class ExportService(
                 "Related Resource Key",
                 "Related Resource Type",
                 "Status",
+                "Initial Risk",
                 "Residual Risk",
                 "Measures",
                 "Risk Description",
-                "FDPIC Consultation Required",
-                "FDPIC Consultation Completed",
-                "FDPIC Consultation Date",
-                "FDPIC Consultation Outcome",
+                "DPA Consultation Required",
+                "DPA Consultation Completed",
+                "DPA Consultation Date",
+                "DPA Consultation Outcome",
                 "Triggered By",
                 "Created At"
             )
@@ -400,17 +437,38 @@ open class ExportService(
             val triggeredBy = dpia.triggeredBy?.let { "${it.firstName} ${it.lastName} (${it.username})" } ?: ""
             val createdAt = dpia.createdAt?.atZone(ZoneOffset.UTC)?.format(dateFormatter) ?: ""
             val fdpicDate = dpia.fdpicConsultationDate?.format(dateFormatter) ?: ""
+            val statusLabel =
+                when (dpia.status) {
+                    "IN_PROGRESS" -> "In Progress"
+                    "COMPLETED" -> "Completed"
+                    else -> dpia.status
+                }
+            val riskLabel =
+                when (dpia.residualRisk) {
+                    "LOW" -> "Low"
+                    "MEDIUM" -> "Medium"
+                    "HIGH" -> "High"
+                    else -> dpia.residualRisk
+                }
+            val initialRiskLabel =
+                when (dpia.initialRisk) {
+                    "LOW" -> "Low"
+                    "MEDIUM" -> "Medium"
+                    "HIGH" -> "High"
+                    else -> dpia.initialRisk
+                }
             sb.appendLine(
                 csvRow(
                     dpia.key,
                     relatedKey,
                     relatedType,
-                    dpia.status,
-                    dpia.residualRisk,
+                    statusLabel,
+                    initialRiskLabel,
+                    riskLabel,
                     dpia.measures,
                     dpia.riskDescription,
-                    dpia.fdpicConsultationRequired?.toString(),
-                    dpia.fdpicConsultationCompleted?.toString(),
+                    dpia.fdpicConsultationRequired?.let { if (it) "Yes" else "No" },
+                    dpia.fdpicConsultationCompleted?.let { if (it) "Yes" else "No" },
                     fdpicDate,
                     dpia.fdpicConsultationOutcome,
                     triggeredBy,

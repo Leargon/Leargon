@@ -20,7 +20,6 @@ import java.time.ZonedDateTime
 @Singleton
 open class BusinessEntityMapper(
     private val fieldConfigurationService: FieldConfigurationService,
-    private val dataProcessorMapper: DataProcessorMapper,
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
@@ -46,15 +45,22 @@ open class BusinessEntityMapper(
                     else -> true
                 }
             }
+        val owningUnit = businessEntity.boundedContext?.owningUnit
+        val effectiveOwner = businessEntity.dataOwner ?: owningUnit?.businessOwner
+        val effectiveSteward = businessEntity.dataSteward ?: owningUnit?.businessSteward
+        val effectiveCustodian = businessEntity.technicalCustodian ?: owningUnit?.technicalCustodian
         return BusinessEntityResponse(
             businessEntity.key,
-            UserMapper.toUserSummary(businessEntity.dataOwner),
+            businessEntity.dataOwner != null,
             UserMapper.toUserSummary(businessEntity.createdBy),
             LocalizedTextMapper.toModel(businessEntity.names),
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
-        ).parent(toBusinessEntitySummaryResponse(businessEntity.parent))
+        ).dataOwner(UserMapper.toUserSummary(effectiveOwner))
+            .dataSteward(UserMapper.toUserSummary(effectiveSteward))
+            .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
+            .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext))
             .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities))
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
@@ -62,8 +68,7 @@ open class BusinessEntityMapper(
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(businessEntity.classificationAssignments))
             .retentionPeriod(businessEntity.retentionPeriod)
-            .crossBorderTransfers(businessEntity.crossBorderTransfers.orEmpty().map { DataProcessorMapper.toCrossBorderTransferEntry(it) })
-            .dataProcessors(businessEntity.dataProcessors.orEmpty().map { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .storageLocations(businessEntity.storageLocations.orEmpty())
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
@@ -79,7 +84,7 @@ open class BusinessEntityMapper(
             toZonedDateTime(entity.createdAt),
             toZonedDateTime(entity.updatedAt)
         ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
-            .dataOwner(UserMapper.toUserSummary(entity.dataOwner))
+            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: entity.boundedContext?.owningUnit?.businessOwner))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments))
@@ -149,6 +154,8 @@ open class BusinessEntityMapper(
                 .parentName(entity.parent?.getName("en"))
                 .rootKey(root?.key)
                 .rootName(root?.getName("en"))
+                .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
+                .description(entity.descriptions.firstOrNull()?.text)
         }
 
         @JvmStatic

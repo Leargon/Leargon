@@ -16,10 +16,17 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 
 export interface ProcessSummaryResponse {
   /** Process key */
   key: string;
   /** Process name in default locale */
   name: string;
+  boundedContext?: BoundedContextSummaryResponse | null;
+  /**
+   * Description in the default locale
+   * @nullable
+   */
+  description?: string | null;
 }

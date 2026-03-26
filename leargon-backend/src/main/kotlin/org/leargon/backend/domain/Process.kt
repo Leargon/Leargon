@@ -45,8 +45,16 @@ class Process {
     var securityMeasures: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "process_owner_id", nullable = false)
+    @JoinColumn(name = "process_owner_id", nullable = true)
     var processOwner: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_steward_id")
+    var processSteward: User? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_custodian_id")
+    var technicalCustodian: User? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
@@ -110,10 +118,13 @@ class Process {
     var crossBorderTransfers: MutableList<CrossBorderTransfer>? = null
 
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
-    var dataProcessors: MutableSet<DataProcessor> = mutableSetOf()
+    var serviceProviders: MutableSet<ServiceProvider> = mutableSetOf()
 
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
     var itSystems: MutableSet<ItSystem> = mutableSetOf()
+
+    @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
+    var capabilities: MutableSet<Capability> = mutableSetOf()
 
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)

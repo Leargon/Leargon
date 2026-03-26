@@ -49,7 +49,7 @@ import type {
   ProcessVersionResponse,
   SaveProcessDiagramRequest,
   UpdateCrossBorderTransfersRequest,
-  UpdateLinkedDataProcessorsRequest,
+  UpdateLinkedServiceProvidersRequest,
   UpdateOrgUnitParentsRequest,
   UpdateProcessCodeRequest,
   UpdateProcessItSystemsRequest,
@@ -58,6 +58,8 @@ import type {
   UpdateProcessParentRequest,
   UpdateProcessPurposeRequest,
   UpdateProcessSecurityMeasuresRequest,
+  UpdateProcessStewardRequest,
+  UpdateProcessTechnicalCustodianRequest,
   UpdateProcessTypeRequest,
   VersionDiffResponse
 } from '../model';
@@ -1754,6 +1756,105 @@ export const useRemoveProcessOutput = <TError = void | ErrorResponse,
       return useMutation(getRemoveProcessOutputMutationOptions(options), queryClient);
     }
     /**
+ * Clears the explicit process owner override, reverting to computed owner from the bounded context owning unit. Only the current owner or an admin can perform this.
+ * @summary Clear explicit process owner override
+ */
+export type clearProcessOwnerResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type clearProcessOwnerResponse401 = {
+  data: void
+  status: 401
+}
+
+export type clearProcessOwnerResponse403 = {
+  data: void
+  status: 403
+}
+
+export type clearProcessOwnerResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type clearProcessOwnerResponseSuccess = (clearProcessOwnerResponse200) & {
+  headers: Headers;
+};
+export type clearProcessOwnerResponseError = (clearProcessOwnerResponse401 | clearProcessOwnerResponse403 | clearProcessOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type clearProcessOwnerResponse = (clearProcessOwnerResponseSuccess | clearProcessOwnerResponseError)
+
+export const getClearProcessOwnerUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/owner`
+}
+
+export const clearProcessOwner = async (key: string, options?: RequestInit): Promise<clearProcessOwnerResponse> => {
+  
+  return customAxios<clearProcessOwnerResponse>(getClearProcessOwnerUrl(key),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+
+
+export const getClearProcessOwnerMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext> => {
+
+const mutationKey = ['clearProcessOwner'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearProcessOwner>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
+
+          return  clearProcessOwner(key,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearProcessOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof clearProcessOwner>>>
+    
+    export type ClearProcessOwnerMutationError = void | ErrorResponse
+
+    /**
+ * @summary Clear explicit process owner override
+ */
+export const useClearProcessOwner = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearProcessOwner>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearProcessOwner>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getClearProcessOwnerMutationOptions(options), queryClient);
+    }
+    /**
  * Updates the owner of a process. Only the current process owner or an admin can update.
  * @summary Update process owner
  */
@@ -1853,6 +1954,208 @@ export const useUpdateProcessOwner = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getUpdateProcessOwnerMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the business steward of a process. Only the process owner or an admin can update.
+ * @summary Update process steward
+ */
+export type updateProcessStewardResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessStewardResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessStewardResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessStewardResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessStewardResponseSuccess = (updateProcessStewardResponse200) & {
+  headers: Headers;
+};
+export type updateProcessStewardResponseError = (updateProcessStewardResponse401 | updateProcessStewardResponse403 | updateProcessStewardResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessStewardResponse = (updateProcessStewardResponseSuccess | updateProcessStewardResponseError)
+
+export const getUpdateProcessStewardUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/process-steward`
+}
+
+export const updateProcessSteward = async (key: string,
+    updateProcessStewardRequest: UpdateProcessStewardRequest, options?: RequestInit): Promise<updateProcessStewardResponse> => {
+  
+  return customAxios<updateProcessStewardResponse>(getUpdateProcessStewardUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessStewardRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessStewardMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext> => {
+
+const mutationKey = ['updateProcessSteward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessSteward>>, {key: string;data: UpdateProcessStewardRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessSteward(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessStewardMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessSteward>>>
+    export type UpdateProcessStewardMutationBody = UpdateProcessStewardRequest
+    export type UpdateProcessStewardMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process steward
+ */
+export const useUpdateProcessSteward = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessSteward>>, TError,{key: string;data: UpdateProcessStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessSteward>>,
+        TError,
+        {key: string;data: UpdateProcessStewardRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessStewardMutationOptions(options), queryClient);
+    }
+    /**
+ * Updates the technical custodian of a process. Only the process owner or an admin can update.
+ * @summary Update process technical custodian
+ */
+export type updateProcessTechnicalCustodianResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessTechnicalCustodianResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessTechnicalCustodianResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessTechnicalCustodianResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessTechnicalCustodianResponseSuccess = (updateProcessTechnicalCustodianResponse200) & {
+  headers: Headers;
+};
+export type updateProcessTechnicalCustodianResponseError = (updateProcessTechnicalCustodianResponse401 | updateProcessTechnicalCustodianResponse403 | updateProcessTechnicalCustodianResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessTechnicalCustodianResponse = (updateProcessTechnicalCustodianResponseSuccess | updateProcessTechnicalCustodianResponseError)
+
+export const getUpdateProcessTechnicalCustodianUrl = (key: string,) => {
+
+
+  
+
+  return `/processes/${key}/technical-custodian`
+}
+
+export const updateProcessTechnicalCustodian = async (key: string,
+    updateProcessTechnicalCustodianRequest: UpdateProcessTechnicalCustodianRequest, options?: RequestInit): Promise<updateProcessTechnicalCustodianResponse> => {
+  
+  return customAxios<updateProcessTechnicalCustodianResponse>(getUpdateProcessTechnicalCustodianUrl(key),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProcessTechnicalCustodianRequest,)
+  }
+);}
+  
+
+
+
+export const getUpdateProcessTechnicalCustodianMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext> => {
+
+const mutationKey = ['updateProcessTechnicalCustodian'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, {key: string;data: UpdateProcessTechnicalCustodianRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessTechnicalCustodian(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessTechnicalCustodianMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>>
+    export type UpdateProcessTechnicalCustodianMutationBody = UpdateProcessTechnicalCustodianRequest
+    export type UpdateProcessTechnicalCustodianMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update process technical custodian
+ */
+export const useUpdateProcessTechnicalCustodian = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>, TError,{key: string;data: UpdateProcessTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessTechnicalCustodian>>,
+        TError,
+        {key: string;data: UpdateProcessTechnicalCustodianRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessTechnicalCustodianMutationOptions(options), queryClient);
     }
     /**
  * Updates the type of a process. Only the process owner or an admin can update.
@@ -3053,67 +3356,67 @@ export const useUpdateProcessCrossBorderTransfers = <TError = void,
       return useMutation(getUpdateProcessCrossBorderTransfersMutationOptions(options), queryClient);
     }
     /**
- * Replaces the set of data processors linked to a process. Admin only.
- * @summary Update linked data processors
+ * Replaces the set of service providers linked to a process. Admin only.
+ * @summary Update linked service providers
  */
-export type updateProcessDataProcessorsResponse204 = {
+export type updateProcessServiceProvidersResponse204 = {
   data: void
   status: 204
 }
 
-export type updateProcessDataProcessorsResponse401 = {
+export type updateProcessServiceProvidersResponse401 = {
   data: void
   status: 401
 }
 
-export type updateProcessDataProcessorsResponse403 = {
+export type updateProcessServiceProvidersResponse403 = {
   data: void
   status: 403
 }
 
-export type updateProcessDataProcessorsResponse404 = {
+export type updateProcessServiceProvidersResponse404 = {
   data: void
   status: 404
 }
 
-export type updateProcessDataProcessorsResponseSuccess = (updateProcessDataProcessorsResponse204) & {
+export type updateProcessServiceProvidersResponseSuccess = (updateProcessServiceProvidersResponse204) & {
   headers: Headers;
 };
-export type updateProcessDataProcessorsResponseError = (updateProcessDataProcessorsResponse401 | updateProcessDataProcessorsResponse403 | updateProcessDataProcessorsResponse404) & {
+export type updateProcessServiceProvidersResponseError = (updateProcessServiceProvidersResponse401 | updateProcessServiceProvidersResponse403 | updateProcessServiceProvidersResponse404) & {
   headers: Headers;
 };
 
-export type updateProcessDataProcessorsResponse = (updateProcessDataProcessorsResponseSuccess | updateProcessDataProcessorsResponseError)
+export type updateProcessServiceProvidersResponse = (updateProcessServiceProvidersResponseSuccess | updateProcessServiceProvidersResponseError)
 
-export const getUpdateProcessDataProcessorsUrl = (key: string,) => {
+export const getUpdateProcessServiceProvidersUrl = (key: string,) => {
 
 
   
 
-  return `/processes/${key}/data-processors`
+  return `/processes/${key}/service-providers`
 }
 
-export const updateProcessDataProcessors = async (key: string,
-    updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest, options?: RequestInit): Promise<updateProcessDataProcessorsResponse> => {
+export const updateProcessServiceProviders = async (key: string,
+    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: RequestInit): Promise<updateProcessServiceProvidersResponse> => {
   
-  return customAxios<updateProcessDataProcessorsResponse>(getUpdateProcessDataProcessorsUrl(key),
+  return customAxios<updateProcessServiceProvidersResponse>(getUpdateProcessServiceProvidersUrl(key),
   {      
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      updateLinkedDataProcessorsRequest,)
+      updateLinkedServiceProvidersRequest,)
   }
 );}
   
 
 
 
-export const getUpdateProcessDataProcessorsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateProcessDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext> => {
+export const getUpdateProcessServiceProvidersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext> => {
 
-const mutationKey = ['updateProcessDataProcessors'];
+const mutationKey = ['updateProcessServiceProviders'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3123,10 +3426,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessDataProcessors>>, {key: string;data: UpdateLinkedDataProcessorsRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessServiceProviders>>, {key: string;data: UpdateLinkedServiceProvidersRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  updateProcessDataProcessors(key,data,requestOptions)
+          return  updateProcessServiceProviders(key,data,requestOptions)
         }
 
 
@@ -3136,22 +3439,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdateProcessDataProcessorsMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessDataProcessors>>>
-    export type UpdateProcessDataProcessorsMutationBody = UpdateLinkedDataProcessorsRequest
-    export type UpdateProcessDataProcessorsMutationError = void
+    export type UpdateProcessServiceProvidersMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessServiceProviders>>>
+    export type UpdateProcessServiceProvidersMutationBody = UpdateLinkedServiceProvidersRequest
+    export type UpdateProcessServiceProvidersMutationError = void
 
     /**
- * @summary Update linked data processors
+ * @summary Update linked service providers
  */
-export const useUpdateProcessDataProcessors = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessDataProcessors>>, TError,{key: string;data: UpdateLinkedDataProcessorsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+export const useUpdateProcessServiceProviders = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateProcessDataProcessors>>,
+        Awaited<ReturnType<typeof updateProcessServiceProviders>>,
         TError,
-        {key: string;data: UpdateLinkedDataProcessorsRequest},
+        {key: string;data: UpdateLinkedServiceProvidersRequest},
         TContext
       > => {
-      return useMutation(getUpdateProcessDataProcessorsMutationOptions(options), queryClient);
+      return useMutation(getUpdateProcessServiceProvidersMutationOptions(options), queryClient);
     }
     /**
  * Replaces the list of IT systems for a process. Requires process owner or ROLE_ADMIN.

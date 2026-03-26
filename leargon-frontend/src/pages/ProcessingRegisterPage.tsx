@@ -73,7 +73,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const hasChildren = children.length > 0;
   const completeness = getCompleteness(process);
   const hasMissing = (process.missingMandatoryFields?.length ?? 0) > 0;
-  const processorCount = process.dataProcessors?.length ?? 0;
+  const processorCount = process.serviceProviders?.length ?? 0;
   const transferCount = process.crossBorderTransfers?.length ?? 0;
 
   const handleLegalBasisChange = useCallback(async (value: string) => {
@@ -261,6 +261,16 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
               {process.securityMeasures || (canEdit ? t('common.clickToEdit') : '—')}
             </Typography>
           )}
+        </TableCell>
+
+        {/* Personal Data — true if any input/output entity is classified as containing personal data */}
+        <TableCell>
+          <Chip
+            label={process.containsPersonalData ? 'Yes' : 'No'}
+            size="small"
+            color={process.containsPersonalData ? 'success' : 'default'}
+            variant={process.containsPersonalData ? 'filled' : 'outlined'}
+          />
         </TableCell>
 
         {/* Data Subject Categories — read-only (root ancestor of each input/output entity) */}
@@ -452,9 +462,10 @@ const ProcessingRegisterPage: React.FC = () => {
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colLegalBasis')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPurpose')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colSecurityMeasures')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalData')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataSubjectCategories')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colPersonalDataCategories')}</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colDataProcessors')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colServiceProviders')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('compliance.colCrossBorder')}</TableCell>
               <TableCell sx={{ fontWeight: 600, minWidth: 120 }}>{t('compliance.colCompleteness')}</TableCell>
             </TableRow>
@@ -462,11 +473,11 @@ const ProcessingRegisterPage: React.FC = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9}><LinearProgress /></TableCell>
+                <TableCell colSpan={10}><LinearProgress /></TableCell>
               </TableRow>
             ) : topLevelProcesses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">
+                <TableCell colSpan={10} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>{t('common.noResults')}</Typography>
                 </TableCell>
               </TableRow>

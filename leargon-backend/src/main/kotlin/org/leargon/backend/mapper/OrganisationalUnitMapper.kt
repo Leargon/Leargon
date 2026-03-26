@@ -15,7 +15,7 @@ import java.time.ZonedDateTime
 @Singleton
 open class OrganisationalUnitMapper(
     private val fieldConfigurationService: FieldConfigurationService,
-    private val dataProcessorMapper: DataProcessorMapper
+    private val serviceProviderMapper: ServiceProviderMapper
 ) {
     fun toResponse(
         unit: OrganisationalUnit,
@@ -27,7 +27,7 @@ open class OrganisationalUnitMapper(
                     fieldName == "names" -> unit.names.isNotEmpty()
                     fieldName == "descriptions" -> unit.descriptions.isNotEmpty()
                     fieldName == "unitType" -> !unit.unitType.isNullOrBlank()
-                    fieldName == "lead" -> unit.lead != null
+                    fieldName == "businessOwner" -> unit.businessOwner != null
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         unit.names.any { it.locale == locale && !it.text.isNullOrBlank() }
@@ -50,7 +50,9 @@ open class OrganisationalUnitMapper(
             toZonedDateTime(unit.createdAt),
             toZonedDateTime(unit.updatedAt)
         ).unitType(unit.unitType)
-            .lead(if (unit.lead != null) UserMapper.toUserSummary(unit.lead) else null)
+            .businessOwner(if (unit.businessOwner != null) UserMapper.toUserSummary(unit.businessOwner) else null)
+            .businessSteward(if (unit.businessSteward != null) UserMapper.toUserSummary(unit.businessSteward) else null)
+            .technicalCustodian(if (unit.technicalCustodian != null) UserMapper.toUserSummary(unit.technicalCustodian) else null)
             .descriptions(LocalizedTextMapper.toModel(unit.descriptions))
             .parents(toSummaryList(unit.parents))
             .children(toSummaryList(unit.children))
@@ -58,7 +60,7 @@ open class OrganisationalUnitMapper(
             .isExternal(unit.isExternal)
             .externalCompanyName(unit.externalCompanyName)
             .countryOfExecution(unit.countryOfExecution)
-            .linkedDataProcessor(unit.linkedDataProcessor?.let { dataProcessorMapper.toDataProcessorSummaryResponse(it) })
+            .serviceProviders(unit.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .dataAccessEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataAccessEntities))
             .dataManipulationEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataManipulationEntities))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))

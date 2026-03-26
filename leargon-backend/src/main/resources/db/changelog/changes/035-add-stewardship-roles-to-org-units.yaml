@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 035-add-stewardship-roles-to-org-units
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: business_steward_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_org_unit_business_steward
+                    references: users(id)
+              - column:
+                  name: technical_custodian_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_org_unit_technical_custodian
+                    references: users(id)

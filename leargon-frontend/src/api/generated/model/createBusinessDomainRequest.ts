@@ -33,4 +33,9 @@ export interface CreateBusinessDomainRequest {
   names: LocalizedText[];
   /** Descriptions for the domain */
   descriptions?: LocalizedText[];
+  /**
+   * Key of the organisational unit responsible for this domain
+   * @nullable
+   */
+  owningUnitKey?: string | null;
 }

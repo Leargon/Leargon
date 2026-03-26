@@ -376,7 +376,7 @@ class BusinessEntityControllerSpec extends Specification {
         when: "changing data owner"
         def response = client.toBlocking().exchange(
                 HttpRequest.PUT("/business-entities/${entityKey}/data-owner",
-                        new UpdateBusinessEntityDataOwnerRequest("newowner"))
+                        new UpdateBusinessEntityDataOwnerRequest().dataOwnerUsername("newowner"))
                         .bearerAuth(ownerData.token),
                 BusinessEntityResponse
         )

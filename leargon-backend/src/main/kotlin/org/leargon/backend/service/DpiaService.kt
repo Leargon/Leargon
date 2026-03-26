@@ -134,12 +134,14 @@ open class DpiaService(
     @Transactional
     open fun updateResidualRisk(
         dpiaKey: String,
+        initialRisk: String?,
         residualRisk: String?,
         fdpicConsultationRequired: Boolean?,
         currentUser: User
     ): DpiaResponse {
         val dpia = getDpiaByKey(dpiaKey)
         checkEditPermission(dpia, currentUser)
+        if (initialRisk != null) dpia.initialRisk = initialRisk
         dpia.residualRisk = residualRisk
         if (fdpicConsultationRequired != null) {
             dpia.fdpicConsultationRequired = fdpicConsultationRequired

@@ -178,12 +178,7 @@ open class BusinessEntityService(
         entity.dataOwner = newOwner
 
         entity = businessEntityRepository.update(entity)
-        createBusinessEntityVersion(
-            entity,
-            currentUser,
-            "OWNER_CHANGE",
-            "Changed data owner to ${newOwner.username}"
-        )
+        createBusinessEntityVersion(entity, currentUser, "OWNER_CHANGE", "Changed data owner to ${newOwner.username}")
         return entity
     }
 
@@ -194,6 +189,71 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         val entity = updateBusinessEntityDataOwner(entityKey, dataOwnerUsername, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
+    open fun clearBusinessEntityDataOwner(
+        entityKey: String,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        if (entity.boundedContext?.owningUnit?.businessOwner == null) {
+            throw IllegalArgumentException(
+                "Cannot clear explicit data owner: no computed owner available from the bounded context's owning unit"
+            )
+        }
+        entity.dataOwner = null
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "OWNER_CHANGE", "Cleared explicit data owner (reverted to computed)")
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
+    open fun updateBusinessEntityDataSteward(
+        entityKey: String,
+        stewardUsername: String?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        entity.dataSteward =
+            if (stewardUsername != null) {
+                userRepository
+                    .findByUsername(stewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Data steward user not found: $stewardUsername") }
+            } else {
+                null
+            }
+
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated data steward to ${stewardUsername ?: "none"}")
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Transactional
+    open fun updateBusinessEntityTechnicalCustodian(
+        entityKey: String,
+        custodianUsername: String?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        entity.technicalCustodian =
+            if (custodianUsername != null) {
+                userRepository
+                    .findByUsername(custodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found: $custodianUsername") }
+            } else {
+                null
+            }
+
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated technical custodian to ${custodianUsername ?: "none"}")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
@@ -276,21 +336,16 @@ open class BusinessEntityService(
     }
 
     @Transactional
-    open fun updateCrossBorderTransfers(
+    open fun updateStorageLocations(
         entityKey: String,
-        transfers: List<org.leargon.backend.model.CrossBorderTransferEntry>,
+        locations: List<String>,
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
-        entity.crossBorderTransfers =
-            transfers
-                .map {
-                    org.leargon.backend.mapper.DataProcessorMapper
-                        .fromCrossBorderTransferEntry(it)
-                }.toMutableList()
+        entity.storageLocations = locations.toMutableList()
         entity = businessEntityRepository.update(entity)
-        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated cross-border transfers")
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated storage locations")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
@@ -649,7 +704,7 @@ open class BusinessEntityService(
         val snapshot =
             mapOf(
                 "key" to entity.key,
-                "dataOwnerUsername" to entity.dataOwner!!.username,
+                "dataOwnerUsername" to entity.dataOwner?.username,
                 "names" to entity.names.map { mapOf("locale" to it.locale, "text" to it.text) },
                 "descriptions" to entity.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
             )
@@ -680,7 +735,8 @@ open class BusinessEntityService(
             entity: BusinessEntity,
             currentUser: User
         ) {
-            val isOwner = entity.dataOwner!!.id == currentUser.id
+            val effectiveOwner = entity.dataOwner ?: entity.boundedContext?.owningUnit?.businessOwner
+            val isOwner = effectiveOwner?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the data owner or an admin can edit this entity")

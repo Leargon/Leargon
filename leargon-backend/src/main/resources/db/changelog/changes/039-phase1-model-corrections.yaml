@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 039-rename-lead-to-owner-on-org-units
+      author: leargon
+      changes:
+        - renameColumn:
+            tableName: organisational_units
+            oldColumnName: lead_id
+            newColumnName: owner_id
+            columnDataType: BIGINT
+
+  - changeSet:
+      id: 039-rename-cross-border-transfers-to-storage-locations-on-entities
+      author: leargon
+      changes:
+        - renameColumn:
+            tableName: business_entities
+            oldColumnName: cross_border_transfers
+            newColumnName: storage_locations
+            columnDataType: JSON
+
+  - changeSet:
+      id: 039-drop-data-processor-business-entities-join-table
+      author: leargon
+      changes:
+        - dropTable:
+            tableName: data_processor_business_entities

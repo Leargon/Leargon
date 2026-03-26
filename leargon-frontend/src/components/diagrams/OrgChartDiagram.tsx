@@ -46,7 +46,7 @@ function buildGraph(
     data: {
       label: getLocalizedText(unit.names),
       unitType: unit.unitType ?? undefined,
-      leadName: unit.lead ? `${unit.lead.firstName} ${unit.lead.lastName}` : undefined,
+      leadName: unit.businessOwner ? `${unit.businessOwner.firstName} ${unit.businessOwner.lastName}` : undefined,
       processCount: processCountByUnit.get(unit.key) ?? 0,
       showProcessCount,
     } satisfies OrgUnitNodeData,

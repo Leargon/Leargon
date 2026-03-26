@@ -118,15 +118,37 @@ def wipe(label, list_path, delete_path_fn, sort_key=None):
     print(f'  deleted {len(items)} {label}')
 
 
+print('\n[0a/7] Capabilities...')
+# Wipe children before parents
+all_caps = api('GET', '/capabilities', token=T)
+if isinstance(all_caps, list):
+    caps_by_key = {c['key']: c for c in all_caps}
+    def cap_depth(c):
+        parent_ref = c.get('parent')
+        if not parent_ref:
+            return 0
+        parent_key = parent_ref['key'] if isinstance(parent_ref, dict) else parent_ref
+        parent = caps_by_key.get(parent_key)
+        return 1 + (cap_depth(parent) if parent else 0)
+    caps_sorted = sorted(all_caps, key=lambda c: -cap_depth(c))
+    for c in caps_sorted:
+        api('DELETE', f'/capabilities/{c["key"]}', token=T)
+    print(f'  deleted {len(caps_sorted)} capabilities')
+
 print('\n[0/7] IT systems...')
 wipe('IT systems', '/it-systems', lambda k: f'/it-systems/{k}')
 
-print('\n[1/7] Data processors...')
-wipe('data processors', '/data-processors', lambda k: f'/data-processors/{k}')
+print('\n[1/7] Service providers (ex data processors)...')
+wipe('service providers', '/service-providers', lambda k: f'/service-providers/{k}')
 
 print('\n[2/7] Classifications...')
-wipe('classifications', '/classifications',
-     lambda k: f'/classifications/{k}')
+_all_classifs = api('GET', '/classifications', token=T)
+if isinstance(_all_classifs, list):
+    _system_keys = {'personal-data', 'special-categories'}
+    _deletable = [c for c in _all_classifs if c.get('key') not in _system_keys]
+    for c in _deletable:
+        api('DELETE', f'/classifications/{c["key"]}', token=T)
+    print(f'  deleted {len(_deletable)} classifications (skipped {len(_all_classifs) - len(_deletable)} system)')
 
 print('[3/7] Processes (clear diagrams, deepest children first)...')
 processes = api('GET', '/processes', token=T)
@@ -238,6 +260,8 @@ user_defs = [
     ('lisa.chen',      'Lisa',   'Chen',      'lisa.chen@leargon.local',        'Customer Care Manager'),
     ('marco.rossi',    'Marco',  'Rossi',     'marco.rossi@leargon.local',      'Logistics Manager'),
     ('anna.schneider', 'Anna',   'Schneider', 'anna.schneider@leargon.local',   'HR Manager'),
+    ('felix.kramer',   'Felix',  'Kramer',    'felix.kramer@leargon.local',     'Head of Engineering'),
+    ('petra.vogel',    'Petra',  'Vogel',     'petra.vogel@leargon.local',      'Data Protection Officer'),
 ]
 
 user_keys = {}
@@ -276,14 +300,10 @@ classif_defs = [
             {'key': 'supporting', 'names': n4('Supporting',        'Unterstützend',     'Support',           'Di supporto',             'De apoyo')},
         ],
     },
-    {
-        'assignableTo': 'BUSINESS_ENTITY',
-        'names': n4('Personal Data', 'Personenbezogene Daten', 'Donnees personnelles', 'Dati personali', 'Datos personales'),
-        'values': [
-            {'key': 'PD', 'names': n4('Personal Data', 'Personenbezogene Daten', 'Donnees personnelles', 'Dati personali', 'Datos personales')},
-            {'key': 'SPD', 'names': n4('Special Category', 'Besondere Kategorie', 'Categorie speciale', 'Categoria speciale', 'Categoría especial')},
-        ],
-    },
+    # NOTE: Personal Data classification is a system classification (migration 038).
+    # It uses value keys 'personal-data--contains' / 'personal-data--not-contains'.
+    # Special Categories is also a system classification with keys 'special-categories--health' etc.
+    # We do NOT create these here; instead we reference them by their system keys below.
     {
         'assignableTo': 'BUSINESS_PROCESS',
         'names': n4('Process Priority', 'Prozesspriorität', 'Priorite du processus', 'Priorita del processo', 'Prioridad del proceso'),
@@ -311,10 +331,12 @@ for cd in classif_defs:
     else:
         classif_keys[en_name] = en_name.lower().replace(' ', '-')
 
-S   = classif_keys.get('Sensitivity',                    'sensitivity')
-DC  = classif_keys.get('Data Criticality',               'data-criticality')
-PD  = classif_keys.get('Personal Data',                  'personal-data')
-PP  = classif_keys.get('Process Priority',               'process-priority')
+S   = classif_keys.get('Sensitivity',    'sensitivity')
+DC  = classif_keys.get('Data Criticality', 'data-criticality')
+PP  = classif_keys.get('Process Priority', 'process-priority')
+# System classifications (created by migration 038, not seeded)
+PD  = 'personal-data'   # system classification key
+SC  = 'special-categories'  # system classification key
 
 
 # ── 4. Organisational units ────────────────────────────────────────────────────
@@ -365,7 +387,17 @@ ou_data = [
         'Construit et maintient la plateforme, les API et les integrations.',
         'Costruisce e mantiene la piattaforma, le API e le integrazioni.',
         'Construye y mantiene la plataforma, las API y las integraciones.'),
-     None),
+     'felix.kramer'),
+
+    # Data Protection Officer — cross-functional, sits under Operations
+    ('Data Protection Office', 'support-function',
+     n4('Data Protection Office', 'Datenschutzbeauftragter', 'Délégué à la protection des données', 'Responsabile della protezione dei dati', 'Delegado de protección de datos'),
+     n4('Monitors GDPR and revDSG compliance, manages DPIAs and serves as the Data Protection Authority contact.',
+        'Überwacht DSGVO- und revDSG-Konformität, verwaltet DSFAs und ist Ansprechpartner für die Aufsichtsbehörde.',
+        'Surveille la conformité RGPD et revLPD, gère les AIPD et assure le contact avec l\'autorité de contrôle.',
+        'Monitora la conformità GDPR e revLPD, gestisce le DPIA e funge da contatto con l\'autorità di controllo.',
+        'Supervisa el cumplimiento del RGPD y la revLPD, gestiona las EIPD y actúa como contacto con la autoridad de control.'),
+     'petra.vogel'),
 
     # Sub-units of Online Shop
     ('Marketing', 'business-unit',
@@ -415,17 +447,18 @@ for (en_name, unit_type, nms, descs, lead) in ou_data:
         ou_keys[en_name] = ouk
         api('PUT', f'/organisational-units/{ouk}/type', {'unitType': unit_type}, T)
         if lead:
-            api('PUT', f'/organisational-units/{ouk}/lead', {'leadUsername': lead}, T)
+            api('PUT', f'/organisational-units/{ouk}/lead', {'businessOwnerUsername': lead}, T)
         ok(f'{en_name} (type={unit_type}' + (f', lead={lead})' if lead else ')'), result)
     else:
         ou_keys[en_name] = en_name.lower().replace(' ', '-')
 
 # Set org unit parent hierarchy
 ou_parents = {
-    'Marketing':   'Online Shop',
-    'Operations':  'Online Shop',
-    'Logistics':   'Supply Chain',
-    'Payment':     'Finance',
+    'Marketing':             'Online Shop',
+    'Operations':            'Online Shop',
+    'Logistics':             'Supply Chain',
+    'Payment':               'Finance',
+    'Data Protection Office':'Operations',
 }
 print('  Setting org unit hierarchy...')
 for child_en, parent_en in ou_parents.items():
@@ -433,6 +466,29 @@ for child_en, parent_en in ou_parents.items():
     parent_key = ou_keys.get(parent_en, parent_en.lower().replace(' ', '-'))
     ok(f'  {child_key} -> {parent_key}',
        api('PUT', f'/organisational-units/{child_key}/parents', {'keys': [parent_key]}, T))
+
+# Stewards and technical custodians for org units
+# (unit_en, business_steward_username, technical_custodian_username)
+print('  Setting org unit stewards and custodians...')
+ou_governance = [
+    ('Online Shop',           'lisa.chen',   'felix.kramer'),
+    ('Finance',               'tom.wagner',  'felix.kramer'),
+    ('Supply Chain',          'marco.rossi', 'felix.kramer'),
+    ('Human Resources',       'anna.schneider', 'felix.kramer'),
+    ('Engineering',           'felix.kramer', 'felix.kramer'),
+    ('Marketing',             'sarah.mitchell', 'felix.kramer'),
+    ('Operations',            'lisa.chen',   'felix.kramer'),
+    ('Logistics',             'marco.rossi', 'felix.kramer'),
+    ('Payment',               'tom.wagner',  'felix.kramer'),
+    ('Data Protection Office','petra.vogel', 'felix.kramer'),
+]
+for (unit_en, steward, custodian) in ou_governance:
+    ukey = ou_keys.get(unit_en, unit_en.lower().replace(' ', '-'))
+    api('PUT', f'/organisational-units/{ukey}/steward',
+        {'businessStewardUsername': steward}, T)
+    api('PUT', f'/organisational-units/{ukey}/technical-custodian',
+        {'technicalCustodianUsername': custodian}, T)
+print(f'  set governance roles on {len(ou_governance)} units')
 
 
 # ── 5. Business domains ─────────────────────────────────────────────────────────
@@ -549,11 +605,31 @@ for (en_name, parent_en, domain_type, nms, descs) in domain_data:
         if en_name in domain_vision:
             api('PUT', f'/business-domains/{dkey}/vision-statement',
                 {'visionStatement': domain_vision[en_name]}, T)
-        api('POST', f'/business-domains/{dkey}/bounded-contexts',
-            {'names': [{'locale': 'en', 'text': en_name}]}, T)
+        if domain_type != 'BUSINESS':
+            api('POST', f'/business-domains/{dkey}/bounded-contexts',
+                {'names': [{'locale': 'en', 'text': en_name}]}, T)
         ok(f'{en_name} (type={domain_type})', result)
     else:
         domain_keys[en_name] = en_name.lower().replace(' ', '-')
+
+# Assign owning org units to domains — enables computed owner chain
+print('  Assigning owning units to domains...')
+domain_owning_units = {
+    'Sales':          'Online Shop',
+    'Billing':        'Finance',
+    'Warehouse':      'Supply Chain',
+    'Shipping':       'Supply Chain',
+    'Marketing':      'Marketing',
+    'Customer Care':  'Operations',
+    'Human Resources':'Human Resources',
+}
+for domain_en, unit_en in domain_owning_units.items():
+    dkey = domain_keys.get(domain_en, domain_en.lower().replace(' ', '-'))
+    ukey = ou_keys.get(unit_en)
+    if ukey:
+        ok(f'  {domain_en} owned by {unit_en}',
+           api('PUT', f'/business-domains/{dkey}/owning-unit', {'owningUnitKey': ukey}, T))
+
 
 def dk(en_name):
     return domain_keys.get(en_name, en_name.lower().replace(' ', '-'))
@@ -570,13 +646,18 @@ print('\n[6/9] Business entities...')
 
 # (en_name, parent_en, domain_en, names, descriptions, data_owner_username)
 entity_data = [
-    ('Natural Person', None, None,
+    ('Natural Person', None, 'Customer Care',
      n4('Natural Person', 'Natürliche Person', 'Personne physique', 'Persona fisica', 'Persona física'),
-     n4('A human individual with legal capacity. Acts as the shared base identity for customers and employees.',
-        'Eine natürliche Person mit Rechtshandlungsfähigkeit. Gemeinsame Basisidentität für Kunden und Mitarbeiter.',
-        'Personne physique avec capacite juridique. Identite de base partagee entre clients et employes.',
-        'Persona fisica con capacita giuridica. Identita base condivisa tra clienti e dipendenti.',
-        'Persona física con capacidad jurídica. Identidad base compartida entre clientes y empleados.'),
+     n4('A human individual with legal capacity. Acts as the shared base identity for customers and employees. '
+        'The authoritative privacy-law entity under GDPR/revDSG — any processing of personal data is grounded here.',
+        'Eine natürliche Person mit Rechtshandlungsfähigkeit. Gemeinsame Basisidentität für Kunden und Mitarbeiter. '
+        'Massgebliche datenschutzrechtliche Entität unter DSGVO/revDSG.',
+        'Personne physique avec capacite juridique. Identite de base partagee entre clients et employes. '
+        'Entite de reference pour le droit de la protection des donnees sous RGPD/revLPD.',
+        'Persona fisica con capacita giuridica. Identita base condivisa tra clienti e dipendenti. '
+        'Entita di riferimento per la protezione dei dati ai sensi del GDPR/revLPD.',
+        'Persona física con capacidad jurídica. Identidad base compartida entre clientes y empleados. '
+        'Entidad de referencia en materia de protección de datos bajo RGPD/revLPD.'),
      'lisa.chen'),
 
     ('Product', None, 'Sales',
@@ -747,10 +828,39 @@ def ek(en_name):
     return entity_keys.get(en_name, en_name.lower().replace(' ', '-'))
 
 
+# ── 6b. Retention periods ───────────────────────────────────────────────────────
+print('\n[6b/9] Retention periods...')
+# Retention periods follow GDPR Art. 5(1)(e), revDSG Art. 6(4) and applicable commercial law.
+retention_periods = {
+    'Natural Person':       'As long as relationship is active; deleted within 30 days of erasure request unless legal hold applies.',
+    'Customer':             '3 years after last order or account closure, whichever is later.',
+    'Employee':             '7 years after end of employment (statutory minimum for payroll and labour law records).',
+    'Applicant':            '6 months after rejection or withdrawal of application; 2 years with explicit consent.',
+    'Order':                '10 years from order date (commercial law: OR Art. 962 / HGB §257).',
+    'Order Line Item':      '10 years from order date (commercial law: OR Art. 962 / HGB §257).',
+    'Invoice':              '10 years from invoice date (fiscal retention obligation).',
+    'Payment Transaction':  '10 years from transaction date (AML and fiscal retention obligations).',
+    'Shopping Cart':        '30 days from last activity or until converted to Order.',
+    'Parcel':               '2 years from dispatch date (carrier handover documentation).',
+    'Product':              'Indefinitely while product is listed; archived 5 years after discontinuation.',
+    'Product Category':     'Indefinitely while in use.',
+    'Product Review':       '2 years from publication; deleted within 30 days of reviewer erasure request.',
+    'Billing Address':      '10 years from last associated invoice (fiscal retention).',
+    'Shipping Address':     '2 years from last associated order.',
+    'Full Name':            'Duration of customer relationship plus 3 years; immediately on erasure request.',
+    'Date of Birth':        'Duration of customer relationship; immediately on erasure request (special category data).',
+}
+for entity_en, period in retention_periods.items():
+    ekey = ek(entity_en)
+    ok(f'  retention: {entity_en}',
+       api('PUT', f'/business-entities/{ekey}/retention-period',
+           {'retentionPeriod': period}, T))
+
+
 # ── 7. Entity interfaces ────────────────────────────────────────────────────────
 print('\n[7/9] Entity interfaces...')
 np = ek('Natural Person')
-for entity_en in ('Customer', 'Employee'):
+for entity_en in ('Customer', 'Employee', 'Applicant'):
     k = ek(entity_en)
     ok(f'{k} implements [{np}]',
        api('PUT', f'/business-entities/{k}/interfaces', {'interfaces': [np]}, T))
@@ -1069,22 +1179,83 @@ process_data = [
      n4('Flag Backorder', 'Nachlieferung kennzeichnen', 'Signaler une commande en souffrance'),
      n4('Marks the order as a backorder in the WMS when one or more items are out of stock.'),
      ['logistics', 'supply-chain'], 'marco.rossi'),
+
+    # ── HR Domain processes ─────────────────────────────────────────────────────
+    ('Recruit Employee', None, 'Human Resources',
+     n4('Recruit Employee', 'Mitarbeiter rekrutieren', 'Recruter un employé', 'Reclutare un dipendente', 'Reclutar un empleado'),
+     n4('End-to-end hiring process: job posting, applicant screening, interviews and offer.',
+        'Vollständiger Einstellungsprozess: Stellenausschreibung, Bewerbersichtung, Gespräche und Angebot.',
+        "Processus de recrutement complet: offre d'emploi, tri des candidats, entretiens et proposition.",
+        'Processo di assunzione completo: annuncio di lavoro, selezione candidati, colloqui e offerta.',
+        'Proceso de contratación completo: publicación, cribado, entrevistas y oferta.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Post Job Opening', 'Recruit Employee', 'Human Resources',
+     n4('Post Job Opening', 'Stelle ausschreiben', 'Publier une offre d\'emploi'),
+     n4('Publishes the job description on internal and external job boards.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Screen Applications', 'Recruit Employee', 'Human Resources',
+     n4('Screen Applications', 'Bewerbungen sichten', 'Examiner les candidatures'),
+     n4('Reviews incoming applications against the job requirements and shortlists candidates.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Conduct Interviews', 'Recruit Employee', 'Human Resources',
+     n4('Conduct Interviews', 'Vorstellungsgespräche führen', 'Conduire les entretiens'),
+     n4('Schedules and runs structured interviews with shortlisted candidates.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Make Hiring Decision', 'Recruit Employee', 'Human Resources',
+     n4('Make Hiring Decision', 'Einstellungsentscheidung treffen', 'Prendre la décision d\'embauche'),
+     n4('Documents the hiring decision, triggers offer creation or rejection notifications.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Onboard Employee', None, 'Human Resources',
+     n4('Onboard Employee', 'Mitarbeiter einarbeiten', 'Intégrer un employé', 'Onboarding del dipendente', 'Incorporar al empleado'),
+     n4('Prepares accounts, equipment and induction materials for a new hire.',
+        'Bereitet Konten, Geräte und Einarbeitungsmaterialien für neue Mitarbeiter vor.',
+        "Prépare les comptes, l'équipement et les supports d'intégration pour le nouvel employé.",
+        "Prepara account, attrezzatura e materiali di inserimento per il nuovo assunto.",
+        'Prepara cuentas, equipos y materiales de incorporación para el nuevo empleado.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Provision IT Access', 'Onboard Employee', 'Human Resources',
+     n4('Provision IT Access', 'IT-Zugang bereitstellen', 'Créer les accès informatiques'),
+     n4('Creates user accounts, assigns roles and provisions hardware for the new employee.'),
+     ['human-resources', 'engineering'], 'felix.kramer'),
+
+    ('Conduct Induction Training', 'Onboard Employee', 'Human Resources',
+     n4('Conduct Induction Training', 'Einführungsschulung durchführen', 'Conduire la formation d\'induction'),
+     n4('Delivers mandatory onboarding training covering company policies, data protection and safety.'),
+     ['human-resources'], 'anna.schneider'),
+
+    ('Handle Right to Erasure Request', None, 'Customer Care',
+     n4('Handle Right to Erasure Request', 'Löschanfrage bearbeiten', 'Traiter une demande d\'effacement', 'Gestire la richiesta di cancellazione', 'Gestionar solicitud de supresión'),
+     n4('Processes a GDPR/revDSG Art. 17 erasure request: verifies identity, assesses retention obligations and executes deletion.',
+        'Bearbeitet eine DSGVO/revDSG-Löschanfrage: prüft Identität, bewertet Aufbewahrungspflichten und führt Löschung durch.',
+        "Traite une demande d'effacement RGPD/revLPD Art. 17: vérifie l'identité, évalue les obligations de conservation et exécute la suppression.",
+        'Elabora una richiesta di cancellazione GDPR/revLPD Art. 17: verifica identità, valuta obblighi di conservazione e procede alla cancellazione.',
+        'Procesa una solicitud de supresión RGPD/revLPD Art. 17: verifica identidad, evalúa obligaciones de retención y ejecuta la eliminación.'),
+     ['operations', 'data-protection-office'], 'petra.vogel'),
 ]
 
 # Legal basis per process (Art. 6 GDPR / Art. 31 revDSG)
 process_legal_basis = {
-    'Customer Registration':    'CONTRACT',
-    'Validate Customer Data':   'CONTRACT',
-    'Confirm Email Address':    'CONTRACT',
-    'Place an Order':           'CONTRACT',
-    'Search for Product':       'CONTRACT',
-    'Add to Cart':              'CONTRACT',
-    'Checkout':                 'CONTRACT',
-    'Validate Shipping Address':'CONTRACT',
-    'Process Payment':          'CONTRACT',
-    'Send Invoice':             'LEGAL_OBLIGATION',
-    'Ship Order':               'CONTRACT',
-    'Pick and Pack':            'CONTRACT',
+    'Customer Registration':      'CONTRACT',
+    'Validate Customer Data':     'CONTRACT',
+    'Confirm Email Address':      'CONTRACT',
+    'Place an Order':             'CONTRACT',
+    'Search for Product':         'CONTRACT',
+    'Add to Cart':                'CONTRACT',
+    'Checkout':                   'CONTRACT',
+    'Validate Shipping Address':  'CONTRACT',
+    'Process Payment':            'CONTRACT',
+    'Send Invoice':               'LEGAL_OBLIGATION',
+    'Ship Order':                 'CONTRACT',
+    'Pick and Pack':              'CONTRACT',
+    'Recruit Employee':           'CONTRACT',
+    'Onboard Employee':           'CONTRACT',
+    'Handle Right to Erasure Request': 'LEGAL_OBLIGATION',
 }
 
 process_keys = {}
@@ -1238,6 +1409,42 @@ process_details = {
         'inputs':  ['Order Line Item'],
         'outputs': ['Parcel'],
     },
+    'Recruit Employee': {
+        'purpose': (
+            'To identify, attract and hire qualified candidates by processing applicant '
+            'personal data strictly to the extent needed for the hiring decision.'
+        ),
+        'securityMeasures': (
+            'Applicant data restricted to HR and hiring managers; deleted or anonymised within '
+            'retention period; DPIA conducted for roles requiring background checks.'
+        ),
+        'inputs':  ['Applicant'],
+        'outputs': ['Employee'],
+    },
+    'Onboard Employee': {
+        'purpose': (
+            'To set up a new employee with the accounts, tools and training needed to '
+            'start their role, processing only data necessary for system provisioning.'
+        ),
+        'securityMeasures': (
+            'IT access provisioned via role-based access control; credentials delivered securely; '
+            'induction training includes mandatory data-protection module.'
+        ),
+        'inputs':  ['Applicant'],
+        'outputs': ['Employee'],
+    },
+    'Handle Right to Erasure Request': {
+        'purpose': (
+            'To honour a data subject\'s right to erasure under GDPR Art. 17 / revDSG Art. 32 '
+            'by verifying identity, assessing retention holds and executing deletion.'
+        ),
+        'securityMeasures': (
+            'Identity verification before any action; audit trail of all deletion steps; '
+            'legal-hold check against fiscal and commercial retention obligations before erasure.'
+        ),
+        'inputs':  ['Customer', 'Natural Person'],
+        'outputs': ['Natural Person'],
+    },
 }
 
 for proc_en, details in process_details.items():
@@ -1384,27 +1591,30 @@ assign('business-entities', ek('Applicant'),         [(S, 'C2'), (DC, 'supportin
 assign('business-entities', ek('Invoice'),           [(S, 'C3'), (DC, 'critical')])
 assign('business-entities', ek('Customer'),          [(S, 'C3'), (DC, 'critical')])
 assign('business-entities', ek('Natural Person'),    [(S, 'C3'), (DC, 'critical')])
-assign('business-entities', ek('Billing Address'),   [(S, 'C3'), (DC, 'important'), (PD, 'PD')])
-assign('business-entities', ek('Shipping Address'),  [(S, 'C3'), (DC, 'important'), (PD, 'PD')])
-assign('business-entities', ek('Full Name'),         [(S, 'C3'), (DC, 'important'), (PD, 'PD')])
-assign('business-entities', ek('Employee'),          [(S, 'C4'), (DC, 'important')])
-assign('business-entities', ek('Payment Transaction'),[(S, 'C4'), (DC, 'critical')])
-assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important'), (PD, 'SPD')])
+assign('business-entities', ek('Billing Address'),   [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
+assign('business-entities', ek('Shipping Address'),  [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
+assign('business-entities', ek('Full Name'),         [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
+assign('business-entities', ek('Employee'),          [(S, 'C4'), (DC, 'important'), (PD, 'personal-data--contains')])
+assign('business-entities', ek('Payment Transaction'),[(S, 'C4'), (DC, 'critical'), (PD, 'personal-data--contains')])
+assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important'), (PD, 'personal-data--contains'), (SC, 'special-categories--none')])
 
 print('  Process classifications:')
 for proc_en, prio in [
-    ('Place an Order',         'critical'),
-    ('Checkout',               'critical'),
-    ('Process Payment',        'critical'),
-    ('Customer Registration',  'high'),
-    ('Confirm Email Address',  'high'),
-    ('Pick and Pack',          'high'),
-    ('Send Invoice',           'high'),
-    ('Ship Order',             'high'),
-    ('Validate Customer Data', 'medium'),
-    ('Validate Shipping Address','medium'),
-    ('Search for Product',     'medium'),
-    ('Add to Cart',            'medium'),
+    ('Place an Order',                    'critical'),
+    ('Checkout',                          'critical'),
+    ('Process Payment',                   'critical'),
+    ('Handle Right to Erasure Request',   'critical'),
+    ('Customer Registration',             'high'),
+    ('Confirm Email Address',             'high'),
+    ('Pick and Pack',                     'high'),
+    ('Send Invoice',                      'high'),
+    ('Ship Order',                        'high'),
+    ('Recruit Employee',                  'high'),
+    ('Validate Customer Data',            'medium'),
+    ('Validate Shipping Address',         'medium'),
+    ('Search for Product',                'medium'),
+    ('Add to Cart',                       'medium'),
+    ('Onboard Employee',                  'medium'),
 ]:
     assign('processes', pk(proc_en), [(PP, prio)])
 
@@ -1872,88 +2082,106 @@ field_configs = [
 ok('field configurations', api('PUT', '/administration/field-configurations', field_configs, T))
 
 
-# ── Data Processors & Cross-border Transfers ─────────────────────────────────────
-print('\n[15] Data processors & cross-border transfers...')
+# ── Service Providers & Cross-border Transfers ───────────────────────────────────
+print('\n[15] Service providers & cross-border transfers...')
 
-stripe = api('POST', '/data-processors', {
+stripe = api('POST', '/service-providers', {
     'names': n4('Stripe', 'Stripe', 'Stripe', 'Stripe', 'Stripe'),
     'processingCountries': ['US', 'IE'],
     'processorAgreementInPlace': True,
     'subProcessorsApproved': True,
+    'serviceProviderType': 'DATA_PROCESSOR',
 }, T)
-ok('data processor: Stripe', stripe)
+ok('service provider: Stripe', stripe)
 
-klaviyo = api('POST', '/data-processors', {
+klaviyo = api('POST', '/service-providers', {
     'names': n4('Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo', 'Klaviyo'),
     'processingCountries': ['US'],
     'processorAgreementInPlace': True,
     'subProcessorsApproved': False,
+    'serviceProviderType': 'DATA_PROCESSOR',
 }, T)
-ok('data processor: Klaviyo', klaviyo)
+ok('service provider: Klaviyo', klaviyo)
 
-dhl = api('POST', '/data-processors', {
+dhl = api('POST', '/service-providers', {
     'names': n4('DHL Express', 'DHL Express', 'DHL Express', 'DHL Express', 'DHL Express'),
     'processingCountries': ['DE', 'NL'],
     'processorAgreementInPlace': True,
     'subProcessorsApproved': True,
+    'serviceProviderType': 'MANAGED_SERVICE',
 }, T)
-ok('data processor: DHL Express', dhl)
+ok('service provider: DHL Express', dhl)
 
-# Link entities to processors
-if '_error' not in stripe:
-    ok('link Payment Transaction → Stripe',
-       api('PUT', f'/data-processors/{stripe["key"]}/linked-entities',
-           {'businessEntityKeys': [ek('Payment Transaction')]}, T))
+workday = api('POST', '/service-providers', {
+    'names': n4('Workday', 'Workday', 'Workday', 'Workday', 'Workday'),
+    'processingCountries': ['US', 'IE'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': True,
+    'serviceProviderType': 'DATA_PROCESSOR',
+}, T)
+ok('service provider: Workday', workday)
 
-if '_error' not in klaviyo:
-    ok('link Customer → Klaviyo',
-       api('PUT', f'/data-processors/{klaviyo["key"]}/linked-entities',
-           {'businessEntityKeys': [ek('Customer')]}, T))
+salesforce = api('POST', '/service-providers', {
+    'names': n4('Salesforce', 'Salesforce', 'Salesforce', 'Salesforce', 'Salesforce'),
+    'processingCountries': ['US', 'DE'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': True,
+    'serviceProviderType': 'DATA_PROCESSOR',
+}, T)
+ok('service provider: Salesforce', salesforce)
 
-if '_error' not in dhl:
-    ok('link Parcel → DHL Express',
-       api('PUT', f'/data-processors/{dhl["key"]}/linked-entities',
-           {'businessEntityKeys': [ek('Parcel')]}, T))
+google_analytics = api('POST', '/service-providers', {
+    'names': n4('Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4'),
+    'processingCountries': ['US'],
+    'processorAgreementInPlace': True,
+    'subProcessorsApproved': False,
+    'serviceProviderType': 'DATA_PROCESSOR',
+}, T)
+ok('service provider: Google Analytics 4', google_analytics)
 
-# Link processes to processors
+# Link processes to service providers
 if '_error' not in stripe:
     ok('link Process Payment → Stripe',
-       api('PUT', f'/data-processors/{stripe["key"]}/linked-processes',
+       api('PUT', f'/service-providers/{stripe["key"]}/linked-processes',
            {'processKeys': [pk('Process Payment')]}, T))
 
 if '_error' not in klaviyo:
     ok('link Customer Registration + Confirm Email → Klaviyo',
-       api('PUT', f'/data-processors/{klaviyo["key"]}/linked-processes',
+       api('PUT', f'/service-providers/{klaviyo["key"]}/linked-processes',
            {'processKeys': [pk('Customer Registration'), pk('Confirm Email Address')]}, T))
 
 if '_error' not in dhl:
     ok('link Ship Order → DHL Express',
-       api('PUT', f'/data-processors/{dhl["key"]}/linked-processes',
+       api('PUT', f'/service-providers/{dhl["key"]}/linked-processes',
            {'processKeys': [pk('Ship Order')]}, T))
 
-# Cross-border transfers on entities (Art. 16-17 revDSG)
-ok('cross-border transfers: Customer',
-   api('PUT', f'/business-entities/{ek("Customer")}/cross-border-transfers',
-       {'transfers': [
-           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Email marketing service via Klaviyo (US-based)'},
-       ]}, T))
+if '_error' not in workday:
+    ok('link Recruit Employee + Onboard Employee → Workday',
+       api('PUT', f'/service-providers/{workday["key"]}/linked-processes',
+           {'processKeys': [pk('Recruit Employee'), pk('Onboard Employee')]}, T))
 
-ok('cross-border transfers: Payment Transaction',
-   api('PUT', f'/business-entities/{ek("Payment Transaction")}/cross-border-transfers',
-       {'transfers': [
-           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Payment processing via Stripe (US-based)'},
-           {'destinationCountry': 'IE', 'safeguard': 'ADEQUACY_DECISION',
-            'notes': 'Stripe European operations (Ireland, EU adequacy)'},
-       ]}, T))
+if '_error' not in salesforce:
+    ok('link Customer Registration → Salesforce',
+       api('PUT', f'/service-providers/{salesforce["key"]}/linked-processes',
+           {'processKeys': [pk('Customer Registration')]}, T))
 
-ok('cross-border transfers: Parcel',
-   api('PUT', f'/business-entities/{ek("Parcel")}/cross-border-transfers',
-       {'transfers': [
-           {'destinationCountry': 'DE', 'safeguard': 'ADEQUACY_DECISION',
-            'notes': 'DHL Express logistics operations (Germany, EU adequacy)'},
-       ]}, T))
+if '_error' not in google_analytics:
+    ok('link Search for Product → Google Analytics 4',
+       api('PUT', f'/service-providers/{google_analytics["key"]}/linked-processes',
+           {'processKeys': [pk('Search for Product'), pk('Place an Order')]}, T))
+
+# Storage locations on entities (ISO country codes; replaces old cross-border-transfers on entities)
+ok('storage locations: Customer',
+   api('PUT', f'/business-entities/{ek("Customer")}/storage-locations',
+       {'locations': ['US', 'DE']}, T))
+
+ok('storage locations: Payment Transaction',
+   api('PUT', f'/business-entities/{ek("Payment Transaction")}/storage-locations',
+       {'locations': ['US', 'IE']}, T))
+
+ok('storage locations: Parcel',
+   api('PUT', f'/business-entities/{ek("Parcel")}/storage-locations',
+       {'locations': ['DE']}, T))
 
 # Cross-border transfers on processes (Art. 16-17 revDSG)
 ok('cross-border transfers: Process Payment',
@@ -1967,8 +2195,40 @@ ok('cross-border transfers: Customer Registration',
    api('PUT', f'/processes/{pk("Customer Registration")}/cross-border-transfers',
        {'transfers': [
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Email verification service via Klaviyo (US)'},
+            'notes': 'Email verification service via Klaviyo (US); CRM sync via Salesforce (US)'},
        ]}, T))
+
+ok('cross-border transfers: Recruit Employee',
+   api('PUT', f'/processes/{pk("Recruit Employee")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Applicant data processed in Workday HCM (US/IE)'},
+           {'destinationCountry': 'IE', 'safeguard': 'ADEQUACY_DECISION',
+            'notes': 'Workday EU data centre (Ireland) — GDPR adequate jurisdiction'},
+       ]}, T))
+
+ok('cross-border transfers: Search for Product',
+   api('PUT', f'/processes/{pk("Search for Product")}/cross-border-transfers',
+       {'transfers': [
+           {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
+            'notes': 'Behavioural analytics via Google Analytics 4 (US)'},
+       ]}, T))
+
+ok('storage locations: Employee',
+   api('PUT', f'/business-entities/{ek("Employee")}/storage-locations',
+       {'locations': ['DE', 'US', 'IE']}, T))
+
+ok('storage locations: Applicant',
+   api('PUT', f'/business-entities/{ek("Applicant")}/storage-locations',
+       {'locations': ['DE', 'US', 'IE']}, T))
+
+ok('storage locations: Order',
+   api('PUT', f'/business-entities/{ek("Order")}/storage-locations',
+       {'locations': ['DE']}, T))
+
+ok('storage locations: Invoice',
+   api('PUT', f'/business-entities/{ek("Invoice")}/storage-locations',
+       {'locations': ['DE']}, T))
 
 
 # ── Context Relationships (DDD Strategic Patterns) ────────────────────────────────
@@ -2018,18 +2278,45 @@ domain_event_defs = [
      ['Billing', 'Warehouse'],
      [('Place an Order', 'TRIGGERS')],
      'Raised when a customer successfully places an order. Triggers invoice creation in Billing and fulfilment in Warehouse.'),
+    ('OrderCancelled', 'Sales',
+     ['Billing', 'Warehouse'],
+     [],
+     'Raised when an order is cancelled by the customer or by the system (e.g. payment failure). '
+     'Triggers credit note creation in Billing and stock reinstatement in Warehouse.'),
     ('PaymentProcessed', 'Billing',
      ['Sales'],
      [('Process Payment', 'TRIGGERS')],
      'Raised when a payment is successfully processed. Allows Sales to confirm the order and proceed to fulfilment.'),
-    ('OrderShipped', 'Shipping',
+    ('PaymentFailed', 'Billing',
+     ['Sales', 'Customer Care'],
+     [('Process Payment', 'TRIGGERS')],
+     'Raised when a payment attempt is declined by the gateway. Notifies Sales to put the order on hold and Customer Care to contact the customer.'),
+    ('InvoiceSent', 'Billing',
+     ['Sales'],
+     [('Send Invoice', 'TRIGGERS')],
+     'Raised when an invoice has been successfully delivered to the customer. Allows Sales to mark the order as fully invoiced.'),
+    ('ParcelDispatched', 'Shipping',
      ['Sales', 'Customer Care'],
      [('Ship Order', 'TRIGGERS')],
-     'Raised when a parcel is dispatched to the carrier. Notifies Sales to mark the order as shipped and Customer Care to trigger delivery notifications.'),
+     'Raised when a parcel is handed over to the carrier. Notifies Sales to mark the order as shipped and Customer Care to send a tracking notification to the customer.'),
+    ('ParcelDelivered', 'Shipping',
+     ['Sales', 'Customer Care', 'Marketing'],
+     [],
+     'Raised when the carrier confirms delivery. Triggers order completion in Sales, delivery confirmation in Customer Care and a product-review invitation in Marketing.'),
     ('CustomerRegistered', 'Customer Care',
      ['Marketing', 'Sales'],
      [('Customer Registration', 'TRIGGERS')],
-     'Raised when a new customer account is created. Allows Marketing to trigger a welcome campaign and Sales to enable personalised recommendations.'),
+     'Raised when a new customer account is activated. Allows Marketing to trigger a welcome campaign and Sales to enable personalised recommendations.'),
+    ('CustomerDataErased', 'Customer Care',
+     ['Sales', 'Billing', 'Marketing'],
+     [('Handle Right to Erasure Request', 'TRIGGERS')],
+     'Raised when all personal data for a customer has been successfully deleted following an Art. 17 erasure request. '
+     'Notifies downstream contexts to purge any retained copies.'),
+    ('EmployeeHired', 'Human Resources',
+     [],
+     [('Recruit Employee', 'TRIGGERS')],
+     'Raised when a hiring decision is confirmed and an applicant transitions to Employee. '
+     'Used internally by HR to trigger the Onboard Employee process.'),
 ]
 
 for (ev_en, pub_domain, consumer_domains, proc_links, desc) in domain_event_defs:
@@ -2086,10 +2373,194 @@ for (first_en, second_en, note) in translation_links:
        }, T))
 
 
+# ── Business Capability Model (BCM) ─────────────────────────────────────────────
+print('\n[18b] Business capabilities (BCM)...')
+
+# Helper to create a capability and return its key
+cap_keys = {}
+
+def mk_cap(short_name, names_list, descs_list, parent_en=None, owning_unit_en=None):
+    body = {'names': names_list, 'descriptions': descs_list}
+    if parent_en and cap_keys.get(parent_en):
+        body['parentCapabilityKey'] = cap_keys[parent_en]
+    if owning_unit_en and ou_keys.get(owning_unit_en):
+        body['owningUnitKey'] = ou_keys[owning_unit_en]
+    result = api('POST', '/capabilities', body, T)
+    if '_error' not in result:
+        cap_keys[short_name] = result['key']
+        ok(f'capability: {short_name}', result)
+    else:
+        cap_keys[short_name] = short_name.lower().replace(' ', '-')
+
+# ── Level 0: Root capability areas ─────────────────────────────────────────────
+mk_cap('Sales & Marketing',
+    n4('Sales & Marketing', 'Vertrieb & Marketing'),
+    n4('Capabilities to attract, convert and retain customers.',
+       'Fähigkeiten zur Gewinnung, Konvertierung und Bindung von Kunden.'),
+    owning_unit_en='Marketing')
+
+mk_cap('Order Fulfilment',
+    n4('Order Fulfilment', 'Auftragsabwicklung'),
+    n4('End-to-end capabilities for order processing and delivery.',
+       'Durchgängige Fähigkeiten für Auftragsabwicklung und Lieferung.'),
+    owning_unit_en='Operations')
+
+mk_cap('Finance & Billing',
+    n4('Finance & Billing', 'Finanzen & Abrechnung'),
+    n4('Financial transaction management, invoicing and reconciliation.',
+       'Verwaltung von Finanztransaktionen, Rechnungsstellung und Abstimmung.'),
+    owning_unit_en='Finance')
+
+mk_cap('Platform & Technology',
+    n4('Platform & Technology', 'Plattform & Technologie'),
+    n4('Technology infrastructure, integrations and platform capabilities.',
+       'Technologieinfrastruktur, Integrationen und Plattformfähigkeiten.'),
+    owning_unit_en='Engineering')
+
+mk_cap('Compliance & Data Governance',
+    n4('Compliance & Data Governance', 'Compliance & Daten-Governance'),
+    n4('Regulatory compliance, data privacy and governance capabilities.',
+       'Regulatorische Compliance, Datenschutz und Governance-Fähigkeiten.'),
+    owning_unit_en='Operations')
+
+# ── Level 1: Sub-capabilities of Sales & Marketing ─────────────────────────────
+mk_cap('Product Catalogue Management',
+    n4('Product Catalogue Management', 'Produktkatalogverwaltung'),
+    n4('Managing product listings, descriptions, pricing and availability.',
+       'Verwaltung von Produktlistings, Beschreibungen, Preisen und Verfügbarkeit.'),
+    parent_en='Sales & Marketing', owning_unit_en='Marketing')
+
+mk_cap('Customer Acquisition',
+    n4('Customer Acquisition', 'Kundengewinnung'),
+    n4('Attracting new customers through campaigns and SEO.',
+       'Gewinnung neuer Kunden durch Kampagnen und SEO.'),
+    parent_en='Sales & Marketing', owning_unit_en='Marketing')
+
+mk_cap('Customer Retention',
+    n4('Customer Retention', 'Kundenbindung'),
+    n4('Loyalty programmes, personalisation and retention analytics.',
+       'Treueprogramme, Personalisierung und Bindungsanalysen.'),
+    parent_en='Sales & Marketing', owning_unit_en='Marketing')
+
+mk_cap('Shopping Cart & Checkout',
+    n4('Shopping Cart & Checkout', 'Warenkorb & Checkout'),
+    n4('Cart management, upsell, coupon redemption and checkout flow.',
+       'Warenkorb, Upselling, Einlösung von Gutscheinen und Checkout-Prozess.'),
+    parent_en='Sales & Marketing', owning_unit_en='Online Shop')
+
+# ── Level 1: Sub-capabilities of Order Fulfilment ──────────────────────────────
+mk_cap('Order Management',
+    n4('Order Management', 'Auftragsverwaltung'),
+    n4('Order intake, validation, status tracking and amendments.',
+       'Auftragserfassung, -validierung, Statusverfolgung und Änderungen.'),
+    parent_en='Order Fulfilment', owning_unit_en='Operations')
+
+mk_cap('Warehouse & Inventory',
+    n4('Warehouse & Inventory', 'Lager & Bestand'),
+    n4('Stock management, pick and pack, and inventory forecasting.',
+       'Bestandsverwaltung, Kommissionierung und Bestandsprognosen.'),
+    parent_en='Order Fulfilment', owning_unit_en='Logistics')
+
+mk_cap('Shipping & Returns',
+    n4('Shipping & Returns', 'Versand & Rücksendungen'),
+    n4('Carrier integration, parcel tracking and returns processing.',
+       'Spediteurintegration, Paketverfolgung und Retourenbearbeitung.'),
+    parent_en='Order Fulfilment', owning_unit_en='Logistics')
+
+# ── Level 1: Sub-capabilities of Finance & Billing ─────────────────────────────
+mk_cap('Invoice Management',
+    n4('Invoice Management', 'Rechnungsverwaltung'),
+    n4('Invoice creation, delivery and lifecycle management.',
+       'Erstellung, Zustellung und Verwaltung des Rechnungslebenszyklus.'),
+    parent_en='Finance & Billing', owning_unit_en='Finance')
+
+mk_cap('Payment Processing',
+    n4('Payment Processing', 'Zahlungsabwicklung'),
+    n4('Card processing, refunds and payment reconciliation.',
+       'Kartenverarbeitung, Rückerstattungen und Zahlungsabstimmung.'),
+    parent_en='Finance & Billing', owning_unit_en='Payment')
+
+mk_cap('Financial Reporting',
+    n4('Financial Reporting', 'Finanzberichterstattung'),
+    n4('Monthly closing, analytics dashboards and regulatory reporting.',
+       'Monatsabschluss, Analyse-Dashboards und regulatorische Berichte.'),
+    parent_en='Finance & Billing', owning_unit_en='Finance')
+
+# ── Level 1: Sub-capabilities of Platform & Technology ─────────────────────────
+mk_cap('Integration & APIs',
+    n4('Integration & APIs', 'Integrationen & APIs'),
+    n4('Third-party integrations, webhook management and API gateway.',
+       'Drittanbieter-Integrationen, Webhook-Verwaltung und API-Gateway.'),
+    parent_en='Platform & Technology', owning_unit_en='Engineering')
+
+mk_cap('Data Platform',
+    n4('Data Platform', 'Datenplattform'),
+    n4('Data warehouse, ingestion pipelines and analytics infrastructure.',
+       'Data Warehouse, Erfassungs-Pipelines und Analyseinfrastruktur.'),
+    parent_en='Platform & Technology', owning_unit_en='Engineering')
+
+mk_cap('Identity & Access Management',
+    n4('Identity & Access Management', 'Identitäts- und Zugriffsverwaltung'),
+    n4('Authentication, authorisation, SSO and user account management.',
+       'Authentifizierung, Autorisierung, SSO und Benutzerkontenverwaltung.'),
+    parent_en='Platform & Technology', owning_unit_en='Engineering')
+
+# ── Level 1: Sub-capabilities of Compliance & Data Governance ─────────────────
+mk_cap('GDPR & Privacy Management',
+    n4('GDPR & Privacy Management', 'DSGVO & Datenschutzverwaltung'),
+    n4('Processing records, consent management and DPIA workflows.',
+       'Verarbeitungsverzeichnis, Einwilligungsverwaltung und DSFA-Prozesse.'),
+    parent_en='Compliance & Data Governance', owning_unit_en='Operations')
+
+mk_cap('Data Quality Management',
+    n4('Data Quality Management', 'Datenqualitätsverwaltung'),
+    n4('Profiling, validation rules and data stewardship workflows.',
+       'Profiling, Validierungsregeln und Daten-Stewardship-Prozesse.'),
+    parent_en='Compliance & Data Governance', owning_unit_en='Engineering')
+
+# ── Level 2: Sub-capabilities of Data Platform ─────────────────────────────────
+mk_cap('Data Ingestion',
+    n4('Data Ingestion', 'Datenerfassung'),
+    n4('Batch and streaming ingestion from operational systems.',
+       'Batch- und Streaming-Erfassung aus Betriebssystemen.'),
+    parent_en='Data Platform', owning_unit_en='Engineering')
+
+mk_cap('Data Transformation',
+    n4('Data Transformation', 'Datentransformation'),
+    n4('ETL/ELT pipelines, data modelling and data mart population.',
+       'ETL/ELT-Pipelines, Datenmodellierung und Data-Mart-Befüllung.'),
+    parent_en='Data Platform', owning_unit_en='Engineering')
+
+# Link capabilities to processes
+cap_proc_links = [
+    ('Product Catalogue Management',  ['Search for Product']),
+    ('Shopping Cart & Checkout',      ['Add to Cart', 'Checkout', 'Place an Order']),
+    ('Order Management',              ['Place an Order', 'Send Order Confirmation']),
+    ('Warehouse & Inventory',         ['Pick and Pack']),
+    ('Shipping & Returns',            ['Ship Order', 'Pick and Pack']),
+    ('Invoice Management',            ['Send Invoice']),
+    ('Payment Processing',            ['Process Payment']),
+    ('Financial Reporting',           ['Send Invoice', 'Process Payment']),
+    ('GDPR & Privacy Management',     ['Customer Registration', 'Confirm Email Address']),
+    ('Identity & Access Management',  ['Customer Registration', 'Confirm Email Address']),
+    ('Customer Acquisition',          ['Customer Registration']),
+    ('Customer Retention',            ['Confirm Email Address']),
+]
+print('  Linking processes to capabilities...')
+for cap_short, proc_names in cap_proc_links:
+    cap_key = cap_keys.get(cap_short)
+    if not cap_key:
+        continue
+    proc_key_list = [pk(p) for p in proc_names]
+    if proc_key_list:
+        api('PUT', f'/capabilities/{cap_key}/linked-processes',
+            {'processKeys': proc_key_list}, T)
+
+
 # ── IT Systems ───────────────────────────────────────────────────────────────────
 print('\n[19] IT systems...')
 
-# (en_name, vendor, system_url, linked_process_en_names)
+# (en_name, vendor, system_url, names, descriptions, linked_process_en_names, owning_unit_en)
 it_system_defs = [
     (
         'Shopify', 'Shopify Inc.',
@@ -2101,6 +2572,7 @@ it_system_defs = [
            "Piattaforma e-commerce per catalogo prodotti, carrello e checkout.",
            'Plataforma de comercio electrónico para catálogo, carrito y pago.'),
         ['Search for Product', 'Add to Cart', 'Checkout', 'Place an Order'],
+        'Online Shop',
     ),
     (
         'Stripe', 'Stripe Inc.',
@@ -2112,6 +2584,7 @@ it_system_defs = [
            'Gateway di pagamento per carte, rimborsi e riconciliazione finanziaria.',
            'Pasarela de pago para tarjetas, reembolsos y conciliación financiera.'),
         ['Process Payment', 'Send Invoice'],
+        'Payment',
     ),
     (
         'Klaviyo', 'Klaviyo Inc.',
@@ -2123,6 +2596,7 @@ it_system_defs = [
            'Piattaforma di automazione marketing email e SMS per campagne clienti.',
            'Plataforma de automatización de marketing por email y SMS para campañas.'),
         ['Customer Registration', 'Confirm Email Address'],
+        'Marketing',
     ),
     (
         'Manhattan WMS', 'Manhattan Associates',
@@ -2134,6 +2608,7 @@ it_system_defs = [
            'Sistema di gestione magazzino per controllo scorte, prelievo e spedizione.',
            'Sistema de gestión de almacén para control de stock, picking y expedición.'),
         ['Pick and Pack', 'Ship Order'],
+        'Logistics',
     ),
     (
         'SAP S/4HANA', 'SAP SE',
@@ -2145,14 +2620,65 @@ it_system_defs = [
            'Sistema ERP per contabilità finanziaria e gestione delle fatture.',
            'Sistema ERP para contabilidad financiera y gestión de facturas.'),
         ['Send Invoice'],
+        'Finance',
+    ),
+    (
+        'Salesforce CRM', 'Salesforce Inc.',
+        'https://www.salesforce.com',
+        n4('Salesforce CRM', 'Salesforce CRM', 'Salesforce CRM', 'Salesforce CRM', 'Salesforce CRM'),
+        n4('Customer relationship management platform for tracking customer interactions, campaigns and support tickets.',
+           'CRM-Plattform für Kundenkontakte, Kampagnen und Support-Tickets.',
+           'Plateforme CRM pour le suivi des interactions clients, campagnes et tickets de support.',
+           'Piattaforma CRM per il tracciamento delle interazioni clienti, campagne e ticket di supporto.',
+           'Plataforma CRM para el seguimiento de interacciones con clientes, campañas y tickets de soporte.'),
+        ['Customer Registration', 'Handle Right to Erasure Request'],
+        'Marketing',
+    ),
+    (
+        'Workday HCM', 'Workday Inc.',
+        'https://www.workday.com',
+        n4('Workday HCM', 'Workday HCM', 'Workday HCM', 'Workday HCM', 'Workday HCM'),
+        n4('Human capital management system for employee records, payroll, recruitment and onboarding.',
+           'Human-Capital-Management-System für Mitarbeiterdaten, Lohnbuchhaltung, Rekrutierung und Einarbeitung.',
+           'Système de gestion du capital humain pour les dossiers employés, la paie et le recrutement.',
+           'Sistema di gestione delle risorse umane per registri dipendenti, retribuzioni, reclutamento e onboarding.',
+           'Sistema de gestión del capital humano para registros de empleados, nóminas, reclutamiento e incorporación.'),
+        ['Recruit Employee', 'Onboard Employee'],
+        'Human Resources',
+    ),
+    (
+        'Google Analytics 4', 'Google LLC',
+        'https://analytics.google.com',
+        n4('Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4', 'Google Analytics 4'),
+        n4('Web analytics platform for tracking storefront traffic, user journeys and conversion funnels.',
+           'Web-Analyseplattform für die Verfolgung von Storefront-Traffic, Nutzerreisen und Conversion-Funnels.',
+           "Plateforme d'analyse web pour le trafic de la boutique, les parcours utilisateurs et les entonnoirs de conversion.",
+           "Piattaforma di analisi web per il traffico dello storefront, i percorsi degli utenti e i funnel di conversione.",
+           'Plataforma de analítica web para el tráfico de la tienda, los recorridos de los usuarios y los embudos de conversión.'),
+        ['Search for Product', 'Place an Order'],
+        'Marketing',
+    ),
+    (
+        'Zendesk', 'Zendesk Inc.',
+        'https://www.zendesk.com',
+        n4('Zendesk', 'Zendesk', 'Zendesk', 'Zendesk', 'Zendesk'),
+        n4('Customer support ticketing and helpdesk platform for handling customer inquiries and complaints.',
+           'Kunden-Support-Ticketing und Helpdesk-Plattform für Kundenanfragen und Beschwerden.',
+           "Plateforme de ticketing et helpdesk pour la gestion des demandes et réclamations clients.",
+           'Piattaforma di ticketing e helpdesk per la gestione delle richieste e reclami dei clienti.',
+           'Plataforma de tickets de soporte y helpdesk para gestionar consultas y reclamaciones de clientes.'),
+        ['Customer Registration', 'Handle Right to Erasure Request'],
+        'Operations',
     ),
 ]
 
 it_system_keys = {}
-for (short_name, vendor, url, nms, descs, linked_procs) in it_system_defs:
+for (short_name, vendor, url, nms, descs, linked_procs, owning_unit_en) in it_system_defs:
+    owning_unit_key = ou_keys.get(owning_unit_en) if owning_unit_en else None
     result = api('POST', '/it-systems', {
         'names': nms, 'descriptions': descs,
         'vendor': vendor, 'systemUrl': url,
+        **({'owningUnitKey': owning_unit_key} if owning_unit_key else {}),
     }, T)
     if '_error' not in result:
         isk = result['key']
@@ -2180,7 +2706,6 @@ if '_error' not in dhl:
            'isExternal': True,
            'externalCompanyName': 'DHL Logistics GmbH',
            'countryOfExecution': 'DE',
-           'linkedDataProcessorKey': dhl['key'],
        }, T))
     # DHL team reads Order and Parcel, writes (manipulates) Parcel
     ok('Logistics data access entities',
@@ -2199,7 +2724,6 @@ if '_error' not in stripe:
            'isExternal': True,
            'externalCompanyName': 'Stripe Managed Services Ltd.',
            'countryOfExecution': 'IE',
-           'linkedDataProcessorKey': stripe['key'],
        }, T))
     # Payment team reads Invoice, writes Payment Transaction
     ok('Payment data access entities',
@@ -2211,6 +2735,119 @@ if '_error' not in stripe:
 else:
     print('  SKIP external org unit (Stripe data processor not created)')
 
+
+# ── DPIAs ───────────────────────────────────────────────────────────────────────
+print('\n[21] DPIAs...')
+
+# Trigger DPIAs on privacy-sensitive processes (those with personal data)
+# (process_en_name, initial_risk, residual_risk, risk_description, measures)
+dpia_defs = [
+    (
+        'Customer Registration',
+        'HIGH', 'MEDIUM',
+        'Collects PII (name, email, address) and creates a persistent user account. '
+        'Risk of data breach if account credentials are compromised.',
+        'Enforce strong password policy and MFA. Encrypt PII at rest and in transit. '
+        'Limit data retention to active account lifetime plus statutory periods.',
+    ),
+    (
+        'Process Payment',
+        'HIGH', 'LOW',
+        'Processes card data and financial PII. Risk of financial fraud and PCI-DSS non-compliance.',
+        'All card data handled exclusively by PCI-DSS compliant processor (Stripe). '
+        'No card numbers stored in own systems. Tokenisation in place.',
+    ),
+    (
+        'Confirm Email Address',
+        'MEDIUM', 'LOW',
+        'Sends email with verification token to user email address. '
+        'Risk of phishing if token sent to unverified address.',
+        'One-time token with 24h expiry. SMTP transport encrypted. '
+        'Token invalidated after first use.',
+    ),
+    (
+        'Send Invoice',
+        'MEDIUM', 'MEDIUM',
+        'Processes financial PII (billing address, VAT ID) and sends to external email. '
+        'Risk of invoice interception or delivery to wrong address.',
+        'Verify email address before sending. Use encrypted SMTP. '
+        'Retain invoices for statutory period (10 years AT/DE).',
+    ),
+    (
+        'Recruit Employee',
+        'HIGH', 'MEDIUM',
+        'Processes applicant PII including CV data, interview notes and potentially health or criminal record information. '
+        'Risk of unlawful retention of unsuccessful applicant data beyond the statutory period.',
+        'Strict 6-month retention policy for rejected applicants. '
+        'Role-based access limited to HR and hiring manager. '
+        'Background checks handled by accredited third-party provider only.',
+    ),
+    (
+        'Handle Right to Erasure Request',
+        'HIGH', 'LOW',
+        'Accesses personal data across multiple systems to execute deletion. '
+        'Risk of incomplete erasure if downstream systems are not notified, or of unlawful deletion if legal hold applies.',
+        'Automated deletion workflow with cross-system confirmation receipts. '
+        'Legal-hold check against fiscal and commercial retention schedules before any deletion. '
+        'Full audit trail retained for 5 years after erasure event.',
+    ),
+]
+
+for (proc_name, initial_risk, residual_risk, risk_desc, measures) in dpia_defs:
+    proc_key = pk(proc_name)
+    # Trigger the DPIA
+    dpia_result = api('POST', f'/processes/{proc_key}/dpia', {}, T)
+    if '_error' not in dpia_result and dpia_result.get('key'):
+        dpia_key = dpia_result['key']
+        # Set risk description and measures
+        api('PUT', f'/dpia/{dpia_key}/risk-description',
+            {'riskDescription': risk_desc}, T)
+        api('PUT', f'/dpia/{dpia_key}/measures',
+            {'measures': measures}, T)
+        # Set initial and residual risk
+        ok(f'DPIA: {proc_name}',
+           api('PUT', f'/dpia/{dpia_key}/residual-risk', {
+               'initialRisk': initial_risk,
+               'residualRisk': residual_risk,
+           }, T))
+    else:
+        print(f'  SKIP DPIA for {proc_name} (process not found or DPIA already exists)')
+
+
+# ── Computed owners (clear explicit overrides) ───────────────────────────────────
+# These entities/processes are in bounded contexts whose owning unit has a business owner.
+# Clearing the explicit override lets the owner be computed from the owning unit.
+print('\n[22] Computed owners (clear explicit overrides where owning unit provides owner)...')
+
+# Bounded contexts by domain; owning units are set in [18b] via the capabilities/org-unit assignments.
+# We clear the override for entities and top-level processes that belong to org-unit-owned contexts.
+
+# Entities whose owner should be computed from their bounded context's owning unit:
+# - Product, Product Category, Product Review, Shopping Cart, Order, Order Line Item → Sales BC (owned by Online Shop → sarah.mitchell)
+# - Invoice, Payment Transaction → Billing BC (owned by Finance → tom.wagner)
+# - Parcel → Warehouse BC (owned by Supply Chain → marco.rossi)
+# - Customer, Billing Address, Shipping Address, Full Name, Date of Birth → Customer Care BC (owned by Online Shop/Operations → lisa.chen)
+computed_entities = [
+    'product', 'product-category', 'product-review', 'shopping-cart',
+    'order', 'order-line-item', 'invoice', 'payment-transaction', 'parcel',
+    'natural-person',
+]
+for ekey in computed_entities:
+    r = api('DELETE', f'/business-entities/{ekey}/data-owner', token=T)
+    if '_error' not in r:
+        print(f'  ok  computed owner: {ekey}')
+
+# Top-level processes whose owner should be computed from bounded context owning unit:
+computed_processes = [
+    'place-an-order', 'checkout', 'search-for-product', 'add-to-cart',
+    'ship-order', 'pick-and-pack',
+    'send-invoice', 'process-payment',
+    'recruit-employee', 'onboard-employee',
+]
+for pkey in computed_processes:
+    r = api('DELETE', f'/processes/{pkey}/owner', token=T)
+    if '_error' not in r:
+        print(f'  ok  computed owner: {pkey}')
 
 # ── Summary ─────────────────────────────────────────────────────────────────────
 print('\n' + '=' * 60)

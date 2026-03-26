@@ -8,7 +8,8 @@ import type { BusinessDomainResponse } from '@/api/generated/model/businessDomai
 import type { ClassificationResponse } from '@/api/generated/model/classificationResponse';
 import type { OrganisationalUnitResponse } from '@/api/generated/model/organisationalUnitResponse';
 import type { UserResponse } from '@/api/generated/model/userResponse';
-import type { DataProcessorResponse } from '@/api/generated/model/dataProcessorResponse';
+import type { ServiceProviderResponse } from '@/api/generated/model/serviceProviderResponse';
+import type { CapabilityResponse } from '@/api/generated/model/capabilityResponse';
 
 export function createClient(baseURL: string): AxiosInstance {
   return axios.create({
@@ -170,18 +171,34 @@ export async function createOrgUnit(
   return res.data;
 }
 
-export async function createDataProcessor(
+export async function createServiceProvider(
   client: AxiosInstance,
   name: string,
   processingCountries: string[] = ['DE'],
-): Promise<DataProcessorResponse> {
+): Promise<ServiceProviderResponse> {
   const body = {
     names: [{ locale: 'en', text: name }],
     processingCountries,
     processorAgreementInPlace: true,
     subProcessorsApproved: false,
   };
-  const res = await client.post<DataProcessorResponse>('/data-processors', body);
+  const res = await client.post<ServiceProviderResponse>('/service-providers', body);
+  if (res.status !== 201) {
+    throw new ApiError(res.status, res.data);
+  }
+  return res.data;
+}
+
+export async function createCapability(
+  client: AxiosInstance,
+  name: string,
+  extras?: Record<string, unknown>,
+): Promise<CapabilityResponse> {
+  const body = {
+    names: [{ locale: 'en', text: name }],
+    ...extras,
+  };
+  const res = await client.post<CapabilityResponse>('/capabilities', body);
   if (res.status !== 201) {
     throw new ApiError(res.status, res.data);
   }

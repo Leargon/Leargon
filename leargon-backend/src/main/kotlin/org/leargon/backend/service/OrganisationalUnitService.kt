@@ -15,7 +15,6 @@ import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessEntityRepository
-import org.leargon.backend.repository.DataProcessorRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.UserRepository
@@ -28,7 +27,6 @@ open class OrganisationalUnitService(
     private val userRepository: UserRepository,
     private val localeService: LocaleService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
-    private val dataProcessorRepository: DataProcessorRepository,
     private val businessEntityRepository: BusinessEntityRepository,
     private val boundedContextRepository: BoundedContextRepository
 ) {
@@ -70,13 +68,31 @@ open class OrganisationalUnitService(
             unit.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
 
-        unit.lead =
-            if (request.leadUsername != null) {
+        unit.businessOwner =
+            if (request.businessOwnerUsername != null) {
                 userRepository
-                    .findByUsername(request.leadUsername)
-                    .orElseThrow { ResourceNotFoundException("Lead user not found") }
+                    .findByUsername(request.businessOwnerUsername)
+                    .orElseThrow { ResourceNotFoundException("Business owner user not found") }
             } else {
                 currentUser
+            }
+
+        unit.businessSteward =
+            if (request.businessStewardUsername != null) {
+                userRepository
+                    .findByUsername(request.businessStewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Business steward user not found") }
+            } else {
+                null
+            }
+
+        unit.technicalCustodian =
+            if (request.technicalCustodianUsername != null) {
+                userRepository
+                    .findByUsername(request.technicalCustodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found") }
+            } else {
+                null
             }
 
         val defaultLocale = localeService.getDefaultLocale()
@@ -131,21 +147,57 @@ open class OrganisationalUnitService(
     }
 
     @Transactional
-    open fun updateLead(
+    open fun updateBusinessOwner(
         key: String,
-        leadUsername: String?
+        businessOwnerUsername: String?
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
-        if (leadUsername != null) {
-            unit.lead =
+        if (businessOwnerUsername != null) {
+            unit.businessOwner =
                 userRepository
-                    .findByUsername(leadUsername)
-                    .orElseThrow { ResourceNotFoundException("Lead user not found") }
+                    .findByUsername(businessOwnerUsername)
+                    .orElseThrow { ResourceNotFoundException("Business owner user not found") }
         } else {
-            throw IllegalArgumentException("Lead is required and cannot be removed")
+            throw IllegalArgumentException("Business owner is required and cannot be removed")
         }
 
+        unit = organisationalUnitRepository.update(unit)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun updateBusinessSteward(
+        key: String,
+        businessStewardUsername: String?
+    ): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        unit.businessSteward =
+            if (businessStewardUsername != null) {
+                userRepository
+                    .findByUsername(businessStewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Business steward user not found") }
+            } else {
+                null
+            }
+        unit = organisationalUnitRepository.update(unit)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Transactional
+    open fun updateTechnicalCustodian(
+        key: String,
+        technicalCustodianUsername: String?
+    ): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        unit.technicalCustodian =
+            if (technicalCustodianUsername != null) {
+                userRepository
+                    .findByUsername(technicalCustodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found") }
+            } else {
+                null
+            }
         unit = organisationalUnitRepository.update(unit)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
@@ -196,14 +248,6 @@ open class OrganisationalUnitService(
         if (request.isExternal != null) unit.isExternal = request.isExternal
         unit.externalCompanyName = request.externalCompanyName
         unit.countryOfExecution = request.countryOfExecution
-        unit.linkedDataProcessor =
-            if (request.linkedDataProcessorKey != null) {
-                dataProcessorRepository
-                    .findByKey(request.linkedDataProcessorKey)
-                    .orElseThrow { ResourceNotFoundException("Data processor not found: ${request.linkedDataProcessorKey}") }
-            } else {
-                null
-            }
         unit = organisationalUnitRepository.update(unit)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }

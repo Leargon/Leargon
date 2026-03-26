@@ -9,7 +9,11 @@ import java.util.Optional
 
 @Repository
 interface ProcessRepository : JpaRepository<Process, Long> {
-    @Join(value = "processOwner", type = Join.Type.FETCH)
+    @Join(value = "processOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.domain", type = Join.Type.LEFT_FETCH)
@@ -18,11 +22,16 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
-    @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "itSystems", type = Join.Type.LEFT_FETCH)
+    @Join(value = "capabilities", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<Process>
 
-    @Join(value = "processOwner", type = Join.Type.FETCH)
+    @Join(value = "processOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "boundedContext.owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "createdBy", type = Join.Type.FETCH)
     @Join(value = "boundedContext", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.domain", type = Join.Type.LEFT_FETCH)
@@ -31,8 +40,9 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     @Join(value = "executingUnits", type = Join.Type.LEFT_FETCH)
     @Join(value = "parent", type = Join.Type.LEFT_FETCH)
     @Join(value = "children", type = Join.Type.LEFT_FETCH)
-    @Join(value = "dataProcessors", type = Join.Type.LEFT_FETCH)
+    @Join(value = "serviceProviders", type = Join.Type.LEFT_FETCH)
     @Join(value = "itSystems", type = Join.Type.LEFT_FETCH)
+    @Join(value = "capabilities", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<Process>
 
     @Join(value = "children", type = Join.Type.LEFT_FETCH)

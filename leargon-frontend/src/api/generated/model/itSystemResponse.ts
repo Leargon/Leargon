@@ -17,6 +17,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 import type { LocalizedText } from './localizedText';
+import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
 
 export interface ItSystemResponse {
@@ -34,6 +35,8 @@ export interface ItSystemResponse {
    * @nullable
    */
   systemUrl?: string | null;
+  /** Organisational unit that owns this IT system */
+  owningUnit?: OrganisationalUnitSummaryResponse | null;
   /**
    * Processes that use this IT system
    * @nullable

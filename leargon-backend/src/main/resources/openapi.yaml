@@ -48,8 +48,8 @@ tags:
   description: Organisational Unit management endpoints
 - name: Process
   description: Business Process management endpoints
-- name: DataProcessor
-  description: Data Processor management endpoints
+- name: ServiceProvider
+  description: Service Provider management endpoints
 - name: Dpia
   description: Data Protection Impact Assessment management endpoints
 - name: Export
@@ -74,6 +74,8 @@ tags:
   description: IT System management endpoints
 - name: BusinessDataQualityRule
   description: Business Data Quality Rule management endpoints
+- name: Capability
+  description: Business Capability management endpoints
 - name: Search
   description: Full-text catalogue search endpoint
 paths:
@@ -1096,6 +1098,39 @@ paths:
           description: Domain not found
         '401':
           description: Not authenticated
+  /business-domains/{key}/owning-unit:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update domain owning unit
+      operationId: updateBusinessDomainOwningUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainOwningUnitRequest'
+      responses:
+        '200':
+          description: Updated domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Domain or organisational unit not found
+        '401':
+          description: Not authenticated
   /business-domains/{key}/bounded-contexts:
     get:
       tags:
@@ -1815,6 +1850,72 @@ paths:
           description: Event or link not found
         '401':
           description: Not authenticated
+  /domain-events/{key}/entity-links:
+    post:
+      tags:
+      - DomainEvent
+      summary: Add an entity link to a domain event
+      operationId: addDomainEventEntityLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDomainEventEntityLinkRequest'
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Event or entity not found
+        '401':
+          description: Not authenticated
+  /domain-events/{key}/entity-links/{linkId}:
+    delete:
+      tags:
+      - DomainEvent
+      summary: Remove an entity link from a domain event
+      operationId: removeDomainEventEntityLink
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: linkId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Updated domain event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainEventResponse'
+        '403':
+          description: Requires ROLE_ADMIN
+        '404':
+          description: Event or link not found
+        '401':
+          description: Not authenticated
   /business-entities:
     get:
       tags:
@@ -2000,6 +2101,42 @@ paths:
         '401':
           description: Not authenticated
   /business-entities/{key}/data-owner:
+    delete:
+      tags:
+      - BusinessEntity
+      summary: Clear explicit data owner override
+      description: Clears the explicit data owner override, reverting to computed owner from the bounded context owning unit. Only the Data Owner or an Administrator can edit an entity.
+      operationId: clearBusinessEntityDataOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Business Entity data owner override cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
     put:
       tags:
       - BusinessEntity
@@ -2024,6 +2161,92 @@ paths:
       responses:
         '200':
           description: Business Entity data owner updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/data-steward:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity data steward
+      description: Updates the data steward of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityDataSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityDataStewardRequest'
+      responses:
+        '200':
+          description: Business Entity data steward updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /business-entities/{key}/technical-custodian:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update business entity technical custodian
+      description: Updates the technical custodian of a business entity. Only the Data Owner or an Administrator can edit an entity.
+      operationId: updateBusinessEntityTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessEntityTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Business Entity technical custodian updated successfully
           content:
             application/json:
               schema:
@@ -2581,13 +2804,13 @@ paths:
           description: Business entity not found
         '401':
           description: Not authenticated
-  /business-entities/{key}/cross-border-transfers:
+  /business-entities/{key}/storage-locations:
     put:
       tags:
       - BusinessEntity
-      summary: Update cross-border transfers
-      description: Sets the list of cross-border transfers for a business entity. Requires data owner or admin.
-      operationId: updateBusinessEntityCrossBorderTransfers
+      summary: Update storage locations
+      description: Sets the list of storage locations (ISO country codes) for a business entity. Requires data owner or admin.
+      operationId: updateBusinessEntityStorageLocations
       security:
       - bearerAuth: []
       parameters:
@@ -2602,7 +2825,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateCrossBorderTransfersRequest'
+              $ref: '#/components/schemas/UpdateStorageLocationsRequest'
       responses:
         '200':
           description: Updated business entity
@@ -3288,6 +3511,68 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /organisational-units/{key}/steward:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit steward
+      description: Updates the business steward of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitStewardRequest'
+      responses:
+        '200':
+          description: Steward updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/technical-custodian:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit technical custodian
+      description: Updates the technical custodian of an organisational unit. Requires ROLE_ADMIN.
+      operationId: updateOrganisationalUnitTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Technical custodian updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '401':
+          description: Not authenticated
   /organisational-units/{key}/type:
     put:
       tags:
@@ -3406,7 +3691,7 @@ paths:
       tags:
       - OrganisationalUnit
       summary: Update external/body-leasing fields
-      description: Updates isExternal, externalCompanyName, countryOfExecution, and linkedDataProcessorKey. Requires ROLE_ADMIN.
+      description: Updates isExternal, externalCompanyName, and countryOfExecution. Requires ROLE_ADMIN.
       operationId: updateOrgUnitExternalFields
       security:
       - bearerAuth: []
@@ -3430,6 +3715,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /organisational-units/{key}/service-providers:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update linked service providers
+      description: Replaces the set of service providers linked to this org unit. Requires ROLE_ADMIN.
+      operationId: updateOrgUnitServiceProviders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkedServiceProvidersRequest'
+      responses:
+        '204':
+          description: Service providers updated
         '404':
           description: Organisational unit not found
         '401':
@@ -4127,6 +4443,38 @@ paths:
         '401':
           description: Not authenticated
   /processes/{key}/owner:
+    delete:
+      tags:
+      - Process
+      summary: Clear explicit process owner override
+      description: Clears the explicit process owner override, reverting to computed owner from the bounded context owning unit. Only the current owner or an admin can perform this.
+      operationId: clearProcessOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process owner override cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
     put:
       tags:
       - Process
@@ -4151,6 +4499,84 @@ paths:
       responses:
         '200':
           description: Process owner updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/process-steward:
+    put:
+      tags:
+      - Process
+      summary: Update process steward
+      description: Updates the business steward of a process. Only the process owner or an admin can update.
+      operationId: updateProcessSteward
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessStewardRequest'
+      responses:
+        '200':
+          description: Process steward updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/technical-custodian:
+    put:
+      tags:
+      - Process
+      summary: Update process technical custodian
+      description: Updates the technical custodian of a process. Only the process owner or an admin can update.
+      operationId: updateProcessTechnicalCustodian
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessTechnicalCustodianRequest'
+      responses:
+        '200':
+          description: Process technical custodian updated
           content:
             application/json:
               schema:
@@ -4523,37 +4949,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /business-entities/{key}/data-processors:
-    put:
-      tags:
-      - BusinessEntity
-      summary: Update linked data processors
-      description: Replaces the set of data processors linked to a business entity. Admin only.
-      operationId: updateBusinessEntityDataProcessors
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: key
-        in: path
-        required: true
-        description: Business Entity key
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
-      responses:
-        '204':
-          description: Updated
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '401':
-          description: Not authenticated
   /processes/{key}/dpia:
     get:
       tags:
@@ -4648,13 +5043,13 @@ paths:
           description: Process not found
         '401':
           description: Not authenticated
-  /processes/{key}/data-processors:
+  /processes/{key}/service-providers:
     put:
       tags:
       - Process
-      summary: Update linked data processors
-      description: Replaces the set of data processors linked to a process. Admin only.
-      operationId: updateProcessDataProcessors
+      summary: Update linked service providers
+      description: Replaces the set of service providers linked to a process. Admin only.
+      operationId: updateProcessServiceProviders
       security:
       - bearerAuth: []
       parameters:
@@ -4669,7 +5064,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateLinkedDataProcessorsRequest'
+              $ref: '#/components/schemas/UpdateLinkedServiceProvidersRequest'
       responses:
         '204':
           description: Updated
@@ -4679,32 +5074,32 @@ paths:
           description: Not found
         '401':
           description: Not authenticated
-  /data-processors:
+  /service-providers:
     get:
       tags:
-      - DataProcessor
-      summary: Get all data processors
-      description: Returns a list of all data processors. Requires authentication.
-      operationId: getAllDataProcessors
+      - ServiceProvider
+      summary: Get all service providers
+      description: Returns a list of all service providers. Requires authentication.
+      operationId: getAllServiceProviders
       security:
       - bearerAuth: []
       responses:
         '200':
-          description: List of data processors
+          description: List of service providers
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DataProcessorResponse'
+                  $ref: '#/components/schemas/ServiceProviderResponse'
         '401':
           description: Not authenticated
     post:
       tags:
-      - DataProcessor
-      summary: Create a data processor
-      description: Creates a new data processor entry. Requires ROLE_ADMIN.
-      operationId: createDataProcessor
+      - ServiceProvider
+      summary: Create a service provider
+      description: Creates a new service provider entry. Requires ROLE_ADMIN.
+      operationId: createServiceProvider
       security:
       - bearerAuth: []
       requestBody:
@@ -4712,58 +5107,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDataProcessorRequest'
+              $ref: '#/components/schemas/CreateServiceProviderRequest'
       responses:
         '201':
-          description: Data processor created
+          description: Service provider created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}:
+  /service-providers/{key}:
     get:
       tags:
-      - DataProcessor
-      summary: Get a data processor by key
-      description: Returns a single data processor. Requires authentication.
-      operationId: getDataProcessor
+      - ServiceProvider
+      summary: Get a service provider by key
+      description: Returns a single service provider. Requires authentication.
+      operationId: getServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       responses:
         '200':
-          description: Data processor
+          description: Service provider
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
     put:
       tags:
-      - DataProcessor
-      summary: Update a data processor
-      description: Updates a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessor
+      - ServiceProvider
+      summary: Update a service provider
+      description: Updates a service provider. Requires ROLE_ADMIN.
+      operationId: updateServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       requestBody:
@@ -4771,89 +5166,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDataProcessorRequest'
+              $ref: '#/components/schemas/UpdateServiceProviderRequest'
       responses:
         '200':
-          description: Updated data processor
+          description: Updated service provider
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataProcessorResponse'
+                $ref: '#/components/schemas/ServiceProviderResponse'
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
     delete:
       tags:
-      - DataProcessor
-      summary: Delete a data processor
-      description: Deletes a data processor. Requires ROLE_ADMIN.
-      operationId: deleteDataProcessor
+      - ServiceProvider
+      summary: Delete a service provider
+      description: Deletes a service provider. Requires ROLE_ADMIN.
+      operationId: deleteServiceProvider
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       responses:
         '204':
-          description: Data processor deleted
+          description: Service provider deleted
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}/linked-entities:
+  /service-providers/{key}/linked-processes:
     put:
       tags:
-      - DataProcessor
-      summary: Update linked business entities
-      description: Replaces the list of linked business entities for a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessorLinkedEntities
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: key
-        in: path
-        required: true
-        description: Data processor key
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateDataProcessorEntityLinksRequest'
-      responses:
-        '204':
-          description: Linked entities updated
-        '404':
-          description: Data processor not found
-        '401':
-          description: Not authenticated
-        '403':
-          description: Insufficient permissions (requires ROLE_ADMIN)
-  /data-processors/{key}/linked-processes:
-    put:
-      tags:
-      - DataProcessor
+      - ServiceProvider
       summary: Update linked processes
-      description: Replaces the list of linked processes for a data processor. Requires ROLE_ADMIN.
-      operationId: updateDataProcessorLinkedProcesses
+      description: Replaces the list of linked processes for a service provider. Requires ROLE_ADMIN.
+      operationId: updateServiceProviderLinkedProcesses
       security:
       - bearerAuth: []
       parameters:
       - name: key
         in: path
         required: true
-        description: Data processor key
+        description: Service provider key
         schema:
           type: string
       requestBody:
@@ -4861,12 +5225,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDataProcessorProcessLinksRequest'
+              $ref: '#/components/schemas/UpdateServiceProviderProcessLinksRequest'
       responses:
         '204':
           description: Linked processes updated
         '404':
-          description: Data processor not found
+          description: Service provider not found
         '401':
           description: Not authenticated
         '403':
@@ -5354,13 +5718,13 @@ paths:
           description: Not authenticated
         '403':
           description: Requires ROLE_ADMIN
-  /export/data-processors:
+  /export/service-providers:
     get:
       tags:
       - Export
-      summary: Export sub-processor register (Auftragsverarbeiter)
-      description: Returns a CSV export of all data processors with linked processes and entities. Requires ROLE_ADMIN.
-      operationId: exportDataProcessors
+      summary: Export service provider register
+      description: Returns a CSV export of all service providers with linked processes. Requires ROLE_ADMIN.
+      operationId: exportServiceProviders
       security:
       - bearerAuth: []
       parameters:
@@ -5535,6 +5899,205 @@ paths:
           description: Query too short (minimum 2 characters)
         '401':
           description: Not authenticated
+  /capabilities:
+    get:
+      tags:
+      - Capability
+      summary: Get all capabilities
+      description: Returns a list of all business capabilities.
+      operationId: getAllCapabilities
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of capabilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CapabilityResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - Capability
+      summary: Create a capability
+      description: Creates a new business capability. Requires ROLE_ADMIN.
+      operationId: createCapability
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCapabilityRequest'
+      responses:
+        '201':
+          description: Capability created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityResponse'
+        '400':
+          description: Invalid request data
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /capabilities/{key}:
+    get:
+      tags:
+      - Capability
+      summary: Get capability by key
+      operationId: getCapabilityByKey
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Capability key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Capability found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityResponse'
+        '404':
+          description: Capability not found
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - Capability
+      summary: Update a capability
+      description: Updates an existing capability. Requires ROLE_ADMIN.
+      operationId: updateCapability
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Capability key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCapabilityRequest'
+      responses:
+        '200':
+          description: Capability updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapabilityResponse'
+        '400':
+          description: Invalid request data
+        '404':
+          description: Capability not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    delete:
+      tags:
+      - Capability
+      summary: Delete a capability
+      description: Deletes a capability. Requires ROLE_ADMIN.
+      operationId: deleteCapability
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Capability key
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Capability deleted successfully
+        '404':
+          description: Capability not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /capabilities/{key}/classifications:
+    put:
+      tags:
+      - Capability
+      summary: Assign classifications to a capability
+      description: Replaces all classification assignments for a capability. Requires ROLE_ADMIN.
+      operationId: assignClassificationsToCapability
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Capability key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClassificationAssignmentRequest'
+      responses:
+        '204':
+          description: Classifications assigned successfully
+        '400':
+          description: Invalid assignment data
+        '404':
+          description: Capability not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /capabilities/{key}/linked-processes:
+    put:
+      tags:
+      - Capability
+      summary: Update linked processes
+      description: Replaces the list of processes linked to a capability. Requires ROLE_ADMIN.
+      operationId: updateCapabilityLinkedProcesses
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Capability key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCapabilityProcessLinksRequest'
+      responses:
+        '204':
+          description: Linked processes updated
+        '404':
+          description: Capability not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
 components:
   securitySchemes:
     bearerAuth:
@@ -5676,6 +6239,10 @@ components:
           type: string
           nullable: true
           description: Vision statement for the bounded context
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Organisational unit responsible for this domain
         createdAt:
           type: string
           format: date-time
@@ -5710,6 +6277,10 @@ components:
           type: string
           description: Parent domain name in default locale
           example: Sales Domain
+        owningUnitName:
+          type: string
+          nullable: true
+          description: Name of the owning organisational unit (used for computed owner/steward/custodian display)
     BoundedContextResponse:
       type: object
       required:
@@ -5928,12 +6499,12 @@ components:
       type: object
       required:
       - key
-      - dataOwner
       - createdBy
       - names
       - descriptions
       - createdAt
       - updatedAt
+      - ownerIsExplicit
       properties:
         key:
           type: string
@@ -5941,6 +6512,19 @@ components:
           example: sales.retail.customer
         dataOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+        ownerIsExplicit:
+          type: boolean
+          description: True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context
+        dataSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward override (falls back to owning org unit steward)
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian override (falls back to owning org unit technical custodian)
         parent:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         children:
@@ -5981,18 +6565,12 @@ components:
           nullable: true
           description: Retention period description for the entity
           example: 7 years
-        crossBorderTransfers:
+        storageLocations:
           type: array
           nullable: true
           items:
-            $ref: '#/components/schemas/CrossBorderTransferEntry'
-          description: List of cross-border data transfers for this entity
-        dataProcessors:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/DataProcessorSummaryResponse'
-          description: Data processors linked to this entity
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where this entity's data is stored
         missingMandatoryFields:
           type: array
           nullable: true
@@ -6105,6 +6683,13 @@ components:
           nullable: true
           description: Name of the root ancestor entity in default locale, null if this entity is itself top-level
           example: Sales
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
+        description:
+          type: string
+          nullable: true
+          description: Description in the default locale
     BusinessEntityTreeResponse:
       type: object
       required:
@@ -6189,6 +6774,7 @@ components:
       - BUSINESS_ENTITY
       - BUSINESS_PROCESS
       - ORGANISATIONAL_UNIT
+      - CAPABILITY
     ClassificationAssignmentRequest:
       type: object
       required:
@@ -6222,6 +6808,7 @@ components:
       - names
       - values
       - multiValue
+      - isSystem
       - createdAt
       - updatedAt
       properties:
@@ -6234,6 +6821,10 @@ components:
         multiValue:
           type: boolean
           description: Whether multiple values of this classification can be assigned to a single entity
+          default: false
+        isSystem:
+          type: boolean
+          description: System classifications are required for DSG/GDPR compliance and cannot be modified or deleted
           default: false
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
@@ -6309,6 +6900,10 @@ components:
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Descriptions for the domain
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit responsible for this domain
     CreateBusinessEntityRelationshipRequest:
       type: object
       required:
@@ -6643,8 +7238,16 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
-        lead:
+        businessOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+        businessSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward responsible for data quality and definitions
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian responsible for the systems
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -6680,10 +7283,12 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code where external work is performed
-        linkedDataProcessor:
-          $ref: '#/components/schemas/DataProcessorSummaryResponse'
+        serviceProviders:
+          type: array
           nullable: true
-          description: Data processor (DPA) linked to this external unit
+          items:
+            $ref: '#/components/schemas/ServiceProviderSummaryResponse'
+          description: Service providers (DPA, bodylease, consultants, etc.) linked to this org unit
         dataAccessEntities:
           type: array
           nullable: true
@@ -6783,10 +7388,18 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
-        leadUsername:
+        businessOwnerUsername:
           type: string
           nullable: true
-          description: Username of the unit lead
+          description: Username of the business owner
+        businessStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the business steward
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the technical custodian
         parentKeys:
           type: array
           items:
@@ -6795,10 +7408,24 @@ components:
     UpdateOrgUnitLeadRequest:
       type: object
       properties:
-        leadUsername:
+        businessOwnerUsername:
           type: string
           nullable: true
-          description: Username of the new lead (null to remove)
+          description: Username of the new business owner (null to remove)
+    UpdateOrgUnitStewardRequest:
+      type: object
+      properties:
+        businessStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new business steward (null to remove)
+    UpdateOrgUnitTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateOrgUnitTypeRequest:
       type: object
       properties:
@@ -6820,12 +7447,13 @@ components:
       type: object
       required:
       - key
-      - processOwner
       - createdBy
       - names
       - descriptions
       - createdAt
       - updatedAt
+      - ownerIsExplicit
+      - containsPersonalData
       properties:
         key:
           type: string
@@ -6850,6 +7478,22 @@ components:
           description: Technical and organisational security measures (TOM)
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+        ownerIsExplicit:
+          type: boolean
+          description: True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context
+        containsPersonalData:
+          type: boolean
+          description: True if any input or output entity of this process is classified as containing personal data
+        processSteward:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Business steward override (falls back to owning org unit steward)
+        technicalCustodian:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Technical custodian override (falls back to owning org unit technical custodian)
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:
@@ -6891,12 +7535,18 @@ components:
           items:
             $ref: '#/components/schemas/CrossBorderTransferEntry'
           description: List of cross-border data transfers for this process
-        dataProcessors:
+        serviceProviders:
           type: array
           nullable: true
           items:
-            $ref: '#/components/schemas/DataProcessorSummaryResponse'
-          description: Data processors linked to this process
+            $ref: '#/components/schemas/ServiceProviderSummaryResponse'
+          description: Service providers linked to this process
+        capabilities:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CapabilitySummaryResponse'
+          description: Capabilities realized by this process
         itSystems:
           type: array
           nullable: true
@@ -6943,6 +7593,13 @@ components:
           type: string
           description: Process name in default locale
           example: Order Fulfillment
+        boundedContext:
+          $ref: '#/components/schemas/BoundedContextSummaryResponse'
+          nullable: true
+        description:
+          type: string
+          nullable: true
+          description: Description in the default locale
     ProcessTreeResponse:
       type: object
       required:
@@ -7152,6 +7809,20 @@ components:
         dataOwnerUsername:
           type: string
           description: Username of the new data owner
+    UpdateBusinessEntityDataStewardRequest:
+      type: object
+      properties:
+        dataStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new data steward (null to remove)
+    UpdateBusinessEntityTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateBusinessEntityInterfacesRequest:
       type: object
       required:
@@ -7242,6 +7913,20 @@ components:
         processOwnerUsername:
           type: string
           description: Username of the new process owner
+    UpdateProcessStewardRequest:
+      type: object
+      properties:
+        processStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the new process steward (null to remove)
+    UpdateProcessTechnicalCustodianRequest:
+      type: object
+      properties:
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the new technical custodian (null to remove)
     UpdateProcessLegalBasisRequest:
       type: object
       properties:
@@ -7503,33 +8188,56 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CrossBorderTransferEntry'
-    DataProcessorSummaryResponse:
+    UpdateStorageLocationsRequest:
+      type: object
+      required:
+      - locations
+      properties:
+        locations:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where data is stored
+    ServiceProviderType:
+      type: string
+      enum:
+        - DATA_PROCESSOR
+        - BODYLEASE
+        - MANAGED_SERVICE
+        - CONSULTANT
+        - OTHER
+      description: Type of service provider
+    ServiceProviderSummaryResponse:
       type: object
       required:
       - key
       - names
+      - serviceProviderType
       - processorAgreementInPlace
       - subProcessorsApproved
       properties:
         key:
           type: string
-          description: Data processor key
+          description: Service provider key
           example: aws-eu-west-1
         names:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processorAgreementInPlace:
           type: boolean
           description: Whether a data processing agreement is in place
         subProcessorsApproved:
           type: boolean
           description: Whether sub-processors have been approved
-    DataProcessorResponse:
+    ServiceProviderResponse:
       type: object
       required:
       - key
       - names
+      - serviceProviderType
       - processingCountries
       - processorAgreementInPlace
       - subProcessorsApproved
@@ -7537,12 +8245,14 @@ components:
       properties:
         key:
           type: string
-          description: Data processor key
+          description: Service provider key
           example: aws-eu-west-1
         names:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7554,18 +8264,12 @@ components:
         subProcessorsApproved:
           type: boolean
           description: Whether sub-processors have been approved
-        linkedBusinessEntities:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
-          description: Business entities linked to this processor
         linkedProcesses:
           type: array
           nullable: true
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
-          description: Processes linked to this processor
+          description: Processes linked to this service provider
         createdAt:
           type: string
           format: date-time
@@ -7575,7 +8279,7 @@ components:
           format: date-time
           nullable: true
           description: Last update timestamp
-    CreateDataProcessorRequest:
+    CreateServiceProviderRequest:
       type: object
       required:
       - names
@@ -7584,6 +8288,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7593,7 +8299,7 @@ components:
           type: boolean
         subProcessorsApproved:
           type: boolean
-    UpdateDataProcessorRequest:
+    UpdateServiceProviderRequest:
       type: object
       required:
       - names
@@ -7602,6 +8308,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        serviceProviderType:
+          $ref: '#/components/schemas/ServiceProviderType'
         processingCountries:
           type: array
           items:
@@ -7611,25 +8319,17 @@ components:
           type: boolean
         subProcessorsApproved:
           type: boolean
-    UpdateLinkedDataProcessorsRequest:
+    UpdateLinkedServiceProvidersRequest:
       type: object
       required:
-      - dataProcessorKeys
+      - serviceProviderKeys
       properties:
-        dataProcessorKeys:
+        serviceProviderKeys:
           type: array
           items:
             type: string
-          description: Keys of data processors to link
-    UpdateDataProcessorEntityLinksRequest:
-      type: object
-      properties:
-        businessEntityKeys:
-          type: array
-          items:
-            type: string
-          description: Keys of business entities to link
-    UpdateDataProcessorProcessLinksRequest:
+          description: Keys of service providers to link
+    UpdateServiceProviderProcessLinksRequest:
       type: object
       properties:
         processKeys:
@@ -7713,6 +8413,8 @@ components:
         measures:
           type: string
           nullable: true
+        initialRisk:
+          $ref: '#/components/schemas/ResidualRisk'
         residualRisk:
           $ref: '#/components/schemas/ResidualRisk'
         fdpicConsultationRequired:
@@ -7752,6 +8454,8 @@ components:
     UpdateDpiaResidualRiskRequest:
       type: object
       properties:
+        initialRisk:
+          $ref: '#/components/schemas/ResidualRisk'
         residualRisk:
           $ref: '#/components/schemas/ResidualRisk'
         fdpicConsultationRequired:
@@ -8026,6 +8730,13 @@ components:
         visionStatement:
           type: string
           nullable: true
+    UpdateDomainOwningUnitRequest:
+      type: object
+      properties:
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the owning organisational unit (null to remove)
     TranslationLinkResponse:
       type: object
       required:
@@ -8118,6 +8829,7 @@ components:
       - publishingBoundedContext
       - consumers
       - processLinks
+      - entityLinks
       - createdAt
       - updatedAt
       properties:
@@ -8144,6 +8856,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DomainEventProcessLinkResponse'
+        entityLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainEventEntityLinkResponse'
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
@@ -8189,6 +8905,35 @@ components:
           type: string
         linkType:
           $ref: '#/components/schemas/DomainEventLinkType'
+    DomainEventEntityLinkType:
+      type: string
+      enum:
+      - PRODUCES
+      - CONSUMES
+    DomainEventEntityLinkResponse:
+      type: object
+      required:
+      - id
+      - entity
+      - linkType
+      properties:
+        id:
+          type: integer
+          format: int64
+        entity:
+          $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        linkType:
+          $ref: '#/components/schemas/DomainEventEntityLinkType'
+    AddDomainEventEntityLinkRequest:
+      type: object
+      required:
+      - entityKey
+      - linkType
+      properties:
+        entityKey:
+          type: string
+        linkType:
+          $ref: '#/components/schemas/DomainEventEntityLinkType'
     ItSystemSummaryResponse:
       type: object
       required:
@@ -8229,6 +8974,10 @@ components:
           type: string
           nullable: true
           description: URL for documentation or system login
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Organisational unit that owns this IT system
         linkedProcesses:
           type: array
           nullable: true
@@ -8262,6 +9011,9 @@ components:
         systemUrl:
           type: string
           nullable: true
+        owningUnitKey:
+          type: string
+          nullable: true
     UpdateItSystemRequest:
       type: object
       required:
@@ -8280,6 +9032,9 @@ components:
           type: string
           nullable: true
         systemUrl:
+          type: string
+          nullable: true
+        owningUnitKey:
           type: string
           nullable: true
     UpdateItSystemLinkedProcessesRequest:
@@ -8315,10 +9070,6 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code
-        linkedDataProcessorKey:
-          type: string
-          nullable: true
-          description: Key of the data processor (DPA) for this external unit
     UpdateOrgUnitEntityLinksRequest:
       type: object
       required:
@@ -8364,3 +9115,129 @@ components:
       - BUSINESS_DOMAIN
       - BUSINESS_PROCESS
       - ORGANISATIONAL_UNIT
+    CapabilityResponse:
+      type: object
+      required:
+      - key
+      - names
+      properties:
+        key:
+          type: string
+          description: Capability key
+          example: customer-management
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        descriptions:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        parent:
+          $ref: '#/components/schemas/CapabilitySummaryResponse'
+          nullable: true
+        children:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CapabilitySummaryResponse'
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+        linkedProcesses:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ProcessSummaryResponse'
+          description: Processes that realize this capability
+        classificationAssignments:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentResponse'
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CapabilitySummaryResponse:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+          description: Capability key
+          example: customer-management
+        name:
+          type: string
+          description: Capability name in default locale
+          example: Customer Management
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+    CreateCapabilityRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Names for the capability (at least one required)
+        descriptions:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Descriptions for the capability
+        parentCapabilityKey:
+          type: string
+          nullable: true
+          description: Key of the parent capability (for creating child capabilities)
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit that owns this capability
+    UpdateCapabilityRequest:
+      type: object
+      required:
+      - names
+      properties:
+        names:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated names for the capability
+        descriptions:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Updated descriptions for the capability
+        parentCapabilityKey:
+          type: string
+          nullable: true
+          description: Key of the parent capability (null to make top-level)
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit that owns this capability
+    UpdateCapabilityProcessLinksRequest:
+      type: object
+      required:
+      - processKeys
+      properties:
+        processKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of processes that realize this capability

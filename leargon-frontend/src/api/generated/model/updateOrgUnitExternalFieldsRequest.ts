@@ -27,9 +27,4 @@ export interface UpdateOrgUnitExternalFieldsRequest {
    * @nullable
    */
   countryOfExecution?: string | null;
-  /**
-   * Key of the data processor (DPA) for this external unit
-   * @nullable
-   */
-  linkedDataProcessorKey?: string | null;
 }

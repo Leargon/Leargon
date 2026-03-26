@@ -18,10 +18,10 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
-import type { DataProcessorSummaryResponse } from './dataProcessorSummaryResponse';
 import type { LocalizedText } from './localizedText';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
+import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface OrganisationalUnitResponse {
@@ -32,7 +32,11 @@ export interface OrganisationalUnitResponse {
    * @nullable
    */
   unitType?: string | null;
-  lead?: UserSummaryResponse;
+  businessOwner?: UserSummaryResponse;
+  /** Business steward responsible for data quality and definitions */
+  businessSteward?: UserSummaryResponse | null;
+  /** Technical custodian responsible for the systems */
+  technicalCustodian?: UserSummaryResponse | null;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];
@@ -55,8 +59,11 @@ export interface OrganisationalUnitResponse {
    * @nullable
    */
   countryOfExecution?: string | null;
-  /** Data processor (DPA) linked to this external unit */
-  linkedDataProcessor?: DataProcessorSummaryResponse | null;
+  /**
+   * Service providers (DPA, bodylease, consultants, etc.) linked to this org unit
+   * @nullable
+   */
+  serviceProviders?: ServiceProviderSummaryResponse[] | null;
   /**
    * Business entities this external unit has read access to
    * @nullable

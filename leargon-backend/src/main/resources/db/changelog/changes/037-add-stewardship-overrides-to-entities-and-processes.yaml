@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037-add-stewardship-overrides-to-entities-and-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: data_steward_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_business_entity_data_steward
+                    references: users(id)
+              - column:
+                  name: data_custodian_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_business_entity_data_custodian
+                    references: users(id)
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: process_steward_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_process_steward
+                    references: users(id)
+              - column:
+                  name: process_custodian_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_process_process_custodian
+                    references: users(id)

@@ -19,6 +19,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 import type { ResidualRisk } from './residualRisk';
 
 export interface UpdateDpiaResidualRiskRequest {
+  initialRisk?: ResidualRisk | null;
   residualRisk?: ResidualRisk | null;
   /** @nullable */
   fdpicConsultationRequired?: boolean | null;

@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 042-create-domain-event-entity-links
+      author: leargon
+      changes:
+        - createTable:
+            tableName: domain_event_entity_links
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: event_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: link_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_entity_links
+            baseColumnNames: event_id
+            referencedTableName: domain_events
+            referencedColumnNames: id
+            constraintName: fk_deel_event
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: domain_event_entity_links
+            baseColumnNames: entity_id
+            referencedTableName: business_entities
+            referencedColumnNames: id
+            constraintName: fk_deel_entity
+            onDelete: CASCADE

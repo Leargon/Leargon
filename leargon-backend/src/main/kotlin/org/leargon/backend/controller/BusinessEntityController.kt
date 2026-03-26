@@ -22,16 +22,16 @@ import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
+import org.leargon.backend.model.UpdateBusinessEntityDataStewardRequest
 import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
-import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
-import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
+import org.leargon.backend.model.UpdateBusinessEntityTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateRetentionPeriodRequest
+import org.leargon.backend.model.UpdateStorageLocationsRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessEntityService
 import org.leargon.backend.service.ClassificationService
-import org.leargon.backend.service.DataProcessorService
 import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.UserService
 
@@ -42,7 +42,6 @@ open class BusinessEntityController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val dataProcessorService: DataProcessorService,
     private val dpiaService: DpiaService
 ) : BusinessEntityApi {
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> = businessEntityService.getAllBusinessEntitiesAsResponses()
@@ -96,6 +95,11 @@ open class BusinessEntityController(
         return businessEntityService.updateBusinessEntityParentAsResponse(key, updateBusinessEntityParentRequest.parentKey, currentUser)
     }
 
+    override fun clearBusinessEntityDataOwner(key: String): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.clearBusinessEntityDataOwner(key, currentUser)
+    }
+
     override fun updateBusinessEntityDataOwner(
         key: String,
         @Valid @Body updateBusinessEntityDataOwnerRequest: UpdateBusinessEntityDataOwnerRequest
@@ -103,7 +107,31 @@ open class BusinessEntityController(
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityDataOwnerAsResponse(
             key,
-            updateBusinessEntityDataOwnerRequest.dataOwnerUsername,
+            updateBusinessEntityDataOwnerRequest.dataOwnerUsername!!,
+            currentUser
+        )
+    }
+
+    override fun updateBusinessEntityDataSteward(
+        key: String,
+        @Valid @Body updateBusinessEntityDataStewardRequest: UpdateBusinessEntityDataStewardRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updateBusinessEntityDataSteward(
+            key,
+            updateBusinessEntityDataStewardRequest.dataStewardUsername,
+            currentUser
+        )
+    }
+
+    override fun updateBusinessEntityTechnicalCustodian(
+        key: String,
+        @Valid @Body updateBusinessEntityTechnicalCustodianRequest: UpdateBusinessEntityTechnicalCustodianRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updateBusinessEntityTechnicalCustodian(
+            key,
+            updateBusinessEntityTechnicalCustodianRequest.technicalCustodianUsername,
             currentUser
         )
     }
@@ -176,21 +204,12 @@ open class BusinessEntityController(
         return businessEntityService.updateRetentionPeriod(key, updateRetentionPeriodRequest.retentionPeriod, currentUser)
     }
 
-    override fun updateBusinessEntityCrossBorderTransfers(
+    override fun updateBusinessEntityStorageLocations(
         key: String,
-        @Valid @Body updateCrossBorderTransfersRequest: UpdateCrossBorderTransfersRequest
+        @Valid @Body updateStorageLocationsRequest: UpdateStorageLocationsRequest
     ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
-        return businessEntityService.updateCrossBorderTransfers(key, updateCrossBorderTransfersRequest.transfers, currentUser)
-    }
-
-    @Secured("ROLE_ADMIN")
-    override fun updateBusinessEntityDataProcessors(
-        key: String,
-        @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest
-    ): HttpResponse<Void> {
-        dataProcessorService.updateEntityDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
-        return HttpResponse.noContent()
+        return businessEntityService.updateStorageLocations(key, updateStorageLocationsRequest.locations, currentUser)
     }
 
     override fun getEntityDpia(key: String): DpiaResponse = dpiaService.getDpiaForEntity(key)

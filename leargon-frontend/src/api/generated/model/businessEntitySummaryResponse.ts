@@ -16,6 +16,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
+import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse';
 
 export interface BusinessEntitySummaryResponse {
   /** BusinessEntity key */
@@ -42,4 +43,10 @@ export interface BusinessEntitySummaryResponse {
    * @nullable
    */
   rootName?: string | null;
+  boundedContext?: BoundedContextSummaryResponse | null;
+  /**
+   * Description in the default locale
+   * @nullable
+   */
+  description?: string | null;
 }

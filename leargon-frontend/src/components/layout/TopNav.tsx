@@ -15,7 +15,7 @@ import {
   SelectChangeEvent,
   Divider,
 } from '@mui/material';
-import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare } from '@mui/icons-material';
+import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare, Layers } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
 import GlobalSearch from './GlobalSearch';
@@ -25,10 +25,11 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 
 const PERSPECTIVES: { id: Perspective; labelKey: string; icon: React.ReactNode; firstPath: string }[] = [
-  { id: 'gdpr', labelKey: 'DSG / GDPR', icon: <Gavel fontSize="small" />, firstPath: '/compliance' },
+  { id: 'bcm', labelKey: 'Capability Model', icon: <Layers fontSize="small" />, firstPath: '/capabilities' },
   { id: 'governance', labelKey: 'Governance', icon: <AccountTree fontSize="small" />, firstPath: '/entities' },
   { id: 'ddd', labelKey: 'Domain-Driven Design', icon: <Hub fontSize="small" />, firstPath: '/domains' },
   { id: 'orgdev', labelKey: 'Organisational Development', icon: <CorporateFare fontSize="small" />, firstPath: '/organisation' },
+  { id: 'gdpr', labelKey: 'DSG / GDPR', icon: <Gavel fontSize="small" />, firstPath: '/compliance' },
 ];
 
 const TopNav: React.FC = () => {

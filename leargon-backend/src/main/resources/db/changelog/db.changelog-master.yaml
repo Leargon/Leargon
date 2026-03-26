@@ -65,3 +65,29 @@ databaseChangeLog:
       file: db/changelog/changes/032-create-business-data-quality-rule-tables.yaml
   - include:
       file: db/changelog/changes/034-add-owning-team-to-bounded-contexts.yaml
+  - include:
+      file: db/changelog/changes/035-add-stewardship-roles-to-org-units.yaml
+  - include:
+      file: db/changelog/changes/036-add-owning-unit-to-business-domains.yaml
+  - include:
+      file: db/changelog/changes/037-add-stewardship-overrides-to-entities-and-processes.yaml
+  - include:
+      file: db/changelog/changes/037a-widen-classification-value-key.yaml
+  - include:
+      file: db/changelog/changes/038-add-system-classifications.yaml
+  - include:
+      file: db/changelog/changes/039-phase1-model-corrections.yaml
+  - include:
+      file: db/changelog/changes/040-rename-data-processor-to-service-provider.yaml
+  - include:
+      file: db/changelog/changes/041-create-capability-tables.yaml
+  - include:
+      file: db/changelog/changes/042-create-domain-event-entity-links.yaml
+  - include:
+      file: db/changelog/changes/043-add-owning-unit-to-it-systems.yaml
+  - include:
+      file: db/changelog/changes/044-add-initial-risk-to-dpia.yaml
+  - include:
+      file: db/changelog/changes/045-clear-incompatible-storage-locations.yaml
+  - include:
+      file: db/changelog/changes/046-make-owner-nullable.yaml

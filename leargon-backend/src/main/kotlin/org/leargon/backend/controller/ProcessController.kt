@@ -24,7 +24,7 @@ import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessDiagramRequest
 import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
-import org.leargon.backend.model.UpdateLinkedDataProcessorsRequest
+import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateProcessCodeRequest
 import org.leargon.backend.model.UpdateProcessItSystemsRequest
@@ -33,14 +33,16 @@ import org.leargon.backend.model.UpdateProcessOwnerRequest
 import org.leargon.backend.model.UpdateProcessParentRequest
 import org.leargon.backend.model.UpdateProcessPurposeRequest
 import org.leargon.backend.model.UpdateProcessSecurityMeasuresRequest
+import org.leargon.backend.model.UpdateProcessStewardRequest
+import org.leargon.backend.model.UpdateProcessTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
-import org.leargon.backend.service.DataProcessorService
 import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.ItSystemService
 import org.leargon.backend.service.ProcessDiagramService
 import org.leargon.backend.service.ProcessService
+import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -52,7 +54,7 @@ open class ProcessController(
     private val userService: UserService,
     private val securityService: SecurityService,
     private val processMapper: ProcessMapper,
-    private val dataProcessorService: DataProcessorService,
+    private val serviceProviderService: ServiceProviderService,
     private val dpiaService: DpiaService,
     private val itSystemService: ItSystemService
 ) : ProcessApi {
@@ -125,12 +127,33 @@ open class ProcessController(
         return processService.updateSecurityMeasures(key, request.securityMeasures, currentUser)
     }
 
+    override fun clearProcessOwner(key: String): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.clearProcessOwner(key, currentUser)
+    }
+
     override fun updateProcessOwner(
         key: String,
         @Valid @Body request: UpdateProcessOwnerRequest
     ): ProcessResponse {
         val currentUser = getCurrentUser()
-        return processService.updateProcessOwner(key, request.processOwnerUsername, currentUser)
+        return processService.updateProcessOwner(key, request.processOwnerUsername!!, currentUser)
+    }
+
+    override fun updateProcessSteward(
+        key: String,
+        @Valid @Body request: UpdateProcessStewardRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessSteward(key, request.processStewardUsername, currentUser)
+    }
+
+    override fun updateProcessTechnicalCustodian(
+        key: String,
+        @Valid @Body request: UpdateProcessTechnicalCustodianRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessTechnicalCustodian(key, request.technicalCustodianUsername, currentUser)
     }
 
     override fun updateProcessCode(
@@ -222,11 +245,11 @@ open class ProcessController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun updateProcessDataProcessors(
+    override fun updateProcessServiceProviders(
         key: String,
-        @Valid @Body updateLinkedDataProcessorsRequest: UpdateLinkedDataProcessorsRequest
+        @Valid @Body updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest
     ): HttpResponse<Void> {
-        dataProcessorService.updateProcessDataProcessors(key, updateLinkedDataProcessorsRequest.dataProcessorKeys)
+        serviceProviderService.updateProcessServiceProviders(key, updateLinkedServiceProvidersRequest.serviceProviderKeys)
         return HttpResponse.noContent()
     }
 

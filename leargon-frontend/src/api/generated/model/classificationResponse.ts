@@ -27,6 +27,8 @@ export interface ClassificationResponse {
   assignableTo: ClassificationAssignableTo;
   /** Whether multiple values of this classification can be assigned to a single entity */
   multiValue: boolean;
+  /** System classifications are required for DSG/GDPR compliance and cannot be modified or deleted */
+  isSystem: boolean;
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];

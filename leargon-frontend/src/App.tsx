@@ -17,7 +17,7 @@ import OntologyPage from './pages/OntologyPage';
 import ProcessesPage from './pages/ProcessesPage';
 import OrganisationPage from './pages/OrganisationPage';
 import SettingsPage from './pages/SettingsPage';
-import DataProcessorsPage from './pages/DataProcessorsPage';
+import ServiceProvidersPage from './pages/ServiceProvidersPage';
 import ProcessingRegisterPage from './pages/ProcessingRegisterPage';
 import DpiaListPage from './pages/DpiaListPage';
 import ProfilePage from './pages/ProfilePage';
@@ -32,6 +32,9 @@ import ContextMapPage from './pages/ContextMapPage';
 import EventFlowPage from './pages/EventFlowPage';
 import ItSystemsPage from './pages/ItSystemsPage';
 import UbiquitousLanguagePage from './pages/UbiquitousLanguagePage';
+import CapabilitiesPage from './pages/CapabilitiesPage';
+import CapabilityMapPage from './pages/CapabilityMapPage';
+import StrategicMapPage from './pages/StrategicMapPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,7 +58,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Navigate to="/entities" replace /> },
+      { index: true, element: <Navigate to="/capabilities" replace /> },
       { path: 'domains', element: <DomainsPage /> },
       { path: 'domains/:key', element: <DomainsPage /> },
       { path: 'entities', element: <OntologyPage /> },
@@ -68,8 +71,8 @@ const router = createBrowserRouter([
       { path: 'settings/locales', element: <SettingsPage /> },
       { path: 'settings/classifications', element: <SettingsPage /> },
       { path: 'settings/field-configurations', element: <SettingsPage /> },
-      { path: 'data-processors', element: <DataProcessorsPage /> },
-      { path: 'data-processors/:key', element: <DataProcessorsPage /> },
+      { path: 'service-providers', element: <ServiceProvidersPage /> },
+      { path: 'service-providers/:key', element: <ServiceProvidersPage /> },
       { path: 'compliance', element: <ProcessingRegisterPage /> },
       { path: 'dpia', element: <DpiaListPage /> },
       { path: 'team-insights', element: <TeamInsightsPage /> },
@@ -81,6 +84,10 @@ const router = createBrowserRouter([
       { path: 'it-systems', element: <ItSystemsPage /> },
       { path: 'it-systems/:key', element: <ItSystemsPage /> },
       { path: 'ubiquitous-language', element: <UbiquitousLanguagePage /> },
+      { path: 'capabilities', element: <CapabilitiesPage /> },
+      { path: 'capabilities/:key', element: <CapabilitiesPage /> },
+      { path: 'diagrams/capability-map', element: <CapabilityMapPage /> },
+      { path: 'diagrams/strategic-map', element: <StrategicMapPage /> },
       { path: 'profile', element: <ProfilePage /> },
     ],
   },

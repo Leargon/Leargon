@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 036-add-owning-unit-to-business-domains
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: business_domains
+            columns:
+              - column:
+                  name: owning_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_business_domain_owning_unit
+                    references: organisational_units(id)

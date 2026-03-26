@@ -318,6 +318,74 @@ open class ProcessService(
     }
 
     @Transactional
+    open fun clearProcessOwner(
+        key: String,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        if (process.boundedContext?.owningUnit?.businessOwner == null) {
+            throw IllegalArgumentException(
+                "Cannot clear explicit process owner: no computed owner available from the bounded context's owning unit"
+            )
+        }
+        process.processOwner = null
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "OWNER_CHANGE", "Cleared explicit process owner (reverted to computed)")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
+    open fun updateProcessSteward(
+        key: String,
+        stewardUsername: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.processSteward =
+            if (stewardUsername != null) {
+                userRepository
+                    .findByUsername(stewardUsername)
+                    .orElseThrow { ResourceNotFoundException("Process steward user not found: $stewardUsername") }
+            } else {
+                null
+            }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated process steward to ${stewardUsername ?: "none"}")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
+    open fun updateProcessTechnicalCustodian(
+        key: String,
+        custodianUsername: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        process.technicalCustodian =
+            if (custodianUsername != null) {
+                userRepository
+                    .findByUsername(custodianUsername)
+                    .orElseThrow { ResourceNotFoundException("Technical custodian user not found: $custodianUsername") }
+            } else {
+                null
+            }
+
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated technical custodian to ${custodianUsername ?: "none"}")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Transactional
     open fun updateProcessCode(
         key: String,
         code: String?,
@@ -354,7 +422,7 @@ open class ProcessService(
         process.crossBorderTransfers =
             transfers
                 .map {
-                    org.leargon.backend.mapper.DataProcessorMapper
+                    org.leargon.backend.mapper.CrossBorderTransferMapper
                         .fromCrossBorderTransferEntry(it)
                 }.toMutableList()
         process = processRepository.update(process)
@@ -666,7 +734,7 @@ open class ProcessService(
                 "code" to process.code,
                 "processType" to process.processType,
                 "legalBasis" to process.legalBasis,
-                "processOwnerUsername" to process.processOwner!!.username,
+                "processOwnerUsername" to process.processOwner?.username,
                 "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
                 "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
             )
@@ -697,7 +765,8 @@ open class ProcessService(
             process: Process,
             currentUser: User
         ) {
-            val isOwner = process.processOwner!!.id == currentUser.id
+            val effectiveOwner = process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner
+            val isOwner = effectiveOwner?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the process owner or an admin can edit this process")

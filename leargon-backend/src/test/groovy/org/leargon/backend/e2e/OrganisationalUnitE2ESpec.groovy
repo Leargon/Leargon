@@ -197,7 +197,7 @@ class OrganisationalUnitE2ESpec extends AbstractE2ESpec {
         response.body().unitType == "Innovation Lab"
     }
 
-    def "should update org unit lead"() {
+    def "should update org unit business owner"() {
         given:
         def token = signupAdmin("ou-uplead@example.com", "ouuplead")
         signup("ou-newlead@example.com", "ounewlead")
@@ -205,12 +205,12 @@ class OrganisationalUnitE2ESpec extends AbstractE2ESpec {
 
         when:
         def response = client.toBlocking().exchange(
-                HttpRequest.PUT("/organisational-units/${unit.key}/lead", [leadUsername: "ounewlead"])
+                HttpRequest.PUT("/organisational-units/${unit.key}/lead", [businessOwnerUsername: "ounewlead"])
                         .bearerAuth(token), Map
         )
 
         then:
-        response.body().lead.username == "ounewlead"
+        response.body().businessOwner.username == "ounewlead"
     }
 
     def "should update org unit parents"() {
@@ -263,11 +263,11 @@ class OrganisationalUnitE2ESpec extends AbstractE2ESpec {
         ex.status == HttpStatus.FORBIDDEN
     }
 
-    def "should allow lead to update their unit"() {
+    def "should allow business owner to update their unit"() {
         given:
         def adminToken = signupAdmin("ou-leadup@example.com", "ouleadup")
         def leadToken = signup("ou-lead@example.com", "oulead")
-        def unit = createOrgUnit(adminToken, "Lead Editable Unit", [leadUsername: "oulead"])
+        def unit = createOrgUnit(adminToken, "Lead Editable Unit", [businessOwnerUsername: "oulead"])
 
         when:
         def response = client.toBlocking().exchange(
@@ -279,11 +279,11 @@ class OrganisationalUnitE2ESpec extends AbstractE2ESpec {
         response.body().unitType == "Lead Updated Type"
     }
 
-    def "should allow lead to create child unit under their unit"() {
+    def "should allow business owner to create child unit under their unit"() {
         given:
         def adminToken = signupAdmin("ou-leadcr@example.com", "ouleadcr")
         def leadToken = signup("ou-leadchild@example.com", "ouleadchild")
-        def parent = createOrgUnit(adminToken, "Lead Parent Unit", [leadUsername: "ouleadchild"])
+        def parent = createOrgUnit(adminToken, "Lead Parent Unit", [businessOwnerUsername: "ouleadchild"])
 
         when:
         def response = client.toBlocking().exchange(
@@ -300,11 +300,11 @@ class OrganisationalUnitE2ESpec extends AbstractE2ESpec {
         response.body().parents[0].key == parent.key
     }
 
-    def "should reject lead creating root unit"() {
+    def "should reject business owner creating root unit"() {
         given:
         def adminToken = signupAdmin("ou-leadrt@example.com", "ouleadrt")
         def leadToken = signup("ou-leadroot@example.com", "ouleadroot")
-        createOrgUnit(adminToken, "Some Unit", [leadUsername: "ouleadroot"])
+        createOrgUnit(adminToken, "Some Unit", [businessOwnerUsername: "ouleadroot"])
 
         when: "lead tries to create a root unit (no parentKeys)"
         client.toBlocking().exchange(

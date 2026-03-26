@@ -18,6 +18,7 @@ import org.leargon.backend.model.UpdateClassificationRequest
 import org.leargon.backend.model.UpdateClassificationValueRequest
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.CapabilityRepository
 import org.leargon.backend.repository.ClassificationRepository
 import org.leargon.backend.repository.ClassificationValueRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
@@ -32,6 +33,7 @@ open class ClassificationService(
     private val businessDomainRepository: BusinessDomainRepository,
     private val processRepository: ProcessRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
+    private val capabilityRepository: CapabilityRepository,
     private val businessEntityService: BusinessEntityService,
     private val localeService: LocaleService,
     private val classificationMapper: ClassificationMapper
@@ -96,6 +98,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(key)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification cannot be modified")
 
         if (!request.names.isNullOrEmpty()) {
             validateTranslations(request.names)
@@ -128,6 +131,7 @@ open class ClassificationService(
     ) {
         checkAdminRole(currentUser)
         val classification = getClassificationByKey(key)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification cannot be deleted")
 
         // Remove assignments from entities
         businessEntityRepository.findAll().forEach { entity ->
@@ -161,6 +165,15 @@ open class ClassificationService(
             }
         }
 
+        // Remove assignments from capabilities
+        capabilityRepository.findAll().forEach { capability ->
+            if (capability.classificationAssignments.any { it.classificationKey == key }) {
+                capability.classificationAssignments =
+                    capability.classificationAssignments.filter { it.classificationKey != key }.toMutableList()
+                capabilityRepository.update(capability)
+            }
+        }
+
         classificationRepository.delete(classification)
     }
 
@@ -172,6 +185,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be modified")
 
         if (classification.values.any { it.key == request.key }) {
             throw IllegalArgumentException("Value key '${request.key}' already exists in this classification")
@@ -204,6 +218,7 @@ open class ClassificationService(
     ): ClassificationResponse {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be modified")
 
         val value =
             classification.values.find { it.key == valueKey }
@@ -233,6 +248,7 @@ open class ClassificationService(
     ) {
         checkAdminRole(currentUser)
         var classification = getClassificationByKey(classificationKey)
+        if (classification.isSystem) throw ForbiddenOperationException("System classification values cannot be deleted")
 
         val value =
             classification.values.find { it.key == valueKey }
@@ -283,6 +299,18 @@ open class ClassificationService(
                             !(it.classificationKey == classificationKey && it.valueKey == valueKey)
                         }.toMutableList()
                 organisationalUnitRepository.update(unit)
+            }
+        }
+
+        // Remove assignments from capabilities
+        capabilityRepository.findAll().forEach { capability ->
+            if (capability.classificationAssignments.any { it.classificationKey == classificationKey && it.valueKey == valueKey }) {
+                capability.classificationAssignments =
+                    capability.classificationAssignments
+                        .filter {
+                            !(it.classificationKey == classificationKey && it.valueKey == valueKey)
+                        }.toMutableList()
+                capabilityRepository.update(capability)
             }
         }
 
@@ -385,10 +413,10 @@ open class ClassificationService(
                 .findByKey(orgUnitKey)
                 .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
 
-        val isLead = unit.lead?.id == currentUser.id
+        val isOwner = unit.businessOwner?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isLead && !isAdmin) {
-            throw ForbiddenOperationException("Only the lead or an admin can assign classifications")
+        if (!isOwner && !isAdmin) {
+            throw ForbiddenOperationException("Only the business owner or an admin can assign classifications")
         }
 
         validateAssignments(assignments, "ORGANISATIONAL_UNIT")

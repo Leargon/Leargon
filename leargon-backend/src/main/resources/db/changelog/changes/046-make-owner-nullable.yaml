@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 046-make-owner-nullable
+      author: leargon
+      comment: >
+        Make data_owner_id on business_entities and process_owner_id on processes nullable.
+        Owners can now be computed from the owning org unit of the bounded context instead of
+        always requiring an explicit assignment. Existing rows keep their current owner (no data loss).
+      changes:
+        - sql:
+            sql: "ALTER TABLE business_entities MODIFY COLUMN data_owner_id BIGINT NULL"
+        - sql:
+            sql: "ALTER TABLE processes MODIFY COLUMN process_owner_id BIGINT NULL"

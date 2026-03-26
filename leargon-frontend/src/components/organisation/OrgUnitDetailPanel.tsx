@@ -44,6 +44,8 @@ import {
   useUpdateOrganisationalUnitDescriptions,
   useUpdateOrganisationalUnitType,
   useUpdateOrganisationalUnitLead,
+  useUpdateOrganisationalUnitSteward,
+  useUpdateOrganisationalUnitTechnicalCustodian,
   useUpdateOrganisationalUnitParents,
   useDeleteOrganisationalUnit,
   useGetAllOrganisationalUnits,
@@ -53,16 +55,19 @@ import {
   useUpdateOrgUnitDataManipulationEntities,
   useGetOwnedBoundedContextsByOrgUnit,
   getGetOwnedBoundedContextsByOrgUnitQueryKey,
+  useUpdateOrgUnitServiceProviders,
 } from '../../api/generated/organisational-unit/organisational-unit';
 import { useUpdateBoundedContextOwningTeam } from '../../api/generated/bounded-context/bounded-context';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
-import { useGetAllDataProcessors } from '../../api/generated/data-processor/data-processor';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
@@ -73,7 +78,7 @@ import type {
   UserResponse,
   ClassificationAssignmentRequest,
   ClassificationResponse,
-  DataProcessorResponse,
+  ServiceProviderResponse,
   BusinessEntityResponse,
   BoundedContextSummaryResponse,
   BusinessDomainResponse,
@@ -98,11 +103,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
+  const sections = ORG_UNIT_SECTIONS_BY_PERSPECTIVE[perspective];
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
-  const isLeadOrAdmin = isAdmin || (user?.username === unit?.lead?.username);
+  const isLeadOrAdmin = isAdmin || (user?.username === unit?.businessOwner?.username);
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
@@ -111,8 +118,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const users = (usersResponse?.data as UserResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'ORGANISATIONAL_UNIT' });
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
-  const { data: dataProcessorsResponse } = useGetAllDataProcessors();
-  const allDataProcessors = (dataProcessorsResponse?.data as DataProcessorResponse[] | undefined) || [];
+  const { data: serviceProvidersResponse } = useGetAllServiceProviders();
+  const allServiceProviders = (serviceProvidersResponse?.data as ServiceProviderResponse[] | undefined) || [];
+  const updateOrgUnitServiceProviders = useUpdateOrgUnitServiceProviders();
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: ownedBcsResponse } = useGetOwnedBoundedContextsByOrgUnit(unitKey);
@@ -157,6 +165,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const updateDescriptions = useUpdateOrganisationalUnitDescriptions();
   const updateType = useUpdateOrganisationalUnitType();
   const updateLead = useUpdateOrganisationalUnitLead();
+  const updateSteward = useUpdateOrganisationalUnitSteward();
+  const updateTechnicalCustodian = useUpdateOrganisationalUnitTechnicalCustodian();
   const updateParents = useUpdateOrganisationalUnitParents();
   const assignClassifications = useAssignClassificationsToOrgUnit();
   const deleteUnit = useDeleteOrganisationalUnit();
@@ -208,10 +218,26 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     },
   });
 
-  // Inline edit for lead
+  // Inline edit for lead (businessOwner)
   const leadEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
-      await updateLead.mutateAsync({ key: unitKey, data: { leadUsername: val } });
+      await updateLead.mutateAsync({ key: unitKey, data: { businessOwnerUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for business steward
+  const stewardEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateSteward.mutateAsync({ key: unitKey, data: { businessStewardUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for technical custodian
+  const technicalCustodianEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTechnicalCustodian.mutateAsync({ key: unitKey, data: { technicalCustodianUsername: val } });
       invalidate();
     },
   });
@@ -237,7 +263,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     isExternal: boolean;
     externalCompanyName: string;
     countryOfExecution: string;
-    linkedDataProcessorKey: string;
   }>({
     onSave: async (val) => {
       await updateExternalFields.mutateAsync({
@@ -246,9 +271,16 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           isExternal: val.isExternal,
           externalCompanyName: val.externalCompanyName || null,
           countryOfExecution: val.countryOfExecution || null,
-          linkedDataProcessorKey: val.linkedDataProcessorKey || null,
         },
       });
+      invalidate();
+    },
+  });
+
+  // Inline edit for service providers
+  const serviceProvidersEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateOrgUnitServiceProviders.mutateAsync({ key: unitKey, data: { serviceProviderKeys: keys } });
       invalidate();
     },
   });
@@ -274,6 +306,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     namesEdit.cancel();
     typeEdit.cancel();
     leadEdit.cancel();
+    stewardEdit.cancel();
+    technicalCustodianEdit.cancel();
     parentsEdit.cancel();
     classEdit.cancel();
     externalFieldsEdit.cancel();
@@ -456,18 +490,18 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </Box>
       )}
 
-      <Divider sx={{ my: 2 }} />
+      {sections.stewardship && <Divider sx={{ my: 2 }} />}
 
-      {/* Lead */}
+      {sections.stewardship && <>{/* Business Owner */}
       <SectionHeader
-        title="Lead"
-        canEdit={isLeadOrAdmin}
+        title="Business Owner"
+        canEdit={isAdmin}
         isEditing={leadEdit.isEditing}
-        onEdit={() => leadEdit.startEdit(unit.lead?.username || null)}
+        onEdit={() => leadEdit.startEdit(unit.businessOwner?.username || null)}
         onSave={leadEdit.save}
         onCancel={leadEdit.cancel}
         isSaving={leadEdit.isSaving}
-        isMandatory={isMandatory('lead')}
+        isMandatory={isMandatory('businessOwner')}
       />
       <Box sx={{ mb: 2 }}>
         {leadEdit.isEditing ? (
@@ -478,7 +512,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               value={users.find((u) => u.username === leadEdit.editValue) || null}
               onChange={(_, newVal) => leadEdit.setEditValue(newVal?.username || null)}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for lead..." sx={{ width: 350 }} />
+                <TextField {...params} size="small" placeholder="Search for business owner..." sx={{ width: 350 }} />
               )}
               isOptionEqualToValue={(option, value) => option.username === value.username}
               size="small"
@@ -487,18 +521,104 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </Box>
         ) : (
           <Typography variant="body2">
-            {unit.lead ? (
+            {unit.businessOwner ? (
               <Chip
-                label={`${unit.lead.firstName} ${unit.lead.lastName}`}
+                label={`${unit.businessOwner.firstName} ${unit.businessOwner.lastName}`}
                 size="small"
               />
             ) : (
-              <span style={{ color: '#888' }}>No lead assigned</span>
+              <span style={{ color: '#888' }}>No business owner assigned</span>
             )}
           </Typography>
         )}
       </Box>
 
+      <Divider sx={{ my: 2 }} />
+
+      {/* Business Steward */}
+      <SectionHeader
+        title="Business Steward"
+        canEdit={isAdmin}
+        isEditing={stewardEdit.isEditing}
+        onEdit={() => stewardEdit.startEdit(unit.businessSteward?.username || null)}
+        onSave={stewardEdit.save}
+        onCancel={stewardEdit.cancel}
+        isSaving={stewardEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {stewardEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.username})`}
+              value={users.find((u) => u.username === stewardEdit.editValue) || null}
+              onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for business steward..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.username === value.username}
+              size="small"
+            />
+            {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Typography variant="body2">
+            {unit.businessSteward ? (
+              <Chip
+                label={`${unit.businessSteward.firstName} ${unit.businessSteward.lastName}`}
+                size="small"
+              />
+            ) : (
+              <span style={{ color: '#888' }}>No business steward assigned</span>
+            )}
+          </Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Technical Custodian */}
+      <SectionHeader
+        title="Technical Custodian"
+        canEdit={isAdmin}
+        isEditing={technicalCustodianEdit.isEditing}
+        onEdit={() => technicalCustodianEdit.startEdit(unit.technicalCustodian?.username || null)}
+        onSave={technicalCustodianEdit.save}
+        onCancel={technicalCustodianEdit.cancel}
+        isSaving={technicalCustodianEdit.isSaving}
+      />
+      <Box sx={{ mb: 2 }}>
+        {technicalCustodianEdit.isEditing ? (
+          <Box>
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.username})`}
+              value={users.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+              onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+              renderInput={(params) => (
+                <TextField {...params} size="small" placeholder="Search for technical custodian..." sx={{ width: 350 }} />
+              )}
+              isOptionEqualToValue={(option, value) => option.username === value.username}
+              size="small"
+            />
+            {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+          </Box>
+        ) : (
+          <Typography variant="body2">
+            {unit.technicalCustodian ? (
+              <Chip
+                label={`${unit.technicalCustodian.firstName} ${unit.technicalCustodian.lastName}`}
+                size="small"
+              />
+            ) : (
+              <span style={{ color: '#888' }}>No technical custodian assigned</span>
+            )}
+          </Typography>
+        )}
+      </Box>
+      </>}
+
+      {sections.boundedContexts && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Bounded Contexts */}
@@ -544,6 +664,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <Typography variant="body2" color="text.secondary">No bounded contexts owned</Typography>
         )}
       </Box>
+      </>)}
 
       <Divider sx={{ my: 2 }} />
 
@@ -636,7 +757,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       )}
 
       {/* External Party Details */}
-      {(isAdmin || unit.isExternal) && (
+      {sections.externalFields && (isAdmin || unit.isExternal) && (
         <>
           <SectionHeader
             title="External Party Details"
@@ -646,7 +767,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               isExternal: unit.isExternal ?? false,
               externalCompanyName: unit.externalCompanyName ?? '',
               countryOfExecution: unit.countryOfExecution ?? '',
-              linkedDataProcessorKey: unit.linkedDataProcessor?.key ?? '',
             })}
             onSave={externalFieldsEdit.save}
             onCancel={externalFieldsEdit.cancel}
@@ -679,14 +799,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, countryOfExecution: val?.code ?? '' })}
                       renderInput={(params) => <TextField {...params} size="small" label="Country of Execution" sx={{ width: 300 }} />}
                     />
-                    <Autocomplete
-                      options={allDataProcessors}
-                      getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-                      value={allDataProcessors.find((dp) => dp.key === externalFieldsEdit.editValue!.linkedDataProcessorKey) || null}
-                      onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, linkedDataProcessorKey: val?.key ?? '' })}
-                      renderInput={(params) => <TextField {...params} size="small" label="Linked Data Processor (DPA)" sx={{ width: 300 }} />}
-                      isOptionEqualToValue={(o, v) => o.key === v.key}
-                    />
                   </>
                 )}
                 {externalFieldsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{externalFieldsEdit.error}</Alert>}
@@ -710,14 +822,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                           ? `${COUNTRY_NAMES[unit.countryOfExecution] ?? unit.countryOfExecution} (${unit.countryOfExecution})`
                           : '—'}
                       </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 180 }}>Linked Data Processor:</Typography>
-                      {unit.linkedDataProcessor ? (
-                        <Chip label={getLocalizedText(unit.linkedDataProcessor.names ?? [], unit.linkedDataProcessor.key)} size="small" variant="outlined" />
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">Not linked</Typography>
-                      )}
                     </Box>
                   </>
                 )}
@@ -811,7 +915,50 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </>
       )}
 
+      {/* Service Providers */}
+      {sections.serviceProviders && (<>
+        <SectionHeader
+          title="Service Providers"
+          canEdit={isAdmin}
+          isEditing={serviceProvidersEdit.isEditing}
+          onEdit={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))}
+          onSave={serviceProvidersEdit.save}
+          onCancel={serviceProvidersEdit.cancel}
+          isSaving={serviceProvidersEdit.isSaving}
+        />
+        <Box sx={{ mb: 2 }}>
+          {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+            <Box>
+              <Autocomplete
+                multiple
+                options={allServiceProviders}
+                getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+                onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+                renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+                renderTags={(val, getTagProps) =>
+                  val.map((option, index) => (
+                    <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                  ))
+                }
+              />
+              {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+            </Box>
+          ) : (unit.serviceProviders ?? []).length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {(unit.serviceProviders ?? []).map((sp) => (
+                <Chip key={sp.key} label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
+          )}
+        </Box>
+        <Divider sx={{ my: 2 }} />
+      </>)}
+
       {/* Classifications */}
+      {sections.classifications && (<>
       <SectionHeader title="Classifications" canEdit={isLeadOrAdmin} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
@@ -905,6 +1052,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </Box>
       )}
+      </>)}
 
       <Divider sx={{ my: 2 }} />
 

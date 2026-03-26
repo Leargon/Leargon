@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 045-clear-incompatible-storage-locations
+      author: leargon
+      comment: >
+        Migration 039 renamed cross_border_transfers → storage_locations on business_entities
+        and repurposed the column from CrossBorderTransfer objects to List<String> (storage location
+        country codes). Any data from the old format (JSON objects) is incompatible and must be
+        cleared. Safe to run on fresh installs (no rows) and on migrated installs (old data cleared).
+      changes:
+        - sql:
+            sql: "UPDATE business_entities SET storage_locations = NULL WHERE storage_locations IS NOT NULL AND JSON_TYPE(JSON_EXTRACT(storage_locations, '$[0]')) = 'OBJECT'"

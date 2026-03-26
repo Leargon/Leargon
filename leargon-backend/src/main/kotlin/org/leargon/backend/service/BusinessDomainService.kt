@@ -20,6 +20,7 @@ import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.DomainEventRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -28,6 +29,7 @@ open class BusinessDomainService(
     private val businessDomainVersionRepository: BusinessDomainVersionRepository,
     private val boundedContextRepository: BoundedContextRepository,
     private val domainEventRepository: DomainEventRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val localeService: LocaleService,
     private val businessDomainMapper: BusinessDomainMapper
 ) {
@@ -86,10 +88,20 @@ open class BusinessDomainService(
         domain.type = request.type?.value
 
         if (request.parentKey != null) {
+            if (request.type?.value == "BUSINESS") {
+                throw IllegalArgumentException("A domain of type BUSINESS must be top-level (no parent)")
+            }
             domain.parent =
                 businessDomainRepository
                     .findByKey(request.parentKey)
                     .orElseThrow { ResourceNotFoundException("Parent BusinessDomain not found") }
+        }
+
+        if (request.owningUnitKey != null) {
+            domain.owningUnit =
+                organisationalUnitRepository
+                    .findByKey(request.owningUnitKey)
+                    .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found: ${request.owningUnitKey}") }
         }
 
         domain.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -116,6 +128,9 @@ open class BusinessDomainService(
         var domain = getBusinessDomainByKey(domainKey)
 
         if (parentKey != null) {
+            if (domain.type == "BUSINESS") {
+                throw IllegalArgumentException("A domain of type BUSINESS must be top-level and cannot have a parent")
+            }
             if (parentKey == domainKey) {
                 throw IllegalArgumentException("A businessDomain cannot be its own parent")
             }
@@ -167,6 +182,9 @@ open class BusinessDomainService(
         currentUser: User
     ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
+        if (type == "BUSINESS" && domain.parent != null) {
+            throw IllegalArgumentException("A domain of type BUSINESS must be top-level (no parent)")
+        }
         domain.type = type
         domain = businessDomainRepository.update(domain)
         createBusinessDomainVersion(
@@ -175,6 +193,26 @@ open class BusinessDomainService(
             "TYPE_CHANGE",
             "Changed type to ${type ?: "none"}"
         )
+        return domain
+    }
+
+    @Transactional
+    open fun updateOwningUnit(
+        domainKey: String,
+        owningUnitKey: String?,
+        currentUser: User
+    ): BusinessDomain {
+        var domain = getBusinessDomainByKey(domainKey)
+        domain.owningUnit =
+            if (owningUnitKey != null) {
+                organisationalUnitRepository
+                    .findByKey(owningUnitKey)
+                    .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found: $owningUnitKey") }
+            } else {
+                null
+            }
+        domain = businessDomainRepository.update(domain)
+        createBusinessDomainVersion(domain, currentUser, "UPDATE", "Updated owning unit to ${owningUnitKey ?: "none"}")
         return domain
     }
 

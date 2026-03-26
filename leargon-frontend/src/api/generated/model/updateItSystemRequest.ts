@@ -26,4 +26,6 @@ export interface UpdateItSystemRequest {
   vendor?: string | null;
   /** @nullable */
   systemUrl?: string | null;
+  /** @nullable */
+  owningUnitKey?: string | null;
 }

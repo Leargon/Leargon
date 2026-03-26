@@ -17,7 +17,8 @@ import java.time.ZonedDateTime
 
 @Singleton
 open class BusinessDomainMapper(
-    private val fieldConfigurationService: FieldConfigurationService
+    private val fieldConfigurationService: FieldConfigurationService,
+    private val organisationalUnitMapper: OrganisationalUnitMapper
 ) {
     fun toBusinessDomainResponse(domain: BusinessDomain): BusinessDomainResponse {
         val fc =
@@ -52,6 +53,7 @@ open class BusinessDomainMapper(
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
             .visionStatement(domain.visionStatement)
+            .owningUnit(organisationalUnitMapper.toSummaryResponse(domain.owningUnit))
             .subdomains(toBusinessDomainSummaryResponseArray(domain.children))
             .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(domain.classificationAssignments))

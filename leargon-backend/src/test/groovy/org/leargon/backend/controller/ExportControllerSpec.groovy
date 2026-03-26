@@ -12,7 +12,7 @@ import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
-import org.leargon.backend.repository.DataProcessorRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
@@ -26,7 +26,7 @@ class ExportControllerSpec extends Specification {
     @Inject @Client("/") HttpClient client
     @Inject UserRepository userRepository
     @Inject DpiaRepository dpiaRepository
-    @Inject DataProcessorRepository dataProcessorRepository
+    @Inject ServiceProviderRepository serviceProviderRepository
     @Inject ProcessRepository processRepository
     @Inject ProcessVersionRepository processVersionRepository
     @Inject BusinessEntityRepository businessEntityRepository
@@ -42,7 +42,7 @@ class ExportControllerSpec extends Specification {
 
     def cleanup() {
         dpiaRepository.deleteAll()
-        dataProcessorRepository.deleteAll()
+        serviceProviderRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.findAll().each { processRepository.delete(it) }
         businessEntityVersionRepository.deleteAll()
@@ -79,15 +79,16 @@ class ExportControllerSpec extends Specification {
         resp.body().key
     }
 
-    private String createDataProcessor(String adminToken, String name = "Test Processor") {
+    private String createServiceProvider(String adminToken, String name = "Test Provider") {
         def req = [
             names: [[locale: "en", text: name]],
+            serviceProviderType: "DATA_PROCESSOR",
             processingCountries: ["DE"],
             processorAgreementInPlace: true,
             subProcessorsApproved: false
         ]
         def resp = client.toBlocking().exchange(
-            HttpRequest.POST("/data-processors", req).bearerAuth(adminToken), Map)
+            HttpRequest.POST("/service-providers", req).bearerAuth(adminToken), Map)
         resp.body().key
     }
 
@@ -110,7 +111,11 @@ class ExportControllerSpec extends Specification {
     def "GET /export/processing-register returns 200 with CSV content for admin"() {
         given:
         String adminToken = createAdminToken()
-        createProcess(adminToken, "Export Test Process")
+        String processKey = createProcess(adminToken, "Export Test Process")
+        // Set a legal basis so the process is included in the personal data register
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/processes/${processKey}/legal-basis",
+                [legalBasis: "CONSENT"]).bearerAuth(adminToken), Map)
 
         when:
         def response = client.toBlocking().exchange(
@@ -136,36 +141,36 @@ class ExportControllerSpec extends Specification {
         e.status == HttpStatus.UNAUTHORIZED
     }
 
-    // ─── GET /export/data-processors ─────────────────────────────────────────
+    // ─── GET /export/service-providers ───────────────────────────────────────
 
-    def "GET /export/data-processors returns 403 for non-admin"() {
+    def "GET /export/service-providers returns 403 for non-admin"() {
         given:
         def userData = createUserWithToken("user2@export.com", "user2export")
         String token = userData.token
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.GET("/export/data-processors").bearerAuth(token), String)
+            HttpRequest.GET("/export/service-providers").bearerAuth(token), String)
 
         then:
         def e = thrown(HttpClientResponseException)
         e.status == HttpStatus.FORBIDDEN
     }
 
-    def "GET /export/data-processors returns 200 with CSV content for admin"() {
+    def "GET /export/service-providers returns 200 with CSV content for admin"() {
         given:
         String adminToken = createAdminToken("admin2@export.com", "exportAdmin2")
-        createDataProcessor(adminToken, "Acme Corp")
+        createServiceProvider(adminToken, "Acme Corp")
 
         when:
         def response = client.toBlocking().exchange(
-            HttpRequest.GET("/export/data-processors").bearerAuth(adminToken), String)
+            HttpRequest.GET("/export/service-providers").bearerAuth(adminToken), String)
 
         then:
         response.status == HttpStatus.OK
         def body = response.body()
-        body.contains("Processor Key")
-        body.contains("Processor Name")
+        body.contains("Service Provider Key")
+        body.contains("Service Provider Name")
         body.contains("Acme Corp")
     }
 
@@ -204,7 +209,7 @@ class ExportControllerSpec extends Specification {
         def body = response.body()
         body.contains("DPIA Key")
         body.contains("Status")
-        body.contains("IN_PROGRESS")
+        body.contains("In Progress")
     }
 
     def "GET /export/dpia-register returns empty CSV (headers only) when no DPIAs exist"() {

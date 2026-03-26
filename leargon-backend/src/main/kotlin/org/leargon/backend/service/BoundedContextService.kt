@@ -57,6 +57,12 @@ open class BoundedContextService(
                 .findByKey(domainKey)
                 .orElseThrow { ResourceNotFoundException("BusinessDomain not found: $domainKey") }
 
+        if (domain.type == "BUSINESS") {
+            throw ForbiddenOperationException(
+                "Bounded contexts can only be created for CORE, SUPPORTING, or GENERIC domains, not BUSINESS domains",
+            )
+        }
+
         val bc = BoundedContext()
         bc.domain = domain
         bc.createdBy = currentUser
@@ -89,7 +95,8 @@ open class BoundedContextService(
     open fun createDefaultForDomain(
         domain: BusinessDomain,
         currentUser: User
-    ): BoundedContext {
+    ): BoundedContext? {
+        if (domain.type == "BUSINESS") return null
         val bc = BoundedContext()
         bc.domain = domain
         bc.createdBy = currentUser

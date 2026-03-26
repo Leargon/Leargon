@@ -45,6 +45,9 @@ import {
   useUpdateProcessType,
   useUpdateProcessLegalBasis,
   useUpdateProcessOwner,
+  useClearProcessOwner,
+  useUpdateProcessSteward,
+  useUpdateProcessTechnicalCustodian,
   useUpdateProcessCode,
   useUpdateProcessParent,
   useAssignBoundedContextToProcess,
@@ -73,9 +76,13 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import {
   useUpdateProcessItSystems,
+  useUpdateProcessServiceProviders,
 } from '../../api/generated/process/process';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigation } from '../../context/NavigationContext';
+import { PROCESS_TABS_BY_PERSPECTIVE, defaultProcessTab } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import PropRow from '../common/PropRow';
@@ -97,6 +104,7 @@ import type {
   OrganisationalUnitResponse,
   CrossBorderTransferEntry,
   ItSystemResponse,
+  ServiceProviderResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
 
@@ -147,7 +155,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
+  const { perspective } = useNavigation();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+
+  const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
 
   const { data: processResponse, isLoading, error } = useGetProcessByKey(processKey);
   const process = processResponse?.data as ProcessResponse | undefined;
@@ -167,6 +178,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: allItSystemsResponse } = useGetAllItSystems();
   const allItSystems = (allItSystemsResponse?.data as ItSystemResponse[] | undefined) || [];
+  const { data: allServiceProvidersResponse } = useGetAllServiceProviders();
+  const allServiceProviders = (allServiceProvidersResponse?.data as ServiceProviderResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetProcessDpia(processKey, {
@@ -179,7 +192,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => defaultProcessTab(perspective));
+
+  useEffect(() => {
+    const tabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
+    if (!tabs.includes(activeTab as typeof tabs[0])) {
+      setActiveTab(tabs[0]);
+    }
+  }, [perspective]);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -205,6 +225,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateType = useUpdateProcessType();
   const updateLegalBasis = useUpdateProcessLegalBasis();
   const updateOwner = useUpdateProcessOwner();
+  const clearOwnerMutation = useClearProcessOwner();
+  const updateSteward = useUpdateProcessSteward();
+  const updateTechnicalCustodian = useUpdateProcessTechnicalCustodian();
   const updateCode = useUpdateProcessCode();
   const assignBoundedContext = useAssignBoundedContextToProcess();
   const assignClassifications = useAssignClassificationsToProcess();
@@ -218,6 +241,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
   const updateItSystems = useUpdateProcessItSystems();
+  const updateServiceProviders = useUpdateProcessServiceProviders();
   const updateParent = useUpdateProcessParent();
 
   // Cross-border transfers dialog state
@@ -270,6 +294,26 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const ownerEdit = useInlineEdit<string>({
     onSave: async (val) => {
       await updateOwner.mutateAsync({ key: processKey, data: { processOwnerUsername: val } });
+      invalidate();
+    },
+  });
+  const clearOwnerOverride = async () => {
+    await clearOwnerMutation.mutateAsync({ key: processKey });
+    invalidate();
+  };
+
+  // Process steward inline edit
+  const stewardEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateSteward.mutateAsync({ key: processKey, data: { processStewardUsername: val } });
+      invalidate();
+    },
+  });
+
+  // Technical custodian inline edit
+  const technicalCustodianEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTechnicalCustodian.mutateAsync({ key: processKey, data: { technicalCustodianUsername: val } });
       invalidate();
     },
   });
@@ -340,12 +384,22 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     },
   });
 
+  // Service Providers inline edit
+  const serviceProvidersEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateServiceProviders.mutateAsync({ key: processKey, data: { serviceProviderKeys: keys } });
+      invalidate();
+    },
+  });
+
   // Cancel all edits when navigating to a different process
   useEffect(() => {
     namesEdit.cancel();
     typeEdit.cancel();
     legalBasisEdit.cancel();
     ownerEdit.cancel();
+    stewardEdit.cancel();
+    technicalCustodianEdit.cancel();
     codeEdit.cancel();
     boundedContextEdit.cancel();
     classEdit.cancel();
@@ -353,6 +407,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     purposeEdit.cancel();
     securityMeasuresEdit.cancel();
     itSystemsEdit.cancel();
+    serviceProvidersEdit.cancel();
     parentEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processKey]);
@@ -506,7 +561,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
         <PropRow label={t('process.processOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
-          onEdit={() => ownerEdit.startEdit(process.processOwner.username)} onSave={ownerEdit.save}
+          onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
             <Box>
@@ -523,7 +578,71 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {process.processOwner ? (
+                <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
+              ) : (
+                <Typography variant="body2" color="text.secondary">{t('common.unassigned')}</Typography>
+              )}
+              {!process.ownerIsExplicit && process.processOwner && (
+                <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+              )}
+              {process.ownerIsExplicit && isAdmin && process.boundedContext?.owningUnitName && (
+                <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                  {t('common.clearOverride')}
+                </Button>
+              )}
+            </Box>
+          )}
+        </PropRow>
+        <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
+          onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
+          onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
+          {stewardEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
+                onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('process.processSteward')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
+              {process.processSteward
+                ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
+                : t('common.notSet')}
+            </Typography>
+          )}
+        </PropRow>
+        <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+          onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
+          onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
+          {technicalCustodianEdit.isEditing ? (
+            <Box>
+              <Autocomplete
+                options={allUsers.filter((u) => u.enabled)}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+                onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+                renderInput={(params) => <TextField {...params} label={t('process.technicalCustodian')} size="small" />}
+                isOptionEqualToValue={(o, v) => o.username === v.username}
+                size="small"
+                sx={{ width: 300 }}
+              />
+              {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+              {process.technicalCustodian
+                ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
+                : t('common.notSet')}
+            </Typography>
           )}
         </PropRow>
         <PropRow label={t('process.code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}
@@ -625,10 +744,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Paper>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as number)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label={t('tabs.dataAndTeams')} />
-        <Tab label={t('tabs.compliance')} />
-        <Tab label={t('tabs.governance')} />
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as typeof visibleTabs[0])} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+        {visibleTabs.includes(0) && <Tab value={0} label={t('tabs.dataAndTeams')} />}
+        {visibleTabs.includes(1) && <Tab value={1} label={t('tabs.compliance')} />}
+        {visibleTabs.includes(2) && <Tab value={2} label={t('tabs.governance')} />}
       </Tabs>
 
       {activeTab === 0 && <>
@@ -758,23 +877,57 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Data Processors */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Data Processors</Typography>
+      {/* Service Providers */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">Service Providers</Typography>
+        {isOwnerOrAdmin && !serviceProvidersEdit.isEditing && (
+          <IconButton size="small" onClick={() => serviceProvidersEdit.startEdit((process.serviceProviders ?? []).map((s) => s.key))}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
+        {serviceProvidersEdit.isEditing && (
+          <>
+            <IconButton size="small" onClick={serviceProvidersEdit.save} disabled={serviceProvidersEdit.isSaving} color="primary">
+              {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+            </IconButton>
+            <IconButton size="small" onClick={serviceProvidersEdit.cancel} disabled={serviceProvidersEdit.isSaving}>
+              <Close fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </Box>
       <Box sx={{ mb: 2 }}>
-        {process.dataProcessors && process.dataProcessors.length > 0 ? (
+        {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+          <Box>
+            <Autocomplete
+              multiple
+              options={allServiceProviders}
+              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+              value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+              onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+              renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+              renderTags={(val, getTagProps) =>
+                val.map((option, index) => (
+                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                ))
+              }
+            />
+            {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+          </Box>
+        ) : (process.serviceProviders ?? []).length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {process.dataProcessors.map((dp) => (
+            {(process.serviceProviders ?? []).map((sp) => (
               <Chip
-                key={dp.key}
-                label={getLocalizedText(dp.names, dp.key)}
-                icon={dp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
+                key={sp.key}
+                label={getLocalizedText(sp.names, sp.key)}
+                icon={sp.processorAgreementInPlace ? <CheckCircleIcon fontSize="small" color="success" /> : <WarningIcon fontSize="small" color="warning" />}
                 size="small"
                 variant="outlined"
               />
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No data processors linked</Typography>
+          <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
         )}
       </Box>
 

@@ -36,6 +36,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AddDomainEventEntityLinkRequest,
   AddDomainEventProcessLinkRequest,
   CreateDomainEventRequest,
   DomainEventResponse,
@@ -985,5 +986,205 @@ export const useRemoveDomainEventProcessLink = <TError = void,
         TContext
       > => {
       return useMutation(getRemoveDomainEventProcessLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Add an entity link to a domain event
+ */
+export type addDomainEventEntityLinkResponse200 = {
+  data: DomainEventResponse
+  status: 200
+}
+
+export type addDomainEventEntityLinkResponse401 = {
+  data: void
+  status: 401
+}
+
+export type addDomainEventEntityLinkResponse403 = {
+  data: void
+  status: 403
+}
+
+export type addDomainEventEntityLinkResponse404 = {
+  data: void
+  status: 404
+}
+
+export type addDomainEventEntityLinkResponseSuccess = (addDomainEventEntityLinkResponse200) & {
+  headers: Headers;
+};
+export type addDomainEventEntityLinkResponseError = (addDomainEventEntityLinkResponse401 | addDomainEventEntityLinkResponse403 | addDomainEventEntityLinkResponse404) & {
+  headers: Headers;
+};
+
+export type addDomainEventEntityLinkResponse = (addDomainEventEntityLinkResponseSuccess | addDomainEventEntityLinkResponseError)
+
+export const getAddDomainEventEntityLinkUrl = (key: string,) => {
+
+
+  
+
+  return `/domain-events/${key}/entity-links`
+}
+
+export const addDomainEventEntityLink = async (key: string,
+    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options?: RequestInit): Promise<addDomainEventEntityLinkResponse> => {
+  
+  return customAxios<addDomainEventEntityLinkResponse>(getAddDomainEventEntityLinkUrl(key),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      addDomainEventEntityLinkRequest,)
+  }
+);}
+  
+
+
+
+export const getAddDomainEventEntityLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext> => {
+
+const mutationKey = ['addDomainEventEntityLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addDomainEventEntityLink>>, {key: string;data: AddDomainEventEntityLinkRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  addDomainEventEntityLink(key,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddDomainEventEntityLinkMutationResult = NonNullable<Awaited<ReturnType<typeof addDomainEventEntityLink>>>
+    export type AddDomainEventEntityLinkMutationBody = AddDomainEventEntityLinkRequest
+    export type AddDomainEventEntityLinkMutationError = void
+
+    /**
+ * @summary Add an entity link to a domain event
+ */
+export const useAddDomainEventEntityLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addDomainEventEntityLink>>,
+        TError,
+        {key: string;data: AddDomainEventEntityLinkRequest},
+        TContext
+      > => {
+      return useMutation(getAddDomainEventEntityLinkMutationOptions(options), queryClient);
+    }
+    /**
+ * @summary Remove an entity link from a domain event
+ */
+export type removeDomainEventEntityLinkResponse200 = {
+  data: DomainEventResponse
+  status: 200
+}
+
+export type removeDomainEventEntityLinkResponse401 = {
+  data: void
+  status: 401
+}
+
+export type removeDomainEventEntityLinkResponse403 = {
+  data: void
+  status: 403
+}
+
+export type removeDomainEventEntityLinkResponse404 = {
+  data: void
+  status: 404
+}
+
+export type removeDomainEventEntityLinkResponseSuccess = (removeDomainEventEntityLinkResponse200) & {
+  headers: Headers;
+};
+export type removeDomainEventEntityLinkResponseError = (removeDomainEventEntityLinkResponse401 | removeDomainEventEntityLinkResponse403 | removeDomainEventEntityLinkResponse404) & {
+  headers: Headers;
+};
+
+export type removeDomainEventEntityLinkResponse = (removeDomainEventEntityLinkResponseSuccess | removeDomainEventEntityLinkResponseError)
+
+export const getRemoveDomainEventEntityLinkUrl = (key: string,
+    linkId: number,) => {
+
+
+  
+
+  return `/domain-events/${key}/entity-links/${linkId}`
+}
+
+export const removeDomainEventEntityLink = async (key: string,
+    linkId: number, options?: RequestInit): Promise<removeDomainEventEntityLinkResponse> => {
+  
+  return customAxios<removeDomainEventEntityLinkResponse>(getRemoveDomainEventEntityLinkUrl(key,linkId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+  
+
+
+
+export const getRemoveDomainEventEntityLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext> => {
+
+const mutationKey = ['removeDomainEventEntityLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, {key: string;linkId: number}> = (props) => {
+          const {key,linkId} = props ?? {};
+
+          return  removeDomainEventEntityLink(key,linkId,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveDomainEventEntityLinkMutationResult = NonNullable<Awaited<ReturnType<typeof removeDomainEventEntityLink>>>
+    
+    export type RemoveDomainEventEntityLinkMutationError = void
+
+    /**
+ * @summary Remove an entity link from a domain event
+ */
+export const useRemoveDomainEventEntityLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeDomainEventEntityLink>>,
+        TError,
+        {key: string;linkId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveDomainEventEntityLinkMutationOptions(options), queryClient);
     }
     
