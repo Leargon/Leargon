@@ -15,7 +15,7 @@ import {
   SelectChangeEvent,
   Divider,
 } from '@mui/material';
-import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare, Layers } from '@mui/icons-material';
+import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare, Layers, Home } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
 import GlobalSearch from './GlobalSearch';
@@ -36,6 +36,7 @@ const TopNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
+  const isHomeRoute = location.pathname === '/home';
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
   const { effectiveMode, toggleMode } = useThemeMode();
@@ -74,6 +75,23 @@ const TopNav: React.FC = () => {
         onClick={() => navigate('/')}
       />
 
+      {/* Home */}
+      <Tooltip title="Home">
+        <IconButton
+          size="small"
+          onClick={() => navigate('/home')}
+          sx={{
+            color: location.pathname === '/home' ? 'white' : 'grey.400',
+            bgcolor: location.pathname === '/home' ? 'rgba(255,255,255,0.12)' : 'transparent',
+            borderRadius: 1,
+            mr: 0.5,
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
+          }}
+        >
+          <Home fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
       {/* Perspective tabs */}
       <Box sx={{ display: 'flex', gap: 0.5 }}>
         {PERSPECTIVES.map((p) => (
@@ -83,12 +101,12 @@ const TopNav: React.FC = () => {
             onClick={() => handlePerspectiveClick(p)}
             size="small"
             sx={{
-              color: !isSettingsRoute && perspective === p.id ? 'white' : 'grey.400',
-              bgcolor: !isSettingsRoute && perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 'white' : 'grey.400',
+              bgcolor: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
               borderRadius: 1,
               px: 1.5,
               textTransform: 'none',
-              fontWeight: !isSettingsRoute && perspective === p.id ? 600 : 400,
+              fontWeight: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 600 : 400,
               fontSize: '0.8rem',
               whiteSpace: 'nowrap',
               '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },

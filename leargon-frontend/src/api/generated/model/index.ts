@@ -17,12 +17,18 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './activityItem';
+export * from './activityItemResourceType';
 export * from './addDomainEventEntityLinkRequest';
 export * from './addDomainEventProcessLinkRequest';
 export * from './addProcessEntityRequest';
 export * from './administrationChangePasswordRequest';
 export * from './assignBoundedContextRequest';
 export * from './assignBusinessDomainRequest';
+export * from './attentionItem';
+export * from './attentionItemIssueCode';
+export * from './attentionItemResourceType';
+export * from './attentionItemSeverity';
 export * from './authResponse';
 export * from './azureConfigResponse';
 export * from './azureLoginRequest';
@@ -85,6 +91,7 @@ export * from './createSupportedLocaleRequest';
 export * from './createTranslationLinkRequest';
 export * from './crossBorderTransferEntry';
 export * from './crossBorderTransferSafeguard';
+export * from './dashboardResponse';
 export * from './dataProcessorResponse';
 export * from './dataProcessorSummaryResponse';
 export * from './domainEventEntityLinkResponse';
@@ -115,6 +122,7 @@ export * from './localizedBusinessDomainResponse';
 export * from './localizedBusinessEntityResponse';
 export * from './localizedText';
 export * from './loginRequest';
+export * from './myResponsibilitiesResponse';
 export * from './organisationalUnitResponse';
 export * from './organisationalUnitSummaryResponse';
 export * from './organisationalUnitTreeResponse';

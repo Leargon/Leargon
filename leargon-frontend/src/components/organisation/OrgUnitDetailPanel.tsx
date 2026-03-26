@@ -71,6 +71,7 @@ import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter'
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import type {
   LocalizedText,
   OrganisationalUnitResponse,
@@ -154,7 +155,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
-  const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
@@ -349,56 +349,64 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const parentCandidates = allUnits.filter((u) => u.key !== unitKey);
 
   return (
-    <Box sx={{ p: 3, overflow: 'auto', height: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">{getLocalizedText(unit.names, 'Unnamed Unit')}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {unit.key}</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={getLocalizedText(unit.names, 'Unnamed Unit')}
+        itemKey={unit.key}
+        chips={<>
+          {unit.unitType && <Chip label={unit.unitType} size="small" color="primary" />}
+          {unit.businessOwner && (
+            <Chip label={`${unit.businessOwner.firstName} ${unit.businessOwner.lastName}`} size="small" variant="outlined" />
+          )}
+          {isLeadOrAdmin && unit.missingMandatoryFields && unit.missingMandatoryFields.length > 0 && (
+            <Chip label="Missing fields" size="small" color="warning" />
+          )}
+        </>}
+        actions={<>
           {isLeadOrAdmin && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Add />}
-              onClick={() => setCreateChildOpen(true)}
-            >
-              Add Child Unit
+            <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
+              Add Child
             </Button>
           )}
           {isLeadOrAdmin && (
-            <Button
-              color="error"
-              variant="outlined"
-              size="small"
-              startIcon={<Delete />}
-              onClick={() => setDeleteDialogOpen(true)}
-            >
+            <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               Delete
             </Button>
           )}
-        </Box>
-      </Box>
-
-      {/* Missing mandatory fields alert */}
-      {isLeadOrAdmin && unit.missingMandatoryFields && unit.missingMandatoryFields.length > 0 && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Missing mandatory fields: {unit.missingMandatoryFields.join(', ')}
-        </Alert>
-      )}
-
-      {/* Names & Descriptions */}
-      <SectionHeader
-        title="Names & Descriptions"
-        canEdit={isLeadOrAdmin}
-        isEditing={namesEdit.isEditing}
-        onEdit={() => namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] })}
-        onSave={namesEdit.save}
-        onCancel={namesEdit.cancel}
-        isSaving={namesEdit.isSaving}
-        isMandatory={isMandatory('names')}
+        </>}
       />
+
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+        {/* Missing mandatory fields alert */}
+        {isLeadOrAdmin && unit.missingMandatoryFields && unit.missingMandatoryFields.length > 0 && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Missing mandatory fields: {unit.missingMandatoryFields.join(', ')}
+          </Alert>
+        )}
+
+        {/* Names & Descriptions */}
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Names & Descriptions</Typography>
+              {isLeadOrAdmin && !namesEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] }); }}>
+                  <Edit fontSize="small" />
+                </IconButton>
+              )}
+              {namesEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); namesEdit.save(); }} disabled={namesEdit.isSaving}>
+                    {namesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.cancel(); }} disabled={namesEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
       {namesEdit.isEditing && namesEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           <TranslationEditor
@@ -456,43 +464,122 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </>
       )}
 
-      <Divider sx={{ my: 2 }} />
+          </AccordionDetails>
+        </Accordion>
 
-      {/* Type */}
-      <SectionHeader
-        title="Type"
-        canEdit={isLeadOrAdmin}
-        isEditing={typeEdit.isEditing}
-        onEdit={() => typeEdit.startEdit(unit.unitType || null)}
-        onSave={typeEdit.save}
-        onCancel={typeEdit.cancel}
-        isSaving={typeEdit.isSaving}
-        isMandatory={isMandatory('unitType')}
-      />
-      {typeEdit.isEditing ? (
-        <Box sx={{ mb: 2 }}>
-          <TextField
-            value={typeEdit.editValue || ''}
-            onChange={(e) => typeEdit.setEditValue(e.target.value || null)}
-            size="small"
-            placeholder="Enter unit type..."
-            sx={{ minWidth: 200 }}
-          />
-          {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
-        </Box>
-      ) : (
-        <Box sx={{ mb: 2 }}>
-          {unit.unitType ? (
-            <Chip label={unit.unitType} color="primary" size="small" />
-          ) : (
-            <Typography variant="body2" color="text.secondary">Not set</Typography>
-          )}
-        </Box>
-      )}
+        {/* Properties: Type + Parents + Children */}
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">Properties</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {/* Type */}
+            <SectionHeader
+              title="Type"
+              canEdit={isLeadOrAdmin}
+              isEditing={typeEdit.isEditing}
+              onEdit={() => typeEdit.startEdit(unit.unitType || null)}
+              onSave={typeEdit.save}
+              onCancel={typeEdit.cancel}
+              isSaving={typeEdit.isSaving}
+              isMandatory={isMandatory('unitType')}
+            />
+            {typeEdit.isEditing ? (
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  value={typeEdit.editValue || ''}
+                  onChange={(e) => typeEdit.setEditValue(e.target.value || null)}
+                  size="small"
+                  placeholder="Enter unit type..."
+                  sx={{ minWidth: 200 }}
+                />
+                {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ mb: 2 }}>
+                {unit.unitType ? (
+                  <Chip label={unit.unitType} color="primary" size="small" />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">Not set</Typography>
+                )}
+              </Box>
+            )}
+            <Divider sx={{ my: 2 }} />
+            {/* Parents */}
+            <SectionHeader
+              title="Parents"
+              canEdit={isLeadOrAdmin}
+              isEditing={parentsEdit.isEditing}
+              onEdit={() => parentsEdit.startEdit(unit.parents?.map((p) => p.key) || [])}
+              onSave={parentsEdit.save}
+              onCancel={parentsEdit.cancel}
+              isSaving={parentsEdit.isSaving}
+            />
+            <Box sx={{ mb: 2 }}>
+              {parentsEdit.isEditing ? (
+                <Box>
+                  <Autocomplete
+                    multiple
+                    options={parentCandidates}
+                    getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                    value={parentCandidates.filter((u) => parentsEdit.editValue?.includes(u.key))}
+                    onChange={(_, newVal) => parentsEdit.setEditValue(newVal.map((v) => v.key))}
+                    renderInput={(params) => (
+                      <TextField {...params} size="small" placeholder="Search for parent units..." sx={{ width: 350 }} />
+                    )}
+                    isOptionEqualToValue={(option, value) => option.key === value.key}
+                    size="small"
+                  />
+                  {parentsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentsEdit.error}</Alert>}
+                </Box>
+              ) : (
+                <>
+                  {unit.parents && unit.parents.length > 0 ? (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {unit.parents.map((p) => (
+                        <Chip
+                          key={p.key}
+                          label={p.name}
+                          size="small"
+                          onClick={() => navigate(`/organisation/${p.key}`)}
+                          clickable
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Top-level unit</Typography>
+                  )}
+                </>
+              )}
+            </Box>
+            {/* Children (read-only) */}
+            {unit.children && unit.children.length > 0 && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>Children</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                  {unit.children.map((child) => (
+                    <Chip
+                      key={child.key}
+                      label={child.name}
+                      size="small"
+                      onClick={() => navigate(`/organisation/${child.key}`)}
+                      clickable
+                    />
+                  ))}
+                </Box>
+              </>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
-      {sections.stewardship && <Divider sx={{ my: 2 }} />}
-
-      {sections.stewardship && <>{/* Business Owner */}
+        {/* Stewardship */}
+        {sections.stewardship && <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">Stewardship</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {/* Business Owner */}
       <SectionHeader
         title="Business Owner"
         canEdit={isAdmin}
@@ -615,163 +702,104 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             )}
           </Typography>
         )}
-      </Box>
-      </>}
-
-      {sections.boundedContexts && (<>
-      <Divider sx={{ my: 2 }} />
-
-      {/* Bounded Contexts */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Bounded Contexts</Typography>
-        {isLeadOrAdmin && (
-          <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
-            Assign
-          </Button>
-        )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
-        {ownedBoundedContexts.length > 0 ? (
-          <List dense disablePadding>
-            {ownedBoundedContexts.map((bc) => (
-              <ListItem
-                key={bc.key}
-                disablePadding
-                sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
-                secondaryAction={
-                  isLeadOrAdmin && (
-                    <Button
-                      size="small"
-                      color="warning"
-                      onClick={() => handleUnassignBc(bc.key)}
-                      disabled={updateBcOwningTeam.isPending}
-                    >
-                      Unassign
-                    </Button>
-                  )
-                }
-              >
-                <ListItemText
-                  primary={bc.name}
-                  secondary={bc.domainName}
-                  primaryTypographyProps={{ variant: 'body2' }}
-                  secondaryTypographyProps={{ variant: 'caption' }}
-                />
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Typography variant="body2" color="text.secondary">No bounded contexts owned</Typography>
-        )}
-      </Box>
-      </>)}
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Parents */}
-      <SectionHeader
-        title="Parents"
-        canEdit={isLeadOrAdmin}
-        isEditing={parentsEdit.isEditing}
-        onEdit={() => parentsEdit.startEdit(unit.parents?.map((p) => p.key) || [])}
-        onSave={parentsEdit.save}
-        onCancel={parentsEdit.cancel}
-        isSaving={parentsEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {parentsEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              multiple
-              options={parentCandidates}
-              getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-              value={parentCandidates.filter((u) => parentsEdit.editValue?.includes(u.key))}
-              onChange={(_, newVal) => parentsEdit.setEditValue(newVal.map((v) => v.key))}
-              renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for parent units..." sx={{ width: 350 }} />
-              )}
-              isOptionEqualToValue={(option, value) => option.key === value.key}
-              size="small"
-            />
-            {parentsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentsEdit.error}</Alert>}
           </Box>
-        ) : (
-          <>
-            {unit.parents && unit.parents.length > 0 ? (
+          </AccordionDetails>
+        </Accordion>}
+
+        {/* Bounded Contexts */}
+        {sections.boundedContexts && <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">Bounded Contexts</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              {isLeadOrAdmin && (
+                <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
+                  Assign
+                </Button>
+              )}
+            </Box>
+            {ownedBoundedContexts.length > 0 ? (
+              <List dense disablePadding>
+                {ownedBoundedContexts.map((bc) => (
+                  <ListItem
+                    key={bc.key}
+                    disablePadding
+                    sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
+                    secondaryAction={
+                      isLeadOrAdmin && (
+                        <Button
+                          size="small"
+                          color="warning"
+                          onClick={() => handleUnassignBc(bc.key)}
+                          disabled={updateBcOwningTeam.isPending}
+                        >
+                          Unassign
+                        </Button>
+                      )
+                    }
+                  >
+                    <ListItemText
+                      primary={bc.name}
+                      secondary={bc.domainName}
+                      primaryTypographyProps={{ variant: 'body2' }}
+                      secondaryTypographyProps={{ variant: 'caption' }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body2" color="text.secondary">No bounded contexts owned</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>}
+
+        {/* Executing Processes */}
+        {unit.executingProcesses && unit.executingProcesses.length > 0 && (
+          <Accordion disableGutters>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">Executing Processes</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {unit.parents.map((p) => (
+                {unit.executingProcesses.map((proc) => (
                   <Chip
-                    key={p.key}
-                    label={p.name}
+                    key={proc.key}
+                    label={proc.name}
                     size="small"
-                    onClick={() => navigate(`/organisation/${p.key}`)}
+                    onClick={() => navigate(`/processes/${proc.key}`)}
                     clickable
                   />
                 ))}
               </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary">Top-level unit</Typography>
-            )}
-          </>
+            </AccordionDetails>
+          </Accordion>
         )}
-      </Box>
 
-      <Divider sx={{ my: 2 }} />
-
-      {/* Children (read-only) */}
-      {unit.children && unit.children.length > 0 && (
-        <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Children</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-            {unit.children.map((child) => (
-              <Chip
-                key={child.key}
-                label={child.name}
-                size="small"
-                onClick={() => navigate(`/organisation/${child.key}`)}
-                clickable
-              />
-            ))}
-          </Box>
-          <Divider sx={{ my: 2 }} />
-        </>
-      )}
-
-      {/* Executing Processes (read-only) */}
-      {unit.executingProcesses && unit.executingProcesses.length > 0 && (
-        <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Executing Processes</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
-            {unit.executingProcesses.map((proc) => (
-              <Chip
-                key={proc.key}
-                label={proc.name}
-                size="small"
-                onClick={() => navigate(`/processes/${proc.key}`)}
-                clickable
-              />
-            ))}
-          </Box>
-          <Divider sx={{ my: 2 }} />
-        </>
-      )}
-
-      {/* External Party Details */}
-      {sections.externalFields && (isAdmin || unit.isExternal) && (
-        <>
-          <SectionHeader
-            title="External Party Details"
-            canEdit={isAdmin}
-            isEditing={externalFieldsEdit.isEditing}
-            onEdit={() => externalFieldsEdit.startEdit({
-              isExternal: unit.isExternal ?? false,
-              externalCompanyName: unit.externalCompanyName ?? '',
-              countryOfExecution: unit.countryOfExecution ?? '',
-            })}
-            onSave={externalFieldsEdit.save}
-            onCancel={externalFieldsEdit.cancel}
-            isSaving={externalFieldsEdit.isSaving}
-          />
+        {/* External Party Details */}
+        {sections.externalFields && (isAdmin || unit.isExternal) && (
+          <Accordion disableGutters>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle2">External Party</Typography>
+                {isAdmin && !externalFieldsEdit.isEditing && (
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' }); }}>
+                    <Edit fontSize="small" />
+                  </IconButton>
+                )}
+                {externalFieldsEdit.isEditing && (
+                  <>
+                    <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.save(); }} disabled={externalFieldsEdit.isSaving}>
+                      {externalFieldsEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                    </IconButton>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.cancel(); }} disabled={externalFieldsEdit.isSaving}>
+                      <Close fontSize="small" />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
           <Box sx={{ mb: 2 }}>
             {externalFieldsEdit.isEditing && externalFieldsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -910,22 +938,33 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               </Box>
             </>
           )}
+            </AccordionDetails>
+          </Accordion>
+        )}
 
-          <Divider sx={{ my: 2 }} />
-        </>
-      )}
-
-      {/* Service Providers */}
-      {sections.serviceProviders && (<>
-        <SectionHeader
-          title="Service Providers"
-          canEdit={isAdmin}
-          isEditing={serviceProvidersEdit.isEditing}
-          onEdit={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))}
-          onSave={serviceProvidersEdit.save}
-          onCancel={serviceProvidersEdit.cancel}
-          isSaving={serviceProvidersEdit.isSaving}
-        />
+        {/* Service Providers */}
+        {sections.serviceProviders && <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Service Providers</Typography>
+              {isAdmin && !serviceProvidersEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key)); }}>
+                  <Edit fontSize="small" />
+                </IconButton>
+              )}
+              {serviceProvidersEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.save(); }} disabled={serviceProvidersEdit.isSaving}>
+                    {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.cancel(); }} disabled={serviceProvidersEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
         <Box sx={{ mb: 2 }}>
           {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
             <Box>
@@ -954,17 +993,32 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
           )}
         </Box>
-        <Divider sx={{ my: 2 }} />
-      </>)}
+          </AccordionDetails>
+        </Accordion>}
 
-      {/* Classifications */}
-      {sections.classifications && (<>
-      <SectionHeader title="Classifications" canEdit={isLeadOrAdmin} isEditing={classEdit.isEditing}
-        onEdit={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({
-          classificationKey: a.classificationKey, valueKey: a.valueKey,
-        })) || [])}
-        onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving}
-        isMandatory={anyClassificationMandatory} />
+        {/* Classifications */}
+        {sections.classifications && <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Classifications</Typography>
+              {isLeadOrAdmin && !classEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || []); }}>
+                  <Edit fontSize="small" />
+                </IconButton>
+              )}
+              {classEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); classEdit.save(); }} disabled={classEdit.isSaving}>
+                    {classEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); classEdit.cancel(); }} disabled={classEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.map((c) => {
@@ -1052,30 +1106,36 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </Box>
       )}
-      </>)}
+          </AccordionDetails>
+        </Accordion>}
 
-      <Divider sx={{ my: 2 }} />
-
-      {/* Metadata */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Table size="small">
-          <TableBody>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
-              <TableCell>{unit.createdBy.firstName} {unit.createdBy.lastName}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
-              <TableCell>{new Date(unit.createdAt).toLocaleString()}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
-              <TableCell>{new Date(unit.updatedAt).toLocaleString()}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Paper>
+        {/* Metadata */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">Metadata</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+                    <TableCell>{unit.createdBy.firstName} {unit.createdBy.lastName}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+                    <TableCell>{new Date(unit.createdAt).toLocaleString()}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+                    <TableCell>{new Date(unit.updatedAt).toLocaleString()}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+          </AccordionDetails>
+        </Accordion>
+      </Box>
 
       {/* Assign Bounded Context Dialog */}
       <Dialog open={assignBcDialogOpen} onClose={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }} maxWidth="sm" fullWidth>

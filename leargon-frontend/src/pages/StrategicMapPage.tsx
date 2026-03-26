@@ -54,7 +54,7 @@ function getCapabilitySubtreeKeys(cap: CapabilityResponse, allCaps: CapabilityRe
   return result;
 }
 
-const StrategicMapPage: React.FC = () => {
+export const StrategicMapContent: React.FC = () => {
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
 
@@ -106,6 +106,221 @@ const StrategicMapPage: React.FC = () => {
   }
 
   return (
+    <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      {/* Legend */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+        {Object.entries(DOMAIN_TYPE_LABELS).map(([type, label]) => (
+          <Chip
+            key={type}
+            label={label}
+            size="small"
+            sx={{ bgcolor: DOMAIN_TYPE_COLORS[type], color: '#fff', fontSize: '0.7rem' }}
+          />
+        ))}
+        <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center', ml: 1 }}>
+          Domain types
+        </Typography>
+      </Box>
+
+      {/* Matrix table */}
+      <Box sx={{ overflowX: 'auto' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: `200px repeat(${Math.max(rootCapabilities.length, 1)}, minmax(180px, 1fr))`,
+            gap: '2px',
+            minWidth: 400 + rootCapabilities.length * 180,
+          }}
+        >
+          {/* Header row */}
+          <Box sx={{ bgcolor: 'grey.100', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
+            <Typography variant="caption" fontWeight={600} color="text.secondary">
+              Domain / Capability
+            </Typography>
+          </Box>
+
+          {rootCapabilities.length === 0 ? (
+            <Box sx={{ bgcolor: 'grey.50', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
+              <Typography variant="caption" color="text.secondary">No capabilities defined</Typography>
+            </Box>
+          ) : (
+            rootCapabilities.map((cap) => (
+              <Paper
+                key={cap.key}
+                variant="outlined"
+                onClick={() => navigate(`/capabilities/${cap.key}`)}
+                sx={{
+                  p: 1,
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  cursor: 'pointer',
+                  borderRadius: 1,
+                  '&:hover': { opacity: 0.85 },
+                }}
+              >
+                <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                  {getLocalizedText(cap.names, cap.key)}
+                </Typography>
+                {cap.owningUnit && (
+                  <Typography variant="caption" sx={{ display: 'block', opacity: 0.75, fontSize: '0.65rem' }}>
+                    {cap.owningUnit.name}
+                  </Typography>
+                )}
+                {cap.children && cap.children.length > 0 && (
+                  <Chip
+                    label={`${cap.children.length} sub`}
+                    size="small"
+                    sx={{ height: 16, fontSize: '0.6rem', mt: 0.5, bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }}
+                  />
+                )}
+              </Paper>
+            ))
+          )}
+
+          {/* Domain rows */}
+          {rootDomains.map((domain) => {
+            const domainName = getLocalizedText(domain.names, domain.key);
+            const domainType = domain.effectiveType ?? domain.type;
+            const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
+            const typeLabel = domainType ? DOMAIN_TYPE_LABELS[domainType] : null;
+            const bcs = domain.boundedContexts ?? [];
+            const subdomains = domain.subdomains ?? [];
+
+            return (
+              <React.Fragment key={domain.key}>
+                {/* Domain label cell */}
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1,
+                    borderLeft: `4px solid ${typeColor}`,
+                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 0.5,
+                    minHeight: 72,
+                  }}
+                >
+                  <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+                    {domainName}
+                  </Typography>
+                  {typeLabel && (
+                    <Chip
+                      label={typeLabel}
+                      size="small"
+                      sx={{ width: 'fit-content', height: 16, fontSize: '0.65rem', bgcolor: typeColor, color: '#fff' }}
+                    />
+                  )}
+                  {subdomains.length > 0 && (
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                      {subdomains.length} subdomain{subdomains.length !== 1 ? 's' : ''}
+                    </Typography>
+                  )}
+                </Paper>
+
+                {/* Capability cells for this domain */}
+                {rootCapabilities.length === 0 ? (
+                  <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, minHeight: 72 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {bcs.map((bc) => (
+                        <Tooltip key={bc.key} title={bc.key}>
+                          <Chip
+                            label={bc.name}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: '0.7rem', height: 20 }}
+                          />
+                        </Tooltip>
+                      ))}
+                      {bcs.length === 0 && (
+                        <Typography variant="caption" color="text.disabled">—</Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                ) : (
+                  rootCapabilities.map((cap) => {
+                    // Show BCs in this domain cell — all BCs for the domain are shown in all cells
+                    // as there's no direct BC→Capability mapping; this shows the domain's BCs
+                    // alongside each capability for alignment discussion
+                    const subtreeKeys = capabilitySubtrees.find((s) => s.cap.key === cap.key)?.subtreeKeys ?? new Set();
+                    const capChildCount = subtreeKeys.size - 1; // exclude root itself
+
+                    return (
+                      <Paper
+                        key={`${domain.key}-${cap.key}`}
+                        variant="outlined"
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          minHeight: 72,
+                          bgcolor: bcs.length > 0 ? 'action.hover' : 'background.default',
+                        }}
+                      >
+                        {bcs.length > 0 ? (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {bcs.map((bc) => (
+                              <Tooltip key={bc.key} title={bc.key}>
+                                <Chip
+                                  label={bc.name}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ fontSize: '0.65rem', height: 18, borderColor: typeColor }}
+                                />
+                              </Tooltip>
+                            ))}
+                          </Box>
+                        ) : (
+                          <Typography variant="caption" color="text.disabled">—</Typography>
+                        )}
+                        {capChildCount > 0 && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: '0.6rem' }}>
+                            {capChildCount} sub-cap{capChildCount !== 1 ? 's' : ''}
+                          </Typography>
+                        )}
+                      </Paper>
+                    );
+                  })
+                )}
+              </React.Fragment>
+            );
+          })}
+        </Box>
+      </Box>
+
+      {/* All bounded contexts summary */}
+      {rootDomains.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+            Bounded Contexts Overview
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {rootDomains.map((domain) => {
+              const bcs = domain.boundedContexts ?? [];
+              if (bcs.length === 0) return null;
+              const domainType = domain.effectiveType ?? domain.type;
+              const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
+              return (
+                <Paper key={domain.key} variant="outlined" sx={{ p: 1, borderLeft: `3px solid ${typeColor}`, minWidth: 160 }}>
+                  <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                    {getLocalizedText(domain.names, domain.key)}
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {bcs.map((bc) => (
+                      <Chip key={bc.key} label={bc.name} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
+                    ))}
+                  </Box>
+                </Paper>
+              );
+            })}
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+const StrategicMapPage: React.FC = () => {
+  return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
@@ -115,216 +330,7 @@ const StrategicMapPage: React.FC = () => {
         </Typography>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {/* Legend */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          {Object.entries(DOMAIN_TYPE_LABELS).map(([type, label]) => (
-            <Chip
-              key={type}
-              label={label}
-              size="small"
-              sx={{ bgcolor: DOMAIN_TYPE_COLORS[type], color: '#fff', fontSize: '0.7rem' }}
-            />
-          ))}
-          <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center', ml: 1 }}>
-            Domain types
-          </Typography>
-        </Box>
-
-        {/* Matrix table */}
-        <Box sx={{ overflowX: 'auto' }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: `200px repeat(${Math.max(rootCapabilities.length, 1)}, minmax(180px, 1fr))`,
-              gap: '2px',
-              minWidth: 400 + rootCapabilities.length * 180,
-            }}
-          >
-            {/* Header row */}
-            <Box sx={{ bgcolor: 'grey.100', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
-              <Typography variant="caption" fontWeight={600} color="text.secondary">
-                Domain / Capability
-              </Typography>
-            </Box>
-
-            {rootCapabilities.length === 0 ? (
-              <Box sx={{ bgcolor: 'grey.50', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
-                <Typography variant="caption" color="text.secondary">No capabilities defined</Typography>
-              </Box>
-            ) : (
-              rootCapabilities.map((cap) => (
-                <Paper
-                  key={cap.key}
-                  variant="outlined"
-                  onClick={() => navigate(`/capabilities/${cap.key}`)}
-                  sx={{
-                    p: 1,
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText',
-                    cursor: 'pointer',
-                    borderRadius: 1,
-                    '&:hover': { opacity: 0.85 },
-                  }}
-                >
-                  <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-                    {getLocalizedText(cap.names, cap.key)}
-                  </Typography>
-                  {cap.owningUnit && (
-                    <Typography variant="caption" sx={{ display: 'block', opacity: 0.75, fontSize: '0.65rem' }}>
-                      {cap.owningUnit.name}
-                    </Typography>
-                  )}
-                  {cap.children && cap.children.length > 0 && (
-                    <Chip
-                      label={`${cap.children.length} sub`}
-                      size="small"
-                      sx={{ height: 16, fontSize: '0.6rem', mt: 0.5, bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }}
-                    />
-                  )}
-                </Paper>
-              ))
-            )}
-
-            {/* Domain rows */}
-            {rootDomains.map((domain) => {
-              const domainName = getLocalizedText(domain.names, domain.key);
-              const domainType = domain.effectiveType ?? domain.type;
-              const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
-              const typeLabel = domainType ? DOMAIN_TYPE_LABELS[domainType] : null;
-              const bcs = domain.boundedContexts ?? [];
-              const subdomains = domain.subdomains ?? [];
-
-              return (
-                <React.Fragment key={domain.key}>
-                  {/* Domain label cell */}
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1,
-                      borderLeft: `4px solid ${typeColor}`,
-                      borderRadius: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 0.5,
-                      minHeight: 72,
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
-                      {domainName}
-                    </Typography>
-                    {typeLabel && (
-                      <Chip
-                        label={typeLabel}
-                        size="small"
-                        sx={{ width: 'fit-content', height: 16, fontSize: '0.65rem', bgcolor: typeColor, color: '#fff' }}
-                      />
-                    )}
-                    {subdomains.length > 0 && (
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                        {subdomains.length} subdomain{subdomains.length !== 1 ? 's' : ''}
-                      </Typography>
-                    )}
-                  </Paper>
-
-                  {/* Capability cells for this domain */}
-                  {rootCapabilities.length === 0 ? (
-                    <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, minHeight: 72 }}>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {bcs.map((bc) => (
-                          <Tooltip key={bc.key} title={bc.key}>
-                            <Chip
-                              label={bc.name}
-                              size="small"
-                              variant="outlined"
-                              sx={{ fontSize: '0.7rem', height: 20 }}
-                            />
-                          </Tooltip>
-                        ))}
-                        {bcs.length === 0 && (
-                          <Typography variant="caption" color="text.disabled">—</Typography>
-                        )}
-                      </Box>
-                    </Paper>
-                  ) : (
-                    rootCapabilities.map((cap) => {
-                      // Show BCs in this domain cell — all BCs for the domain are shown in all cells
-                      // as there's no direct BC→Capability mapping; this shows the domain's BCs
-                      // alongside each capability for alignment discussion
-                      const subtreeKeys = capabilitySubtrees.find((s) => s.cap.key === cap.key)?.subtreeKeys ?? new Set();
-                      const capChildCount = subtreeKeys.size - 1; // exclude root itself
-
-                      return (
-                        <Paper
-                          key={`${domain.key}-${cap.key}`}
-                          variant="outlined"
-                          sx={{
-                            p: 1,
-                            borderRadius: 1,
-                            minHeight: 72,
-                            bgcolor: bcs.length > 0 ? 'action.hover' : 'background.default',
-                          }}
-                        >
-                          {bcs.length > 0 ? (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {bcs.map((bc) => (
-                                <Tooltip key={bc.key} title={bc.key}>
-                                  <Chip
-                                    label={bc.name}
-                                    size="small"
-                                    variant="outlined"
-                                    sx={{ fontSize: '0.65rem', height: 18, borderColor: typeColor }}
-                                  />
-                                </Tooltip>
-                              ))}
-                            </Box>
-                          ) : (
-                            <Typography variant="caption" color="text.disabled">—</Typography>
-                          )}
-                          {capChildCount > 0 && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: '0.6rem' }}>
-                              {capChildCount} sub-cap{capChildCount !== 1 ? 's' : ''}
-                            </Typography>
-                          )}
-                        </Paper>
-                      );
-                    })
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </Box>
-        </Box>
-
-        {/* All bounded contexts summary */}
-        {rootDomains.length > 0 && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-              Bounded Contexts Overview
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {rootDomains.map((domain) => {
-                const bcs = domain.boundedContexts ?? [];
-                if (bcs.length === 0) return null;
-                const domainType = domain.effectiveType ?? domain.type;
-                const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
-                return (
-                  <Paper key={domain.key} variant="outlined" sx={{ p: 1, borderLeft: `3px solid ${typeColor}`, minWidth: 160 }}>
-                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                      {getLocalizedText(domain.names, domain.key)}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {bcs.map((bc) => (
-                        <Chip key={bc.key} label={bc.name} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
-                      ))}
-                    </Box>
-                  </Paper>
-                );
-              })}
-            </Box>
-          </Box>
-        )}
-      </Box>
+      <StrategicMapContent />
     </Box>
   );
 };

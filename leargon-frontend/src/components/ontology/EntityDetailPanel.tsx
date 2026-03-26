@@ -31,10 +31,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Tabs,
-  Tab,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore, ChevronRight, Add, Warning as WarningIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetBusinessEntityByKey,
@@ -77,9 +75,10 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { ENTITY_TABS_BY_PERSPECTIVE, defaultEntityTab } from '../../utils/perspectiveFilter';
+import { ENTITY_TABS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 import QualityRulesSection from './QualityRulesSection';
@@ -152,14 +151,6 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(() => defaultEntityTab(perspective));
-
-  useEffect(() => {
-    const tabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
-    if (!tabs.includes(activeTab as typeof tabs[0])) {
-      setActiveTab(tabs[0]);
-    }
-  }, [perspective]);
 
   // Translation link dialog state
   const [tlDialogOpen, setTlDialogOpen] = useState(false);
@@ -444,14 +435,22 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const interfaceCandidates = allEntities.filter((e) => e.key !== entityKey);
 
   return (
-    <Box sx={{ p: 3, overflow: 'auto', height: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">{getLocalizedText(entity.names, 'Unnamed Entity')}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {entity.key}</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={getLocalizedText(entity.names, 'Unnamed Entity')}
+        itemKey={entity.key}
+        chips={<>
+          {entity.dataOwner ? (
+            <Chip label={entity.dataOwner.username} size="small" variant="outlined" color="primary" />
+          ) : isOwnerOrAdmin ? (
+            <Chip icon={<WarningIcon fontSize="small" />} label="No owner" size="small" color="warning" />
+          ) : null}
+          {isOwnerOrAdmin && (entity.missingMandatoryFields?.length ?? 0) > 0 && (
+            <Chip icon={<WarningIcon fontSize="small" />} label={`${entity.missingMandatoryFields!.length} missing`} size="small" color="warning" />
+          )}
+          {dpia && <Chip label="DPIA active" size="small" color="secondary" />}
+        </>}
+        actions={<>
           {isOwnerOrAdmin && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               Add Child Entity
@@ -462,15 +461,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               Delete
             </Button>
           )}
-        </Box>
-      </Box>
-
-      {/* Missing mandatory fields warning — only visible to owner and admin */}
-      {isOwnerOrAdmin && entity.missingMandatoryFields && entity.missingMandatoryFields.length > 0 && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Missing mandatory fields: {entity.missingMandatoryFields.join(', ')}
-        </Alert>
-      )}
+        </>}
+      />
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
 
       {/* Names & Descriptions */}
       <SectionHeader title={t('entity.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
@@ -695,15 +688,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </PropRow>
       </Paper>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v as typeof visibleTabs[0])} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-        {visibleTabs.includes(0) && <Tab value={0} label={t('tabs.compliance')} />}
-        {visibleTabs.includes(1) && <Tab value={1} label={t('tabs.relationships')} />}
-        {visibleTabs.includes(2) && <Tab value={2} label={t('tabs.governance')} />}
-        {visibleTabs.includes(3) && <Tab value={3} label={t('diagrams.lineageTab')} />}
-      </Tabs>
-
-      {activeTab === 0 && <>
+      {visibleTabs.includes(0) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 0} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.compliance')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Storage Locations */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -747,9 +737,16 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         invalidateKey={getGetEntityDpiaQueryKey(entityKey) as readonly unknown[]}
       />
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
-      {activeTab === 1 && <>
+      {visibleTabs.includes(1) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 1} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.relationships')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Interfaces */}
       <SectionHeader title="Interfaces" canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
@@ -960,9 +957,16 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         );
       })()}
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
-      {activeTab === 2 && <>
+      {visibleTabs.includes(2) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 2} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.governance')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Classifications */}
       <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
@@ -1114,15 +1118,24 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </Paper>
       )}
 
-      </>}
+        </AccordionDetails>
+      </Accordion>
+      )}
 
-      {activeTab === 3 && (
-        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={24} /></Box>}>
-          <EntityLineageDiagram
-            entityKey={entityKey}
-            entityName={getLocalizedText(entity.names)}
-          />
-        </Suspense>
+      {visibleTabs.includes(3) && (
+      <Accordion defaultExpanded={visibleTabs[0] === 3} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('diagrams.lineageTab')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
+          <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={24} /></Box>}>
+            <EntityLineageDiagram
+              entityKey={entityKey}
+              entityName={getLocalizedText(entity.names)}
+            />
+          </Suspense>
+        </AccordionDetails>
+      </Accordion>
       )}
 
       {/* Create Child Entity Dialog */}
@@ -1342,6 +1355,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Button>
         </DialogActions>
       </Dialog>
+      </Box>
     </Box>
   );
 };

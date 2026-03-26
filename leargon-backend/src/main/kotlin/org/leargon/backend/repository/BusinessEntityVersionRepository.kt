@@ -9,6 +9,10 @@ import java.util.Optional
 @Repository
 interface BusinessEntityVersionRepository : JpaRepository<BusinessEntityVersion, Long> {
     @Join(value = "changedBy", type = Join.Type.FETCH)
+    @Join(value = "businessEntity", type = Join.Type.FETCH)
+    override fun findAll(): List<BusinessEntityVersion>
+
+    @Join(value = "changedBy", type = Join.Type.FETCH)
     fun findByBusinessEntityIdOrderByVersionNumberDesc(businessEntityId: Long): List<BusinessEntityVersion>
 
     @Join(value = "changedBy", type = Join.Type.FETCH)

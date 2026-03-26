@@ -4,8 +4,8 @@ import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } fro
 import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub, Insights,
-  BubbleChart, AccountTreeOutlined, Schema, Share, FlashOn, Computer,
-  People, Language, Label, Tune, AutoAwesomeMosaic, Layers, GridView,
+  FlashOn, Computer,
+  People, Language, Label, Tune, AutoAwesomeMosaic,
 } from '@mui/icons-material';
 import { useNavigation, type Perspective } from '../../context/NavigationContext';
 
@@ -22,8 +22,6 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     title: 'Business Capability Model',
     items: [
       { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
-      { label: 'Capability Map', path: '/diagrams/capability-map', icon: <GridView /> },
-      { label: 'Strategic Map', path: '/diagrams/strategic-map', icon: <Layers /> },
       { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
     ],
   },
@@ -40,9 +38,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     title: 'Governance',
     items: [
       { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
-      { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
-      { label: 'Process Landscape', path: '/diagrams/processes', icon: <Schema /> },
     ],
   },
   ddd: {
@@ -50,8 +46,6 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     items: [
       { label: 'Domain Model', path: '/domains', icon: <Category /> },
       { label: 'Ubiquitous Language', path: '/ubiquitous-language', icon: <Hub /> },
-      { label: 'Entity Map', path: '/diagrams/entities', icon: <BubbleChart /> },
-      { label: 'Context Map', path: '/diagrams/context-map', icon: <Share /> },
       { label: 'Event Flow', path: '/diagrams/event-flow', icon: <FlashOn /> },
     ],
   },
@@ -59,9 +53,7 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
     title: 'Organisational Development',
     items: [
       { label: 'Organisational Structure', path: '/organisation', icon: <CorporateFare /> },
-      { label: 'Org Chart', path: '/diagrams/organisation', icon: <AccountTreeOutlined /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
-      { label: 'Process Landscape', path: '/diagrams/processes', icon: <Schema /> },
       { label: 'Team Insights', path: '/team-insights', icon: <Insights /> },
     ],
   },
@@ -81,6 +73,10 @@ const Sidebar: React.FC = () => {
   const { perspective } = useNavigation();
   const location = useLocation();
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
+  const isHomeRoute = location.pathname === '/home';
+
+  if (isHomeRoute) return null;
+
   const { title, items } = isSettingsRoute ? SETTINGS_NAV : PERSPECTIVE_NAV[perspective];
 
   return (

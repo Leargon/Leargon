@@ -12,11 +12,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
   Alert,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete } from '@mui/icons-material';
+import { Edit as EditIcon, Check, Close, Delete, ExpandMore } from '@mui/icons-material';
+import DetailPanelHeader from '../common/DetailPanelHeader';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetItSystem,
@@ -41,32 +44,6 @@ import type {
   ItSystemResponse,
 } from '../../api/generated/model';
 
-interface SectionHeaderProps {
-  title: string;
-  canEdit: boolean;
-  isEditing: boolean;
-  onEdit: () => void;
-  onSave: () => void;
-  onCancel: () => void;
-  isSaving: boolean;
-}
-
-const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing, onEdit, onSave, onCancel, isSaving }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-    <Typography variant="subtitle2">{title}</Typography>
-    {canEdit && !isEditing && (
-      <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
-    )}
-    {isEditing && (
-      <>
-        <IconButton size="small" onClick={onSave} disabled={isSaving} color="primary">
-          {isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-        </IconButton>
-        <IconButton size="small" onClick={onCancel} disabled={isSaving}><Close fontSize="small" /></IconButton>
-      </>
-    )}
-  </Box>
-);
 
 interface ItSystemDetailPanelProps {
   systemKey: string;
@@ -176,189 +153,247 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   }
 
   return (
-    <Box sx={{ p: 3, overflow: 'auto', height: '100%' }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <Box>
-          <Typography variant="h5">{getLocalizedText(system.names, system.key)}</Typography>
-          <Typography variant="body2" color="text.secondary">Key: {system.key}</Typography>
-        </Box>
-        {isAdmin && (
-          <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-            Delete
-          </Button>
-        )}
-      </Box>
-
-      {/* Names & Descriptions */}
-      <SectionHeader
-        title="Names & Descriptions"
-        canEdit={isAdmin}
-        isEditing={namesEdit.isEditing}
-        onEdit={() => namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] })}
-        onSave={namesEdit.save}
-        onCancel={namesEdit.cancel}
-        isSaving={namesEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {namesEdit.isEditing && namesEdit.editValue ? (
-          <Box>
-            <TranslationEditor
-              locales={locales}
-              names={namesEdit.editValue.names}
-              descriptions={namesEdit.editValue.descriptions}
-              onNamesChange={(n) => namesEdit.setEditValue({ ...namesEdit.editValue!, names: n })}
-              onDescriptionsChange={(d) => namesEdit.setEditValue({ ...namesEdit.editValue!, descriptions: d })}
-            />
-            {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {system.names.map((n) => (
-              <Chip key={n.locale} label={`${n.locale}: ${n.text}`} size="small" variant="outlined" />
-            ))}
-          </Box>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Vendor & System URL */}
-      <SectionHeader
-        title="Details"
-        canEdit={isAdmin}
-        isEditing={detailsEdit.isEditing}
-        onEdit={() => detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' })}
-        onSave={detailsEdit.save}
-        onCancel={detailsEdit.cancel}
-        isSaving={detailsEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {detailsEdit.isEditing && detailsEdit.editValue !== null ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <TextField
-              label="Vendor"
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <DetailPanelHeader
+        title={getLocalizedText(system.names, system.key)}
+        itemKey={system.key}
+        chips={
+          system.owningUnit ? (
+            <Chip
+              label={system.owningUnit.name || system.owningUnit.key}
               size="small"
-              value={detailsEdit.editValue.vendor}
-              onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, vendor: e.target.value })}
-              sx={{ width: 300 }}
+              variant="outlined"
+              onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
+              clickable
             />
-            <TextField
-              label="System URL"
-              size="small"
-              value={detailsEdit.editValue.systemUrl}
-              onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, systemUrl: e.target.value })}
-              sx={{ width: 300 }}
-              placeholder="https://..."
-            />
-            {detailsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{detailsEdit.error}</Alert>}
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>Vendor:</Typography>
-              <Typography variant="body2">
-                {system.vendor ?? <span style={{ color: '#888' }}>Not set</span>}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>System URL:</Typography>
-              {system.systemUrl ? (
-                <Typography variant="body2">
-                  <a href={system.systemUrl} target="_blank" rel="noopener noreferrer">{system.systemUrl}</a>
-                </Typography>
-              ) : (
-                <Typography variant="body2" color="text.secondary">Not set</Typography>
+          ) : undefined
+        }
+        actions={
+          isAdmin ? (
+            <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
+              Delete
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+        {/* Names & Descriptions */}
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Names & Descriptions</Typography>
+              {isAdmin && !namesEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] }); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {namesEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); namesEdit.save(); }} disabled={namesEdit.isSaving}>
+                    {namesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.cancel(); }} disabled={namesEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
               )}
             </Box>
-          </Box>
-        )}
-      </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {namesEdit.isEditing && namesEdit.editValue ? (
+              <Box>
+                <TranslationEditor
+                  locales={locales}
+                  names={namesEdit.editValue.names}
+                  descriptions={namesEdit.editValue.descriptions}
+                  onNamesChange={(n) => namesEdit.setEditValue({ ...namesEdit.editValue!, names: n })}
+                  onDescriptionsChange={(d) => namesEdit.setEditValue({ ...namesEdit.editValue!, descriptions: d })}
+                />
+                {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {system.names.map((n) => (
+                  <Chip key={n.locale} label={`${n.locale}: ${n.text}`} size="small" variant="outlined" />
+                ))}
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
-      <Divider sx={{ my: 2 }} />
+        {/* Details */}
+        <Accordion defaultExpanded disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Details</Typography>
+              {isAdmin && !detailsEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' }); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {detailsEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); detailsEdit.save(); }} disabled={detailsEdit.isSaving}>
+                    {detailsEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); detailsEdit.cancel(); }} disabled={detailsEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {detailsEdit.isEditing && detailsEdit.editValue !== null ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <TextField
+                  label="Vendor"
+                  size="small"
+                  value={detailsEdit.editValue.vendor}
+                  onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, vendor: e.target.value })}
+                  sx={{ width: 300 }}
+                />
+                <TextField
+                  label="System URL"
+                  size="small"
+                  value={detailsEdit.editValue.systemUrl}
+                  onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, systemUrl: e.target.value })}
+                  sx={{ width: 300 }}
+                  placeholder="https://..."
+                />
+                {detailsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{detailsEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>Vendor:</Typography>
+                  <Typography variant="body2">
+                    {system.vendor ?? <span style={{ color: '#888' }}>Not set</span>}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>System URL:</Typography>
+                  {system.systemUrl ? (
+                    <Typography variant="body2">
+                      <a href={system.systemUrl} target="_blank" rel="noopener noreferrer">{system.systemUrl}</a>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Not set</Typography>
+                  )}
+                </Box>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
-      {/* Owning Unit */}
-      <SectionHeader
-        title="Owning Unit"
-        canEdit={isAdmin}
-        isEditing={owningUnitEdit.isEditing}
-        onEdit={() => owningUnitEdit.startEdit(system.owningUnit?.key ?? null)}
-        onSave={owningUnitEdit.save}
-        onCancel={owningUnitEdit.cancel}
-        isSaving={owningUnitEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {owningUnitEdit.isEditing ? (
-          <Box>
-            <Autocomplete
-              options={allOrgUnits}
-              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-              value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
-              onChange={(_, val) => owningUnitEdit.setEditValue(val?.key ?? null)}
-              renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" />}
-              sx={{ width: 350 }}
-            />
-            {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
-          </Box>
-        ) : system.owningUnit ? (
-          <Chip
-            label={system.owningUnit.name || system.owningUnit.key}
-            size="small"
-            variant="outlined"
-            onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
-            clickable
-          />
-        ) : (
-          <Typography variant="body2" color="text.secondary">Not assigned</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Linked Processes */}
-      <SectionHeader
-        title="Linked Processes"
-        canEdit={isAdmin}
-        isEditing={processesEdit.isEditing}
-        onEdit={() => processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key))}
-        onSave={processesEdit.save}
-        onCancel={processesEdit.cancel}
-        isSaving={processesEdit.isSaving}
-      />
-      <Box sx={{ mb: 2 }}>
-        {processesEdit.isEditing && processesEdit.editValue !== null ? (
-          <Box>
-            <Autocomplete
-              multiple
-              options={allProcesses}
-              getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
-              value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
-              onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
-              renderInput={(params) => <TextField {...params} size="small" label="Processes" />}
-              renderTags={(val, getTagProps) =>
-                val.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
-                ))
-              }
-            />
-            {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
-          </Box>
-        ) : (system.linkedProcesses ?? []).length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {(system.linkedProcesses ?? []).map((p) => (
+        {/* Owning Unit */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Owning Unit</Typography>
+              {isAdmin && !owningUnitEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); owningUnitEdit.startEdit(system.owningUnit?.key ?? null); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {owningUnitEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); owningUnitEdit.save(); }} disabled={owningUnitEdit.isSaving}>
+                    {owningUnitEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); owningUnitEdit.cancel(); }} disabled={owningUnitEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {owningUnitEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allOrgUnits}
+                  getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                  value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
+                  onChange={(_, val) => owningUnitEdit.setEditValue(val?.key ?? null)}
+                  renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" />}
+                  sx={{ width: 350 }}
+                />
+                {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+              </Box>
+            ) : system.owningUnit ? (
               <Chip
-                key={p.key}
-                label={p.name || p.key}
+                label={system.owningUnit.name || system.owningUnit.key}
                 size="small"
                 variant="outlined"
-                onClick={() => navigate(`/processes/${p.key}`)}
+                onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
                 clickable
               />
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" color="text.secondary">No processes linked</Typography>
-        )}
+            ) : (
+              <Typography variant="body2" color="text.secondary">Not assigned</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Linked Processes */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">Linked Processes</Typography>
+              {isAdmin && !processesEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key)); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {processesEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); processesEdit.save(); }} disabled={processesEdit.isSaving}>
+                    {processesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.cancel(); }} disabled={processesEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {processesEdit.isEditing && processesEdit.editValue !== null ? (
+              <Box>
+                <Autocomplete
+                  multiple
+                  options={allProcesses}
+                  getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                  value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
+                  onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
+                  renderInput={(params) => <TextField {...params} size="small" label="Processes" />}
+                  renderTags={(val, getTagProps) =>
+                    val.map((option, index) => (
+                      <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                    ))
+                  }
+                />
+                {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
+              </Box>
+            ) : (system.linkedProcesses ?? []).length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {(system.linkedProcesses ?? []).map((p) => (
+                  <Chip
+                    key={p.key}
+                    label={p.name || p.key}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => navigate(`/processes/${p.key}`)}
+                    clickable
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">No processes linked</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
       </Box>
 
       {/* Delete Dialog */}
