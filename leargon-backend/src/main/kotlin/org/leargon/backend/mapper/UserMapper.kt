@@ -3,8 +3,10 @@ package org.leargon.backend.mapper
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.User
 import org.leargon.backend.model.SignupRequest
+import org.leargon.backend.model.UpdateProfileRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
+import org.leargon.backend.model.UserResponsePreferredRole
 import org.leargon.backend.model.UserSummaryResponse
 import java.time.Instant
 import java.time.ZoneOffset
@@ -42,6 +44,7 @@ open class UserMapper {
             toZonedDateTime(user.updatedAt)
         ).lastLoginAt(toZonedDateTime(user.lastLoginAt))
             .authProvider(user.authProvider)
+            .preferredRole(user.preferredRole?.let { UserResponsePreferredRole.fromValue(it) })
 
     fun updateUserFromRequest(
         request: UpdateUserRequest,
@@ -54,6 +57,14 @@ open class UserMapper {
         if (request.preferredLanguage != null) user.preferredLanguage = request.preferredLanguage!!
         if (request.enabled != null) user.enabled = request.enabled!!
         user.roles = mapRoles(request, user)
+    }
+
+    fun updateProfileFromRequest(
+        request: UpdateProfileRequest,
+        user: User
+    ) {
+        if (request.preferredLanguage != null) user.preferredLanguage = request.preferredLanguage!!
+        if (request.preferredRole != null) user.preferredRole = request.preferredRole!!.value
     }
 
     fun parseRoles(rolesString: String?): List<String> {

@@ -1,33 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { createContext, useContext } from 'react';
+import { useRole, type Role } from './RoleContext';
 
 export type Perspective = 'gdpr' | 'governance' | 'ddd' | 'orgdev' | 'bcm';
 
-const STORAGE_KEY = 'leargon_perspective';
-
-// Only routes exclusive to ONE perspective trigger an auto-switch.
-// Shared routes (/entities, /processes, /diagrams/entities, /diagrams/processes)
-// are intentionally absent so the current perspective is preserved.
-const ROUTE_TO_PERSPECTIVE: Record<string, Perspective> = {
-  '/capabilities': 'bcm',
-  '/diagrams/capability-map': 'bcm',
-  '/diagrams/strategic-map': 'bcm',
-  '/compliance': 'gdpr',
-  '/service-providers': 'gdpr',
-  '/dpia': 'gdpr',
-  '/domains': 'ddd',
-  '/diagrams/context-map': 'ddd',
-  '/diagrams/event-flow': 'ddd',
-  '/organisation': 'orgdev',
-  '/diagrams/organisation': 'orgdev',
-  '/team-insights': 'orgdev',
+const ROLE_TO_PERSPECTIVE: Record<Role, Perspective> = {
+  compliance: 'gdpr',
+  architecture: 'ddd',
+  operations: 'orgdev',
+  admin: 'governance',
 };
 
-function inferPerspective(pathname: string): Perspective | null {
-  for (const [prefix, p] of Object.entries(ROUTE_TO_PERSPECTIVE)) {
-    if (pathname === prefix || pathname.startsWith(prefix + '/')) return p;
-  }
-  return null;
+export function roleToPerspective(role: Role): Perspective {
+  return ROLE_TO_PERSPECTIVE[role];
 }
 
 interface NavigationContextValue {
@@ -36,36 +20,24 @@ interface NavigationContextValue {
 }
 
 const NavigationContext = createContext<NavigationContextValue>({
-  perspective: 'bcm',
+  perspective: 'governance',
   setPerspective: () => {},
 });
 
-export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  const [perspective, setPerspectiveState] = useState<Perspective>(() => {
-    const inferred = inferPerspective(location.pathname);
-    if (inferred) return inferred;
-    return (sessionStorage.getItem(STORAGE_KEY) as Perspective) ?? 'bcm';
-  });
-
-  useEffect(() => {
-    const inferred = inferPerspective(location.pathname);
-    if (inferred && inferred !== perspective) {
-      setPerspectiveState(inferred);
-      sessionStorage.setItem(STORAGE_KEY, inferred);
-    }
-  }, [location.pathname]);
-
-  const setPerspective = (p: Perspective) => {
-    setPerspectiveState(p);
-    sessionStorage.setItem(STORAGE_KEY, p);
-  };
-
+// Bridge: reads role from RoleContext and derives the perspective.
+// Components that call useNavigation().perspective continue to work unchanged.
+const NavigationBridge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { role } = useRole();
+  const perspective = ROLE_TO_PERSPECTIVE[role];
   return (
-    <NavigationContext.Provider value={{ perspective, setPerspective }}>
+    <NavigationContext.Provider value={{ perspective, setPerspective: () => {} }}>
       {children}
     </NavigationContext.Provider>
   );
+};
+
+export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <NavigationBridge>{children}</NavigationBridge>;
 };
 
 export const useNavigation = () => useContext(NavigationContext);

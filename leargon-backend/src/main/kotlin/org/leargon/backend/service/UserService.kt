@@ -11,6 +11,7 @@ import org.leargon.backend.mapper.UserMapper
 import org.leargon.backend.model.AdministrationChangePasswordRequest
 import org.leargon.backend.model.ChangePasswordRequest
 import org.leargon.backend.model.SignupRequest
+import org.leargon.backend.model.UpdateProfileRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -110,6 +111,16 @@ open class UserService(
             )
         }
         userRepository.delete(user)
+    }
+
+    @Transactional
+    open fun updateProfile(
+        userId: Long,
+        request: UpdateProfileRequest
+    ): User {
+        val user = getUserById(userId)
+        userMapper.updateProfileFromRequest(request, user)
+        return userRepository.update(user)
     }
 
     open fun getUserRoles(user: User): List<String> = user.roles.split(',').toList()

@@ -5839,6 +5839,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+      - User
+      summary: Update own profile
+      description: Allows a user to update their own profile settings (preferred role, preferred language).
+      operationId: updateProfile
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /users/me/password:
     post:
       tags:
@@ -8025,6 +8052,22 @@ components:
           example:
           - ROLE_USER
           - ROLE_ADMIN
+    UpdateProfileRequest:
+      type: object
+      properties:
+        preferredRole:
+          type: string
+          nullable: true
+          description: User's preferred role/view
+          enum:
+          - COMPLIANCE
+          - ARCHITECTURE
+          - OPERATIONS
+          - ADMIN
+        preferredLanguage:
+          type: string
+          description: Locale code (e.g., 'en', 'de')
+          example: en
     UserResponse:
       type: object
       required:
@@ -8107,6 +8150,16 @@ components:
           nullable: true
           description: Authentication provider (e.g., AZURE for Azure Entra ID users)
           example: null
+        preferredRole:
+          type: string
+          nullable: true
+          description: User's preferred role/view
+          enum:
+          - COMPLIANCE
+          - ARCHITECTURE
+          - OPERATIONS
+          - ADMIN
+          example: ARCHITECTURE
     UserSummaryResponse:
       type: object
       required:

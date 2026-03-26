@@ -3,11 +3,11 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
 import {
   Category, AccountTree, Timeline, CorporateFare,
-  Handshake, FactCheck, GppGood, Hub, Insights,
+  Handshake, FactCheck, GppGood, Hub,
   FlashOn, Computer,
   People, Language, Label, Tune, AutoAwesomeMosaic,
 } from '@mui/icons-material';
-import { useNavigation, type Perspective } from '../../context/NavigationContext';
+import { useRole, type Role } from '../../context/RoleContext';
 
 export const SIDEBAR_WIDTH = 200;
 
@@ -17,15 +17,8 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> = {
-  bcm: {
-    title: 'Business Capability Model',
-    items: [
-      { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
-      { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
-    ],
-  },
-  gdpr: {
+const ROLE_NAV: Record<Role, { title: string; items: NavItem[] }> = {
+  compliance: {
     title: 'DSG / GDPR',
     items: [
       { label: 'Processing Register', path: '/compliance', icon: <FactCheck /> },
@@ -34,27 +27,33 @@ const PERSPECTIVE_NAV: Record<Perspective, { title: string; items: NavItem[] }> 
       { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
     ],
   },
-  governance: {
-    title: 'Governance',
-    items: [
-      { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
-      { label: 'Process Map', path: '/processes', icon: <Timeline /> },
-    ],
-  },
-  ddd: {
+  architecture: {
     title: 'Domain-Driven Design',
     items: [
       { label: 'Domain Model', path: '/domains', icon: <Category /> },
       { label: 'Ubiquitous Language', path: '/ubiquitous-language', icon: <Hub /> },
+      { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
       { label: 'Event Flow', path: '/diagrams/event-flow', icon: <FlashOn /> },
     ],
   },
-  orgdev: {
+  operations: {
     title: 'Organisational Development',
     items: [
       { label: 'Organisational Structure', path: '/organisation', icon: <CorporateFare /> },
       { label: 'Process Map', path: '/processes', icon: <Timeline /> },
-      { label: 'Team Insights', path: '/team-insights', icon: <Insights /> },
+      { label: 'Capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
+      { label: 'IT Systems', path: '/it-systems', icon: <Computer /> },
+    ],
+  },
+  admin: {
+    title: 'Governance',
+    items: [
+      { label: 'Data Ontology', path: '/entities', icon: <AccountTree /> },
+      { label: 'Domain Model', path: '/domains', icon: <Category /> },
+      { label: 'Process Map', path: '/processes', icon: <Timeline /> },
+      { label: 'Processing Register', path: '/compliance', icon: <FactCheck /> },
+      { label: 'Service Providers', path: '/service-providers', icon: <Handshake /> },
+      { label: 'Organisation', path: '/organisation', icon: <CorporateFare /> },
     ],
   },
 };
@@ -70,14 +69,14 @@ const SETTINGS_NAV = {
 };
 
 const Sidebar: React.FC = () => {
-  const { perspective } = useNavigation();
+  const { role } = useRole();
   const location = useLocation();
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
   const isHomeRoute = location.pathname === '/home';
 
   if (isHomeRoute) return null;
 
-  const { title, items } = isSettingsRoute ? SETTINGS_NAV : PERSPECTIVE_NAV[perspective];
+  const { title, items } = isSettingsRoute ? SETTINGS_NAV : ROLE_NAV[role];
 
   return (
     <Box

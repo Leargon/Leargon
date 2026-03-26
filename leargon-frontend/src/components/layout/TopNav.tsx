@@ -15,41 +15,40 @@ import {
   SelectChangeEvent,
   Divider,
 } from '@mui/material';
-import { Settings, Person, Logout, LightMode, DarkMode, Gavel, AccountTree, Hub, CorporateFare, Layers, Home } from '@mui/icons-material';
+import { Settings, Person, Logout, LightMode, DarkMode, CheckCircle, ManageAccounts, Home } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
 import GlobalSearch from './GlobalSearch';
 import { useThemeMode } from '../../context/ThemeContext';
-import { useNavigation, type Perspective } from '../../context/NavigationContext';
+import { useRole, type Role } from '../../context/RoleContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 
-const PERSPECTIVES: { id: Perspective; labelKey: string; icon: React.ReactNode; firstPath: string }[] = [
-  { id: 'bcm', labelKey: 'Capability Model', icon: <Layers fontSize="small" />, firstPath: '/capabilities' },
-  { id: 'governance', labelKey: 'Governance', icon: <AccountTree fontSize="small" />, firstPath: '/entities' },
-  { id: 'ddd', labelKey: 'Domain-Driven Design', icon: <Hub fontSize="small" />, firstPath: '/domains' },
-  { id: 'orgdev', labelKey: 'Organisational Development', icon: <CorporateFare fontSize="small" />, firstPath: '/organisation' },
-  { id: 'gdpr', labelKey: 'DSG / GDPR', icon: <Gavel fontSize="small" />, firstPath: '/compliance' },
-];
+const ROLE_LABELS: Record<Role, string> = {
+  compliance: 'DSG / GDPR',
+  architecture: 'Architecture',
+  operations: 'Operations',
+  admin: 'Governance',
+};
 
 const TopNav: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
-  const isHomeRoute = location.pathname === '/home';
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
   const { effectiveMode, toggleMode } = useThemeMode();
-  const { perspective, setPerspective } = useNavigation();
+  const { role, setRole, isTemporary } = useRole();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [roleMenuAnchor, setRoleMenuAnchor] = useState<null | HTMLElement>(null);
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
-  const handlePerspectiveClick = (p: typeof PERSPECTIVES[0]) => {
-    setPerspective(p.id);
-    navigate(p.firstPath);
+  const handleRoleChange = async (r: Role) => {
+    setRoleMenuAnchor(null);
+    await setRole(r);
   };
 
   return (
@@ -92,30 +91,55 @@ const TopNav: React.FC = () => {
         </IconButton>
       </Tooltip>
 
-      {/* Perspective tabs */}
-      <Box sx={{ display: 'flex', gap: 0.5 }}>
-        {PERSPECTIVES.map((p) => (
-          <Button
-            key={p.id}
-            startIcon={p.icon}
-            onClick={() => handlePerspectiveClick(p)}
-            size="small"
-            sx={{
-              color: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 'white' : 'grey.400',
-              bgcolor: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 'rgba(255,255,255,0.12)' : 'transparent',
-              borderRadius: 1,
-              px: 1.5,
-              textTransform: 'none',
-              fontWeight: !isSettingsRoute && !isHomeRoute && perspective === p.id ? 600 : 400,
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap',
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
-            }}
+      {/* Role switcher */}
+      <Tooltip title={isTemporary ? 'Temporary view — resets on next login' : 'Current view'}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={(e) => setRoleMenuAnchor(e.currentTarget)}
+          sx={{
+            color: isTemporary ? 'warning.main' : (isSettingsRoute ? 'grey.400' : 'white'),
+            borderColor: isTemporary ? 'warning.dark' : 'grey.700',
+            bgcolor: !isSettingsRoute && !isTemporary ? 'rgba(255,255,255,0.08)' : 'transparent',
+            textTransform: 'none',
+            fontSize: '0.8rem',
+            fontWeight: !isSettingsRoute ? 600 : 400,
+            px: 1.5,
+            minWidth: 'unset',
+            '&:hover': { bgcolor: 'rgba(255,255,255,0.12)', borderColor: 'grey.500' },
+          }}
+        >
+          {ROLE_LABELS[role]}{isTemporary ? ' *' : ''}
+        </Button>
+      </Tooltip>
+
+      {/* Role switcher menu */}
+      <Menu
+        anchorEl={roleMenuAnchor}
+        open={Boolean(roleMenuAnchor)}
+        onClose={() => setRoleMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        <Box sx={{ px: 2, py: 0.75 }}>
+          <Typography variant="caption" color="text.secondary">Switch view</Typography>
+        </Box>
+        {(['compliance', 'architecture', 'operations', 'admin'] as Role[]).map((r) => (
+          <MenuItem
+            key={r}
+            selected={role === r && !isTemporary}
+            onClick={() => handleRoleChange(r)}
           >
-            {p.labelKey}
-          </Button>
+            <ListItemIcon>
+              {role === r && !isTemporary
+                ? <CheckCircle fontSize="small" color="primary" />
+                : <ManageAccounts fontSize="small" sx={{ color: 'text.disabled' }} />
+              }
+            </ListItemIcon>
+            <ListItemText>{ROLE_LABELS[r]}</ListItemText>
+          </MenuItem>
         ))}
-      </Box>
+      </Menu>
 
       {/* Global search */}
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', px: 2 }}>

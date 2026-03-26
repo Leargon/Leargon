@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 047-add-preferred-role-to-users
+      author: leargon
+      comment: >
+        Add preferred_role column to users table. Stores the user's preferred navigation
+        role (COMPLIANCE, ARCHITECTURE, OPERATIONS, ADMIN). Nullable — defaults are
+        inferred at runtime based on user's system role.
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: preferred_role
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true

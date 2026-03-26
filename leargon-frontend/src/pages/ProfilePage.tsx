@@ -9,6 +9,8 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Person,
@@ -19,9 +21,18 @@ import {
 } from '@mui/icons-material';
 import { useChangePassword } from '../api/generated/user/user';
 import { useAuth } from '../context/AuthContext';
+import { useRole, type Role } from '../context/RoleContext';
+
+const ROLE_LABELS: Record<Role, string> = {
+  compliance: 'DSG / GDPR',
+  architecture: 'Architecture',
+  operations: 'Operations',
+  admin: 'Governance',
+};
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
+  const { role, setRole, isTemporary, clearTemporaryRole } = useRole();
   const changePasswordMutation = useChangePassword();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -72,6 +83,34 @@ const ProfilePage: React.FC = () => {
             </Typography>
           )}
         </Box>
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>Default View</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Choose which navigation view to show by default. You can switch at any time from the top bar.
+        </Typography>
+        {isTemporary && (
+          <Alert
+            severity="info"
+            sx={{ mb: 2 }}
+            action={<Button size="small" onClick={clearTemporaryRole}>Reset</Button>}
+          >
+            You are using a temporary view. Reset to restore your saved default.
+          </Alert>
+        )}
+        <ToggleButtonGroup
+          value={role}
+          exclusive
+          onChange={(_e, v) => { if (v) setRole(v as Role); }}
+          size="small"
+        >
+          {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+            <ToggleButton key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </Paper>
 
       {!user?.isFallbackAdministrator && (
