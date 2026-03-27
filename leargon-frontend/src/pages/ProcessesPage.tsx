@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Timeline, Schema, FormatListBulleted } from '@mui/icons-material';
 import ProcessListPanel from '../components/processes/ProcessListPanel';
 import ProcessDetailPanel from '../components/processes/ProcessDetailPanel';
-import CreateProcessDialog from '../components/processes/CreateProcessDialog';
+import ProcessCreationWizard from '../components/processes/ProcessCreationWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 
 const ProcessLandscapeDiagram = lazy(() => import('../components/diagrams/ProcessLandscapeDiagram'));
@@ -38,7 +38,7 @@ const ProcessesPage: React.FC = () => {
       hasSelection={!!key}
       diagrams={{ map: <ProcessLandscapeDiagram /> }}
     >
-      <CreateProcessDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+      <ProcessCreationWizard open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
     </SplitPageLayout>
   );
 };

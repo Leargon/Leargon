@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { AccountTree, BubbleChart, FormatListBulleted } from '@mui/icons-material';
 import EntityTreePanel from '../components/ontology/EntityTreePanel';
 import EntityDetailPanel from '../components/ontology/EntityDetailPanel';
-import CreateEntityDialog from '../components/ontology/CreateEntityDialog';
+import EntityCreationWizard from '../components/ontology/EntityCreationWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 
 const EntityMapDiagram = lazy(() => import('../components/diagrams/EntityMapDiagram'));
@@ -38,7 +38,7 @@ const OntologyPage: React.FC = () => {
       hasSelection={!!key}
       diagrams={{ map: <EntityMapDiagram /> }}
     >
-      <CreateEntityDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+      <EntityCreationWizard open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
     </SplitPageLayout>
   );
 };

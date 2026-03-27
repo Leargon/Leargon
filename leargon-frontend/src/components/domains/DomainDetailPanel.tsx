@@ -84,7 +84,7 @@ import DetailPanelHeader from '../common/DetailPanelHeader';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import NudgeBanner from '../common/NudgeBanner';
 import WhatNextBanner from '../common/WhatNextBanner';
-import CreateDomainDialog from './CreateDomainDialog';
+import DomainCreationWizard from './DomainCreationWizard';
 import BoundedContextULPanel from './BoundedContextULPanel';
 import type {
   LocalizedText,
@@ -500,7 +500,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           title={t('nudge.domain.noOwningUnitTitle')}
           message={t('nudge.domain.noOwningUnitMessage')}
           actions={[{ label: t('nudge.domain.setOwningUnit'), onClick: () => owningUnitEdit.startEdit(null) }]}
-          learnMore="The owning org unit's business owner becomes the computed data owner for any entity or process in this domain that has no explicit owner set."
+          learnMore={t('nudge.domain.noOwningUnitLearnMore')}
         />
       )}
 
@@ -511,7 +511,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           title={t('nudge.domain.noBcTitle')}
           message={t('nudge.domain.noBcMessage')}
           actions={[{ label: t('nudge.domain.createBc'), onClick: () => setAddBcOpen(true) }]}
-          learnMore="In Domain-Driven Design, a bounded context is the explicit boundary within which a model is consistent and a team owns the code. Each context should map to a deployable service or a clearly owned subdomain."
+          learnMore={t('nudge.domain.noBcLearnMore')}
         />
       )}
 
@@ -1194,7 +1194,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       })()}
 
       {/* Create Subdomain Dialog */}
-      <CreateDomainDialog
+      <DomainCreationWizard
         open={createSubdomainOpen}
         onClose={() => setCreateSubdomainOpen(false)}
         parentKey={domainKey}

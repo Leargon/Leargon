@@ -4,7 +4,7 @@ import { Button } from '@mui/material';
 import { Category, Share, FormatListBulleted, Download } from '@mui/icons-material';
 import DomainTreePanel from '../components/domains/DomainTreePanel';
 import DomainDetailPanel from '../components/domains/DomainDetailPanel';
-import CreateDomainDialog from '../components/domains/CreateDomainDialog';
+import DomainCreationWizard from '../components/domains/DomainCreationWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { tokenStorage } from '../utils/tokenStorage';
 
@@ -62,7 +62,7 @@ const DomainsPage: React.FC = () => {
       hasSelection={!!key}
       diagrams={{ 'context-map': <ContextMapDiagram /> }}
     >
-      <CreateDomainDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+      <DomainCreationWizard open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
     </SplitPageLayout>
   );
 };

@@ -85,7 +85,7 @@ import QualityRulesSection from './QualityRulesSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import NudgeBanner from '../common/NudgeBanner';
 import WhatNextBanner from '../common/WhatNextBanner';
-import CreateEntityDialog from './CreateEntityDialog';
+import EntityCreationWizard from './EntityCreationWizard';
 import type {
   LocalizedText,
   ClassificationAssignmentRequest,
@@ -1182,7 +1182,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       })()}
 
       {/* Create Child Entity Dialog */}
-      <CreateEntityDialog
+      <EntityCreationWizard
         open={createChildOpen}
         onClose={() => setCreateChildOpen(false)}
         parentKey={entityKey}

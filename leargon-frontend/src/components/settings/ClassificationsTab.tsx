@@ -23,6 +23,8 @@ import {
   FormControlLabel,
   Switch,
 } from '@mui/material';
+import { AutoAwesome } from '@mui/icons-material';
+import ClassificationTaxonomyWizard from './ClassificationTaxonomyWizard';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -67,6 +69,7 @@ const ClassificationsTab: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  const [taxonomyWizardOpen, setTaxonomyWizardOpen] = useState(false);
 
   // Create classification dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -200,7 +203,25 @@ const ClassificationsTab: React.FC = () => {
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       {classifications.length === 0 ? (
-        <Typography color="text.secondary">No classifications yet.</Typography>
+        <Paper
+          variant="outlined"
+          sx={{ p: 3, textAlign: 'center', borderStyle: 'dashed' }}
+        >
+          <AutoAwesome sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+          <Typography variant="h6" sx={{ mb: 0.5 }}>No classifications yet</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Classifications are metadata labels — like "Personal Data" or "Confidentiality" — that
+            you attach to entities, domains, processes, and org units to drive governance rules and
+            compliance reports.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AutoAwesome />}
+            onClick={() => setTaxonomyWizardOpen(true)}
+          >
+            Set Up Classification Taxonomy
+          </Button>
+        </Paper>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {classifications.map((c: ClassificationResponse) => {
@@ -359,6 +380,11 @@ const ClassificationsTab: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ClassificationTaxonomyWizard
+        open={taxonomyWizardOpen}
+        onClose={() => setTaxonomyWizardOpen(false)}
+      />
     </>
   );
 };
