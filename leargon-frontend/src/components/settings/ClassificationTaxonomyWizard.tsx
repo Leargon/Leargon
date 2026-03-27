@@ -82,6 +82,143 @@ const TEMPLATES: TemplateDefinition[] = [
     defaultAssignableTo: 'BUSINESS_ENTITY',
     multiValue: false,
   },
+  {
+    id: 'cia-confidentiality',
+    values: [
+      { key: 'high', nameKey: 'high' },
+      { key: 'medium', nameKey: 'medium' },
+      { key: 'low', nameKey: 'low' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'cia-integrity',
+    values: [
+      { key: 'high', nameKey: 'high' },
+      { key: 'medium', nameKey: 'medium' },
+      { key: 'low', nameKey: 'low' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'cia-availability',
+    values: [
+      { key: 'high', nameKey: 'high' },
+      { key: 'medium', nameKey: 'medium' },
+      { key: 'low', nameKey: 'low' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'sensitivity',
+    values: [
+      { key: 'highly-sensitive', nameKey: 'highlySensitive' },
+      { key: 'sensitive', nameKey: 'sensitive' },
+      { key: 'internal', nameKey: 'internal' },
+      { key: 'public', nameKey: 'public' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'data-ownership',
+    values: [
+      { key: 'owned', nameKey: 'owned' },
+      { key: 'shared', nameKey: 'shared' },
+      { key: 'sourced', nameKey: 'sourced' },
+      { key: 'deprecated', nameKey: 'deprecated' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'master-data-type',
+    values: [
+      { key: 'master', nameKey: 'master' },
+      { key: 'reference', nameKey: 'reference' },
+      { key: 'transactional', nameKey: 'transactional' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'regulatory-scope',
+    values: [
+      { key: 'gdpr', nameKey: 'gdpr' },
+      { key: 'hipaa', nameKey: 'hipaa' },
+      { key: 'sox', nameKey: 'sox' },
+      { key: 'none', nameKey: 'none' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: true,
+  },
+  {
+    id: 'lifecycle-stage',
+    values: [
+      { key: 'concept', nameKey: 'concept' },
+      { key: 'active', nameKey: 'active' },
+      { key: 'deprecated', nameKey: 'deprecated' },
+      { key: 'archived', nameKey: 'archived' },
+    ],
+    defaultAssignableTo: 'BUSINESS_ENTITY',
+    multiValue: false,
+  },
+  {
+    id: 'strategic-importance',
+    values: [
+      { key: 'differentiating', nameKey: 'differentiating' },
+      { key: 'essential', nameKey: 'essential' },
+      { key: 'commodity', nameKey: 'commodity' },
+    ],
+    defaultAssignableTo: 'BUSINESS_DOMAIN',
+    multiValue: false,
+  },
+  {
+    id: 'capability-maturity',
+    values: [
+      { key: 'initial', nameKey: 'initial' },
+      { key: 'developing', nameKey: 'developing' },
+      { key: 'defined', nameKey: 'defined' },
+      { key: 'managed', nameKey: 'managed' },
+      { key: 'optimizing', nameKey: 'optimizing' },
+    ],
+    defaultAssignableTo: 'BUSINESS_DOMAIN',
+    multiValue: false,
+  },
+  {
+    id: 'investment-priority',
+    values: [
+      { key: 'invest', nameKey: 'invest' },
+      { key: 'maintain', nameKey: 'maintain' },
+      { key: 'retire', nameKey: 'retire' },
+    ],
+    defaultAssignableTo: 'BUSINESS_DOMAIN',
+    multiValue: false,
+  },
+  {
+    id: 'process-risk',
+    values: [
+      { key: 'high', nameKey: 'high' },
+      { key: 'medium', nameKey: 'medium' },
+      { key: 'low', nameKey: 'low' },
+    ],
+    defaultAssignableTo: 'BUSINESS_PROCESS',
+    multiValue: false,
+  },
+  {
+    id: 'process-maturity',
+    values: [
+      { key: 'ad-hoc', nameKey: 'adHoc' },
+      { key: 'repeatable', nameKey: 'repeatable' },
+      { key: 'standardized', nameKey: 'standardized' },
+      { key: 'optimized', nameKey: 'optimized' },
+    ],
+    defaultAssignableTo: 'BUSINESS_PROCESS',
+    multiValue: false,
+  },
 ];
 
 // Map template id to the i18n sub-key used in wizard.taxonomy.templates.*
@@ -90,6 +227,19 @@ const TEMPLATE_I18N_ID: Record<string, string> = {
   'personal-data': 'personalData',
   'data-quality': 'dataQuality',
   'retention': 'retention',
+  'cia-confidentiality': 'ciaConfidentiality',
+  'cia-integrity': 'ciaIntegrity',
+  'cia-availability': 'ciaAvailability',
+  'sensitivity': 'sensitivity',
+  'data-ownership': 'dataOwnership',
+  'master-data-type': 'masterDataType',
+  'regulatory-scope': 'regulatoryScope',
+  'lifecycle-stage': 'lifecycleStage',
+  'strategic-importance': 'strategicImportance',
+  'capability-maturity': 'capabilityMaturity',
+  'investment-priority': 'investmentPriority',
+  'process-risk': 'processRisk',
+  'process-maturity': 'processMaturity',
 };
 
 // --- Editable classification state ---

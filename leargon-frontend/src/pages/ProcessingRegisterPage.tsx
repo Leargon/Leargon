@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, TextField, Table, TableHead, TableBody, TableRow, TableCell,
@@ -24,6 +24,7 @@ import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 import { useNavigate } from 'react-router-dom';
+import ComplianceSetupWizard from '../components/compliance/ComplianceSetupWizard';
 
 const LEGAL_BASIS_COLORS: Record<string, 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'> = {
   CONSENT: 'primary',
@@ -369,9 +370,22 @@ const ProcessingRegisterPage: React.FC = () => {
   const [missingOnly, setMissingOnly] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
   const exportMenuOpen = Boolean(exportAnchorEl);
+  const [complianceWizardOpen, setComplianceWizardOpen] = useState(false);
+  const [complianceWizardDismissed, setComplianceWizardDismissed] = useState(false);
 
   const { data: processesResponse, isLoading } = useGetAllProcesses();
   const processes: ProcessResponse[] = ((processesResponse?.data) as ProcessResponse[] | undefined) ?? [];
+
+  const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => (p as any).legalBasis);
+
+  useEffect(() => {
+    if (hasNoLegalBases && !complianceWizardDismissed) setComplianceWizardOpen(true);
+  }, [hasNoLegalBases, complianceWizardDismissed]);
+
+  const handleComplianceWizardClose = () => {
+    setComplianceWizardOpen(false);
+    setComplianceWizardDismissed(true);
+  };
 
   const invalidateProcesses = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
@@ -429,6 +443,11 @@ const ProcessingRegisterPage: React.FC = () => {
           label={<Typography variant="body2">{t('compliance.filterMissingOnly')}</Typography>}
         />
         <Box sx={{ flex: 1 }} />
+        {hasNoLegalBases && (
+          <Button variant="contained" size="small" onClick={() => setComplianceWizardOpen(true)}>
+            {t('wizard.onboarding.compliance.emptyButton')}
+          </Button>
+        )}
         {isAdmin && (
           <>
             <Button
@@ -498,6 +517,7 @@ const ProcessingRegisterPage: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <ComplianceSetupWizard open={complianceWizardOpen} onClose={handleComplianceWizardClose} />
     </Box>
   );
 };
