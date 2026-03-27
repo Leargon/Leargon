@@ -33,3 +33,21 @@
 **IF** \
 **I WANT** to assign a parent entity\
 **SO THAT** this business entity is getting a child entity of the selected parent entity
+
+#### USER STORY 'Stewardship roles'
+**AS A** data owner or admin\
+**IF** \
+**I WANT** to assign a data steward and technical custodian to a business entity\
+**SO THAT** the people responsible for data quality and technical maintenance are clearly documented alongside the data owner
+
+#### USER STORY 'Storage locations'
+**AS A** data owner or admin\
+**IF** \
+**I WANT** to document where a business entity is physically or logically stored\
+**SO THAT** the data footprint and lineage of the entity is traceable across systems and environments
+
+#### USER STORY 'Translation links'
+**AS A** data owner or admin\
+**IF** the same concept exists under different names in different bounded contexts\
+**I WANT** to create translation links between semantically equivalent entities in different bounded contexts\
+**SO THAT** cross-domain language differences are made explicit and the ubiquitous language boundaries are documented

@@ -74,7 +74,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
         </Box>
       )}
 
-      {/* Nouns — Entities */}
+      {/* Nouns â€” Entities */}
       <Typography variant="subtitle2" sx={{ mb: 1, mt: 0 }}>
         {t('boundedContextUL.nouns')}
       </Typography>
@@ -86,7 +86,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
         <Table size="small" sx={{ mb: 2 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>{t('ubiquitousLanguage.nouns').replace(' — Entities', '')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('ubiquitousLanguage.nouns').replace(' â€” Entities', '')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('ubiquitousLanguage.description')}</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>{t('boundedContextUL.qualityRules')}</TableCell>
             </TableRow>
@@ -122,7 +122,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
                   {entity.qualityRules && entity.qualityRules.length > 0 ? (
                     <Chip label={entity.qualityRules.length} size="small" variant="outlined" color="info" />
                   ) : (
-                    <Typography variant="caption" color="text.secondary">—</Typography>
+                    <Typography variant="caption" color="text.secondary">â€”</Typography>
                   )}
                 </TableCell>
               </TableRow>
@@ -131,7 +131,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
         </Table>
       )}
 
-      {/* Verbs — Processes */}
+      {/* Verbs â€” Processes */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         {t('boundedContextUL.verbs')}
       </Typography>

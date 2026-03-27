@@ -63,3 +63,21 @@
 **IF** \
 **I WANT** to permanently delete an organisational unit\
 **SO THAT** dissolved or incorrectly created units are removed from the system
+
+#### USER STORY 'Update organisational unit business owner'
+**AS AN** admin\
+**IF** the user is registered and active\
+**I WANT** to assign or change the business owner of an organisational unit\
+**SO THAT** the accountable business stakeholder for this unit is documented and automatically resolved as the effective owner for entities and processes whose bounded context is owned by this unit
+
+#### USER STORY 'Update organisational unit business steward'
+**AS AN** admin\
+**IF** the user is registered and active\
+**I WANT** to assign or change the business steward of an organisational unit\
+**SO THAT** the data steward for this unit is documented and resolved as the effective steward for entities and processes in bounded contexts owned by this unit
+
+#### USER STORY 'Update organisational unit technical custodian'
+**AS AN** admin\
+**IF** the user is registered and active\
+**I WANT** to assign or change the technical custodian of an organisational unit\
+**SO THAT** the responsible engineer is documented and resolved as the effective technical custodian for entities and processes in bounded contexts owned by this unit

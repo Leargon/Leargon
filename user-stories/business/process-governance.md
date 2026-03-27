@@ -39,3 +39,21 @@
 **IF** \
 **I WANT** to assign a parent process\
 **SO THAT** this business process is getting a child process of the selected parent process
+
+#### USER STORY 'IT systems'
+**AS A** process owner or admin\
+**IF** \
+**I WANT** to link IT systems to the business process\
+**SO THAT** the technology used to execute the process is documented and visible in the processing register
+
+#### USER STORY 'Service providers'
+**AS A** process owner or admin\
+**IF** third-party vendors are involved in this process\
+**I WANT** to link service providers to the business process\
+**SO THAT** external data processors are documented and their contractual status is traceable
+
+#### USER STORY 'Compliance documentation'
+**AS A** process owner or privacy officer\
+**IF** \
+**I WANT** to document the legal basis, purpose, security measures, and any cross-border transfers for a business process\
+**SO THAT** the process is included in a complete and audit-ready processing register

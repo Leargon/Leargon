@@ -111,3 +111,33 @@
 **IF** \
 **I WANT** to set a retention period string on a business entity (e.g. "7 years")\
 **SO THAT** the data lifecycle requirements for that entity are documented and visible to all users
+
+#### USER STORY 'Update business entity data steward'
+**AS A** data owner or admin\
+**IF** the new steward is a registered and active user\
+**I WANT** to assign or change the data steward of a business entity\
+**SO THAT** the person responsible for day-to-day data quality on this entity is documented
+
+#### USER STORY 'Update business entity technical custodian'
+**AS A** data owner or admin\
+**IF** the new custodian is a registered and active user\
+**I WANT** to assign or change the technical custodian of a business entity\
+**SO THAT** the engineer responsible for the technical implementation of this entity is documented
+
+#### USER STORY 'Assign business entity to bounded context'
+**AS A** data owner or admin\
+**IF** the bounded context exists\
+**I WANT** to assign a business entity to a bounded context\
+**SO THAT** the entity is placed within an explicit service boundary and its owning unit is resolved automatically from the bounded context
+
+#### USER STORY 'Add storage location to business entity'
+**AS A** data owner or admin\
+**IF** \
+**I WANT** to add a storage location to a business entity specifying where this data is physically or logically stored (e.g. database name, system name, cloud bucket)\
+**SO THAT** the data lineage and storage footprint of the entity is documented
+
+#### USER STORY 'Remove storage location from business entity'
+**AS A** data owner or admin\
+**IF** the storage location is currently recorded for this entity\
+**I WANT** to remove a storage location from a business entity\
+**SO THAT** the storage documentation remains accurate when data is migrated or removed

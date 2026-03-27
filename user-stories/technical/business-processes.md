@@ -123,3 +123,75 @@
 **IF** at least two versions of the business process exist\
 **I WANT** to see the diff between a specific version and its preceding version, highlighting which fields changed and how\
 **SO THAT** I can understand exactly what was changed and by whom at any given point
+
+#### USER STORY 'Update business process steward'
+**AS A** process owner or admin\
+**IF** the new steward is a registered and active user\
+**I WANT** to assign or change the process steward of a business process\
+**SO THAT** the person responsible for day-to-day process quality is documented
+
+#### USER STORY 'Update business process technical custodian'
+**AS A** process owner or admin\
+**IF** the new custodian is a registered and active user\
+**I WANT** to assign or change the technical custodian of a business process\
+**SO THAT** the engineer responsible for the technical implementation of this process is documented
+
+#### USER STORY 'Assign business process to bounded context'
+**AS A** process owner or admin\
+**IF** the bounded context exists\
+**I WANT** to assign a business process to a bounded context\
+**SO THAT** the process is placed within an explicit service boundary and its owning unit is resolved automatically
+
+#### USER STORY 'Link IT system to business process'
+**AS A** process owner or admin\
+**IF** the IT system exists\
+**I WANT** to link one or more IT systems to a business process\
+**SO THAT** it is documented which systems support the execution of this process
+
+#### USER STORY 'Unlink IT system from business process'
+**AS A** process owner or admin\
+**IF** the IT system is currently linked\
+**I WANT** to remove the link between an IT system and a business process\
+**SO THAT** the relationship is removed when no longer accurate
+
+#### USER STORY 'Link service provider to business process'
+**AS A** process owner or admin\
+**IF** the service provider exists\
+**I WANT** to link one or more service providers to a business process\
+**SO THAT** it is documented which external processors handle data on behalf of this process
+
+#### USER STORY 'Unlink service provider from business process'
+**AS A** process owner or admin\
+**IF** the service provider is currently linked\
+**I WANT** to remove the link between a service provider and a business process\
+**SO THAT** the relationship is removed when no longer accurate
+
+#### USER STORY 'Update process legal basis'
+**AS A** process owner or admin\
+**IF** \
+**I WANT** to set the legal basis for a business process (Consent, Contract, Legal Obligation, Vital Interests, Public Task, Legitimate Interest)\
+**SO THAT** the GDPR Art. 30 / DSG Art. 12 requirement for documented legal basis is met
+
+#### USER STORY 'Update process purpose'
+**AS A** process owner or admin\
+**IF** \
+**I WANT** to document the purpose of a business process as a free-text statement\
+**SO THAT** the specific, explicit, and legitimate purpose of the processing activity is recorded
+
+#### USER STORY 'Update process security measures'
+**AS A** process owner or admin\
+**IF** \
+**I WANT** to document the technical and organisational security measures applied to a business process\
+**SO THAT** the security context of the processing activity is visible in the processing register
+
+#### USER STORY 'Add cross-border transfer to business process'
+**AS A** process owner or admin\
+**IF** \
+**I WANT** to add a cross-border transfer record specifying destination country and transfer safeguard mechanism\
+**SO THAT** transfers outside Switzerland or the EU/EEA are documented as required by DSG Art. 16 and GDPR Art. 44
+
+#### USER STORY 'Remove cross-border transfer from business process'
+**AS A** process owner or admin\
+**IF** the transfer record exists\
+**I WANT** to remove a cross-border transfer record from a business process\
+**SO THAT** the transfer documentation remains accurate

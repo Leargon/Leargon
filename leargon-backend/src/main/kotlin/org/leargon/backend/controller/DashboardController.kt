@@ -25,6 +25,5 @@ open class DashboardController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun getMaturityMetrics(): MaturityMetricsResponse =
-        dashboardService.getMaturityMetrics()
+    override fun getMaturityMetrics(): MaturityMetricsResponse = dashboardService.getMaturityMetrics()
 }

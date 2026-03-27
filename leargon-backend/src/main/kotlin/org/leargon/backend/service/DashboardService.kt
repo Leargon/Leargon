@@ -13,9 +13,9 @@ import org.leargon.backend.model.DashboardResponse
 import org.leargon.backend.model.MaturityMetricItem
 import org.leargon.backend.model.MaturityMetricsResponse
 import org.leargon.backend.model.MyResponsibilitiesResponse
-import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.model.UserSummaryResponse
+import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
@@ -209,7 +209,12 @@ open class DashboardService(
         val allDomains = domainRepo.findAll()
         val allDpias = dpiaRepo.findAll()
 
-        fun metric(key: String, label: String, covered: Int, total: Int): MaturityMetricItem {
+        fun metric(
+            key: String,
+            label: String,
+            covered: Int,
+            total: Int
+        ): MaturityMetricItem {
             val pct = if (total == 0) 100 else (covered * 100 / total)
             return MaturityMetricItem(key, label, covered, total, pct)
         }
@@ -247,13 +252,13 @@ open class DashboardService(
 
         return MaturityMetricsResponse(
             listOf(
-                metric("entityOwnership",    "Entity ownership",          entitiesWithOwner,             allEntities.size),
-                metric("processCompliance",   "Process compliance",        processesWithLegalBasis,       allProcesses.size),
-                metric("domainStructure",     "Domain structure",          domainsWithBc,                 allDomains.size),
-                metric("dpiasCoverage",       "DPIA coverage",             personalDataProcessesWithDpia, personalDataProcesses.size),
-                metric("processUnitCoverage", "Process–team assignment",   processesWithUnit,             allProcesses.size),
-                metric("dataProcessorDocs",   "Data processor documented", processesWithProviders,        personalDataProcesses.size),
-                metric("processPurpose",      "Processing purpose",        processesWithPurpose,          allProcesses.size),
+                metric("entityOwnership", "Entity ownership", entitiesWithOwner, allEntities.size),
+                metric("processCompliance", "Process compliance", processesWithLegalBasis, allProcesses.size),
+                metric("domainStructure", "Domain structure", domainsWithBc, allDomains.size),
+                metric("dpiasCoverage", "DPIA coverage", personalDataProcessesWithDpia, personalDataProcesses.size),
+                metric("processUnitCoverage", "Process–team assignment", processesWithUnit, allProcesses.size),
+                metric("dataProcessorDocs", "Data processor documented", processesWithProviders, personalDataProcesses.size),
+                metric("processPurpose", "Processing purpose", processesWithPurpose, allProcesses.size),
             )
         )
     }
