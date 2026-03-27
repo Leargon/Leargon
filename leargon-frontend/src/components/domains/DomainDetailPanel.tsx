@@ -81,7 +81,10 @@ import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
-import CreateDomainDialog from './CreateDomainDialog';
+import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import NudgeBanner from '../common/NudgeBanner';
+import WhatNextBanner from '../common/WhatNextBanner';
+import DomainCreationWizard from './DomainCreationWizard';
 import BoundedContextULPanel from './BoundedContextULPanel';
 import type {
   LocalizedText,
@@ -483,6 +486,34 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         ) : undefined}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
+
+      {/* Item 1: Missing fields banner */}
+      <MissingFieldsBanner
+        missingFields={domain.missingMandatoryFields ?? []}
+        ownerOrAdmin={isAdmin}
+      />
+
+      {/* Item 10: Domain without owning unit */}
+      {isAdmin && !domain.owningUnit && (
+        <NudgeBanner
+          severity="info"
+          title={t('nudge.domain.noOwningUnitTitle')}
+          message={t('nudge.domain.noOwningUnitMessage')}
+          actions={[{ label: t('nudge.domain.setOwningUnit'), onClick: () => owningUnitEdit.startEdit(null) }]}
+          learnMore={t('nudge.domain.noOwningUnitLearnMore')}
+        />
+      )}
+
+      {/* Item 8: Empty bounded context — domain has no bounded contexts */}
+      {isAdmin && boundedContexts.length === 0 && (
+        <NudgeBanner
+          severity="info"
+          title={t('nudge.domain.noBcTitle')}
+          message={t('nudge.domain.noBcMessage')}
+          actions={[{ label: t('nudge.domain.createBc'), onClick: () => setAddBcOpen(true) }]}
+          learnMore={t('nudge.domain.noBcLearnMore')}
+        />
+      )}
 
       {/* Names & Descriptions */}
       <SectionHeader
@@ -1153,8 +1184,17 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </Paper>
       )}
 
+      {/* Item 6: What's next suggestion */}
+      {isAdmin && (() => {
+        const steps = [];
+        if (boundedContexts.length === 0) steps.push({ description: t('nudge.domain.nextCreateBcDesc'), actionLabel: t('nudge.domain.createBc'), onClick: () => setAddBcOpen(true) });
+        else if (!domain.owningUnit) steps.push({ description: t('nudge.domain.nextSetOwningUnitDesc'), actionLabel: t('nudge.domain.setOwningUnit'), onClick: () => owningUnitEdit.startEdit(null) });
+        else if ((domain.missingMandatoryFields?.length ?? 0) > 0) steps.push({ description: t('nudge.entity.nextFillFields', { count: domain.missingMandatoryFields!.length }), actionLabel: t('nudge.entity.showFields'), onClick: () => {} });
+        return <WhatNextBanner steps={steps} />;
+      })()}
+
       {/* Create Subdomain Dialog */}
-      <CreateDomainDialog
+      <DomainCreationWizard
         open={createSubdomainOpen}
         onClose={() => setCreateSubdomainOpen(false)}
         parentKey={domainKey}

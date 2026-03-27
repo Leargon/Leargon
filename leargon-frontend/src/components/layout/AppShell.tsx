@@ -3,12 +3,14 @@ import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { RoleProvider } from '../../context/RoleContext';
 import { NavigationProvider } from '../../context/NavigationContext';
+import { WizardModeProvider } from '../../context/WizardModeContext';
 import TopNav from './TopNav';
 import Sidebar from './Sidebar';
 
 const AppShell: React.FC = () => {
   return (
     <RoleProvider>
+    <WizardModeProvider>
     <NavigationProvider>
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         {/* Top navigation bar — full width */}
@@ -30,6 +32,7 @@ const AppShell: React.FC = () => {
         </Box>
       </Box>
     </NavigationProvider>
+    </WizardModeProvider>
     </RoleProvider>
   );
 };

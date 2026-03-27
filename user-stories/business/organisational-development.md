@@ -21,3 +21,9 @@
 **IF** \
 **I WANT** to create crossunit teams, which spans across many organisational parent units\
 **SO THAT** I can define more details
+
+#### USER STORY 'Governance roles'
+**AS AN** admin\
+**IF** \
+**I WANT** to assign a business owner, business steward, and technical custodian to an organisational unit\
+**SO THAT** these roles are automatically resolved as the effective owner, steward, and custodian for all entities and processes in bounded contexts owned by this unit, without requiring explicit assignment on every item

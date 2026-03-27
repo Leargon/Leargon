@@ -219,3 +219,61 @@ Focuses on team structure and process responsibility:
 - **Bottleneck teams** — teams executing processes across 3 or more distinct domains
 - **Wrongly placed teams** — teams where no single domain accounts for 60% or more of their processes
 - **Split domains** — domains whose processes are spread across 3 or more distinct org units
+
+---
+
+## 5. UI Field Visibility by Perspective
+
+The frontend filters which fields and tabs are shown based on the active perspective. The goal is to present only the information relevant to the user's current analytical frame, reducing noise.
+
+### Entity detail panel — tabs
+
+| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Compliance | ✓ | ✓ | — | — | — |
+| Relationships | — | ✓ | ✓ | ✓ | — |
+| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Lineage | — | ✓ | ✓ | — | — |
+
+### Entity detail panel — core fields
+
+| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Data Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Data Steward | — | ✓ | — | — | — |
+| Technical Custodian | — | ✓ | — | — | — |
+| Parent Entity | — | ✓ | ✓ | — | — |
+| Bounded Context | — | ✓ | ✓ | — | — |
+| Retention Period | ✓ | ✓ | — | — | — |
+
+### Process detail panel — tabs
+
+| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Data & Teams | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Compliance | ✓ | ✓ | — | — | — |
+| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+### Process detail panel — core fields
+
+| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Process Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Process Steward | — | ✓ | — | — | — |
+| Technical Custodian | — | ✓ | — | — | — |
+| Code | — | ✓ | ✓ | ✓ | ✓ |
+| Process Type | — | ✓ | ✓ | ✓ | ✓ |
+| Legal Basis | ✓ | ✓ | — | — | — |
+| Bounded Context | — | ✓ | ✓ | — | — |
+
+### Domain detail panel — sections
+
+| Section | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Domain Type | — | ✓ | ✓ | ✓ | ✓ |
+| Parent Domain | — | ✓ | ✓ | ✓ | ✓ |
+| Vision Statement | — | ✓ | ✓ | ✓ | ✓ |
+| Owning Unit | — | ✓ | — | ✓ | ✓ |
+| Bounded Contexts | — | ✓ | ✓ | — | — |
+| Context Relationships | — | ✓ | ✓ | — | — |
+| Classifications | ✓ | ✓ | — | — | — |

@@ -122,6 +122,8 @@ export * from './localizedBusinessDomainResponse';
 export * from './localizedBusinessEntityResponse';
 export * from './localizedText';
 export * from './loginRequest';
+export * from './maturityMetricItem';
+export * from './maturityMetricsResponse';
 export * from './myResponsibilitiesResponse';
 export * from './organisationalUnitResponse';
 export * from './organisationalUnitSummaryResponse';

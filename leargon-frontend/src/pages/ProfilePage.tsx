@@ -22,6 +22,7 @@ import {
 import { useChangePassword } from '../api/generated/user/user';
 import { useAuth } from '../context/AuthContext';
 import { useRole, type Role } from '../context/RoleContext';
+import { useWizardMode, type WizardMode } from '../context/WizardModeContext';
 
 const ROLE_LABELS: Record<Role, string> = {
   compliance: 'DSG / GDPR',
@@ -33,6 +34,7 @@ const ROLE_LABELS: Record<Role, string> = {
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { role, setRole, isTemporary, clearTemporaryRole } = useRole();
+  const { mode: wizardMode, setMode: setWizardMode } = useWizardMode();
   const changePasswordMutation = useChangePassword();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -110,6 +112,22 @@ const ProfilePage: React.FC = () => {
               {ROLE_LABELS[r]}
             </ToggleButton>
           ))}
+        </ToggleButtonGroup>
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>Creation Wizard Mode</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Choose how creation wizards behave. Express mode shows all fields on one page; Guided mode walks you through each step with explanations.
+        </Typography>
+        <ToggleButtonGroup
+          value={wizardMode}
+          exclusive
+          onChange={(_e, v) => { if (v) setWizardMode(v as WizardMode); }}
+          size="small"
+        >
+          <ToggleButton value="guided">Guided (with explanations)</ToggleButton>
+          <ToggleButton value="express">Express (single form)</ToggleButton>
         </ToggleButtonGroup>
       </Paper>
 

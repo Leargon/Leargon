@@ -75,3 +75,21 @@
 **IF** at least two versions of the business domain exist\
 **I WANT** to see the diff between a specific version and its preceding version, highlighting which fields changed and how\
 **SO THAT** I can understand exactly what was changed and by whom at any given point
+
+#### USER STORY 'Update business domain owning unit'
+**AS AN** admin\
+**IF** the organisational unit exists\
+**I WANT** to assign or change the owning organisational unit of a business domain\
+**SO THAT** the team accountable for this domain is documented and governance roles are resolved automatically for all entities within it
+
+#### USER STORY 'Update business domain vision statement'
+**AS AN** admin\
+**IF** \
+**I WANT** to set or update a vision statement for a business domain in all supported locales\
+**SO THAT** the strategic intent and purpose of the domain is documented and visible to all users
+
+#### USER STORY 'Create bounded context within domain'
+**AS AN** admin\
+**IF** \
+**I WANT** to create a bounded context within a business domain\
+**SO THAT** an explicit service boundary is defined and entities can be assigned to it

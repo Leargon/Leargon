@@ -23,12 +23,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'vendor-query': ['@tanstack/react-query', 'axios'],
-          'vendor-flow': ['@xyflow/react', '@dagrejs/dagre'],
-          'vendor-msal': ['@azure/msal-browser', '@azure/msal-react'],
+        manualChunks: (id) => {
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) return 'vendor-react';
+          if (id.includes('@mui/') || id.includes('@emotion/')) return 'vendor-mui';
+          if (id.includes('@tanstack/') || id.includes('axios')) return 'vendor-query';
+          if (id.includes('@xyflow/') || id.includes('@dagrejs/')) return 'vendor-flow';
+          if (id.includes('@azure/msal')) return 'vendor-msal';
         },
       },
     },

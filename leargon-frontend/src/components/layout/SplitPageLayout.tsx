@@ -35,7 +35,8 @@ export const EmptyDetailState: React.FC<{
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
-}> = ({ icon, title, subtitle }) => (
+  action?: React.ReactNode;
+}> = ({ icon, title, subtitle, action }) => (
   <Box
     sx={{
       display: 'flex',
@@ -51,6 +52,7 @@ export const EmptyDetailState: React.FC<{
     </Box>
     <Typography variant="h6">{title}</Typography>
     {subtitle && <Typography variant="body2">{subtitle}</Typography>}
+    {action && <Box sx={{ mt: 2 }}>{action}</Box>}
   </Box>
 );
 

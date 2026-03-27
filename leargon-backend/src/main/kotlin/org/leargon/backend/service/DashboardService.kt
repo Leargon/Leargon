@@ -10,9 +10,12 @@ import org.leargon.backend.model.AttentionItemResourceType
 import org.leargon.backend.model.AttentionItemSeverity
 import org.leargon.backend.model.BusinessEntitySummaryResponse
 import org.leargon.backend.model.DashboardResponse
+import org.leargon.backend.model.MaturityMetricItem
+import org.leargon.backend.model.MaturityMetricsResponse
 import org.leargon.backend.model.MyResponsibilitiesResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.model.UserSummaryResponse
+import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
@@ -31,6 +34,7 @@ open class DashboardService(
     private val businessDomainVersionRepository: BusinessDomainVersionRepository,
     private val dpiaRepository: DpiaRepository,
     private val userRepository: UserRepository,
+    private val businessDomainRepository: BusinessDomainRepository,
 ) {
     fun getDashboard(
         email: String,
@@ -191,6 +195,71 @@ open class DashboardService(
             needsAttention,
             recentActivity,
             MyResponsibilitiesResponse(myEntities, myProcesses),
+        )
+    }
+
+    fun getMaturityMetrics(): MaturityMetricsResponse {
+        val entityRepo = this.businessEntityRepository
+        val procRepo = this.processRepository
+        val domainRepo = this.businessDomainRepository
+        val dpiaRepo = this.dpiaRepository
+
+        val allEntities = entityRepo.findAll()
+        val allProcesses = procRepo.findAll()
+        val allDomains = domainRepo.findAll()
+        val allDpias = dpiaRepo.findAll()
+
+        fun metric(
+            key: String,
+            label: String,
+            covered: Int,
+            total: Int
+        ): MaturityMetricItem {
+            val pct = if (total == 0) 100 else (covered * 100 / total)
+            return MaturityMetricItem(key, label, covered, total, pct)
+        }
+
+        // 1. Entity ownership coverage
+        val entitiesWithOwner = allEntities.count { it.dataOwner != null }
+
+        // 2. Process compliance coverage (has legal basis)
+        val processesWithLegalBasis = allProcesses.count { it.legalBasis != null }
+
+        // 3. Domain structure coverage (has at least one bounded context)
+        val domainsWithBc = allDomains.count { !it.boundedContexts.isNullOrEmpty() }
+
+        // Helper: does this process handle personal data?
+        fun processHasPersonalData(p: org.leargon.backend.domain.Process): Boolean =
+            (p.inputEntities + p.outputEntities).any { entity ->
+                entity.classificationAssignments.any {
+                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                }
+            }
+
+        // 4. DPIA coverage (personal data processes with a DPIA)
+        val personalDataProcesses = allProcesses.filter { processHasPersonalData(it) }
+        val processKeysWithDpia = allDpias.mapNotNull { it.process?.key }.toSet()
+        val personalDataProcessesWithDpia = personalDataProcesses.count { it.key in processKeysWithDpia }
+
+        // 5. Process–unit coverage (has executing unit)
+        val processesWithUnit = allProcesses.count { !it.executingUnits.isNullOrEmpty() }
+
+        // 6. Data processor documentation (personal data processes with service providers)
+        val processesWithProviders = personalDataProcesses.count { it.serviceProviders.isNotEmpty() }
+
+        // 7. Process purpose documentation (has purpose text)
+        val processesWithPurpose = allProcesses.count { !it.purpose.isNullOrBlank() }
+
+        return MaturityMetricsResponse(
+            listOf(
+                metric("entityOwnership", "Entity ownership", entitiesWithOwner, allEntities.size),
+                metric("processCompliance", "Process compliance", processesWithLegalBasis, allProcesses.size),
+                metric("domainStructure", "Domain structure", domainsWithBc, allDomains.size),
+                metric("dpiasCoverage", "DPIA coverage", personalDataProcessesWithDpia, personalDataProcesses.size),
+                metric("processUnitCoverage", "Process–team assignment", processesWithUnit, allProcesses.size),
+                metric("dataProcessorDocs", "Data processor documented", processesWithProviders, personalDataProcesses.size),
+                metric("processPurpose", "Processing purpose", processesWithPurpose, allProcesses.size),
+            )
         )
     }
 }

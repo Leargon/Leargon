@@ -66,6 +66,71 @@ export const DOMAIN_SECTIONS_BY_PERSPECTIVE: Record<Perspective, {
 };
 
 /**
+ * Core field visibility for EntityDetailPanel (PropRows above the tabs).
+ * dataOwner is always shown — only the secondary fields are controlled here.
+ */
+export const ENTITY_FIELDS_BY_PERSPECTIVE: Record<Perspective, {
+  dataSteward: boolean;
+  technicalCustodian: boolean;
+  parentEntity: boolean;
+  boundedContext: boolean;
+  retentionPeriod: boolean;
+}> = {
+  gdpr:       { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: true  },
+  governance: { dataSteward: true,  technicalCustodian: true,  parentEntity: true,  boundedContext: true,  retentionPeriod: true  },
+  ddd:        { dataSteward: false, technicalCustodian: false, parentEntity: true,  boundedContext: true,  retentionPeriod: false },
+  orgdev:     { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: false },
+  bcm:        { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: false },
+};
+
+/**
+ * Core field visibility for ProcessDetailPanel (PropRows above the tabs).
+ * processOwner is always shown — only the secondary fields are controlled here.
+ */
+export const PROCESS_FIELDS_BY_PERSPECTIVE: Record<Perspective, {
+  processSteward: boolean;
+  technicalCustodian: boolean;
+  code: boolean;
+  processType: boolean;
+  legalBasis: boolean;
+  boundedContext: boolean;
+}> = {
+  gdpr:       { processSteward: false, technicalCustodian: false, code: false, processType: false, legalBasis: true,  boundedContext: false },
+  governance: { processSteward: true,  technicalCustodian: true,  code: true,  processType: true,  legalBasis: true,  boundedContext: true  },
+  ddd:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: true  },
+  orgdev:     { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: false },
+  bcm:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: false },
+};
+
+/**
+ * Wizard step IDs visible per perspective.
+ * Steps not in the set are omitted from the wizard; summary is always included.
+ */
+export const WIZARD_DOMAIN_STEPS_BY_PERSPECTIVE: Record<Perspective, Set<string>> = {
+  gdpr:       new Set(['identity', 'summary']),
+  governance: new Set(['identity', 'placement', 'vision', 'bounded-context', 'summary']),
+  ddd:        new Set(['identity', 'placement', 'vision', 'bounded-context', 'summary']),
+  orgdev:     new Set(['identity', 'placement', 'vision', 'summary']),
+  bcm:        new Set(['identity', 'placement', 'vision', 'summary']),
+};
+
+export const WIZARD_ENTITY_STEPS_BY_PERSPECTIVE: Record<Perspective, Set<string>> = {
+  gdpr:       new Set(['identity', 'ownership', 'classifications', 'summary']),
+  governance: new Set(['identity', 'placement', 'ownership', 'classifications', 'summary']),
+  ddd:        new Set(['identity', 'placement', 'ownership', 'summary']),
+  orgdev:     new Set(['identity', 'placement', 'ownership', 'summary']),
+  bcm:        new Set(['identity', 'classifications', 'summary']),
+};
+
+export const WIZARD_PROCESS_STEPS_BY_PERSPECTIVE: Record<Perspective, Set<string>> = {
+  gdpr:       new Set(['identity', 'ownership', 'data-flow', 'compliance', 'summary']),
+  governance: new Set(['identity', 'ownership', 'data-flow', 'compliance', 'summary']),
+  ddd:        new Set(['identity', 'ownership', 'data-flow', 'summary']),
+  orgdev:     new Set(['identity', 'ownership', 'data-flow', 'summary']),
+  bcm:        new Set(['identity', 'ownership', 'data-flow', 'summary']),
+};
+
+/**
  * Org unit panel sections visible per perspective.
  */
 export const ORG_UNIT_SECTIONS_BY_PERSPECTIVE: Record<Perspective, {

@@ -1,22 +1,62 @@
 # Léargon Roadmap
 *Ordered by value/effort score (value 1–10 ÷ sessions).*
 
-| Feature                           | Sessions | Weekly | Value | Score   |
-|-----------------------------------|----------|--------|-------|---------|
-| Privacy notice generation         | 1        | 10%    | 8/10  | **8.0** |
-| DSG/GDPR compliance guided setup  | 2        | 20%    | 9/10  | **4.5** |
-| Personal dashboard                | 2        | 20%    | 8/10  | **4.0** |
-| Data governance guided setup      | 2        | 20%    | 8/10  | **4.0** |
-| DDD guided setup                  | 2        | 20%    | 8/10  | **4.0** |
-| Catalogue insights                | 3        | 30%    | 8/10  | **2.7** |
-| Catalogue quality rules           | 3        | 30%    | 7/10  | **2.3** |
-| Impact analysis & domain coupling | 4        | 40%    | 8/10  | **2.0** |
-| Compliance metrics dashboard      | 4        | 40%    | 8/10  | **2.0** |
-| DDD guided discovery              | 4        | 40%    | 7/10  | **1.8** |
-| Import & integration              | 4        | 40%    | 7/10  | **1.8** |
-| Watch & notifications             | 4        | 40%    | 6/10  | **1.5** |
-| Review cycles                     | 4        | 40%    | 6/10  | **1.5** |
-| Stewards                          | 5        | 50%    | 7/10  | **1.4** |
+| Feature                            | Sessions | Weekly | Value | Score    |
+|------------------------------------|----------|--------|-------|----------|
+| Sub-domain owning unit default     | 0.5      | 5%     | 7/10  | **14.0** |
+| Privacy notice generation          | 1        | 10%    | 8/10  | **8.0**  |
+| DSG/GDPR compliance guided setup   | 1.5      | 15%    | 9/10  | **6.0**  |
+| Process effective entity roll-up   | 1.5      | 15%    | 8/10  | **5.3**  |
+| Data governance guided setup       | 1.5      | 15%    | 8/10  | **5.3**  |
+| DDD guided setup                   | 1.5      | 15%    | 8/10  | **5.3**  |
+| Catalogue insights                 | 3        | 30%    | 8/10  | **2.7**  |
+| Catalogue quality rules            | 3        | 30%    | 7/10  | **2.3**  |
+| Impact analysis & domain coupling  | 4        | 40%    | 8/10  | **2.0**  |
+| Compliance metrics dashboard       | 4        | 40%    | 8/10  | **2.0**  |
+| DDD guided discovery               | 4        | 40%    | 7/10  | **1.8**  |
+| Import & integration               | 4        | 40%    | 7/10  | **1.8**  |
+| Watch & notifications              | 4        | 40%    | 6/10  | **1.5**  |
+| Review cycles                      | 4        | 40%    | 6/10  | **1.5**  |
+| Performance & scalability          | 3        | 30%    | 7/10  | **2.3**  |
+| Stewards                           | 5        | 50%    | 7/10  | **1.4**  |
+
+---
+
+## Sub-domain owning unit default
+
+*When creating a sub-domain (a domain with a parent), pre-fill the owning unit field with the parent domain's owning unit as a default suggestion. The user can override it freely — this is a creation-time convenience, not a computed inheritance. No backend change required; the default is applied in the create dialog / Domain Creation Wizard before the request is sent.*
+*⏱ Sessions: 0.5 · Weekly effort: ~5% · Value: 7/10 · Score: 14.0*
+
+#### USER STORY 'Pre-fill owning unit when creating a sub-domain'
+**AS AN** architect or admin\
+**IF** I am creating a business domain and select a parent domain that has an owning organisational unit\
+**I WANT** the owning unit field to be pre-filled with the parent domain's owning unit\
+**SO THAT** I do not have to manually re-select the same unit for every sub-domain, while still being free to assign a different unit when the sub-domain is owned by a different team
+
+---
+
+## Process effective entity roll-up
+
+*Adds computed `effectiveInputEntities` and `effectiveOutputEntities` fields to the process API response. These aggregate the direct entity assignments of a process with those of all its descendant sub-processes (recursively). The directly assigned entities remain editable; the effective view is read-only and displayed alongside them. Requires an openapi.yaml change and a backend recursive query.*
+*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
+
+#### USER STORY 'View effective data flow across a process hierarchy'
+**AS A** logged in user\
+**IF** a business process has sub-processes that each assign input and output entities\
+**I WANT** to see the union of all input and output entities across the process and its entire sub-process hierarchy on the process detail panel\
+**SO THAT** I understand the full data footprint of a process group without having to open each sub-process individually
+
+#### USER STORY 'Compliance register uses effective entity roll-up'
+**AS A** privacy officer\
+**IF** a parent process has no directly assigned entities but its sub-processes collectively handle personal data\
+**I WANT** the processing register and compliance exports to reflect the aggregated entity scope from all sub-processes\
+**SO THAT** the register is complete and no processing activity is omitted from the Art. 30 / DSG Art. 12 record because entities were assigned only at sub-process level
+
+#### USER STORY 'Warn when process hierarchy has no entity coverage'
+**AS A** process owner or admin\
+**IF** a process has no input or output entities directly assigned AND none of its sub-processes or linked call-activity processes define any entities either\
+**I WANT** to see a warning on the process detail panel indicating that the data flow for this process is completely undocumented\
+**SO THAT** processes with no entity coverage are surfaced as gaps rather than silently passing compliance checks with an empty data footprint
 
 ---
 
@@ -101,31 +141,21 @@
 
 ## DSG / GDPR compliance guided setup
 *Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. No new tables.*
-*⏱ Sessions: 2 · Weekly effort: ~20% · Value: 9/10 · Score: 4.5*
+*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 9/10 · Score: 6.0*
 
-#### USER STORY 'Compliance setup wizard entry point'
-**AS A** privacy officer or DPO\
-**IF** I need to comply with GDPR Art. 30 or Swiss DSG Art. 12 (record of processing activities)\
-**I WANT** to be offered a compliance setup wizard that walks me through building the processing register step by step\
-**SO THAT** I can reach an audit-ready compliance posture without expert knowledge of the tool's data model
+*Partially implemented: the compliance wizard entry point is live on the processing register page and covers legal basis assignment and purpose documentation for all processes. The following steps are not yet implemented.*
 
 #### USER STORY 'Personal data classification step'
 **AS A** privacy officer\
-**IF** I am at the first step of the compliance wizard\
-**I WANT** to be guided through creating a classification scheme for personal data categories (e.g. ordinary personal data, sensitive personal data, special categories under GDPR Art. 9 / DSG Art. 5)\
+**IF** I open the compliance wizard\
+**I WANT** the wizard to check whether a personal data classification exists and, if not, show an inline shortcut to create one via the Classification Taxonomy Wizard\
 **SO THAT** business entities containing personal data are consistently labelled before I build the processing register
 
 #### USER STORY 'Processing activity identification step'
 **AS A** privacy officer\
 **IF** business processes exist in the catalogue\
 **I WANT** the wizard to walk me through reviewing each process and marking which ones involve personal data processing\
-**SO THAT** I can quickly scope the processing register to the relevant subset of all documented processes
-
-#### USER STORY 'Legal basis assignment step'
-**AS A** privacy officer\
-**IF** I have identified processes that handle personal data\
-**I WANT** the wizard to prompt me to record the legal basis for each processing activity (consent, contract, legal obligation, vital interests, public task, legitimate interest)\
-**SO THAT** the processing register is complete with mandatory legal basis information
+**SO THAT** I can quickly scope the register to the relevant subset of all documented processes
 
 #### USER STORY 'Data processor inventory step'
 **AS A** privacy officer\
@@ -154,18 +184,7 @@
 ---
 
 ## Personal dashboard
-*Pure read-only flush — no new tables. The home screen aggregates existing data: owned items, recent activity feed from version history, and (once Watch & notifications is shipped) the watchlist.*
-*⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
-
-#### USER STORY 'View owned items on personal dashboard'
-**AS A** data owner, process owner, or admin\
-**I WANT** to see a personal dashboard as the home screen listing all business entities, processes, and domains I own, grouped by type, with quick-glance status indicators (completeness score, open DPIA, missing mandatory fields)\
-**SO THAT** I have an immediate overview of my governance responsibilities every time I open Léargon without having to navigate through tree views
-
-#### USER STORY 'View recent catalogue activity on dashboard'
-**AS A** logged in user\
-**I WANT** to see a chronological feed of recently created or modified items across the catalogue — showing item name, type, change type, who made the change, and when — limited to the last 20 entries\
-**SO THAT** I can stay informed about what is happening in the data catalogue without subscribing to individual items
+*Core implemented: home screen shows owned entities/processes (My Responsibilities), recent catalogue activity feed, needs-attention items, and governance maturity overview for admins. Remaining stories depend on Watch & notifications and Review cycles respectively.*
 
 #### USER STORY 'View watchlist on dashboard'
 **AS A** logged in user\
@@ -183,19 +202,15 @@
 
 ## Data governance guided setup
 *Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. No new tables.*
-*⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
+*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
+
+*Partially implemented: the Classification Taxonomy Wizard (Settings → Classifications) and the Governance Maturity Overview (home screen, admin view) are shipped. What remains is a unified governance wizard that chains these steps into a single guided flow.*
 
 #### USER STORY 'Governance setup wizard entry point'
 **AS A** CDO or data steward\
 **IF** my organisation is starting a data governance programme\
-**I WANT** to be guided through the recommended order of governance setup steps\
+**I WANT** to be guided through the recommended order of governance setup steps — classification taxonomy → entity ownership → classification coverage → process ownership — in a single wizard\
 **SO THAT** I build a governable data landscape without skipping foundational prerequisites
-
-#### USER STORY 'Classification taxonomy setup step'
-**AS AN** admin\
-**IF** I am at the first step of the governance wizard\
-**I WANT** to be walked through creating a classification taxonomy (e.g. confidentiality: Public / Internal / Confidential / Secret; data quality tiers) with suggested starting templates\
-**SO THAT** a consistent vocabulary is in place before other users start cataloguing entities
 
 #### USER STORY 'Data owner assignment step'
 **AS AN** admin or CDO\
@@ -215,35 +230,13 @@
 **I WANT** the wizard to list unowned processes and allow me to assign owners or executing units in bulk\
 **SO THAT** every process has clear accountability once the governance foundation is in place
 
-#### USER STORY 'Governance maturity overview'
-**AS A** CDO\
-**IF** I want to track the organisation's governance progress over time\
-**I WANT** a maturity overview showing: % of entities with owners, % with mandatory classifications assigned, % of processes with owners, and % of domains with at least one bounded context\
-**SO THAT** I can report governance progress to leadership and identify regressions between reviews
-
 ---
 
 ## DDD guided setup
 *Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
-*⏱ Sessions: 2 · Weekly effort: ~20% · Value: 8/10 · Score: 4.0*
+*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
 
-#### USER STORY 'DDD setup wizard entry point'
-**AS A** company that is new to Domain-Driven Design\
-**IF** I open Léargon and no business domains exist yet\
-**I WANT** to be offered a guided setup wizard that walks me through the first DDD modelling steps\
-**SO THAT** I can establish a meaningful domain landscape without prior Léargon or DDD expertise
-
-#### USER STORY 'Domain classification guidance'
-**AS AN** architect\
-**IF** I am in the DDD setup wizard and have created at least one domain\
-**I WANT** the wizard to explain the four domain types (Core, Supporting, Generic, Undefined) with examples and prompt me to classify each domain I have created\
-**SO THAT** my domain types reflect strategic importance from the start and are not left at the default
-
-#### USER STORY 'Bounded context setup step'
-**AS AN** architect\
-**IF** I have defined at least one business domain\
-**I WANT** the wizard to walk me through creating at least one bounded context per domain and explain what a bounded context represents\
-**SO THAT** each domain has an explicit service boundary before I add events or relationships
+*Partially implemented: the DDD Domain Model Wizard auto-opens when no domains exist and guides users through creating their first domain (including domain type), bounded context, and first entity. Context relationships, domain events, team assignments, and a progress indicator are not yet implemented.*
 
 #### USER STORY 'Context relationship step'
 **AS AN** architect\
@@ -310,6 +303,11 @@
 **AS AN** admin\
 **I WANT** to see which business processes are assigned to more than one executing organisational unit\
 **SO THAT** I can identify potential coordination overhead, unclear ownership, or bottlenecks in cross-unit processes
+
+#### USER STORY 'Detect processes with no entity coverage in hierarchy'
+**AS AN** admin\
+**I WANT** to see a list of business processes where neither the process itself nor any of its sub-processes has any input or output entities assigned\
+**SO THAT** I can identify process trees with completely undocumented data flows and prioritise them for remediation
 
 ---
 
@@ -636,3 +634,56 @@
 **IF** stewards are assigned\
 **I WANT** to see the list of current stewards on the detail page of a business entity, domain, process, or organisational unit\
 **SO THAT** I know who is responsible for maintaining that item alongside the primary owner or lead
+
+---
+
+## Performance & scalability
+
+*Materialise expensive computed values into the database so that read paths stay fast as the catalogue grows. Recompute only when the relevant source data changes, using an event-driven invalidation strategy. Covers effective ownership chains, entity roll-ups on process hierarchies, governance maturity metrics, and compliance scores. No visible behaviour change for users beyond faster response times — except where stale indicators are shown.*
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
+
+#### USER STORY 'Persist materialised effective ownership fields'
+**AS A** developer\
+**I WANT** the effective owner, steward, and technical custodian fields on `BusinessEntity` and `Process` to be stored as denormalised columns in the database, computed at write time rather than resolved by join traversal at read time\
+**SO THAT** list and detail endpoints do not need to traverse the bounded-context → org-unit chain on every request, keeping response times constant as the catalogue grows
+
+#### USER STORY 'Invalidate effective ownership on source change'
+**AS A** developer\
+**I WANT** an event listener that recomputes and persists the effective owner/steward/custodian for all affected entities and processes whenever an org unit's governance roles change, a bounded context's owning unit changes, or an entity's explicit owner is updated\
+**SO THAT** the materialised values are always consistent with the latest source data without requiring a full-catalogue recomputation on every change
+
+#### USER STORY 'Persist materialised effective entity roll-up on processes'
+**AS A** developer\
+**I WANT** the effective input and output entity sets for each process to be stored as a JSON snapshot in the database, computed at write time by recursively aggregating all sub-process assignments\
+**SO THAT** the process detail panel and compliance export do not trigger recursive tree traversals on every load
+
+#### USER STORY 'Invalidate effective entity roll-up on assignment change'
+**AS A** developer\
+**I WANT** an event listener that recomputes the effective entity roll-up for a process and all its ancestors whenever input or output entity assignments change on any process in the hierarchy\
+**SO THAT** the roll-up snapshot is always up to date and no stale data reaches the compliance register
+
+#### USER STORY 'Persist materialised governance maturity scores'
+**AS A** developer\
+**I WANT** the governance maturity metrics (entity ownership coverage, process compliance coverage, classification coverage, domain structure coverage, DPIA coverage) to be stored as a timestamped snapshot in the database, recomputed on a configurable schedule or triggered manually\
+**SO THAT** the maturity overview on the home screen loads instantly from a pre-computed row rather than scanning the full catalogue on every page load
+
+#### USER STORY 'Invalidate maturity snapshot on significant catalogue change'
+**AS A** developer\
+**I WANT** the maturity snapshot to be flagged as stale and a background recomputation to be queued whenever a significant catalogue event occurs (entity created or deleted, legal basis set, classification assigned, domain bounded context added)\
+**SO THAT** the home screen reflects recent changes without waiting for the next scheduled recomputation cycle
+
+#### USER STORY 'Show staleness indicator on computed views'
+**AS A** logged in user\
+**IF** a computed view (maturity overview, compliance metrics, catalogue insights) is displaying a snapshot that is older than a configurable threshold\
+**I WANT** to see a subtle indicator showing when the snapshot was last computed and a "Recompute now" button (admin only)\
+**SO THAT** I know whether the numbers reflect the current state of the catalogue or a recent-but-not-live snapshot
+
+#### USER STORY 'Add database indexes for catalogue list queries'
+**AS A** developer\
+**I WANT** database indexes added for the most frequently filtered and sorted columns across all entity types (name locale value, domain key, process owner, legal basis, created/modified timestamps)\
+**SO THAT** list endpoints with filters and sort orders remain sub-100 ms as catalogue size grows into the thousands of records
+
+#### USER STORY 'Paginate catalogue list endpoints'
+**AS A** developer\
+**I WANT** all list endpoints (`/entities`, `/processes`, `/domains`, `/organisational-units`) to support cursor-based or offset pagination with a configurable page size\
+**SO THAT** the API and frontend remain responsive when a catalogue contains thousands of items, rather than loading the entire collection into memory on every request

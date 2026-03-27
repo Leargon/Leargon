@@ -72,6 +72,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
 import DetailPanelHeader from '../common/DetailPanelHeader';
+import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import type {
   LocalizedText,
   OrganisationalUnitResponse,
@@ -358,9 +359,6 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           {unit.businessOwner && (
             <Chip label={`${unit.businessOwner.firstName} ${unit.businessOwner.lastName}`} size="small" variant="outlined" />
           )}
-          {isLeadOrAdmin && unit.missingMandatoryFields && unit.missingMandatoryFields.length > 0 && (
-            <Chip label="Missing fields" size="small" color="warning" />
-          )}
         </>}
         actions={<>
           {isLeadOrAdmin && (
@@ -377,12 +375,11 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       />
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
-        {/* Missing mandatory fields alert */}
-        {isLeadOrAdmin && unit.missingMandatoryFields && unit.missingMandatoryFields.length > 0 && (
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            Missing mandatory fields: {unit.missingMandatoryFields.join(', ')}
-          </Alert>
-        )}
+        {/* Item 1: Missing fields banner */}
+        <MissingFieldsBanner
+          missingFields={unit.missingMandatoryFields ?? []}
+          ownerOrAdmin={isLeadOrAdmin}
+        />
 
         {/* Names & Descriptions */}
         <Accordion defaultExpanded disableGutters>

@@ -1,17 +1,37 @@
-import React, { lazy, useState } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Button } from '@mui/material';
 import { Timeline, Schema, FormatListBulleted } from '@mui/icons-material';
 import ProcessListPanel from '../components/processes/ProcessListPanel';
 import ProcessDetailPanel from '../components/processes/ProcessDetailPanel';
-import CreateProcessDialog from '../components/processes/CreateProcessDialog';
+import ProcessCreationWizard from '../components/processes/ProcessCreationWizard';
+import ProcessLandscapeWizard from '../components/processes/ProcessLandscapeWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import { useGetAllProcesses } from '../api/generated/process/process';
+import { useTranslation } from 'react-i18next';
 
 const ProcessLandscapeDiagram = lazy(() => import('../components/diagrams/ProcessLandscapeDiagram'));
 
 const ProcessesPage: React.FC = () => {
+  const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [setupWizardOpen, setSetupWizardOpen] = useState(false);
+  const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
   const [view, setView] = useState('list');
+
+  const { data: processesResponse, isLoading } = useGetAllProcesses();
+  const processes = (processesResponse?.data as any[] | undefined) ?? [];
+  const isEmpty = !isLoading && processes.length === 0;
+
+  useEffect(() => {
+    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed]);
+
+  const handleSetupClose = () => {
+    setSetupWizardOpen(false);
+    setSetupWizardDismissed(true);
+  };
 
   return (
     <SplitPageLayout
@@ -30,15 +50,21 @@ const ProcessesPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Timeline sx={{ fontSize: 64 }} />}
-            title="Select a process"
-            subtitle="Choose a process from the list to view its details"
+            title={isEmpty ? t('wizard.onboarding.processLandscape.emptyTitle') : 'Select a process'}
+            subtitle={isEmpty ? t('wizard.onboarding.processLandscape.emptyDescription') : 'Choose a process from the list to view its details'}
+            action={isEmpty ? (
+              <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
+                {t('wizard.onboarding.processLandscape.emptyButton')}
+              </Button>
+            ) : undefined}
           />
         )
       }
       hasSelection={!!key}
       diagrams={{ map: <ProcessLandscapeDiagram /> }}
     >
-      <CreateProcessDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+      <ProcessCreationWizard open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
+      <ProcessLandscapeWizard open={setupWizardOpen} onClose={handleSetupClose} />
     </SplitPageLayout>
   );
 };

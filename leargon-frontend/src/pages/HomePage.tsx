@@ -20,27 +20,26 @@ import {
   Storage,
   AccountTree,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useGetDashboard } from '../api/generated/dashboard/dashboard';
 import type { AttentionItem, ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
+import MaturityOverview from '../components/dashboard/MaturityOverview';
 
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
+function useFormatRelativeTime() {
+  const { t } = useTranslation();
+  return (dateStr: string): string => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return t('home.timeJustNow');
+    if (minutes < 60) return t('home.timeMinutes', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('home.timeHours', { count: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('home.timeDays', { count: days });
+    return new Date(dateStr).toLocaleDateString();
+  };
 }
-
-const ISSUE_LABELS: Record<string, string> = {
-  NO_LEGAL_BASIS: 'No legal basis',
-  DPIA_IN_PROGRESS: 'DPIA in progress',
-  MISSING_OWNER: 'Missing owner',
-};
 
 const RESOURCE_TYPE_PATHS: Record<string, string> = {
   PROCESS: '/processes',
@@ -52,15 +51,25 @@ const RESOURCE_TYPE_PATHS: Record<string, string> = {
 const RESOURCE_TYPE_NO_DETAIL = new Set(['DPIA']);
 
 function AttentionSection({ items }: { items: AttentionItem[] }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   if (items.length === 0) {
     return (
       <Box sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
-        <Typography variant="body2">Nothing needs your attention right now.</Typography>
+        <Typography variant="body2">{t('home.nothingNeedsAttention')}</Typography>
       </Box>
     );
   }
+
+  const issueLabel = (code: string): string => {
+    const map: Record<string, string> = {
+      NO_LEGAL_BASIS: t('home.issueNoLegalBasis'),
+      DPIA_IN_PROGRESS: t('home.issueDpiaInProgress'),
+      MISSING_OWNER: t('home.issueMissingOwner'),
+    };
+    return map[code] ?? code;
+  };
 
   return (
     <List dense disablePadding>
@@ -81,7 +90,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
               </Box>
               <ListItemText
                 primary={item.name}
-                secondary={ISSUE_LABELS[item.issueCode] ?? item.issueCode}
+                secondary={issueLabel(item.issueCode)}
                 primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                 secondaryTypographyProps={{ variant: 'caption' }}
               />
@@ -100,12 +109,14 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
 }
 
 function ActivitySection({ items }: { items: ActivityItem[] }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const formatRelativeTime = useFormatRelativeTime();
 
   if (items.length === 0) {
     return (
       <Box sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
-        <Typography variant="body2">No recent activity.</Typography>
+        <Typography variant="body2">{t('home.noRecentActivity')}</Typography>
       </Box>
     );
   }
@@ -166,13 +177,14 @@ function SectionCard({ title, icon, children }: { title: string; icon: React.Rea
 }
 
 function ResponsibilitiesSection({ items, type }: { items: Array<{ key: string; name: string }>; type: 'entities' | 'processes' }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const path = type === 'entities' ? '/entities' : '/processes';
 
   if (items.length === 0) {
     return (
       <Box sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
-        <Typography variant="body2">None assigned.</Typography>
+        <Typography variant="body2">{t('home.noneAssigned')}</Typography>
       </Box>
     );
   }
@@ -197,7 +209,9 @@ function ResponsibilitiesSection({ items, type }: { items: Array<{ key: string; 
 }
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: response, isLoading } = useGetDashboard();
   const dashboard = (response?.data) as import('../api/generated/model').DashboardResponse | undefined;
 
@@ -205,34 +219,37 @@ const HomePage: React.FC = () => {
     <Box sx={{ p: 3, height: '100%', overflow: 'auto', maxWidth: 900 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight={600}>
-          Welcome{user?.firstName ? `, ${user.firstName}` : ''}
+          {user?.firstName ? t('home.welcomeNamed', { name: user.firstName }) : t('home.welcome')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Here&apos;s an overview of items that need your attention.
+          {t('home.subtitle')}
         </Typography>
       </Box>
+
+      {/* Item 11: Governance Maturity Overview — admin only */}
+      {isAdmin && <Box sx={{ mb: 3 }}><MaturityOverview /></Box>}
 
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
 
       {dashboard && (
         <>
           {/* Needs Attention */}
-          <SectionCard title="Needs Attention" icon={<Warning fontSize="small" />}>
+          <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
             <AttentionSection items={dashboard.needsAttention ?? []} />
           </SectionCard>
 
           {/* Recently Modified */}
-          <SectionCard title="Recently Modified" icon={<Schedule fontSize="small" />}>
+          <SectionCard title={t('home.recentlyModified')} icon={<Schedule fontSize="small" />}>
             <ActivitySection items={dashboard.recentActivity ?? []} />
           </SectionCard>
 
           {/* My Responsibilities */}
-          <SectionCard title="My Responsibilities" icon={<AssignmentInd fontSize="small" />}>
+          <SectionCard title={t('home.myResponsibilities')} icon={<AssignmentInd fontSize="small" />}>
             <Box>
               <Box sx={{ px: 2, pt: 1.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Storage fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
                 <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Entities ({(dashboard.myResponsibilities?.entities ?? []).length})
+                  {t('home.entities', { count: (dashboard.myResponsibilities?.entities ?? []).length })}
                 </Typography>
               </Box>
               <ResponsibilitiesSection items={dashboard.myResponsibilities?.entities ?? []} type="entities" />
@@ -242,7 +259,7 @@ const HomePage: React.FC = () => {
               <Box sx={{ px: 2, pt: 0.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <AccountTree fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
                 <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  Processes ({(dashboard.myResponsibilities?.processes ?? []).length})
+                  {t('home.processes', { count: (dashboard.myResponsibilities?.processes ?? []).length })}
                 </Typography>
               </Box>
               <ResponsibilitiesSection items={dashboard.myResponsibilities?.processes ?? []} type="processes" />
