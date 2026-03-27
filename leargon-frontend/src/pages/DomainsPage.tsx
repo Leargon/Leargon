@@ -51,18 +51,18 @@ const DomainsPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="Domain Model"
-      subtitle="Business Domains & Bounded Contexts"
+      title={t('pages.domainModel')}
+      subtitle={t('pages.businessDomains')}
       views={[
-        { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
-        { value: 'context-map', label: 'Context Map', icon: <Share sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'list', label: t('pages.list'), icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'context-map', label: t('pages.contextMap'), icon: <Share sx={{ fontSize: 16, mr: 0.5 }} /> },
       ]}
       currentView={view}
       onViewChange={setView}
       actions={
         view === 'context-map' ? (
           <Button size="small" startIcon={<Download />} onClick={handleExportCml} variant="outlined">
-            Export CML
+            {t('pages.exportCml')}
           </Button>
         ) : undefined
       }
@@ -73,8 +73,8 @@ const DomainsPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Category sx={{ fontSize: 64 }} />}
-            title={isEmpty ? t('wizard.onboarding.domainModel.emptyTitle') : 'Select a domain'}
-            subtitle={isEmpty ? t('wizard.onboarding.domainModel.emptyDescription') : 'Choose a domain from the tree to view its details'}
+            title={isEmpty ? t('wizard.onboarding.domainModel.emptyTitle') : t('pages.selectDomain')}
+            subtitle={isEmpty ? t('wizard.onboarding.domainModel.emptyDescription') : t('pages.chooseDomain')}
             action={isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.domainModel.emptyButton')}

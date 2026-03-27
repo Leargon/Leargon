@@ -1,5 +1,6 @@
 import React, { lazy, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AccountTree, BubbleChart, FormatListBulleted } from '@mui/icons-material';
 import EntityTreePanel from '../components/ontology/EntityTreePanel';
 import EntityDetailPanel from '../components/ontology/EntityDetailPanel';
@@ -9,17 +10,18 @@ import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPag
 const EntityMapDiagram = lazy(() => import('../components/diagrams/EntityMapDiagram'));
 
 const OntologyPage: React.FC = () => {
+  const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [view, setView] = useState('list');
 
   return (
     <SplitPageLayout
-      title="Data Ontology"
-      subtitle="Business Entities"
+      title={t('pages.dataOntology')}
+      subtitle={t('pages.businessEntities')}
       views={[
-        { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
-        { value: 'map', label: 'Entity Map', icon: <BubbleChart sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'list', label: t('pages.list'), icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'map', label: t('pages.entityMap'), icon: <BubbleChart sx={{ fontSize: 16, mr: 0.5 }} /> },
       ]}
       currentView={view}
       onViewChange={setView}
@@ -30,8 +32,8 @@ const OntologyPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<AccountTree sx={{ fontSize: 64 }} />}
-            title="Select an entity"
-            subtitle="Choose an entity from the tree to view its details"
+            title={t('pages.selectEntity')}
+            subtitle={t('pages.chooseEntity')}
           />
         )
       }

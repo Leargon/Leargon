@@ -19,19 +19,21 @@ import {
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useChangePassword } from '../api/generated/user/user';
 import { useAuth } from '../context/AuthContext';
 import { useRole, type Role } from '../context/RoleContext';
 import { useWizardMode, type WizardMode } from '../context/WizardModeContext';
 
-const ROLE_LABELS: Record<Role, string> = {
-  compliance: 'DSG / GDPR',
-  architecture: 'Architecture',
-  operations: 'Operations',
-  admin: 'Governance',
+const ROLE_KEYS: Record<Role, string> = {
+  compliance: 'profile.roleCompliance',
+  architecture: 'profile.roleArchitecture',
+  operations: 'profile.roleOperations',
+  admin: 'profile.roleAdmin',
 };
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { role, setRole, isTemporary, clearTemporaryRole } = useRole();
   const { mode: wizardMode, setMode: setWizardMode } = useWizardMode();
@@ -49,56 +51,56 @@ const ProfilePage: React.FC = () => {
     setError('');
     setSuccess('');
 
-    if (!currentPassword) { setError('Current password is required'); return; }
-    if (!newPassword || newPassword.length < 8) { setError('New password must be at least 8 characters'); return; }
-    if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
-    if (currentPassword === newPassword) { setError('New password must be different'); return; }
+    if (!currentPassword) { setError(t('profile.errorCurrentRequired')); return; }
+    if (!newPassword || newPassword.length < 8) { setError(t('profile.errorMinLength')); return; }
+    if (newPassword !== confirmPassword) { setError(t('profile.errorMismatch')); return; }
+    if (currentPassword === newPassword) { setError(t('profile.errorSamePassword')); return; }
 
     try {
       await changePasswordMutation.mutateAsync({ data: { currentPassword, newPassword } });
-      setSuccess('Password changed successfully');
+      setSuccess(t('profile.passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       if (err?.response?.status === 401) {
-        setError('Current password is incorrect');
+        setError(t('profile.errorIncorrect'));
       } else {
-        setError(err?.response?.data?.message || 'Failed to change password');
+        setError(err?.response?.data?.message || t('profile.errorFailed'));
       }
     }
   };
 
   return (
     <Box sx={{ p: 3, maxWidth: 600 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>Profile</Typography>
+      <Typography variant="h5" sx={{ mb: 3 }}>{t('profile.title')}</Typography>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Account Information</Typography>
+        <Typography variant="h6" sx={{ mb: 2 }}>{t('profile.accountInfo')}</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <InfoRow icon={<Person color="primary" />} label="Username" value={user?.username} />
-          <InfoRow icon={<Email color="primary" />} label="Email" value={user?.email} />
-          <InfoRow icon={<AccountCircle color="primary" />} label="Name" value={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()} />
+          <InfoRow icon={<Person color="primary" />} label={t('profile.username')} value={user?.username} />
+          <InfoRow icon={<Email color="primary" />} label={t('profile.email')} value={user?.email} />
+          <InfoRow icon={<AccountCircle color="primary" />} label={t('profile.name')} value={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()} />
           {user?.createdAt && (
             <Typography variant="caption" color="text.secondary">
-              Member since {new Date(user.createdAt).toLocaleDateString()}
+              {t('profile.memberSince', { date: new Date(user.createdAt).toLocaleDateString() })}
             </Typography>
           )}
         </Box>
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 0.5 }}>Default View</Typography>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>{t('profile.defaultView')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Choose which navigation view to show by default. You can switch at any time from the top bar.
+          {t('profile.defaultViewDescription')}
         </Typography>
         {isTemporary && (
           <Alert
             severity="info"
             sx={{ mb: 2 }}
-            action={<Button size="small" onClick={clearTemporaryRole}>Reset</Button>}
+            action={<Button size="small" onClick={clearTemporaryRole}>{t('profile.reset')}</Button>}
           >
-            You are using a temporary view. Reset to restore your saved default.
+            {t('profile.temporaryViewWarning')}
           </Alert>
         )}
         <ToggleButtonGroup
@@ -107,18 +109,18 @@ const ProfilePage: React.FC = () => {
           onChange={(_e, v) => { if (v) setRole(v as Role); }}
           size="small"
         >
-          {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
+          {(Object.keys(ROLE_KEYS) as Role[]).map((r) => (
             <ToggleButton key={r} value={r}>
-              {ROLE_LABELS[r]}
+              {t(ROLE_KEYS[r])}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 0.5 }}>Creation Wizard Mode</Typography>
+        <Typography variant="h6" sx={{ mb: 0.5 }}>{t('profile.wizardMode')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Choose how creation wizards behave. Express mode shows all fields on one page; Guided mode walks you through each step with explanations.
+          {t('profile.wizardModeDescription')}
         </Typography>
         <ToggleButtonGroup
           value={wizardMode}
@@ -126,14 +128,14 @@ const ProfilePage: React.FC = () => {
           onChange={(_e, v) => { if (v) setWizardMode(v as WizardMode); }}
           size="small"
         >
-          <ToggleButton value="guided">Guided (with explanations)</ToggleButton>
-          <ToggleButton value="express">Express (single form)</ToggleButton>
+          <ToggleButton value="guided">{t('profile.guided')}</ToggleButton>
+          <ToggleButton value="express">{t('profile.express')}</ToggleButton>
         </ToggleButtonGroup>
       </Paper>
 
       {!user?.isFallbackAdministrator && (
         <Paper variant="outlined" sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Change Password</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>{t('profile.changePassword')}</Typography>
           <Divider sx={{ mb: 2 }} />
 
           {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
@@ -141,7 +143,7 @@ const ProfilePage: React.FC = () => {
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Current Password"
+              label={t('profile.currentPassword')}
               type={showCurrent ? 'text' : 'password'}
               size="small"
               value={currentPassword}
@@ -159,12 +161,12 @@ const ProfilePage: React.FC = () => {
               }}
             />
             <TextField
-              label="New Password"
+              label={t('profile.newPassword')}
               type={showNew ? 'text' : 'password'}
               size="small"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              helperText="Must be at least 8 characters"
+              helperText={t('profile.newPasswordHelper')}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -178,7 +180,7 @@ const ProfilePage: React.FC = () => {
               }}
             />
             <TextField
-              label="Confirm New Password"
+              label={t('profile.confirmNewPassword')}
               type="password"
               size="small"
               value={confirmPassword}
@@ -190,7 +192,7 @@ const ProfilePage: React.FC = () => {
               disabled={changePasswordMutation.isPending}
               sx={{ alignSelf: 'flex-start' }}
             >
-              {changePasswordMutation.isPending ? 'Changing...' : 'Change Password'}
+              {changePasswordMutation.isPending ? t('profile.changing') : t('profile.changePassword')}
             </Button>
           </Box>
         </Paper>

@@ -275,7 +275,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       setAddEventOpen(false);
       setAddEventName('');
     } catch {
-      setAddEventError('Failed to create domain event');
+      setAddEventError(t('domain.failedCreateEvent'));
     }
   };
 
@@ -445,7 +445,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   if (error || !domain) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Domain not found or failed to load.</Alert>
+        <Alert severity="error">{t('domain.notFoundOrFailed')}</Alert>
       </Box>
     );
   }
@@ -456,7 +456,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
-        title={getLocalizedText(domain.names, 'Unnamed Domain')}
+        title={getLocalizedText(domain.names, t('domain.unnamedDomain'))}
         itemKey={domain.key}
         chips={<>
           {(domain.type || domain.effectiveType) && (
@@ -471,16 +471,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             <Chip label={domain.owningUnit.name} size="small" variant="outlined" />
           )}
           {isAdmin && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
-            <Chip icon={<WarningIcon fontSize="small" />} label={`${domain.missingMandatoryFields!.length} missing`} size="small" color="warning" />
+            <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: domain.missingMandatoryFields!.length })} size="small" color="warning" />
           )}
         </>}
         actions={isAdmin ? (
           <>
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateSubdomainOpen(true)}>
-              Add Subdomain
+              {t('domain.addSubdomain')}
             </Button>
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           </>
         ) : undefined}
@@ -517,7 +517,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
       {/* Names & Descriptions */}
       <SectionHeader
-        title="Names & Descriptions"
+        title={t('domain.namesAndDescriptions')}
         canEdit={isAdmin}
         isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...domain.names], descriptions: [...(domain.descriptions || [])] })}
@@ -540,7 +540,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       ) : (
         <>
           {/* Names - horizontal table with all locales */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Names</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -563,7 +563,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           </Paper>
 
           {/* Descriptions - accordion */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Descriptions</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
             {descriptionLocales.map((l) => {
               const desc = domain.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -575,7 +575,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || 'No description'}
+                      {desc || t('common.noDescription')}
                     </Typography>
                   </AccordionDetails>
                 </Accordion>
@@ -590,7 +590,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Divider sx={{ my: 2 }} />
           {/* Type */}
           <SectionHeader
-            title="Type"
+            title={t('domain.type')}
             canEdit={isAdmin}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
@@ -609,7 +609,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 sx={{ minWidth: 200 }}
               >
                 <MenuItem value="">
-                  <em>None (inherit from parent)</em>
+                  <em>{t('common.noneInherit')}</em>
                 </MenuItem>
                 {DOMAIN_TYPE_VALUES.map((t) => (
                   <MenuItem key={t} value={t}>{t}</MenuItem>
@@ -624,10 +624,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               ) : domain.effectiveType ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Chip label={domain.effectiveType} variant="outlined" size="small" />
-                  <Typography variant="caption" color="text.secondary">(inherited from parent)</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('common.inheritedFromParent')}</Typography>
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">Not set</Typography>
+                <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
               )}
             </Box>
           )}
@@ -639,7 +639,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Divider sx={{ my: 2 }} />
           {/* Parent */}
           <SectionHeader
-            title="Parent Domain"
+            title={t('domain.parentDomain')}
             canEdit={isAdmin}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
@@ -656,7 +656,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   value={parentCandidates.find((d) => d.key === parentEdit.editValue) || null}
                   onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
-                    <TextField {...params} size="small" placeholder="Search for parent domain..." sx={{ width: 350 }} />
+                    <TextField {...params} size="small" placeholder={t('domain.searchParentDomain')} sx={{ width: 350 }} />
                   )}
                   isOptionEqualToValue={(option, value) => option.key === value.key}
                   size="small"
@@ -673,7 +673,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     clickable
                   />
                 ) : (
-                  <span style={{ color: '#888' }}>Top-level domain</span>
+                  <span style={{ color: '#888' }}>{t('domain.topLevelDomain')}</span>
                 )}
               </Typography>
             )}
@@ -682,7 +682,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {domain.subdomains && domain.subdomains.length > 0 && (
             <>
               <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Subdomains</Typography>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('domain.subdomains')}</Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
                 {domain.subdomains.map((sub) => (
                   <Chip
@@ -758,7 +758,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) || null}
                   onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
-                    <TextField {...params} size="small" placeholder="Search for owning unit..." sx={{ width: 350 }} />
+                    <TextField {...params} size="small" placeholder={t('domain.searchOwningUnit')} sx={{ width: 350 }} />
                   )}
                   isOptionEqualToValue={(option, value) => option.key === value.key}
                   size="small"
@@ -1012,7 +1012,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       <>
       {/* Classifications */}
       <SectionHeader
-        title="Classifications"
+        title={t('common.classifications')}
         canEdit={isAdmin}
         isEditing={classEdit.isEditing}
         onEdit={() =>
@@ -1083,7 +1083,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   sx={{ minWidth: 150 }}
                 >
                   <MenuItem value="">
-                    <em>None</em>
+                    <em>{t('common.none')}</em>
                   </MenuItem>
                   {c.values?.map((v) => (
                     <MenuItem key={v.key} value={v.key}>
@@ -1116,12 +1116,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     })}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">Not set</Typography>
+                  <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
                 )}
               </Box>
             );
           }) : (
-            <Typography variant="body2" color="text.secondary">No classifications configured</Typography>
+            <Typography variant="body2" color="text.secondary">{t('common.noClassificationsConfigured')}</Typography>
           )}
         </Box>
       )}
@@ -1130,20 +1130,20 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Metadata */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('common.metadata')}</Typography>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.createdBy')}</TableCell>
               <TableCell>{domain.createdBy.firstName} {domain.createdBy.lastName}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.created')}</TableCell>
               <TableCell>{new Date(domain.createdAt).toLocaleString()}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.lastUpdated')}</TableCell>
               <TableCell>{new Date(domain.updatedAt).toLocaleString()}</TableCell>
             </TableRow>
           </TableBody>
@@ -1157,13 +1157,13 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       >
         {versionsOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
         <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
-          Version History ({versions.length})
+          {t('common.versionHistory')} ({versions.length})
         </Typography>
       </Box>
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">No version history</Typography>
+            <Typography variant="body2" color="text.secondary">{t('common.noVersionHistory')}</Typography>
           ) : (
             <Table size="small">
               <TableBody>
@@ -1206,7 +1206,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         <DialogContent sx={{ pt: 2 }}>
           <TextField
             size="small"
-            label="Name (English)"
+            label={t('domain.nameEnglish')}
             value={addBcName}
             onChange={(e) => setAddBcName(e.target.value)}
             fullWidth
@@ -1228,7 +1228,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 invalidateBcs();
                 setAddBcOpen(false);
               } catch {
-                setAddBcError('Failed to create bounded context');
+                setAddBcError(t('domain.failedCreateBc'));
               }
             }}
             variant="contained"
@@ -1249,7 +1249,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             value={boundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelUpstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
-              <TextField {...params} size="small" label={`${t('domain.upstream')} (provides)`} />
+              <TextField {...params} size="small" label={`${t('domain.upstream')} ${t('domain.provides')}`} />
             )}
             isOptionEqualToValue={(option, value) => option.key === value.key}
             size="small"
@@ -1260,7 +1260,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             value={boundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelDownstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
-              <TextField {...params} size="small" label={`${t('domain.downstream')} (consumes)`} />
+              <TextField {...params} size="small" label={`${t('domain.downstream')} ${t('domain.consumes')}`} />
             )}
             isOptionEqualToValue={(option, value) => option.key === value.key}
             size="small"
@@ -1357,7 +1357,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           />
           <TextField
             size="small"
-            label="Event Name (English)"
+            label={t('domain.eventNameEnglish')}
             value={addEventName}
             onChange={(e) => setAddEventName(e.target.value)}
             fullWidth
@@ -1379,16 +1379,15 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Domain</DialogTitle>
+        <DialogTitle>{t('domain.deleteDomain')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{getLocalizedText(domain.names)}"?
-            This will also delete all subdomains and unassign any entities.
+            {t('domain.deleteConfirm', { name: getLocalizedText(domain.names) })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">{t('common.delete')}</Button>
         </DialogActions>
       </Dialog>
       </Box>
