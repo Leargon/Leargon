@@ -80,7 +80,7 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { PROCESS_TABS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
+import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
@@ -161,6 +161,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
+  const fields = PROCESS_FIELDS_BY_PERSPECTIVE[perspective];
 
   const { data: processResponse, isLoading, error } = useGetProcessByKey(processKey);
   const process = processResponse?.data as ProcessResponse | undefined;
@@ -628,152 +629,164 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Box>
           )}
         </PropRow>
-        <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
-          onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
-          onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
-          {stewardEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
-                value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
-                onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
-                renderInput={(params) => <TextField {...params} label={t('process.processSteward')} size="small" />}
-                isOptionEqualToValue={(o, v) => o.username === v.username}
-                size="small"
-                sx={{ width: 300 }}
-              />
-              {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
-            </Box>
-          ) : (
-            <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
-              {process.processSteward
-                ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
-                : t('common.notSet')}
-            </Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
-          onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
-          onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
-          {technicalCustodianEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
-                value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
-                onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
-                renderInput={(params) => <TextField {...params} label={t('process.technicalCustodian')} size="small" />}
-                isOptionEqualToValue={(o, v) => o.username === v.username}
-                size="small"
-                sx={{ width: 300 }}
-              />
-              {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
-            </Box>
-          ) : (
-            <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
-              {process.technicalCustodian
-                ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
-                : t('common.notSet')}
-            </Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('process.code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}
-          onEdit={() => codeEdit.startEdit(process.code || '')} onSave={codeEdit.save}
-          onCancel={codeEdit.cancel} isSaving={codeEdit.isSaving}>
-          {codeEdit.isEditing ? (
-            <Box>
-              <TextField size="small" value={codeEdit.editValue || ''} onChange={(e) => codeEdit.setEditValue(e.target.value)}
-                placeholder="Process code" helperText="If set, the code is used as the key instead of the name" sx={{ width: 300 }} />
-              {codeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{codeEdit.error}</Alert>}
-            </Box>
-          ) : (
-            <Typography variant="body2" color={process.code ? 'text.primary' : 'text.secondary'}>
-              {process.code || t('common.notSet')}
-            </Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('process.processType')} canEdit={isOwnerOrAdmin} isEditing={typeEdit.isEditing}
-          onEdit={() => typeEdit.startEdit(process.processType || '')} onSave={typeEdit.save}
-          onCancel={typeEdit.cancel} isSaving={typeEdit.isSaving}>
-          {typeEdit.isEditing ? (
-            <Box>
-              <Select
-                value={typeEdit.editValue || ''}
-                onChange={(e: SelectChangeEvent) => typeEdit.setEditValue((e.target.value || '') as ProcessType | '')}
-                size="small"
-                displayEmpty
-                sx={{ minWidth: 200 }}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {PROCESS_TYPE_VALUES.map((t) => (
-                  <MenuItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</MenuItem>
-                ))}
-              </Select>
-              {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
-            </Box>
-          ) : process.processType ? (
-            <Chip label={PROCESS_TYPE_LABELS[process.processType] || process.processType} color="primary" size="small" />
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('process.legalBasis')} canEdit={isOwnerOrAdmin} isEditing={legalBasisEdit.isEditing}
-          onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
-          onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving}>
-          {legalBasisEdit.isEditing ? (
-            <Box>
-              <Select<string>
-                value={legalBasisEdit.editValue || ''}
-                onChange={(e: SelectChangeEvent) => legalBasisEdit.setEditValue((e.target.value || '') as LegalBasis | '')}
-                size="small"
-                displayEmpty
-                sx={{ minWidth: 300 }}
-              >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {LEGAL_BASIS_VALUES.map((v) => (
-                  <MenuItem key={v} value={v}>{LEGAL_BASIS_LABELS[v]}</MenuItem>
-                ))}
-              </Select>
-              {legalBasisEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{legalBasisEdit.error}</Alert>}
-            </Box>
-          ) : process.legalBasis ? (
-            <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} color="secondary" size="small" />
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('process.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
-          onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
-          onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
-          {boundedContextEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
-                getOptionLabel={(option) => `${option.name} (${option.domainName})`}
-                value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
-                onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
-                renderInput={(params) => (
-                  <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
-                )}
-                isOptionEqualToValue={(option, value) => option.key === value.key}
-                size="small"
-              />
-              {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
-            </Box>
-          ) : process.boundedContext ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Chip label={process.boundedContext.name} size="small" />
-              <Typography variant="caption" color="text.secondary">({process.boundedContext.domainName})</Typography>
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
-          )}
-        </PropRow>
+        {fields.processSteward && (
+          <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
+            onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
+            onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
+            {stewardEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allUsers.filter((u) => u.enabled)}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
+                  onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
+                  renderInput={(params) => <TextField {...params} label={t('process.processSteward')} size="small" />}
+                  isOptionEqualToValue={(o, v) => o.username === v.username}
+                  size="small"
+                  sx={{ width: 300 }}
+                />
+                {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
+                {process.processSteward
+                  ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
+                  : t('common.notSet')}
+              </Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.technicalCustodian && (
+          <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+            onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
+            onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
+            {technicalCustodianEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allUsers.filter((u) => u.enabled)}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+                  onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+                  renderInput={(params) => <TextField {...params} label={t('process.technicalCustodian')} size="small" />}
+                  isOptionEqualToValue={(o, v) => o.username === v.username}
+                  size="small"
+                  sx={{ width: 300 }}
+                />
+                {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+                {process.technicalCustodian
+                  ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
+                  : t('common.notSet')}
+              </Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.code && (
+          <PropRow label={t('process.code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}
+            onEdit={() => codeEdit.startEdit(process.code || '')} onSave={codeEdit.save}
+            onCancel={codeEdit.cancel} isSaving={codeEdit.isSaving}>
+            {codeEdit.isEditing ? (
+              <Box>
+                <TextField size="small" value={codeEdit.editValue || ''} onChange={(e) => codeEdit.setEditValue(e.target.value)}
+                  placeholder="Process code" helperText="If set, the code is used as the key instead of the name" sx={{ width: 300 }} />
+                {codeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{codeEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" color={process.code ? 'text.primary' : 'text.secondary'}>
+                {process.code || t('common.notSet')}
+              </Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.processType && (
+          <PropRow label={t('process.processType')} canEdit={isOwnerOrAdmin} isEditing={typeEdit.isEditing}
+            onEdit={() => typeEdit.startEdit(process.processType || '')} onSave={typeEdit.save}
+            onCancel={typeEdit.cancel} isSaving={typeEdit.isSaving}>
+            {typeEdit.isEditing ? (
+              <Box>
+                <Select
+                  value={typeEdit.editValue || ''}
+                  onChange={(e: SelectChangeEvent) => typeEdit.setEditValue((e.target.value || '') as ProcessType | '')}
+                  size="small"
+                  displayEmpty
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {PROCESS_TYPE_VALUES.map((t) => (
+                    <MenuItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</MenuItem>
+                  ))}
+                </Select>
+                {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
+              </Box>
+            ) : process.processType ? (
+              <Chip label={PROCESS_TYPE_LABELS[process.processType] || process.processType} color="primary" size="small" />
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.legalBasis && (
+          <PropRow label={t('process.legalBasis')} canEdit={isOwnerOrAdmin} isEditing={legalBasisEdit.isEditing}
+            onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
+            onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving}>
+            {legalBasisEdit.isEditing ? (
+              <Box>
+                <Select<string>
+                  value={legalBasisEdit.editValue || ''}
+                  onChange={(e: SelectChangeEvent) => legalBasisEdit.setEditValue((e.target.value || '') as LegalBasis | '')}
+                  size="small"
+                  displayEmpty
+                  sx={{ minWidth: 300 }}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {LEGAL_BASIS_VALUES.map((v) => (
+                    <MenuItem key={v} value={v}>{LEGAL_BASIS_LABELS[v]}</MenuItem>
+                  ))}
+                </Select>
+                {legalBasisEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{legalBasisEdit.error}</Alert>}
+              </Box>
+            ) : process.legalBasis ? (
+              <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} color="secondary" size="small" />
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.boundedContext && (
+          <PropRow label={t('process.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+            onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
+            onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
+            {boundedContextEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
+                  getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                  value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
+                  onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.key === value.key}
+                  size="small"
+                />
+                {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
+              </Box>
+            ) : process.boundedContext ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Chip label={process.boundedContext.name} size="small" />
+                <Typography variant="caption" color="text.secondary">({process.boundedContext.domainName})</Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+            )}
+          </PropRow>
+        )}
       </Paper>
 
       {visibleTabs.includes(0) && (

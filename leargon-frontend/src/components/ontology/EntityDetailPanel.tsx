@@ -75,7 +75,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { ENTITY_TABS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
+import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
@@ -126,6 +126,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const visibleTabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
+  const fields = ENTITY_FIELDS_BY_PERSPECTIVE[perspective];
 
   const { data: entityResponse, isLoading, error } = useGetBusinessEntityByKey(entityKey);
   const entity = entityResponse?.data as BusinessEntityResponse | undefined;
@@ -598,128 +599,138 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             </Box>
           )}
         </PropRow>
-        <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
-          onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
-          onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
-          {dataStewardEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
-                value={allUsers.find((u) => u.username === dataStewardEdit.editValue) || null}
-                onChange={(_, newVal) => dataStewardEdit.setEditValue(newVal?.username || null)}
-                renderInput={(params) => <TextField {...params} label={t('entity.dataSteward')} size="small" />}
-                isOptionEqualToValue={(o, v) => o.username === v.username}
-                size="small"
-                sx={{ width: 300 }}
-              />
-              {dataStewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataStewardEdit.error}</Alert>}
-            </Box>
-          ) : (
-            <Typography variant="body2" color={entity.dataSteward ? 'text.primary' : 'text.secondary'}>
-              {entity.dataSteward
-                ? `${entity.dataSteward.firstName} ${entity.dataSteward.lastName} (${entity.dataSteward.username})`
-                : t('common.notSet')}
-            </Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('entity.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
-          onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
-          onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
-          {technicalCustodianEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
-                value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
-                onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
-                renderInput={(params) => <TextField {...params} label={t('entity.technicalCustodian')} size="small" />}
-                isOptionEqualToValue={(o, v) => o.username === v.username}
-                size="small"
-                sx={{ width: 300 }}
-              />
-              {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
-            </Box>
-          ) : (
-            <Typography variant="body2" color={entity.technicalCustodian ? 'text.primary' : 'text.secondary'}>
-              {entity.technicalCustodian
-                ? `${entity.technicalCustodian.firstName} ${entity.technicalCustodian.lastName} (${entity.technicalCustodian.username})`
-                : t('common.notSet')}
-            </Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
-          onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
-          onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
-          {parentEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={parentCandidates}
-                getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
-                value={parentCandidates.find((e) => e.key === parentEdit.editValue) || null}
-                onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
-                renderInput={(params) => (
-                  <TextField {...params} size="small" placeholder="Search for parent entity..." sx={{ width: 350 }} />
-                )}
-                isOptionEqualToValue={(option, value) => option.key === value.key}
-                size="small"
-              />
-              {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
-            </Box>
-          ) : entity.parent ? (
-            <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('entity.topLevel')}</Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
-          onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
-          onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
-          {boundedContextEdit.isEditing ? (
-            <Box>
-              <Autocomplete
-                options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
-                getOptionLabel={(option) => `${option.name} (${option.domainName})`}
-                value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
-                onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
-                renderInput={(params) => (
-                  <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
-                )}
-                isOptionEqualToValue={(option, value) => option.key === value.key}
-                size="small"
-              />
-              {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
-            </Box>
-          ) : entity.boundedContext ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Chip label={entity.boundedContext.name} size="small" />
-              <Typography variant="caption" color="text.secondary">({entity.boundedContext.domainName})</Typography>
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
-          )}
-        </PropRow>
-        <PropRow label={t('entity.retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
-          onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
-          onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
-          isMandatory={isMandatory('retentionPeriod')}>
-          {retentionEdit.isEditing ? (
-            <Box>
-              <TextField
-                value={retentionEdit.editValue ?? ''}
-                onChange={(e) => retentionEdit.setEditValue(e.target.value)}
-                size="small"
-                placeholder="e.g. 7 years"
-                sx={{ width: 300 }}
-              />
-              {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
-            </Box>
-          ) : entity.retentionPeriod ? (
-            <Typography variant="body2">{entity.retentionPeriod}</Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
-          )}
-        </PropRow>
+        {fields.dataSteward && (
+          <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
+            onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
+            onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
+            {dataStewardEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allUsers.filter((u) => u.enabled)}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  value={allUsers.find((u) => u.username === dataStewardEdit.editValue) || null}
+                  onChange={(_, newVal) => dataStewardEdit.setEditValue(newVal?.username || null)}
+                  renderInput={(params) => <TextField {...params} label={t('entity.dataSteward')} size="small" />}
+                  isOptionEqualToValue={(o, v) => o.username === v.username}
+                  size="small"
+                  sx={{ width: 300 }}
+                />
+                {dataStewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataStewardEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" color={entity.dataSteward ? 'text.primary' : 'text.secondary'}>
+                {entity.dataSteward
+                  ? `${entity.dataSteward.firstName} ${entity.dataSteward.lastName} (${entity.dataSteward.username})`
+                  : t('common.notSet')}
+              </Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.technicalCustodian && (
+          <PropRow label={t('entity.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+            onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
+            onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
+            {technicalCustodianEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allUsers.filter((u) => u.enabled)}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
+                  onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
+                  renderInput={(params) => <TextField {...params} label={t('entity.technicalCustodian')} size="small" />}
+                  isOptionEqualToValue={(o, v) => o.username === v.username}
+                  size="small"
+                  sx={{ width: 300 }}
+                />
+                {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" color={entity.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+                {entity.technicalCustodian
+                  ? `${entity.technicalCustodian.firstName} ${entity.technicalCustodian.lastName} (${entity.technicalCustodian.username})`
+                  : t('common.notSet')}
+              </Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.parentEntity && (
+          <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
+            onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
+            onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
+            {parentEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={parentCandidates}
+                  getOptionLabel={(option) => `${getLocalizedText(option.names, option.key)} (${option.key})`}
+                  value={parentCandidates.find((e) => e.key === parentEdit.editValue) || null}
+                  onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder="Search for parent entity..." sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.key === value.key}
+                  size="small"
+                />
+                {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
+              </Box>
+            ) : entity.parent ? (
+              <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('entity.topLevel')}</Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.boundedContext && (
+          <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+            onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
+            onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
+            {boundedContextEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
+                  getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                  value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
+                  onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.key === value.key}
+                  size="small"
+                />
+                {boundedContextEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{boundedContextEdit.error}</Alert>}
+              </Box>
+            ) : entity.boundedContext ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Chip label={entity.boundedContext.name} size="small" />
+                <Typography variant="caption" color="text.secondary">({entity.boundedContext.domainName})</Typography>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+            )}
+          </PropRow>
+        )}
+        {fields.retentionPeriod && (
+          <PropRow label={t('entity.retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
+            onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
+            onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
+            isMandatory={isMandatory('retentionPeriod')}>
+            {retentionEdit.isEditing ? (
+              <Box>
+                <TextField
+                  value={retentionEdit.editValue ?? ''}
+                  onChange={(e) => retentionEdit.setEditValue(e.target.value)}
+                  size="small"
+                  placeholder="e.g. 7 years"
+                  sx={{ width: 300 }}
+                />
+                {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
+              </Box>
+            ) : entity.retentionPeriod ? (
+              <Typography variant="body2">{entity.retentionPeriod}</Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+            )}
+          </PropRow>
+        )}
       </Paper>
 
       {visibleTabs.includes(0) && (
