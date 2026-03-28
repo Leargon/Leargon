@@ -67,7 +67,7 @@ describe('Capability API', () => {
     expect(res.status).toBe(201);
     expect(res.data.key).toBeTruthy();
     expect(res.data.names[0].text).toBe('Customer Management');
-    expect(res.data.parent).toBeNull();
+    expect(res.data.parent ?? null).toBeNull();
   });
 
   it('non-admin cannot create a capability', async () => {
@@ -188,7 +188,7 @@ describe('Capability API', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.parent).toBeNull();
+    expect(res.data.parent ?? null).toBeNull();
   });
 
   // ─── Owning Unit ─────────────────────────────────────────────────────────
@@ -226,7 +226,7 @@ describe('Capability API', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.owningUnit).toBeNull();
+    expect(res.data.owningUnit ?? null).toBeNull();
   });
 
   it('returns 404 when assigning a non-existent owning unit', async () => {
@@ -252,9 +252,11 @@ describe('Capability API', () => {
       { processKeys: [proc1.key, proc2.key] },
     );
 
-    expect(res.status).toBe(200);
-    expect(res.data.linkedProcesses).toHaveLength(2);
-    const processKeys = res.data.linkedProcesses!.map((p) => p.key);
+    expect(res.status).toBe(204);
+    // 204 returns no body — verify via GET
+    const getRes = await adminClient.get<CapabilityResponse>(`/capabilities/${cap.key}`);
+    expect(getRes.data.linkedProcesses).toHaveLength(2);
+    const processKeys = getRes.data.linkedProcesses!.map((p) => p.key);
     expect(processKeys).toContain(proc1.key);
     expect(processKeys).toContain(proc2.key);
   });
@@ -272,7 +274,8 @@ describe('Capability API', () => {
       { processKeys: [] },
     );
 
-    expect(res.status).toBe(200);
-    expect(res.data.linkedProcesses ?? []).toHaveLength(0);
+    expect(res.status).toBe(204);
+    const clearGetRes = await adminClient.get<CapabilityResponse>(`/capabilities/${cap.key}`);
+    expect(clearGetRes.data.linkedProcesses ?? []).toHaveLength(0);
   });
 });

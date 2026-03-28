@@ -120,6 +120,21 @@ export async function createDomain(
   return res.data;
 }
 
+export async function createBoundedContext(
+  client: AxiosInstance,
+  name: string,
+  domainKey: string,
+): Promise<{ key: string; names: Array<{ locale: string; text: string }> }> {
+  const body = {
+    names: [{ locale: 'en', text: name }],
+  };
+  const res = await client.post(`/business-domains/${domainKey}/bounded-contexts`, body);
+  if (res.status !== 201) {
+    throw new ApiError(res.status, res.data);
+  }
+  return res.data;
+}
+
 export async function createClassification(
   client: AxiosInstance,
   name: string,

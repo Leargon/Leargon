@@ -37,12 +37,12 @@ import { useLocale } from '../../context/LocaleContext';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 
-const PROCESS_TYPE_LABELS: Record<string, string> = {
-  OPERATIONAL_CORE: 'Operational / Core',
-  SUPPORT: 'Support',
-  MANAGEMENT: 'Management',
-  INNOVATION: 'Innovation',
-  COMPLIANCE: 'Compliance',
+const PROCESS_TYPE_KEYS: Record<string, string> = {
+  OPERATIONAL_CORE: 'processType.OPERATIONAL_CORE',
+  SUPPORT: 'processType.SUPPORT',
+  MANAGEMENT: 'processType.MANAGEMENT',
+  INNOVATION: 'processType.INNOVATION',
+  COMPLIANCE: 'processType.COMPLIANCE',
 };
 
 interface ProcessCreationWizardProps {
@@ -176,7 +176,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             >
               <MenuItem value=""><em>{t('wizard.process.typeNotSet')}</em></MenuItem>
               {PROCESS_TYPE_VALUES.map((pt) => (
-                <MenuItem key={pt} value={pt}>{PROCESS_TYPE_LABELS[pt]}</MenuItem>
+                <MenuItem key={pt} value={pt}>{t(PROCESS_TYPE_KEYS[pt])}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -309,11 +309,11 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <SummaryRow label={t('wizard.process.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
           <SummaryRow label={t('wizard.process.summaryCode')} value={code || t('wizard.process.summaryCodeAuto')} />
-          <SummaryRow label={t('wizard.process.summaryType')} value={processType ? PROCESS_TYPE_LABELS[processType] : '—'} />
+          <SummaryRow label={t('wizard.process.summaryType')} value={processType ? t(PROCESS_TYPE_KEYS[processType]) : '—'} />
           <SummaryRow label={t('wizard.process.summaryOwner')} value={processOwnerUsername || t('wizard.process.summaryOwnerDefault', { username: user?.username || '' })} />
           <SummaryRow label={t('wizard.process.summaryInputEntities')} value={inputEntityKeys.length > 0 ? inputEntityKeys.join(', ') : '—'} />
           <SummaryRow label={t('wizard.process.summaryOutputEntities')} value={outputEntityKeys.length > 0 ? outputEntityKeys.join(', ') : '—'} />
-          <SummaryRow label={t('wizard.process.summaryLegalBasis')} value={legalBasis ? t(`compliance.legalBasis.${legalBasis}`, { defaultValue: legalBasis }) : '—'} />
+          <SummaryRow label={t('wizard.process.summaryLegalBasis')} value={legalBasis ? t(`legalBasis.${legalBasis}`, { defaultValue: legalBasis }) : '—'} />
         </Box>
       ),
     },

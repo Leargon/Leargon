@@ -348,7 +348,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
   const handleCreateRelationship = async () => {
     if (!relSecondEntity) {
-      setRelError('Please select the second entity');
+      setRelError(t('entity.selectSecondEntity'));
       return;
     }
     try {
@@ -368,7 +368,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       setRelDialogOpen(false);
       resetRelForm();
     } catch (err: any) {
-      setRelError(err?.response?.data?.message || 'Failed to create relationship');
+      setRelError(err?.response?.data?.message || t('entity.failedCreateRelationship'));
     }
   };
 
@@ -413,7 +413,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       invalidate();
       setEditRelDialogOpen(false);
     } catch (err: any) {
-      setEditRelError(err?.response?.data?.message || 'Failed to update relationship');
+      setEditRelError(err?.response?.data?.message || t('entity.failedUpdateRelationship'));
     }
   };
 
@@ -428,7 +428,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   if (error || !entity) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Entity not found or failed to load.</Alert>
+        <Alert severity="error">{t('entity.notFoundOrFailed')}</Alert>
       </Box>
     );
   }
@@ -441,28 +441,28 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
-        title={getLocalizedText(entity.names, 'Unnamed Entity')}
+        title={getLocalizedText(entity.names, t('entity.unnamedEntity'))}
         itemKey={entity.key}
         chips={<>
           {entity.dataOwner ? (
             <Chip label={entity.dataOwner.username} size="small" variant="outlined" color="primary" />
           ) : isOwnerOrAdmin ? (
-            <Chip icon={<WarningIcon fontSize="small" />} label="No owner" size="small" color="warning" />
+            <Chip icon={<WarningIcon fontSize="small" />} label={t('entity.noOwner')} size="small" color="warning" />
           ) : null}
           {isOwnerOrAdmin && (entity.missingMandatoryFields?.length ?? 0) > 0 && (
-            <Chip icon={<WarningIcon fontSize="small" />} label={`${entity.missingMandatoryFields!.length} missing`} size="small" color="warning" />
+            <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: entity.missingMandatoryFields!.length })} size="small" color="warning" />
           )}
-          {dpia && <Chip label="DPIA active" size="small" color="secondary" />}
+          {dpia && <Chip label={t('entity.dpiaActive')} size="small" color="secondary" />}
         </>}
         actions={<>
           {isOwnerOrAdmin && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
-              Add Child Entity
+              {t('entity.addChildEntity')}
             </Button>
           )}
           {isOwnerOrAdmin && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           )}
         </>}
@@ -515,7 +515,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       ) : (
         <>
           {/* Names - horizontal table with all locales */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Names</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -538,7 +538,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Paper>
 
           {/* Descriptions - accordion */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Descriptions</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
             {descriptionLocales.map((l) => {
               const desc = entity.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -550,7 +550,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || 'No description'}
+                      {desc || t('common.noDescription')}
                     </Typography>
                   </AccordionDetails>
                 </Accordion>
@@ -574,7 +574,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
-                renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
+                renderInput={(params) => <TextField {...params} label={t('entity.owner')} size="small" />}
                 isOptionEqualToValue={(o, v) => o.username === v.username}
                 size="small"
                 sx={{ width: 300 }}
@@ -665,7 +665,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   value={parentCandidates.find((e) => e.key === parentEdit.editValue) || null}
                   onChange={(_, newVal) => parentEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
-                    <TextField {...params} size="small" placeholder="Search for parent entity..." sx={{ width: 350 }} />
+                    <TextField {...params} size="small" placeholder={t('entity.searchParentEntity')} sx={{ width: 350 }} />
                   )}
                   isOptionEqualToValue={(option, value) => option.key === value.key}
                   size="small"
@@ -691,7 +691,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
                   onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
-                    <TextField {...params} size="small" placeholder="Search for bounded context..." sx={{ width: 350 }} />
+                    <TextField {...params} size="small" placeholder={t('entity.searchBoundedContext')} sx={{ width: 350 }} />
                   )}
                   isOptionEqualToValue={(option, value) => option.key === value.key}
                   size="small"
@@ -719,7 +719,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   value={retentionEdit.editValue ?? ''}
                   onChange={(e) => retentionEdit.setEditValue(e.target.value)}
                   size="small"
-                  placeholder="e.g. 7 years"
+                  placeholder={t('entity.retentionPlaceholder')}
                   sx={{ width: 300 }}
                 />
                 {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
@@ -742,7 +742,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Storage Locations */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Storage Locations</Typography>
+        <Typography variant="subtitle2">{t('entity.storageLocations')}</Typography>
         {isOwnerOrAdmin && (
           <IconButton
             size="small"
@@ -765,7 +765,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No storage locations recorded</Typography>
+          <Typography variant="body2" color="text.secondary">{t('entity.noStorageLocations')}</Typography>
         )}
       </Box>
 
@@ -794,7 +794,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Interfaces */}
-      <SectionHeader title="Interfaces" canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
+      <SectionHeader title={t('entity.interfaces')} canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
         onEdit={() => interfacesEdit.startEdit(entity.interfacesEntities?.map((e) => e.key) || [])}
         onSave={interfacesEdit.save} onCancel={interfacesEdit.cancel} isSaving={interfacesEdit.isSaving} />
       <Box sx={{ mb: 2 }}>
@@ -807,7 +807,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               value={interfaceCandidates.filter((e) => (interfacesEdit.editValue || []).includes(e.key))}
               onChange={(_, newVal) => interfacesEdit.setEditValue(newVal.map((v) => v.key))}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for entities..." />
+                <TextField {...params} size="small" placeholder={t('entity.searchEntities')} />
               )}
               isOptionEqualToValue={(option, value) => option.key === value.key}
               size="small"
@@ -821,7 +821,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No interfaces</Typography>
+          <Typography variant="body2" color="text.secondary">{t('entity.noInterfaces')}</Typography>
         )}
       </Box>
 
@@ -829,7 +829,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Relationships */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Relationships</Typography>
+        <Typography variant="subtitle2">{t('entity.relationships')}</Typography>
         {isOwnerOrAdmin && (
           <IconButton size="small" onClick={() => { resetRelForm(); setRelDialogOpen(true); }} color="primary">
             <Add fontSize="small" />
@@ -841,9 +841,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Cardinality</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>{t('entity.cardinality')}</TableCell>
+                <TableCell>{t('entity.description')}</TableCell>
+                <TableCell align="right">{t('common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -877,7 +877,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Table>
         </Paper>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>No relationships</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('entity.noRelationships')}</Typography>
       )}
 
       <Divider sx={{ my: 2 }} />
@@ -898,7 +898,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               <TableRow>
                 <TableCell>{t('entity.linkedEntity')}</TableCell>
                 <TableCell>{t('entity.semanticDifferenceNote')}</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell align="right">{t('common.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -947,7 +947,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {/* Children (read-only) */}
       {entity.children && entity.children.length > 0 && (
         <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Children</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.children')}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
             {entity.children.map((c) => (
               <Chip key={c.key} label={c.name} size="small" onClick={() => navigate(`/entities/${c.key}`)} clickable />
@@ -960,7 +960,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {/* Implements (read-only) */}
       {entity.implementsEntities && entity.implementsEntities.length > 0 && (
         <>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Implements</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.implements')}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
             {entity.implementsEntities.map((e) => (
               <Chip key={e.key} label={e.name} size="small" variant="outlined" onClick={() => navigate(`/entities/${e.key}`)} clickable />
@@ -979,12 +979,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         if (relatedProcesses.length === 0) return null;
         return (
           <>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Related Processes</Typography>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.relatedProcesses')}</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
               {relatedProcesses.map((p) => {
                 const isInput = (p.inputEntities || []).some((e) => e.key === entityKey);
                 const isOutput = (p.outputEntities || []).some((e) => e.key === entityKey);
-                const suffix = isInput && isOutput ? 'input/output' : isInput ? 'input' : 'output';
+                const suffix = isInput && isOutput ? t('entity.inputOutput') : isInput ? t('entity.input') : t('entity.output');
                 return (
                   <Chip
                     key={p.key}
@@ -1014,7 +1014,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Classifications */}
-      <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
+      <SectionHeader title={t('common.classifications')} canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(entity.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
         })) || [])}
@@ -1065,7 +1065,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   if (e.target.value) newAssignments.push({ classificationKey: c.key, valueKey: e.target.value });
                   classEdit.setEditValue(newAssignments);
                 }} size="small" displayEmpty sx={{ minWidth: 150 }}>
-                  <MenuItem value=""><em>None</em></MenuItem>
+                  <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                   {c.values?.map((v) => (
                     <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
                   ))}
@@ -1102,7 +1102,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               </Box>
             );
           }) : (
-            <Typography variant="body2" color="text.secondary">No classifications configured</Typography>
+            <Typography variant="body2" color="text.secondary">{t('common.noClassificationsConfigured')}</Typography>
           )}
         </Box>
       )}
@@ -1115,20 +1115,20 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Metadata */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('common.metadata')}</Typography>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.createdBy')}</TableCell>
               <TableCell>{entity.createdBy.firstName} {entity.createdBy.lastName}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.created')}</TableCell>
               <TableCell>{new Date(entity.createdAt).toLocaleString()}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.lastUpdated')}</TableCell>
               <TableCell>{new Date(entity.updatedAt).toLocaleString()}</TableCell>
             </TableRow>
           </TableBody>
@@ -1139,12 +1139,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mb: 1 }}
         onClick={() => setVersionsOpen(!versionsOpen)}>
         {versionsOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
-        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>Version History ({versions.length})</Typography>
+        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>{t('common.versionHistory')} ({versions.length})</Typography>
       </Box>
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">No version history</Typography>
+            <Typography variant="body2" color="text.secondary">{t('common.noVersionHistory')}</Typography>
           ) : (
             <Table size="small">
               <TableBody>
@@ -1201,25 +1201,25 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Entity</DialogTitle>
+        <DialogTitle>{t('entity.deleteEntity')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{getLocalizedText(entity.names)}"?
+            {t('entity.deleteConfirm', { name: getLocalizedText(entity.names) })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">{t('common.delete')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Create Relationship Dialog */}
       <Dialog open={relDialogOpen} onClose={() => setRelDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Relationship</DialogTitle>
+        <DialogTitle>{t('entity.addRelationship')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              First entity: <strong>{getLocalizedText(entity.names, entityKey)}</strong>
+              {t('entity.firstEntity')}: <strong>{getLocalizedText(entity.names, entityKey)}</strong>
             </Typography>
             <Autocomplete
               options={allEntities.filter((e) => e.key !== entityKey)}
@@ -1227,41 +1227,41 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               value={relSecondEntity}
               onChange={(_, newVal) => setRelSecondEntity(newVal)}
               renderInput={(params) => (
-                <TextField {...params} label="Second Entity" size="small" />
+                <TextField {...params} label={t('entity.secondEntity')} size="small" />
               )}
               isOptionEqualToValue={(option, value) => option.key === value.key}
               size="small"
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="First Min" value={relFirstMin} onChange={(e) => setRelFirstMin(e.target.value)}
+              <TextField label={t('entity.firstMin')} value={relFirstMin} onChange={(e) => setRelFirstMin(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
-              <TextField label="First Max" value={relFirstMax} onChange={(e) => setRelFirstMax(e.target.value)}
+              <TextField label={t('entity.firstMax')} value={relFirstMax} onChange={(e) => setRelFirstMax(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder="Empty = unbounded" helperText="Empty = *" />
+                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="Second Min" value={relSecondMin} onChange={(e) => setRelSecondMin(e.target.value)}
+              <TextField label={t('entity.secondMin')} value={relSecondMin} onChange={(e) => setRelSecondMin(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
-              <TextField label="Second Max" value={relSecondMax} onChange={(e) => setRelSecondMax(e.target.value)}
+              <TextField label={t('entity.secondMax')} value={relSecondMax} onChange={(e) => setRelSecondMax(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder="Empty = unbounded" helperText="Empty = *" />
+                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
             </Box>
-            <TextField label="Description" value={relDescription} onChange={(e) => setRelDescription(e.target.value)}
+            <TextField label={t('entity.description')} value={relDescription} onChange={(e) => setRelDescription(e.target.value)}
               size="small" multiline rows={2} fullWidth />
             {relError && <Alert severity="error">{relError}</Alert>}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRelDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRelDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleCreateRelationship} variant="contained" disabled={createRelationship.isPending}>
-            {createRelationship.isPending ? 'Creating...' : 'Create'}
+            {createRelationship.isPending ? t('common.creating') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Relationship Dialog */}
       <Dialog open={editRelDialogOpen} onClose={() => setEditRelDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Relationship</DialogTitle>
+        <DialogTitle>{t('entity.editRelationship')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             {(() => {
@@ -1274,28 +1274,28 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               );
             })()}
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="First Min" value={editRelFirstMin} onChange={(e) => setEditRelFirstMin(e.target.value)}
+              <TextField label={t('entity.firstMin')} value={editRelFirstMin} onChange={(e) => setEditRelFirstMin(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
-              <TextField label="First Max" value={editRelFirstMax} onChange={(e) => setEditRelFirstMax(e.target.value)}
+              <TextField label={t('entity.firstMax')} value={editRelFirstMax} onChange={(e) => setEditRelFirstMax(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder="Empty = unbounded" helperText="Empty = *" />
+                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="Second Min" value={editRelSecondMin} onChange={(e) => setEditRelSecondMin(e.target.value)}
+              <TextField label={t('entity.secondMin')} value={editRelSecondMin} onChange={(e) => setEditRelSecondMin(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
-              <TextField label="Second Max" value={editRelSecondMax} onChange={(e) => setEditRelSecondMax(e.target.value)}
+              <TextField label={t('entity.secondMax')} value={editRelSecondMax} onChange={(e) => setEditRelSecondMax(e.target.value)}
                 size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder="Empty = unbounded" helperText="Empty = *" />
+                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
             </Box>
-            <TextField label="Description" value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)}
+            <TextField label={t('entity.description')} value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)}
               size="small" multiline rows={2} fullWidth />
             {editRelError && <Alert severity="error">{editRelError}</Alert>}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditRelDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setEditRelDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleSaveEditRelationship} variant="contained" disabled={updateRelationship.isPending}>
-            {updateRelationship.isPending ? 'Saving...' : 'Save'}
+            {updateRelationship.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1325,7 +1325,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               multiline
               rows={2}
               fullWidth
-              placeholder="Optional: note any semantic differences between the two entities..."
+              placeholder={t('entity.semanticNotePlaceholder')}
             />
             {tlError && <Alert severity="error">{tlError}</Alert>}
           </Box>
@@ -1354,7 +1354,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 queryClient.invalidateQueries({ queryKey: getGetEntityTranslationLinksQueryKey(entityKey) });
                 setTlDialogOpen(false);
               } catch {
-                setTlError(tlEditingId ? 'Failed to update translation link' : 'Failed to create translation link');
+                setTlError(tlEditingId ? t('entity.failedUpdateTranslationLink') : t('entity.failedCreateTranslationLink'));
               }
             }}
             variant="contained"
@@ -1370,7 +1370,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {/* Data Processors Dialog */}
       {/* Storage Locations Dialog */}
       <Dialog open={locationsDialogOpen} onClose={() => setLocationsDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Storage Locations</DialogTitle>
+        <DialogTitle>{t('entity.editStorageLocations')}</DialogTitle>
         <DialogContent>
           {locationsError && <Alert severity="error" sx={{ mb: 1 }}>{locationsError}</Alert>}
           <Autocomplete
@@ -1381,7 +1381,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             value={COUNTRY_OPTIONS.filter((o) => editLocations.includes(o.code))}
             onChange={(_, val) => setEditLocations(val.map((v) => v.code))}
             isOptionEqualToValue={(o, v) => o.code === v.code}
-            renderInput={(params) => <TextField {...params} label="Countries where data is stored" size="small" />}
+            renderInput={(params) => <TextField {...params} label={t('entity.countriesWhereDataStored')} size="small" />}
             renderTags={(val, getTagProps) =>
               val.map((option, index) => (
                 <Chip {...getTagProps({ index })} key={option.code} label={`${option.name} (${option.code})`} size="small" />
@@ -1390,7 +1390,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setLocationsDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setLocationsDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             disabled={updateStorageLocations.isPending}
@@ -1401,11 +1401,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 invalidate();
                 setLocationsDialogOpen(false);
               } catch {
-                setLocationsError('Failed to save storage locations');
+                setLocationsError(t('entity.failedSaveStorageLocations'));
               }
             }}
           >
-            {updateStorageLocations.isPending ? 'Saving...' : 'Save'}
+            {updateStorageLocations.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

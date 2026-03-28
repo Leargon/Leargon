@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037b-make-classification-created-by-nullable
+      author: leargon
+      comment: "Make created_by_id nullable in classifications so system classifications can be seeded on a fresh DB before the fallback admin user is created by AdministratorUserBootstrap."
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: classifications
+            constraintName: fk_classifications_created_by_id
+
+        - modifyDataType:
+            tableName: classifications
+            columnName: created_by_id
+            newDataType: BIGINT
+
+        - dropNotNullConstraint:
+            tableName: classifications
+            columnName: created_by_id
+            columnDataType: BIGINT
+
+        - addForeignKeyConstraint:
+            baseTableName: classifications
+            baseColumnNames: created_by_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_classifications_created_by_id
+            onDelete: SET NULL

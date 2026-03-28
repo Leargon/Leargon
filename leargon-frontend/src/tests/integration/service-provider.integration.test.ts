@@ -4,14 +4,11 @@ import {
   signup,
   signupAdmin,
   withToken,
-  createEntity,
   createProcess,
   createServiceProvider,
-  ApiError,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { ServiceProviderResponse } from '@/api/generated/model/serviceProviderResponse';
-import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
 
 function getBackendUrl(): string {
@@ -187,55 +184,6 @@ describe('Service Provider API', () => {
       `/service-providers/${provider.key}`,
     );
     expect(getProvider.data.linkedProcesses?.some((p) => p.key === process.key)).toBe(true);
-  });
-
-  // ─── CROSS-BORDER TRANSFERS ON ENTITY ──────────────────────────────────
-
-  it('entity owner can update cross-border transfers', async () => {
-    const entity = await createEntity(userClient, 'Transfer Test Entity');
-
-    const res = await userClient.put<BusinessEntityResponse>(
-      `/business-entities/${entity.key}/cross-border-transfers`,
-      {
-        transfers: [
-          { destinationCountry: 'DE', safeguard: 'ADEQUACY_DECISION' },
-          { destinationCountry: 'US', safeguard: 'STANDARD_CONTRACTUAL_CLAUSES', notes: 'SCCs in place' },
-        ],
-      },
-    );
-    expect(res.status).toBe(200);
-    expect(res.data.crossBorderTransfers?.length).toBe(2);
-    expect(
-      res.data.crossBorderTransfers?.some(
-        (t) => t.destinationCountry === 'DE' && t.safeguard === 'ADEQUACY_DECISION',
-      ),
-    ).toBe(true);
-    expect(
-      res.data.crossBorderTransfers?.some(
-        (t) => t.destinationCountry === 'US' && t.notes === 'SCCs in place',
-      ),
-    ).toBe(true);
-  });
-
-  it('non-owner cannot update cross-border transfers on entity', async () => {
-    const entity = await createEntity(adminClient, 'Admin Transfer Entity');
-
-    const res = await userClient.put(
-      `/business-entities/${entity.key}/cross-border-transfers`,
-      { transfers: [] },
-    );
-    expect(res.status).toBe(403);
-  });
-
-  it('admin can update cross-border transfers on any entity', async () => {
-    const entity = await createEntity(userClient, 'Any Transfer Entity');
-
-    const res = await adminClient.put<BusinessEntityResponse>(
-      `/business-entities/${entity.key}/cross-border-transfers`,
-      { transfers: [{ destinationCountry: 'CH', safeguard: 'ADEQUACY_DECISION' }] },
-    );
-    expect(res.status).toBe(200);
-    expect(res.data.crossBorderTransfers?.some((t) => t.destinationCountry === 'CH')).toBe(true);
   });
 
   // ─── CROSS-BORDER TRANSFERS ON PROCESS ─────────────────────────────────

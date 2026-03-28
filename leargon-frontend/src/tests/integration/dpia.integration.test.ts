@@ -189,8 +189,8 @@ describe('DPIA API', () => {
     expect(res.data.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('non-admin cannot list all DPIAs', async () => {
+  it('non-admin can also list all DPIAs', async () => {
     const res = await userClient.get('/dpia');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 });

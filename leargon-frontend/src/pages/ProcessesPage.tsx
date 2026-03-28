@@ -35,11 +35,11 @@ const ProcessesPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="Process Map"
-      subtitle="Business Processes"
+      title={t('pages.processMap')}
+      subtitle={t('pages.businessProcesses')}
       views={[
-        { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
-        { value: 'map', label: 'Landscape', icon: <Schema sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'list', label: t('pages.list'), icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
+        { value: 'map', label: t('pages.landscape'), icon: <Schema sx={{ fontSize: 16, mr: 0.5 }} /> },
       ]}
       currentView={view}
       onViewChange={setView}
@@ -50,8 +50,8 @@ const ProcessesPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Timeline sx={{ fontSize: 64 }} />}
-            title={isEmpty ? t('wizard.onboarding.processLandscape.emptyTitle') : 'Select a process'}
-            subtitle={isEmpty ? t('wizard.onboarding.processLandscape.emptyDescription') : 'Choose a process from the list to view its details'}
+            title={isEmpty ? t('wizard.onboarding.processLandscape.emptyTitle') : t('pages.selectProcess')}
+            subtitle={isEmpty ? t('wizard.onboarding.processLandscape.emptyDescription') : t('pages.chooseProcess')}
             action={isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.processLandscape.emptyButton')}

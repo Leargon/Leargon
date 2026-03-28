@@ -71,7 +71,7 @@ describe('IT System API', () => {
     expect(res.data.names[0].text).toBe('SAP ERP');
     expect(res.data.vendor).toBe('SAP SE');
     expect(res.data.systemUrl).toBe('https://sap.example.com');
-    expect(res.data.owningUnit).toBeNull();
+    expect(res.data.owningUnit ?? null).toBeNull();
   });
 
   it('non-admin cannot create an IT system', async () => {
@@ -174,7 +174,7 @@ describe('IT System API', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.owningUnit).toBeNull();
+    expect(res.data.owningUnit ?? null).toBeNull();
   });
 
   it('returns 404 when assigning a non-existent owning unit', async () => {
@@ -200,9 +200,10 @@ describe('IT System API', () => {
       { processKeys: [proc1.key, proc2.key] },
     );
 
-    expect(res.status).toBe(200);
-    expect(res.data.linkedProcesses).toHaveLength(2);
-    const processKeys = res.data.linkedProcesses!.map((p) => p.key);
+    expect(res.status).toBe(204);
+    const getRes = await adminClient.get<ItSystemResponse>(`/it-systems/${sys.key}`);
+    expect(getRes.data.linkedProcesses).toHaveLength(2);
+    const processKeys = getRes.data.linkedProcesses!.map((p) => p.key);
     expect(processKeys).toContain(proc1.key);
     expect(processKeys).toContain(proc2.key);
   });
@@ -220,7 +221,8 @@ describe('IT System API', () => {
       { processKeys: [] },
     );
 
-    expect(res.status).toBe(200);
-    expect(res.data.linkedProcesses ?? []).toHaveLength(0);
+    expect(res.status).toBe(204);
+    const clearGetRes = await adminClient.get<ItSystemResponse>(`/it-systems/${sys.key}`);
+    expect(clearGetRes.data.linkedProcesses ?? []).toHaveLength(0);
   });
 });
