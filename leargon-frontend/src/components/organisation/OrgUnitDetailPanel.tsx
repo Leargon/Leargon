@@ -382,87 +382,65 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         />
 
         {/* Names & Descriptions */}
-        <Accordion defaultExpanded disableGutters>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Names & Descriptions</Typography>
-              {isLeadOrAdmin && !namesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] }); }}>
-                  <Edit fontSize="small" />
-                </IconButton>
-              )}
-              {namesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); namesEdit.save(); }} disabled={namesEdit.isSaving}>
-                    {namesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.cancel(); }} disabled={namesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-      {namesEdit.isEditing && namesEdit.editValue ? (
-        <Box sx={{ mb: 2 }}>
-          <TranslationEditor
-            locales={locales}
-            names={namesEdit.editValue.names}
-            descriptions={namesEdit.editValue.descriptions}
-            onNamesChange={(n) => namesEdit.setEditValue({ ...namesEdit.editValue!, names: n })}
-            onDescriptionsChange={(d) => namesEdit.setEditValue({ ...namesEdit.editValue!, descriptions: d })}
-          />
-          {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
-        </Box>
-      ) : (
-        <>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Names</Typography>
-          <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  {activeLocales.map((l) => (
-                    <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  {activeLocales.map((l) => (
-                    <TableCell key={l.localeCode}>
-                      {unit.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </Paper>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Descriptions</Typography>
+        <SectionHeader title="Names & Descriptions" canEdit={isLeadOrAdmin} isEditing={namesEdit.isEditing}
+          onEdit={() => namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] })}
+          onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
+        {namesEdit.isEditing && namesEdit.editValue ? (
           <Box sx={{ mb: 2 }}>
-            {descriptionLocales.map((l) => {
-              const desc = unit.descriptions?.find((d) => d.locale === l.localeCode)?.text;
-              return (
-                <Accordion key={l.localeCode} disableGutters variant="outlined"
-                  sx={{ '&:before': { display: 'none' }, '&:not(:last-child)': { borderBottom: 0 } }}>
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography variant="body2">{l.displayName}</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || 'No description'}
-                    </Typography>
-                  </AccordionDetails>
-                </Accordion>
-              );
-            })}
+            <TranslationEditor
+              locales={locales}
+              names={namesEdit.editValue.names}
+              descriptions={namesEdit.editValue.descriptions}
+              onNamesChange={(n) => namesEdit.setEditValue({ ...namesEdit.editValue!, names: n })}
+              onDescriptionsChange={(d) => namesEdit.setEditValue({ ...namesEdit.editValue!, descriptions: d })}
+            />
+            {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
           </Box>
-        </>
-      )}
+        ) : (
+          <>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Names</Typography>
+            <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    {activeLocales.map((l) => (
+                      <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    {activeLocales.map((l) => (
+                      <TableCell key={l.localeCode}>
+                        {unit.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
 
-          </AccordionDetails>
-        </Accordion>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Descriptions</Typography>
+            <Box sx={{ mb: 2 }}>
+              {descriptionLocales.map((l) => {
+                const desc = unit.descriptions?.find((d) => d.locale === l.localeCode)?.text;
+                return (
+                  <Accordion key={l.localeCode} disableGutters variant="outlined"
+                    sx={{ '&:before': { display: 'none' }, '&:not(:last-child)': { borderBottom: 0 } }}>
+                    <AccordionSummary expandIcon={<ExpandMore />}>
+                      <Typography variant="body2">{l.displayName}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
+                        {desc || 'No description'}
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              })}
+            </Box>
+          </>
+        )}
 
         {/* Properties: Type + Parents + Children */}
         <Accordion defaultExpanded disableGutters>
