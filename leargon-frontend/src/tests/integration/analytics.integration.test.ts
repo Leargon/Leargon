@@ -89,9 +89,12 @@ describe('Analytics API', () => {
     const p2 = await createProcess(userClient, 'Analytics BN Process 2');
     const p3 = await createProcess(userClient, 'Analytics BN Process 3');
 
-    await userClient.put(`/processes/${p1.key}/domain`, { businessDomainKey: domain1.key });
-    await userClient.put(`/processes/${p2.key}/domain`, { businessDomainKey: domain2.key });
-    await userClient.put(`/processes/${p3.key}/domain`, { businessDomainKey: domain3.key });
+    const bc1 = (await adminClient.post(`/business-domains/${domain1.key}/bounded-contexts`, { names: [{ locale: 'en', text: 'Analytics BC A' }] })).data;
+    const bc2 = (await adminClient.post(`/business-domains/${domain2.key}/bounded-contexts`, { names: [{ locale: 'en', text: 'Analytics BC B' }] })).data;
+    const bc3 = (await adminClient.post(`/business-domains/${domain3.key}/bounded-contexts`, { names: [{ locale: 'en', text: 'Analytics BC C' }] })).data;
+    await userClient.put(`/processes/${p1.key}/bounded-context`, { boundedContextKey: bc1.key });
+    await userClient.put(`/processes/${p2.key}/bounded-context`, { boundedContextKey: bc2.key });
+    await userClient.put(`/processes/${p3.key}/bounded-context`, { boundedContextKey: bc3.key });
     await userClient.put(`/processes/${p1.key}/executing-units`, { keys: [orgUnit.key] });
     await userClient.put(`/processes/${p2.key}/executing-units`, { keys: [orgUnit.key] });
     await userClient.put(`/processes/${p3.key}/executing-units`, { keys: [orgUnit.key] });

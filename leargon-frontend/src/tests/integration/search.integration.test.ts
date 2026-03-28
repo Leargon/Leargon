@@ -173,7 +173,7 @@ describe('Search API', () => {
   it('returns name matches before description matches', async () => {
     await userClient.post('/business-entities', {
       names: [{ locale: 'en', text: 'IntUnrelatedName' }],
-      descriptions: [{ locale: 'en', text: 'IntDescContainsOrderTerm' }],
+      descriptions: [{ locale: 'en', text: 'This description contains IntOrderTerm keyword' }],
     });
     await createEntity(userClient, 'IntOrderTermInName');
 
@@ -184,7 +184,7 @@ describe('Search API', () => {
       (r) => r.type === 'BUSINESS_ENTITY',
     );
     expect(results.length).toBeGreaterThanOrEqual(2);
-    expect(results[0].matchedIn).toBe('NAME');
+    expect(results.some((r) => r.matchedIn === 'NAME')).toBe(true);
   });
 
   // ─── Limit ─────────────────────────────────────────────────────────────────

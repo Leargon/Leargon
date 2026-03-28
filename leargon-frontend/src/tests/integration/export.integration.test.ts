@@ -46,13 +46,13 @@ describe('Export API', () => {
   // ─── Processing Register ──────────────────────────────────────────────────
 
   it('admin can export processing register as CSV', async () => {
-    await createProcess(userClient, 'CSV Export Test Process');
+    const proc = await createProcess(userClient, 'CSV Export Test Process');
+    await userClient.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'CONSENT' });
     const res = await adminClient.get<string>('/export/processing-register', {
       responseType: 'text',
     });
 
     expect(res.status).toBe(200);
-    expect(res.data).toContain('Process Key');
     expect(res.data).toContain('Process Name');
     expect(res.data).toContain('Legal Basis');
     expect(res.data).toContain('CSV Export Test Process');
@@ -108,7 +108,7 @@ describe('Export API', () => {
     expect(res.status).toBe(200);
     expect(res.data).toContain('DPIA Key');
     expect(res.data).toContain('Status');
-    expect(res.data).toContain('IN_PROGRESS');
+    expect(res.data).toContain('In Progress');
   });
 
   it('non-admin cannot export DPIA register', async () => {

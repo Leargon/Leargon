@@ -5,15 +5,20 @@ import {
   signupAdmin,
   withToken,
   createDomain,
+  createBoundedContext,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
-import type { BusinessDomainResponse } from '@/api/generated/model/businessDomainResponse';
+
+interface BoundedContextResponse {
+  key: string;
+  names: Array<{ locale: string; text: string }>;
+}
 
 interface ContextRelationshipResponse {
   id: number;
   relationshipType: string;
-  upstreamDomain: { key: string; name: string };
-  downstreamDomain: { key: string; name: string };
+  upstreamBoundedContext: { key: string; name: string };
+  downstreamBoundedContext: { key: string; name: string };
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -28,8 +33,8 @@ function getBackendUrl(): string {
 describe('Context Relationship API', () => {
   let adminClient: AxiosInstance;
   let userClient: AxiosInstance;
-  let upstreamDomain: BusinessDomainResponse;
-  let downstreamDomain: BusinessDomainResponse;
+  let upstreamBoundedContext: BoundedContextResponse;
+  let downstreamBoundedContext: BoundedContextResponse;
 
   beforeAll(async () => {
     const baseUrl = getBackendUrl();
@@ -54,8 +59,19 @@ describe('Context Relationship API', () => {
     });
     withToken(userClient, userAuth.accessToken);
 
-    upstreamDomain = await createDomain(adminClient, 'Integration Upstream Domain');
-    downstreamDomain = await createDomain(adminClient, 'Integration Downstream Domain');
+    const upstreamDomain = await createDomain(adminClient, 'Integration Upstream Domain');
+    const downstreamDomain = await createDomain(adminClient, 'Integration Downstream Domain');
+
+    upstreamBoundedContext = await createBoundedContext(
+      adminClient,
+      'Integration Upstream BC',
+      upstreamDomain.key as string,
+    );
+    downstreamBoundedContext = await createBoundedContext(
+      adminClient,
+      'Integration Downstream BC',
+      downstreamDomain.key as string,
+    );
   });
 
   it('GET /context-relationships returns empty list initially', async () => {
@@ -66,8 +82,8 @@ describe('Context Relationship API', () => {
 
   it('admin can create a context relationship', async () => {
     const res = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
-      upstreamDomainKey: upstreamDomain.key,
-      downstreamDomainKey: downstreamDomain.key,
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
       relationshipType: 'CUSTOMER_SUPPLIER',
       description: 'Integration test relationship',
     });
@@ -75,15 +91,15 @@ describe('Context Relationship API', () => {
     expect(res.status).toBe(201);
     expect(res.data.id).toBeGreaterThan(0);
     expect(res.data.relationshipType).toBe('CUSTOMER_SUPPLIER');
-    expect(res.data.upstreamDomain.key).toBe(upstreamDomain.key);
-    expect(res.data.downstreamDomain.key).toBe(downstreamDomain.key);
+    expect(res.data.upstreamBoundedContext.key).toBe(upstreamBoundedContext.key);
+    expect(res.data.downstreamBoundedContext.key).toBe(downstreamBoundedContext.key);
     expect(res.data.description).toBe('Integration test relationship');
   });
 
   it('non-admin cannot create a context relationship', async () => {
     const res = await userClient.post('/context-relationships', {
-      upstreamDomainKey: upstreamDomain.key,
-      downstreamDomainKey: downstreamDomain.key,
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
       relationshipType: 'PARTNERSHIP',
     });
 
@@ -95,8 +111,8 @@ describe('Context Relationship API', () => {
     expect(res.status).toBe(200);
     const rel = res.data.find(
       (r) =>
-        r.upstreamDomain.key === upstreamDomain.key &&
-        r.downstreamDomain.key === downstreamDomain.key,
+        r.upstreamBoundedContext.key === upstreamBoundedContext.key &&
+        r.downstreamBoundedContext.key === downstreamBoundedContext.key,
     );
     expect(rel).toBeDefined();
     expect(rel?.relationshipType).toBe('CUSTOMER_SUPPLIER');
@@ -105,8 +121,8 @@ describe('Context Relationship API', () => {
   it('admin can update a context relationship', async () => {
     // Create a new one for update test
     const createRes = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
-      upstreamDomainKey: upstreamDomain.key,
-      downstreamDomainKey: downstreamDomain.key,
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
       relationshipType: 'PARTNERSHIP',
     });
     const id = createRes.data.id;
@@ -122,8 +138,8 @@ describe('Context Relationship API', () => {
 
   it('admin can delete a context relationship', async () => {
     const createRes = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
-      upstreamDomainKey: upstreamDomain.key,
-      downstreamDomainKey: downstreamDomain.key,
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
       relationshipType: 'SHARED_KERNEL',
     });
     const id = createRes.data.id;

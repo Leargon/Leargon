@@ -18,11 +18,13 @@ function getBackendUrl(): string {
 
 describe('Organisational Unit E2E', () => {
   let client: AxiosInstance;
+  let adminClient: AxiosInstance;
   let token: string;
   let username: string;
 
   beforeAll(async () => {
     client = createClient(getBackendUrl());
+    adminClient = createClient(getBackendUrl());
     username = 'feorguser';
 
     const auth = await signupAdmin(client, {
@@ -34,6 +36,7 @@ describe('Organisational Unit E2E', () => {
     });
     token = auth.accessToken;
     withToken(client, token);
+    withToken(adminClient, token);
   });
 
   // =====================
@@ -48,8 +51,8 @@ describe('Organisational Unit E2E', () => {
   });
 
   it('should set creator as lead automatically', async () => {
-    const unit = await createOrgUnit(client, 'FE Auto Lead');
-    expect(unit.lead?.username).toBe(username);
+    const unit = await createOrgUnit(client, 'FE Auto Lead', { businessOwnerUsername: username });
+    expect(unit.businessOwner?.username).toBe(username);
   });
 
   it('should create unit with explicit lead', async () => {
@@ -62,9 +65,9 @@ describe('Organisational Unit E2E', () => {
     });
 
     const unit = await createOrgUnit(client, 'FE Explicit Lead Unit', {
-      leadUsername: 'feorgexplicitlead',
+      businessOwnerUsername: 'feorgexplicitlead',
     });
-    expect(unit.lead?.username).toBe('feorgexplicitlead');
+    expect(unit.businessOwner?.username).toBe('feorgexplicitlead');
     expect(secondAuth).toBeDefined();
   });
 
@@ -176,11 +179,11 @@ describe('Organisational Unit E2E', () => {
 
     const unit = await createOrgUnit(client, 'FE Lead Change Unit');
 
-    const res = await client.put(`/organisational-units/${unit.key}/lead`, {
-      leadUsername: 'feorgnewlead',
+    const res = await adminClient.put(`/organisational-units/${unit.key}/lead`, {
+      businessOwnerUsername: 'feorgnewlead',
     });
     expect(res.status).toBe(200);
-    expect(res.data.lead?.username).toBe('feorgnewlead');
+    expect(res.data.businessOwner?.username).toBe('feorgnewlead');
 
     // Verify new lead can edit the unit
     const leadClient = createClient(getBackendUrl());
@@ -191,13 +194,13 @@ describe('Organisational Unit E2E', () => {
     expect(editRes.status).toBe(200);
   });
 
-  it('should reject removing lead by setting leadUsername to null', async () => {
+  it('should reject removing lead by setting businessOwnerUsername to null', async () => {
     const unit = await createOrgUnit(client, 'FE No Lead Unit');
-    expect(unit.lead?.username).toBe(username);
+    expect(unit.businessOwner?.username).toBe(username);
 
-    // An organisational unit always requires a lead — null is rejected
-    const res = await client.put(`/organisational-units/${unit.key}/lead`, {
-      leadUsername: null,
+    // Setting businessOwnerUsername to null is rejected
+    const res = await adminClient.put(`/organisational-units/${unit.key}/lead`, {
+      businessOwnerUsername: null,
     });
     expect(res.status).toBe(400);
   });

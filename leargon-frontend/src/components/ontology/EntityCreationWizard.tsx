@@ -261,7 +261,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
                   {label}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                  {c.values.map((v) => {
+                  {(c.values || []).map((v) => {
                     const valueLabel = getLocalizedText(v.names, v.key);
                     const checked = assignments.some((a) => a.classificationKey === c.key && a.valueKey === v.key);
                     return (

@@ -220,7 +220,7 @@ describe('Business Entity E2E', () => {
   // DOMAIN ASSIGNMENT
   // =====================
 
-  it('should assign entity to a business domain', async () => {
+  it('should assign entity to a bounded context', async () => {
     const adminClient = createClient(getBackendUrl());
     const adminAuth = await signupAdmin(adminClient, {
       email: 'fe-ent-domain@example.com',
@@ -232,14 +232,19 @@ describe('Business Entity E2E', () => {
     withToken(adminClient, adminAuth.accessToken);
 
     const domain = await createDomain(adminClient, 'FE Sales Domain');
+    const bcRes = await adminClient.post(
+      `/business-domains/${domain.key}/bounded-contexts`,
+      { names: [{ locale: 'en', text: 'Entity Test BC' }] },
+    );
+    const bcKey = bcRes.data.key;
     const entity = await createEntity(adminClient, 'FE Domain Entity');
 
     const res = await adminClient.put(
-      `/business-entities/${entity.key}/domain`,
-      { businessDomainKey: domain.key },
+      `/business-entities/${entity.key}/bounded-context`,
+      { boundedContextKey: bcKey },
     );
     expect(res.status).toBe(200);
-    expect(res.data.businessDomain.key).toBe(domain.key);
+    expect(res.data.boundedContext.key).toBe(bcKey);
   });
 
   // =====================

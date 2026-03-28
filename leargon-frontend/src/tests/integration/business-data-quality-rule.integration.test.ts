@@ -92,7 +92,7 @@ describe('Business Data Quality Rule API', () => {
     expect(res.status).toBe(201);
     expect(res.data.id).toBeTruthy();
     expect(res.data.description).toBe('Name must not be blank or null');
-    expect(res.data.severity).toBeNull();
+    expect(res.data.severity ?? null).toBeNull();
     expect(res.data.createdAt).toBeTruthy();
   });
 
@@ -232,7 +232,7 @@ describe('Business Data Quality Rule API', () => {
 
     expect(res.status).toBe(200);
     expect(res.data.description).toBe('Updated age rule');
-    expect(res.data.severity).toBeNull();
+    expect(res.data.severity ?? null).toBeNull();
   });
 
   it('returns 403 when non-owner tries to update a rule', async () => {

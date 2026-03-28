@@ -263,7 +263,7 @@ describe('DomainEvent API', () => {
     );
 
     expect(res.status).toBe(200);
-    expect(res.data.processLinks).toHaveLength(0);
+    expect(res.data.processLinks?.length ?? 0).toBe(0);
   });
 
   // ─── DELETE /domain-events/{key} ───────────────────────────────────────────
