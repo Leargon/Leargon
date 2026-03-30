@@ -36,7 +36,7 @@ const ROLE_EXTRA_ITEMS: Record<Role, NavItem[]> = {
   ],
   architecture: [
     { labelKey: 'nav.ubiquitousLanguage', path: '/ubiquitous-language', icon: <Hub /> },
-    { labelKey: 'nav.contextMap', path: '/context-map', icon: <Map /> },
+    { labelKey: 'nav.contextMap', path: '/diagrams/context-map', icon: <Map /> },
     { labelKey: 'nav.eventFlow', path: '/diagrams/event-flow', icon: <FlashOn /> },
   ],
   operations: [
