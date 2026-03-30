@@ -25,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 import { useNavigate } from 'react-router-dom';
 import ComplianceSetupWizard from '../components/compliance/ComplianceSetupWizard';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const LEGAL_BASIS_COLORS: Record<string, 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'> = {
   CONSENT: 'primary',
@@ -366,6 +367,7 @@ const ProcessingRegisterPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { mode } = useWizardMode();
   const [search, setSearch] = useState('');
   const [missingOnly, setMissingOnly] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
@@ -379,8 +381,8 @@ const ProcessingRegisterPage: React.FC = () => {
   const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => (p as any).legalBasis);
 
   useEffect(() => {
-    if (hasNoLegalBases && !complianceWizardDismissed) setComplianceWizardOpen(true);
-  }, [hasNoLegalBases, complianceWizardDismissed]);
+    if (hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
+  }, [hasNoLegalBases, complianceWizardDismissed, mode]);
 
   const handleComplianceWizardClose = () => {
     setComplianceWizardOpen(false);
@@ -466,6 +468,12 @@ const ProcessingRegisterPage: React.FC = () => {
             >
               <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/processing-register', 'processing-register.csv'); }}>
                 {t('compliance.exportProcessingRegister')}
+              </MenuItem>
+              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/data-processors', 'service-providers.csv'); }}>
+                {t('compliance.exportDataProcessors')}
+              </MenuItem>
+              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/dpia-register', 'dpia-register.csv'); }}>
+                {t('compliance.exportDpiaRegister')}
               </MenuItem>
             </Menu>
           </>

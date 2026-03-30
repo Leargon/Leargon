@@ -19,6 +19,7 @@ import type {
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useLocale } from '../../context/LocaleContext';
 
 interface ItSystemsSetupWizardProps {
   open: boolean;
@@ -28,6 +29,7 @@ interface ItSystemsSetupWizardProps {
 const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
   const { mode } = useWizardMode();
+  const { getLocalizedText } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createSystem = useCreateItSystem();
@@ -39,6 +41,7 @@ const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClo
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
   const [names, setNames] = useState<LocalizedText[]>([]);
+  const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
   const [vendor, setVendor] = useState('');
   const [systemUrl, setSystemUrl] = useState('');
   const [owningUnitKey, setOwningUnitKey] = useState('');
@@ -59,6 +62,7 @@ const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClo
       const response = await createSystem.mutateAsync({
         data: {
           names: names.filter((n) => n.text.trim()),
+          descriptions: descriptions.filter((d) => d.text.trim()),
           vendor: vendor.trim() || undefined,
           systemUrl: systemUrl.trim() || undefined,
           owningUnitKey: owningUnitKey || undefined,
@@ -78,6 +82,7 @@ const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClo
 
   const resetForm = () => {
     setNames([]);
+    setDescriptions([]);
     setVendor('');
     setSystemUrl('');
     setOwningUnitKey('');
@@ -116,9 +121,9 @@ const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClo
           <TranslationEditor
             locales={locales}
             names={names}
-            descriptions={[]}
+            descriptions={descriptions}
             onNamesChange={setNames}
-            onDescriptionsChange={() => {}}
+            onDescriptionsChange={setDescriptions}
           />
           <TextField
             size="small"
@@ -154,7 +159,7 @@ const ItSystemsSetupWizard: React.FC<ItSystemsSetupWizardProps> = ({ open, onClo
           >
             <MenuItem value=""><em>{t('wizard.onboarding.itSystems.owningUnitNone')}</em></MenuItem>
             {units.map((u) => (
-              <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+              <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
             ))}
           </Select>
         </FormControl>

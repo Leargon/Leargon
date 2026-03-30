@@ -143,7 +143,7 @@ const ServiceProvidersSetupWizard: React.FC<ServiceProvidersSetupWizardProps> = 
             >
               <MenuItem value=""><em>{t('wizard.onboarding.serviceProviders.typeNone')}</em></MenuItem>
               {Object.values(ServiceProviderType).map((st) => (
-                <MenuItem key={st} value={st}>{st.replace(/_/g, ' ')}</MenuItem>
+                <MenuItem key={st} value={st}>{t(`serviceProviderType.${st}` as Parameters<typeof t>[0], { defaultValue: st.replace(/_/g, ' ') })}</MenuItem>
               ))}
             </Select>
           </FormControl>

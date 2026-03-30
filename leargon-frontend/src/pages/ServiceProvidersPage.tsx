@@ -11,12 +11,14 @@ import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 import { useGetAllServiceProviders } from '../api/generated/service-provider/service-provider';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ServiceProvidersPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -27,8 +29,8 @@ const ServiceProvidersPage: React.FC = () => {
   const isEmpty = !isLoading && providers.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);

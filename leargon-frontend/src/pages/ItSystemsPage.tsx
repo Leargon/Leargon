@@ -9,10 +9,12 @@ import ItSystemsSetupWizard from '../components/it-systems/ItSystemsSetupWizard'
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllItSystems } from '../api/generated/it-system/it-system';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ItSystemsPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -22,8 +24,8 @@ const ItSystemsPage: React.FC = () => {
   const isEmpty = !isLoading && systems.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);

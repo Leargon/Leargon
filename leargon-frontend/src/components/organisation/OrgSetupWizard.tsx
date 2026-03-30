@@ -32,6 +32,7 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
   const [names, setNames] = useState<LocalizedText[]>([]);
+  const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
   const [unitType, setUnitType] = useState('');
   const [businessOwnerUsername, setBusinessOwnerUsername] = useState('');
   const [businessStewardUsername, setBusinessStewardUsername] = useState('');
@@ -53,6 +54,7 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
       await createUnit.mutateAsync({
         data: {
           names: names.filter((n) => n.text.trim()),
+          descriptions: descriptions.filter((d) => d.text.trim()),
           unitType: unitType || undefined,
           businessOwnerUsername: businessOwnerUsername.trim() || undefined,
           businessStewardUsername: businessStewardUsername.trim() || undefined,
@@ -72,6 +74,7 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
 
   const resetForm = () => {
     setNames([]);
+    setDescriptions([]);
     setUnitType('');
     setBusinessOwnerUsername('');
     setBusinessStewardUsername('');
@@ -115,9 +118,9 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
           <TranslationEditor
             locales={locales}
             names={names}
-            descriptions={[]}
+            descriptions={descriptions}
             onNamesChange={setNames}
-            onDescriptionsChange={() => {}}
+            onDescriptionsChange={setDescriptions}
           />
           <FormControl size="small">
             <InputLabel>{t('wizard.onboarding.org.rootUnitTypeLabel')}</InputLabel>
@@ -128,7 +131,7 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
             >
               <MenuItem value=""><em>{t('wizard.onboarding.org.rootUnitTypeNone')}</em></MenuItem>
               {UNIT_TYPE_VALUES.map((ut) => (
-                <MenuItem key={ut} value={ut}>{ut.replace(/_/g, ' ')}</MenuItem>
+                <MenuItem key={ut} value={ut}>{t(`orgUnitType.${ut}` as Parameters<typeof t>[0], { defaultValue: ut.replace(/_/g, ' ') })}</MenuItem>
               ))}
             </Select>
           </FormControl>

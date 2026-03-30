@@ -1164,6 +1164,19 @@ const fr = {
     roleOperations: 'Opérations',
     roleAdmin: 'Gouvernance',
   },
+  orgUnitType: {
+    DEPARTMENT: 'Département',
+    TEAM: 'Équipe',
+    DIVISION: 'Division',
+    CENTRE_OF_EXCELLENCE: "Centre d'excellence",
+  },
+  serviceProviderType: {
+    DATA_PROCESSOR: 'Sous-traitant',
+    BODYLEASE: 'Mise à disposition de personnel',
+    MANAGED_SERVICE: 'Service géré',
+    CONSULTANT: 'Consultant',
+    OTHER: 'Autre',
+  },
 };
 
 export default fr;

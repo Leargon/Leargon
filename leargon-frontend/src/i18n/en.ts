@@ -1164,6 +1164,19 @@ const en = {
     roleOperations: 'Operations',
     roleAdmin: 'Governance',
   },
+  orgUnitType: {
+    DEPARTMENT: 'Department',
+    TEAM: 'Team',
+    DIVISION: 'Division',
+    CENTRE_OF_EXCELLENCE: 'Centre of Excellence',
+  },
+  serviceProviderType: {
+    DATA_PROCESSOR: 'Data Processor',
+    BODYLEASE: 'Body Lease',
+    MANAGED_SERVICE: 'Managed Service',
+    CONSULTANT: 'Consultant',
+    OTHER: 'Other',
+  },
 } as const;
 
 export type TranslationKeys = typeof en;

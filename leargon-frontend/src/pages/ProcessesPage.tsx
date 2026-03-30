@@ -9,12 +9,14 @@ import ProcessLandscapeWizard from '../components/processes/ProcessLandscapeWiza
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllProcesses } from '../api/generated/process/process';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ProcessLandscapeDiagram = lazy(() => import('../components/diagrams/ProcessLandscapeDiagram'));
 
 const ProcessesPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -25,8 +27,8 @@ const ProcessesPage: React.FC = () => {
   const isEmpty = !isLoading && processes.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);

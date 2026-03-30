@@ -7,7 +7,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
@@ -21,14 +20,18 @@ import {
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import type {
+  LocalizedText,
   SupportedLocaleResponse,
   OrganisationalUnitResponse,
 } from '../../api/generated/model';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useLocale } from '../../context/LocaleContext';
+import TranslationEditor from '../common/TranslationEditor';
 
 interface CapabilityEntry {
-  name: string;
+  names: LocalizedText[];
+  descriptions: LocalizedText[];
   owningUnitKey: string;
 }
 
@@ -40,6 +43,7 @@ interface CapabilitySetupWizardProps {
 const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
   const { mode } = useWizardMode();
+  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
   const createCapability = useCreateCapability();
 
@@ -50,21 +54,23 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
   const [capabilities, setCapabilities] = useState<CapabilityEntry[]>([
-    { name: '', owningUnitKey: '' },
-    { name: '', owningUnitKey: '' },
+    { names: [], descriptions: [], owningUnitKey: '' },
+    { names: [], descriptions: [], owningUnitKey: '' },
   ]);
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validCapabilities = capabilities.filter((c) => c.name.trim());
+  const validCapabilities = capabilities.filter((c) =>
+    c.names.some((n) => n.locale === defaultLocale && n.text.trim())
+  );
   const hasAtLeastOne = validCapabilities.length > 0;
 
-  const updateCapability = (index: number, field: keyof CapabilityEntry, value: string) => {
+  const updateCapability = (index: number, field: keyof CapabilityEntry, value: string | LocalizedText[]) => {
     setCapabilities((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
 
-  const addCapability = () => setCapabilities((prev) => [...prev, { name: '', owningUnitKey: '' }]);
+  const addCapability = () => setCapabilities((prev) => [...prev, { names: [], descriptions: [], owningUnitKey: '' }]);
 
   const removeCapability = (index: number) =>
     setCapabilities((prev) => prev.filter((_, i) => i !== index));
@@ -80,7 +86,8 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
       for (const cap of validCapabilities) {
         await createCapability.mutateAsync({
           data: {
-            names: [{ locale: defaultLocale, text: cap.name.trim() }],
+            names: cap.names.filter((n) => n.text.trim()),
+            descriptions: cap.descriptions.filter((d) => d.text.trim()),
             owningUnitKey: cap.owningUnitKey || undefined,
           },
         });
@@ -96,7 +103,10 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
   };
 
   const resetForm = () => {
-    setCapabilities([{ name: '', owningUnitKey: '' }, { name: '', owningUnitKey: '' }]);
+    setCapabilities([
+      { names: [], descriptions: [], owningUnitKey: '' },
+      { names: [], descriptions: [], owningUnitKey: '' },
+    ]);
     setError(null);
   };
 
@@ -131,19 +141,22 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
         <Typography variant="body2">{t('wizard.onboarding.capabilities.guidedCapabilitiesText')}</Typography>
       ),
       content: (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {capabilities.map((cap, index) => (
-            <Box key={index} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <TextField
-                size="small"
-                sx={{ flex: 1 }}
-                label={t('wizard.onboarding.capabilities.capabilityNameLabel', { n: index + 1 })}
-                placeholder={t('wizard.onboarding.capabilities.capabilityNamePlaceholder')}
-                value={cap.name}
-                onChange={(e) => updateCapability(index, 'name', e.target.value)}
+            <Box key={index} sx={{ position: 'relative' }}>
+              <TranslationEditor
+                locales={locales}
+                names={cap.names}
+                descriptions={cap.descriptions}
+                onNamesChange={(names) => updateCapability(index, 'names', names)}
+                onDescriptionsChange={(descs) => updateCapability(index, 'descriptions', descs)}
               />
               {capabilities.length > 1 && (
-                <IconButton size="small" onClick={() => removeCapability(index)}>
+                <IconButton
+                  size="small"
+                  onClick={() => removeCapability(index)}
+                  sx={{ position: 'absolute', top: 4, right: 4 }}
+                >
                   <Remove fontSize="small" />
                 </IconButton>
               )}
@@ -169,24 +182,26 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {validCapabilities.map((cap, index) => (
-            <FormControl key={index} size="small">
-              <InputLabel>{t('wizard.onboarding.capabilities.owningUnitLabel')} — {cap.name}</InputLabel>
-              <Select
-                value={capabilities.find((c) => c.name === cap.name)?.owningUnitKey || ''}
-                onChange={(e: SelectChangeEvent) => {
-                  const globalIndex = capabilities.findIndex((c) => c.name === cap.name);
-                  if (globalIndex >= 0) updateCapability(globalIndex, 'owningUnitKey', e.target.value);
-                }}
-                label={`${t('wizard.onboarding.capabilities.owningUnitLabel')} — ${cap.name}`}
-              >
-                <MenuItem value=""><em>{t('wizard.onboarding.capabilities.owningUnitNone')}</em></MenuItem>
-                {units.map((u) => (
-                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          ))}
+          {capabilities.map((cap, globalIndex) => {
+            const capName = getLocalizedText(cap.names, `#${globalIndex + 1}`);
+            const isValid = cap.names.some((n) => n.locale === defaultLocale && n.text.trim());
+            if (!isValid) return null;
+            return (
+              <FormControl key={globalIndex} size="small">
+                <InputLabel>{t('wizard.onboarding.capabilities.owningUnitLabel')} — {capName}</InputLabel>
+                <Select
+                  value={cap.owningUnitKey}
+                  onChange={(e: SelectChangeEvent) => updateCapability(globalIndex, 'owningUnitKey', e.target.value)}
+                  label={`${t('wizard.onboarding.capabilities.owningUnitLabel')} — ${capName}`}
+                >
+                  <MenuItem value=""><em>{t('wizard.onboarding.capabilities.owningUnitNone')}</em></MenuItem>
+                  {units.map((u) => (
+                    <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            );
+          })}
         </Box>
       ),
     },
@@ -200,7 +215,7 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
             {validCapabilities.map((cap, i) => (
-              <Typography key={i} variant="body2">• {cap.name}{cap.owningUnitKey ? ` (${cap.owningUnitKey})` : ''}</Typography>
+              <Typography key={i} variant="body2">• {getLocalizedText(cap.names, `#${i + 1}`)}{cap.owningUnitKey ? ` (${getLocalizedText(units.find((u) => u.key === cap.owningUnitKey)?.names ?? [], cap.owningUnitKey)})` : ''}</Typography>
             ))}
           </Box>
         </Box>
