@@ -19,7 +19,7 @@ services:
       start_period: 30s
 
   leargon-backend:
-    # image: hcr.io/leargon/leargon-backend:latest
+    # image: ghcr.io/leargon/leargon-backend:latest
     build:
       context: ./leargon-backend
       dockerfile: Dockerfile

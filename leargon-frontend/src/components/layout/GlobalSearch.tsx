@@ -201,8 +201,11 @@ const GlobalSearch: React.FC = () => {
                                     <List dense disablePadding>
                                         {items.map((result) => (
                                             <ListItemButton
-                                                key={result.key}
-                                                onClick={() => handleSelect(result)}
+                                                key={result.key ?? result.matchedIn}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault(); // prevent input blur before navigation fires
+                                                    handleSelect(result);
+                                                }}
                                                 sx={{ py: 0.5, px: 2 }}
                                             >
                                                 <ListItemText
