@@ -10,6 +10,7 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -33,6 +34,7 @@ interface CreateOrgUnitDialogProps {
 }
 
 const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose, parentKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createUnit = useCreateOrganisationalUnit();
@@ -52,7 +54,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
 
   const handleCreate = async () => {
     if (!hasDefaultName) {
-      setError(`Name in the default locale (${defaultLocale}) is required`);
+      setError(t('orgUnitDialog.errorNameRequired', { locale: defaultLocale }));
       return;
     }
 
@@ -73,7 +75,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
       resetForm();
       navigate(`/organisation/${newKey}`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create unit');
+      setError(err?.response?.data?.message || err?.message || t('orgUnitDialog.errorFailed'));
     }
   };
 
@@ -92,7 +94,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{parentKey ? 'Create Child Unit' : 'Create Organisational Unit'}</DialogTitle>
+      <DialogTitle>{parentKey ? t('orgUnitDialog.createChildTitle') : t('orgUnitDialog.createTitle')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TranslationEditor
@@ -105,10 +107,10 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
 
           <TextField
             size="small"
-            label="Type"
+            label={t('orgUnitDialog.typeLabel')}
             value={unitType}
             onChange={(e) => setUnitType(e.target.value)}
-            placeholder="Enter unit type..."
+            placeholder={t('orgUnitDialog.typePlaceholder')}
           />
 
           <Autocomplete
@@ -117,7 +119,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
             value={users.find((u) => u.username === leadUsername) || null}
             onChange={(_, newVal) => setLeadUsername(newVal?.username || null)}
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Lead" placeholder="Search for lead..." />
+              <TextField {...params} size="small" label={t('orgUnitDialog.leadLabel')} placeholder={t('orgUnitDialog.leadPlaceholder')} />
             )}
             isOptionEqualToValue={(option, value) => option.username === value.username}
             size="small"
@@ -127,13 +129,13 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           onClick={handleCreate}
           variant="contained"
           disabled={createUnit.isPending || !hasDefaultName}
         >
-          {createUnit.isPending ? 'Creating...' : 'Create'}
+          {createUnit.isPending ? t('common.creating') : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>

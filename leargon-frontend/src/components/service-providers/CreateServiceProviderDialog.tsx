@@ -19,6 +19,7 @@ import {
   InputLabel,
   Box,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useCreateServiceProvider,
@@ -41,20 +42,13 @@ const COUNTRY_OPTIONS = [
   { code: 'SE', name: 'Sweden' }, { code: 'SG', name: 'Singapore' }, { code: 'US', name: 'United States' },
 ];
 
-const PROVIDER_TYPE_LABELS: Record<string, string> = {
-  DATA_PROCESSOR: 'Data Processor',
-  BODYLEASE: 'Body Lease',
-  MANAGED_SERVICE: 'Managed Service',
-  CONSULTANT: 'Consultant',
-  OTHER: 'Other',
-};
-
 interface CreateServiceProviderDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
 const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales();
@@ -83,7 +77,7 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
 
   const handleCreate = async () => {
     if (!hasDefaultName) {
-      setError('Please provide a name in the default locale');
+      setError(t('serviceProviderDialog.errorNameRequired'));
       return;
     }
     try {
@@ -102,13 +96,13 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
         navigate(`/service-providers/${res.data.key}`);
       }
     } catch {
-      setError('Failed to create service provider');
+      setError(t('serviceProviderDialog.errorFailed'));
     }
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Service Provider</DialogTitle>
+      <DialogTitle>{t('serviceProviderDialog.createTitle')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <TranslationEditor
@@ -121,14 +115,14 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
         />
         <Box sx={{ mt: 2 }}>
           <FormControl size="small" fullWidth>
-            <InputLabel>Provider Type</InputLabel>
+            <InputLabel>{t('serviceProviderDialog.providerTypeLabel')}</InputLabel>
             <Select
               value={providerType}
-              label="Provider Type"
+              label={t('serviceProviderDialog.providerTypeLabel')}
               onChange={(e) => setProviderType(e.target.value)}
             >
-              {Object.entries(PROVIDER_TYPE_LABELS).map(([val, label]) => (
-                <MenuItem key={val} value={val}>{label}</MenuItem>
+              {Object.values(ServiceProviderType).map((val) => (
+                <MenuItem key={val} value={val}>{t(`serviceProviderType.${val}`)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -139,7 +133,7 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
           getOptionLabel={(o) => `${o.code} – ${o.name}`}
           value={COUNTRY_OPTIONS.filter((c) => countries.includes(c.code))}
           onChange={(_, val) => setCountries(val.map((v) => v.code))}
-          renderInput={(params) => <TextField {...params} label="Processing Countries" size="small" sx={{ mt: 2 }} />}
+          renderInput={(params) => <TextField {...params} label={t('serviceProviderDialog.processingCountriesLabel')} size="small" sx={{ mt: 2 }} />}
           renderTags={(val, getTagProps) =>
             val.map((option, index) => (
               <Chip {...getTagProps({ index })} key={option.code} label={option.code} size="small" />
@@ -149,18 +143,18 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
         <FormControlLabel
           sx={{ mt: 1, display: 'block' }}
           control={<Switch checked={agreement} onChange={(e) => setAgreement(e.target.checked)} />}
-          label="Data Processing Agreement in place"
+          label={t('serviceProviderDialog.agreementLabel')}
         />
         <FormControlLabel
           sx={{ display: 'block' }}
           control={<Switch checked={subProcessors} onChange={(e) => setSubProcessors(e.target.checked)} />}
-          label="Sub-processors approved"
+          label={t('serviceProviderDialog.subProcessorsLabel')}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button onClick={handleCreate} variant="contained" disabled={createProvider.isPending}>
-          {createProvider.isPending ? <CircularProgress size={16} /> : 'Create'}
+          {createProvider.isPending ? <CircularProgress size={16} /> : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>
