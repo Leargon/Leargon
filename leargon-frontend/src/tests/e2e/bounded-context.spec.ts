@@ -30,7 +30,7 @@ test.describe('Bounded Contexts — Domain Detail (Admin)', () => {
     // Fill in the name
     const dialog = page.getByRole('dialog');
     await dialog.locator('input').fill('New Payments Context');
-    await dialog.getByRole('button', { name: 'Add' }).click();
+    await dialog.getByRole('button', { name: 'Create' }).click();
 
     await page.waitForLoadState('networkidle');
 
@@ -59,7 +59,7 @@ test.describe('Bounded Contexts — Domain Detail (Admin)', () => {
       const dialog = page.getByRole('dialog');
       if (await dialog.isVisible()) {
         await dialog.locator('input').first().fill('PW BC Entity Check');
-        await dialog.getByRole('button', { name: 'Add' }).click();
+        await dialog.getByRole('button', { name: 'Create' }).click();
         await page.waitForLoadState('networkidle');
       }
     }

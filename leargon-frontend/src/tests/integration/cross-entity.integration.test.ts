@@ -145,6 +145,55 @@ describe('Cross-Entity E2E', () => {
   });
 
   // =====================
+  // REFERENTIAL INTEGRITY: DELETE ENTITY → PROCESSES SURVIVE
+  // =====================
+
+  it('should delete entity → linked processes still exist, entity removed from inputs', async () => {
+    const proc = await createProcess(client, 'FE Integrity Process A');
+    const entity = await createEntity(client, 'FE Integrity Entity A');
+
+    // Link entity as input
+    await client.post(`/processes/${proc.key}/inputs`, { entityKey: entity.key });
+
+    // Verify it's linked
+    const beforeRes = await client.get(`/processes/${proc.key}`);
+    expect(beforeRes.data.inputEntities.length).toBe(1);
+
+    // Delete the entity
+    const delRes = await client.delete(`/business-entities/${entity.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Entity is gone
+    const entityRes = await client.get(`/business-entities/${entity.key}`);
+    expect(entityRes.status).toBe(404);
+
+    // Process still exists, entity removed from inputs via DB cascade
+    const procRes = await client.get(`/processes/${proc.key}`);
+    expect(procRes.status).toBe(200);
+    expect(procRes.data.inputEntities.every((e: { key: string }) => e.key !== entity.key)).toBe(true);
+  });
+
+  it('should delete process → input/output entities still exist (not deleted)', async () => {
+    const proc = await createProcess(client, 'FE Integrity Process B');
+    const inputEnt = await createEntity(client, 'FE Integrity Entity Input');
+    const outputEnt = await createEntity(client, 'FE Integrity Entity Output');
+
+    await client.post(`/processes/${proc.key}/inputs`, { entityKey: inputEnt.key });
+    await client.post(`/processes/${proc.key}/outputs`, { entityKey: outputEnt.key });
+
+    // Delete the process
+    const delRes = await client.delete(`/processes/${proc.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Both entities still exist
+    const inputRes = await client.get(`/business-entities/${inputEnt.key}`);
+    expect(inputRes.status).toBe(200);
+
+    const outputRes = await client.get(`/business-entities/${outputEnt.key}`);
+    expect(outputRes.status).toBe(200);
+  });
+
+  // =====================
   // CASCADE: DELETE DOMAIN → ENTITIES/PROCESSES LOSE DOMAIN REF
   // =====================
 

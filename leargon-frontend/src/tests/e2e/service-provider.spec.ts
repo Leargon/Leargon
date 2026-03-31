@@ -41,15 +41,15 @@ test.describe('Service Providers Page — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     // Click the Delete button in the detail panel header
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).first().click();
 
     // Confirm deletion dialog
     const confirmDialog = page.getByRole('dialog');
-    await confirmDialog.getByRole('button', { name: 'Delete' }).click();
+    await confirmDialog.getByRole('button', { name: 'Delete', exact: true }).click();
 
     await page.waitForLoadState('networkidle');
-    // Should navigate back to list; provider no longer in list
-    await expect(page.getByText(name)).not.toBeVisible({ timeout: 10_000 });
+    // Should navigate back to list; detail panel for the deleted provider should be gone
+    await expect(page.getByRole('heading', { name })).not.toBeVisible({ timeout: 10_000 });
   });
 });
 

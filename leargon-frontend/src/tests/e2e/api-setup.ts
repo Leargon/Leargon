@@ -38,6 +38,7 @@ async function apiFetch(
   if (!res.ok) {
     throw new Error(`${method} ${urlPath} → ${res.status}: ${await res.text()}`);
   }
+  if (res.status === 204 || res.headers.get('content-length') === '0') return {};
   return res.json() as Promise<Record<string, unknown>>;
 }
 
@@ -70,7 +71,7 @@ export const createOrgUnit = (
   apiFetch(
     '/organisational-units',
     'POST',
-    { names: [{ locale: 'en', text: name }], ...(leadUsername ? { leadUsername } : {}) },
+    { names: [{ locale: 'en', text: name }], ...(leadUsername ? { businessOwnerUsername: leadUsername } : {}) },
     as,
   );
 
@@ -135,6 +136,18 @@ export const createBoundedContext = (
     { names: [{ locale: 'en', text: name }] },
     as,
   );
+
+export const createItSystem = (
+  name: string,
+  extras?: Record<string, unknown>,
+): Promise<Record<string, unknown>> =>
+  apiFetch('/it-systems', 'POST', { names: [{ locale: 'en', text: name }], ...extras }, ADMIN);
+
+export const linkItSystemToProcesses = (
+  itSystemKey: string,
+  processKeys: string[],
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/it-systems/${itSystemKey}/linked-processes`, 'PUT', { processKeys }, ADMIN);
 
 export const createCapability = (
   name: string,

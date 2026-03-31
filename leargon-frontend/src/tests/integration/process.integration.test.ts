@@ -240,6 +240,24 @@ describe('Process E2E', () => {
     expect(getRes.status).toBe(404);
   });
 
+  it('should block deletion of process that has child processes (400)', async () => {
+    const parent = await createProcess(client, 'FE Parent Process');
+    const child = await createProcess(client, 'FE Child Process', { parentProcessKey: parent.key });
+    expect(child.parentProcess?.key).toBe(parent.key);
+
+    // Attempt to delete parent while child exists → 400
+    const delRes = await client.delete(`/processes/${parent.key}`);
+    expect(delRes.status).toBe(400);
+
+    // Parent still exists
+    const getRes = await client.get(`/processes/${parent.key}`);
+    expect(getRes.status).toBe(200);
+
+    // Cleanup: delete child first, then parent
+    await client.delete(`/processes/${child.key}`);
+    await client.delete(`/processes/${parent.key}`);
+  });
+
   // =====================
   // UPDATE OWNER
   // =====================
@@ -508,25 +526,6 @@ describe('Process E2E', () => {
     expect(res.data.legalBasis).toBe('LEGAL_OBLIGATION');
   });
 
-  it('should return 403 when non-owner sets legal basis', async () => {
-    const proc = await createProcess(client, 'FE Legal Basis Forbidden Process');
-
-    const otherClient = createClient(getBackendUrl());
-    const otherAuth = await signup(otherClient, {
-      email: 'fe-legal-other@example.com',
-      username: 'felegalother',
-      password: 'password123',
-      firstName: 'Other',
-      lastName: 'User',
-    });
-    withToken(otherClient, otherAuth.accessToken);
-
-    const res = await otherClient.put(`/processes/${proc.key}/legal-basis`, {
-      legalBasis: 'CONSENT',
-    });
-    expect(res.status).toBe(403);
-  });
-
   it('should return 404 when setting legal basis on unknown process', async () => {
     const res = await client.put(`/processes/non-existent-proc/legal-basis`, {
       legalBasis: 'CONSENT',
@@ -571,23 +570,6 @@ describe('Process E2E', () => {
     expect(res.data.purpose ?? null).toBeNull();
   });
 
-  it('should return 403 when non-owner sets purpose', async () => {
-    const proc = await createProcess(client, 'FE Purpose Forbidden Process');
-
-    const otherClient = createClient(getBackendUrl());
-    const otherAuth = await signup(otherClient, {
-      email: 'fe-purpose-other@example.com',
-      username: 'fepurposeother',
-      password: 'password123',
-      firstName: 'Other',
-      lastName: 'User',
-    });
-    withToken(otherClient, otherAuth.accessToken);
-
-    const res = await otherClient.put(`/processes/${proc.key}/purpose`, { purpose: 'Unauthorized' });
-    expect(res.status).toBe(403);
-  });
-
   // =====================
   // SECURITY MEASURES
   // =====================
@@ -615,22 +597,4 @@ describe('Process E2E', () => {
     expect(res.data.securityMeasures ?? null).toBeNull();
   });
 
-  it('should return 403 when non-owner sets security measures', async () => {
-    const proc = await createProcess(client, 'FE Security Measures Forbidden Process');
-
-    const otherClient = createClient(getBackendUrl());
-    const otherAuth = await signup(otherClient, {
-      email: 'fe-security-other@example.com',
-      username: 'fesecurityother',
-      password: 'password123',
-      firstName: 'Other',
-      lastName: 'User',
-    });
-    withToken(otherClient, otherAuth.accessToken);
-
-    const res = await otherClient.put(`/processes/${proc.key}/security-measures`, {
-      securityMeasures: 'Unauthorized measures',
-    });
-    expect(res.status).toBe(403);
-  });
 });

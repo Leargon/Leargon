@@ -3,19 +3,18 @@ import { uid, createCapability, createOrgUnit, createProcess } from './api-setup
 
 // ─── BCM Perspective ─────────────────────────────────────────────────────────
 
-test.describe('BCM Perspective — default', () => {
-  test('BCM perspective tab is active by default', async ({ page }) => {
-    await page.goto('/');
+test.describe('Default navigation', () => {
+  test('admin role view shows Governance label in top nav', async ({ page }) => {
+    await page.goto('/home');
     await page.waitForLoadState('networkidle');
 
-    // The perspective selector should show "Capability Model" as active
-    const activeTab = page.getByRole('tab', { selected: true });
-    await expect(activeTab).toContainText(/Capability Model/i, { timeout: 10_000 });
+    // The role switcher button should show "Governance" for admin
+    await expect(page.locator('button').filter({ hasText: /Governance/i }).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test('/ redirects to /capabilities by default', async ({ page }) => {
+  test('/ redirects to /home by default', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveURL(/\/capabilities/, { timeout: 10_000 });
+    await expect(page).toHaveURL(/\/home/, { timeout: 10_000 });
   });
 });
 
@@ -53,7 +52,7 @@ test.describe('Capabilities page', () => {
     await page.goto(`/capabilities/${capKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('child capability shows parent name', async ({ page }) => {
@@ -67,7 +66,7 @@ test.describe('Capabilities page', () => {
     await page.goto(`/capabilities/${parent.key as string}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText(childName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(childName).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can delete a capability via UI', async ({ page }) => {
@@ -78,13 +77,13 @@ test.describe('Capabilities page', () => {
     await page.goto(`/capabilities/${capKey}`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
 
     const confirmDialog = page.getByRole('dialog');
-    await confirmDialog.getByRole('button', { name: 'Delete' }).click();
+    await confirmDialog.getByRole('button', { name: 'Delete', exact: true }).click();
 
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(name)).not.toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(name).first()).not.toBeVisible({ timeout: 10_000 });
   });
 });
 
@@ -147,7 +146,7 @@ test.describe('Strategic Map page', () => {
 // ─── Perspective Filtering ────────────────────────────────────────────────────
 
 test.describe('Perspective-based field filtering', () => {
-  test('BCM perspective on entity detail shows only Governance tab', async ({ page }) => {
+  test('admin (governance) perspective on entity detail shows Governance accordion', async ({ page }) => {
     const entityName = uid('PerspEnt');
 
     // Create entity via API
@@ -163,17 +162,15 @@ test.describe('Perspective-based field filtering', () => {
     });
     const entity = (await r.json()) as { key: string };
 
-    // Switch to BCM perspective first (default) and navigate to entity
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    // In BCM perspective, only Governance tab should be visible
-    await expect(page.getByRole('tab', { name: 'Governance' })).toBeVisible({ timeout: 10_000 });
-    // GDPR Compliance tab should not be visible in BCM
-    await expect(page.getByRole('tab', { name: 'GDPR & Compliance' })).not.toBeVisible();
+    // In admin (governance) perspective, both Governance and Compliance sections are visible
+    await expect(page.locator('[aria-expanded]').filter({ hasText: 'Governance' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[aria-expanded]').filter({ hasText: 'Compliance' })).toBeVisible();
   });
 
-  test('switching to GDPR perspective shows Compliance tab on entity', async ({ page }) => {
+  test('switching to compliance role shows Compliance accordion on entity', async ({ page }) => {
     const entityName = uid('GdprPerspEnt');
 
     const backendUrl = process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
@@ -191,16 +188,17 @@ test.describe('Perspective-based field filtering', () => {
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    // Click the GDPR perspective tab in the top nav
-    await page.getByRole('tab', { name: /DSG.*GDPR/i }).click();
+    // Switch to DSG/GDPR (compliance) role via the role switcher
+    await page.locator('button').filter({ hasText: /Governance/i }).first().click();
+    await page.getByRole('menuitem', { name: /DSG.*GDPR/i }).click();
     await page.waitForLoadState('networkidle');
 
     // Navigate back to the entity
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    // GDPR Compliance tab should now be visible
-    await expect(page.getByRole('tab', { name: 'GDPR & Compliance' })).toBeVisible({
+    // Compliance accordion should be visible in DSG/GDPR (compliance) perspective
+    await expect(page.locator('[aria-expanded]').filter({ hasText: 'Compliance' })).toBeVisible({
       timeout: 10_000,
     });
   });

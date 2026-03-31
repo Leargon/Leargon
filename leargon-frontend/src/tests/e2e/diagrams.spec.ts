@@ -46,8 +46,8 @@ test.describe('Process Landscape diagram', () => {
   test('page loads with diagram toolbar', async ({ page }) => {
     await page.goto('/diagrams/processes');
     await expect(page.getByText('Process Landscape')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Domain colours')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Show entities')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('Domain layer')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Entity layer')).toBeVisible({ timeout: 5_000 });
   });
 
   test('shows process node after process is created', async ({ page }) => {
@@ -100,13 +100,13 @@ test.describe('Org Chart diagram', () => {
   });
 });
 
-test.describe('Entity Lineage tab', () => {
-  test('lineage tab appears on entity detail', async ({ page }) => {
+test.describe('Entity Lineage accordion', () => {
+  test('lineage accordion appears on entity detail', async ({ page }) => {
     const name = uid('LineageEnt');
     const entity = (await createEntity(name, ADMIN)) as { key: string };
 
     await page.goto(`/entities/${entity.key}`);
-    await expect(page.getByRole('tab', { name: 'Data Lineage' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[aria-expanded]').filter({ hasText: 'Data Lineage' })).toBeVisible({ timeout: 10_000 });
   });
 
   test('lineage diagram shows linked process', async ({ page }) => {
@@ -117,7 +117,7 @@ test.describe('Entity Lineage tab', () => {
     await postJson(`/api/processes/${proc.key}/inputs`, { entityKey: entity.key }, ADMIN);
 
     await page.goto(`/entities/${entity.key}`);
-    await page.getByRole('tab', { name: 'Data Lineage' }).click();
+    await page.locator('[aria-expanded]').filter({ hasText: 'Data Lineage' }).click();
     await expect(page.getByText(procName)).toBeVisible({ timeout: 15_000 });
   });
 });

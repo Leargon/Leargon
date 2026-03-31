@@ -15,14 +15,14 @@ test('login page renders the sign-in form', async ({ page }) => {
   await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
 });
 
-test('login with valid credentials navigates to /domains', async ({ page }) => {
+test('login with valid credentials navigates to /home', async ({ page }) => {
   await page.goto('/login');
 
   await page.getByLabel('Email').fill('admin@e2e-test.local');
   await page.getByLabel('Password').fill('AdminPass123!');
   await page.getByRole('button', { name: /sign in/i }).click();
 
-  await expect(page).toHaveURL(/\/domains/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/home/, { timeout: 10_000 });
 });
 
 test('login with invalid credentials shows an error alert', async ({ page }) => {

@@ -40,6 +40,7 @@ setup('authenticate as admin', async () => {
         localStorage: [
           { name: 'auth_token', value: accessToken },
           { name: 'auth_user', value: JSON.stringify(storedUser) },
+          { name: 'leargon_wizard_mode', value: 'express' },
         ],
       },
     ],

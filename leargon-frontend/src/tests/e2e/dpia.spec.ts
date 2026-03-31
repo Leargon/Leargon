@@ -12,7 +12,7 @@ test.describe('DPIA — Process Detail (Admin)', () => {
     await page.waitForLoadState('networkidle');
 
     // Navigate to Compliance tab
-    await page.getByRole('tab', { name: 'Compliance' }).click();
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
 
     await expect(page.getByText('No DPIA recorded')).toBeVisible({ timeout: 10_000 });
   });
@@ -24,7 +24,7 @@ test.describe('DPIA — Process Detail (Admin)', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('tab', { name: 'Compliance' }).click();
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
 
     await page.getByRole('button', { name: 'Trigger DPIA' }).click();
     await page.waitForLoadState('networkidle');
@@ -39,7 +39,7 @@ test.describe('DPIA — Process Detail (Admin)', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('tab', { name: 'Compliance' }).click();
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
     await page.getByRole('button', { name: 'Trigger DPIA' }).click();
     await page.waitForLoadState('networkidle');
 
@@ -59,7 +59,7 @@ test.describe('DPIA — Process Detail (Admin)', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('tab', { name: 'Compliance' }).click();
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
     await page.getByRole('button', { name: 'Trigger DPIA' }).click();
     await page.waitForLoadState('networkidle');
 
@@ -111,8 +111,7 @@ test.describe('DPIA — Process Detail (Viewer)', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('tab', { name: 'Compliance' }).click();
-
+    // Viewer has 'operations' perspective — no Compliance section rendered at all
     await expect(page.getByRole('button', { name: 'Trigger DPIA' })).not.toBeVisible();
   });
 });

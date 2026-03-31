@@ -16,7 +16,7 @@ test.describe('Retention Period — Entity Detail', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('Retention Period')).toBeVisible();
-    await expect(page.getByText('Not set')).toBeVisible();
+    await expect(page.getByText('Not set').first()).toBeVisible();
   });
 
   test('admin can set retention period via inline edit', async ({ page }) => {
@@ -54,6 +54,6 @@ test.describe('Retention Period — Entity Detail', () => {
     await input.clear();
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText('Not set')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Not set').first()).toBeVisible({ timeout: 5000 });
   });
 });

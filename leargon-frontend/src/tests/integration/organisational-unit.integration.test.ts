@@ -5,6 +5,7 @@ import {
   signupAdmin,
   withToken,
   createOrgUnit,
+  createProcess,
   createClassification,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
@@ -306,6 +307,54 @@ describe('Organisational Unit E2E', () => {
 
     const getRes = await client.get(`/organisational-units/${unit.key}`);
     expect(getRes.status).toBe(404);
+  });
+
+  it('delete parent org unit → child units survive but lose parent link', async () => {
+    const parent = await createOrgUnit(client, 'FE Org Parent To Delete');
+    const child = await createOrgUnit(client, 'FE Org Child Survives');
+
+    // Assign parent
+    await client.put(`/organisational-units/${child.key}/parents`, { keys: [parent.key] });
+    const beforeRes = await client.get(`/organisational-units/${child.key}`);
+    expect(beforeRes.data.parents?.some((p: { key: string }) => p.key === parent.key)).toBe(true);
+
+    // Delete parent
+    const delRes = await client.delete(`/organisational-units/${parent.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Parent is gone
+    const parentRes = await client.get(`/organisational-units/${parent.key}`);
+    expect(parentRes.status).toBe(404);
+
+    // Child still exists and parent link is gone
+    const childRes = await client.get(`/organisational-units/${child.key}`);
+    expect(childRes.status).toBe(200);
+    expect(childRes.data.parents?.every((p: { key: string }) => p.key !== parent.key)).toBe(true);
+  });
+
+  it('delete org unit → executing processes still exist, unit removed from executingUnits', async () => {
+    const unit = await createOrgUnit(client, 'FE Org Unit To Delete With Procs');
+    const proc = await createProcess(client, 'FE Org Surviving Process');
+
+    // Assign unit as executing unit on process
+    await client.put(`/processes/${proc.key}/executing-units`, { keys: [unit.key] });
+
+    // Verify assignment
+    const beforeRes = await client.get(`/processes/${proc.key}`);
+    expect(beforeRes.data.executingUnits?.some((u: { key: string }) => u.key === unit.key)).toBe(true);
+
+    // Delete the org unit
+    const delRes = await client.delete(`/organisational-units/${unit.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Unit is gone
+    const unitRes = await client.get(`/organisational-units/${unit.key}`);
+    expect(unitRes.status).toBe(404);
+
+    // Process still exists, unit removed from executingUnits via DB cascade
+    const procRes = await client.get(`/processes/${proc.key}`);
+    expect(procRes.status).toBe(200);
+    expect(procRes.data.executingUnits?.every((u: { key: string }) => u.key !== unit.key)).toBe(true);
   });
 
   it('should reject deletion by non-lead user', async () => {

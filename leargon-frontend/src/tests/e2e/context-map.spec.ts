@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uid, createDomain, ADMIN } from './api-setup';
+import { uid, createDomain, createBoundedContext, ADMIN } from './api-setup';
 
 // ─── Context Map Page ──────────────────────────────────────────────────────
 
@@ -28,6 +28,10 @@ test.describe('Context Map (Admin)', () => {
     const downDomain = await createDomain(downName);
     const upKey = upDomain.key as string;
     const downKey = downDomain.key as string;
+
+    // Create bounded contexts so the Add Relationship button becomes visible
+    await createBoundedContext(upKey, uid('Up BC 1'));
+    await createBoundedContext(upKey, uid('Up BC 2'));
 
     // Navigate to upstream domain
     await page.goto(`/domains/${upKey}`);

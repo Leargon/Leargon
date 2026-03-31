@@ -137,36 +137,96 @@ erDiagram
 
 ---
 
-## 3. Computed vs Explicit Relationships
+## 3. Deletion Behaviour
 
-### Explicit (stored in the database)
+Deletion in Leargon follows a consistent principle: **deleting an object never silently deletes unrelated objects**. Relationships are either explicitly blocked, nulled out, or cleaned up via database cascade on join tables. The rules per object type are:
 
-| Relationship | Where stored |
-|---|---|
-| Process → Capability | `process_capability` join table |
-| Domain → Bounded Context | `bounded_context.domain_id` FK |
-| Domain Event → Data Entity (PRODUCES / CONSUMES) | `domain_event_entity` join table with link type |
-| Data Entity → Bounded Context | `business_entity.bounded_context_id` FK |
-| Process → Data Entity (input / output) | `process_input_entity` / `process_output_entity` join tables |
-| Org Unit → Data Processor | `organisational_unit.linked_data_processor_id` FK |
-| Context → Context relationship | `bounded_context_relationship` table |
+### Business Domain
 
-### Computed (derived at query time or in the frontend)
+Deleting a domain **cascades to all its Bounded Contexts** (which are owned exclusively by the domain). Entities and processes that were assigned to those bounded contexts have their `boundedContext` reference nulled out — they survive as unassigned objects.
 
-| Derived view | How derived |
-|---|---|
-| Capability's data entities | Union of all input/output entities across all processes that realise the capability |
-| Capability's org units | Union of all executing units across all processes that realise the capability |
-| IT system's data entities | Union of input/output entities of all processes that use the IT system |
-| IT system's org units | Union of executing units of all processes that use the IT system |
-| "Handles personal data" on process | Process has a `personal-data = personal-data--contains` classification assignment |
-| Ubiquitous Language per Bounded Context | All entities assigned to that context (nouns), all processes assigned (verbs), all events published or consumed (events) |
-| Processing Register completeness | Ratio of filled mandatory fields vs total mandatory fields per process |
-| Conway's Law misalignment | Processes where the executing org unit's bounded context differs from the process's bounded context |
+### Bounded Context
+
+Cannot be deleted independently; it is deleted when its parent domain is deleted.
+
+### Data Entity
+
+- Children are **reparented to null** (they become root-level entities; their keys are recomputed).
+- Interface/implementation links to other entities are **cleared from both sides**.
+- Translation links are deleted.
+- Entries in `process_entity_inputs` and `process_entity_outputs` join tables are **removed by DB cascade** (`ON DELETE CASCADE`). The linked processes survive but the entity is removed from their input/output sets.
+
+### Process
+
+- **Blocked if the process has child processes.** Returns HTTP 400. Children must be deleted or reparented first.
+- **Blocked if referenced as a called element in another process's BPMN diagram.** Returns HTTP 400.
+- Entries in `process_executing_units`, `process_entity_inputs`, `process_entity_outputs`, and `process_capability` join tables are removed by DB cascade.
+- Any DPIA that referenced this process has its `process` FK nulled out (DPIA survives).
+- Domain-event-to-process links are deleted.
+- Linked IT systems, service providers, and capabilities are **not affected** — those objects survive.
+
+### Organisational Unit
+
+- Simple delete — **no structural guard, not even for child units**.
+- The `organisational_unit_parents` join table has `ON DELETE CASCADE` on both sides (`unit_id` and `parent_id`). Deleting a parent unit removes its rows from the join table; child units **survive but become parentless** (their parent link is simply dropped). Deleting a child unit removes its own join-table rows without affecting the parent.
+- Entries in `process_executing_units` are **removed by DB cascade**. Processes that had this unit as an executing unit survive with the unit removed from their `executingUnits` list.
+
+### Capability
+
+- Simple delete.
+- Entries in `process_capability` and `it_system_capability` join tables are removed by DB cascade. Linked processes and IT systems survive.
+
+### IT System
+
+- Simple delete.
+- Entries in `it_system_linked_processes` join table are removed by DB cascade. Linked processes survive.
+
+### Service Provider
+
+- Simple delete.
+- Entries in `service_provider_linked_processes` join table are removed by DB cascade. Linked processes survive.
+
+### Domain Event
+
+- Simple delete.
+- `domain_event_entity` and `domain_event_process_link` join table entries are removed by DB cascade.
+
+### Classification / Classification Value
+
+Deleting a classification (or a value within it) triggers an explicit cleanup pass in `ClassificationService` that removes all matching `ClassificationAssignment` entries from every entity, domain, process, and org unit that held that assignment. The owning objects survive.
 
 ---
 
-## 4. Analytical Perspectives
+## 4. Computed vs Explicit Relationships
+
+### Explicit (stored in the database)
+
+| Relationship                                     | Where stored                                                 |
+|--------------------------------------------------|--------------------------------------------------------------|
+| Process → Capability                             | `process_capability` join table                              |
+| Domain → Bounded Context                         | `bounded_context.domain_id` FK                               |
+| Domain Event → Data Entity (PRODUCES / CONSUMES) | `domain_event_entity` join table with link type              |
+| Data Entity → Bounded Context                    | `business_entity.bounded_context_id` FK                      |
+| Process → Data Entity (input / output)           | `process_input_entity` / `process_output_entity` join tables |
+| Org Unit → Data Processor                        | `organisational_unit.linked_data_processor_id` FK            |
+| Context → Context relationship                   | `bounded_context_relationship` table                         |
+
+### Computed (derived at query time or in the frontend)
+
+| Derived view                            | How derived                                                                                                              |
+|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Capability's data entities              | Union of all input/output entities across all processes that realise the capability                                      |
+| Capability's org units                  | Union of all executing units across all processes that realise the capability                                            |
+| IT system's data entities               | Union of input/output entities of all processes that use the IT system                                                   |
+| IT system's org units                   | Union of executing units of all processes that use the IT system                                                         |
+| "Handles personal data" on process      | Process has a `personal-data = personal-data--contains` classification assignment                                        |
+| Ubiquitous Language per Bounded Context | All entities assigned to that context (nouns), all processes assigned (verbs), all events published or consumed (events) |
+| Processing Register completeness        | Ratio of filled mandatory fields vs total mandatory fields per process                                                   |
+| Conway's Law misalignment               | Processes where the executing org unit's bounded context differs from the process's bounded context                      |
+
+---
+
+## 5. Analytical Perspectives
 
 ### DSG/GDPR Perspective
 
@@ -222,58 +282,122 @@ Focuses on team structure and process responsibility:
 
 ---
 
-## 5. UI Field Visibility by Perspective
+## 6. UI Field Visibility by Perspective
 
 The frontend filters which fields and tabs are shown based on the active perspective. The goal is to present only the information relevant to the user's current analytical frame, reducing noise.
 
 ### Entity detail panel — tabs
 
-| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Compliance | ✓ | ✓ | — | — | — |
-| Relationships | — | ✓ | ✓ | ✓ | — |
-| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Lineage | — | ✓ | ✓ | — | — |
+| Tab           | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------|:--------:|:----------:|:---:|:------:|:---:|
+| Compliance    |    ✓     |     ✓      |  —  |   —    |  —  |
+| Relationships |    —     |     ✓      |  ✓  |   ✓    |  —  |
+| Governance    |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Lineage       |    —     |     ✓      |  ✓  |   —    |  —  |
 
 ### Entity detail panel — core fields
 
-| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Data Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Data Steward | — | ✓ | — | — | — |
-| Technical Custodian | — | ✓ | — | — | — |
-| Parent Entity | — | ✓ | ✓ | — | — |
-| Bounded Context | — | ✓ | ✓ | — | — |
-| Retention Period | ✓ | ✓ | — | — | — |
+| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Data Owner          |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Data Steward        |    —     |     ✓      |  —  |   —    |  —  |
+| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
+| Parent Entity       |    —     |     ✓      |  ✓  |   —    |  —  |
+| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
+| Retention Period    |    ✓     |     ✓      |  —  |   —    |  —  |
 
 ### Process detail panel — tabs
 
-| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Data & Teams | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Compliance | ✓ | ✓ | — | — | — |
-| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Tab          | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|--------------|:--------:|:----------:|:---:|:------:|:---:|
+| Data & Teams |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Compliance   |    ✓     |     ✓      |  —  |   —    |  —  |
+| Governance   |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
 
 ### Process detail panel — core fields
 
-| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Process Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Process Steward | — | ✓ | — | — | — |
-| Technical Custodian | — | ✓ | — | — | — |
-| Code | — | ✓ | ✓ | ✓ | ✓ |
-| Process Type | — | ✓ | ✓ | ✓ | ✓ |
-| Legal Basis | ✓ | ✓ | — | — | — |
-| Bounded Context | — | ✓ | ✓ | — | — |
+| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Process Owner       |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Process Steward     |    —     |     ✓      |  —  |   —    |  —  |
+| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
+| Code                |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Process Type        |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Legal Basis         |    ✓     |     ✓      |  —  |   —    |  —  |
+| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
 
 ### Domain detail panel — sections
 
-| Section | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Domain Type | — | ✓ | ✓ | ✓ | ✓ |
-| Parent Domain | — | ✓ | ✓ | ✓ | ✓ |
-| Vision Statement | — | ✓ | ✓ | ✓ | ✓ |
-| Owning Unit | — | ✓ | — | ✓ | ✓ |
-| Bounded Contexts | — | ✓ | ✓ | — | — |
-| Context Relationships | — | ✓ | ✓ | — | — |
-| Classifications | ✓ | ✓ | — | — | — |
+| Section               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|-----------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Domain Type           |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Parent Domain         |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Vision Statement      |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Owning Unit           |    —     |     ✓      |  —  |   ✓    |  ✓  |
+| Bounded Contexts      |    —     |     ✓      |  ✓  |   —    |  —  |
+| Context Relationships |    —     |     ✓      |  ✓  |   —    |  —  |
+| Classifications       |    ✓     |     ✓      |  —  |   —    |  —  |
+
+---
+
+## 7. Test Suite Strategy
+
+Leargon has three test suites. Each has a distinct responsibility; nothing is tested in two places.
+
+```
+Backend Spock     →  "What does the API guarantee?"
+Frontend integ.   →  "Do cross-resource mutations leave the system consistent?"
+E2E Playwright    →  "Can the user complete their core task via the browser?"
+```
+
+### Layer 1 — Backend Spock specs (`leargon-backend/src/test/`)
+
+**Owns**: every rule the API enforces.
+
+- All HTTP status codes: 201, 200, 204, 400, 403, 404, 409
+- Input validation and error messages
+- Permission rules — who can create, edit, delete what
+- Business logic: deletion guards, cascade nulling, version history creation
+- All negative paths
+
+**Does not test**: frontend type correctness, UI rendering, cross-resource lifecycle.
+
+Because these tests run against an in-memory H2 database with no browser, they are fast enough to be exhaustive. This is the right place to be thorough.
+
+### Layer 2 — Frontend integration tests (`src/tests/integration/`)
+
+**Owns**: TypeScript API client correctness and cross-resource lifecycle.
+
+- Round-trip tests that verify the generated TS types match the backend response shape (one create + read per resource is sufficient)
+- Multi-resource scenarios: delete A → verify B survives with expected state, full lifecycle (domain → BC → entity → process → verify refs)
+- Referential integrity after mutations
+
+**Does not test**: API authorization rules (403/404/401 — those belong in Spock), single-resource update/rename variations (those are covered by the backend spec), UI rendering.
+
+The practical rule: *if a test only calls one endpoint and checks one resource, it belongs in Spock unless its sole purpose is verifying the TypeScript client types parse correctly.*
+
+### Layer 3 — E2E Playwright tests (`src/tests/e2e/`)
+
+**Owns**: user-visible behaviour and role-conditional UI.
+
+- Happy-path user journeys: open dialog → fill form → submit → see result
+- Role gates: admin sees action buttons, non-admin/viewer does not
+- Cross-page rendering: data set on the detail page appears correctly on the list/register page
+- Diagram page loading and node interaction
+
+**Does not test**: API authorization logic (the 403 path is Spock's job; E2E only verifies the frontend hides the controls), per-severity or per-value enumeration of enum variants (one representative value is sufficient), empty-state + filled-state for every field (one representative field per section is sufficient).
+
+The practical rule: *one spec file per page/feature. Each file covers: admin CRUD journey + role visibility. Avoid testing the same UI pattern (field sets value → value appears) more than once per feature.*
+
+### The layering in practice
+
+```
+Rule: "non-admin gets 403 on DELETE /processes/:key"
+→ Backend Spock (ProcessControllerSpec). Not in integration or E2E.
+
+Rule: "deleting an IT system does not delete its linked processes"
+→ Frontend integration (it-system.integration.test.ts). Not in E2E or Spock.
+
+Rule: "the Delete button is not rendered for a viewer"
+→ E2E (processes-crud.spec.ts). Not in integration or Spock.
+```

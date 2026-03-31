@@ -37,11 +37,10 @@ test.describe('Field Configuration — Admin UI', () => {
     await clearFieldConfigurations();
   });
 
-  test('field-configurations tab is visible in settings', async ({ page }) => {
+  test('field-configurations page is accessible in settings', async ({ page }) => {
     await page.goto('/settings/field-configurations');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('tab', { name: 'Field Configuration' })).toBeVisible();
     await expect(page.getByText('Mandatory Field Configuration')).toBeVisible();
   });
 
@@ -58,8 +57,8 @@ test.describe('Field Configuration — Admin UI', () => {
 
     await page.getByRole('button', { name: 'Add' }).click();
 
-    // The chip should appear with the human-readable label
-    await expect(page.getByRole('button', { name: /Retention Period/ })).toBeVisible();
+    // The chip should appear (a delete icon appears on configured chips)
+    await expect(page.locator('[data-testid="DeleteIcon"]')).toBeVisible();
 
     // Save
     await page.getByRole('button', { name: 'Save' }).click();
@@ -73,15 +72,15 @@ test.describe('Field Configuration — Admin UI', () => {
     await page.goto('/settings/field-configurations');
     await page.waitForLoadState('networkidle');
 
-    // Chip shows human-readable label; delete it
-    await page.getByRole('button', { name: /Retention Period/ }).locator('svg').click();
+    // Chip shows human-readable label; click its delete icon
+    await page.locator('[data-testid="DeleteIcon"]').click();
 
     // Save
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Field configurations saved')).toBeVisible({ timeout: 5000 });
 
-    // Chip should be gone
-    await expect(page.getByRole('button', { name: /Retention Period/ })).not.toBeVisible();
+    // Chip should be gone — only the locked "Name (English, default)" chip remains
+    await expect(page.locator('[data-testid="DeleteIcon"]')).not.toBeVisible();
   });
 
   test('shows built-in locked name chip that cannot be removed', async ({ page }) => {
@@ -109,7 +108,10 @@ test.describe('Missing Mandatory Fields — Entity Detail', () => {
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText(/Missing mandatory fields/)).toBeVisible({ timeout: 5000 });
+    const banner = page.getByRole('alert');
+    await expect(banner).toBeVisible({ timeout: 5000 });
+    await expect(banner.getByText(/mandatory field.*incomplete/i)).toBeVisible();
+    await banner.getByRole('button', { name: /show/i }).click();
     await expect(page.getByText(/retentionPeriod/)).toBeVisible();
   });
 

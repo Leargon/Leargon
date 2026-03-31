@@ -23,7 +23,7 @@ test.describe('Team Insights page', () => {
 
     await expect(page.getByText('Ownership Workload per User')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Process Load per Org Unit')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Bottleneck Teams')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Bottleneck Teams').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('shows org unit in process load section after assigning a process', async ({ page }) => {

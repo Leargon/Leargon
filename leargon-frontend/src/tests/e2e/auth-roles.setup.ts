@@ -57,6 +57,7 @@ for (const u of USERS) {
           localStorage: [
             { name: 'auth_token', value: accessToken },
             { name: 'auth_user', value: JSON.stringify(user) },
+            { name: 'leargon_wizard_mode', value: 'express' },
           ],
         },
       ],
