@@ -1,26 +1,28 @@
 # Léargon Roadmap
 *Ordered by value/effort score (value 1–10 ÷ sessions).*
 
-| Feature                            | Sessions | Weekly | Value | Score    |
-|------------------------------------|----------|--------|-------|----------|
-| Sub-domain owning unit default     | 0.5      | 5%     | 7/10  | **14.0** |
-| Privacy notice generation          | 1        | 10%    | 8/10  | **8.0**  |
-| DSG/GDPR compliance guided setup   | 1.5      | 15%    | 9/10  | **6.0**  |
-| Process effective entity roll-up   | 1.5      | 15%    | 8/10  | **5.3**  |
-| Data governance guided setup       | 1.5      | 15%    | 8/10  | **5.3**  |
-| DDD guided setup                   | 1.5      | 15%    | 8/10  | **5.3**  |
-| Catalogue insights                 | 3        | 30%    | 8/10  | **2.7**  |
-| Catalogue quality rules            | 3        | 30%    | 7/10  | **2.3**  |
-| Impact analysis & domain coupling  | 4        | 40%    | 8/10  | **2.0**  |
-| Compliance metrics dashboard       | 4        | 40%    | 8/10  | **2.0**  |
-| DDD guided discovery               | 4        | 40%    | 7/10  | **1.8**  |
-| Import & integration               | 4        | 40%    | 7/10  | **1.8**  |
-| Watch & notifications              | 4        | 40%    | 6/10  | **1.5**  |
-| Review cycles                      | 4        | 40%    | 6/10  | **1.5**  |
-| Team Topologies                    | 2.5      | 25%    | 8/10  | **3.2**  |
-| Value Stream Mapping (VSM)         | 2.5      | 25%    | 7/10  | **2.8**  |
-| Performance & scalability          | 3        | 30%    | 7/10  | **2.3**  |
-| Stewards                           | 5        | 50%    | 7/10  | **1.4**  |
+*Sessions = remaining work (partially-implemented features are re-estimated from their current state).*
+
+| Feature                                       | Sessions | Weekly | Value | Score    |
+|-----------------------------------------------|----------|--------|-------|----------|
+| Data governance guided setup *(partial)*      | 0.5      | 5%     | 8/10  | **16.0** |
+| Sub-domain owning unit default                | 0.5      | 5%     | 7/10  | **14.0** |
+| DSG/GDPR compliance guided setup *(partial)*  | 1        | 10%    | 9/10  | **9.0**  |
+| Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
+| DDD guided setup *(partial)*                  | 1        | 10%    | 8/10  | **8.0**  |
+| Process effective entity roll-up              | 1.5      | 15%    | 8/10  | **5.3**  |
+| Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
+| Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
+| Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
+| Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
+| Performance & scalability                     | 3        | 30%    | 7/10  | **2.3**  |
+| Impact analysis & domain coupling             | 4        | 40%    | 8/10  | **2.0**  |
+| Compliance metrics dashboard                  | 4        | 40%    | 8/10  | **2.0**  |
+| DDD guided discovery                          | 4        | 40%    | 7/10  | **1.8**  |
+| Import & integration                          | 4        | 40%    | 7/10  | **1.8**  |
+| Watch & notifications                         | 4        | 40%    | 6/10  | **1.5**  |
+| Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
+| Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
 
 ---
 
@@ -124,26 +126,40 @@
 
 ---
 
-## Privacy notice generation
-*Single story. Depends on processing register data being complete. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
+## Service provider data flow transparency
+*Surfaces the data that flows to each external service provider — who the provider is, which processes use it, what entities are sent, and on what legal basis. Leverages the existing service provider model (type, linked processes, process entities). No new tables. Concrete compliance deliverable: DPA checklist, cross-border transfer register, and a machine-readable transparency summary per processor.*
 *⏱ Sessions: 1 · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
 
-**Data model notes:**
-- **Data subject categories** = top-level Business Entities (root of the parent-child tree, i.e. `parent == null`) assigned as input/output on a process.
-- **Personal data categories** = all directly assigned input/output entities on a process (may be leaf-level children).
-- **Retention duration per processing activity**: currently only modelled on `BusinessEntity` (entity-level retention). There is no per-`Process` retention field — this is a gap candidate for future work before privacy notice generation can be fully automated.
+**Data model note:** All building blocks already exist — `ServiceProvider` with type (`MANAGED_SERVICE`, `BODYLEASE`, `DATA_PROCESSOR`), `Process → ServiceProvider` links, `Process` input/output entities, `Process` legal basis and cross-border transfers.
 
-#### USER STORY 'Generate privacy notice draft'
+#### USER STORY 'View data flow summary for a service provider'
+**AS A** privacy officer or admin\
+**IF** one or more processes are linked to a service provider\
+**I WANT** to see, on the service provider detail page, a consolidated view of every process that uses this provider, which input and output entities are involved, and what the legal basis is for each process\
+**SO THAT** I can immediately understand what data the company sends to this provider and why, without manually tracing each process individually
+
+#### USER STORY 'View cross-border data flows via service providers'
+**AS A** privacy officer\
+**IF** a service provider is located in a country outside Switzerland or the EU/EEA\
+**I WANT** to see a list of all data entities transferred to that provider via linked processes, grouped by transfer mechanism (SCCs, adequacy decision, derogation)\
+**SO THAT** cross-border transfers are visible in one place for regulatory documentation and audit purposes (DSG Art. 16 / GDPR Art. 44)
+
+#### USER STORY 'Data processor agreement checklist'
 **AS AN** admin\
-**IF** processing activities are documented with controller identity, purposes, data categories, recipient categories, retention periods, and cross-border transfers\
-**I WANT** to generate a draft privacy notice from the catalogue data covering all Art. 19 revDSG required elements\
-**SO THAT** the duty to inform data subjects is grounded in the same authoritative catalogue and stays consistent with the processing register
+**IF** a service provider has type DATA_PROCESSOR\
+**I WANT** to see a checklist on the provider's detail page verifying whether the key DPA elements are documented: contract reference, data categories covered, processing purpose, sub-processor list, and security measures\
+**SO THAT** gaps in the processor agreement documentation surface immediately rather than during an audit
+
+#### USER STORY 'Export service provider transparency summary'
+**AS AN** admin\
+**I WANT** to export a structured summary of all service providers with their linked processes, entity scope, legal basis, and transfer mechanism as a CSV or PDF\
+**SO THAT** the full processor inventory can be handed to external auditors or included in the Art. 30 / DSG Art. 12 documentation package
 
 ---
 
 ## DSG / GDPR compliance guided setup
 *Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. No new tables.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 9/10 · Score: 6.0*
+*⏱ Sessions: 1 (remaining) · Weekly effort: ~10% · Value: 9/10 · Score: 9.0*
 
 *Partially implemented: the compliance wizard entry point is live on the processing register page and covers legal basis assignment and purpose documentation for all processes. The following steps are not yet implemented.*
 
@@ -204,9 +220,9 @@
 
 ## Data governance guided setup
 *Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. No new tables.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
+*⏱ Sessions: 0.5 (remaining) · Weekly effort: ~5% · Value: 8/10 · Score: 16.0*
 
-*Partially implemented: the Classification Taxonomy Wizard (Settings → Classifications) and the Governance Maturity Overview (home screen, admin view) are shipped. What remains is a unified governance wizard that chains these steps into a single guided flow.*
+*Partially implemented: the Classification Taxonomy Wizard (Settings → Classifications) and the Governance Maturity Overview (home screen, admin view) are shipped. What remains is a unified governance wizard entry point that chains these steps into a single guided flow with bulk-assign views.*
 
 #### USER STORY 'Governance setup wizard entry point'
 **AS A** CDO or data steward\
@@ -236,7 +252,7 @@
 
 ## DDD guided setup
 *Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
+*⏱ Sessions: 1 (remaining) · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
 
 *Partially implemented: the DDD Domain Model Wizard auto-opens when no domains exist and guides users through creating their first domain (including domain type), bounded context, and first entity. Context relationships, domain events, team assignments, and a progress indicator are not yet implemented.*
 

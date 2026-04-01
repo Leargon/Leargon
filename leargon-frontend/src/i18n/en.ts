@@ -1213,6 +1213,23 @@ const en = {
     CONSULTANT: 'Consultant',
     OTHER: 'Other',
   },
+  serviceProviderTypeGuide: {
+    show: 'How to choose a type',
+    hide: 'Hide type guide',
+    decisionQuestion: 'Which type fits your provider?',
+    examplePrefix: 'e.g.',
+    managedServiceWhen: 'They operate a software platform or cloud service on your behalf. You use their product and send data to it.',
+    managedServiceExample: 'Salesforce, HubSpot, Microsoft Azure, AWS S3, Microsoft 365, Jira Cloud',
+    dataProcessorWhen: 'They process personal data exclusively on your documented instructions (GDPR Art. 4(8) / DSG Art. 5(k)). A Data Processing Agreement (DPA) is legally required.',
+    dataProcessorExample: 'Payroll processor, email marketing platform handling contact data, cloud backup provider',
+    dataProcessorNote: '⚠ When in doubt between Managed Service and Data Processor, choose Data Processor — it triggers the stricter compliance requirements.',
+    bodyleaseWhen: 'They provide staff (people) who work under your day-to-day direction and authority. The vendor supplies the headcount; you control the work.',
+    bodyleaseExample: 'Temporary workers from a staffing agency, outsourced IT staff integrated into your team',
+    consultantWhen: 'They provide independent expertise, advice, or project delivery under their own direction. They are not under your operational control.',
+    consultantExample: 'Strategy consultants, auditors, implementation partners delivering a fixed-scope project',
+    otherWhen: 'The relationship does not clearly fit any of the above categories.',
+    overlap: 'Note: A Managed Service can also be a Data Processor if it handles personal data on your behalf. When both apply, choose Data Processor.',
+  },
 } as const;
 
 export type TranslationKeys = typeof en;

@@ -28,6 +28,7 @@ import type {
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import ServiceProviderTypeGuide from './ServiceProviderTypeGuide';
 
 interface ServiceProvidersSetupWizardProps {
   open: boolean;
@@ -147,6 +148,7 @@ const ServiceProvidersSetupWizard: React.FC<ServiceProvidersSetupWizardProps> = 
               ))}
             </Select>
           </FormControl>
+          <ServiceProviderTypeGuide />
           <TextField
             size="small"
             label={t('wizard.onboarding.serviceProviders.processingCountriesLabel')}

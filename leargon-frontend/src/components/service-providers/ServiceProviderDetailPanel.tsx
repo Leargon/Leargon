@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, CheckCircle, Warning, ExpandMore } from '@mui/icons-material';
 import DetailPanelHeader from '../common/DetailPanelHeader';
+import ServiceProviderTypeGuide from './ServiceProviderTypeGuide';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetServiceProvider,
@@ -294,7 +295,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           </AccordionSummary>
           <AccordionDetails>
             {typeEdit.isEditing && typeEdit.editValue !== null ? (
-              <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControl size="small" sx={{ width: 240 }}>
                   <InputLabel>Type</InputLabel>
                   <Select
@@ -307,6 +308,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                     ))}
                   </Select>
                 </FormControl>
+                <ServiceProviderTypeGuide />
                 {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
               </Box>
             ) : (

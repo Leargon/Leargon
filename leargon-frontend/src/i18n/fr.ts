@@ -1213,6 +1213,23 @@ const fr = {
     CONSULTANT: 'Consultant',
     OTHER: 'Autre',
   },
+  serviceProviderTypeGuide: {
+    show: 'Comment choisir le bon type ?',
+    hide: "Masquer le guide",
+    decisionQuestion: 'Quel type correspond à votre fournisseur ?',
+    examplePrefix: 'ex.',
+    managedServiceWhen: "Le fournisseur exploite une plateforme logicielle ou un service cloud en votre nom. Vous utilisez son produit et lui envoyez des données.",
+    managedServiceExample: 'Salesforce, HubSpot, Microsoft Azure, AWS S3, Microsoft 365, Jira Cloud',
+    dataProcessorWhen: "Le fournisseur traite des données personnelles exclusivement sur vos instructions documentées (RGPD Art. 4(8) / LPD Art. 5 let. k). Un accord de traitement des données (ATD) est légalement obligatoire.",
+    dataProcessorExample: "Prestataire de paie, plateforme d'e-mailing traitant des données de contacts, fournisseur de sauvegarde cloud",
+    dataProcessorNote: "⚠ En cas de doute entre Service géré et Sous-traitant, choisissez Sous-traitant — cela déclenche les exigences de conformité les plus strictes.",
+    bodyleaseWhen: "Le fournisseur met à votre disposition du personnel qui travaille sous votre direction opérationnelle quotidienne. Le fournisseur fournit les effectifs ; vous dirigez le travail.",
+    bodyleaseExample: "Travailleurs intérimaires d'une agence, personnel informatique externalisé intégré à votre équipe",
+    consultantWhen: "Le fournisseur apporte une expertise indépendante, des conseils ou réalise un projet sous sa propre responsabilité. Il n'est pas sous votre contrôle opérationnel.",
+    consultantExample: "Consultants en stratégie, auditeurs, partenaires d'implémentation avec périmètre fixe",
+    otherWhen: "La relation ne correspond clairement à aucune des catégories ci-dessus.",
+    overlap: "Remarque : un Service géré peut simultanément être un Sous-traitant s'il traite des données personnelles en votre nom. Si les deux s'appliquent, choisissez Sous-traitant.",
+  },
 };
 
 export default fr;

@@ -1213,6 +1213,23 @@ const de = {
     CONSULTANT: 'Berater',
     OTHER: 'Sonstige',
   },
+  serviceProviderTypeGuide: {
+    show: 'Wie wähle ich den richtigen Typ?',
+    hide: 'Hilfe ausblenden',
+    decisionQuestion: 'Welcher Typ passt zu Ihrem Anbieter?',
+    examplePrefix: 'z.B.',
+    managedServiceWhen: 'Der Anbieter betreibt eine Software-Plattform oder einen Cloud-Dienst in Ihrem Auftrag. Sie nutzen sein Produkt und übermitteln Daten daran.',
+    managedServiceExample: 'Salesforce, HubSpot, Microsoft Azure, AWS S3, Microsoft 365, Jira Cloud',
+    dataProcessorWhen: 'Der Anbieter verarbeitet personenbezogene Daten ausschliesslich auf Ihre dokumentierten Weisungen hin (DSGVO Art. 4 Nr. 8 / DSG Art. 5 lit. k). Ein Auftragsverarbeitungsvertrag (AVV) ist gesetzlich vorgeschrieben.',
+    dataProcessorExample: 'Lohnbuchhaltungsdienstleister, E-Mail-Marketing-Plattform mit Kontaktdaten, Cloud-Backup-Anbieter',
+    dataProcessorNote: '⚠ Im Zweifel zwischen Managed Service und Auftragsverarbeiter: Wählen Sie Auftragsverarbeiter — das löst die strengeren Compliance-Anforderungen aus.',
+    bodyleaseWhen: 'Der Anbieter stellt Ihnen Personal zur Verfügung, das unter Ihrer täglichen Weisungsbefugnis arbeitet. Der Anbieter liefert die Ressourcen; Sie führen die Arbeit.',
+    bodyleaseExample: 'Zeitarbeiter einer Personalvermittlung, ausgelagertes IT-Personal in Ihrem Team',
+    consultantWhen: 'Der Anbieter erbringt unabhängige Expertise, Beratung oder Projektleistungen unter eigener Verantwortung. Er unterliegt nicht Ihrer operativen Kontrolle.',
+    consultantExample: 'Strategieberater, Wirtschaftsprüfer, Implementierungspartner mit Festpreisprojekt',
+    otherWhen: 'Die Beziehung passt eindeutig in keine der oben genannten Kategorien.',
+    overlap: 'Hinweis: Ein Managed Service kann gleichzeitig Auftragsverarbeiter sein, wenn er personenbezogene Daten in Ihrem Auftrag verarbeitet. Wenn beides zutrifft, wählen Sie Auftragsverarbeiter.',
+  },
 };
 
 export default de;
