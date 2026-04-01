@@ -16,6 +16,7 @@ import { Add, Search, CheckCircle, Warning } from '@mui/icons-material';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import type { ServiceProviderResponse } from '../../api/generated/model';
 
 interface ServiceProviderListPanelProps {
@@ -25,6 +26,7 @@ interface ServiceProviderListPanelProps {
 
 const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ selectedKey, onCreateClick }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
@@ -47,7 +49,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search providers..."
+          placeholder={t('serviceProvider.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -63,7 +65,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
         />
         {isAdmin && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.new')}
           </Button>
         )}
       </Box>
@@ -75,7 +77,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
           </Box>
         ) : filtered.length === 0 ? (
           <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
-            {filter ? 'No results' : 'No service providers yet'}
+            {filter ? t('serviceProvider.noResults') : t('serviceProvider.noProvidersYet')}
           </Typography>
         ) : (
           <List disablePadding>
@@ -93,7 +95,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
                 />
                 <Chip
                   icon={p.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-                  label={p.processorAgreementInPlace ? 'DPA' : 'No DPA'}
+                  label={p.processorAgreementInPlace ? t('serviceProvider.dpa') : t('serviceProvider.noDpa')}
                   size="small"
                   color={p.processorAgreementInPlace ? 'success' : 'warning'}
                   variant="outlined"

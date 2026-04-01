@@ -34,6 +34,7 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
@@ -52,6 +53,7 @@ interface ItSystemDetailPanelProps {
 const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
@@ -147,7 +149,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   if (error || !system) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">IT system not found or failed to load.</Alert>
+        <Alert severity="error">{t('itSystem.notFound')}</Alert>
       </Box>
     );
   }
@@ -171,7 +173,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         actions={
           isAdmin ? (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           ) : undefined
         }
@@ -182,7 +184,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         <Accordion defaultExpanded disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Names & Descriptions</Typography>
+              <Typography variant="subtitle2">{t('common.namesAndDescriptions')}</Typography>
               {isAdmin && !namesEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] }); }}>
                   <EditIcon fontSize="small" />
@@ -226,7 +228,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         <Accordion defaultExpanded disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Details</Typography>
+              <Typography variant="subtitle2">{t('common.details')}</Typography>
               {isAdmin && !detailsEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' }); }}>
                   <EditIcon fontSize="small" />
@@ -248,38 +250,38 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             {detailsEdit.isEditing && detailsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <TextField
-                  label="Vendor"
+                  label={t('itSystem.vendor')}
                   size="small"
                   value={detailsEdit.editValue.vendor}
                   onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, vendor: e.target.value })}
                   sx={{ width: 300 }}
                 />
                 <TextField
-                  label="System URL"
+                  label={t('itSystem.systemUrl')}
                   size="small"
                   value={detailsEdit.editValue.systemUrl}
                   onChange={(e) => detailsEdit.setEditValue({ ...detailsEdit.editValue!, systemUrl: e.target.value })}
                   sx={{ width: 300 }}
-                  placeholder="https://..."
+                  placeholder={t('itSystem.systemUrlPlaceholder')}
                 />
                 {detailsEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{detailsEdit.error}</Alert>}
               </Box>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>Vendor:</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>{t('itSystem.vendor')}:</Typography>
                   <Typography variant="body2">
-                    {system.vendor ?? <span style={{ color: '#888' }}>Not set</span>}
+                    {system.vendor ?? <span style={{ color: '#888' }}>{t('common.notSet')}</span>}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>System URL:</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>{t('itSystem.systemUrl')}:</Typography>
                   {system.systemUrl ? (
                     <Typography variant="body2">
                       <a href={system.systemUrl} target="_blank" rel="noopener noreferrer">{system.systemUrl}</a>
                     </Typography>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">Not set</Typography>
+                    <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
                   )}
                 </Box>
               </Box>
@@ -291,7 +293,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Owning Unit</Typography>
+              <Typography variant="subtitle2">{t('common.owningUnit')}</Typography>
               {isAdmin && !owningUnitEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); owningUnitEdit.startEdit(system.owningUnit?.key ?? null); }}>
                   <EditIcon fontSize="small" />
@@ -317,7 +319,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                   getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                   value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
                   onChange={(_, val) => owningUnitEdit.setEditValue(val?.key ?? null)}
-                  renderInput={(params) => <TextField {...params} size="small" label="Owning Unit" />}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('common.owningUnit')} />}
                   sx={{ width: 350 }}
                 />
                 {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
@@ -331,7 +333,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                 clickable
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">Not assigned</Typography>
+              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -340,7 +342,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Linked Processes</Typography>
+              <Typography variant="subtitle2">{t('common.linkedProcesses')}</Typography>
               {isAdmin && !processesEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key)); }}>
                   <EditIcon fontSize="small" />
@@ -367,7 +369,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                   getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                   value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
                   onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
-                  renderInput={(params) => <TextField {...params} size="small" label="Processes" />}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('common.processes')} />}
                   renderTags={(val, getTagProps) =>
                     val.map((option, index) => (
                       <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
@@ -390,7 +392,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">No processes linked</Typography>
+              <Typography variant="body2" color="text.secondary">{t('itSystem.noLinkedProcesses')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -398,14 +400,14 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete IT System</DialogTitle>
+        <DialogTitle>{t('itSystem.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete <strong>{getLocalizedText(system.names, system.key)}</strong>? This cannot be undone.</Typography>
+          <Typography>{t('common.deleteConfirm', { name: getLocalizedText(system.names, system.key) })}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={handleDelete} disabled={deleteSystem.isPending}>
-            {deleteSystem.isPending ? <CircularProgress size={16} /> : 'Delete'}
+            {deleteSystem.isPending ? <CircularProgress size={16} /> : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

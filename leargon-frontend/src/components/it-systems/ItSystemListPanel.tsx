@@ -15,6 +15,7 @@ import { Add, Search } from '@mui/icons-material';
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import type { ItSystemResponse } from '../../api/generated/model';
 
 interface ItSystemListPanelProps {
@@ -24,6 +25,7 @@ interface ItSystemListPanelProps {
 
 const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCreateClick }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
@@ -47,7 +49,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search IT systems..."
+          placeholder={t('itSystem.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -63,7 +65,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
         />
         {isAdmin && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.new')}
           </Button>
         )}
       </Box>
@@ -75,7 +77,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
           </Box>
         ) : filtered.length === 0 ? (
           <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
-            {filter ? 'No results' : 'No IT systems yet'}
+            {filter ? t('itSystem.noResults') : t('itSystem.noSystemsYet')}
           </Typography>
         ) : (
           <List disablePadding>
