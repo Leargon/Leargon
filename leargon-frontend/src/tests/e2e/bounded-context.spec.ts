@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uid, createDomain, createBoundedContext, createDomainEvent } from './api-setup';
+import { uid, createDomain, createBoundedContext, createDomainEvent, createEntity } from './api-setup';
 
 test.describe('Bounded Contexts — Domain Detail (Admin)', () => {
   test('domain detail page shows bounded contexts section', async ({ page }) => {
@@ -48,25 +48,15 @@ test.describe('Bounded Contexts — Domain Detail (Admin)', () => {
   });
 
   test('entity detail page shows bounded context field', async ({ page }) => {
-    // The EntityDetailPanel should show a "Bounded Context" field instead of "Business Domain"
-    await page.goto('/entities');
+    // The EntityDetailPanel should show a "Bounded Context" field for admin (governance perspective)
+    const entity = await createEntity(uid('PW BC Entity Check'));
+    const entityKey = entity.key as string;
+
+    await page.goto(`/entities/${entityKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Create an entity and open it
-    const addBtn = page.getByRole('button', { name: /add/i }).first();
-    if (await addBtn.isVisible()) {
-      await addBtn.click();
-      const dialog = page.getByRole('dialog');
-      if (await dialog.isVisible()) {
-        await dialog.locator('input').first().fill('PW BC Entity Check');
-        await dialog.getByRole('button', { name: 'Create' }).click();
-        await page.waitForLoadState('networkidle');
-      }
-    }
-
-    // Look for "Bounded Context" label (not "Business Domain") in entity panel
-    const bcLabel = page.getByText('Bounded Context', { exact: true });
-    await expect(bcLabel).toBeVisible({ timeout: 10_000 });
+    // Bounded Context field visible in governance perspective (admin role)
+    await expect(page.getByText('Bounded Context', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   });
 });
 

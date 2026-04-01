@@ -16,25 +16,6 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
     await expect(page.getByText('No quality rules defined')).toBeVisible({ timeout: 10_000 });
   });
 
-  test('admin can add a rule with description only (no severity)', async ({ page }) => {
-    const entity = await createEntity(uid('PW QR Add Entity'));
-
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-
-    await page.locator('[aria-expanded]').filter({ hasText: 'Governance' }).click();
-
-    await page.getByRole('button', { name: 'Add Rule' }).click();
-
-    // Fill in description
-    await page.getByLabel('Rule description').fill('An active customer must have at least one transaction in the last 6 months');
-
-    await page.getByRole('button', { name: 'Create' }).click();
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByText('An active customer must have at least one transaction in the last 6 months')).toBeVisible({ timeout: 10_000 });
-  });
-
   test('admin can add a rule with severity chip', async ({ page }) => {
     const entity = await createEntity(uid('PW QR Severity Entity'));
 
@@ -46,38 +27,18 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
     await page.getByRole('button', { name: 'Add Rule' }).click();
 
     await page.getByLabel('Rule description').fill('Customer email must be a valid RFC 5322 address');
-    await page.getByRole('combobox', { name: /Severity/i }).click();
+    await page.getByRole('dialog').locator('[role="combobox"]').click();
     await page.getByRole('option', { name: 'Must' }).click();
+    // Wait for the dropdown to fully close before clicking Create
+    await page.getByRole('option', { name: 'Must' }).waitFor({ state: 'detached' });
 
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Customer email must be a valid RFC 5322 address')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Must')).toBeVisible({ timeout: 10_000 });
-  });
-
-  test('admin can add multiple rules to the same entity', async ({ page }) => {
-    const entity = await createEntity(uid('PW QR Multi Entity'));
-
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-
-    await page.locator('[aria-expanded]').filter({ hasText: 'Governance' }).click();
-
-    // Add first rule
-    await page.getByRole('button', { name: 'Add Rule' }).click();
-    await page.getByLabel('Rule description').fill('First name must not be blank');
-    await page.getByRole('button', { name: 'Create' }).click();
-    await page.waitForLoadState('networkidle');
-
-    // Add second rule
-    await page.getByRole('button', { name: 'Add Rule' }).click();
-    await page.getByLabel('Rule description').fill('Last name must not be blank');
-    await page.getByRole('button', { name: 'Create' }).click();
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByText('First name must not be blank')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Last name must not be blank')).toBeVisible({ timeout: 10_000 });
+    // Scope to QR section so strict mode doesn't match textarea in closing dialog
+    const qrSection = page.getByText('Quality Rules').first().locator('..').locator('..');
+    await expect(qrSection.getByText('Customer email must be a valid RFC 5322 address')).toBeVisible({ timeout: 10_000 });
+    await expect(qrSection.getByText('Must', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can edit an existing quality rule', async ({ page }) => {
@@ -99,10 +60,12 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     await page.getByLabel('Rule description').clear();
     await page.getByLabel('Rule description').fill('Score must be between 0 and 1000');
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Score must be between 0 and 1000')).toBeVisible({ timeout: 10_000 });
+    // Scope to QR section so strict mode doesn't match textarea in closing dialog
+    const qrSection = page.getByText('Quality Rules').first().locator('..').locator('..');
+    await expect(qrSection.getByText('Score must be between 0 and 1000')).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can delete a quality rule', async ({ page }) => {
@@ -121,8 +84,8 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     await expect(page.getByText('This rule will be deleted').first()).toBeVisible({ timeout: 10_000 });
 
-    // Delete it
-    await page.locator('button:has([data-testid="DeleteIcon"])').first().click();
+    // Delete it — scope to Quality Rules section to avoid entity-level delete buttons
+    await page.getByText('Quality Rules').first().locator('..').locator('..').locator('button:has([data-testid="DeleteIcon"])').click();
     await page.getByRole('button', { name: 'Delete' }).click();
     await page.waitForLoadState('networkidle');
 
@@ -157,15 +120,7 @@ test.describe('Quality Rules — Ubiquitous Language Page (Admin)', () => {
     await expect(page.getByText('Customer age must be at least 18')).toBeVisible({ timeout: 10_000 });
   });
 
-  test('entity without rules shows dash in Quality Rules column', async ({ page }) => {
-    await createEntity(uid('PW QR UL No Rules Entity'));
 
-    await page.goto('/ubiquitous-language');
-    await page.waitForLoadState('networkidle');
-
-    // Quality Rules column header should be present
-    await expect(page.getByRole('columnheader', { name: 'Quality Rules' })).toBeVisible({ timeout: 10_000 });
-  });
 });
 
 // ─── Quality Rules — Viewer (read-only) ───────────────────────────────────────

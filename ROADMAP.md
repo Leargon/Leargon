@@ -17,6 +17,8 @@
 | Import & integration               | 4        | 40%    | 7/10  | **1.8**  |
 | Watch & notifications              | 4        | 40%    | 6/10  | **1.5**  |
 | Review cycles                      | 4        | 40%    | 6/10  | **1.5**  |
+| Team Topologies                    | 2.5      | 25%    | 8/10  | **3.2**  |
+| Value Stream Mapping (VSM)         | 2.5      | 25%    | 7/10  | **2.8**  |
 | Performance & scalability          | 3        | 30%    | 7/10  | **2.3**  |
 | Stewards                           | 5        | 50%    | 7/10  | **1.4**  |
 
@@ -687,3 +689,80 @@
 **AS A** developer\
 **I WANT** all list endpoints (`/entities`, `/processes`, `/domains`, `/organisational-units`) to support cursor-based or offset pagination with a configurable page size\
 **SO THAT** the API and frontend remain responsive when a catalogue contains thousands of items, rather than loading the entire collection into memory on every request
+
+## Team Topologies
+*Extends the existing organisational unit model with Team Topologies types and interaction modes — the social equivalent of the DDD context map. Each process in Léargon is a step in a value stream, and each org unit is a team. Adding team type and interaction records makes the team topology explicitly modelled alongside the technical topology, enabling cognitive load analysis and hand-off bottleneck detection. Requires one new `team_interactions` table; team type can use the existing classification system or a new enum field on OrganisationalUnit.*\
+*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 8/10 · Score: 3.2*
+
+#### USER STORY 'Assign team topology type to an organisational unit'
+**AS AN** architect or engineering manager\
+**I WANT** to assign a Team Topologies type — Stream-aligned, Platform, Enabling, or Complicated Subsystem — to each organisational unit\
+**SO THAT** the team's mission and expected interaction patterns are explicit and aligned with the Team Topologies model, making Conway's Law analysis more actionable
+
+#### USER STORY 'Define interaction mode between two teams'
+**AS AN** architect\
+**IF** two organisational units collaborate on shared processes or bounded contexts\
+**I WANT** to define a typed interaction record between them specifying the mode (Collaboration, X-as-a-Service, or Facilitating) and whether the interaction is temporary or ongoing\
+**SO THAT** the social topology of the organisation is modelled alongside the technical context map as a complementary, equally explicit view
+
+#### USER STORY 'Track interaction health'
+**AS AN** engineering manager\
+**IF** team interactions are defined\
+**I WANT** to record a health indicator on each interaction — such as average handoff wait time or a qualitative score — and see interactions flagged when health degrades\
+**SO THAT** overloaded interfaces and slow coordination points are visible before they become delivery bottlenecks
+
+#### USER STORY 'View team interaction topology diagram'
+**AS AN** architect\
+**I WANT** to see a diagram of all organisational units and their defined interaction modes, rendered similarly to the DDD context map\
+**SO THAT** the team topology and the technical context map can be read side by side as two complementary views of the same organisation
+
+#### USER STORY 'View cognitive load score per team'
+**AS AN** architect or manager\
+**I WANT** to see a computed cognitive load score for each organisational unit, calculated from the number of bounded contexts owned, capabilities owned, and active value streams handled — with a warning when the score exceeds a configurable threshold\
+**SO THAT** teams at risk of cognitive overload are identified before their scope needs to be split or reduced
+
+#### USER STORY 'Detect mismatched interaction modes'
+**AS AN** architect\
+**IF** two Stream-aligned teams interact via Collaboration rather than X-as-a-Service\
+**I WANT** Léargon to surface this as a potential bottleneck, since sustained Collaboration between two Stream-aligned teams is a Team Topologies anti-pattern that reduces autonomy and increases cognitive load\
+**SO THAT** interaction anti-patterns are identified and can be addressed — either by formalising an X-as-a-Service boundary or by consolidating the teams
+
+---
+
+## Value Stream Mapping (VSM)
+*Adds lean/VSM metadata to the existing process model. Each Léargon process represents one step in a value stream. Adding cycle time, wait time, activity classification, and frequency to processes enables end-to-end lead time calculation and waste identification without any new entity types — only new fields on Process and a VSM summary view. A process is classified at the stream level (Enabling / Operational / Business Support) and at the activity level (Value-Adding, Business Value-Added, or Waste), with a free-text justification that answers the transformation, customer, error, and necessity checks.*\
+*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 7/10 · Score: 2.8*
+
+#### USER STORY 'Classify a process as a value stream type'
+**AS A** lean practitioner or operations manager\
+**I WANT** to classify each business process as one of three value stream types: Enabling (prerequisite — removes barriers for the main stream), Operational (revenue-generating, directly customer-facing), or Business Support (internal services)\
+**SO THAT** the value stream portfolio is visible, each process's strategic role is explicit, and lean improvement efforts can be focused on the highest-leverage streams first
+
+#### USER STORY 'Record time metadata on a process'
+**AS A** process analyst\
+**IF** I am documenting a process\
+**I WANT** to record the average cycle time (CT — actual processing time), wait time (WT — average queue time before the step begins), and changeover time (CO — setup time between instances) on a process\
+**SO THAT** end-to-end lead time, process efficiency ratio (VA time ÷ total lead time), and queue-to-work ratios can be computed across a value stream
+
+#### USER STORY 'Record process frequency'
+**AS A** process analyst\
+**IF** I am documenting a process\
+**I WANT** to record how many instances of the process run per day / week / month / year\
+**SO THAT** throughput, takt time, and cumulative wait time at scale can be derived, and bottleneck steps with high volume and high wait time can be identified
+
+#### USER STORY 'Classify process activity type and justify it'
+**AS A** lean practitioner\
+**IF** I am analysing process efficiency\
+**I WANT** to classify each process step as Value-Adding (VA — directly transforms the product or information for the customer), Business Value-Added (BVA — necessary but not directly valuable to the customer, e.g. compliance checks, legal documentation), or Waste (Muda — can be eliminated, e.g. rework, redundant data entry, waiting without purpose) with a free-text justification\
+**SO THAT** non-value-adding activities are explicit, improvement candidates are prioritised by waste category, and the classification decision is traceable
+
+#### USER STORY 'Record quality metrics on a process'
+**AS A** process analyst\
+**I WANT** to record the First Pass Yield (FPY %) — the percentage of process instances completed correctly on the first attempt without rework — and a completion rate on a process\
+**SO THAT** processes with quality defects are visible in the value stream summary and can be targeted for root cause analysis before they inflate downstream rework waste
+
+#### USER STORY 'View value stream summary across processes'
+**AS A** lean practitioner or operations manager\
+**IF** processes are documented with time metadata, activity classifications, and frequency\
+**I WANT** to see a value stream summary view showing: total lead time (sum of CT + WT across a process chain), value-adding ratio (VA time ÷ total lead time), and a breakdown of activity types across the stream\
+**SO THAT** I can identify the biggest improvement opportunities — steps with high wait time, low FPY, or Waste classification — and measure improvement over time as metadata is refined

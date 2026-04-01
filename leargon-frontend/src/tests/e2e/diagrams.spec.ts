@@ -64,7 +64,7 @@ test.describe('Process Landscape diagram', () => {
     const parent = (await createProcess(parentName, ADMIN)) as { key: string };
     // Create child directly with parentProcessKey in the request body
     await postJson(
-      '/api/processes',
+      '/processes',
       { names: [{ locale: 'en', text: childName }], parentProcessKey: parent.key },
       ADMIN,
     );
@@ -114,10 +114,11 @@ test.describe('Entity Lineage accordion', () => {
     const procName = uid('LineProc');
     const entity = (await createEntity(entityName, ADMIN)) as { key: string };
     const proc = (await createProcess(procName, ADMIN)) as { key: string };
-    await postJson(`/api/processes/${proc.key}/inputs`, { entityKey: entity.key }, ADMIN);
+    await postJson(`/processes/${proc.key}/inputs`, { entityKey: entity.key }, ADMIN);
 
     await page.goto(`/entities/${entity.key}`);
     await page.locator('[aria-expanded]').filter({ hasText: 'Data Lineage' }).click();
-    await expect(page.getByText(procName)).toBeVisible({ timeout: 15_000 });
+    // Scope to the ReactFlow canvas to avoid strict-mode clash with entity chip
+    await expect(page.locator('.react-flow').getByText(procName)).toBeVisible({ timeout: 15_000 });
   });
 });

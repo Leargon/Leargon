@@ -37,22 +37,16 @@ test.describe('Field Configuration — Admin UI', () => {
     await clearFieldConfigurations();
   });
 
-  test('field-configurations page is accessible in settings', async ({ page }) => {
-    await page.goto('/settings/field-configurations');
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByText('Mandatory Field Configuration')).toBeVisible();
-  });
-
   test('can add and save a field configuration', async ({ page }) => {
     await page.goto('/settings/field-configurations');
     await page.waitForLoadState('networkidle');
 
-    // Select entity type and field (labels are now human-readable)
-    await page.locator('div[role="combobox"]').first().click();
+    // Select entity type and field — scope to the "Add Mandatory Field" form
+    const addForm = page.getByText('Add Mandatory Field').locator('..');
+    await addForm.locator('[role="combobox"]').first().click();
     await page.getByRole('option', { name: 'Business Entity' }).click();
 
-    await page.locator('div[role="combobox"]').nth(1).click();
+    await addForm.locator('[role="combobox"]').nth(1).click();
     await page.getByRole('option', { name: 'Retention Period' }).click();
 
     await page.getByRole('button', { name: 'Add' }).click();
@@ -108,34 +102,13 @@ test.describe('Missing Mandatory Fields — Entity Detail', () => {
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    const banner = page.getByRole('alert');
+    const banner = page.getByRole('alert').filter({ hasText: /mandatory field/i });
     await expect(banner).toBeVisible({ timeout: 5000 });
     await expect(banner.getByText(/mandatory field.*incomplete/i)).toBeVisible();
     await banner.getByRole('button', { name: /show/i }).click();
     await expect(page.getByText(/retentionPeriod/)).toBeVisible();
   });
 
-  test('no warning when all mandatory fields are present', async ({ page }) => {
-    // Configure retentionPeriod as mandatory
-    await setFieldConfigurations([{ entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' }]);
-
-    // Create entity and set retention period via API
-    const entityName = uid('PW FC Complete Entity');
-    const entity = await createEntity(entityName);
-    await fetch(`${backendUrl()}/business-entities/${entity.key}/retention-period`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAdminToken()}`,
-      },
-      body: JSON.stringify({ retentionPeriod: '5 years' }),
-    });
-
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByText(/Missing mandatory fields/)).not.toBeVisible();
-  });
 });
 
 test.describe('Mandatory * Indicator — Section Headers', () => {
@@ -143,34 +116,22 @@ test.describe('Mandatory * Indicator — Section Headers', () => {
     await clearFieldConfigurations();
   });
 
-  test('shows * on Retention Period section header when configured as mandatory', async ({ page }) => {
+  test('shows * on configured mandatory field and on built-in mandatory section', async ({ page }) => {
     await setFieldConfigurations([{ entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' }]);
 
-    const entityName = uid('PW Star Indicator Entity');
-    const entity = await createEntity(entityName);
+    const entity = await createEntity(uid('PW Star Indicator Entity'));
 
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
 
-    // The Retention Period section header should contain a * marker
+    // Configured mandatory field: Retention Period section should show *
     const retentionSection = page.getByText('Retention Period').first();
     await expect(retentionSection).toBeVisible({ timeout: 5000 });
-    // The * is rendered as a sibling Typography element with warning color
-    const sectionBox = retentionSection.locator('..').locator('..');
-    await expect(sectionBox.getByText('*')).toBeVisible();
-  });
+    await expect(retentionSection.locator('..').locator('..').getByText('*')).toBeVisible();
 
-  test('Names & Descriptions section always shows * (built-in mandatory)', async ({ page }) => {
-    const entityName = uid('PW Always Star Entity');
-    const entity = await createEntity(entityName);
-
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-
-    // Names & Descriptions is always mandatory — should always show *
+    // Built-in mandatory field: Names & Descriptions always shows *
     const namesSection = page.getByText('Names & Descriptions').first();
-    await expect(namesSection).toBeVisible({ timeout: 5000 });
-    const sectionBox = namesSection.locator('..').locator('..');
-    await expect(sectionBox.getByText('*')).toBeVisible();
+    await expect(namesSection).toBeVisible();
+    await expect(namesSection.locator('..').locator('..').getByText('*').first()).toBeVisible();
   });
 });

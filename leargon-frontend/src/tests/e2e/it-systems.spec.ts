@@ -74,7 +74,7 @@ test.describe('IT Systems Page — Admin', () => {
     // Navigate to the process — it should still exist
     await page.goto(`/processes/${procKey}`);
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(procName)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: procName })).toBeVisible({ timeout: 10_000 });
   });
 });
 
