@@ -26,6 +26,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, CheckCircle, Warning, ExpandMore } from '@mui/icons-material';
 import DetailPanelHeader from '../common/DetailPanelHeader';
+import ServiceProviderTypeGuide from './ServiceProviderTypeGuide';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetServiceProvider,
@@ -39,6 +40,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
@@ -58,14 +60,6 @@ const COUNTRY_NAMES: Record<string, string> = {
 };
 const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
 
-const PROVIDER_TYPE_LABELS: Record<string, string> = {
-  DATA_PROCESSOR: 'Data Processor',
-  BODYLEASE: 'Body Lease',
-  MANAGED_SERVICE: 'Managed Service',
-  CONSULTANT: 'Consultant',
-  OTHER: 'Other',
-};
-
 interface ServiceProviderDetailPanelProps {
   providerKey: string;
 }
@@ -73,6 +67,7 @@ interface ServiceProviderDetailPanelProps {
 const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({ providerKey }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
@@ -184,7 +179,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
   if (error || !provider) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Service provider not found or failed to load.</Alert>
+        <Alert severity="error">{t('serviceProvider.notFound')}</Alert>
       </Box>
     );
   }
@@ -197,13 +192,13 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         chips={
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             <Chip
-              label={PROVIDER_TYPE_LABELS[provider.serviceProviderType as string] ?? provider.serviceProviderType}
+              label={t(`serviceProviderType.${provider.serviceProviderType}` as any, { defaultValue: provider.serviceProviderType as string })}
               size="small"
               variant="outlined"
             />
             <Chip
               icon={provider.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-              label={provider.processorAgreementInPlace ? 'DPA' : 'No DPA'}
+              label={provider.processorAgreementInPlace ? t('serviceProvider.dpa') : t('serviceProvider.noDpa')}
               size="small"
               color={provider.processorAgreementInPlace ? 'success' : 'warning'}
             />
@@ -218,7 +213,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         actions={
           isAdmin ? (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-              Delete
+              {t('common.delete')}
             </Button>
           ) : undefined
         }
@@ -229,7 +224,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         <Accordion defaultExpanded disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Names</Typography>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionNames')}</Typography>
               {isAdmin && !namesEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit([...provider.names]); }}>
                   <EditIcon fontSize="small" />
@@ -274,7 +269,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         <Accordion defaultExpanded disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Provider Type</Typography>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionProviderType')}</Typography>
               {isAdmin && !typeEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); typeEdit.startEdit(provider.serviceProviderType as string); }}>
                   <EditIcon fontSize="small" />
@@ -294,23 +289,24 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           </AccordionSummary>
           <AccordionDetails>
             {typeEdit.isEditing && typeEdit.editValue !== null ? (
-              <Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControl size="small" sx={{ width: 240 }}>
-                  <InputLabel>Type</InputLabel>
+                  <InputLabel>{t('serviceProvider.typeLabel')}</InputLabel>
                   <Select
                     value={typeEdit.editValue}
-                    label="Type"
+                    label={t('serviceProvider.typeLabel')}
                     onChange={(e) => typeEdit.setEditValue(e.target.value)}
                   >
-                    {Object.entries(PROVIDER_TYPE_LABELS).map(([val, label]) => (
-                      <MenuItem key={val} value={val}>{label}</MenuItem>
+                    {Object.values(ServiceProviderType).map((val) => (
+                      <MenuItem key={val} value={val}>{t(`serviceProviderType.${val}` as any, { defaultValue: val })}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
+                <ServiceProviderTypeGuide />
                 {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
               </Box>
             ) : (
-              <Chip label={PROVIDER_TYPE_LABELS[provider.serviceProviderType as string] ?? provider.serviceProviderType} size="small" />
+              <Chip label={t(`serviceProviderType.${provider.serviceProviderType}` as any, { defaultValue: provider.serviceProviderType as string })} size="small" />
             )}
           </AccordionDetails>
         </Accordion>
@@ -319,7 +315,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Processing Countries</Typography>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionCountries')}</Typography>
               {isAdmin && !countriesEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(provider.processingCountries ?? [])]); }}>
                   <EditIcon fontSize="small" />
@@ -346,7 +342,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                   getOptionLabel={(o) => `${o.code} – ${o.name}`}
                   value={COUNTRY_OPTIONS.filter((c) => countriesEdit.editValue!.includes(c.code))}
                   onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
-                  renderInput={(params) => <TextField {...params} size="small" label="Countries" />}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.countriesLabel')} />}
                   renderTags={(val, getTagProps) =>
                     val.map((option, index) => (
                       <Chip {...getTagProps({ index })} key={option.code} label={option.code} size="small" />
@@ -362,7 +358,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">No countries specified</Typography>
+              <Typography variant="body2" color="text.secondary">{t('serviceProvider.noCountries')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -371,7 +367,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Agreement Status</Typography>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionAgreement')}</Typography>
               {isAdmin && !agreementEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved }); }}>
                   <EditIcon fontSize="small" />
@@ -399,7 +395,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                       onChange={(e) => agreementEdit.setEditValue({ ...agreementEdit.editValue!, agreement: e.target.checked })}
                     />
                   }
-                  label="Data Processing Agreement in place"
+                  label={t('serviceProvider.dpaLabel')}
                 />
                 <FormControlLabel
                   control={
@@ -408,7 +404,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                       onChange={(e) => agreementEdit.setEditValue({ ...agreementEdit.editValue!, subProcessors: e.target.checked })}
                     />
                   }
-                  label="Sub-processors approved"
+                  label={t('serviceProvider.subProcessorsLabel')}
                 />
                 {agreementEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{agreementEdit.error}</Alert>}
               </Box>
@@ -416,13 +412,13 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
                   icon={provider.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-                  label={provider.processorAgreementInPlace ? 'DPA in place' : 'No DPA'}
+                  label={provider.processorAgreementInPlace ? t('serviceProvider.dpaInPlace') : t('serviceProvider.noDpa')}
                   size="small"
                   color={provider.processorAgreementInPlace ? 'success' : 'warning'}
                 />
                 <Chip
                   icon={provider.subProcessorsApproved ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-                  label={provider.subProcessorsApproved ? 'Sub-processors approved' : 'Sub-processors not approved'}
+                  label={provider.subProcessorsApproved ? t('serviceProvider.subProcessorsApproved') : t('serviceProvider.subProcessorsNotApproved')}
                   size="small"
                   color={provider.subProcessorsApproved ? 'success' : 'default'}
                 />
@@ -435,7 +431,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Linked Processes</Typography>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionLinkedProcesses')}</Typography>
               {isAdmin && !processesEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key)); }}>
                   <EditIcon fontSize="small" />
@@ -462,7 +458,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                   getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                   value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
                   onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
-                  renderInput={(params) => <TextField {...params} size="small" label="Processes" />}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.processesLabel')} />}
                   renderTags={(val, getTagProps) =>
                     val.map((option, index) => (
                       <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
@@ -485,7 +481,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">No processes linked</Typography>
+              <Typography variant="body2" color="text.secondary">{t('serviceProvider.noProcesses')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -493,14 +489,14 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Service Provider</DialogTitle>
+        <DialogTitle>{t('serviceProvider.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete <strong>{getLocalizedText(provider.names, provider.key)}</strong>? This cannot be undone.</Typography>
+          <Typography>{t('serviceProvider.deleteConfirm', { name: getLocalizedText(provider.names, provider.key) })}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button color="error" variant="contained" onClick={handleDelete} disabled={deleteProvider.isPending}>
-            {deleteProvider.isPending ? <CircularProgress size={16} /> : 'Delete'}
+            {deleteProvider.isPending ? <CircularProgress size={16} /> : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

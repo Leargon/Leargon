@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  Autocomplete,
   Box,
   Checkbox,
   FormControl,
@@ -19,10 +20,14 @@ import {
   getGetBusinessEntityTreeQueryKey,
   useAssignBoundedContextToBusinessEntity,
   useAssignClassificationsToEntity,
+  useGetBusinessEntityByKey,
+  useUpdateBusinessEntityDataSteward,
+  useUpdateBusinessEntityTechnicalCustodian,
 } from '../../api/generated/business-entity/business-entity';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetClassifications } from '../../api/generated/classification/classification';
+import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useAuth } from '../../context/AuthContext';
 import type {
   LocalizedText,
@@ -30,6 +35,7 @@ import type {
   SupportedLocaleResponse,
   ClassificationResponse,
   ClassificationAssignmentRequest,
+  UserSummaryResponse,
 } from '../../api/generated/model';
 import { ClassificationAssignableTo } from '../../api/generated/model';
 import TranslationEditor from '../common/TranslationEditor';
@@ -59,6 +65,8 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const createEntity = useCreateBusinessEntity();
   const assignBc = useAssignBoundedContextToBusinessEntity();
   const assignClassifications = useAssignClassificationsToEntity();
+  const updateSteward = useUpdateBusinessEntityDataSteward();
+  const updateCustodian = useUpdateBusinessEntityTechnicalCustodian();
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
@@ -66,9 +74,16 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const allDomains = (domainsResponse?.data as any[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications();
   const allClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
+  const { data: usersResponse } = useGetAllUsers();
+  const allUsers = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const entityClassifications = allClassifications.filter(
     (c) => c.assignableTo === ClassificationAssignableTo.BUSINESS_ENTITY,
   );
+
+  const { data: parentEntityResponse } = useGetBusinessEntityByKey(parentKey!, {
+    query: { enabled: !!parentKey },
+  });
+  const parentEntity = parentKey ? (parentEntityResponse?.data as any) : undefined;
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
@@ -77,7 +92,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     (d.boundedContexts || []).map((bc: any) => ({
       key: bc.key,
       domainKey: d.key,
-      label: `${getLocalizedText(bc.names, bc.key)} (${d.key})`,
+      label: `${bc.name || bc.key} (${d.key})`,
     })),
   );
 
@@ -89,7 +104,19 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const [boundedContextKey, setBoundedContextKey] = useState('');
 
   // Step 3 — Ownership
-  const [dataOwnerUsername, setDataOwnerUsername] = useState('');
+  const [dataOwner, setDataOwner] = useState<UserSummaryResponse | null>(null);
+  const [dataSteward, setDataSteward] = useState<UserSummaryResponse | null>(null);
+  const [technicalCustodian, setTechnicalCustodian] = useState<UserSummaryResponse | null>(null);
+
+  // Pre-fill from parent entity when dialog opens
+  useEffect(() => {
+    if (open && parentEntity && allUsers.length > 0) {
+      if (parentEntity.dataOwner?.username) setDataOwner(allUsers.find((u) => u.username === parentEntity.dataOwner.username) ?? null);
+      if (parentEntity.dataSteward?.username) setDataSteward(allUsers.find((u) => u.username === parentEntity.dataSteward.username) ?? null);
+      if (parentEntity.technicalCustodian?.username) setTechnicalCustodian(allUsers.find((u) => u.username === parentEntity.technicalCustodian.username) ?? null);
+      if (parentEntity.boundedContext?.key) setBoundedContextKey(parentEntity.boundedContext.key);
+    }
+  }, [open, parentEntity?.dataOwner?.username, parentEntity?.dataSteward?.username, parentEntity?.technicalCustodian?.username, parentEntity?.boundedContext?.key, allUsers.length]);
 
   // Step 4 — Classifications
   const [assignments, setAssignments] = useState<ClassificationAssignmentRequest[]>([]);
@@ -126,7 +153,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         data: {
           names: names.filter((n) => n.text.trim()),
           descriptions: descriptions.filter((d) => d.text.trim()),
-          dataOwnerUsername: dataOwnerUsername.trim() || user?.username || undefined,
+          dataOwnerUsername: dataOwner?.username || user?.username || undefined,
           parentKey: parentKey || null,
         },
       });
@@ -146,6 +173,20 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         });
       }
 
+      if (dataSteward?.username) {
+        await updateSteward.mutateAsync({
+          key: newEntity.key,
+          data: { dataStewardUsername: dataSteward.username },
+        });
+      }
+
+      if (technicalCustodian?.username) {
+        await updateCustodian.mutateAsync({
+          key: newEntity.key,
+          data: { technicalCustodianUsername: technicalCustodian.username },
+        });
+      }
+
       queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
       resetForm();
       onClose();
@@ -161,7 +202,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     setNames([]);
     setDescriptions([]);
     setBoundedContextKey('');
-    setDataOwnerUsername('');
+    setDataOwner(null);
+    setDataSteward(null);
+    setTechnicalCustodian(null);
     setAssignments([]);
     setError(null);
   };
@@ -230,14 +273,44 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         <Typography variant="body2">{t('wizard.entity.guidedOwnershipText')}</Typography>
       ),
       content: (
-        <TextField
-          label={t('wizard.entity.ownerLabel')}
-          size="small"
-          fullWidth
-          value={dataOwnerUsername}
-          onChange={(e) => setDataOwnerUsername(e.target.value)}
-          helperText={t('wizard.entity.ownerHelper', { username: user?.username || 'current user' })}
-        />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Autocomplete
+            options={allUsers}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            value={dataOwner}
+            onChange={(_, v) => setDataOwner(v)}
+            isOptionEqualToValue={(o, v) => o.username === v.username}
+            size="small"
+            renderInput={(params) => (
+              <TextField {...params} label={t('wizard.entity.ownerLabel')} size="small"
+                helperText={t('wizard.entity.ownerHelper', { username: user?.username || 'current user' })} />
+            )}
+          />
+          <Autocomplete
+            options={allUsers}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            value={dataSteward}
+            onChange={(_, v) => setDataSteward(v)}
+            isOptionEqualToValue={(o, v) => o.username === v.username}
+            size="small"
+            renderInput={(params) => (
+              <TextField {...params} label={t('wizard.entity.stewardLabel')} size="small"
+                helperText={t('wizard.entity.stewardHelper')} />
+            )}
+          />
+          <Autocomplete
+            options={allUsers}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            value={technicalCustodian}
+            onChange={(_, v) => setTechnicalCustodian(v)}
+            isOptionEqualToValue={(o, v) => o.username === v.username}
+            size="small"
+            renderInput={(params) => (
+              <TextField {...params} label={t('wizard.entity.custodianLabel')} size="small"
+                helperText={t('wizard.entity.custodianHelper')} />
+            )}
+          />
+        </Box>
       ),
     },
     {
@@ -293,7 +366,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
           <SummaryRow label={t('wizard.entity.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
           <SummaryRow label={t('wizard.entity.summaryParent')} value={parentKey || '—'} />
           <SummaryRow label={t('wizard.entity.summaryBc')} value={boundedContextKey || '—'} />
-          <SummaryRow label={t('wizard.entity.summaryOwner')} value={dataOwnerUsername || t('wizard.entity.summaryOwnerDefault', { username: user?.username || '' })} />
+          <SummaryRow label={t('wizard.entity.summaryOwner')} value={dataOwner ? `${dataOwner.firstName} ${dataOwner.lastName}` : t('wizard.entity.summaryOwnerDefault', { username: user?.username || '' })} />
+          <SummaryRow label={t('wizard.entity.summarySteward')} value={dataSteward ? `${dataSteward.firstName} ${dataSteward.lastName}` : '—'} />
+          <SummaryRow label={t('wizard.entity.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />
           <SummaryRow
             label={t('wizard.entity.summaryClassifications')}
             value={assignments.length > 0 ? t('wizard.entity.summaryClassifications', { count: assignments.length }) : '—'}

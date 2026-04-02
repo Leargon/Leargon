@@ -11,12 +11,14 @@ import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 import { useGetAllServiceProviders } from '../api/generated/service-provider/service-provider';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ServiceProvidersPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -27,8 +29,8 @@ const ServiceProvidersPage: React.FC = () => {
   const isEmpty = !isLoading && providers.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -37,8 +39,8 @@ const ServiceProvidersPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="Service Providers"
-      subtitle="Art. 28 GDPR / Art. 10a revDSG"
+      title={t('serviceProvider.pageTitle')}
+      subtitle={t('serviceProvider.pageSubtitle')}
       actions={
         isAdmin ? (
           <>
@@ -49,7 +51,7 @@ const ServiceProvidersPage: React.FC = () => {
               endIcon={<ArrowDropDown />}
               onClick={(e) => setExportAnchorEl(e.currentTarget)}
             >
-              Export
+              {t('common.export')}
             </Button>
             <Menu
               anchorEl={exportAnchorEl}
@@ -62,7 +64,7 @@ const ServiceProvidersPage: React.FC = () => {
                   downloadExport('/export/service-providers', 'service-providers.csv');
                 }}
               >
-                Export Service Provider Register (CSV)
+                {t('serviceProvider.exportCsv')}
               </MenuItem>
             </Menu>
           </>
@@ -80,8 +82,8 @@ const ServiceProvidersPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Handshake sx={{ fontSize: 64 }} />}
-            title={isEmpty ? t('wizard.onboarding.serviceProviders.emptyTitle') : 'Select a service provider'}
-            subtitle={isEmpty ? t('wizard.onboarding.serviceProviders.emptyDescription') : 'Choose a provider from the list to view its details'}
+            title={isEmpty ? t('wizard.onboarding.serviceProviders.emptyTitle') : t('serviceProvider.selectTitle')}
+            subtitle={isEmpty ? t('wizard.onboarding.serviceProviders.emptyDescription') : t('serviceProvider.selectSubtitle')}
             action={isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.serviceProviders.emptyButton')}

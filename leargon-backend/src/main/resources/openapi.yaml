@@ -7532,13 +7532,17 @@ components:
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
         purpose:
-          type: string
+          type: array
           nullable: true
-          description: Purpose of processing (Zweck der Bearbeitung)
+          description: Purpose of processing (Zweck der Bearbeitung) — localised
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         securityMeasures:
-          type: string
+          type: array
           nullable: true
-          description: Technical and organisational security measures (TOM)
+          description: Technical and organisational security measures (TOM) — localised
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
@@ -7576,6 +7580,16 @@ components:
             $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         outputEntities:
           type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        effectiveInputEntities:
+          type: array
+          description: Recursive union of input entities from this process and all descendant sub-processes (read-only computed field)
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        effectiveOutputEntities:
+          type: array
+          description: Recursive union of output entities from this process and all descendant sub-processes (read-only computed field)
           items:
             $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         executingUnits:
@@ -7999,14 +8013,18 @@ components:
       type: object
       properties:
         purpose:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateProcessSecurityMeasuresRequest:
       type: object
       properties:
         securityMeasures:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateProcessTypeRequest:
       type: object
       properties:

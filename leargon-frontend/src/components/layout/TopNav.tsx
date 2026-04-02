@@ -15,7 +15,7 @@ import {
   SelectChangeEvent,
   Divider,
 } from '@mui/material';
-import { Settings, Person, Logout, LightMode, DarkMode, CheckCircle, ManageAccounts, Home } from '@mui/icons-material';
+import { Settings, Person, Logout, LightMode, DarkMode, CheckCircle, ManageAccounts } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { useLocale } from '../../context/LocaleContext';
 import GlobalSearch from './GlobalSearch';
@@ -23,12 +23,13 @@ import { useThemeMode } from '../../context/ThemeContext';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
+import { useTranslation } from 'react-i18next';
 
-const ROLE_LABELS: Record<Role, string> = {
-  compliance: 'DSG / GDPR',
-  architecture: 'Architecture',
-  operations: 'Operations',
-  admin: 'Governance',
+const ROLE_I18N_KEYS: Record<Role, string> = {
+  compliance: 'nav.sectionCompliance',
+  architecture: 'nav.sectionArchitecture',
+  operations: 'nav.sectionOperations',
+  admin: 'nav.sectionGovernance',
 };
 
 const TopNav: React.FC = () => {
@@ -39,6 +40,7 @@ const TopNav: React.FC = () => {
   const { preferredLocale, setPreferredLocale } = useLocale();
   const { effectiveMode, toggleMode } = useThemeMode();
   const { role, setRole, isTemporary } = useRole();
+  const { t } = useTranslation();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -49,6 +51,7 @@ const TopNav: React.FC = () => {
   const handleRoleChange = async (r: Role) => {
     setRoleMenuAnchor(null);
     await setRole(r);
+    navigate('/home');
   };
 
   return (
@@ -74,23 +77,6 @@ const TopNav: React.FC = () => {
         onClick={() => navigate('/')}
       />
 
-      {/* Home */}
-      <Tooltip title="Home">
-        <IconButton
-          size="small"
-          onClick={() => navigate('/home')}
-          sx={{
-            color: location.pathname === '/home' ? 'white' : 'grey.400',
-            bgcolor: location.pathname === '/home' ? 'rgba(255,255,255,0.12)' : 'transparent',
-            borderRadius: 1,
-            mr: 0.5,
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
-          }}
-        >
-          <Home fontSize="small" />
-        </IconButton>
-      </Tooltip>
-
       {/* Role switcher */}
       <Tooltip title={isTemporary ? 'Temporary view — resets on next login' : 'Current view'}>
         <Button
@@ -109,7 +95,7 @@ const TopNav: React.FC = () => {
             '&:hover': { bgcolor: 'rgba(255,255,255,0.12)', borderColor: 'grey.500' },
           }}
         >
-          {ROLE_LABELS[role]}{isTemporary ? ' *' : ''}
+          {t(ROLE_I18N_KEYS[role])}{isTemporary ? ' *' : ''}
         </Button>
       </Tooltip>
 
@@ -136,7 +122,7 @@ const TopNav: React.FC = () => {
                 : <ManageAccounts fontSize="small" sx={{ color: 'text.disabled' }} />
               }
             </ListItemIcon>
-            <ListItemText>{ROLE_LABELS[r]}</ListItemText>
+            <ListItemText>{t(ROLE_I18N_KEYS[r])}</ListItemText>
           </MenuItem>
         ))}
       </Menu>

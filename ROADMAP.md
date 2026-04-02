@@ -1,37 +1,25 @@
 # Léargon Roadmap
 *Ordered by value/effort score (value 1–10 ÷ sessions).*
 
-| Feature                            | Sessions | Weekly | Value | Score    |
-|------------------------------------|----------|--------|-------|----------|
-| Sub-domain owning unit default     | 0.5      | 5%     | 7/10  | **14.0** |
-| Privacy notice generation          | 1        | 10%    | 8/10  | **8.0**  |
-| DSG/GDPR compliance guided setup   | 1.5      | 15%    | 9/10  | **6.0**  |
-| Process effective entity roll-up   | 1.5      | 15%    | 8/10  | **5.3**  |
-| Data governance guided setup       | 1.5      | 15%    | 8/10  | **5.3**  |
-| DDD guided setup                   | 1.5      | 15%    | 8/10  | **5.3**  |
-| Catalogue insights                 | 3        | 30%    | 8/10  | **2.7**  |
-| Catalogue quality rules            | 3        | 30%    | 7/10  | **2.3**  |
-| Impact analysis & domain coupling  | 4        | 40%    | 8/10  | **2.0**  |
-| Compliance metrics dashboard       | 4        | 40%    | 8/10  | **2.0**  |
-| DDD guided discovery               | 4        | 40%    | 7/10  | **1.8**  |
-| Import & integration               | 4        | 40%    | 7/10  | **1.8**  |
-| Watch & notifications              | 4        | 40%    | 6/10  | **1.5**  |
-| Review cycles                      | 4        | 40%    | 6/10  | **1.5**  |
-| Performance & scalability          | 3        | 30%    | 7/10  | **2.3**  |
-| Stewards                           | 5        | 50%    | 7/10  | **1.4**  |
+*Sessions = remaining work (partially-implemented features are re-estimated from their current state).*
+
+| Feature                                       | Sessions | Weekly | Value | Score    |
+|-----------------------------------------------|----------|--------|-------|----------|
+| Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
+| Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
+| Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
+| Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
+| Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
+| Performance & scalability                     | 3        | 30%    | 7/10  | **2.3**  |
+| Impact analysis & domain coupling             | 4        | 40%    | 8/10  | **2.0**  |
+| Compliance metrics dashboard                  | 4        | 40%    | 8/10  | **2.0**  |
+| DDD guided discovery                          | 4        | 40%    | 7/10  | **1.8**  |
+| Import & integration                          | 4        | 40%    | 7/10  | **1.8**  |
+| Watch & notifications                         | 4        | 40%    | 6/10  | **1.5**  |
+| Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
+| Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
 
 ---
-
-## Sub-domain owning unit default
-
-*When creating a sub-domain (a domain with a parent), pre-fill the owning unit field with the parent domain's owning unit as a default suggestion. The user can override it freely — this is a creation-time convenience, not a computed inheritance. No backend change required; the default is applied in the create dialog / Domain Creation Wizard before the request is sent.*
-*⏱ Sessions: 0.5 · Weekly effort: ~5% · Value: 7/10 · Score: 14.0*
-
-#### USER STORY 'Pre-fill owning unit when creating a sub-domain'
-**AS AN** architect or admin\
-**IF** I am creating a business domain and select a parent domain that has an owning organisational unit\
-**I WANT** the owning unit field to be pre-filled with the parent domain's owning unit\
-**SO THAT** I do not have to manually re-select the same unit for every sub-domain, while still being free to assign a different unit when the sub-domain is owned by a different team
 
 ---
 
@@ -60,7 +48,7 @@
 
 ---
 
-## Priority · BPMN Sub-process Inline Expansion
+## BPMN Sub-process Inline Expansion
 
 *Inline expand/collapse of linked call-activity sub-processes directly inside the process BPMN diagram — no navigation away, no popup. The expanded sub-process content is rendered as a nested read-only plane within the same canvas; the parent diagram remains visible and navigable. Screenshots to be provided by user before implementation.*
 
@@ -98,7 +86,7 @@
 
 ---
 
-## Backlog · BPMN Pools for IT Systems, Executing Units & Subcontractors
+## BPMN Pools for IT Systems, Executing Units & Subcontractors
 
 *Swim-lane pools in process BPMN diagrams to visualise which IT system, org unit, or external sub-processor is responsible for each task. Depends on IT Systems, Org Units, and Data Processors being linked to a process (already implemented). Requires design decision on pool assignment storage.*
 
@@ -122,64 +110,34 @@
 
 ---
 
-## Privacy notice generation
-*Single story. Depends on processing register data being complete. Template-based document generation only — no new data model. Concrete legal deliverable: Art. 19 revDSG duty to inform data subjects.*
+## Service provider data flow transparency
+*Surfaces the data that flows to each external service provider — who the provider is, which processes use it, what entities are sent, and on what legal basis. Leverages the existing service provider model (type, linked processes, process entities). No new tables. Concrete compliance deliverable: DPA checklist, cross-border transfer register, and a machine-readable transparency summary per processor.*
 *⏱ Sessions: 1 · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
 
-**Data model notes:**
-- **Data subject categories** = top-level Business Entities (root of the parent-child tree, i.e. `parent == null`) assigned as input/output on a process.
-- **Personal data categories** = all directly assigned input/output entities on a process (may be leaf-level children).
-- **Retention duration per processing activity**: currently only modelled on `BusinessEntity` (entity-level retention). There is no per-`Process` retention field — this is a gap candidate for future work before privacy notice generation can be fully automated.
+**Data model note:** All building blocks already exist — `ServiceProvider` with type (`MANAGED_SERVICE`, `BODYLEASE`, `DATA_PROCESSOR`), `Process → ServiceProvider` links, `Process` input/output entities, `Process` legal basis and cross-border transfers.
 
-#### USER STORY 'Generate privacy notice draft'
+#### USER STORY 'View data flow summary for a service provider'
+**AS A** privacy officer or admin\
+**IF** one or more processes are linked to a service provider\
+**I WANT** to see, on the service provider detail page, a consolidated view of every process that uses this provider, which input and output entities are involved, and what the legal basis is for each process\
+**SO THAT** I can immediately understand what data the company sends to this provider and why, without manually tracing each process individually
+
+#### USER STORY 'View cross-border data flows via service providers'
+**AS A** privacy officer\
+**IF** a service provider is located in a country outside Switzerland or the EU/EEA\
+**I WANT** to see a list of all data entities transferred to that provider via linked processes, grouped by transfer mechanism (SCCs, adequacy decision, derogation)\
+**SO THAT** cross-border transfers are visible in one place for regulatory documentation and audit purposes (DSG Art. 16 / GDPR Art. 44)
+
+#### USER STORY 'Data processor agreement checklist'
 **AS AN** admin\
-**IF** processing activities are documented with controller identity, purposes, data categories, recipient categories, retention periods, and cross-border transfers\
-**I WANT** to generate a draft privacy notice from the catalogue data covering all Art. 19 revDSG required elements\
-**SO THAT** the duty to inform data subjects is grounded in the same authoritative catalogue and stays consistent with the processing register
+**IF** a service provider has type DATA_PROCESSOR\
+**I WANT** to see a checklist on the provider's detail page verifying whether the key DPA elements are documented: contract reference, data categories covered, processing purpose, sub-processor list, and security measures\
+**SO THAT** gaps in the processor agreement documentation surface immediately rather than during an audit
 
----
-
-## DSG / GDPR compliance guided setup
-*Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. No new tables.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 9/10 · Score: 6.0*
-
-*Partially implemented: the compliance wizard entry point is live on the processing register page and covers legal basis assignment and purpose documentation for all processes. The following steps are not yet implemented.*
-
-#### USER STORY 'Personal data classification step'
-**AS A** privacy officer\
-**IF** I open the compliance wizard\
-**I WANT** the wizard to check whether a personal data classification exists and, if not, show an inline shortcut to create one via the Classification Taxonomy Wizard\
-**SO THAT** business entities containing personal data are consistently labelled before I build the processing register
-
-#### USER STORY 'Processing activity identification step'
-**AS A** privacy officer\
-**IF** business processes exist in the catalogue\
-**I WANT** the wizard to walk me through reviewing each process and marking which ones involve personal data processing\
-**SO THAT** I can quickly scope the register to the relevant subset of all documented processes
-
-#### USER STORY 'Data processor inventory step'
-**AS A** privacy officer\
-**IF** third-party vendors process personal data on our behalf\
-**I WANT** the wizard to walk me through inventorying external data processors and linking them to the relevant processes\
-**SO THAT** processor agreements (GDPR Art. 28 / DSG Art. 9) are traceable in the system and not omitted
-
-#### USER STORY 'Cross-border transfer step'
-**AS A** privacy officer\
-**IF** data processors or processes involve transferring personal data outside Switzerland or the EU/EEA\
-**I WANT** the wizard to identify these transfers and prompt me to record the destination country and the transfer mechanism (SCCs, adequacy decision, BCRs, derogations)\
-**SO THAT** cross-border transfers are documented as required by DSG Art. 16 and GDPR Art. 44
-
-#### USER STORY 'DPIA triggering step'
-**AS A** privacy officer\
-**IF** I have identified processing activities that pose a high risk to data subjects (large-scale profiling, systematic monitoring, automated decision-making, special category data)\
-**I WANT** the wizard to flag these high-risk processes and prompt me to initiate a Data Protection Impact Assessment for each one\
-**SO THAT** no high-risk processing activity proceeds without a documented DPIA as required by GDPR Art. 35 and DSG Art. 22
-
-#### USER STORY 'Compliance readiness score'
-**AS A** privacy officer\
-**IF** I am building the organisation's compliance posture into Léargon\
-**I WANT** a readiness overview at the end of the wizard showing: how many processes lack a legal basis, how many entities lack a personal data category classification, how many data processors are linked, and how many DPIAs are outstanding\
-**SO THAT** I can close remaining gaps before an audit or supervisory inquiry
+#### USER STORY 'Export service provider transparency summary'
+**AS AN** admin\
+**I WANT** to export a structured summary of all service providers with their linked processes, entity scope, legal basis, and transfer mechanism as a CSV or PDF\
+**SO THAT** the full processor inventory can be handed to external auditors or included in the Art. 30 / DSG Art. 12 documentation package
 
 ---
 
@@ -199,68 +157,6 @@
 **SO THAT** I can act on overdue reviews immediately and plan ahead for reviews that are coming up shortly
 
 ---
-
-## Data governance guided setup
-*Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. No new tables.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
-
-*Partially implemented: the Classification Taxonomy Wizard (Settings → Classifications) and the Governance Maturity Overview (home screen, admin view) are shipped. What remains is a unified governance wizard that chains these steps into a single guided flow.*
-
-#### USER STORY 'Governance setup wizard entry point'
-**AS A** CDO or data steward\
-**IF** my organisation is starting a data governance programme\
-**I WANT** to be guided through the recommended order of governance setup steps — classification taxonomy → entity ownership → classification coverage → process ownership — in a single wizard\
-**SO THAT** I build a governable data landscape without skipping foundational prerequisites
-
-#### USER STORY 'Data owner assignment step'
-**AS AN** admin or CDO\
-**IF** business entities exist in the catalogue without a designated data owner\
-**I WANT** the wizard to present a filtered list of unowned entities and allow me to assign owners in bulk from a single screen\
-**SO THAT** every data object has a responsible person before moving on to classifications
-
-#### USER STORY 'Entity classification coverage step'
-**AS A** data steward\
-**IF** business entities exist without mandatory classification assignments\
-**I WANT** the wizard to highlight which entities lack mandatory classifications and allow me to fill gaps inline\
-**SO THAT** the catalogue is complete and fit for governance reporting before the wizard is marked done
-
-#### USER STORY 'Process ownership step'
-**AS AN** admin\
-**IF** business processes exist without an assigned owner or executing organisational unit\
-**I WANT** the wizard to list unowned processes and allow me to assign owners or executing units in bulk\
-**SO THAT** every process has clear accountability once the governance foundation is in place
-
----
-
-## DDD guided setup
-*Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
-
-*Partially implemented: the DDD Domain Model Wizard auto-opens when no domains exist and guides users through creating their first domain (including domain type), bounded context, and first entity. Context relationships, domain events, team assignments, and a progress indicator are not yet implemented.*
-
-#### USER STORY 'Context relationship step'
-**AS AN** architect\
-**IF** I have created two or more bounded contexts\
-**I WANT** the wizard to prompt me to define how contexts relate to each other (Partnership, Customer/Supplier, Shared Kernel, etc.) and explain the implications of each relationship type\
-**SO THAT** the integration topology and Conway's Law implications are explicitly modelled
-
-#### USER STORY 'Domain event assignment step'
-**AS AN** architect or domain expert\
-**IF** I have defined bounded contexts\
-**I WANT** the wizard to prompt me to identify at least one domain event per bounded context and assign it a publishing context\
-**SO THAT** asynchronous communication patterns are explicitly captured in the model from the beginning
-
-#### USER STORY 'Team assignment step'
-**AS AN** architect\
-**IF** I have defined bounded contexts and organisational units\
-**I WANT** the wizard to suggest assigning each bounded context to an owning organisational unit\
-**SO THAT** team topologies and ownership are reflected in the domain model
-
-#### USER STORY 'DDD setup progress indicator'
-**AS AN** architect\
-**IF** I am building my DDD model incrementally\
-**I WANT** a progress overview in the wizard showing which steps are complete (domains created, all classified, bounded contexts created, context relationships defined, domain events assigned, team assignments done)\
-**SO THAT** I know which gaps remain before the model is useful and coherent
 
 ---
 
@@ -687,3 +583,80 @@
 **AS A** developer\
 **I WANT** all list endpoints (`/entities`, `/processes`, `/domains`, `/organisational-units`) to support cursor-based or offset pagination with a configurable page size\
 **SO THAT** the API and frontend remain responsive when a catalogue contains thousands of items, rather than loading the entire collection into memory on every request
+
+## Team Topologies
+*Extends the existing organisational unit model with Team Topologies types and interaction modes — the social equivalent of the DDD context map. Each process in Léargon is a step in a value stream, and each org unit is a team. Adding team type and interaction records makes the team topology explicitly modelled alongside the technical topology, enabling cognitive load analysis and hand-off bottleneck detection. Requires one new `team_interactions` table; team type can use the existing classification system or a new enum field on OrganisationalUnit.*\
+*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 8/10 · Score: 3.2*
+
+#### USER STORY 'Assign team topology type to an organisational unit'
+**AS AN** architect or engineering manager\
+**I WANT** to assign a Team Topologies type — Stream-aligned, Platform, Enabling, or Complicated Subsystem — to each organisational unit\
+**SO THAT** the team's mission and expected interaction patterns are explicit and aligned with the Team Topologies model, making Conway's Law analysis more actionable
+
+#### USER STORY 'Define interaction mode between two teams'
+**AS AN** architect\
+**IF** two organisational units collaborate on shared processes or bounded contexts\
+**I WANT** to define a typed interaction record between them specifying the mode (Collaboration, X-as-a-Service, or Facilitating) and whether the interaction is temporary or ongoing\
+**SO THAT** the social topology of the organisation is modelled alongside the technical context map as a complementary, equally explicit view
+
+#### USER STORY 'Track interaction health'
+**AS AN** engineering manager\
+**IF** team interactions are defined\
+**I WANT** to record a health indicator on each interaction — such as average handoff wait time or a qualitative score — and see interactions flagged when health degrades\
+**SO THAT** overloaded interfaces and slow coordination points are visible before they become delivery bottlenecks
+
+#### USER STORY 'View team interaction topology diagram'
+**AS AN** architect\
+**I WANT** to see a diagram of all organisational units and their defined interaction modes, rendered similarly to the DDD context map\
+**SO THAT** the team topology and the technical context map can be read side by side as two complementary views of the same organisation
+
+#### USER STORY 'View cognitive load score per team'
+**AS AN** architect or manager\
+**I WANT** to see a computed cognitive load score for each organisational unit, calculated from the number of bounded contexts owned, capabilities owned, and active value streams handled — with a warning when the score exceeds a configurable threshold\
+**SO THAT** teams at risk of cognitive overload are identified before their scope needs to be split or reduced
+
+#### USER STORY 'Detect mismatched interaction modes'
+**AS AN** architect\
+**IF** two Stream-aligned teams interact via Collaboration rather than X-as-a-Service\
+**I WANT** Léargon to surface this as a potential bottleneck, since sustained Collaboration between two Stream-aligned teams is a Team Topologies anti-pattern that reduces autonomy and increases cognitive load\
+**SO THAT** interaction anti-patterns are identified and can be addressed — either by formalising an X-as-a-Service boundary or by consolidating the teams
+
+---
+
+## Value Stream Mapping (VSM)
+*Adds lean/VSM metadata to the existing process model. Each Léargon process represents one step in a value stream. Adding cycle time, wait time, activity classification, and frequency to processes enables end-to-end lead time calculation and waste identification without any new entity types — only new fields on Process and a VSM summary view. A process is classified at the stream level (Enabling / Operational / Business Support) and at the activity level (Value-Adding, Business Value-Added, or Waste), with a free-text justification that answers the transformation, customer, error, and necessity checks.*\
+*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 7/10 · Score: 2.8*
+
+#### USER STORY 'Classify a process as a value stream type'
+**AS A** lean practitioner or operations manager\
+**I WANT** to classify each business process as one of three value stream types: Enabling (prerequisite — removes barriers for the main stream), Operational (revenue-generating, directly customer-facing), or Business Support (internal services)\
+**SO THAT** the value stream portfolio is visible, each process's strategic role is explicit, and lean improvement efforts can be focused on the highest-leverage streams first
+
+#### USER STORY 'Record time metadata on a process'
+**AS A** process analyst\
+**IF** I am documenting a process\
+**I WANT** to record the average cycle time (CT — actual processing time), wait time (WT — average queue time before the step begins), and changeover time (CO — setup time between instances) on a process\
+**SO THAT** end-to-end lead time, process efficiency ratio (VA time ÷ total lead time), and queue-to-work ratios can be computed across a value stream
+
+#### USER STORY 'Record process frequency'
+**AS A** process analyst\
+**IF** I am documenting a process\
+**I WANT** to record how many instances of the process run per day / week / month / year\
+**SO THAT** throughput, takt time, and cumulative wait time at scale can be derived, and bottleneck steps with high volume and high wait time can be identified
+
+#### USER STORY 'Classify process activity type and justify it'
+**AS A** lean practitioner\
+**IF** I am analysing process efficiency\
+**I WANT** to classify each process step as Value-Adding (VA — directly transforms the product or information for the customer), Business Value-Added (BVA — necessary but not directly valuable to the customer, e.g. compliance checks, legal documentation), or Waste (Muda — can be eliminated, e.g. rework, redundant data entry, waiting without purpose) with a free-text justification\
+**SO THAT** non-value-adding activities are explicit, improvement candidates are prioritised by waste category, and the classification decision is traceable
+
+#### USER STORY 'Record quality metrics on a process'
+**AS A** process analyst\
+**I WANT** to record the First Pass Yield (FPY %) — the percentage of process instances completed correctly on the first attempt without rework — and a completion rate on a process\
+**SO THAT** processes with quality defects are visible in the value stream summary and can be targeted for root cause analysis before they inflate downstream rework waste
+
+#### USER STORY 'View value stream summary across processes'
+**AS A** lean practitioner or operations manager\
+**IF** processes are documented with time metadata, activity classifications, and frequency\
+**I WANT** to see a value stream summary view showing: total lead time (sum of CT + WT across a process chain), value-adding ratio (VA time ÷ total lead time), and a breakdown of activity types across the stream\
+**SO THAT** I can identify the biggest improvement opportunities — steps with high wait time, low FPY, or Waste classification — and measure improvement over time as metadata is refined

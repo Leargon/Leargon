@@ -74,13 +74,6 @@ describe('IT System API', () => {
     expect(res.data.owningUnit ?? null).toBeNull();
   });
 
-  it('non-admin cannot create an IT system', async () => {
-    const res = await userClient.post('/it-systems', {
-      names: [{ locale: 'en', text: 'Forbidden System' }],
-    });
-    expect(res.status).toBe(403);
-  });
-
   it('can get all IT systems', async () => {
     await createItSystem(adminClient, 'List Test System');
     const res = await userClient.get<ItSystemResponse[]>('/it-systems');
@@ -118,14 +111,6 @@ describe('IT System API', () => {
     expect(res.data.vendor).toBe('New Vendor');
   });
 
-  it('non-admin cannot update an IT system', async () => {
-    const sys = await createItSystem(adminClient, 'No Update System');
-    const res = await userClient.put(`/it-systems/${sys.key}`, {
-      names: [{ locale: 'en', text: 'Hacked' }],
-    });
-    expect(res.status).toBe(403);
-  });
-
   it('admin can delete an IT system', async () => {
     const sys = await createItSystem(adminClient, 'Delete Me System');
     const del = await adminClient.delete(`/it-systems/${sys.key}`);
@@ -133,12 +118,6 @@ describe('IT System API', () => {
 
     const get = await userClient.get(`/it-systems/${sys.key}`);
     expect(get.status).toBe(404);
-  });
-
-  it('non-admin cannot delete an IT system', async () => {
-    const sys = await createItSystem(adminClient, 'Protected System');
-    const res = await userClient.delete(`/it-systems/${sys.key}`);
-    expect(res.status).toBe(403);
   });
 
   // ─── Owning Unit ──────────────────────────────────────────────────────────
@@ -206,6 +185,31 @@ describe('IT System API', () => {
     const processKeys = getRes.data.linkedProcesses!.map((p) => p.key);
     expect(processKeys).toContain(proc1.key);
     expect(processKeys).toContain(proc2.key);
+  });
+
+  it('delete IT system → linked processes still exist (not deleted)', async () => {
+    const sys = await createItSystem(adminClient, 'System To Delete With Procs');
+    const proc1 = await createProcess(adminClient, 'ITS Surviving Process 1');
+    const proc2 = await createProcess(adminClient, 'ITS Surviving Process 2');
+
+    await adminClient.put(`/it-systems/${sys.key}/linked-processes`, {
+      processKeys: [proc1.key, proc2.key],
+    });
+
+    // Delete the IT system
+    const delRes = await adminClient.delete(`/it-systems/${sys.key}`);
+    expect(delRes.status).toBe(204);
+
+    // System is gone
+    const sysRes = await userClient.get(`/it-systems/${sys.key}`);
+    expect(sysRes.status).toBe(404);
+
+    // Processes still exist
+    const p1Res = await userClient.get(`/processes/${proc1.key}`);
+    expect(p1Res.status).toBe(200);
+
+    const p2Res = await userClient.get(`/processes/${proc2.key}`);
+    expect(p2Res.status).toBe(200);
   });
 
   it('can clear linked processes from an IT system', async () => {

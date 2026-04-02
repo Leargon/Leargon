@@ -46,8 +46,8 @@ test.describe('Process Landscape diagram', () => {
   test('page loads with diagram toolbar', async ({ page }) => {
     await page.goto('/diagrams/processes');
     await expect(page.getByText('Process Landscape')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Domain colours')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Show entities')).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('Domain layer')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Entity layer')).toBeVisible({ timeout: 5_000 });
   });
 
   test('shows process node after process is created', async ({ page }) => {
@@ -64,7 +64,7 @@ test.describe('Process Landscape diagram', () => {
     const parent = (await createProcess(parentName, ADMIN)) as { key: string };
     // Create child directly with parentProcessKey in the request body
     await postJson(
-      '/api/processes',
+      '/processes',
       { names: [{ locale: 'en', text: childName }], parentProcessKey: parent.key },
       ADMIN,
     );
@@ -100,13 +100,13 @@ test.describe('Org Chart diagram', () => {
   });
 });
 
-test.describe('Entity Lineage tab', () => {
-  test('lineage tab appears on entity detail', async ({ page }) => {
+test.describe('Entity Lineage accordion', () => {
+  test('lineage accordion appears on entity detail', async ({ page }) => {
     const name = uid('LineageEnt');
     const entity = (await createEntity(name, ADMIN)) as { key: string };
 
     await page.goto(`/entities/${entity.key}`);
-    await expect(page.getByRole('tab', { name: 'Data Lineage' })).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[aria-expanded]').filter({ hasText: 'Data Lineage' })).toBeVisible({ timeout: 10_000 });
   });
 
   test('lineage diagram shows linked process', async ({ page }) => {
@@ -114,10 +114,11 @@ test.describe('Entity Lineage tab', () => {
     const procName = uid('LineProc');
     const entity = (await createEntity(entityName, ADMIN)) as { key: string };
     const proc = (await createProcess(procName, ADMIN)) as { key: string };
-    await postJson(`/api/processes/${proc.key}/inputs`, { entityKey: entity.key }, ADMIN);
+    await postJson(`/processes/${proc.key}/inputs`, { entityKey: entity.key }, ADMIN);
 
     await page.goto(`/entities/${entity.key}`);
-    await page.getByRole('tab', { name: 'Data Lineage' }).click();
-    await expect(page.getByText(procName)).toBeVisible({ timeout: 15_000 });
+    await page.locator('[aria-expanded]').filter({ hasText: 'Data Lineage' }).click();
+    // Scope to the ReactFlow canvas to avoid strict-mode clash with entity chip
+    await expect(page.locator('.react-flow').getByText(procName)).toBeVisible({ timeout: 15_000 });
   });
 });

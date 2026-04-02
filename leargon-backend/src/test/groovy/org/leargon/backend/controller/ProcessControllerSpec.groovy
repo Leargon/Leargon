@@ -774,14 +774,14 @@ class ProcessControllerSpec extends Specification {
 
         when:
         def response = client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "To manage customer data for billing purposes"])
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: [[locale: "en", text: "To manage customer data for billing purposes"]]])
                         .bearerAuth(token),
                 ProcessResponse
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().purpose == "To manage customer data for billing purposes"
+        response.body().purpose?.find { it.locale == "en" }?.text == "To manage customer data for billing purposes"
     }
 
     def "PUT /processes/{key}/purpose should clear purpose when null"() {
@@ -796,7 +796,7 @@ class ProcessControllerSpec extends Specification {
 
         and: "set a purpose first"
         client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "Some purpose"])
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: [[locale: "en", text: "Some purpose"]]])
                         .bearerAuth(token), ProcessResponse)
 
         when:
@@ -808,7 +808,7 @@ class ProcessControllerSpec extends Specification {
 
         then:
         response.status == HttpStatus.OK
-        response.body().purpose == null
+        !response.body().purpose
     }
 
     def "PUT /processes/{key}/purpose should return 403 for non-owner"() {
@@ -823,7 +823,7 @@ class ProcessControllerSpec extends Specification {
 
         when:
         client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: "Unauthorized purpose"])
+                HttpRequest.PUT("/processes/${proc.key}/purpose", [purpose: [[locale: "en", text: "Unauthorized purpose"]]])
                         .bearerAuth(otherData.token),
                 ProcessResponse
         )
@@ -849,14 +849,14 @@ class ProcessControllerSpec extends Specification {
 
         when:
         def response = client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: "Encryption at rest and in transit, access control"])
+                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: [[locale: "en", text: "Encryption at rest and in transit, access control"]]])
                         .bearerAuth(token),
                 ProcessResponse
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().securityMeasures == "Encryption at rest and in transit, access control"
+        response.body().securityMeasures?.find { it.locale == "en" }?.text == "Encryption at rest and in transit, access control"
     }
 
     def "PUT /processes/{key}/security-measures should return 403 for non-owner"() {
@@ -871,7 +871,7 @@ class ProcessControllerSpec extends Specification {
 
         when:
         client.toBlocking().exchange(
-                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: "Unauthorized measures"])
+                HttpRequest.PUT("/processes/${proc.key}/security-measures", [securityMeasures: [[locale: "en", text: "Unauthorized measures"]]])
                         .bearerAuth(otherData.token),
                 ProcessResponse
         )

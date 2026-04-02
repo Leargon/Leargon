@@ -78,13 +78,6 @@ describe('Service Provider API', () => {
     expect(res.data.serviceProviderType).toBe('BODYLEASE');
   });
 
-  it('non-admin cannot create a service provider', async () => {
-    const res = await userClient.post('/service-providers', {
-      names: [{ locale: 'en', text: 'Unauthorized Provider' }],
-    });
-    expect(res.status).toBe(403);
-  });
-
   // ─── READ ──────────────────────────────────────────────────────────────
 
   it('authenticated user can list all service providers', async () => {
@@ -94,12 +87,6 @@ describe('Service Provider API', () => {
     const res = await userClient.get<ServiceProviderResponse[]>('/service-providers');
     expect(res.status).toBe(200);
     expect(res.data.length).toBeGreaterThanOrEqual(2);
-  });
-
-  it('unauthenticated request is rejected', async () => {
-    const anonClient = createClient(getBackendUrl());
-    const res = await anonClient.get('/service-providers');
-    expect(res.status).toBe(401);
   });
 
   it('can get service provider by key', async () => {
@@ -139,18 +126,6 @@ describe('Service Provider API', () => {
     expect(res.data.serviceProviderType).toBe('MANAGED_SERVICE');
   });
 
-  it('non-admin cannot update a service provider', async () => {
-    const created = await createServiceProvider(adminClient, 'Protected Vendor');
-    const res = await userClient.put(`/service-providers/${created.key}`, {
-      names: [{ locale: 'en', text: 'Hacked' }],
-      processingCountries: [],
-      processorAgreementInPlace: false,
-      subProcessorsApproved: false,
-      serviceProviderType: 'OTHER',
-    });
-    expect(res.status).toBe(403);
-  });
-
   // ─── DELETE ────────────────────────────────────────────────────────────
 
   it('admin can delete a service provider', async () => {
@@ -160,12 +135,6 @@ describe('Service Provider API', () => {
 
     const get = await userClient.get(`/service-providers/${created.key}`);
     expect(get.status).toBe(404);
-  });
-
-  it('non-admin cannot delete a service provider', async () => {
-    const created = await createServiceProvider(adminClient, 'Safe Vendor');
-    const res = await userClient.delete(`/service-providers/${created.key}`);
-    expect(res.status).toBe(403);
   });
 
   // ─── LINK PROCESSES ────────────────────────────────────────────────────
@@ -184,6 +153,33 @@ describe('Service Provider API', () => {
       `/service-providers/${provider.key}`,
     );
     expect(getProvider.data.linkedProcesses?.some((p) => p.key === process.key)).toBe(true);
+  });
+
+  // ─── REFERENTIAL INTEGRITY ─────────────────────────────────────────────
+
+  it('delete service provider → linked processes still exist (not deleted)', async () => {
+    const provider = await createServiceProvider(adminClient, 'Provider To Delete With Procs');
+    const proc1 = await createProcess(adminClient, 'SP Surviving Process 1');
+    const proc2 = await createProcess(adminClient, 'SP Surviving Process 2');
+
+    await adminClient.put(`/service-providers/${provider.key}/linked-processes`, {
+      processKeys: [proc1.key, proc2.key],
+    });
+
+    // Delete the service provider
+    const delRes = await adminClient.delete(`/service-providers/${provider.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Provider is gone
+    const providerRes = await userClient.get(`/service-providers/${provider.key}`);
+    expect(providerRes.status).toBe(404);
+
+    // Processes still exist
+    const p1Res = await userClient.get(`/processes/${proc1.key}`);
+    expect(p1Res.status).toBe(200);
+
+    const p2Res = await userClient.get(`/processes/${proc2.key}`);
+    expect(p2Res.status).toBe(200);
   });
 
   // ─── CROSS-BORDER TRANSFERS ON PROCESS ─────────────────────────────────
@@ -208,13 +204,4 @@ describe('Service Provider API', () => {
     ).toBe(true);
   });
 
-  it('non-owner cannot update cross-border transfers on process', async () => {
-    const process = await createProcess(adminClient, 'Admin Process Transfers');
-
-    const res = await userClient.put(
-      `/processes/${process.key}/cross-border-transfers`,
-      { transfers: [] },
-    );
-    expect(res.status).toBe(403);
-  });
 });

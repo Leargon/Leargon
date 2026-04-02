@@ -95,3 +95,5 @@ databaseChangeLog:
       file: db/changelog/changes/046-make-owner-nullable.yaml
   - include:
       file: db/changelog/changes/047-add-preferred-role-to-users.yaml
+  - include:
+      file: db/changelog/changes/048-localize-process-purpose-security-measures.yaml

@@ -20,13 +20,13 @@ Swiss revDSG and EU GDPR impose obligations at the process level: every data-pro
 
 The three frameworks share structural objects but use them for different purposes:
 
-| Object | DDD role | BCM role | DSG/GDPR role |
-|---|---|---|---|
-| Bounded Context | Linguistic boundary, context map node | Unit of ownership | Processing scope |
-| Process | Event producer/consumer | Capability realisation | Processing activity (Art. 30) |
-| Data Entity | Ubiquitous Language noun | Capability data scope | Personal data category |
-| Org Unit | Team owning a context | Capability owner | Data controller / processor |
-| Classification | Domain tag | Maturity/criticality tag | Personal data / legal basis flag |
+| Object          | DDD role                              | BCM role                 | DSG/GDPR role                    |
+|-----------------|---------------------------------------|--------------------------|----------------------------------|
+| Bounded Context | Linguistic boundary, context map node | Unit of ownership        | Processing scope                 |
+| Process         | Event producer/consumer               | Capability realisation   | Processing activity (Art. 30)    |
+| Data Entity     | Ubiquitous Language noun              | Capability data scope    | Personal data category           |
+| Org Unit        | Team owning a context                 | Capability owner         | Data controller / processor      |
+| Classification  | Domain tag                            | Maturity/criticality tag | Personal data / legal basis flag |
 
 A process classified as `personal-data = personal-data--contains` is simultaneously a DDD *verb* (something that happens in a context), a BCM realisation (it fulfils a capability), and a GDPR processing activity that must appear in the register.
 
@@ -137,36 +137,96 @@ erDiagram
 
 ---
 
-## 3. Computed vs Explicit Relationships
+## 3. Deletion Behaviour
 
-### Explicit (stored in the database)
+Deletion in Leargon follows a consistent principle: **deleting an object never silently deletes unrelated objects**. Relationships are either explicitly blocked, nulled out, or cleaned up via database cascade on join tables. The rules per object type are:
 
-| Relationship | Where stored |
-|---|---|
-| Process → Capability | `process_capability` join table |
-| Domain → Bounded Context | `bounded_context.domain_id` FK |
-| Domain Event → Data Entity (PRODUCES / CONSUMES) | `domain_event_entity` join table with link type |
-| Data Entity → Bounded Context | `business_entity.bounded_context_id` FK |
-| Process → Data Entity (input / output) | `process_input_entity` / `process_output_entity` join tables |
-| Org Unit → Data Processor | `organisational_unit.linked_data_processor_id` FK |
-| Context → Context relationship | `bounded_context_relationship` table |
+### Business Domain
 
-### Computed (derived at query time or in the frontend)
+Deleting a domain **cascades to all its Bounded Contexts** (which are owned exclusively by the domain). Entities and processes that were assigned to those bounded contexts have their `boundedContext` reference nulled out — they survive as unassigned objects.
 
-| Derived view | How derived |
-|---|---|
-| Capability's data entities | Union of all input/output entities across all processes that realise the capability |
-| Capability's org units | Union of all executing units across all processes that realise the capability |
-| IT system's data entities | Union of input/output entities of all processes that use the IT system |
-| IT system's org units | Union of executing units of all processes that use the IT system |
-| "Handles personal data" on process | Process has a `personal-data = personal-data--contains` classification assignment |
-| Ubiquitous Language per Bounded Context | All entities assigned to that context (nouns), all processes assigned (verbs), all events published or consumed (events) |
-| Processing Register completeness | Ratio of filled mandatory fields vs total mandatory fields per process |
-| Conway's Law misalignment | Processes where the executing org unit's bounded context differs from the process's bounded context |
+### Bounded Context
+
+Cannot be deleted independently; it is deleted when its parent domain is deleted.
+
+### Data Entity
+
+- Children are **reparented to null** (they become root-level entities; their keys are recomputed).
+- Interface/implementation links to other entities are **cleared from both sides**.
+- Translation links are deleted.
+- Entries in `process_entity_inputs` and `process_entity_outputs` join tables are **removed by DB cascade** (`ON DELETE CASCADE`). The linked processes survive but the entity is removed from their input/output sets.
+
+### Process
+
+- **Blocked if the process has child processes.** Returns HTTP 400. Children must be deleted or reparented first.
+- **Blocked if referenced as a called element in another process's BPMN diagram.** Returns HTTP 400.
+- Entries in `process_executing_units`, `process_entity_inputs`, `process_entity_outputs`, and `process_capability` join tables are removed by DB cascade.
+- Any DPIA that referenced this process has its `process` FK nulled out (DPIA survives).
+- Domain-event-to-process links are deleted.
+- Linked IT systems, service providers, and capabilities are **not affected** — those objects survive.
+
+### Organisational Unit
+
+- Simple delete — **no structural guard, not even for child units**.
+- The `organisational_unit_parents` join table has `ON DELETE CASCADE` on both sides (`unit_id` and `parent_id`). Deleting a parent unit removes its rows from the join table; child units **survive but become parentless** (their parent link is simply dropped). Deleting a child unit removes its own join-table rows without affecting the parent.
+- Entries in `process_executing_units` are **removed by DB cascade**. Processes that had this unit as an executing unit survive with the unit removed from their `executingUnits` list.
+
+### Capability
+
+- Simple delete.
+- Entries in `process_capability` and `it_system_capability` join tables are removed by DB cascade. Linked processes and IT systems survive.
+
+### IT System
+
+- Simple delete.
+- Entries in `it_system_linked_processes` join table are removed by DB cascade. Linked processes survive.
+
+### Service Provider
+
+- Simple delete.
+- Entries in `service_provider_linked_processes` join table are removed by DB cascade. Linked processes survive.
+
+### Domain Event
+
+- Simple delete.
+- `domain_event_entity` and `domain_event_process_link` join table entries are removed by DB cascade.
+
+### Classification / Classification Value
+
+Deleting a classification (or a value within it) triggers an explicit cleanup pass in `ClassificationService` that removes all matching `ClassificationAssignment` entries from every entity, domain, process, and org unit that held that assignment. The owning objects survive.
 
 ---
 
-## 4. Analytical Perspectives
+## 4. Computed vs Explicit Relationships
+
+### Explicit (stored in the database)
+
+| Relationship                                     | Where stored                                                 |
+|--------------------------------------------------|--------------------------------------------------------------|
+| Process → Capability                             | `process_capability` join table                              |
+| Domain → Bounded Context                         | `bounded_context.domain_id` FK                               |
+| Domain Event → Data Entity (PRODUCES / CONSUMES) | `domain_event_entity` join table with link type              |
+| Data Entity → Bounded Context                    | `business_entity.bounded_context_id` FK                      |
+| Process → Data Entity (input / output)           | `process_input_entity` / `process_output_entity` join tables |
+| Org Unit → Data Processor                        | `organisational_unit.linked_data_processor_id` FK            |
+| Context → Context relationship                   | `bounded_context_relationship` table                         |
+
+### Computed (derived at query time or in the frontend)
+
+| Derived view                            | How derived                                                                                                              |
+|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| Capability's data entities              | Union of all input/output entities across all processes that realise the capability                                      |
+| Capability's org units                  | Union of all executing units across all processes that realise the capability                                            |
+| IT system's data entities               | Union of input/output entities of all processes that use the IT system                                                   |
+| IT system's org units                   | Union of executing units of all processes that use the IT system                                                         |
+| "Handles personal data" on process      | Process has a `personal-data = personal-data--contains` classification assignment                                        |
+| Ubiquitous Language per Bounded Context | All entities assigned to that context (nouns), all processes assigned (verbs), all events published or consumed (events) |
+| Processing Register completeness        | Ratio of filled mandatory fields vs total mandatory fields per process                                                   |
+| Conway's Law misalignment               | Processes where the executing org unit's bounded context differs from the process's bounded context                      |
+
+---
+
+## 5. Analytical Perspectives
 
 ### DSG/GDPR Perspective
 
@@ -222,58 +282,230 @@ Focuses on team structure and process responsibility:
 
 ---
 
-## 5. UI Field Visibility by Perspective
+## 6. UI Field Visibility by Perspective
 
 The frontend filters which fields and tabs are shown based on the active perspective. The goal is to present only the information relevant to the user's current analytical frame, reducing noise.
 
 ### Entity detail panel — tabs
 
-| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Compliance | ✓ | ✓ | — | — | — |
-| Relationships | — | ✓ | ✓ | ✓ | — |
-| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Lineage | — | ✓ | ✓ | — | — |
+| Tab           | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------|:--------:|:----------:|:---:|:------:|:---:|
+| Compliance    |    ✓     |     ✓      |  —  |   —    |  —  |
+| Relationships |    —     |     ✓      |  ✓  |   ✓    |  —  |
+| Governance    |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Lineage       |    —     |     ✓      |  ✓  |   —    |  —  |
 
 ### Entity detail panel — core fields
 
-| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Data Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Data Steward | — | ✓ | — | — | — |
-| Technical Custodian | — | ✓ | — | — | — |
-| Parent Entity | — | ✓ | ✓ | — | — |
-| Bounded Context | — | ✓ | ✓ | — | — |
-| Retention Period | ✓ | ✓ | — | — | — |
+| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Data Owner          |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Data Steward        |    —     |     ✓      |  —  |   —    |  —  |
+| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
+| Parent Entity       |    —     |     ✓      |  ✓  |   —    |  —  |
+| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
+| Retention Period    |    ✓     |     ✓      |  —  |   —    |  —  |
 
 ### Process detail panel — tabs
 
-| Tab | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Data & Teams | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Compliance | ✓ | ✓ | — | — | — |
-| Governance | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Tab          | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|--------------|:--------:|:----------:|:---:|:------:|:---:|
+| Data & Teams |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Compliance   |    ✓     |     ✓      |  —  |   —    |  —  |
+| Governance   |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
 
 ### Process detail panel — core fields
 
-| Field | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Process Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Process Steward | — | ✓ | — | — | — |
-| Technical Custodian | — | ✓ | — | — | — |
-| Code | — | ✓ | ✓ | ✓ | ✓ |
-| Process Type | — | ✓ | ✓ | ✓ | ✓ |
-| Legal Basis | ✓ | ✓ | — | — | — |
-| Bounded Context | — | ✓ | ✓ | — | — |
+| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|---------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Process Owner       |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Process Steward     |    —     |     ✓      |  —  |   —    |  —  |
+| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
+| Code                |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Process Type        |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Legal Basis         |    ✓     |     ✓      |  —  |   —    |  —  |
+| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
 
 ### Domain detail panel — sections
 
-| Section | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---|:---:|:---:|:---:|:---:|:---:|
-| Domain Type | — | ✓ | ✓ | ✓ | ✓ |
-| Parent Domain | — | ✓ | ✓ | ✓ | ✓ |
-| Vision Statement | — | ✓ | ✓ | ✓ | ✓ |
-| Owning Unit | — | ✓ | — | ✓ | ✓ |
-| Bounded Contexts | — | ✓ | ✓ | — | — |
-| Context Relationships | — | ✓ | ✓ | — | — |
-| Classifications | ✓ | ✓ | — | — | — |
+| Section               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
+|-----------------------|:--------:|:----------:|:---:|:------:|:---:|
+| Domain Type           |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Parent Domain         |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Vision Statement      |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
+| Owning Unit           |    —     |     ✓      |  —  |   ✓    |  ✓  |
+| Bounded Contexts      |    —     |     ✓      |  ✓  |   —    |  —  |
+| Context Relationships |    —     |     ✓      |  ✓  |   —    |  —  |
+| Classifications       |    ✓     |     ✓      |  —  |   —    |  —  |
+
+---
+
+## 7. Test Suite Strategy
+
+Leargon has three test suites. Each has a distinct responsibility; nothing is tested in two places.
+
+```
+Backend Spock     →  "What does the API guarantee?"
+Frontend integ.   →  "Do cross-resource mutations leave the system consistent?"
+E2E Playwright    →  "Can the user complete their core task via the browser?"
+```
+
+### Layer 1 — Backend Spock specs (`leargon-backend/src/test/`)
+
+**Owns**: every rule the API enforces.
+
+- All HTTP status codes: 201, 200, 204, 400, 403, 404, 409
+- Input validation and error messages
+- Permission rules — who can create, edit, delete what
+- Business logic: deletion guards, cascade nulling, version history creation
+- All negative paths
+
+**Does not test**: frontend type correctness, UI rendering, cross-resource lifecycle.
+
+Because these tests run against an in-memory H2 database with no browser, they are fast enough to be exhaustive. This is the right place to be thorough.
+
+### Layer 2 — Frontend integration tests (`src/tests/integration/`)
+
+**Owns**: TypeScript API client correctness and cross-resource lifecycle.
+
+- Round-trip tests that verify the generated TS types match the backend response shape (one create + read per resource is sufficient)
+- Multi-resource scenarios: delete A → verify B survives with expected state, full lifecycle (domain → BC → entity → process → verify refs)
+- Referential integrity after mutations
+
+**Does not test**: API authorization rules (403/404/401 — those belong in Spock), single-resource update/rename variations (those are covered by the backend spec), UI rendering.
+
+The practical rule: *if a test only calls one endpoint and checks one resource, it belongs in Spock unless its sole purpose is verifying the TypeScript client types parse correctly.*
+
+### Layer 3 — E2E Playwright tests (`src/tests/e2e/`)
+
+**Owns**: user-visible behaviour and role-conditional UI.
+
+- Happy-path user journeys: open dialog → fill form → submit → see result
+- Role gates: admin sees action buttons, non-admin/viewer does not
+- Cross-page rendering: data set on the detail page appears correctly on the list/register page
+- Diagram page loading and node interaction
+
+**Does not test**: API authorization logic (the 403 path is Spock's job; E2E only verifies the frontend hides the controls), per-severity or per-value enumeration of enum variants (one representative value is sufficient), empty-state + filled-state for every field (one representative field per section is sufficient).
+
+The practical rule: *one spec file per page/feature. Each file covers: admin CRUD journey + role visibility. Avoid testing the same UI pattern (field sets value → value appears) more than once per feature.*
+
+### The layering in practice
+
+```
+Rule: "non-admin gets 403 on DELETE /processes/:key"
+→ Backend Spock (ProcessControllerSpec). Not in integration or E2E.
+
+Rule: "deleting an IT system does not delete its linked processes"
+→ Frontend integration (it-system.integration.test.ts). Not in E2E or Spock.
+
+Rule: "the Delete button is not rendered for a viewer"
+→ E2E (processes-crud.spec.ts). Not in integration or Spock.
+```
+
+---
+
+## 8. Roles, Ownership, and RBAC
+
+Leargon has two layers of access control: **system-level roles** (coarse-grained) and **entity-level ownership** (fine-grained). They are checked independently and both enforced server-side; the frontend mirrors them in UI only.
+
+---
+
+### System-Level Roles
+
+Two roles exist, stored as a comma-separated string in the `User.roles` column:
+
+| Role         | Meaning                                                                                                          |
+|--------------|------------------------------------------------------------------------------------------------------------------|
+| `ROLE_USER`  | Every authenticated user. Can read everything and create new objects (becoming their owner).                     |
+| `ROLE_ADMIN` | Full administrative access: can edit any object regardless of ownership, manage users, and configure the system. |
+
+Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In practice all admins have both, but code checks are explicit (`roles.contains("ROLE_ADMIN")`).
+
+---
+
+### How System Roles Are Assigned
+
+**Signup** (`POST /authentication/signup`): always creates the user with `ROLE_USER`. No self-service promotion exists.
+
+**Azure Entra ID login** (`POST /authentication/azure-login`): on first login the user is auto-created with `ROLE_USER` and `authProvider = "AZURE"`. Subsequent logins update the user's profile fields but never change the role — Azure group membership is **not** synced to roles.
+
+**Admin promotion**: only an existing `ROLE_ADMIN` can promote another user via the administration API. Ordinary users cannot change their own role.
+
+**Fallback administrator**: a special bootstrap account created at startup from the `ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` environment variables. It has `ROLE_ADMIN` and `isFallbackAdministrator = true`. It cannot be deleted, disabled, or have its password changed via the regular API. It can use password-based login even when Azure authentication is configured for all other users.
+
+---
+
+### Entity-Level Ownership Roles
+
+Each content object carries named ownership fields that confer edit permission on that specific object only. These are **not global roles**.
+
+| Object type         | Primary owner field                        | Secondary fields                        |
+|---------------------|--------------------------------------------|-----------------------------------------|
+| Business Entity     | `dataOwner`                                | `dataSteward`, `technicalCustodian`     |
+| Process             | `processOwner`                             | `processSteward`, `technicalCustodian`  |
+| Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian` |
+
+The creator of an object is set as its primary owner at creation time. Only `ROLE_ADMIN` can reassign ownership fields.
+
+`dataSteward`, `technicalCustodian`, and `businessSteward` are informational — they appear in analytics and audit views but do not grant edit permission.
+
+---
+
+### Computed (Inherited) Ownership
+
+If a Business Entity or Process has no explicit owner set, the system derives one from the object's position in the domain model:
+
+```
+effective owner = explicit owner
+              ?? boundedContext.owningUnit.businessOwner
+```
+
+This computed owner is treated identically to an explicit owner for permission checks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
+
+---
+
+### Permission Matrix
+
+| Operation                                                         | `ROLE_USER` (non-owner) | Object owner / effective owner |    `ROLE_ADMIN`    |
+|-------------------------------------------------------------------|:-----------------------:|:------------------------------:|:------------------:|
+| Read any object                                                   |            ✓            |               ✓                |         ✓          |
+| Create a new object (becomes owner)                               |            ✓            |               —                |         ✓          |
+| Edit object properties (names, fields, classifications)           |            ✗            |               ✓                |         ✓          |
+| Reassign ownership fields (`dataOwner`, `processOwner`, stewards) |            ✗            |               ✗                |         ✓          |
+| Delete an object                                                  |            ✗            |               ✓                |         ✓          |
+| User management (create, enable/disable, delete users)            |            ✗            |               ✗                |         ✓          |
+| Delete fallback admin user                                        |            ✗            |               ✗                | ✗ (blocked always) |
+
+**Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
+
+**Organisational Unit ownership** has no edit permission check in the current implementation — any authenticated user can edit org unit properties.
+
+---
+
+### Account Status
+
+| Field                                               | Effect                                                                        |
+|-----------------------------------------------------|-------------------------------------------------------------------------------|
+| `user.enabled = false`                              | Login rejected; set by admin via the disable endpoint.                        |
+| `user.setupCompleted = false` (fallback admin only) | Frontend redirects to `/setup` after login to complete initial configuration. |
+| JWT expiry                                          | Tokens expire after 3600 seconds; no refresh mechanism.                       |
+
+No failed-login lockout mechanism exists.
+
+---
+
+### Frontend Role Checks
+
+The frontend derives three booleans from the JWT payload and the fetched entity:
+
+```typescript
+const isAdmin      = user?.roles?.includes('ROLE_ADMIN') ?? false;
+const isOwner      = user?.username === entity?.dataOwner?.username;  // explicit only
+const canEdit      = isAdmin || isOwner;
+```
+
+These control the visibility of edit buttons, ownership assignment UI, and admin-only sections. They are **UI convenience only** — the server re-validates every mutation independently.
+
+Route-level guards:
+- `ProtectedRoute` — redirects unauthenticated users to `/login`.
+- `AdminRoute` — redirects non-admin users; used for the Settings and Administration sections.

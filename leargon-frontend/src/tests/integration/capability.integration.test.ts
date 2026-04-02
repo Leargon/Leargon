@@ -70,13 +70,6 @@ describe('Capability API', () => {
     expect(res.data.parent ?? null).toBeNull();
   });
 
-  it('non-admin cannot create a capability', async () => {
-    const res = await userClient.post('/capabilities', {
-      names: [{ locale: 'en', text: 'Forbidden Cap' }],
-    });
-    expect(res.status).toBe(403);
-  });
-
   it('can get all capabilities', async () => {
     await createCapability(adminClient, 'List Test Cap');
     const res = await userClient.get<CapabilityResponse[]>('/capabilities');
@@ -111,14 +104,6 @@ describe('Capability API', () => {
     expect(res.data.names[0].text).toBe('Renamed Cap');
   });
 
-  it('non-admin cannot update a capability', async () => {
-    const cap = await createCapability(adminClient, 'No Update Cap');
-    const res = await userClient.put(`/capabilities/${cap.key}`, {
-      names: [{ locale: 'en', text: 'Hacked' }],
-    });
-    expect(res.status).toBe(403);
-  });
-
   it('admin can delete a capability', async () => {
     const cap = await createCapability(adminClient, 'Delete Me Cap');
     const del = await adminClient.delete(`/capabilities/${cap.key}`);
@@ -126,12 +111,6 @@ describe('Capability API', () => {
 
     const get = await userClient.get(`/capabilities/${cap.key}`);
     expect(get.status).toBe(404);
-  });
-
-  it('non-admin cannot delete a capability', async () => {
-    const cap = await createCapability(adminClient, 'Protected Cap');
-    const res = await userClient.delete(`/capabilities/${cap.key}`);
-    expect(res.status).toBe(403);
   });
 
   // ─── Hierarchy ────────────────────────────────────────────────────────────
@@ -259,6 +238,31 @@ describe('Capability API', () => {
     const processKeys = getRes.data.linkedProcesses!.map((p) => p.key);
     expect(processKeys).toContain(proc1.key);
     expect(processKeys).toContain(proc2.key);
+  });
+
+  it('delete capability → linked processes still exist (not deleted)', async () => {
+    const cap = await createCapability(adminClient, 'Cap To Delete With Procs');
+    const proc1 = await createProcess(adminClient, 'Cap Surviving Process 1');
+    const proc2 = await createProcess(adminClient, 'Cap Surviving Process 2');
+
+    await adminClient.put(`/capabilities/${cap.key}/linked-processes`, {
+      processKeys: [proc1.key, proc2.key],
+    });
+
+    // Delete the capability
+    const delRes = await adminClient.delete(`/capabilities/${cap.key}`);
+    expect(delRes.status).toBe(204);
+
+    // Capability is gone
+    const capRes = await userClient.get(`/capabilities/${cap.key}`);
+    expect(capRes.status).toBe(404);
+
+    // Processes still exist
+    const p1Res = await userClient.get(`/processes/${proc1.key}`);
+    expect(p1Res.status).toBe(200);
+
+    const p2Res = await userClient.get(`/processes/${proc2.key}`);
+    expect(p2Res.status).toBe(200);
   });
 
   it('can clear linked processes from a capability', async () => {

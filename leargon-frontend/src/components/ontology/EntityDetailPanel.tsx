@@ -457,7 +457,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         actions={<>
           {isOwnerOrAdmin && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
-              {t('entity.addChildEntity')}
+              {t('common.addChildEntity')}
             </Button>
           )}
           {isOwnerOrAdmin && (

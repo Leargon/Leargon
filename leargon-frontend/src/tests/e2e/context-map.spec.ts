@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uid, createDomain, ADMIN } from './api-setup';
+import { uid, createDomain, createBoundedContext, ADMIN } from './api-setup';
 
 // ─── Context Map Page ──────────────────────────────────────────────────────
 
@@ -21,44 +21,38 @@ test.describe('Context Map (Admin)', () => {
   });
 
   test('admin can create a context relationship from domain detail', async ({ page }) => {
-    const upName = uid('PW Upstream');
-    const downName = uid('PW Downstream');
+    const domainKey = (await createDomain(uid('PW Rel Domain'))).key as string;
 
-    const upDomain = await createDomain(upName);
-    const downDomain = await createDomain(downName);
-    const upKey = upDomain.key as string;
-    const downKey = downDomain.key as string;
+    // Need 2+ BCs in the same domain — the dialog selects from this domain's BCs
+    const bcA = uid('BC Alpha');
+    const bcB = uid('BC Beta');
+    await createBoundedContext(domainKey, bcA);
+    await createBoundedContext(domainKey, bcB);
 
-    // Navigate to upstream domain
-    await page.goto(`/domains/${upKey}`);
+    await page.goto(`/domains/${domainKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Click Add Relationship button
-    const addBtn = page.getByRole('button', { name: 'Add Relationship' });
-    await expect(addBtn).toBeVisible({ timeout: 10_000 });
-    await addBtn.click();
+    // Add Relationship button appears when domain has >= 2 BCs
+    await expect(page.getByRole('button', { name: 'Add Relationship' })).toBeVisible({ timeout: 10_000 });
+    await page.getByRole('button', { name: 'Add Relationship' }).click();
 
-    // Fill in dialog
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
 
-    // Select partner domain
-    const partnerAutocomplete = dialog.locator('input').first();
-    await partnerAutocomplete.fill(downName);
-    await page.waitForTimeout(500);
-    const option = page.getByRole('option').first();
-    if (await option.isVisible()) {
-      await option.click();
-    }
+    // Select upstream BC (first autocomplete)
+    await dialog.locator('input').first().fill(bcA.slice(0, 7));
+    await page.waitForTimeout(300);
+    await page.getByRole('option').filter({ hasText: bcA }).click();
 
-    // Click Create
+    // Select downstream BC (second autocomplete)
+    await dialog.locator('input').nth(1).fill(bcB.slice(0, 7));
+    await page.waitForTimeout(300);
+    await page.getByRole('option').filter({ hasText: bcB }).click();
+
     await dialog.getByRole('button', { name: 'Create' }).click();
     await page.waitForLoadState('networkidle');
 
-    // The dialog should close
     await expect(dialog).not.toBeVisible({ timeout: 5_000 });
-
-    // Context Relationships section should now show the relationship
     await expect(page.getByText('Context Relationships')).toBeVisible({ timeout: 5_000 });
   });
 

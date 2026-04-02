@@ -34,6 +34,6 @@ test.describe('Classification multiValue — Settings', () => {
     // Wait for dialog to close
     await expect(dialog).not.toBeVisible({ timeout: 5000 });
     // We cannot easily assert "not present" for a specific chip without targeting it — just check page loaded
-    await expect(page.getByText('Classifications')).toBeVisible();
+    await expect(page.getByText('Classifications').first()).toBeVisible();
   });
 });

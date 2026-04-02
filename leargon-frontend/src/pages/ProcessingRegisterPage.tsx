@@ -4,7 +4,7 @@ import {
   Box, Typography, TextField, Table, TableHead, TableBody, TableRow, TableCell,
   TableContainer, Paper, Chip, LinearProgress, Tooltip, FormControlLabel,
   Switch, Button, InputAdornment, Menu, MenuItem, IconButton, Select,
-  CircularProgress, ClickAwayListener,
+  CircularProgress, ClickAwayListener, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
   Search, FileDownload, CheckCircle, Warning, ArrowDropDown,
@@ -19,12 +19,16 @@ import {
   useUpdateProcessSecurityMeasures,
 } from '../api/generated/process/process';
 import type { ProcessResponse } from '../api/generated/model/processResponse';
+import type { LocalizedText, SupportedLocaleResponse } from '../api/generated/model';
 import { LegalBasis } from '../api/generated/model/legalBasis';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
+import { useGetSupportedLocales } from '../api/generated/locale/locale';
+import TranslationEditor from '../components/common/TranslationEditor';
 import { downloadExport } from '../api/exportApi';
 import { useNavigate } from 'react-router-dom';
 import ComplianceSetupWizard from '../components/compliance/ComplianceSetupWizard';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const LEGAL_BASIS_COLORS: Record<string, 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'> = {
   CONSENT: 'primary',
@@ -53,17 +57,18 @@ interface ProcessRowProps {
   canEdit: boolean;
   onSaved: () => void;
   getLocalizedText: (names: any, fallback?: string) => string;
+  locales: SupportedLocaleResponse[];
   t: (key: string, opts?: any) => string;
 }
 
 const ProcessRow: React.FC<ProcessRowProps> = ({
-  process, allProcesses, level, canEdit, onSaved, getLocalizedText, t,
+  process, allProcesses, level, canEdit, onSaved, getLocalizedText, locales, t,
 }) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [editingField, setEditingField] = useState<EditingField>(null);
-  const [purposeValue, setPurposeValue] = useState('');
-  const [securityMeasuresValue, setSecurityMeasuresValue] = useState('');
+  const [purposeValue, setPurposeValue] = useState<LocalizedText[]>([]);
+  const [securityMeasuresValue, setSecurityMeasuresValue] = useState<LocalizedText[]>([]);
   const [saving, setSaving] = useState(false);
 
   const updateLegalBasis = useUpdateProcessLegalBasis();
@@ -91,7 +96,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const handlePurposeSave = useCallback(async () => {
     setSaving(true);
     try {
-      await updatePurpose.mutateAsync({ key: process.key, data: { purpose: purposeValue || null } });
+      await updatePurpose.mutateAsync({ key: process.key, data: { purpose: purposeValue.length > 0 ? purposeValue : undefined } });
       onSaved();
     } finally {
       setSaving(false);
@@ -102,7 +107,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const handleSecurityMeasuresSave = useCallback(async () => {
     setSaving(true);
     try {
-      await updateSecurityMeasures.mutateAsync({ key: process.key, data: { securityMeasures: securityMeasuresValue || null } });
+      await updateSecurityMeasures.mutateAsync({ key: process.key, data: { securityMeasures: securityMeasuresValue.length > 0 ? securityMeasuresValue : undefined } });
       onSaved();
     } finally {
       setSaving(false);
@@ -113,14 +118,14 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const startEditPurpose = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canEdit) return;
-    setPurposeValue(process.purpose ?? '');
+    setPurposeValue([...(process.purpose ?? [])]);
     setEditingField('purpose');
   };
 
   const startEditSecurityMeasures = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!canEdit) return;
-    setSecurityMeasuresValue(process.securityMeasures ?? '');
+    setSecurityMeasuresValue([...(process.securityMeasures ?? [])]);
     setEditingField('securityMeasures');
   };
 
@@ -204,64 +209,22 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           )}
         </TableCell>
 
-        {/* Purpose — inline text edit */}
-        <TableCell onClick={editingField !== 'purpose' ? startEditPurpose : undefined}
-          sx={canEdit && editingField !== 'purpose' ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
-          {editingField === 'purpose' ? (
-            <ClickAwayListener onClickAway={() => setEditingField(null)}>
-              <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-start' }} onClick={(e) => e.stopPropagation()}>
-                <TextField
-                  autoFocus
-                  size="small"
-                  multiline
-                  rows={2}
-                  value={purposeValue}
-                  onChange={(e) => setPurposeValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditingField(null); }}
-                  sx={{ flex: 1, fontSize: '0.8125rem' }}
-                />
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                  <IconButton size="small" color="primary" onClick={handlePurposeSave} disabled={saving}>
-                    {saving ? <CircularProgress size={14} /> : <CheckCircle sx={{ fontSize: 16 }} />}
-                  </IconButton>
-                </Box>
-              </Box>
-            </ClickAwayListener>
-          ) : (
-            <Typography variant="body2" color={process.purpose ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
-              sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.purpose && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
-              {process.purpose || (canEdit ? t('common.clickToEdit') : '—')}
-            </Typography>
-          )}
+        {/* Purpose — click opens dialog */}
+        <TableCell onClick={startEditPurpose}
+          sx={canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
+          <Typography variant="body2" color={process.purpose?.length ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
+            sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.purpose?.length && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
+            {getLocalizedText(process.purpose ?? [], canEdit ? t('common.clickToEdit') : '—')}
+          </Typography>
         </TableCell>
 
-        {/* Security Measures (TOM) — inline text edit */}
-        <TableCell onClick={editingField !== 'securityMeasures' ? startEditSecurityMeasures : undefined}
-          sx={canEdit && editingField !== 'securityMeasures' ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
-          {editingField === 'securityMeasures' ? (
-            <ClickAwayListener onClickAway={() => setEditingField(null)}>
-              <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'flex-start' }} onClick={(e) => e.stopPropagation()}>
-                <TextField
-                  autoFocus
-                  size="small"
-                  multiline
-                  rows={2}
-                  value={securityMeasuresValue}
-                  onChange={(e) => setSecurityMeasuresValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditingField(null); }}
-                  sx={{ flex: 1, fontSize: '0.8125rem' }}
-                />
-                <IconButton size="small" color="primary" onClick={handleSecurityMeasuresSave} disabled={saving}>
-                  {saving ? <CircularProgress size={14} /> : <CheckCircle sx={{ fontSize: 16 }} />}
-                </IconButton>
-              </Box>
-            </ClickAwayListener>
-          ) : (
-            <Typography variant="body2" color={process.securityMeasures ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
-              sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.securityMeasures && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
-              {process.securityMeasures || (canEdit ? t('common.clickToEdit') : '—')}
-            </Typography>
-          )}
+        {/* Security Measures (TOM) — click opens dialog */}
+        <TableCell onClick={startEditSecurityMeasures}
+          sx={canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
+          <Typography variant="body2" color={process.securityMeasures?.length ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
+            sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.securityMeasures?.length && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
+            {getLocalizedText(process.securityMeasures ?? [], canEdit ? t('common.clickToEdit') : '—')}
+          </Typography>
         </TableCell>
 
         {/* Personal Data — true if any input/output entity is classified as containing personal data */}
@@ -274,10 +237,10 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           />
         </TableCell>
 
-        {/* Data Subject Categories — read-only (root ancestor of each input/output entity) */}
+        {/* Data Subject Categories — read-only (root ancestor of each effective input/output entity) */}
         <TableCell>
           {(() => {
-            const allEntities = [...(process.inputEntities ?? []), ...(process.outputEntities ?? [])];
+            const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
             // For each entity: if it has no parent it IS the root; otherwise use rootKey/rootName
             const rootMap = new Map<string, string>();
             for (const e of allEntities) {
@@ -299,10 +262,10 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           })()}
         </TableCell>
 
-        {/* Personal Data Categories — read-only (all assigned input+output entities) */}
+        {/* Personal Data Categories — read-only (all effective input+output entities) */}
         <TableCell>
           {(() => {
-            const allEntities = [...(process.inputEntities ?? []), ...(process.outputEntities ?? [])];
+            const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
             const unique = Array.from(new Map(allEntities.map((e) => [e.key, e.name])).entries());
             if (unique.length === 0) return <Typography variant="body2" color="text.secondary">—</Typography>;
             const label = unique.map(([, name]) => name).join(', ');
@@ -344,6 +307,52 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
         </TableCell>
       </TableRow>
 
+      {/* Purpose edit dialog */}
+      <Dialog open={editingField === 'purpose'} onClose={() => setEditingField(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('process.purpose')}</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TranslationEditor
+            locales={locales}
+            names={purposeValue}
+            descriptions={[]}
+            onNamesChange={setPurposeValue}
+            onDescriptionsChange={() => {}}
+            hideDescriptions
+            multilineNames
+            namePlaceholder={t('process.purposePlaceholder')}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditingField(null)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handlePurposeSave} disabled={saving}>
+            {saving ? <CircularProgress size={16} /> : t('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Security measures edit dialog */}
+      <Dialog open={editingField === 'securityMeasures'} onClose={() => setEditingField(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('process.securityMeasures')}</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TranslationEditor
+            locales={locales}
+            names={securityMeasuresValue}
+            descriptions={[]}
+            onNamesChange={setSecurityMeasuresValue}
+            onDescriptionsChange={() => {}}
+            hideDescriptions
+            multilineNames
+            namePlaceholder={t('process.securityMeasuresPlaceholder')}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditingField(null)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handleSecurityMeasuresSave} disabled={saving}>
+            {saving ? <CircularProgress size={16} /> : t('common.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {hasChildren && expanded && children.map((child) => (
         <ProcessRow
           key={child.key}
@@ -353,6 +362,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           canEdit={canEdit}
           onSaved={onSaved}
           getLocalizedText={getLocalizedText}
+          locales={locales}
           t={t}
         />
       ))}
@@ -365,7 +375,10 @@ const ProcessingRegisterPage: React.FC = () => {
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { data: localesResponse } = useGetSupportedLocales();
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { mode } = useWizardMode();
   const [search, setSearch] = useState('');
   const [missingOnly, setMissingOnly] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
@@ -379,8 +392,8 @@ const ProcessingRegisterPage: React.FC = () => {
   const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => (p as any).legalBasis);
 
   useEffect(() => {
-    if (hasNoLegalBases && !complianceWizardDismissed) setComplianceWizardOpen(true);
-  }, [hasNoLegalBases, complianceWizardDismissed]);
+    if (hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
+  }, [hasNoLegalBases, complianceWizardDismissed, mode]);
 
   const handleComplianceWizardClose = () => {
     setComplianceWizardOpen(false);
@@ -467,6 +480,12 @@ const ProcessingRegisterPage: React.FC = () => {
               <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/processing-register', 'processing-register.csv'); }}>
                 {t('compliance.exportProcessingRegister')}
               </MenuItem>
+              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/data-processors', 'service-providers.csv'); }}>
+                {t('compliance.exportDataProcessors')}
+              </MenuItem>
+              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/dpia-register', 'dpia-register.csv'); }}>
+                {t('compliance.exportDpiaRegister')}
+              </MenuItem>
             </Menu>
           </>
         )}
@@ -510,6 +529,7 @@ const ProcessingRegisterPage: React.FC = () => {
                   canEdit={canEdit}
                   onSaved={invalidateProcesses}
                   getLocalizedText={getLocalizedText}
+                  locales={locales}
                   t={t as any}
                 />
               ))

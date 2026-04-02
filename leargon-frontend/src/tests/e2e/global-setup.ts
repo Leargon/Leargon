@@ -41,6 +41,10 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     .withExposedPorts(8080)
     .withEnvironment({
       MICRONAUT_SERVER_PORT: '8080',
+      DB_URL:
+        'jdbc:mysql://mysql:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true',
+      DB_USERNAME: 'leargon',
+      DB_PASSWORD: 'leargon',
       DATASOURCES_DEFAULT_URL:
         'jdbc:mysql://mysql:3306/leargon?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true',
       DATASOURCES_DEFAULT_USERNAME: 'leargon',
@@ -51,7 +55,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       ADMIN_PASSWORD: 'AdminPass123!',
     })
     .withWaitStrategy(
-      Wait.forHttp('/health', 8080).forStatusCode(200).withStartupTimeout(180_000),
+      Wait.forHttp('/health', 8080).forStatusCode(200).withStartupTimeout(300_000),
     )
     .start();
 

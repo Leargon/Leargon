@@ -8,10 +8,11 @@ import {
 
 test.describe('Service Providers Page — Admin', () => {
   test('Service Providers page shows empty state', async ({ page }) => {
+    await createServiceProvider(uid('PW Empty State SP'));
     await page.goto('/service-providers');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Select a service provider')).toBeVisible();
+    await expect(page.getByText('Select a service provider')).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can create a service provider via UI', async ({ page }) => {
@@ -29,7 +30,7 @@ test.describe('Service Providers Page — Admin', () => {
 
     await page.waitForLoadState('networkidle');
     // After creation, navigates to the detail; provider name appears in list
-    await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can delete a service provider via UI', async ({ page }) => {
@@ -41,15 +42,15 @@ test.describe('Service Providers Page — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     // Click the Delete button in the detail panel header
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).first().click();
 
     // Confirm deletion dialog
     const confirmDialog = page.getByRole('dialog');
-    await confirmDialog.getByRole('button', { name: 'Delete' }).click();
+    await confirmDialog.getByRole('button', { name: 'Delete', exact: true }).click();
 
     await page.waitForLoadState('networkidle');
-    // Should navigate back to list; provider no longer in list
-    await expect(page.getByText(name)).not.toBeVisible({ timeout: 10_000 });
+    // Should navigate back to list; detail panel for the deleted provider should be gone
+    await expect(page.getByRole('heading', { name })).not.toBeVisible({ timeout: 10_000 });
   });
 });
 

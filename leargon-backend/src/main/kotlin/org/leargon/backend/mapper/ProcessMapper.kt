@@ -1,6 +1,7 @@
 package org.leargon.backend.mapper
 
 import jakarta.inject.Singleton
+import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
@@ -53,9 +54,11 @@ open class ProcessMapper(
         val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
         val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
         val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian
-        val allProcessEntities = process.inputEntities + process.outputEntities
+        val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
+        val effectiveOutputEntities = collectEffectiveEntities(process) { it.outputEntities }
+        val allEffectiveEntities = (effectiveInputEntities + effectiveOutputEntities).distinctBy { it.key }
         val containsPersonalData =
-            allProcessEntities.any { entity ->
+            allEffectiveEntities.any { entity ->
                 entity.classificationAssignments.any {
                     it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
                 }
@@ -77,13 +80,15 @@ open class ProcessMapper(
             .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
             .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
             .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
+            .effectiveInputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveInputEntities))
+            .effectiveOutputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveOutputEntities))
             .executingUnits(toOrgUnitSummaryList(process.executingUnits))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
             .legalBasis(toLegalBasis(process.legalBasis))
-            .purpose(process.purpose)
-            .securityMeasures(process.securityMeasures)
+            .purpose(LocalizedTextMapper.toModel(process.purpose))
+            .securityMeasures(LocalizedTextMapper.toModel(process.securityMeasures))
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
@@ -123,6 +128,24 @@ open class ProcessMapper(
 
     companion object {
         private val CALLED_ELEMENT_REGEX = Regex("""calledElement="([^"]+)"""")
+
+        @JvmStatic
+        fun collectEffectiveEntities(
+            process: Process,
+            selector: (Process) -> Collection<BusinessEntity>
+        ): List<BusinessEntity> {
+            val seen = mutableSetOf<String>()
+            val result = mutableListOf<BusinessEntity>()
+
+            fun collect(p: Process) {
+                for (entity in selector(p)) {
+                    if (seen.add(entity.key)) result.add(entity)
+                }
+                for (child in p.children) collect(child)
+            }
+            collect(process)
+            return result
+        }
 
         @JvmStatic
         fun extractCalledProcessKeys(bpmnXml: String?): List<String> {

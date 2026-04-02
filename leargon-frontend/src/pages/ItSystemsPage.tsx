@@ -9,10 +9,12 @@ import ItSystemsSetupWizard from '../components/it-systems/ItSystemsSetupWizard'
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllItSystems } from '../api/generated/it-system/it-system';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ItSystemsPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -22,8 +24,8 @@ const ItSystemsPage: React.FC = () => {
   const isEmpty = !isLoading && systems.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -32,8 +34,8 @@ const ItSystemsPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="IT Systems"
-      subtitle="Systems used in business processes"
+      title={t('itSystem.pageTitle')}
+      subtitle={t('itSystem.pageSubtitle')}
       list={<ItSystemListPanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
@@ -41,8 +43,8 @@ const ItSystemsPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Computer sx={{ fontSize: 64 }} />}
-            title={isEmpty ? t('wizard.onboarding.itSystems.emptyTitle') : 'Select an IT system'}
-            subtitle={isEmpty ? t('wizard.onboarding.itSystems.emptyDescription') : 'Choose a system from the list to view its details'}
+            title={isEmpty ? t('wizard.onboarding.itSystems.emptyTitle') : t('itSystem.selectTitle')}
+            subtitle={isEmpty ? t('wizard.onboarding.itSystems.emptyDescription') : t('itSystem.selectSubtitle')}
             action={isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.itSystems.emptyButton')}

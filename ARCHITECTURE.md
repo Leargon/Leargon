@@ -44,7 +44,7 @@ C4Container
 
   System_Boundary(leargon, "Léargon") {
     Container(frontend, "Web App", "React 19 / TypeScript / Vite", "Single-page application served by nginx. Provides the data catalogue UI, process diagrams, user management, and settings screens.")
-    Container(backend, "REST API", "Kotlin / Micronaut 4.6 / JVM 21", "Stateless HTTP API. Enforces business rules, authentication (local JWT + Azure), multilingual data, versioning, and classification logic.")
+    Container(backend, "REST API", "Kotlin 2.3 / Micronaut 4.10 / JVM 21", "Stateless HTTP API. Enforces business rules, authentication (local JWT + Azure), multilingual data, versioning, and classification logic.")
     ContainerDb(db, "Database", "MySQL 8.4", "Stores users, business entities, domains, processes, org units, classifications, version history, and supported locales.")
   }
 
@@ -72,7 +72,7 @@ C4Component
   ContainerDb(db, "MySQL 8.4", "Relational DB")
   System_Ext(azure, "Azure Entra ID", "JWKS endpoint")
 
-  Container_Boundary(api, "REST API — Micronaut 4.6 / Kotlin") {
+  Container_Boundary(api, "REST API — Micronaut 4.10 / Kotlin 2.3") {
 
     Component(sec, "Security Layer", "Micronaut Security / Kotlin", "UserPasswordAuthenticationProvider (BCrypt), AzureTokenValidator (RS256/JWKS), PasswordEncoder (BCrypt-12)")
     Component(ctrl, "Controllers (11)", "Micronaut @Controller / Kotlin", "AuthenticationController, BusinessDomainController, BusinessEntityController, ProcessController, ClassificationController, OrganisationalUnitController, UserController, AdministrationController, LocaleController, SetupController, (OpenAPI-generated interfaces)")
@@ -214,7 +214,7 @@ C4Deployment
       }
 
       Deployment_Node(backendNode, "leargon-backend", "eclipse-temurin:21-jre-alpine · host 8081 → container 8080") {
-        Container(backendApp, "Léargon REST API", "Kotlin / Micronaut 4.6 / JVM 21 · listens :8080", "Shadow JAR. Liquibase runs migrations at startup.")
+        Container(backendApp, "Léargon REST API", "Kotlin 2.3 / Micronaut 4.10 / JVM 21 · listens :8080", "Shadow JAR. Liquibase runs migrations at startup.")
       }
 
       Deployment_Node(frontendNode, "leargon-frontend", "nginx:alpine · host 3000 → container 80") {

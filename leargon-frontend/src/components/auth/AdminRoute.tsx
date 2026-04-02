@@ -31,7 +31,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const isAdmin = user && user.roles && user.roles.includes('ROLE_ADMIN');
 
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;

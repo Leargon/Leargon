@@ -87,6 +87,7 @@ import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import ProcessCreationWizard from './ProcessCreationWizard';
 import NudgeBanner from '../common/NudgeBanner';
 import WhatNextBanner from '../common/WhatNextBanner';
 
@@ -195,6 +196,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
+  const [subProcessWizardOpen, setSubProcessWizardOpen] = useState(false);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -345,17 +347,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   });
 
   // Purpose inline edit
-  const purposeEdit = useInlineEdit<string>({
+  const purposeEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val || undefined } });
+      await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val.length > 0 ? val : undefined } });
       invalidate();
     },
   });
 
   // Security measures inline edit
-  const securityMeasuresEdit = useInlineEdit<string>({
+  const securityMeasuresEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updateSecurityMeasures.mutateAsync({ key: processKey, data: { securityMeasures: val || undefined } });
+      await updateSecurityMeasures.mutateAsync({ key: processKey, data: { securityMeasures: val.length > 0 ? val : undefined } });
       invalidate();
     },
   });
@@ -469,6 +471,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const inputCandidates = allEntities.filter((e) => !inputEntityKeys.has(e.key));
   const outputCandidates = allEntities.filter((e) => !outputEntityKeys.has(e.key));
 
+  const effectiveInputEntities = process.effectiveInputEntities || [];
+  const effectiveOutputEntities = process.effectiveOutputEntities || [];
+  const hasSubProcessEntities =
+    effectiveInputEntities.some((e) => !inputEntityKeys.has(e.key)) ||
+    effectiveOutputEntities.some((e) => !outputEntityKeys.has(e.key));
+  const hasAnyEffectiveEntities = effectiveInputEntities.length > 0 || effectiveOutputEntities.length > 0;
+  const hasChildProcesses = (process.childProcesses?.length ?? 0) > 0;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
@@ -489,6 +499,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={`${process.missingMandatoryFields!.length} missing`} size="small" color="warning" />
           )}
           {dpia && <Chip label="DPIA active" size="small" color="secondary" />}
+          {isOwnerOrAdmin && !hasAnyEffectiveEntities && (
+            <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
+          )}
         </>}
         actions={isOwnerOrAdmin ? (
           <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
@@ -518,7 +531,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {process.containsPersonalData && isOwnerOrAdmin && (() => {
         const missing = [];
         if (!process.legalBasis) missing.push(t('nudge.missingFields.fields.legalBasis'));
-        if (!process.purpose) missing.push(t('nudge.missingFields.fields.purpose'));
+        if (!process.purpose?.length) missing.push(t('nudge.missingFields.fields.purpose'));
         if (!dpia && !isDpiaLoading) missing.push('DPIA');
         if (!missing.length) return null;
         return (
@@ -529,6 +542,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           />
         );
       })()}
+
+      {/* No entity coverage warning */}
+      {isOwnerOrAdmin && !hasAnyEffectiveEntities && (
+        <NudgeBanner
+          severity="warning"
+          title={t('nudge.process.noEntityCoverageTitle')}
+          message={hasChildProcesses ? t('nudge.process.noEntityCoverageMessageWithChildren') : t('nudge.process.noEntityCoverageMessage')}
+        />
+      )}
 
       {/* Names & Descriptions */}
       <SectionHeader title={t('process.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
@@ -824,6 +846,54 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         t={t as (key: string) => string}
       />
 
+      {hasSubProcessEntities && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('process.effectiveEntitiesTitle')}
+            </Typography>
+            {effectiveInputEntities.length > 0 && (
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">{t('process.effectiveInputEntities')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                  {effectiveInputEntities.map((e) => (
+                    <Chip
+                      key={e.key}
+                      label={e.name || e.key}
+                      size="small"
+                      variant={inputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
+                      onClick={() => navigate(`/entities/${e.key}`)}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            {effectiveOutputEntities.length > 0 && (
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('process.effectiveOutputEntities')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                  {effectiveOutputEntities.map((e) => (
+                    <Chip
+                      key={e.key}
+                      label={e.name || e.key}
+                      size="small"
+                      variant={outputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
+                      onClick={() => navigate(`/entities/${e.key}`)}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              {t('process.effectiveEntitiesHint')}
+            </Typography>
+          </Box>
+        </>
+      )}
+
       <Divider sx={{ my: 2 }} />
 
       {/* Executing Units */}
@@ -896,44 +966,50 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
         <PropRow label={t('process.purpose')} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
-          onEdit={() => purposeEdit.startEdit(process.purpose || '')} onSave={purposeEdit.save}
+          onEdit={() => purposeEdit.startEdit([...(process.purpose ?? [])])} onSave={purposeEdit.save}
           onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
           {purposeEdit.isEditing ? (
             <Box>
-              <TextField
-                size="small" multiline rows={4}
-                value={purposeEdit.editValue || ''}
-                onChange={(e) => purposeEdit.setEditValue(e.target.value)}
-                placeholder={t('process.purposePlaceholder')}
-                sx={{ width: '100%' }}
+              <TranslationEditor
+                locales={locales}
+                names={purposeEdit.editValue ?? []}
+                descriptions={[]}
+                onNamesChange={(n) => purposeEdit.setEditValue(n)}
+                onDescriptionsChange={() => {}}
+                hideDescriptions
+                multilineNames
+                namePlaceholder={t('process.purposePlaceholder')}
               />
               {purposeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{purposeEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.purpose ? 'text.primary' : 'text.secondary'}
+            <Typography variant="body2" color={process.purpose?.length ? 'text.primary' : 'text.secondary'}
               sx={{ whiteSpace: 'pre-wrap' }}>
-              {process.purpose || t('common.notSet')}
+              {getLocalizedText(process.purpose ?? [], t('common.notSet'))}
             </Typography>
           )}
         </PropRow>
         <PropRow label={t('process.securityMeasures')} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
-          onEdit={() => securityMeasuresEdit.startEdit(process.securityMeasures || '')} onSave={securityMeasuresEdit.save}
+          onEdit={() => securityMeasuresEdit.startEdit([...(process.securityMeasures ?? [])])} onSave={securityMeasuresEdit.save}
           onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
           {securityMeasuresEdit.isEditing ? (
             <Box>
-              <TextField
-                size="small" multiline rows={4}
-                value={securityMeasuresEdit.editValue || ''}
-                onChange={(e) => securityMeasuresEdit.setEditValue(e.target.value)}
-                placeholder={t('process.securityMeasuresPlaceholder')}
-                sx={{ width: '100%' }}
+              <TranslationEditor
+                locales={locales}
+                names={securityMeasuresEdit.editValue ?? []}
+                descriptions={[]}
+                onNamesChange={(n) => securityMeasuresEdit.setEditValue(n)}
+                onDescriptionsChange={() => {}}
+                hideDescriptions
+                multilineNames
+                namePlaceholder={t('process.securityMeasuresPlaceholder')}
               />
               {securityMeasuresEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{securityMeasuresEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.securityMeasures ? 'text.primary' : 'text.secondary'}
+            <Typography variant="body2" color={process.securityMeasures?.length ? 'text.primary' : 'text.secondary'}
               sx={{ whiteSpace: 'pre-wrap' }}>
-              {process.securityMeasures || t('common.notSet')}
+              {getLocalizedText(process.securityMeasures ?? [], t('common.notSet'))}
             </Typography>
           )}
         </PropRow>
@@ -1277,9 +1353,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Box>
 
       {/* Child Processes */}
-      {process.childProcesses && process.childProcesses.length > 0 && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Child Processes</Typography>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="subtitle2">Child Processes</Typography>
+          {isOwnerOrAdmin && (
+            <Button size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
+              {t('process.addSubProcess')}
+            </Button>
+          )}
+        </Box>
+        {process.childProcesses && process.childProcesses.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {process.childProcesses.map((child) => (
               <Chip
@@ -1291,8 +1374,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               />
             ))}
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
+      <ProcessCreationWizard
+        open={subProcessWizardOpen}
+        onClose={() => setSubProcessWizardOpen(false)}
+        parentProcessKey={processKey}
+      />
 
       {/* Process Diagram */}
       <Accordion

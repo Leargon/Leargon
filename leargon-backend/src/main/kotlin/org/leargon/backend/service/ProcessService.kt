@@ -216,12 +216,18 @@ open class ProcessService(
     @Transactional
     open fun updatePurpose(
         key: String,
-        purpose: String?,
+        purpose: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
-        process.purpose = purpose
+        val domainPurpose =
+            purpose
+                ?.map {
+                    org.leargon.backend.domain
+                        .LocalizedText(it.locale, it.text)
+                }?.toMutableList()
+        process.purpose = domainPurpose
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated purpose")
         process = getProcessByKey(process.key)
@@ -231,12 +237,18 @@ open class ProcessService(
     @Transactional
     open fun updateSecurityMeasures(
         key: String,
-        securityMeasures: String?,
+        securityMeasures: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
-        process.securityMeasures = securityMeasures
+        val domainMeasures =
+            securityMeasures
+                ?.map {
+                    org.leargon.backend.domain
+                        .LocalizedText(it.locale, it.text)
+                }?.toMutableList()
+        process.securityMeasures = domainMeasures
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated security measures")
         process = getProcessByKey(process.key)

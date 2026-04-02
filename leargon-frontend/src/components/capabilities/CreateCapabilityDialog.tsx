@@ -12,6 +12,7 @@ import {
   Alert,
   Box,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useCreateCapability,
@@ -30,6 +31,7 @@ interface CreateCapabilityDialogProps {
 }
 
 const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
@@ -59,7 +61,7 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
 
   const handleCreate = async () => {
     if (!hasDefaultName) {
-      setError('Please provide a name in the default locale');
+      setError(t('capabilityDialog.errorNameRequired'));
       return;
     }
     try {
@@ -76,7 +78,7 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
         navigate(`/capabilities/${res.data.key}`);
       }
     } catch {
-      setError('Failed to create capability');
+      setError(t('capabilityDialog.errorFailed'));
     }
   };
 
@@ -85,7 +87,7 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>New Capability</DialogTitle>
+      <DialogTitle>{t('capabilityDialog.createTitle')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <TranslationEditor
@@ -102,7 +104,7 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
           value={selectedParent}
           onChange={(_, val) => setParentKey(val?.key ?? null)}
           renderInput={(params) => (
-            <TextField {...params} label="Parent Capability (optional)" size="small" sx={{ mt: 2 }} />
+            <TextField {...params} label={t('capabilityDialog.parentLabel')} size="small" sx={{ mt: 2 }} />
           )}
         />
         <Autocomplete
@@ -111,15 +113,15 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
           value={selectedUnit}
           onChange={(_, val) => setOwningUnitKey(val?.key ?? null)}
           renderInput={(params) => (
-            <TextField {...params} label="Owning Org Unit (optional)" size="small" sx={{ mt: 2 }} />
+            <TextField {...params} label={t('capabilityDialog.owningUnitLabel')} size="small" sx={{ mt: 2 }} />
           )}
         />
         <Box sx={{ mt: 1 }} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button onClick={handleCreate} variant="contained" disabled={createCapability.isPending}>
-          {createCapability.isPending ? <CircularProgress size={16} /> : 'Create'}
+          {createCapability.isPending ? <CircularProgress size={16} /> : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>

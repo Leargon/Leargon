@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   FormControl,
@@ -57,6 +57,14 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
+  const parentDomain = parentKey ? allDomains.find((d) => d.key === parentKey) : undefined;
+
+  // Pre-fill owning unit from parent when dialog opens
+  useEffect(() => {
+    if (open && parentDomain?.owningUnit?.key) {
+      setOwningUnitKey(parentDomain.owningUnit.key);
+    }
+  }, [open, parentDomain?.owningUnit?.key]);
 
   // Step 1 — Identity
   const [names, setNames] = useState<LocalizedText[]>([]);
@@ -170,11 +178,11 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
             onDescriptionsChange={setDescriptions}
           />
           <FormControl size="small">
-            <InputLabel>{t('process.domainType') || 'Domain Type'}</InputLabel>
+            <InputLabel>{t('wizard.domain.domainType') || 'Domain Type'}</InputLabel>
             <Select
               value={domainType}
               onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
-              label={t('process.domainType') || 'Domain Type'}
+              label={t('wizard.domain.domainType') || 'Domain Type'}
             >
               <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
               {DOMAIN_TYPE_VALUES.map((dt) => (

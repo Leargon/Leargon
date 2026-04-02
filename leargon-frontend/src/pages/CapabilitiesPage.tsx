@@ -11,11 +11,13 @@ import { StrategicMapContent } from './StrategicMapPage';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllCapabilities } from '../api/generated/capability/capability';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const CapabilitiesPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const navigate = useNavigate();
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -26,8 +28,8 @@ const CapabilitiesPage: React.FC = () => {
   const isEmpty = !isLoading && caps.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);

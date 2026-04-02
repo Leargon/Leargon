@@ -38,6 +38,7 @@ async function apiFetch(
   if (!res.ok) {
     throw new Error(`${method} ${urlPath} → ${res.status}: ${await res.text()}`);
   }
+  if (res.status === 204 || res.headers.get('content-length') === '0') return {};
   return res.json() as Promise<Record<string, unknown>>;
 }
 
@@ -70,7 +71,7 @@ export const createOrgUnit = (
   apiFetch(
     '/organisational-units',
     'POST',
-    { names: [{ locale: 'en', text: name }], ...(leadUsername ? { leadUsername } : {}) },
+    { names: [{ locale: 'en', text: name }], ...(leadUsername ? { businessOwnerUsername: leadUsername } : {}) },
     as,
   );
 
@@ -102,14 +103,24 @@ export const setProcessPurpose = (
   purpose: string | null,
   as = ADMIN,
 ): Promise<Record<string, unknown>> =>
-  apiFetch(`/processes/${processKey}/purpose`, 'PUT', { purpose }, as);
+  apiFetch(
+    `/processes/${processKey}/purpose`,
+    'PUT',
+    { purpose: purpose != null ? [{ locale: 'en', text: purpose }] : null },
+    as,
+  );
 
 export const setProcessSecurityMeasures = (
   processKey: string,
   securityMeasures: string | null,
   as = ADMIN,
 ): Promise<Record<string, unknown>> =>
-  apiFetch(`/processes/${processKey}/security-measures`, 'PUT', { securityMeasures }, as);
+  apiFetch(
+    `/processes/${processKey}/security-measures`,
+    'PUT',
+    { securityMeasures: securityMeasures != null ? [{ locale: 'en', text: securityMeasures }] : null },
+    as,
+  );
 
 export const updateCrossBorderTransfers = (
   entityKey: string,
@@ -135,6 +146,18 @@ export const createBoundedContext = (
     { names: [{ locale: 'en', text: name }] },
     as,
   );
+
+export const createItSystem = (
+  name: string,
+  extras?: Record<string, unknown>,
+): Promise<Record<string, unknown>> =>
+  apiFetch('/it-systems', 'POST', { names: [{ locale: 'en', text: name }], ...extras }, ADMIN);
+
+export const linkItSystemToProcesses = (
+  itSystemKey: string,
+  processKeys: string[],
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/it-systems/${itSystemKey}/linked-processes`, 'PUT', { processKeys }, ADMIN);
 
 export const createCapability = (
   name: string,

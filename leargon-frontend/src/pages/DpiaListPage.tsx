@@ -24,6 +24,7 @@ import type { DpiaListItemResponse } from '../api/generated/model/dpiaListItemRe
 import { DpiaListItemResponseLinkedResourceType } from '../api/generated/model/dpiaListItemResponseLinkedResourceType';
 import { ResidualRisk } from '../api/generated/model/residualRisk';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { downloadExport } from '../api/exportApi';
 
 const RISK_COLORS: Record<string, 'success' | 'warning' | 'error'> = {
@@ -43,6 +44,7 @@ interface DpiaRowProps {
 
 const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSaved }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [editingRisk, setEditingRisk] = useState(false);
   const [riskDescription, setRiskDescription] = useState(dpia.riskDescription ?? '');
@@ -143,13 +145,13 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               <CheckCircle fontSize="small" color="success" />
             )}
             <Typography variant="body2">
-              {dpia.status === 'IN_PROGRESS' ? 'In Progress' : 'Completed'}
+              {dpia.status === 'IN_PROGRESS' ? t('dpia.statusInProgress') : t('dpia.statusCompleted')}
             </Typography>
             {canEdit && (
               dpia.status === 'IN_PROGRESS' ? (
                 <IconButton
                   size="small"
-                  title="Mark as Completed"
+                  title={t('dpia.markCompleted')}
                   onClick={handleComplete}
                   disabled={saving === 'status'}
                   sx={{ p: 0.25, ml: 0.25 }}
@@ -159,7 +161,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               ) : (
                 <IconButton
                   size="small"
-                  title="Reopen"
+                  title={t('dpia.reopen')}
                   onClick={handleReopen}
                   disabled={saving === 'status'}
                   sx={{ p: 0.25, ml: 0.25 }}
@@ -193,7 +195,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
         <TableCell>
           {dpia.linkedResourceType && (
             <Chip
-              label={dpia.linkedResourceType === DpiaListItemResponseLinkedResourceType.PROCESS ? 'Process' : 'Entity'}
+              label={dpia.linkedResourceType === DpiaListItemResponseLinkedResourceType.PROCESS ? t('dpia.typeProcess') : t('dpia.typeEntity')}
               size="small"
               variant="outlined"
             />
@@ -215,7 +217,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                 sx={{ minWidth: 100, fontSize: '0.8125rem' }}
                 displayEmpty
               >
-                <MenuItem value=""><em>Not set</em></MenuItem>
+                <MenuItem value=""><em>{t('dpia.notSet')}</em></MenuItem>
                 {RESIDUAL_RISK_OPTIONS.map((r) => (
                   <MenuItem key={r} value={r}>{r}</MenuItem>
                 ))}
@@ -228,7 +230,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
           ) : (
             <Typography variant="body2" color={canEdit ? 'primary' : 'text.secondary'}
               sx={{ fontStyle: canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
-              {canEdit ? 'Click to set' : '—'}
+              {canEdit ? t('dpia.clickToSet') : '—'}
             </Typography>
           )}
         </TableCell>
@@ -271,7 +273,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               {/* Risk Description */}
               <Box>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
-                  Risk Description
+                  {t('dpia.riskDescription')}
                 </Typography>
                 {canEdit ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
@@ -280,7 +282,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                       multiline
                       rows={3}
                       fullWidth
-                      placeholder="Describe the identified risks..."
+                      placeholder={t('dpia.riskPlaceholder')}
                       value={riskDescription}
                       onChange={(e) => setRiskDescription(e.target.value)}
                     />
@@ -290,7 +292,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                       onClick={handleSaveRiskDescription}
                       disabled={saving === 'riskDescription'}
                     >
-                      {saving === 'riskDescription' ? <CircularProgress size={14} /> : 'Save'}
+                      {saving === 'riskDescription' ? <CircularProgress size={14} /> : t('common.save')}
                     </Button>
                   </Box>
                 ) : (
@@ -303,7 +305,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               {/* Measures */}
               <Box>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
-                  Mitigation Measures
+                  {t('dpia.measures')}
                 </Typography>
                 {canEdit ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
@@ -312,7 +314,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                       multiline
                       rows={3}
                       fullWidth
-                      placeholder="Describe the mitigation measures..."
+                      placeholder={t('dpia.measuresPlaceholder')}
                       value={measures}
                       onChange={(e) => setMeasures(e.target.value)}
                     />
@@ -322,7 +324,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                       onClick={handleSaveMeasures}
                       disabled={saving === 'measures'}
                     >
-                      {saving === 'measures' ? <CircularProgress size={14} /> : 'Save'}
+                      {saving === 'measures' ? <CircularProgress size={14} /> : t('common.save')}
                     </Button>
                   </Box>
                 ) : (
@@ -341,6 +343,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
 
 const DpiaListPage: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const [search, setSearch] = useState('');
@@ -374,22 +377,22 @@ const DpiaListPage: React.FC = () => {
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 0.5 }}>
-        <Typography variant="h5" fontWeight={600}>DPIA Register</Typography>
-        <Typography variant="body2" color="text.secondary">Data Protection Impact Assessments</Typography>
+        <Typography variant="h5" fontWeight={600}>{t('dpia.registerTitle')}</Typography>
+        <Typography variant="body2" color="text.secondary">{t('dpia.registerSubtitle')}</Typography>
       </Box>
 
       {/* Summary chips */}
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Chip label={`${inProgress} In Progress`} color="info" size="small" variant="outlined" />
-        <Chip label={`${completed} Completed`} color="success" size="small" variant="outlined" />
-        {highRisk > 0 && <Chip label={`${highRisk} High Risk`} color="error" size="small" />}
+        <Chip label={t('dpia.chipInProgress', { count: inProgress })} color="info" size="small" variant="outlined" />
+        <Chip label={t('dpia.chipCompleted', { count: completed })} color="success" size="small" variant="outlined" />
+        {highRisk > 0 && <Chip label={t('dpia.chipHighRisk', { count: highRisk })} color="error" size="small" />}
       </Box>
 
       {/* Toolbar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <TextField
           size="small"
-          placeholder="Search DPIAs..."
+          placeholder={t('dpia.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 280 }}
@@ -407,7 +410,7 @@ const DpiaListPage: React.FC = () => {
               endIcon={<ArrowDropDown />}
               onClick={(e) => setExportAnchorEl(e.currentTarget)}
             >
-              Export
+              {t('common.export')}
             </Button>
             <Menu
               anchorEl={exportAnchorEl}
@@ -415,7 +418,7 @@ const DpiaListPage: React.FC = () => {
               onClose={() => setExportAnchorEl(null)}
             >
               <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/dpia-register', 'dpia-register.csv'); }}>
-                Export DPIA Register (CSV)
+                {t('dpia.exportCsv')}
               </MenuItem>
             </Menu>
           </>
@@ -427,13 +430,13 @@ const DpiaListPage: React.FC = () => {
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Linked Resource</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Residual Risk</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>FDPIC Consultation</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Triggered By</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colStatus')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colLinkedResource')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colType')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colResidualRisk')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colFdpic')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colTriggeredBy')}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('dpia.colCreated')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -445,7 +448,7 @@ const DpiaListPage: React.FC = () => {
               <TableRow>
                 <TableCell colSpan={7} align="center">
                   <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                    {dpias.length === 0 ? 'No DPIAs recorded yet' : 'No results'}
+                    {dpias.length === 0 ? t('dpia.noRecorded') : t('dpia.noResults')}
                   </Typography>
                 </TableCell>
               </TableRow>

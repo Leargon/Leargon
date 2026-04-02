@@ -10,12 +10,14 @@ import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPag
 import { tokenStorage } from '../utils/tokenStorage';
 import { useGetAllBusinessDomains } from '../api/generated/business-domain/business-domain';
 import { useTranslation } from 'react-i18next';
+import { useWizardMode } from '../context/WizardModeContext';
 
 const ContextMapDiagram = lazy(() => import('../components/diagrams/ContextMapDiagram'));
 
 const DomainsPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -26,8 +28,8 @@ const DomainsPage: React.FC = () => {
   const isEmpty = !isLoading && domains.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed) setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed]);
+    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);

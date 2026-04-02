@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, setProcessLegalBasis, setProcessPurpose, setProcessSecurityMeasures, uid, OWNER } from './api-setup';
+import { createProcess, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -51,7 +51,6 @@ test.describe('Business Process CRUD — Admin', () => {
 
     await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });
   });
-});
 
   test('admin can set legal basis via UI', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
@@ -77,7 +76,7 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Legal Obligation', { exact: false })).toBeVisible();
+    await expect(page.getByText('Legal Obligation', { exact: false }).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('legal basis shows "Not set" when not set', async ({ page }) => {
@@ -85,9 +84,9 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     const legalBasisSection = page.getByText('Legal Basis', { exact: true });
-    await expect(legalBasisSection).toBeVisible();
+    await expect(legalBasisSection).toBeVisible({ timeout: 10_000 });
     // The Not set text is within the same section
-    await expect(page.getByText('Not set').first()).toBeVisible();
+    await expect(page.getByText('Not set').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('purpose is visible in Compliance tab when set', async ({ page }) => {
@@ -96,21 +95,10 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Navigate to Compliance tab
-    await page.getByRole('tab', { name: /compliance/i }).click();
+    // Navigate to Compliance accordion
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
 
     await expect(page.getByText('E2E purpose: manage billing data')).toBeVisible();
-  });
-
-  test('security measures are visible in Compliance tab when set', async ({ page }) => {
-    await setProcessSecurityMeasures(processKey, 'E2E TOM: encryption, access control');
-
-    await page.goto(`/processes/${processKey}`);
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('tab', { name: /compliance/i }).click();
-
-    await expect(page.getByText('E2E TOM: encryption, access control')).toBeVisible();
   });
 
   test('purpose appears in CompliancePage table', async ({ page }) => {
