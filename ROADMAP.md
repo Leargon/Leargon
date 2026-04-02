@@ -5,9 +5,7 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| ~~Sub-domain/entity/sub-process owner default~~ *(done)* | — | — | 7/10 | — |
 | Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
-| ~~Process effective entity roll-up~~ *(done)* | — | — | 8/10 | — |
 | Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
 | Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
@@ -50,7 +48,7 @@
 
 ---
 
-## Priority · BPMN Sub-process Inline Expansion
+## BPMN Sub-process Inline Expansion
 
 *Inline expand/collapse of linked call-activity sub-processes directly inside the process BPMN diagram — no navigation away, no popup. The expanded sub-process content is rendered as a nested read-only plane within the same canvas; the parent diagram remains visible and navigable. Screenshots to be provided by user before implementation.*
 
@@ -88,7 +86,7 @@
 
 ---
 
-## Backlog · BPMN Pools for IT Systems, Executing Units & Subcontractors
+## BPMN Pools for IT Systems, Executing Units & Subcontractors
 
 *Swim-lane pools in process BPMN diagrams to visualise which IT system, org unit, or external sub-processor is responsible for each task. Depends on IT Systems, Org Units, and Data Processors being linked to a process (already implemented). Requires design decision on pool assignment storage.*
 
