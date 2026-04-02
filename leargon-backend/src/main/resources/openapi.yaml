@@ -7532,13 +7532,17 @@ components:
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
         purpose:
-          type: string
+          type: array
           nullable: true
-          description: Purpose of processing (Zweck der Bearbeitung)
+          description: Purpose of processing (Zweck der Bearbeitung) — localised
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         securityMeasures:
-          type: string
+          type: array
           nullable: true
-          description: Technical and organisational security measures (TOM)
+          description: Technical and organisational security measures (TOM) — localised
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
@@ -7999,14 +8003,18 @@ components:
       type: object
       properties:
         purpose:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateProcessSecurityMeasuresRequest:
       type: object
       properties:
         securityMeasures:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateProcessTypeRequest:
       type: object
       properties:

@@ -34,8 +34,8 @@ const ItSystemsPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="IT Systems"
-      subtitle="Systems used in business processes"
+      title={t('itSystem.pageTitle')}
+      subtitle={t('itSystem.pageSubtitle')}
       list={<ItSystemListPanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
@@ -43,8 +43,8 @@ const ItSystemsPage: React.FC = () => {
         ) : (
           <EmptyDetailState
             icon={<Computer sx={{ fontSize: 64 }} />}
-            title={isEmpty ? t('wizard.onboarding.itSystems.emptyTitle') : 'Select an IT system'}
-            subtitle={isEmpty ? t('wizard.onboarding.itSystems.emptyDescription') : 'Choose a system from the list to view its details'}
+            title={isEmpty ? t('wizard.onboarding.itSystems.emptyTitle') : t('itSystem.selectTitle')}
+            subtitle={isEmpty ? t('wizard.onboarding.itSystems.emptyDescription') : t('itSystem.selectSubtitle')}
             action={isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.itSystems.emptyButton')}

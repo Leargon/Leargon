@@ -345,17 +345,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   });
 
   // Purpose inline edit
-  const purposeEdit = useInlineEdit<string>({
+  const purposeEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val || undefined } });
+      await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val.length > 0 ? val : undefined } });
       invalidate();
     },
   });
 
   // Security measures inline edit
-  const securityMeasuresEdit = useInlineEdit<string>({
+  const securityMeasuresEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updateSecurityMeasures.mutateAsync({ key: processKey, data: { securityMeasures: val || undefined } });
+      await updateSecurityMeasures.mutateAsync({ key: processKey, data: { securityMeasures: val.length > 0 ? val : undefined } });
       invalidate();
     },
   });
@@ -518,7 +518,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {process.containsPersonalData && isOwnerOrAdmin && (() => {
         const missing = [];
         if (!process.legalBasis) missing.push(t('nudge.missingFields.fields.legalBasis'));
-        if (!process.purpose) missing.push(t('nudge.missingFields.fields.purpose'));
+        if (!process.purpose?.length) missing.push(t('nudge.missingFields.fields.purpose'));
         if (!dpia && !isDpiaLoading) missing.push('DPIA');
         if (!missing.length) return null;
         return (
@@ -896,44 +896,50 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
         <PropRow label={t('process.purpose')} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
-          onEdit={() => purposeEdit.startEdit(process.purpose || '')} onSave={purposeEdit.save}
+          onEdit={() => purposeEdit.startEdit([...(process.purpose ?? [])])} onSave={purposeEdit.save}
           onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
           {purposeEdit.isEditing ? (
             <Box>
-              <TextField
-                size="small" multiline rows={4}
-                value={purposeEdit.editValue || ''}
-                onChange={(e) => purposeEdit.setEditValue(e.target.value)}
-                placeholder={t('process.purposePlaceholder')}
-                sx={{ width: '100%' }}
+              <TranslationEditor
+                locales={locales}
+                names={purposeEdit.editValue ?? []}
+                descriptions={[]}
+                onNamesChange={(n) => purposeEdit.setEditValue(n)}
+                onDescriptionsChange={() => {}}
+                hideDescriptions
+                multilineNames
+                namePlaceholder={t('process.purposePlaceholder')}
               />
               {purposeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{purposeEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.purpose ? 'text.primary' : 'text.secondary'}
+            <Typography variant="body2" color={process.purpose?.length ? 'text.primary' : 'text.secondary'}
               sx={{ whiteSpace: 'pre-wrap' }}>
-              {process.purpose || t('common.notSet')}
+              {getLocalizedText(process.purpose ?? [], t('common.notSet'))}
             </Typography>
           )}
         </PropRow>
         <PropRow label={t('process.securityMeasures')} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
-          onEdit={() => securityMeasuresEdit.startEdit(process.securityMeasures || '')} onSave={securityMeasuresEdit.save}
+          onEdit={() => securityMeasuresEdit.startEdit([...(process.securityMeasures ?? [])])} onSave={securityMeasuresEdit.save}
           onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
           {securityMeasuresEdit.isEditing ? (
             <Box>
-              <TextField
-                size="small" multiline rows={4}
-                value={securityMeasuresEdit.editValue || ''}
-                onChange={(e) => securityMeasuresEdit.setEditValue(e.target.value)}
-                placeholder={t('process.securityMeasuresPlaceholder')}
-                sx={{ width: '100%' }}
+              <TranslationEditor
+                locales={locales}
+                names={securityMeasuresEdit.editValue ?? []}
+                descriptions={[]}
+                onNamesChange={(n) => securityMeasuresEdit.setEditValue(n)}
+                onDescriptionsChange={() => {}}
+                hideDescriptions
+                multilineNames
+                namePlaceholder={t('process.securityMeasuresPlaceholder')}
               />
               {securityMeasuresEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{securityMeasuresEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.securityMeasures ? 'text.primary' : 'text.secondary'}
+            <Typography variant="body2" color={process.securityMeasures?.length ? 'text.primary' : 'text.secondary'}
               sx={{ whiteSpace: 'pre-wrap' }}>
-              {process.securityMeasures || t('common.notSet')}
+              {getLocalizedText(process.securityMeasures ?? [], t('common.notSet'))}
             </Typography>
           )}
         </PropRow>

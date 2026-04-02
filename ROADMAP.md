@@ -5,11 +5,8 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| Data governance guided setup *(partial)*      | 0.5      | 5%     | 8/10  | **16.0** |
 | Sub-domain owning unit default                | 0.5      | 5%     | 7/10  | **14.0** |
-| DSG/GDPR compliance guided setup *(partial)*  | 1        | 10%    | 9/10  | **9.0**  |
 | Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
-| DDD guided setup *(partial)*                  | 1        | 10%    | 8/10  | **8.0**  |
 | Process effective entity roll-up              | 1.5      | 15%    | 8/10  | **5.3**  |
 | Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
 | Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
@@ -157,50 +154,6 @@
 
 ---
 
-## DSG / GDPR compliance guided setup
-*Checklist-based wizard for privacy officers and DPOs to build the processing register, classify personal data, document legal bases, and trigger DPIAs — all grounded in the existing catalogue. No new tables.*
-*⏱ Sessions: 1 (remaining) · Weekly effort: ~10% · Value: 9/10 · Score: 9.0*
-
-*Partially implemented: the compliance wizard entry point is live on the processing register page and covers legal basis assignment and purpose documentation for all processes. The following steps are not yet implemented.*
-
-#### USER STORY 'Personal data classification step'
-**AS A** privacy officer\
-**IF** I open the compliance wizard\
-**I WANT** the wizard to check whether a personal data classification exists and, if not, show an inline shortcut to create one via the Classification Taxonomy Wizard\
-**SO THAT** business entities containing personal data are consistently labelled before I build the processing register
-
-#### USER STORY 'Processing activity identification step'
-**AS A** privacy officer\
-**IF** business processes exist in the catalogue\
-**I WANT** the wizard to walk me through reviewing each process and marking which ones involve personal data processing\
-**SO THAT** I can quickly scope the register to the relevant subset of all documented processes
-
-#### USER STORY 'Data processor inventory step'
-**AS A** privacy officer\
-**IF** third-party vendors process personal data on our behalf\
-**I WANT** the wizard to walk me through inventorying external data processors and linking them to the relevant processes\
-**SO THAT** processor agreements (GDPR Art. 28 / DSG Art. 9) are traceable in the system and not omitted
-
-#### USER STORY 'Cross-border transfer step'
-**AS A** privacy officer\
-**IF** data processors or processes involve transferring personal data outside Switzerland or the EU/EEA\
-**I WANT** the wizard to identify these transfers and prompt me to record the destination country and the transfer mechanism (SCCs, adequacy decision, BCRs, derogations)\
-**SO THAT** cross-border transfers are documented as required by DSG Art. 16 and GDPR Art. 44
-
-#### USER STORY 'DPIA triggering step'
-**AS A** privacy officer\
-**IF** I have identified processing activities that pose a high risk to data subjects (large-scale profiling, systematic monitoring, automated decision-making, special category data)\
-**I WANT** the wizard to flag these high-risk processes and prompt me to initiate a Data Protection Impact Assessment for each one\
-**SO THAT** no high-risk processing activity proceeds without a documented DPIA as required by GDPR Art. 35 and DSG Art. 22
-
-#### USER STORY 'Compliance readiness score'
-**AS A** privacy officer\
-**IF** I am building the organisation's compliance posture into Léargon\
-**I WANT** a readiness overview at the end of the wizard showing: how many processes lack a legal basis, how many entities lack a personal data category classification, how many data processors are linked, and how many DPIAs are outstanding\
-**SO THAT** I can close remaining gaps before an audit or supervisory inquiry
-
----
-
 ## Personal dashboard
 *Core implemented: home screen shows owned entities/processes (My Responsibilities), recent catalogue activity feed, needs-attention items, and governance maturity overview for admins. Remaining stories depend on Watch & notifications and Review cycles respectively.*
 
@@ -217,68 +170,6 @@
 **SO THAT** I can act on overdue reviews immediately and plan ahead for reviews that are coming up shortly
 
 ---
-
-## Data governance guided setup
-*Checklist-based wizard that helps CDOs, data stewards, and admins establish the foundational governance artefacts in the recommended order: classifications → entity catalogue → data owner assignment → process ownership → org unit assignment. No new tables.*
-*⏱ Sessions: 0.5 (remaining) · Weekly effort: ~5% · Value: 8/10 · Score: 16.0*
-
-*Partially implemented: the Classification Taxonomy Wizard (Settings → Classifications) and the Governance Maturity Overview (home screen, admin view) are shipped. What remains is a unified governance wizard entry point that chains these steps into a single guided flow with bulk-assign views.*
-
-#### USER STORY 'Governance setup wizard entry point'
-**AS A** CDO or data steward\
-**IF** my organisation is starting a data governance programme\
-**I WANT** to be guided through the recommended order of governance setup steps — classification taxonomy → entity ownership → classification coverage → process ownership — in a single wizard\
-**SO THAT** I build a governable data landscape without skipping foundational prerequisites
-
-#### USER STORY 'Data owner assignment step'
-**AS AN** admin or CDO\
-**IF** business entities exist in the catalogue without a designated data owner\
-**I WANT** the wizard to present a filtered list of unowned entities and allow me to assign owners in bulk from a single screen\
-**SO THAT** every data object has a responsible person before moving on to classifications
-
-#### USER STORY 'Entity classification coverage step'
-**AS A** data steward\
-**IF** business entities exist without mandatory classification assignments\
-**I WANT** the wizard to highlight which entities lack mandatory classifications and allow me to fill gaps inline\
-**SO THAT** the catalogue is complete and fit for governance reporting before the wizard is marked done
-
-#### USER STORY 'Process ownership step'
-**AS AN** admin\
-**IF** business processes exist without an assigned owner or executing organisational unit\
-**I WANT** the wizard to list unowned processes and allow me to assign owners or executing units in bulk\
-**SO THAT** every process has clear accountability once the governance foundation is in place
-
----
-
-## DDD guided setup
-*Checklist-based wizard that walks architects through the recommended Domain-Driven Design modelling steps from scratch. No new tables — the wizard state is stateless; progress is derived from what already exists in the catalogue.*
-*⏱ Sessions: 1 (remaining) · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
-
-*Partially implemented: the DDD Domain Model Wizard auto-opens when no domains exist and guides users through creating their first domain (including domain type), bounded context, and first entity. Context relationships, domain events, team assignments, and a progress indicator are not yet implemented.*
-
-#### USER STORY 'Context relationship step'
-**AS AN** architect\
-**IF** I have created two or more bounded contexts\
-**I WANT** the wizard to prompt me to define how contexts relate to each other (Partnership, Customer/Supplier, Shared Kernel, etc.) and explain the implications of each relationship type\
-**SO THAT** the integration topology and Conway's Law implications are explicitly modelled
-
-#### USER STORY 'Domain event assignment step'
-**AS AN** architect or domain expert\
-**IF** I have defined bounded contexts\
-**I WANT** the wizard to prompt me to identify at least one domain event per bounded context and assign it a publishing context\
-**SO THAT** asynchronous communication patterns are explicitly captured in the model from the beginning
-
-#### USER STORY 'Team assignment step'
-**AS AN** architect\
-**IF** I have defined bounded contexts and organisational units\
-**I WANT** the wizard to suggest assigning each bounded context to an owning organisational unit\
-**SO THAT** team topologies and ownership are reflected in the domain model
-
-#### USER STORY 'DDD setup progress indicator'
-**AS AN** architect\
-**IF** I am building my DDD model incrementally\
-**I WANT** a progress overview in the wizard showing which steps are complete (domains created, all classified, bounded contexts created, context relationships defined, domain events assigned, team assignments done)\
-**SO THAT** I know which gaps remain before the model is useful and coherent
 
 ---
 

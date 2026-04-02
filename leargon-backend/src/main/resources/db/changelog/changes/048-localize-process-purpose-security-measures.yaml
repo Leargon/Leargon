@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 048-localize-process-purpose-security-measures
+      author: leargon
+      comment: Convert purpose and security_measures from plain text to JSON LocalizedText arrays
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE processes
+              SET purpose = CONCAT('[{"locale":"en","text":', JSON_QUOTE(purpose), '}]')
+              WHERE purpose IS NOT NULL AND purpose != ''
+              AND NOT (TRIM(purpose) LIKE '[%' AND TRIM(purpose) LIKE '%]');
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE processes
+              SET security_measures = CONCAT('[{"locale":"en","text":', JSON_QUOTE(security_measures), '}]')
+              WHERE security_measures IS NOT NULL AND security_measures != ''
+              AND NOT (TRIM(security_measures) LIKE '[%' AND TRIM(security_measures) LIKE '%]');

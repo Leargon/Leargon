@@ -38,11 +38,13 @@ class Process {
     @Column(name = "legal_basis", length = 50)
     var legalBasis: String? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "purpose", columnDefinition = "TEXT")
-    var purpose: String? = null
+    var purpose: MutableList<LocalizedText>? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "security_measures", columnDefinition = "TEXT")
-    var securityMeasures: String? = null
+    var securityMeasures: MutableList<LocalizedText>? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_owner_id", nullable = true)

@@ -11,6 +11,8 @@ interface TranslationEditorProps {
   disabled?: boolean;
   nameErrors?: Record<string, string>;
   hideDescriptions?: boolean;
+  multilineNames?: boolean;
+  namePlaceholder?: string;
 }
 
 const TranslationEditor: React.FC<TranslationEditorProps> = ({
@@ -22,6 +24,8 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
   disabled = false,
   nameErrors = {},
   hideDescriptions = false,
+  multilineNames = false,
+  namePlaceholder,
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -90,7 +94,10 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
                 disabled={disabled}
                 error={!!nameErrors[locale.localeCode]}
                 helperText={nameErrors[locale.localeCode]}
-                inputProps={{ maxLength: 255 }}
+                multiline={multilineNames}
+                rows={multilineNames ? 4 : undefined}
+                placeholder={namePlaceholder}
+                inputProps={multilineNames ? undefined : { maxLength: 255 }}
               />
               {!hideDescriptions && (
                 <TextField

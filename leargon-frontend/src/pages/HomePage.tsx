@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
+  Button,
   Typography,
   Chip,
   Paper,
@@ -19,12 +20,14 @@ import {
   AssignmentInd,
   Storage,
   AccountTree,
+  AdminPanelSettings,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useGetDashboard } from '../api/generated/dashboard/dashboard';
 import type { AttentionItem, ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
 import MaturityOverview from '../components/dashboard/MaturityOverview';
+import GovernanceSetupWizard from '../components/settings/GovernanceSetupWizard';
 
 function useFormatRelativeTime() {
   const { t } = useTranslation();
@@ -214,20 +217,36 @@ const HomePage: React.FC = () => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: response, isLoading } = useGetDashboard();
   const dashboard = (response?.data) as import('../api/generated/model').DashboardResponse | undefined;
+  const [governanceWizardOpen, setGovernanceWizardOpen] = useState(false);
 
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto', maxWidth: 900 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>
-          {user?.firstName ? t('home.welcomeNamed', { name: user.firstName }) : t('home.welcome')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t('home.subtitle')}
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            {user?.firstName ? t('home.welcomeNamed', { name: user.firstName }) : t('home.welcome')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t('home.subtitle')}
+          </Typography>
+        </Box>
+        {isAdmin && (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AdminPanelSettings />}
+            onClick={() => setGovernanceWizardOpen(true)}
+            sx={{ flexShrink: 0 }}
+          >
+            {t('wizard.governance.title')}
+          </Button>
+        )}
       </Box>
 
       {/* Item 11: Governance Maturity Overview — admin only */}
       {isAdmin && <Box sx={{ mb: 3 }}><MaturityOverview /></Box>}
+
+      <GovernanceSetupWizard open={governanceWizardOpen} onClose={() => setGovernanceWizardOpen(false)} />
 
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
 

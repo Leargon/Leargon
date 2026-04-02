@@ -248,7 +248,7 @@ open class DashboardService(
         val processesWithProviders = personalDataProcesses.count { it.serviceProviders.isNotEmpty() }
 
         // 7. Process purpose documentation (has purpose text)
-        val processesWithPurpose = allProcesses.count { !it.purpose.isNullOrBlank() }
+        val processesWithPurpose = allProcesses.count { !it.purpose.isNullOrEmpty() }
 
         return MaturityMetricsResponse(
             listOf(
