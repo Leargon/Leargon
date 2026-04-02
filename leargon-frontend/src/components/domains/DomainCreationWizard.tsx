@@ -178,11 +178,11 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
             onDescriptionsChange={setDescriptions}
           />
           <FormControl size="small">
-            <InputLabel>{t('process.domainType') || 'Domain Type'}</InputLabel>
+            <InputLabel>{t('wizard.domain.domainType') || 'Domain Type'}</InputLabel>
             <Select
               value={domainType}
               onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
-              label={t('process.domainType') || 'Domain Type'}
+              label={t('wizard.domain.domainType') || 'Domain Type'}
             >
               <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
               {DOMAIN_TYPE_VALUES.map((dt) => (

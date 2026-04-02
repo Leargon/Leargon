@@ -325,6 +325,7 @@ const fr = {
     eventNameEnglish: 'Nom de l\'événement (anglais)',
     failedCreateBc: 'Échec de la création du contexte délimité',
     failedCreateEvent: 'Échec de la création de l\'événement de domaine',
+    parentDomain: 'Domaine parent',
   },
   boundedContext: {
     pageTitle: 'Contexte délimité',
@@ -594,6 +595,7 @@ const fr = {
       guidedVisionText: 'Un énoncé de vision capture la finalité à long terme de ce domaine en une ou deux phrases. Il aide les équipes à comprendre pourquoi le domaine existe et à quoi ressemble un état idéal.',
       guidedBcTitle: 'Qu\'est-ce qu\'un contexte délimité ?',
       guidedBcText: 'Un contexte délimité est la frontière de service explicite dans laquelle un modèle de domaine est cohérent et une équipe possède le code. Chaque contexte doit correspondre à un service déployable. Sans contexte délimité, les entités ne peuvent pas être liées à ce domaine.',
+      domainType: 'Type de domaine',
       errorNameRequired: 'Le nom dans la langue par défaut ({{locale}}) est requis',
       errorFailed: 'Impossible de créer le domaine',
     },

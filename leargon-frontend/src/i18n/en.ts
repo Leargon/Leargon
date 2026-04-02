@@ -325,6 +325,7 @@ const en = {
     eventNameEnglish: 'Event Name (English)',
     failedCreateBc: 'Failed to create bounded context',
     failedCreateEvent: 'Failed to create domain event',
+    parentDomain: 'Parent Domain',
   },
   boundedContext: {
     pageTitle: 'Bounded Context',
@@ -594,6 +595,7 @@ const en = {
       guidedVisionText: 'A vision statement captures the long-term purpose of this domain in one or two sentences. It helps teams understand why the domain exists and what "good" looks like — useful for onboarding and strategic reviews.',
       guidedBcTitle: 'What is a bounded context?',
       guidedBcText: 'A bounded context is the explicit service boundary within which a domain model is consistent and a team owns the code. Each context should map to a deployable service or a clearly owned subdomain. Without a bounded context, entities cannot be linked to this domain.',
+      domainType: 'Domain Type',
       errorNameRequired: 'Name in the default locale ({{locale}}) is required',
       errorFailed: 'Failed to create domain',
     },

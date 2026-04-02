@@ -325,6 +325,7 @@ const de = {
     eventNameEnglish: 'Ereignisname (Englisch)',
     failedCreateBc: 'Bounded Context konnte nicht erstellt werden',
     failedCreateEvent: 'Domänenereignis konnte nicht erstellt werden',
+    parentDomain: 'Übergeordnete Domäne',
   },
   boundedContext: {
     pageTitle: 'Begrenzter Kontext',
@@ -594,6 +595,7 @@ const de = {
       guidedVisionText: 'Eine Visionsbeschreibung fasst den langfristigen Zweck dieser Domäne in ein bis zwei Sätzen zusammen. Sie hilft Teams zu verstehen, warum die Domäne existiert und wie "gut" aussieht — nützlich für Onboarding und strategische Überprüfungen.',
       guidedBcTitle: 'Was ist ein Bounded Context?',
       guidedBcText: 'Ein Bounded Context ist die explizite Servicegrenze, innerhalb derer ein Domänenmodell konsistent ist und ein Team den Code verantwortet. Jeder Kontext sollte einem deployable Service oder einer klar verantworteten Teildomäne entsprechen. Ohne Bounded Context können Entitäten nicht mit dieser Domäne verknüpft werden.',
+      domainType: 'Domänentyp',
       errorNameRequired: 'Name in der Standardsprache ({{locale}}) ist erforderlich',
       errorFailed: 'Domäne konnte nicht erstellt werden',
     },
@@ -694,6 +696,8 @@ const de = {
       executingUnitsLabel: 'Ausführende Einheiten',
       summaryParent: 'Übergeordneter Prozess',
       summaryExecutingUnits: 'Ausführende Einheiten',
+      domainType: 'Domänentyp',
+      parentDomain: 'Übergeordnete Entität',
     },
     taxonomy: {
       title: 'Klassifikationstaxonomie einrichten',
