@@ -87,6 +87,7 @@ import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import DpiaSection from '../compliance/DpiaSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import ProcessCreationWizard from './ProcessCreationWizard';
 import NudgeBanner from '../common/NudgeBanner';
 import WhatNextBanner from '../common/WhatNextBanner';
 
@@ -195,6 +196,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [deleteError, setDeleteError] = useState('');
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
+  const [subProcessWizardOpen, setSubProcessWizardOpen] = useState(false);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
   const activeLocales = locales.filter((l) => l.isActive);
@@ -469,6 +471,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const inputCandidates = allEntities.filter((e) => !inputEntityKeys.has(e.key));
   const outputCandidates = allEntities.filter((e) => !outputEntityKeys.has(e.key));
 
+  const effectiveInputEntities = process.effectiveInputEntities || [];
+  const effectiveOutputEntities = process.effectiveOutputEntities || [];
+  const hasSubProcessEntities =
+    effectiveInputEntities.some((e) => !inputEntityKeys.has(e.key)) ||
+    effectiveOutputEntities.some((e) => !outputEntityKeys.has(e.key));
+  const hasAnyEffectiveEntities = effectiveInputEntities.length > 0 || effectiveOutputEntities.length > 0;
+  const hasChildProcesses = (process.childProcesses?.length ?? 0) > 0;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
@@ -489,6 +499,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={`${process.missingMandatoryFields!.length} missing`} size="small" color="warning" />
           )}
           {dpia && <Chip label="DPIA active" size="small" color="secondary" />}
+          {isOwnerOrAdmin && !hasAnyEffectiveEntities && (
+            <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
+          )}
         </>}
         actions={isOwnerOrAdmin ? (
           <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
@@ -529,6 +542,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           />
         );
       })()}
+
+      {/* No entity coverage warning */}
+      {isOwnerOrAdmin && !hasAnyEffectiveEntities && (
+        <NudgeBanner
+          severity="warning"
+          title={t('nudge.process.noEntityCoverageTitle')}
+          message={hasChildProcesses ? t('nudge.process.noEntityCoverageMessageWithChildren') : t('nudge.process.noEntityCoverageMessage')}
+        />
+      )}
 
       {/* Names & Descriptions */}
       <SectionHeader title={t('process.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
@@ -823,6 +845,54 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         navigate={navigate}
         t={t as (key: string) => string}
       />
+
+      {hasSubProcessEntities && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('process.effectiveEntitiesTitle')}
+            </Typography>
+            {effectiveInputEntities.length > 0 && (
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="caption" color="text.secondary">{t('process.effectiveInputEntities')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                  {effectiveInputEntities.map((e) => (
+                    <Chip
+                      key={e.key}
+                      label={e.name || e.key}
+                      size="small"
+                      variant={inputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
+                      onClick={() => navigate(`/entities/${e.key}`)}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            {effectiveOutputEntities.length > 0 && (
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t('process.effectiveOutputEntities')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                  {effectiveOutputEntities.map((e) => (
+                    <Chip
+                      key={e.key}
+                      label={e.name || e.key}
+                      size="small"
+                      variant={outputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
+                      onClick={() => navigate(`/entities/${e.key}`)}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              {t('process.effectiveEntitiesHint')}
+            </Typography>
+          </Box>
+        </>
+      )}
 
       <Divider sx={{ my: 2 }} />
 
@@ -1283,9 +1353,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Box>
 
       {/* Child Processes */}
-      {process.childProcesses && process.childProcesses.length > 0 && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Child Processes</Typography>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="subtitle2">Child Processes</Typography>
+          {isOwnerOrAdmin && (
+            <Button size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
+              {t('process.addSubProcess')}
+            </Button>
+          )}
+        </Box>
+        {process.childProcesses && process.childProcesses.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {process.childProcesses.map((child) => (
               <Chip
@@ -1297,8 +1374,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               />
             ))}
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
+      <ProcessCreationWizard
+        open={subProcessWizardOpen}
+        onClose={() => setSubProcessWizardOpen(false)}
+        parentProcessKey={processKey}
+      />
 
       {/* Process Diagram */}
       <Accordion

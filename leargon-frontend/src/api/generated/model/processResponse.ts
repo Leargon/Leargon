@@ -66,6 +66,10 @@ export interface ProcessResponse {
   boundedContext?: BoundedContextSummaryResponse | null;
   inputEntities?: BusinessEntitySummaryResponse[];
   outputEntities?: BusinessEntitySummaryResponse[];
+  /** Recursive union of input entities from this process and all descendant sub-processes (read-only computed field) */
+  effectiveInputEntities?: BusinessEntitySummaryResponse[];
+  /** Recursive union of output entities from this process and all descendant sub-processes (read-only computed field) */
+  effectiveOutputEntities?: BusinessEntitySummaryResponse[];
   executingUnits?: OrganisationalUnitSummaryResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
   parentProcess?: ProcessSummaryResponse;

@@ -7582,6 +7582,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        effectiveInputEntities:
+          type: array
+          description: Recursive union of input entities from this process and all descendant sub-processes (read-only computed field)
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+        effectiveOutputEntities:
+          type: array
+          description: Recursive union of output entities from this process and all descendant sub-processes (read-only computed field)
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         executingUnits:
           type: array
           items:

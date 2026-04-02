@@ -170,7 +170,7 @@ describe('Cross-Entity E2E', () => {
     // Process still exists, entity removed from inputs via DB cascade
     const procRes = await client.get(`/processes/${proc.key}`);
     expect(procRes.status).toBe(200);
-    expect(procRes.data.inputEntities.every((e: { key: string }) => e.key !== entity.key)).toBe(true);
+    expect((procRes.data.inputEntities ?? []).every((e: { key: string }) => e.key !== entity.key)).toBe(true);
   });
 
   it('should delete process → input/output entities still exist (not deleted)', async () => {

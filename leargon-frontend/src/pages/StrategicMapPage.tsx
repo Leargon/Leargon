@@ -133,14 +133,14 @@ export const StrategicMapContent: React.FC = () => {
           }}
         >
           {/* Header row */}
-          <Box sx={{ bgcolor: 'grey.100', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ bgcolor: 'action.selected', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
             <Typography variant="caption" fontWeight={600} color="text.secondary">
               Domain / Capability
             </Typography>
           </Box>
 
           {rootCapabilities.length === 0 ? (
-            <Box sx={{ bgcolor: 'grey.50', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ bgcolor: 'action.hover', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
               <Typography variant="caption" color="text.secondary">No capabilities defined</Typography>
             </Box>
           ) : (

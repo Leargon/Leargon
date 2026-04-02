@@ -237,10 +237,10 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           />
         </TableCell>
 
-        {/* Data Subject Categories — read-only (root ancestor of each input/output entity) */}
+        {/* Data Subject Categories — read-only (root ancestor of each effective input/output entity) */}
         <TableCell>
           {(() => {
-            const allEntities = [...(process.inputEntities ?? []), ...(process.outputEntities ?? [])];
+            const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
             // For each entity: if it has no parent it IS the root; otherwise use rootKey/rootName
             const rootMap = new Map<string, string>();
             for (const e of allEntities) {
@@ -262,10 +262,10 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           })()}
         </TableCell>
 
-        {/* Personal Data Categories — read-only (all assigned input+output entities) */}
+        {/* Personal Data Categories — read-only (all effective input+output entities) */}
         <TableCell>
           {(() => {
-            const allEntities = [...(process.inputEntities ?? []), ...(process.outputEntities ?? [])];
+            const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
             const unique = Array.from(new Map(allEntities.map((e) => [e.key, e.name])).entries());
             if (unique.length === 0) return <Typography variant="body2" color="text.secondary">—</Typography>;
             const label = unique.map(([, name]) => name).join(', ');

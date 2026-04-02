@@ -329,7 +329,7 @@ describe('Organisational Unit E2E', () => {
     // Child still exists and parent link is gone
     const childRes = await client.get(`/organisational-units/${child.key}`);
     expect(childRes.status).toBe(200);
-    expect(childRes.data.parents?.every((p: { key: string }) => p.key !== parent.key)).toBe(true);
+    expect((childRes.data.parents ?? []).every((p: { key: string }) => p.key !== parent.key)).toBe(true);
   });
 
   it('delete org unit → executing processes still exist, unit removed from executingUnits', async () => {
@@ -354,7 +354,7 @@ describe('Organisational Unit E2E', () => {
     // Process still exists, unit removed from executingUnits via DB cascade
     const procRes = await client.get(`/processes/${proc.key}`);
     expect(procRes.status).toBe(200);
-    expect(procRes.data.executingUnits?.every((u: { key: string }) => u.key !== unit.key)).toBe(true);
+    expect((procRes.data.executingUnits ?? []).every((u: { key: string }) => u.key !== unit.key)).toBe(true);
   });
 
   it('should reject deletion by non-lead user', async () => {

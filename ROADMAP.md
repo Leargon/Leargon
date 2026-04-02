@@ -5,9 +5,9 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| Sub-domain owning unit default                | 0.5      | 5%     | 7/10  | **14.0** |
+| ~~Sub-domain/entity/sub-process owner default~~ *(done)* | — | — | 7/10 | — |
 | Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
-| Process effective entity roll-up              | 1.5      | 15%    | 8/10  | **5.3**  |
+| ~~Process effective entity roll-up~~ *(done)* | — | — | 8/10 | — |
 | Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
 | Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
@@ -22,17 +22,6 @@
 | Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
 
 ---
-
-## Sub-domain owning unit default
-
-*When creating a sub-domain (a domain with a parent), pre-fill the owning unit field with the parent domain's owning unit as a default suggestion. The user can override it freely — this is a creation-time convenience, not a computed inheritance. No backend change required; the default is applied in the create dialog / Domain Creation Wizard before the request is sent.*
-*⏱ Sessions: 0.5 · Weekly effort: ~5% · Value: 7/10 · Score: 14.0*
-
-#### USER STORY 'Pre-fill owning unit when creating a sub-domain'
-**AS AN** architect or admin\
-**IF** I am creating a business domain and select a parent domain that has an owning organisational unit\
-**I WANT** the owning unit field to be pre-filled with the parent domain's owning unit\
-**SO THAT** I do not have to manually re-select the same unit for every sub-domain, while still being free to assign a different unit when the sub-domain is owned by a different team
 
 ---
 

@@ -4,6 +4,7 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDataQualityRule
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.Process
+import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -95,7 +96,11 @@ open class ExportService(
         for (process in processes) {
             val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
             val processOwnerName = process.processOwner?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
-            val allEntities = (process.inputEntities + process.outputEntities).distinctBy { it.key }
+            val allEntities =
+                (
+                    ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
+                        ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
+                ).distinctBy { it.key }
             val dataSubjectCategories =
                 allEntities
                     .map { rootEntity(it) }

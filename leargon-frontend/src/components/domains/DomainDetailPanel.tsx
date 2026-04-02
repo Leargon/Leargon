@@ -667,7 +667,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               <Typography variant="body2">
                 {domain.parent ? (
                   <Chip
-                    label={domain.parent.name}
+                    label={(() => {
+                      const full = allDomains.find((d) => d.key === domain.parent!.key);
+                      return full ? getLocalizedText(full.names, domain.parent!.key) : domain.parent!.name || domain.parent!.key;
+                    })()}
                     size="small"
                     onClick={() => navigate(`/domains/${domain.parent!.key}`)}
                     clickable

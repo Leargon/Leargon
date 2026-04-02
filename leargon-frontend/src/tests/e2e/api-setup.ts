@@ -103,14 +103,24 @@ export const setProcessPurpose = (
   purpose: string | null,
   as = ADMIN,
 ): Promise<Record<string, unknown>> =>
-  apiFetch(`/processes/${processKey}/purpose`, 'PUT', { purpose }, as);
+  apiFetch(
+    `/processes/${processKey}/purpose`,
+    'PUT',
+    { purpose: purpose != null ? [{ locale: 'en', text: purpose }] : null },
+    as,
+  );
 
 export const setProcessSecurityMeasures = (
   processKey: string,
   securityMeasures: string | null,
   as = ADMIN,
 ): Promise<Record<string, unknown>> =>
-  apiFetch(`/processes/${processKey}/security-measures`, 'PUT', { securityMeasures }, as);
+  apiFetch(
+    `/processes/${processKey}/security-measures`,
+    'PUT',
+    { securityMeasures: securityMeasures != null ? [{ locale: 'en', text: securityMeasures }] : null },
+    as,
+  );
 
 export const updateCrossBorderTransfers = (
   entityKey: string,
