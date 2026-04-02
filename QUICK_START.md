@@ -1,345 +1,202 @@
-# Quick Start Guide - Léargon Authentication System
+# Quick Start Guide — Léargon
 
 ## Prerequisites
-- Docker and Docker Compose installed
-Is- OR: Java 21, Gradle, Node.js 24+, MySQL 8
 
-## Option 1: Docker Compose (Easiest)
+- Docker and Docker Compose — **recommended path**
+- OR: Java 21+, Gradle 8+, Node.js 24+, MySQL 8.4 — for local development
+
+---
+
+## Option 1: Docker Compose (Recommended)
 
 ### Start Everything
+
 ```bash
-docker compose up --build
+docker compose up
 ```
+
+The first run builds both images from source. Subsequent starts are faster.
+To use the pre-built images from GitHub Container Registry instead, uncomment the `image:` lines in `docker-compose.yml`.
 
 ### Access the Application
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8081 (direct) or http://localhost:3000/api (via nginx proxy)
-- **Health Check**: http://localhost:8081/health
 
-### Stop Everything
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Backend API (direct) | http://localhost:8081 |
+| Backend API (via nginx proxy) | http://localhost:3000/api |
+
+### Stop / Clean Up
+
 ```bash
-docker compose down
+docker compose down          # stop containers, keep database volume
+docker compose down -v       # stop containers AND delete all data
 ```
 
-### Clean Up (Remove Database)
-```bash
-docker compose down -v
-```
+### Default Admin Credentials
+
+Configured via environment variables in `docker-compose.yml`:
+
+| Variable | Default (dev only) |
+|---|---|
+| `ADMIN_EMAIL` | `admin@leargon.local` |
+| `ADMIN_USERNAME` | `admin` |
+| `ADMIN_PASSWORD` | `ChangeMe123!` |
+
+> Change these before going to production. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full environment variable reference.
 
 ---
 
 ## Option 2: Local Development
 
 ### Step 1: Start MySQL
+
 ```bash
-docker run -d \
-  --name leargon-mysql \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=rootpassword \
-  -e MYSQL_DATABASE=leargon \
-  -e MYSQL_USER=leargon \
-  -e MYSQL_PASSWORD=leargon \
-  mysql:8.4
+docker compose up mysql
 ```
 
-### Step 2: Start Backend (New Terminal)
+Or point the backend at an existing MySQL 8.4 instance via the `DATASOURCES_DEFAULT_URL` environment variable.
+
+### Step 2: Start the Backend
+
 ```bash
 cd leargon-backend
-./gradlew run
+./gradlew run          # Linux / macOS
+gradlew.bat run        # Windows
 ```
 
-Backend will be available at: http://localhost:8080
+Backend starts at: http://localhost:8080
 
-### Step 3: Start Frontend (New Terminal)
+### Step 3: Start the Frontend
+
 ```bash
 cd leargon-frontend
+npm install
 npm run dev
 ```
 
-Frontend will be available at: http://localhost:5173
+Frontend starts at: http://localhost:5173 and proxies `/api/*` to the backend automatically.
 
 ---
 
-## Testing the Application
+## First Login
 
-### 1. Create an Account
-1. Go to http://localhost:3000 (or :5173)
-2. Click "Get Started" or "Sign Up" in the navbar
-3. Fill in the form:
-   - Email: your@email.com
-   - Username: yourusername
-   - Password: password123 (minimum 8 characters)
-   - First Name: Your Name
-   - Last Name: Last Name
-4. Click "Sign Up"
-5. You should be redirected to the Dashboard
+1. Open http://localhost:3000 (Docker Compose) or http://localhost:5173 (local dev).
+2. Click **Sign In** and log in with the admin credentials.
+3. The setup wizard runs on first login and guides you through creating your first domain, entity, and process.
 
-### 2. View Your Profile
-- The Dashboard displays your profile information
-- Shows your username, email, first names, last names
-- Shows when you created your account and last login time
+---
 
-### 3. Logout and Login
-1. Click "Logout" in the navbar
-2. Click "Login" in the navbar
-3. Enter your email and password
-4. Click "Sign In"
-5. You should be redirected back to the Dashboard
+## Navigation Overview
 
-### 4. Test Protected Routes
-1. While logged out, try to access: http://localhost:3000/dashboard
-2. You should be automatically redirected to the login page
-3. After logging in, you'll be redirected to the Dashboard
+| Page | URL | Purpose |
+|---|---|---|
+| Home | `/home` | Governance maturity overview and your responsibilities |
+| Domains | `/domains` | Business domain hierarchy, bounded contexts, and DDD context map |
+| Entities | `/entities` | Data entity catalogue (ontology) |
+| Processes | `/processes` | Business process catalogue |
+| Organisation | `/organisation` | Organisational unit tree and team assignments |
+| Capabilities | `/capabilities` | Business capability map and IT system support |
+| Compliance | `/compliance` | Processing register (Art. 30 GDPR / Art. 12 revDSG) |
+| IT Systems | `/it-systems` | IT system catalogue linked to processes and capabilities |
+| Service Providers | `/service-providers` | Data processor register with DPA tracking |
+| Settings — Users | `/settings/users` | User management (admin only) |
+| Settings — Locales | `/settings/locales` | Supported display languages |
+| Settings — Classifications | `/settings/classifications` | Taxonomy management |
 
 ---
 
 ## API Testing with curl
 
 ### Health Check
+
 ```bash
 curl http://localhost:8081/health
 ```
 
 ### Sign Up
+
 ```bash
 curl -X POST http://localhost:8081/authentication/signup \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "username": "testuser",
-    "password": "password123",
-    "firstName": "Test",
-    "lastName": "User"
-  }'
-```
-
-Expected response:
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
-  "tokenType": "Bearer",
-  "expiresIn": 3600,
-  "user": {
-    "id": 1,
-    "email": "test@example.com",
-    "username": "testuser",
-    "firstName": "Test",
-    "lastName": "User",
-    "enabled": true,
-    "createdAt": "2026-02-04T18:00:00Z",
-    "lastLoginAt": null
-  }
-}
+  -d '{"email":"alice@example.com","username":"alice","password":"Password123!","firstName":"Alice","lastName":"Smith"}'
 ```
 
 ### Login
+
 ```bash
 curl -X POST http://localhost:8081/authentication/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123"
-  }'
+  -d '{"email":"admin@leargon.local","password":"ChangeMe123!"}'
 ```
 
-### Get Current User
-```bash
-# First, save the token from login/signup response
-TOKEN="paste_your_token_here"
+### Authenticated Request
 
-curl http://localhost:8081/users/me \
+```bash
+TOKEN="paste_access_token_here"
+curl http://localhost:8081/business-entities \
   -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## View Logs
+
+```bash
+docker compose logs -f            # all services
+docker compose logs -f backend    # backend only
+docker compose logs -f frontend   # nginx only
 ```
 
 ---
 
 ## Database Access
 
-### Connect to MySQL
 ```bash
-# If using Docker Compose
-docker exec -it leargon-mysql mysql -u leargon -pleargon leargon
-
-# If using standalone MySQL container
 docker exec -it leargon-mysql mysql -u leargon -pleargon leargon
 ```
 
-### Useful SQL Queries
+Useful queries:
+
 ```sql
--- View all users
-SELECT id, email, username, first_name, last_name, enabled, created_at, last_login_at
-FROM users;
-
--- Check database migrations
-SELECT * FROM DATABASECHANGELOG;
-
--- View database structure
-DESCRIBE users;
+SELECT id, email, username, roles, enabled FROM users;
+SELECT * FROM DATABASECHANGELOG ORDER BY dateExecuted DESC LIMIT 5;
 ```
 
 ---
 
 ## Troubleshooting
 
-### Backend won't start
-**Problem**: "Could not connect to MySQL"
-**Solution**:
-- Make sure MySQL is running: `docker ps | grep mysql`
-- Check MySQL logs: `docker logs leargon-mysql`
-- Wait for MySQL healthcheck to pass
+### Backend won't start — "Could not connect to MySQL"
 
-### Frontend shows connection errors
-**Problem**: "Network Error" or "Cannot connect to backend"
-**Solution**:
-- Verify backend is running: `curl http://localhost:8081/health`
-- Check browser console for CORS errors
-- Verify environment variable: Check `.env.development` has correct `VITE_API_URL`
+MySQL must pass its healthcheck before the backend starts. Check:
 
-### 401 Unauthorized after login
-**Problem**: Token not being sent with requests
-**Solution**:
-- Open browser DevTools → Application → Local Storage
-- Verify `auth_token` exists
-- Try logging out and logging back in
-- Clear browser cache and local storage
-
-### Duplicate email/username errors
-**Problem**: "Email already exists" when signing up
-**Solution**:
-- Email and username must be unique
-- Use a different email/username
-- Or delete the user from database:
-  ```sql
-  DELETE FROM users WHERE email = 'test@example.com';
-  ```
-
-### Build errors
-**Problem**: Gradle or npm build fails
-**Solution**:
-- Backend: `cd leargon-backend && ./gradlew clean build`
-- Frontend: `cd leargon-frontend && rm -rf node_modules && npm install`
-
----
-
-## Development Tips
-
-### Hot Reload
-- **Frontend**: Vite provides instant hot reload
-- **Backend**: Use `./gradlew run --continuous` for auto-restart on changes
-
-### View Logs
 ```bash
-# Docker Compose logs
-docker compose logs -f
-
-# Specific service logs
-docker compose logs -f backend
-docker compose logs -f mysql
-
-# Local development
-# Backend logs appear in terminal
-# Frontend logs appear in terminal and browser console
+docker compose ps
+docker compose logs mysql
 ```
 
-### Reset Database
-```bash
-# Docker Compose
-docker compose down -v
-docker compose up -d mysql
+### Frontend shows network errors
 
-# Wait for MySQL to be ready, then start backend
-docker compose up backend
+Verify the backend is reachable:
+
+```bash
+curl http://localhost:8081/health
 ```
 
----
+In local dev mode, the Vite dev server proxies `/api` to `http://localhost:8080`. If you run the backend on a different port, set `VITE_BACKEND_URL=http://localhost:<port>` before running `npm run dev`.
 
-## Environment Variables
+### 401 Unauthorized
 
-### Backend (application.properties)
-- `datasources.default.url` - MySQL connection URL
-- `datasources.default.username` - Database user
-- `datasources.default.password` - Database password
-- `micronaut.security.token.jwt.signatures.secret.generator.secret` - JWT secret
+JWT tokens expire after 1 hour. Log out and log back in.
+Check that `auth_token` exists in browser LocalStorage (DevTools → Application → Local Storage).
 
-### Frontend (.env.development / .env.production)
-- `VITE_API_URL` - Backend API base URL
+### Build fails
 
----
+```bash
+# Backend
+cd leargon-backend && ./gradlew clean build
 
-## Next Steps
-
-1. ✅ Test the authentication flow
-2. ✅ Create a few test users
-3. ✅ Verify protected routes work
-4. ✅ Check database persistence
-5. 🔧 Customize the UI theme (src/App.jsx)
-6. 🔧 Add more user fields if needed
-7. 🔧 Implement password reset functionality
-8. 🔧 Add email verification
-9. 🔧 Implement refresh tokens
-10. 🔧 Add user profile editing
-
----
-
-## Important Security Notes
-
-### For Production Deployment
-
-1. **Change JWT Secret**
-   ```bash
-   # Generate a secure secret
-   openssl rand -base64 32
-   ```
-   Update in `application.properties` and `docker compose.yml`
-
-2. **Change Database Passwords**
-   - Use strong, randomly generated passwords
-   - Store in environment variables or secrets manager
-
-3. **Update CORS Origins**
-   - Replace localhost URLs with your actual businessDomain
-   - Be specific, don't use wildcards
-
-4. **Use HTTPS**
-   - Configure SSL/TLS certificates
-   - Force HTTPS redirects
-
-5. **Consider httpOnly Cookies**
-   - Instead of localStorage for tokens
-   - Better protection against XSS
-
-6. **Add Rate Limiting**
-   - Protect against brute force attacks
-   - Use tools like fail2ban or application-level rate limiting
-
-7. **Enable Database Backups**
-   - Regular automated backups
-   - Test restore procedures
-
-8. **Monitor and Log**
-   - Set up application monitoring
-   - Log authentication attempts
-   - Alert on suspicious activity
-
----
-
-## Support
-
-If you encounter issues:
-1. Check the troubleshooting section above
-2. Review logs for error messages
-3. Verify all prerequisites are installed
-4. Ensure ports 3000, 3306, and 8080/8081 are available
-5. Check that MySQL is fully started before running backend
-
-## Success!
-
-You should now have a fully functional authentication system with:
-- User registration and login
-- JWT token authentication
-- Protected routes
-- User profile management
-- Professional Material-UI interface
-- MySQL persistence
-
-Happy coding! 🚀
+# Frontend
+cd leargon-frontend && rm -rf node_modules && npm install && npm run build
+```

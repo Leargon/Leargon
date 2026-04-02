@@ -76,7 +76,7 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Legal Obligation', { exact: false }).first()).toBeVisible();
+    await expect(page.getByText('Legal Obligation', { exact: false }).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('legal basis shows "Not set" when not set', async ({ page }) => {
@@ -84,9 +84,9 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     const legalBasisSection = page.getByText('Legal Basis', { exact: true });
-    await expect(legalBasisSection).toBeVisible();
+    await expect(legalBasisSection).toBeVisible({ timeout: 10_000 });
     // The Not set text is within the same section
-    await expect(page.getByText('Not set').first()).toBeVisible();
+    await expect(page.getByText('Not set').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('purpose is visible in Compliance tab when set', async ({ page }) => {

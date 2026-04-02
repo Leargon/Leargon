@@ -8,6 +8,7 @@ import {
 
 test.describe('Service Providers Page — Admin', () => {
   test('Service Providers page shows empty state', async ({ page }) => {
+    await createServiceProvider(uid('PW Empty State SP'));
     await page.goto('/service-providers');
     await page.waitForLoadState('networkidle');
 

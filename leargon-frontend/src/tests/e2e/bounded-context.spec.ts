@@ -12,7 +12,7 @@ test.describe('Bounded Contexts — Domain Detail (Admin)', () => {
     await page.goto(`/domains/${domainKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Bounded Contexts')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Bounded Contexts', exact: true })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Billing Context', { exact: false })).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Shipping Context', { exact: false })).toBeVisible({ timeout: 10_000 });
   });

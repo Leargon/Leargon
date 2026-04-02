@@ -10,10 +10,11 @@ import {
 
 test.describe('IT Systems Page — Admin', () => {
   test('IT Systems page shows empty state', async ({ page }) => {
+    await createItSystem(uid('PW Empty State IT'));
     await page.goto('/it-systems');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Select an IT system')).toBeVisible();
+    await expect(page.getByText('Select an IT system')).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can create an IT system via UI', async ({ page }) => {

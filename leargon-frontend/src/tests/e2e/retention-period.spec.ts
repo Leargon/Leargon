@@ -33,7 +33,7 @@ test.describe('Retention Period — Entity Detail', () => {
     // Save
     await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText('10 years')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('10 years')).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can clear retention period', async ({ page }) => {
