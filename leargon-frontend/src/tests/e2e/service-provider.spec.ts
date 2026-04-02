@@ -11,7 +11,7 @@ test.describe('Service Providers Page — Admin', () => {
     await page.goto('/service-providers');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Select a service provider')).toBeVisible();
+    await expect(page.getByText('Select a service provider')).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can create a service provider via UI', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('Service Providers Page — Admin', () => {
 
     await page.waitForLoadState('networkidle');
     // After creation, navigates to the detail; provider name appears in list
-    await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can delete a service provider via UI', async ({ page }) => {

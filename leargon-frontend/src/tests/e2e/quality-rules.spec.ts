@@ -28,9 +28,10 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     await page.getByLabel('Rule description').fill('Customer email must be a valid RFC 5322 address');
     await page.getByRole('dialog').locator('[role="combobox"]').click();
-    await page.getByRole('option', { name: 'Must' }).click();
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5_000 });
+    await page.getByRole('option', { name: 'Mandatory' }).click();
     // Wait for the dropdown to fully close before clicking Create
-    await page.getByRole('option', { name: 'Must' }).waitFor({ state: 'detached' });
+    await expect(page.getByRole('listbox')).not.toBeVisible({ timeout: 5_000 });
 
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
     await page.waitForLoadState('networkidle');
@@ -38,7 +39,7 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
     // Scope to QR section so strict mode doesn't match textarea in closing dialog
     const qrSection = page.getByText('Quality Rules').first().locator('..').locator('..');
     await expect(qrSection.getByText('Customer email must be a valid RFC 5322 address')).toBeVisible({ timeout: 10_000 });
-    await expect(qrSection.getByText('Must', { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(qrSection.getByText('Mandatory', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test('admin can edit an existing quality rule', async ({ page }) => {

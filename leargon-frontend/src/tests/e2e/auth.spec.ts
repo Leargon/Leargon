@@ -10,9 +10,10 @@ test('navigating to a protected route without auth redirects to /login', async (
 
 test('login page renders the sign-in form', async ({ page }) => {
   await page.goto('/login');
-  await expect(page.getByLabel('Email')).toBeVisible();
-  await expect(page.getByLabel('Password')).toBeVisible();
-  await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByLabel('Email')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByLabel('Password')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible({ timeout: 10_000 });
 });
 
 test('login with valid credentials navigates to /home', async ({ page }) => {

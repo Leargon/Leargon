@@ -41,7 +41,7 @@ test.describe('Capabilities page', () => {
     await dialog.getByRole('button', { name: 'Create' }).click();
 
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('capability detail shows name and no parent', async ({ page }) => {

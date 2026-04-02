@@ -20,13 +20,13 @@ Swiss revDSG and EU GDPR impose obligations at the process level: every data-pro
 
 The three frameworks share structural objects but use them for different purposes:
 
-| Object | DDD role | BCM role | DSG/GDPR role |
-|---|---|---|---|
-| Bounded Context | Linguistic boundary, context map node | Unit of ownership | Processing scope |
-| Process | Event producer/consumer | Capability realisation | Processing activity (Art. 30) |
-| Data Entity | Ubiquitous Language noun | Capability data scope | Personal data category |
-| Org Unit | Team owning a context | Capability owner | Data controller / processor |
-| Classification | Domain tag | Maturity/criticality tag | Personal data / legal basis flag |
+| Object          | DDD role                              | BCM role                 | DSG/GDPR role                    |
+|-----------------|---------------------------------------|--------------------------|----------------------------------|
+| Bounded Context | Linguistic boundary, context map node | Unit of ownership        | Processing scope                 |
+| Process         | Event producer/consumer               | Capability realisation   | Processing activity (Art. 30)    |
+| Data Entity     | Ubiquitous Language noun              | Capability data scope    | Personal data category           |
+| Org Unit        | Team owning a context                 | Capability owner         | Data controller / processor      |
+| Classification  | Domain tag                            | Maturity/criticality tag | Personal data / legal basis flag |
 
 A process classified as `personal-data = personal-data--contains` is simultaneously a DDD *verb* (something that happens in a context), a BCM realisation (it fulfils a capability), and a GDPR processing activity that must appear in the register.
 
@@ -401,3 +401,111 @@ Rule: "deleting an IT system does not delete its linked processes"
 Rule: "the Delete button is not rendered for a viewer"
 → E2E (processes-crud.spec.ts). Not in integration or Spock.
 ```
+
+---
+
+## 8. Roles, Ownership, and RBAC
+
+Leargon has two layers of access control: **system-level roles** (coarse-grained) and **entity-level ownership** (fine-grained). They are checked independently and both enforced server-side; the frontend mirrors them in UI only.
+
+---
+
+### System-Level Roles
+
+Two roles exist, stored as a comma-separated string in the `User.roles` column:
+
+| Role         | Meaning                                                                                                          |
+|--------------|------------------------------------------------------------------------------------------------------------------|
+| `ROLE_USER`  | Every authenticated user. Can read everything and create new objects (becoming their owner).                     |
+| `ROLE_ADMIN` | Full administrative access: can edit any object regardless of ownership, manage users, and configure the system. |
+
+Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In practice all admins have both, but code checks are explicit (`roles.contains("ROLE_ADMIN")`).
+
+---
+
+### How System Roles Are Assigned
+
+**Signup** (`POST /authentication/signup`): always creates the user with `ROLE_USER`. No self-service promotion exists.
+
+**Azure Entra ID login** (`POST /authentication/azure-login`): on first login the user is auto-created with `ROLE_USER` and `authProvider = "AZURE"`. Subsequent logins update the user's profile fields but never change the role — Azure group membership is **not** synced to roles.
+
+**Admin promotion**: only an existing `ROLE_ADMIN` can promote another user via the administration API. Ordinary users cannot change their own role.
+
+**Fallback administrator**: a special bootstrap account created at startup from the `ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` environment variables. It has `ROLE_ADMIN` and `isFallbackAdministrator = true`. It cannot be deleted, disabled, or have its password changed via the regular API. It can use password-based login even when Azure authentication is configured for all other users.
+
+---
+
+### Entity-Level Ownership Roles
+
+Each content object carries named ownership fields that confer edit permission on that specific object only. These are **not global roles**.
+
+| Object type         | Primary owner field                        | Secondary fields                        |
+|---------------------|--------------------------------------------|-----------------------------------------|
+| Business Entity     | `dataOwner`                                | `dataSteward`, `technicalCustodian`     |
+| Process             | `processOwner`                             | `processSteward`, `technicalCustodian`  |
+| Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian` |
+
+The creator of an object is set as its primary owner at creation time. Only `ROLE_ADMIN` can reassign ownership fields.
+
+`dataSteward`, `technicalCustodian`, and `businessSteward` are informational — they appear in analytics and audit views but do not grant edit permission.
+
+---
+
+### Computed (Inherited) Ownership
+
+If a Business Entity or Process has no explicit owner set, the system derives one from the object's position in the domain model:
+
+```
+effective owner = explicit owner
+              ?? boundedContext.owningUnit.businessOwner
+```
+
+This computed owner is treated identically to an explicit owner for permission checks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
+
+---
+
+### Permission Matrix
+
+| Operation                                                         | `ROLE_USER` (non-owner) | Object owner / effective owner |    `ROLE_ADMIN`    |
+|-------------------------------------------------------------------|:-----------------------:|:------------------------------:|:------------------:|
+| Read any object                                                   |            ✓            |               ✓                |         ✓          |
+| Create a new object (becomes owner)                               |            ✓            |               —                |         ✓          |
+| Edit object properties (names, fields, classifications)           |            ✗            |               ✓                |         ✓          |
+| Reassign ownership fields (`dataOwner`, `processOwner`, stewards) |            ✗            |               ✗                |         ✓          |
+| Delete an object                                                  |            ✗            |               ✓                |         ✓          |
+| User management (create, enable/disable, delete users)            |            ✗            |               ✗                |         ✓          |
+| Delete fallback admin user                                        |            ✗            |               ✗                | ✗ (blocked always) |
+
+**Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
+
+**Organisational Unit ownership** has no edit permission check in the current implementation — any authenticated user can edit org unit properties.
+
+---
+
+### Account Status
+
+| Field                                               | Effect                                                                        |
+|-----------------------------------------------------|-------------------------------------------------------------------------------|
+| `user.enabled = false`                              | Login rejected; set by admin via the disable endpoint.                        |
+| `user.setupCompleted = false` (fallback admin only) | Frontend redirects to `/setup` after login to complete initial configuration. |
+| JWT expiry                                          | Tokens expire after 3600 seconds; no refresh mechanism.                       |
+
+No failed-login lockout mechanism exists.
+
+---
+
+### Frontend Role Checks
+
+The frontend derives three booleans from the JWT payload and the fetched entity:
+
+```typescript
+const isAdmin      = user?.roles?.includes('ROLE_ADMIN') ?? false;
+const isOwner      = user?.username === entity?.dataOwner?.username;  // explicit only
+const canEdit      = isAdmin || isOwner;
+```
+
+These control the visibility of edit buttons, ownership assignment UI, and admin-only sections. They are **UI convenience only** — the server re-validates every mutation independently.
+
+Route-level guards:
+- `ProtectedRoute` — redirects unauthenticated users to `/login`.
+- `AdminRoute` — redirects non-admin users; used for the Settings and Administration sections.
