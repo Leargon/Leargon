@@ -1,0 +1,119 @@
+databaseChangeLog:
+  - changeSet:
+      id: 049-create-process-flow-track-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_flow_track
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: gateway_node_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: track_index
+                  type: INT
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 049-create-process-flow-node-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: process_flow_node
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: process_key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: track_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: position
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: node_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: label
+                  type: VARCHAR(512)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: linked_process_key
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: event_definition
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: gateway_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: gateway_pair_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_node
+            baseColumnNames: process_key
+            constraintName: fk_flow_node_process
+            referencedTableName: processes
+            referencedColumnNames: key
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_node
+            baseColumnNames: linked_process_key
+            constraintName: fk_flow_node_linked_process
+            referencedTableName: processes
+            referencedColumnNames: key
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_node
+            baseColumnNames: track_id
+            constraintName: fk_flow_node_track
+            referencedTableName: process_flow_track
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_track
+            baseColumnNames: gateway_node_id
+            constraintName: fk_flow_track_gateway_node
+            referencedTableName: process_flow_node
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 049-drop-bpmn-xml-column
+      author: leargon
+      changes:
+        - dropColumn:
+            tableName: processes
+            columnName: bpmn_xml

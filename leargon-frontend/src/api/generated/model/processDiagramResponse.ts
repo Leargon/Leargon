@@ -19,7 +19,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
 export interface ProcessDiagramResponse {
   /**
-     * BPMN 2.0 XML string, or null if no diagram has been saved yet
+     * BPMN 2.0 XML string generated from the flow nodes, or null if no flow has been saved yet
      * @nullable
      */
   bpmnXml?: string | null;

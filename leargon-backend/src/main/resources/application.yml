@@ -57,6 +57,9 @@ micronaut:
     client:
       read-timeout: 30s
       connect-timeout: 5s
+  serde:
+    serialization:
+      inclusion: ALWAYS
 
 endpoints:
   health:

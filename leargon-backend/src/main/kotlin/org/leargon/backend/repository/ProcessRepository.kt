@@ -60,6 +60,4 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     )
     fun searchByQuery(query: String): List<Process>
 
-    @Query(value = "SELECT * FROM processes WHERE bpmn_xml LIKE :pattern", nativeQuery = true)
-    fun findByBpmnXmlContaining(pattern: String): List<Process>
 }

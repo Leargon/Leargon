@@ -6,6 +6,7 @@ import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.model.ItSystemSummaryResponse
+import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.model.LegalBasis
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessResponse
@@ -23,7 +24,8 @@ import java.time.ZonedDateTime
 open class ProcessMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper,
-    private val capabilityMapper: CapabilityMapper
+    private val capabilityMapper: CapabilityMapper,
+    private val processFlowNodeRepository: ProcessFlowNodeRepository
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
         val fc =
@@ -95,7 +97,11 @@ open class ProcessMapper(
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
-            .calledProcessKeys(extractCalledProcessKeys(process.bpmnXml))
+            .calledProcessKeys(
+                processFlowNodeRepository.findByProcessKeyOrderByPosition(process.key)
+                    .mapNotNull { it.linkedProcessKey }
+                    .distinct()
+            )
     }
 
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
@@ -127,8 +133,6 @@ open class ProcessMapper(
             }.sortedBy { it.key }
 
     companion object {
-        private val CALLED_ELEMENT_REGEX = Regex("""calledElement="([^"]+)"""")
-
         @JvmStatic
         fun collectEffectiveEntities(
             process: Process,
@@ -145,12 +149,6 @@ open class ProcessMapper(
             }
             collect(process)
             return result
-        }
-
-        @JvmStatic
-        fun extractCalledProcessKeys(bpmnXml: String?): List<String> {
-            if (bpmnXml.isNullOrBlank()) return emptyList()
-            return CALLED_ELEMENT_REGEX.findAll(bpmnXml).map { it.groupValues[1] }.toList()
         }
 
         @JvmStatic

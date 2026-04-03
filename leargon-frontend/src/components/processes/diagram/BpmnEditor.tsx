@@ -1,9 +1,4 @@
-import 'bpmn-js/dist/assets/diagram-js.css';
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
-
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import BpmnModeler from 'bpmn-js/lib/Modeler';
-import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -12,253 +7,204 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
+  Paper,
   Snackbar,
+  Typography,
 } from '@mui/material';
-import { Edit as EditIcon, Save, Cancel } from '@mui/icons-material';
-import { useBlocker } from 'react-router-dom';
+import { Cancel, Edit as EditIcon, Save } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useThemeMode } from '../../../context/ThemeContext';
+import { useBlocker, useNavigate } from 'react-router-dom';
 import {
-  useGetProcessDiagram,
-  useSaveProcessDiagram,
-  getGetProcessDiagramQueryKey,
+  useGetProcessFlow,
+  useSaveProcessFlow,
+  getGetProcessFlowQueryKey,
   useGetAllProcesses,
 } from '../../../api/generated/process/process';
-import type { ProcessDiagramResponse } from '../../../api/generated/model/processDiagramResponse';
+import type { FlowNodeResponse } from '../../../api/generated/model/flowNodeResponse';
+import type { ProcessFlowResponse } from '../../../api/generated/model/processFlowResponse';
 import type { ProcessResponse } from '../../../api/generated/model/processResponse';
-import { useLocale } from '../../../context/LocaleContext';
-import BpmnElementLinkDialog from './BpmnElementLinkDialog';
-
-const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-  id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">
-    <bpmn:startEvent id="StartEvent_1" name="Start" />
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="82" width="36" height="36" />
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`;
-
-/** Element types that trigger the link dialog when added to the canvas */
-const LINKABLE_TYPES = new Set([
-  'bpmn:Task',
-  'bpmn:UserTask',
-  'bpmn:ServiceTask',
-  'bpmn:ScriptTask',
-  'bpmn:ManualTask',
-  'bpmn:BusinessRuleTask',
-  'bpmn:SendTask',
-  'bpmn:ReceiveTask',
-  'bpmn:SubProcess',
-  'bpmn:CallActivity',
-]);
-
-interface PendingElement {
-  element: { id: string; type: string };
-}
+import type { LocalNode } from './custom/types';
+import FlowCanvas from './custom/FlowCanvas';
+import InsertMenu from './custom/InsertMenu';
+import StepDialog from './custom/StepDialog';
 
 interface Props {
   processKey: string;
   canEdit: boolean;
 }
 
+function toLocalNode(n: FlowNodeResponse): LocalNode {
+  return {
+    id: n.id,
+    position: n.position,
+    nodeType: n.nodeType as LocalNode['nodeType'],
+    label: n.label,
+    linkedProcessKey: n.linkedProcessKey,
+    isSubProcess: n.isSubProcess,
+    trackId: n.trackId,
+    gatewayPairId: n.gatewayPairId,
+    gatewayType: n.gatewayType,
+    eventDefinition: n.eventDefinition,
+  };
+}
+
+interface InsertState {
+  afterPosition: number;
+  anchor: HTMLElement;
+}
+
+interface StepDialogState {
+  open: boolean;
+  insertAfterPosition?: number;
+  editNode?: LocalNode;
+}
+
 const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const { t } = useTranslation();
-  const { effectiveMode } = useThemeMode();
-  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const modelerRef = useRef<BpmnModeler | BpmnViewer | null>(null);
-  const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
-  const [pending, setPending] = useState<PendingElement | null>(null);
+  const navigate = useNavigate();
 
-  // Edit mode state
-  const [isEditing, setIsEditing] = useState(false);
-  const [originalXml, setOriginalXml] = useState<string | null>(null);
-  // When non-null, override the server XML (used after cancel to restore)
-  const [overrideXml, setOverrideXml] = useState<string | null>(null);
-
-  const { data: diagramResponse, isLoading, isError } = useGetProcessDiagram(processKey);
+  const { data: flowResponse, isLoading, isError } = useGetProcessFlow(processKey);
   const { data: processesResponse } = useGetAllProcesses();
-  const saveProcessDiagram = useSaveProcessDiagram();
+  const saveFlow = useSaveProcessFlow();
 
-  const bpmnXml = (diagramResponse?.data as ProcessDiagramResponse | undefined)?.bpmnXml ?? null;
-  // What the viewer/modeler actually renders
-  const effectiveXml = overrideXml ?? bpmnXml;
+  const serverNodes: LocalNode[] = (
+    (flowResponse?.data as ProcessFlowResponse | undefined)?.nodes ?? []
+  ).map(toLocalNode);
+  const allProcesses: ProcessResponse[] = (processesResponse?.data ?? []) as ProcessResponse[];
+  const currentProcess = allProcesses.find((p) => p.key === processKey) ?? null;
 
-  // Keep a ref so the importXML callback always sees the latest process list
-  const processesRef = useRef<ProcessResponse[]>([]);
-  const getLocalizedTextRef = useRef(getLocalizedText);
-  useEffect(() => { getLocalizedTextRef.current = getLocalizedText; });
+  const [isEditing, setIsEditing] = useState(false);
+  const [localNodes, setLocalNodes] = useState<LocalNode[]>([]);
+  const [insertMenu, setInsertMenu] = useState<InsertState | null>(null);
+  const [stepDialog, setStepDialog] = useState<StepDialogState>({ open: false });
+  const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+
+  // Sync local nodes from server when not editing
   useEffect(() => {
-    processesRef.current = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
-  }, [processesResponse]);
+    if (!isEditing) {
+      setLocalNodes(serverNodes);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowResponse, isEditing]);
 
-  // Re-sync callActivity labels whenever the process list is updated (e.g. after a rename)
+  const isDirty = isEditing;
+  const blocker = useBlocker(isDirty);
+
   useEffect(() => {
-    const instance = modelerRef.current;
-    if (!instance) return;
-    const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
-    if (processes.length === 0) return;
-
-    type BpmnInstance = { get: (name: string) => unknown };
-    type ElementRegistry = { getAll: () => { type: string; businessObject: { calledElement?: string; name?: string } }[] };
-    type EventBus = { fire: (event: string, props: Record<string, unknown>) => void; on: (event: string, cb: (e: unknown) => void) => void };
-
-    const bpmn = instance as unknown as BpmnInstance;
-    const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
-    const eventBus = bpmn.get('eventBus') as EventBus;
-
-    elementRegistry.getAll().forEach((element) => {
-      const calledElement = element.businessObject?.calledElement;
-      if (!calledElement) return;
-      const process = processes.find((p) => p.key === calledElement);
-      if (!process) return;
-      const currentName = getLocalizedTextRef.current(process.names);
-      if (element.businessObject.name !== currentName) {
-        element.businessObject.name = currentName;
-        eventBus.fire('element.changed', { element });
-      }
-    });
-  }, [processesResponse]);
-
-  // Block React Router navigation while editing
-  const blocker = useBlocker(isEditing);
-
-  // Warn on browser tab close while editing
-  useEffect(() => {
-    if (!isEditing) return;
+    if (!isDirty) return;
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [isEditing]);
+  }, [isDirty]);
 
-  // Create/destroy the bpmn-js instance when isEditing or displayed XML changes
-  useEffect(() => {
-    if (!containerRef.current || isLoading) return;
-
-    const xml = effectiveXml ?? EMPTY_BPMN;
-
-    const instance = isEditing
-      ? new BpmnModeler({ container: containerRef.current })
-      : new BpmnViewer({ container: containerRef.current });
-
-    modelerRef.current = instance;
-
-    instance.importXML(xml)
-      .then(() => {
-        type BpmnInstance = { get: (name: string) => unknown };
-        type ElementRegistry = { getAll: () => { type: string; businessObject: { calledElement?: string; name?: string } }[] };
-        type EventBus = {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          on: (event: string, cb: (e: any) => void) => void;
-          fire: (event: string, props: Record<string, unknown>) => void;
-        };
-        const bpmn = instance as unknown as BpmnInstance;
-        const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
-        const eventBus = bpmn.get('eventBus') as EventBus;
-
-        // Sync callActivity labels with current process names
-        elementRegistry.getAll().forEach((element) => {
-          const calledElement = element.businessObject?.calledElement;
-          if (!calledElement) return;
-          const process = processesRef.current.find((p) => p.key === calledElement);
-          if (!process) return;
-          const currentName = getLocalizedTextRef.current(process.names);
-          if (element.businessObject.name !== currentName) {
-            element.businessObject.name = currentName;
-            eventBus.fire('element.changed', { element });
-          }
-        });
-
-        if (!isEditing) return;
-        eventBus.on('shape.added', (event) => {
-          if (LINKABLE_TYPES.has(event.element.type)) {
-            setPending({ element: event.element });
-          }
-        });
-      })
-      .catch(console.error);
-
-    return () => {
-      instance.destroy();
-      modelerRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, effectiveXml, isLoading]);
+  const defaultStartEnd = (): LocalNode[] => [
+    { id: crypto.randomUUID(), position: 0, nodeType: 'START_EVENT' },
+    { id: crypto.randomUUID(), position: 1, nodeType: 'END_EVENT' },
+  ];
 
   const enterEditMode = useCallback(() => {
-    setOriginalXml(bpmnXml);
-    setOverrideXml(null);
+    setLocalNodes(serverNodes.length > 0 ? serverNodes : defaultStartEnd());
     setIsEditing(true);
-  }, [bpmnXml]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flowResponse]);
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
+    setLocalNodes(serverNodes);
     setIsEditing(false);
-    setOverrideXml(originalXml);
-    setPending(null);
-  }, [originalXml]);
+  };
 
   const handleSave = async () => {
-    if (!modelerRef.current || !isEditing) return;
     try {
-      const { xml } = await (modelerRef.current as BpmnModeler).saveXML({ format: true });
-      await saveProcessDiagram.mutateAsync({ key: processKey, data: { bpmnXml: xml } });
-      await queryClient.invalidateQueries({ queryKey: getGetProcessDiagramQueryKey(processKey) as readonly unknown[] });
+      const nodes = localNodes.map((n, i) => ({
+        id: n.id,
+        position: i,
+        nodeType: n.nodeType,
+        label: n.label ?? null,
+        linkedProcessKey: n.linkedProcessKey ?? null,
+        trackId: n.trackId ?? null,
+        gatewayPairId: n.gatewayPairId ?? null,
+        gatewayType: n.gatewayType ?? null,
+        eventDefinition: n.eventDefinition ?? null,
+      }));
+      await saveFlow.mutateAsync({ key: processKey, data: { nodes, tracks: [] } });
+      await queryClient.invalidateQueries({ queryKey: getGetProcessFlowQueryKey(processKey) as readonly unknown[] });
       setIsEditing(false);
-      setOverrideXml(null);
-      setSnackbar({ message: t('processDiagram.saved'), severity: 'success' });
+      setSnackbar({ message: t('flowEditor.saved'), severity: 'success' });
     } catch {
-      setSnackbar({ message: t('processDiagram.saveError'), severity: 'error' });
+      setSnackbar({ message: t('flowEditor.saveError'), severity: 'error' });
     }
   };
 
-  type BpmnInstance = { get: (name: string) => unknown };
-  type ElementRegistry = { get: (id: string) => unknown };
-  type Modeling = {
-    updateProperties: (element: unknown, props: Record<string, unknown>) => void;
-    removeElements: (elements: unknown[]) => void;
+  // Insert menu: opened from InsertionPoint
+  const handleInsertPoint = (afterPosition: number, anchor: HTMLElement) => {
+    setInsertMenu({ afterPosition, anchor });
   };
 
-  const handleDialogConfirm = useCallback(
-    (name: string, linkedProcessKey?: string) => {
-      if (!pending || !modelerRef.current) { setPending(null); return; }
-      const bpmn = modelerRef.current as unknown as BpmnInstance;
-      const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
-      const modeling = bpmn.get('modeling') as Modeling;
-      const el = elementRegistry.get(pending.element.id);
-      if (el) {
-        const props: Record<string, unknown> = { name };
-        if (linkedProcessKey) props.calledElement = linkedProcessKey;
-        modeling.updateProperties(el, props);
-      }
-      setPending(null);
-    },
-    [pending],
-  );
+  const handleInsertMenuClose = () => setInsertMenu(null);
 
-  const handleDialogCancel = useCallback(() => {
-    if (!pending || !modelerRef.current) { setPending(null); return; }
-    const bpmn = modelerRef.current as unknown as BpmnInstance;
-    const elementRegistry = bpmn.get('elementRegistry') as ElementRegistry;
-    const modeling = bpmn.get('modeling') as Modeling;
-    const el = elementRegistry.get(pending.element.id);
-    if (el) modeling.removeElements([el]);
-    setPending(null);
-  }, [pending]);
+  const handleInsertMenuStep = () => {
+    if (!insertMenu) return;
+    setStepDialog({ open: true, insertAfterPosition: insertMenu.afterPosition });
+    setInsertMenu(null);
+  };
+
+  // Step dialog for inserting a new node
+  const handleEditNode = (node: LocalNode) => {
+    setStepDialog({ open: true, editNode: node });
+  };
+
+  const handleStepDialogConfirm = (linkedKey: string, processName: string) => {
+    if (stepDialog.insertAfterPosition !== undefined) {
+      const afterPos = stepDialog.insertAfterPosition;
+      setLocalNodes((prev) => {
+        const idx = prev.findIndex((n) => n.position === afterPos);
+        const newNode: LocalNode = {
+          id: crypto.randomUUID(),
+          position: 0,
+          nodeType: 'TASK',
+          label: processName,
+          linkedProcessKey: linkedKey,
+          isSubProcess: false,
+        };
+        const next = [...prev];
+        next.splice(idx + 1, 0, newNode);
+        return next.map((n, i) => ({ ...n, position: i }));
+      });
+    } else if (stepDialog.editNode) {
+      setLocalNodes((prev) =>
+        prev.map((n) =>
+          n.id === stepDialog.editNode!.id
+            ? { ...n, label: processName, linkedProcessKey: linkedKey }
+            : n,
+        ),
+      );
+    }
+    setStepDialog({ open: false });
+  };
+
+  const handleDelete = (id: string) => {
+    setLocalNodes((prev) =>
+      prev.filter((n) => n.id !== id).map((n, i) => ({ ...n, position: i })),
+    );
+  };
+
+  const handleNavigate = (linkedProcessKey: string) => {
+    navigate(`/processes/${linkedProcessKey}`);
+  };
+
+  const handleLabelChange = (id: string, newLabel: string) => {
+    setLocalNodes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, label: newLabel || null } : n)),
+    );
+  };
+
+  const displayNodes: LocalNode[] = isEditing ? localNodes : serverNodes;
 
   if (isLoading)
     return (
@@ -267,11 +213,10 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       </Box>
     );
 
-  if (isError)
-    return <Alert severity="error" sx={{ m: 2 }}>{t('common.error')}</Alert>;
+  if (isError) return <Alert severity="error" sx={{ m: 2 }}>{t('common.error')}</Alert>;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       {/* Toolbar */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         {canEdit && !isEditing && (
@@ -289,48 +234,74 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
               variant="contained"
               startIcon={<Save />}
               onClick={handleSave}
-              disabled={saveProcessDiagram.isPending}
+              disabled={saveFlow.isPending}
             >
-              {saveProcessDiagram.isPending ? t('common.saving') : t('common.save')}
+              {saveFlow.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </>
         )}
       </Box>
 
-      {/* bpmn-js mounts here */}
-      <Box
-        ref={containerRef}
-        data-color-scheme={effectiveMode}
+      {/* Flow canvas */}
+      <Paper
+        variant="outlined"
         sx={{
-          height: 500,
-          border: 1,
+          p: 2,
+          overflowX: 'auto',
           borderColor: isEditing ? 'primary.main' : 'divider',
-          borderRadius: 1,
-          overflow: 'hidden',
-          bgcolor: 'background.paper',
-          '& .djs-palette': { left: 0, top: 0 },
+          minHeight: 100,
         }}
+      >
+        {displayNodes.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+            {t('flowEditor.empty')}
+          </Typography>
+        ) : (
+          <FlowCanvas
+            nodes={displayNodes}
+            isEditing={isEditing}
+            onInsert={handleInsertPoint}
+            onEdit={handleEditNode}
+            onDelete={handleDelete}
+            onNavigate={handleNavigate}
+            onLabelChange={handleLabelChange}
+          />
+        )}
+      </Paper>
+
+      {/* Insert type menu */}
+      <InsertMenu
+        anchorEl={insertMenu?.anchor ?? null}
+        onClose={handleInsertMenuClose}
+        onSelectStep={handleInsertMenuStep}
       />
 
-      {isEditing && pending && (
-        <BpmnElementLinkDialog
-          open={!!pending}
-          elementType={pending.element.type}
-          currentProcessKey={processKey}
-          onConfirm={handleDialogConfirm}
-          onCancel={handleDialogCancel}
-        />
-      )}
+      {/* Step insert/edit dialog */}
+      <StepDialog
+        open={stepDialog.open}
+        isNew={stepDialog.insertAfterPosition !== undefined}
+        initial={
+          stepDialog.editNode
+            ? { linkedProcessKey: stepDialog.editNode.linkedProcessKey }
+            : undefined
+        }
+        currentProcess={currentProcess}
+        allProcesses={allProcesses}
+        onConfirm={handleStepDialogConfirm}
+        onCancel={() => setStepDialog({ open: false })}
+      />
 
-      {/* Navigation blocker confirmation */}
+      {/* Navigation blocker */}
       <Dialog open={blocker.state === 'blocked'}>
         <DialogTitle>{t('processDiagram.unsavedChanges')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{t('processDiagram.unsavedChangesHint')}</DialogContentText>
+          <Typography>{t('processDiagram.unsavedChangesHint')}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => blocker.reset?.()}>{t('common.cancel')}</Button>
-          <Button color="error" onClick={() => blocker.proceed?.()}>{t('processDiagram.discardAndLeave')}</Button>
+          <Button color="error" onClick={() => blocker.proceed?.()}>
+            {t('processDiagram.discardAndLeave')}
+          </Button>
         </DialogActions>
       </Dialog>
 

@@ -25,6 +25,7 @@ import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.DomainEventProcessLinkRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
+import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
 import org.leargon.backend.repository.UserRepository
@@ -43,7 +44,8 @@ open class ProcessService(
     private val processMapper: ProcessMapper,
     private val businessEntityService: BusinessEntityService,
     private val domainEventProcessLinkRepository: DomainEventProcessLinkRepository,
-    private val dpiaRepository: DpiaRepository
+    private val dpiaRepository: DpiaRepository,
+    private val processFlowNodeRepository: ProcessFlowNodeRepository
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -599,15 +601,12 @@ open class ProcessService(
             )
         }
 
-        // Block deletion if referenced in another process's BPMN diagram
-        val referencingDiagrams =
-            processRepository
-                .findByBpmnXmlContaining("%calledElement=\"${process.key}\"%")
-                .filter { it.id != process.id && it.bpmnXml != null }
-        if (referencingDiagrams.isNotEmpty()) {
-            val names = referencingDiagrams.take(3).joinToString(", ") { it.key }
+        // Block deletion if referenced as a linked process in another process's flow
+        if (processFlowNodeRepository.existsByLinkedProcessKey(process.key)) {
+            val referencingKeys = processFlowNodeRepository.findByLinkedProcessKey(process.key)
+                .map { it.processKey }.distinct().take(3).joinToString(", ")
             throw IllegalArgumentException(
-                "Cannot delete process '${process.key}': it is referenced in the BPMN diagram of: $names"
+                "Cannot delete process '${process.key}': it is referenced as a sub-process in: $referencingKeys"
             )
         }
 
@@ -720,11 +719,9 @@ open class ProcessService(
         oldKey: String,
         newKey: String
     ) {
-        processRepository.findByBpmnXmlContaining("%calledElement=\"$oldKey\"%").forEach { diagramProcess ->
-            diagramProcess.bpmnXml =
-                diagramProcess.bpmnXml!!
-                    .replace("calledElement=\"$oldKey\"", "calledElement=\"$newKey\"")
-            processRepository.update(diagramProcess)
+        processFlowNodeRepository.findByLinkedProcessKey(oldKey).forEach { node ->
+            node.linkedProcessKey = newKey
+            processFlowNodeRepository.update(node)
         }
     }
 

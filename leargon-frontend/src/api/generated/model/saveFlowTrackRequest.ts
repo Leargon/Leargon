@@ -16,12 +16,9 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FlowNodeResponse } from './flowNodeResponse';
-import type { FlowTrackResponse } from './flowTrackResponse';
 
-export interface ProcessFlowResponse {
-  processKey: string;
-  /** Root-level nodes only (trackId is null) */
-  nodes: FlowNodeResponse[];
-  tracks: FlowTrackResponse[];
+export interface SaveFlowTrackRequest {
+  id: string;
+  gatewayNodeId: string;
+  trackIndex: number;
 }

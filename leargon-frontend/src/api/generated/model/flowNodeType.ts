@@ -16,12 +16,15 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FlowNodeResponse } from './flowNodeResponse';
-import type { FlowTrackResponse } from './flowTrackResponse';
 
-export interface ProcessFlowResponse {
-  processKey: string;
-  /** Root-level nodes only (trackId is null) */
-  nodes: FlowNodeResponse[];
-  tracks: FlowTrackResponse[];
-}
+export type FlowNodeType = typeof FlowNodeType[keyof typeof FlowNodeType];
+
+
+export const FlowNodeType = {
+  START_EVENT: 'START_EVENT',
+  END_EVENT: 'END_EVENT',
+  TASK: 'TASK',
+  INTERMEDIATE_EVENT: 'INTERMEDIATE_EVENT',
+  GATEWAY_SPLIT: 'GATEWAY_SPLIT',
+  GATEWAY_JOIN: 'GATEWAY_JOIN',
+} as const;

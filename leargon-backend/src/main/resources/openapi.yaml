@@ -4819,8 +4819,8 @@ paths:
     get:
       tags:
       - Process
-      summary: Get process diagram
-      description: Returns the diagram (elements and flows) of a process.
+      summary: Export process diagram as BPMN XML
+      description: Generates and returns a BPMN 2.0 XML export from the stored flow nodes. Read-only — use PUT /processes/{key}/flow to edit.
       operationId: getProcessDiagram
       security:
       - bearerAuth: []
@@ -4833,7 +4833,7 @@ paths:
           type: string
       responses:
         '200':
-          description: Process diagram
+          description: Process diagram (generated BPMN XML)
           content:
             application/json:
               schema:
@@ -4846,12 +4846,43 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /processes/{key}/flow:
+    get:
+      tags:
+      - Process
+      summary: Get process flow
+      description: Returns the structured flow model (nodes and tracks) of a process.
+      operationId: getProcessFlow
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Process flow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessFlowResponse'
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
     put:
       tags:
       - Process
-      summary: Save process diagram
-      description: Replaces the entire diagram (elements and flows) of a process. Only the process owner or an admin can save.
-      operationId: saveProcessDiagram
+      summary: Save process flow
+      description: Replaces the entire flow (nodes and tracks) of a process atomically. Only the process owner or an admin can save.
+      operationId: saveProcessFlow
       security:
       - bearerAuth: []
       parameters:
@@ -4866,16 +4897,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SaveProcessDiagramRequest'
+              $ref: '#/components/schemas/SaveProcessFlowRequest'
       responses:
         '200':
-          description: Diagram saved successfully
+          description: Flow saved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProcessDiagramResponse'
+                $ref: '#/components/schemas/ProcessFlowResponse'
         '400':
-          description: Invalid diagram data
+          description: Invalid flow data
           content:
             application/json:
               schema:
@@ -7755,13 +7786,132 @@ components:
           type: string
           format: date-time
           description: Timestamp when this version was created
+    FlowNodeType:
+      type: string
+      enum: [START_EVENT, END_EVENT, TASK, INTERMEDIATE_EVENT, GATEWAY_SPLIT, GATEWAY_JOIN]
+    EventDefinition:
+      type: string
+      enum: [NONE, TIMER, MESSAGE, SIGNAL, CONDITIONAL]
+    GatewayType:
+      type: string
+      enum: [EXCLUSIVE, INCLUSIVE, PARALLEL, COMPLEX]
+    FlowNodeResponse:
+      type: object
+      required: [id, position, nodeType]
+      properties:
+        id:
+          type: string
+        trackId:
+          type: string
+          nullable: true
+        position:
+          type: integer
+        nodeType:
+          $ref: '#/components/schemas/FlowNodeType'
+        label:
+          type: string
+          nullable: true
+        linkedProcessKey:
+          type: string
+          nullable: true
+        isSubProcess:
+          type: boolean
+          description: Computed by backend — true if the linked process has flow nodes beyond Start and End
+        eventDefinition:
+          $ref: '#/components/schemas/EventDefinition'
+          nullable: true
+        gatewayType:
+          $ref: '#/components/schemas/GatewayType'
+          nullable: true
+        gatewayPairId:
+          type: string
+          nullable: true
+    FlowTrackResponse:
+      type: object
+      required: [id, gatewayNodeId, trackIndex, nodes]
+      properties:
+        id:
+          type: string
+        gatewayNodeId:
+          type: string
+        trackIndex:
+          type: integer
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowNodeResponse'
+    ProcessFlowResponse:
+      type: object
+      required: [processKey, nodes, tracks]
+      properties:
+        processKey:
+          type: string
+        nodes:
+          type: array
+          description: Root-level nodes only (trackId is null)
+          items:
+            $ref: '#/components/schemas/FlowNodeResponse'
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowTrackResponse'
+    SaveFlowNodeRequest:
+      type: object
+      required: [id, position, nodeType]
+      properties:
+        id:
+          type: string
+        trackId:
+          type: string
+          nullable: true
+        position:
+          type: integer
+        nodeType:
+          $ref: '#/components/schemas/FlowNodeType'
+        label:
+          type: string
+          nullable: true
+        linkedProcessKey:
+          type: string
+          nullable: true
+        eventDefinition:
+          $ref: '#/components/schemas/EventDefinition'
+          nullable: true
+        gatewayType:
+          $ref: '#/components/schemas/GatewayType'
+          nullable: true
+        gatewayPairId:
+          type: string
+          nullable: true
+    SaveFlowTrackRequest:
+      type: object
+      required: [id, gatewayNodeId, trackIndex]
+      properties:
+        id:
+          type: string
+        gatewayNodeId:
+          type: string
+        trackIndex:
+          type: integer
+    SaveProcessFlowRequest:
+      type: object
+      required: [nodes, tracks]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaveFlowNodeRequest'
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaveFlowTrackRequest'
     ProcessDiagramResponse:
       type: object
       properties:
         bpmnXml:
           type: string
           nullable: true
-          description: BPMN 2.0 XML string, or null if no diagram has been saved yet
+          description: BPMN 2.0 XML string generated from the flow nodes, or null if no flow has been saved yet
     SaveProcessDiagramRequest:
       type: object
       required:

@@ -19,10 +19,11 @@ import org.leargon.backend.model.CreateProcessRequest
 import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessDiagramResponse
+import org.leargon.backend.model.ProcessFlowResponse
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
-import org.leargon.backend.model.SaveProcessDiagramRequest
+import org.leargon.backend.model.SaveProcessFlowRequest
 import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
 import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
@@ -40,7 +41,7 @@ import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.DpiaService
 import org.leargon.backend.service.ItSystemService
-import org.leargon.backend.service.ProcessDiagramService
+import org.leargon.backend.service.ProcessFlowService
 import org.leargon.backend.service.ProcessService
 import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
@@ -49,7 +50,7 @@ import org.leargon.backend.service.UserService
 @Secured(SecurityRule.IS_AUTHENTICATED)
 open class ProcessController(
     private val processService: ProcessService,
-    private val processDiagramService: ProcessDiagramService,
+    private val processFlowService: ProcessFlowService,
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
@@ -269,14 +270,13 @@ open class ProcessController(
         return HttpResponse.status<DpiaResponse>(HttpStatus.CREATED).body(response)
     }
 
-    override fun getProcessDiagram(key: String): ProcessDiagramResponse = processDiagramService.getDiagram(key)
+    override fun getProcessDiagram(key: String): ProcessDiagramResponse = processFlowService.exportBpmn(key)
 
-    override fun saveProcessDiagram(
-        key: String,
-        @Valid @Body request: SaveProcessDiagramRequest
-    ): ProcessDiagramResponse {
+    override fun getProcessFlow(key: String): ProcessFlowResponse = processFlowService.getFlow(key)
+
+    override fun saveProcessFlow(key: String, @Valid @Body saveProcessFlowRequest: SaveProcessFlowRequest): ProcessFlowResponse {
         val currentUser = getCurrentUser()
-        return processDiagramService.saveDiagram(key, request, currentUser)
+        return processFlowService.saveFlow(key, saveProcessFlowRequest, currentUser)
     }
 
     private fun getCurrentUser(): User {
