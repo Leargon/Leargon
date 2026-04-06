@@ -7776,6 +7776,7 @@ components:
           - TYPE_CHANGE
           - CLASSIFICATION_CHANGE
           - DIAGRAM_UPDATE
+          - FLOW_UPDATE
           description: Type of change
           example: CREATE
         changeSummary:

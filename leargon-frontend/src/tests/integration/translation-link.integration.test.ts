@@ -111,7 +111,7 @@ describe('TranslationLink API', () => {
     });
 
     expect(res.status).toBe(201);
-    expect(res.data.semanticDifferenceNote).toBeUndefined();
+    expect(res.data.semanticDifferenceNote ?? null).toBeNull();
   });
 
   it('returns 404 for unknown first entity', async () => {

@@ -16,12 +16,16 @@ import type { ProcessVersionResponse } from '@/api/generated/model/processVersio
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
 import type { VersionDiffResponse } from '@/api/generated/model/versionDiffResponse';
 
-const MINIMAL_FLOW = {
-  nodes: [
-    { id: 'start-1', position: 0, nodeType: 'START_EVENT' },
-    { id: 'end-1', position: 1, nodeType: 'END_EVENT' },
-  ],
-  tracks: [],
+let _procFlowSeq = 0;
+const minimalFlow = () => {
+  const ts = ++_procFlowSeq;
+  return {
+    nodes: [
+      { id: `proc-start-${ts}`, position: 0, nodeType: 'START_EVENT' },
+      { id: `proc-end-${ts}`, position: 1, nodeType: 'END_EVENT' },
+    ],
+    tracks: [],
+  };
 };
 
 function getBackendUrl(): string {
@@ -125,7 +129,7 @@ describe('Process E2E', () => {
   it('should save flow and GET /diagram returns BPMN XML', async () => {
     const mainProc = await createProcess(client, 'FE Diagram Main');
 
-    const putRes = await client.put(`/processes/${mainProc.key}/flow`, MINIMAL_FLOW);
+    const putRes = await client.put(`/processes/${mainProc.key}/flow`, minimalFlow());
     expect(putRes.status).toBe(200);
     expect(putRes.data.nodes.length).toBe(2);
 
@@ -150,12 +154,12 @@ describe('Process E2E', () => {
   it('should save flow with task node and retrieve it', async () => {
     const proc = await createProcess(client, 'FE Task Flow');
     const linked = await createProcess(client, 'FE Linked Flow');
-
+    const ts = Date.now();
     const flow = {
       nodes: [
-        { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-        { id: 'n2', position: 1, nodeType: 'TASK', label: 'Do work', linkedProcessKey: linked.key },
-        { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+        { id: `proc-n1-${ts}`, position: 0, nodeType: 'START_EVENT' },
+        { id: `proc-n2-${ts}`, position: 1, nodeType: 'TASK', label: 'Do work', linkedProcessKey: linked.key },
+        { id: `proc-n3-${ts}`, position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],
     };
@@ -172,7 +176,7 @@ describe('Process E2E', () => {
   it('should include FLOW_UPDATE in version history after flow save', async () => {
     const proc = await createProcess(client, 'FE Version Flow');
 
-    await client.put(`/processes/${proc.key}/flow`, MINIMAL_FLOW);
+    await client.put(`/processes/${proc.key}/flow`, minimalFlow());
 
     const versionsRes = await client.get<ProcessVersionResponse[]>(
       `/processes/${proc.key}/versions`,

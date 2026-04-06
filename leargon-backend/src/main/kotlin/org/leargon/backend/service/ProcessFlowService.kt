@@ -111,6 +111,7 @@ open class ProcessFlowService(
             }
         }
         val subProcessKeys = resolveSubProcessKeys(allSavedNodes)
+        processService.recordVersion(processKey, currentUser, "FLOW_UPDATE", "Flow updated")
         return processFlowMapper.toProcessFlowResponse(processKey, allSavedNodes, allSavedTracks, subProcessKeys)
     }
 

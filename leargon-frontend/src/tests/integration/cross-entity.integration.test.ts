@@ -9,11 +9,19 @@ import {
 } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
-import type { SaveProcessDiagramRequest } from '@/api/generated/model/saveProcessDiagramRequest';
 import type { ProcessVersionResponse } from '@/api/generated/model/processVersionResponse';
 
-const MINIMAL_BPMN_XML =
-  '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn"><bpmn:process id="Process_1" isExecutable="false"><bpmn:startEvent id="start-1" /><bpmn:task id="task-1" /><bpmn:endEvent id="end-1" /><bpmn:sequenceFlow id="flow-1" sourceRef="start-1" targetRef="task-1" /><bpmn:sequenceFlow id="flow-2" sourceRef="task-1" targetRef="end-1" /></bpmn:process></bpmn:definitions>';
+let _crossSeq = 0;
+const minimalFlow = () => {
+  const ts = ++_crossSeq;
+  return {
+    nodes: [
+      { id: `cross-start-${ts}`, position: 0, nodeType: 'START_EVENT' },
+      { id: `cross-end-${ts}`, position: 1, nodeType: 'END_EVENT' },
+    ],
+    tracks: [],
+  };
+};
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
@@ -83,17 +91,10 @@ describe('Cross-Entity E2E', () => {
     expect(outputRes.data.outputEntities.length).toBe(1);
     expect(outputRes.data.outputEntities[0].key).toBe(outputEntity.key);
 
-    // 6. Save diagram
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-
-    const diagramRes = await client.put(
-      `/processes/${proc.key}/diagram`,
-      diagramReq,
-    );
-    expect(diagramRes.status).toBe(200);
-    expect(diagramRes.data.bpmnXml).toBeTruthy();
+    // 6. Save flow
+    const flowRes = await client.put(`/processes/${proc.key}/flow`, minimalFlow());
+    expect(flowRes.status).toBe(200);
+    expect(flowRes.data.nodes.length).toBe(2);
 
     // 7. Verify cross-references: process shows bounded context
     const procRes = await client.get<ProcessResponse>(`/processes/${proc.key}`);
@@ -127,11 +128,8 @@ describe('Cross-Entity E2E', () => {
       processType: 'MANAGEMENT',
     });
 
-    // Save diagram → DIAGRAM_UPDATE version
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-    await client.put(`/processes/${proc.key}/diagram`, diagramReq);
+    // Save flow → FLOW_UPDATE version
+    await client.put(`/processes/${proc.key}/flow`, minimalFlow());
 
     // Check versions
     const versionsRes = await client.get<ProcessVersionResponse[]>(
@@ -141,7 +139,7 @@ describe('Cross-Entity E2E', () => {
     expect(versionsRes.data.length).toBeGreaterThanOrEqual(3);
     expect(versionsRes.data.some((v) => v.changeType === 'CREATE')).toBe(true);
     expect(versionsRes.data.some((v) => v.changeType === 'TYPE_CHANGE')).toBe(true);
-    expect(versionsRes.data.some((v) => v.changeType === 'DIAGRAM_UPDATE')).toBe(true);
+    expect(versionsRes.data.some((v) => v.changeType === 'FLOW_UPDATE')).toBe(true);
   });
 
   // =====================

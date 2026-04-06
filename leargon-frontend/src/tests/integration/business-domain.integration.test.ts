@@ -275,7 +275,7 @@ describe('Business Domain E2E', () => {
       '/business-domains/fe-detach-child',
     );
     expect(childRes.status).toBe(200);
-    expect(childRes.data.parent).toBeUndefined();
+    expect(childRes.data.parent ?? null).toBeNull();
     expect(childRes.data.key).toBe('fe-detach-child');
   });
 
