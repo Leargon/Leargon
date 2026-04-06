@@ -3,6 +3,7 @@ import { Box, ClickAwayListener, IconButton, TextField, Tooltip, Typography } fr
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import type { EventDefinition } from '../../../../../api/generated/model/eventDefinition';
+import EventIcon from './EventIcon';
 
 interface Props {
   label?: string | null;
@@ -12,14 +13,6 @@ interface Props {
   onDelete: () => void;
   onLabelChange: (label: string) => void;
 }
-
-const EVENT_SYMBOLS: Record<string, string> = {
-  NONE: '',
-  TIMER: '⏱',
-  MESSAGE: '✉',
-  SIGNAL: '☆',
-  CONDITIONAL: '?',
-};
 
 const IntermediateEventNode: React.FC<Props> = ({
   label,
@@ -33,8 +26,9 @@ const IntermediateEventNode: React.FC<Props> = ({
   const [editingLabel, setEditingLabel] = useState(false);
   const [draft, setDraft] = useState('');
 
-  const symbol = eventDefinition ? (EVENT_SYMBOLS[eventDefinition] ?? '') : '';
-  const typeKey = eventDefinition ? `flowEditor.eventType.${eventDefinition.toLowerCase()}` : 'flowEditor.eventType.none';
+  const typeKey = eventDefinition
+    ? `flowEditor.eventType.${eventDefinition.toLowerCase()}`
+    : 'flowEditor.eventType.none';
   const displayLabel = label || t(typeKey);
 
   const startLabelEdit = () => {
@@ -50,7 +44,7 @@ const IntermediateEventNode: React.FC<Props> = ({
 
   return (
     <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-      {/* Outer circle */}
+      {/* Double ring — BPMN intermediate catching event */}
       <Box
         sx={{
           position: 'relative',
@@ -66,24 +60,21 @@ const IntermediateEventNode: React.FC<Props> = ({
           flexShrink: 0,
         }}
       >
-        {/* Inner circle */}
+        {/* Inner ring */}
         <Box
           sx={{
-            width: 32,
-            height: 32,
+            width: 31,
+            height: 31,
             borderRadius: '50%',
             border: '1.5px solid',
             borderColor: 'warning.main',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            color: 'warning.main',
           }}
         >
-          {symbol && (
-            <Typography sx={{ fontSize: '0.75rem', lineHeight: 1, color: 'warning.main' }}>
-              {symbol}
-            </Typography>
-          )}
+          <EventIcon definition={eventDefinition} filled={false} size={15} />
         </Box>
 
         {isEditing && (

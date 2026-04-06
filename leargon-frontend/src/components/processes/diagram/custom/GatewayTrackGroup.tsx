@@ -133,6 +133,7 @@ const GatewayTrackGroup: React.FC<Props> = ({
             <Box sx={{ minWidth: 60, display: 'flex', alignItems: 'center' }}>
               <FlowTrack
                 nodes={track.nodes}
+                tracks={allTracks}
                 allNodes={allNodes}
                 allTracks={allTracks}
                 isEditing={isEditing}
@@ -143,6 +144,9 @@ const GatewayTrackGroup: React.FC<Props> = ({
                 onNavigate={onNavigate}
                 onLabelChange={onLabelChange}
                 onInsertInTrack={(pos, anchor, nestedTrackId) => onInsert(pos, anchor, nestedTrackId)}
+                onTrackLabelChange={onTrackLabelChange}
+                onEditGateway={onEditGateway}
+                onDeleteGateway={onDeleteGateway}
                 onAddTrack={onAddTrack}
                 onDeleteTrack={onDeleteTrack}
               />

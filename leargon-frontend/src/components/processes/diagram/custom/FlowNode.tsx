@@ -20,6 +20,7 @@ const FlowNode: React.FC<Props> = ({ node, isEditing, onEdit, onDelete, onNaviga
       return (
         <StartEventNode
           label={node.label}
+          eventDefinition={node.eventDefinition}
           isEditing={isEditing}
           onLabelChange={(label) => onLabelChange(node.id, label)}
         />
@@ -28,6 +29,7 @@ const FlowNode: React.FC<Props> = ({ node, isEditing, onEdit, onDelete, onNaviga
       return (
         <EndEventNode
           label={node.label}
+          eventDefinition={node.eventDefinition}
           isEditing={isEditing}
           onLabelChange={(label) => onLabelChange(node.id, label)}
         />

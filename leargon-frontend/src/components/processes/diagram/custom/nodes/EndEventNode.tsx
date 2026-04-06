@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Box, ClickAwayListener, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import type { EventDefinition } from '../../../../../api/generated/model/eventDefinition';
+import EventIcon from './EventIcon';
 
 interface Props {
   label?: string | null;
+  eventDefinition?: EventDefinition | null;
   isEditing: boolean;
   onLabelChange: (label: string) => void;
 }
 
-const EndEventNode: React.FC<Props> = ({ label, isEditing, onLabelChange }) => {
+const EndEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, onLabelChange }) => {
   const { t } = useTranslation();
   const [editingLabel, setEditingLabel] = useState(false);
   const [draft, setDraft] = useState('');
@@ -28,6 +31,7 @@ const EndEventNode: React.FC<Props> = ({ label, isEditing, onLabelChange }) => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+      {/* Thick ring — BPMN end event; icon is filled (throwing) */}
       <Box
         sx={{
           width: 36,
@@ -37,8 +41,15 @@ const EndEventNode: React.FC<Props> = ({ label, isEditing, onLabelChange }) => {
           borderColor: 'error.main',
           bgcolor: 'background.paper',
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'error.main',
         }}
-      />
+      >
+        <EventIcon definition={eventDefinition} filled size={14} />
+      </Box>
+
       {editingLabel ? (
         <ClickAwayListener onClickAway={commit}>
           <TextField

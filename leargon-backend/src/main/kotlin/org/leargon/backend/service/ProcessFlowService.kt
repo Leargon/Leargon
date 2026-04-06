@@ -65,30 +65,53 @@ open class ProcessFlowService(
                 gatewayPairId = n.gatewayPairId
             }
 
-        // 1. Save root nodes first — gateway split/join nodes must exist before tracks reference them
-        val rootNodeRequests = request.nodes.filter { it.trackId == null }
-        val trackNodeRequests = request.nodes.filter { it.trackId != null }
-        val savedRootNodes = rootNodeRequests.map { processFlowNodeRepository.save(buildNode(it)) }
+        // Topological save: root nodes → their tracks → those tracks' nodes → repeat.
+        // This handles arbitrarily nested gateways where a track node is itself a GATEWAY_SPLIT
+        // referenced by deeper tracks.
+        val allSavedNodes = mutableListOf<ProcessFlowNode>()
+        val allSavedTracks = mutableListOf<ProcessFlowTrack>()
+        val savedNodeIds = mutableSetOf<String>()
 
-        // 2. Save tracks — gateway_node_id FK target now exists
-        val savedTracks =
-            request.tracks.map { t ->
-                processFlowTrackRepository.save(
-                    ProcessFlowTrack().apply {
-                        id = t.id
-                        gatewayNodeId = t.gatewayNodeId
-                        trackIndex = t.trackIndex
-                        label = t.label
-                    }
+        // Round 0: root nodes (trackId == null)
+        request.nodes.filter { it.trackId == null }.forEach { n ->
+            allSavedNodes.add(processFlowNodeRepository.save(buildNode(n)))
+            savedNodeIds.add(n.id)
+        }
+
+        val pendingTracks = request.tracks.toMutableList()
+        val pendingTrackNodes = request.nodes.filter { it.trackId != null }.toMutableList()
+
+        while (pendingTracks.isNotEmpty()) {
+            // Tracks whose gateway node is already persisted
+            val readyTracks = pendingTracks.filter { it.gatewayNodeId in savedNodeIds }
+            if (readyTracks.isEmpty()) break // guard: orphaned data, skip
+            pendingTracks.removeAll(readyTracks)
+
+            val newTrackIds = mutableSetOf<String>()
+            readyTracks.forEach { t ->
+                allSavedTracks.add(
+                    processFlowTrackRepository.save(
+                        ProcessFlowTrack().apply {
+                            id = t.id
+                            gatewayNodeId = t.gatewayNodeId
+                            trackIndex = t.trackIndex
+                            label = t.label
+                        }
+                    )
                 )
+                newTrackIds.add(t.id)
             }
 
-        // 3. Save track nodes — track_id FK target now exists
-        val savedTrackNodes = trackNodeRequests.map { processFlowNodeRepository.save(buildNode(it)) }
-
-        val allSavedNodes = savedRootNodes + savedTrackNodes
+            // Save this depth's track nodes (may include nested SPLIT/JOIN nodes)
+            val readyNodes = pendingTrackNodes.filter { it.trackId in newTrackIds }
+            pendingTrackNodes.removeAll(readyNodes)
+            readyNodes.forEach { n ->
+                allSavedNodes.add(processFlowNodeRepository.save(buildNode(n)))
+                savedNodeIds.add(n.id)
+            }
+        }
         val subProcessKeys = resolveSubProcessKeys(allSavedNodes)
-        return processFlowMapper.toProcessFlowResponse(processKey, allSavedNodes, savedTracks, subProcessKeys)
+        return processFlowMapper.toProcessFlowResponse(processKey, allSavedNodes, allSavedTracks, subProcessKeys)
     }
 
     @Transactional
