@@ -603,8 +603,13 @@ open class ProcessService(
 
         // Block deletion if referenced as a linked process in another process's flow
         if (processFlowNodeRepository.existsByLinkedProcessKey(process.key)) {
-            val referencingKeys = processFlowNodeRepository.findByLinkedProcessKey(process.key)
-                .map { it.processKey }.distinct().take(3).joinToString(", ")
+            val referencingKeys =
+                processFlowNodeRepository
+                    .findByLinkedProcessKey(process.key)
+                    .map { it.processKey }
+                    .distinct()
+                    .take(3)
+                    .joinToString(", ")
             throw IllegalArgumentException(
                 "Cannot delete process '${process.key}': it is referenced as a sub-process in: $referencingKeys"
             )

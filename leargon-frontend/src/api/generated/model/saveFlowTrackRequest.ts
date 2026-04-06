@@ -21,4 +21,6 @@ export interface SaveFlowTrackRequest {
   id: string;
   gatewayNodeId: string;
   trackIndex: number;
+  /** @nullable */
+  label?: string | null;
 }

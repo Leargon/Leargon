@@ -28,33 +28,31 @@ open class ProcessFlowService(
         processService.getProcessByKey(processKey) // validates existence
         val nodes = processFlowNodeRepository.findByProcessKeyOrderByPosition(processKey)
         val trackIds = nodes.mapNotNull { it.trackId }.distinct()
-        val tracks = if (trackIds.isEmpty()) emptyList()
-                     else processFlowTrackRepository.findAll().filter { it.id in trackIds }
+        val tracks =
+            if (trackIds.isEmpty()) {
+                emptyList()
+            } else {
+                processFlowTrackRepository.findAll().filter { it.id in trackIds }
+            }
         val subProcessKeys = resolveSubProcessKeys(nodes)
         return processFlowMapper.toProcessFlowResponse(processKey, nodes, tracks, subProcessKeys)
     }
 
     @Transactional
-    open fun saveFlow(processKey: String, request: SaveProcessFlowRequest, currentUser: User): ProcessFlowResponse {
+    open fun saveFlow(
+        processKey: String,
+        request: SaveProcessFlowRequest,
+        currentUser: User
+    ): ProcessFlowResponse {
         val process = processService.getProcessByKey(processKey)
         ProcessService.checkEditPermission(process, currentUser)
 
-        // Delete all existing nodes and tracks for this process
+        // Delete all existing nodes (cascades to tracks via fk_flow_track_gateway_node,
+        // which in turn cascades to track nodes via fk_flow_node_track)
         processFlowNodeRepository.deleteByProcessKey(processKey)
 
-        // Save tracks first (nodes reference them via FK)
-        val savedTracks = request.tracks.map { t ->
-            val track = ProcessFlowTrack().apply {
-                id = t.id
-                gatewayNodeId = t.gatewayNodeId
-                trackIndex = t.trackIndex
-            }
-            processFlowTrackRepository.save(track)
-        }
-
-        // Save nodes
-        val savedNodes = request.nodes.map { n ->
-            val node = ProcessFlowNode().apply {
+        fun buildNode(n: org.leargon.backend.model.SaveFlowNodeRequest) =
+            ProcessFlowNode().apply {
                 id = n.id
                 this.processKey = processKey
                 trackId = n.trackId
@@ -66,11 +64,31 @@ open class ProcessFlowService(
                 gatewayType = n.gatewayType?.let { FlowGatewayType.valueOf(it.name) }
                 gatewayPairId = n.gatewayPairId
             }
-            processFlowNodeRepository.save(node)
-        }
 
-        val subProcessKeys = resolveSubProcessKeys(savedNodes)
-        return processFlowMapper.toProcessFlowResponse(processKey, savedNodes, savedTracks, subProcessKeys)
+        // 1. Save root nodes first — gateway split/join nodes must exist before tracks reference them
+        val rootNodeRequests = request.nodes.filter { it.trackId == null }
+        val trackNodeRequests = request.nodes.filter { it.trackId != null }
+        val savedRootNodes = rootNodeRequests.map { processFlowNodeRepository.save(buildNode(it)) }
+
+        // 2. Save tracks — gateway_node_id FK target now exists
+        val savedTracks =
+            request.tracks.map { t ->
+                processFlowTrackRepository.save(
+                    ProcessFlowTrack().apply {
+                        id = t.id
+                        gatewayNodeId = t.gatewayNodeId
+                        trackIndex = t.trackIndex
+                        label = t.label
+                    }
+                )
+            }
+
+        // 3. Save track nodes — track_id FK target now exists
+        val savedTrackNodes = trackNodeRequests.map { processFlowNodeRepository.save(buildNode(it)) }
+
+        val allSavedNodes = savedRootNodes + savedTrackNodes
+        val subProcessKeys = resolveSubProcessKeys(allSavedNodes)
+        return processFlowMapper.toProcessFlowResponse(processKey, allSavedNodes, savedTracks, subProcessKeys)
     }
 
     @Transactional
@@ -79,22 +97,28 @@ open class ProcessFlowService(
         val nodes = processFlowNodeRepository.findByProcessKeyOrderByPosition(processKey)
         if (nodes.isEmpty()) return ProcessDiagramResponse()
         val trackIds = nodes.mapNotNull { it.trackId }.distinct()
-        val tracks = if (trackIds.isEmpty()) emptyList()
-                     else processFlowTrackRepository.findAll().filter { it.id in trackIds }
+        val tracks =
+            if (trackIds.isEmpty()) {
+                emptyList()
+            } else {
+                processFlowTrackRepository.findAll().filter { it.id in trackIds }
+            }
         val xml = bpmnExportService.export(nodes, tracks)
         return ProcessDiagramResponse().bpmnXml(xml)
     }
 
     private fun resolveSubProcessKeys(nodes: List<ProcessFlowNode>): Set<String> {
-        val taskKeys = nodes
-            .filter { it.nodeType == FlowNodeType.TASK }
-            .mapNotNull { it.linkedProcessKey }
-            .distinct()
-        return taskKeys.filter { linkedKey ->
-            processFlowNodeRepository.existsByProcessKeyAndNodeTypeNotIn(
-                linkedKey,
-                listOf(FlowNodeType.START_EVENT, FlowNodeType.END_EVENT)
-            )
-        }.toSet()
+        val taskKeys =
+            nodes
+                .filter { it.nodeType == FlowNodeType.TASK }
+                .mapNotNull { it.linkedProcessKey }
+                .distinct()
+        return taskKeys
+            .filter { linkedKey ->
+                processFlowNodeRepository.existsByProcessKeyAndNodeTypeNotIn(
+                    linkedKey,
+                    listOf(FlowNodeType.START_EVENT, FlowNodeType.END_EVENT)
+                )
+            }.toSet()
     }
 }

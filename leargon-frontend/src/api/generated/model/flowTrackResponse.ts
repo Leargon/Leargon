@@ -22,5 +22,7 @@ export interface FlowTrackResponse {
   id: string;
   gatewayNodeId: string;
   trackIndex: number;
+  /** @nullable */
+  label?: string | null;
   nodes: FlowNodeResponse[];
 }

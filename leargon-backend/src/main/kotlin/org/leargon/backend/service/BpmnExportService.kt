@@ -14,19 +14,21 @@ import org.leargon.backend.domain.ProcessFlowTrack
  */
 @Singleton
 open class BpmnExportService {
-
     companion object {
         private const val NODE_W = 120
         private const val NODE_H = 60
-        private const val H_GAP = 140   // center-to-center horizontal spacing
-        private const val V_GAP = 100   // track-to-track vertical spacing
+        private const val H_GAP = 140 // center-to-center horizontal spacing
+        private const val V_GAP = 100 // track-to-track vertical spacing
         private const val START_X = 80
         private const val START_Y = 160
         private const val EVENT_SIZE = 36
         private const val GATEWAY_SIZE = 50
     }
 
-    fun export(nodes: List<ProcessFlowNode>, tracks: List<ProcessFlowTrack>): String {
+    fun export(
+        nodes: List<ProcessFlowNode>,
+        tracks: List<ProcessFlowTrack>
+    ): String {
         if (nodes.isEmpty()) return emptyBpmn()
 
         val tracksByGateway = tracks.groupBy { it.gatewayNodeId }
@@ -51,9 +53,29 @@ open class BpmnExportService {
         return buildXml(shapes, flows)
     }
 
-    private data class ShapeSpec(val id: String, val bpmnType: String, val x: Int, val y: Int, val w: Int, val h: Int, val name: String?, val extra: String = "", val childrenXml: String = "")
-    private data class FlowSpec(val id: String, val sourceRef: String, val targetRef: String)
-    private class Counter(var value: Int = 0) { fun next(): Int = ++value }
+    private data class ShapeSpec(
+        val id: String,
+        val bpmnType: String,
+        val x: Int,
+        val y: Int,
+        val w: Int,
+        val h: Int,
+        val name: String?,
+        val extra: String = "",
+        val childrenXml: String = ""
+    )
+
+    private data class FlowSpec(
+        val id: String,
+        val sourceRef: String,
+        val targetRef: String
+    )
+
+    private class Counter(
+        var value: Int = 0
+    ) {
+        fun next(): Int = ++value
+    }
 
     private fun layoutTrack(
         trackNodes: List<ProcessFlowNode>,
@@ -113,7 +135,18 @@ open class BpmnExportService {
                 // Place join gateway
                 if (joinNode != null) {
                     val joinX = x + maxTrackWidth + H_GAP
-                    shapes.add(ShapeSpec(joinNode.id, bpmnType(joinNode), joinX - w / 2, splitY - h / 2, w, h, joinNode.label, gatewayMarker(joinNode)))
+                    shapes.add(
+                        ShapeSpec(
+                            joinNode.id,
+                            bpmnType(joinNode),
+                            joinX - w / 2,
+                            splitY - h / 2,
+                            w,
+                            h,
+                            joinNode.label,
+                            gatewayMarker(joinNode)
+                        )
+                    )
                     prevId = joinNode.id
                     x = joinX + H_GAP
                 } else {
@@ -125,7 +158,14 @@ open class BpmnExportService {
 
             if (node.nodeType == FlowNodeType.GATEWAY_JOIN) continue // placed by split handler
 
-            val nodeExtra = if (node.nodeType == FlowNodeType.TASK && node.linkedProcessKey != null) " calledElement=\"${node.linkedProcessKey}\"" else ""
+            val nodeExtra =
+                if (node.nodeType == FlowNodeType.TASK &&
+                    node.linkedProcessKey != null
+                ) {
+                    " calledElement=\"${node.linkedProcessKey}\""
+                } else {
+                    ""
+                }
             val nodeChildren = if (node.nodeType == FlowNodeType.INTERMEDIATE_EVENT) eventDefinitionXml(node) else ""
             shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, node.label, nodeExtra, nodeChildren))
             if (prevId != null) flows.add(FlowSpec("flow_${flowCounter.next()}", prevId, node.id))
@@ -135,47 +175,58 @@ open class BpmnExportService {
         return x
     }
 
-    private fun nodeDimensions(node: ProcessFlowNode): Pair<Int, Int> = when (node.nodeType) {
-        FlowNodeType.START_EVENT, FlowNodeType.END_EVENT, FlowNodeType.INTERMEDIATE_EVENT -> Pair(EVENT_SIZE, EVENT_SIZE)
-        FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN -> Pair(GATEWAY_SIZE, GATEWAY_SIZE)
-        FlowNodeType.TASK -> Pair(NODE_W, NODE_H)
-    }
-
-    private fun bpmnType(node: ProcessFlowNode): String = when (node.nodeType) {
-        FlowNodeType.START_EVENT -> "bpmn:startEvent"
-        FlowNodeType.END_EVENT -> "bpmn:endEvent"
-        FlowNodeType.INTERMEDIATE_EVENT -> "bpmn:intermediateCatchEvent"
-        FlowNodeType.TASK -> "bpmn:callActivity"
-        FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN -> when (node.gatewayType) {
-            FlowGatewayType.INCLUSIVE -> "bpmn:inclusiveGateway"
-            FlowGatewayType.PARALLEL -> "bpmn:parallelGateway"
-            FlowGatewayType.COMPLEX -> "bpmn:complexGateway"
-            else -> "bpmn:exclusiveGateway"
+    private fun nodeDimensions(node: ProcessFlowNode): Pair<Int, Int> =
+        when (node.nodeType) {
+            FlowNodeType.START_EVENT, FlowNodeType.END_EVENT, FlowNodeType.INTERMEDIATE_EVENT -> Pair(EVENT_SIZE, EVENT_SIZE)
+            FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN -> Pair(GATEWAY_SIZE, GATEWAY_SIZE)
+            FlowNodeType.TASK -> Pair(NODE_W, NODE_H)
         }
-    }
 
-    private fun gatewayMarker(node: ProcessFlowNode): String = when (node.gatewayType) {
-        FlowGatewayType.EXCLUSIVE -> " markerVisible=\"true\""
-        else -> ""
-    }
+    private fun bpmnType(node: ProcessFlowNode): String =
+        when (node.nodeType) {
+            FlowNodeType.START_EVENT -> "bpmn:startEvent"
+            FlowNodeType.END_EVENT -> "bpmn:endEvent"
+            FlowNodeType.INTERMEDIATE_EVENT -> "bpmn:intermediateCatchEvent"
+            FlowNodeType.TASK -> "bpmn:callActivity"
+            FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN ->
+                when (node.gatewayType) {
+                    FlowGatewayType.INCLUSIVE -> "bpmn:inclusiveGateway"
+                    FlowGatewayType.PARALLEL -> "bpmn:parallelGateway"
+                    FlowGatewayType.COMPLEX -> "bpmn:complexGateway"
+                    else -> "bpmn:exclusiveGateway"
+                }
+        }
 
-    private fun eventDefinitionXml(node: ProcessFlowNode): String = when (node.eventDefinition) {
-        FlowEventDefinition.TIMER -> "<bpmn:timerEventDefinition id=\"${node.id}_timer\"/>"
-        FlowEventDefinition.MESSAGE -> "<bpmn:messageEventDefinition id=\"${node.id}_msg\"/>"
-        FlowEventDefinition.SIGNAL -> "<bpmn:signalEventDefinition id=\"${node.id}_sig\"/>"
-        FlowEventDefinition.CONDITIONAL -> "<bpmn:conditionalEventDefinition id=\"${node.id}_cond\"><bpmn:condition/></bpmn:conditionalEventDefinition>"
-        else -> ""
-    }
+    private fun gatewayMarker(node: ProcessFlowNode): String =
+        when (node.gatewayType) {
+            FlowGatewayType.EXCLUSIVE -> " markerVisible=\"true\""
+            else -> ""
+        }
 
-    private fun buildXml(shapes: List<ShapeSpec>, flows: List<FlowSpec>): String {
+    private fun eventDefinitionXml(node: ProcessFlowNode): String =
+        when (node.eventDefinition) {
+            FlowEventDefinition.TIMER -> "<bpmn:timerEventDefinition id=\"${node.id}_timer\"/>"
+            FlowEventDefinition.MESSAGE -> "<bpmn:messageEventDefinition id=\"${node.id}_msg\"/>"
+            FlowEventDefinition.SIGNAL -> "<bpmn:signalEventDefinition id=\"${node.id}_sig\"/>"
+            FlowEventDefinition.CONDITIONAL ->
+                "<bpmn:conditionalEventDefinition id=\"${node.id}_cond\"><bpmn:condition/></bpmn:conditionalEventDefinition>"
+            else -> ""
+        }
+
+    private fun buildXml(
+        shapes: List<ShapeSpec>,
+        flows: List<FlowSpec>
+    ): String {
         val sb = StringBuilder()
-        sb.append("""<?xml version="1.0" encoding="UTF-8"?>
+        sb.append(
+            """<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
   id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_1" isExecutable="false">
-""")
+"""
+        )
         shapes.forEach { s ->
             val nameAttr = if (s.name != null) " name=\"${s.name.xmlEscape()}\"" else ""
             if (s.childrenXml.isEmpty()) {
@@ -189,25 +240,36 @@ open class BpmnExportService {
         flows.forEach { f ->
             sb.append("    <bpmn:sequenceFlow id=\"${f.id}\" sourceRef=\"${f.sourceRef}\" targetRef=\"${f.targetRef}\"/>\n")
         }
-        sb.append("""  </bpmn:process>
+        sb.append(
+            """  </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-""")
+"""
+        )
         shapes.forEach { s ->
-            sb.append("      <bpmndi:BPMNShape id=\"shape_${s.id}\" bpmnElement=\"${s.id}\"${s.extra.takeIf { it.contains("markerVisible") } ?: ""}>\n")
+            sb.append(
+                "      <bpmndi:BPMNShape id=\"shape_${s.id}\" bpmnElement=\"${s.id}\"${s.extra.takeIf {
+                    it.contains(
+                        "markerVisible"
+                    )
+                } ?: ""}>\n"
+            )
             sb.append("        <dc:Bounds x=\"${s.x}\" y=\"${s.y}\" width=\"${s.w}\" height=\"${s.h}\"/>\n")
             sb.append("      </bpmndi:BPMNShape>\n")
         }
         flows.forEach { f ->
             sb.append("      <bpmndi:BPMNEdge id=\"edge_${f.id}\" bpmnElement=\"${f.id}\"/>\n")
         }
-        sb.append("""    </bpmndi:BPMNPlane>
+        sb.append(
+            """    </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
-</bpmn:definitions>""")
+</bpmn:definitions>"""
+        )
         return sb.toString()
     }
 
-    private fun emptyBpmn(): String = """<?xml version="1.0" encoding="UTF-8"?>
+    private fun emptyBpmn(): String =
+        """<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"

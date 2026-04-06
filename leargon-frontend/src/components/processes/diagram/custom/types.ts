@@ -20,5 +20,6 @@ export interface LocalTrack {
   id: string;
   gatewayNodeId: string;
   trackIndex: number;
+  label?: string | null;
   nodes: LocalNode[];
 }

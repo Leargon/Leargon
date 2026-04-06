@@ -6,7 +6,6 @@ import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.model.ItSystemSummaryResponse
-import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.model.LegalBasis
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessResponse
@@ -15,6 +14,7 @@ import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
+import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.service.FieldConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -98,7 +98,8 @@ open class ProcessMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .calledProcessKeys(
-                processFlowNodeRepository.findByProcessKeyOrderByPosition(process.key)
+                processFlowNodeRepository
+                    .findByProcessKeyOrderByPosition(process.key)
                     .mapNotNull { it.linkedProcessKey }
                     .distinct()
             )

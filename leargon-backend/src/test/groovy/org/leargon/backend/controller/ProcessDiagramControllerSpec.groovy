@@ -413,6 +413,191 @@ class ProcessDiagramControllerSpec extends Specification {
         xml.contains("bpmn:timerEventDefinition")
     }
 
+    // ===========================
+    // GATEWAY SAVE / LOAD TESTS
+    // ===========================
+
+    def "PUT /processes/{key}/flow saves gateway split+join with tracks"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "Gateway Process")
+        def pairId = "gw-pair-1"
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "sp1", position: 1, nodeType: "GATEWAY_SPLIT", gatewayPairId: pairId, gatewayType: "EXCLUSIVE"],
+                [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "EXCLUSIVE"],
+                [id: "e1",  position: 3, nodeType: "END_EVENT"]
+            ],
+            tracks: [
+                [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
+                [id: "track-b", gatewayNodeId: "sp1", trackIndex: 1]
+            ]
+        ]
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        response.body().nodes.size() == 4
+        response.body().tracks.size() == 2
+        response.body().tracks.any { it.gatewayNodeId == "sp1" && it.trackIndex == 0 }
+        response.body().tracks.any { it.gatewayNodeId == "sp1" && it.trackIndex == 1 }
+    }
+
+    def "PUT /processes/{key}/flow saves track nodes under their track"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "Gateway With Tasks")
+        def pairId = "gw-pair-2"
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "sp1", position: 1, nodeType: "GATEWAY_SPLIT", gatewayPairId: pairId, gatewayType: "PARALLEL"],
+                [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "PARALLEL"],
+                [id: "e1",  position: 3, nodeType: "END_EVENT"],
+                // Track nodes — have trackId set
+                [id: "tn1", position: 0, nodeType: "TASK", label: "Track A task", trackId: "track-a"],
+                [id: "tn2", position: 0, nodeType: "TASK", label: "Track B task", trackId: "track-b"]
+            ],
+            tracks: [
+                [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
+                [id: "track-b", gatewayNodeId: "sp1", trackIndex: 1]
+            ]
+        ]
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        // Root nodes should only contain the 4 root-level nodes
+        response.body().nodes.size() == 4
+        response.body().nodes.every { it.trackId == null }
+        // Track nodes should be under tracks
+        def trackA = response.body().tracks.find { it.trackIndex == 0 }
+        def trackB = response.body().tracks.find { it.trackIndex == 1 }
+        trackA.nodes.any { it.label == "Track A task" }
+        trackB.nodes.any { it.label == "Track B task" }
+    }
+
+    // ===========================
+    // GATEWAY BPMN EXPORT TESTS
+    // ===========================
+
+    def "GET /processes/{key}/diagram exports exclusive gateway as bpmn:exclusiveGateway"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "XOR Gateway Process")
+        def pairId = "gw-xor"
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "sp1", position: 1, nodeType: "GATEWAY_SPLIT", gatewayPairId: pairId, gatewayType: "EXCLUSIVE"],
+                [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "EXCLUSIVE"],
+                [id: "e1",  position: 3, nodeType: "END_EVENT"]
+            ],
+            tracks: [
+                [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
+                [id: "track-b", gatewayNodeId: "sp1", trackIndex: 1]
+            ]
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${process.key}/diagram").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def xml = response.body().bpmnXml as String
+        xml.contains("bpmn:exclusiveGateway")
+        // Two exclusive gateways (split + join)
+        xml.count("bpmn:exclusiveGateway") == 2
+    }
+
+    def "GET /processes/{key}/diagram exports parallel gateway as bpmn:parallelGateway"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "AND Gateway Process")
+        def pairId = "gw-and"
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "sp1", position: 1, nodeType: "GATEWAY_SPLIT", gatewayPairId: pairId, gatewayType: "PARALLEL"],
+                [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "PARALLEL"],
+                [id: "e1",  position: 3, nodeType: "END_EVENT"]
+            ],
+            tracks: [
+                [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
+                [id: "track-b", gatewayNodeId: "sp1", trackIndex: 1]
+            ]
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${process.key}/diagram").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def xml = response.body().bpmnXml as String
+        xml.contains("bpmn:parallelGateway")
+        xml.count("bpmn:parallelGateway") == 2
+    }
+
+    def "GET /processes/{key}/diagram exports inclusive gateway as bpmn:inclusiveGateway"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "OR Gateway Process")
+        def pairId = "gw-or"
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "sp1", position: 1, nodeType: "GATEWAY_SPLIT", gatewayPairId: pairId, gatewayType: "INCLUSIVE"],
+                [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "INCLUSIVE"],
+                [id: "e1",  position: 3, nodeType: "END_EVENT"]
+            ],
+            tracks: [
+                [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
+                [id: "track-b", gatewayNodeId: "sp1", trackIndex: 1]
+            ]
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${process.key}/diagram").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def xml = response.body().bpmnXml as String
+        xml.contains("bpmn:inclusiveGateway")
+        xml.count("bpmn:inclusiveGateway") == 2
+    }
+
     def "GET /processes/{key}/diagram emits correct event definitions for all intermediate event types"() {
         given:
         def userData = createUserWithToken("owner@example.com", "owner")

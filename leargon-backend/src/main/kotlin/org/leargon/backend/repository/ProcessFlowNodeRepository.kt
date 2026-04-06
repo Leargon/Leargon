@@ -8,8 +8,15 @@ import org.leargon.backend.domain.ProcessFlowNode
 @Repository
 interface ProcessFlowNodeRepository : JpaRepository<ProcessFlowNode, String> {
     fun findByProcessKeyOrderByPosition(processKey: String): List<ProcessFlowNode>
+
     fun deleteByProcessKey(processKey: String)
-    fun existsByProcessKeyAndNodeTypeNotIn(processKey: String, nodeTypes: List<FlowNodeType>): Boolean
+
+    fun existsByProcessKeyAndNodeTypeNotIn(
+        processKey: String,
+        nodeTypes: List<FlowNodeType>
+    ): Boolean
+
     fun existsByLinkedProcessKey(linkedProcessKey: String): Boolean
+
     fun findByLinkedProcessKey(linkedProcessKey: String): List<ProcessFlowNode>
 }

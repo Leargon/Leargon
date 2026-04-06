@@ -8,7 +8,9 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 
 enum class FlowNodeType { START_EVENT, END_EVENT, TASK, INTERMEDIATE_EVENT, GATEWAY_SPLIT, GATEWAY_JOIN }
+
 enum class FlowEventDefinition { NONE, TIMER, MESSAGE, SIGNAL, CONDITIONAL }
+
 enum class FlowGatewayType { EXCLUSIVE, INCLUSIVE, PARALLEL, COMPLEX }
 
 @Entity

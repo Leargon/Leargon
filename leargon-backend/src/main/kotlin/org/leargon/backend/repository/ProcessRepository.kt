@@ -59,5 +59,4 @@ interface ProcessRepository : JpaRepository<Process, Long> {
         nativeQuery = true,
     )
     fun searchByQuery(query: String): List<Process>
-
 }

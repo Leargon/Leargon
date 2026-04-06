@@ -7,5 +7,6 @@ import org.leargon.backend.domain.ProcessFlowTrack
 @Repository
 interface ProcessFlowTrackRepository : JpaRepository<ProcessFlowTrack, String> {
     fun findByGatewayNodeIdOrderByTrackIndex(gatewayNodeId: String): List<ProcessFlowTrack>
+
     fun deleteByGatewayNodeId(gatewayNodeId: String)
 }

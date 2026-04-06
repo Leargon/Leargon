@@ -7836,6 +7836,9 @@ components:
           type: string
         trackIndex:
           type: integer
+        label:
+          type: string
+          nullable: true
         nodes:
           type: array
           items:
@@ -7893,6 +7896,9 @@ components:
           type: string
         trackIndex:
           type: integer
+        label:
+          type: string
+          nullable: true
     SaveProcessFlowRequest:
       type: object
       required: [nodes, tracks]

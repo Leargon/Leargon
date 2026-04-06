@@ -16,4 +16,7 @@ class ProcessFlowTrack {
 
     @Column(name = "track_index", nullable = false)
     var trackIndex: Int = 0
+
+    @Column(name = "label", nullable = true, length = 512)
+    var label: String? = null
 }
