@@ -260,7 +260,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const handleEditNode = (node: LocalNode) => {
     if (node.nodeType === 'TASK') {
       setStepDialog({ open: true, editNode: node });
-    } else if (node.nodeType === 'INTERMEDIATE_EVENT') {
+    } else if (node.nodeType === 'INTERMEDIATE_EVENT' || node.nodeType === 'START_EVENT' || node.nodeType === 'END_EVENT') {
       setEventTypeDialog({ open: true, editNode: node });
     }
   };
@@ -567,6 +567,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       <EventTypeDialog
         open={eventTypeDialog.open}
         isNew={eventTypeDialog.insertAfterPosition !== undefined}
+        nodeType={eventTypeDialog.editNode?.nodeType ?? 'INTERMEDIATE_EVENT'}
         current={eventTypeDialog.editNode?.eventDefinition}
         onConfirm={handleEventTypeConfirm}
         onCancel={() => setEventTypeDialog({ open: false })}

@@ -552,6 +552,7 @@ const fr = {
       message: 'Message',
       signal: 'Signal',
       conditional: 'Conditionnel',
+      terminate: 'Terminer',
     },
     eventTypeDialog: {
       addTitle: 'Ajouter un événement intermédiaire',

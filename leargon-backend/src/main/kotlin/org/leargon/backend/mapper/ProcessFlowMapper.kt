@@ -82,6 +82,7 @@ open class ProcessFlowMapper {
             FlowEventDefinition.MESSAGE -> EventDefinition.MESSAGE
             FlowEventDefinition.SIGNAL -> EventDefinition.SIGNAL
             FlowEventDefinition.CONDITIONAL -> EventDefinition.CONDITIONAL
+            FlowEventDefinition.TERMINATE -> EventDefinition.TERMINATE
         }
 
     private fun toApiGatewayType(type: FlowGatewayType): GatewayType =

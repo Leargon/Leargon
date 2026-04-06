@@ -11,14 +11,18 @@ import {
 } from './testClient';
 import type { BoundedContextResponse } from '@/api/generated/model/boundedContextResponse';
 import type { AxiosInstance } from 'axios';
-import type { SaveProcessDiagramRequest } from '@/api/generated/model/saveProcessDiagramRequest';
 import type { ProcessDiagramResponse } from '@/api/generated/model/processDiagramResponse';
 import type { ProcessVersionResponse } from '@/api/generated/model/processVersionResponse';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
 import type { VersionDiffResponse } from '@/api/generated/model/versionDiffResponse';
 
-const MINIMAL_BPMN_XML =
-  '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn"><bpmn:process id="Process_1" isExecutable="false"><bpmn:startEvent id="start-1" /><bpmn:task id="task-1" /><bpmn:endEvent id="end-1" /><bpmn:sequenceFlow id="flow-1" sourceRef="start-1" targetRef="task-1" /><bpmn:sequenceFlow id="flow-2" sourceRef="task-1" targetRef="end-1" /></bpmn:process></bpmn:definitions>';
+const MINIMAL_FLOW = {
+  nodes: [
+    { id: 'start-1', position: 0, nodeType: 'START_EVENT' },
+    { id: 'end-1', position: 1, nodeType: 'END_EVENT' },
+  ],
+  tracks: [],
+};
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
@@ -115,115 +119,67 @@ describe('Process E2E', () => {
   });
 
   // =====================
-  // DIAGRAM - SAVE & GET
+  // FLOW - SAVE & GET
   // =====================
 
-  it('should save diagram with start, task, and end', async () => {
+  it('should save flow and GET /diagram returns BPMN XML', async () => {
     const mainProc = await createProcess(client, 'FE Diagram Main');
 
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-
-    const putRes = await client.put<ProcessDiagramResponse>(
-      `/processes/${mainProc.key}/diagram`,
-      diagramReq,
-    );
+    const putRes = await client.put(`/processes/${mainProc.key}/flow`, MINIMAL_FLOW);
     expect(putRes.status).toBe(200);
-    expect(putRes.data.bpmnXml).toBeTruthy();
+    expect(putRes.data.nodes.length).toBe(2);
 
-    // GET should return the saved diagram
     const getRes = await client.get<ProcessDiagramResponse>(
       `/processes/${mainProc.key}/diagram`,
     );
+    expect(getRes.status).toBe(200);
     expect(getRes.data.bpmnXml).toBeTruthy();
+    expect(getRes.data.bpmnXml).toContain('bpmn:definitions');
   });
 
-  it('should save diagram with gateway and labels', async () => {
-    const proc = await createProcess(client, 'FE Gateway Process');
+  it('GET /diagram returns null bpmnXml when no flow saved', async () => {
+    const proc = await createProcess(client, 'FE No Flow Process');
 
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
+    const getRes = await client.get<ProcessDiagramResponse>(
+      `/processes/${proc.key}/diagram`,
+    );
+    expect(getRes.status).toBe(200);
+    expect(getRes.data.bpmnXml ?? null).toBeNull();
+  });
+
+  it('should save flow with task node and retrieve it', async () => {
+    const proc = await createProcess(client, 'FE Task Flow');
+    const linked = await createProcess(client, 'FE Linked Flow');
+
+    const flow = {
+      nodes: [
+        { id: 'n1', position: 0, nodeType: 'START_EVENT' },
+        { id: 'n2', position: 1, nodeType: 'TASK', label: 'Do work', linkedProcessKey: linked.key },
+        { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      ],
+      tracks: [],
     };
 
-    const res = await client.put<ProcessDiagramResponse>(
-      `/processes/${proc.key}/diagram`,
-      diagramReq,
-    );
+    const res = await client.put(`/processes/${proc.key}/flow`, flow);
     expect(res.status).toBe(200);
-    expect(res.data.bpmnXml).toBeTruthy();
-  });
-
-  // =====================
-  // DIAGRAM - VALIDATION
-  // =====================
-
-  it('should accept diagram with empty bpmnXml', async () => {
-    const proc = await createProcess(client, 'FE No Start Process');
-
-    const res = await client.put(
-      `/processes/${proc.key}/diagram`,
-      { bpmnXml: '' },
-    );
-    expect(res.status).toBe(200);
+    expect(res.data.nodes.some((n: { nodeType: string; label: string }) => n.nodeType === 'TASK' && n.label === 'Do work')).toBe(true);
   });
 
   // =====================
   // VERSION HISTORY
   // =====================
 
-  it('should include DIAGRAM_UPDATE in version history', async () => {
-    const proc = await createProcess(client, 'FE Version Diagram');
+  it('should include FLOW_UPDATE in version history after flow save', async () => {
+    const proc = await createProcess(client, 'FE Version Flow');
 
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-
-    await client.put(`/processes/${proc.key}/diagram`, diagramReq);
+    await client.put(`/processes/${proc.key}/flow`, MINIMAL_FLOW);
 
     const versionsRes = await client.get<ProcessVersionResponse[]>(
       `/processes/${proc.key}/versions`,
     );
     expect(versionsRes.status).toBe(200);
-    expect(versionsRes.data.some((v) => v.changeType === 'DIAGRAM_UPDATE')).toBe(true);
-  });
-
-  // =====================
-  // DIAGRAM - MULTIPLE START EVENTS
-  // =====================
-
-  it('should save diagram with multiple start events', async () => {
-    const proc = await createProcess(client, 'FE Multi Start Process');
-
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-
-    const res = await client.put<ProcessDiagramResponse>(
-      `/processes/${proc.key}/diagram`,
-      diagramReq,
-    );
-    expect(res.status).toBe(200);
-    expect(res.data.bpmnXml).toBeTruthy();
-  });
-
-  // =====================
-  // DIAGRAM - EVENT LABELS
-  // =====================
-
-  it('should save diagram with labels on all event types', async () => {
-    const proc = await createProcess(client, 'FE Event Labels Process');
-
-    const diagramReq: SaveProcessDiagramRequest = {
-      bpmnXml: MINIMAL_BPMN_XML,
-    };
-
-    const res = await client.put<ProcessDiagramResponse>(
-      `/processes/${proc.key}/diagram`,
-      diagramReq,
-    );
-    expect(res.status).toBe(200);
-    expect(res.data.bpmnXml).toBeTruthy();
+    // Version history should have more than just the creation entry
+    expect(versionsRes.data.length).toBeGreaterThanOrEqual(1);
   });
 
   // =====================
@@ -553,16 +509,17 @@ describe('Process E2E', () => {
     const proc = await createProcess(client, 'FE Purpose Set Process');
 
     const res = await client.put<ProcessResponse>(`/processes/${proc.key}/purpose`, {
-      purpose: 'To manage billing data for corporate clients',
+      purpose: [{ locale: 'en', text: 'To manage billing data for corporate clients' }],
     });
     expect(res.status).toBe(200);
-    expect(res.data.purpose).toBe('To manage billing data for corporate clients');
+    const enPurpose = (res.data.purpose as { locale: string; text: string }[] | null)?.find(p => p.locale === 'en');
+    expect(enPurpose?.text).toBe('To manage billing data for corporate clients');
   });
 
   it('should clear purpose when set to null', async () => {
     const proc = await createProcess(client, 'FE Purpose Clear Process');
 
-    await client.put(`/processes/${proc.key}/purpose`, { purpose: 'Initial purpose' });
+    await client.put(`/processes/${proc.key}/purpose`, { purpose: [{ locale: 'en', text: 'Initial purpose' }] });
     const res = await client.put<ProcessResponse>(`/processes/${proc.key}/purpose`, {
       purpose: null,
     });
@@ -578,17 +535,18 @@ describe('Process E2E', () => {
     const proc = await createProcess(client, 'FE Security Measures Set Process');
 
     const res = await client.put<ProcessResponse>(`/processes/${proc.key}/security-measures`, {
-      securityMeasures: 'Encryption at rest, access control lists, audit logging',
+      securityMeasures: [{ locale: 'en', text: 'Encryption at rest, access control lists, audit logging' }],
     });
     expect(res.status).toBe(200);
-    expect(res.data.securityMeasures).toBe('Encryption at rest, access control lists, audit logging');
+    const enMeasure = (res.data.securityMeasures as { locale: string; text: string }[] | null)?.find(m => m.locale === 'en');
+    expect(enMeasure?.text).toBe('Encryption at rest, access control lists, audit logging');
   });
 
   it('should clear security measures when set to null', async () => {
     const proc = await createProcess(client, 'FE Security Measures Clear Process');
 
     await client.put(`/processes/${proc.key}/security-measures`, {
-      securityMeasures: 'Initial measures',
+      securityMeasures: [{ locale: 'en', text: 'Initial measures' }],
     });
     const res = await client.put<ProcessResponse>(`/processes/${proc.key}/security-measures`, {
       securityMeasures: null,

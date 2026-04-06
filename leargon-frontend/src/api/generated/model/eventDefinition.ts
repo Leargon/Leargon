@@ -26,4 +26,5 @@ export const EventDefinition = {
   MESSAGE: 'MESSAGE',
   SIGNAL: 'SIGNAL',
   CONDITIONAL: 'CONDITIONAL',
+  TERMINATE: 'TERMINATE',
 } as const;

@@ -18,6 +18,7 @@
 | Watch & notifications                         | 4        | 40%    | 6/10  | **1.5**  |
 | Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
 | Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
+| Extended BPMN event types (Story 2b)          | 3        | 30%    | 6/10  | **2.0**  |
 
 ---
 
@@ -45,6 +46,48 @@
 **IF** a process has no input or output entities directly assigned AND none of its sub-processes or linked call-activity processes define any entities either\
 **I WANT** to see a warning on the process detail panel indicating that the data flow for this process is completely undocumented\
 **SO THAT** processes with no entity coverage are surfaced as gaps rather than silently passing compliance checks with an empty data footprint
+
+---
+
+## Extended BPMN Event Types (Story 2b)
+
+*Extends the custom BPMN editor with boundary events, extended start/end event types, intermediate throw events, and non-interrupting variants. The boundary event attachment UI is the hard part — requires hit-testing the task node border and rendering the event circle anchored to it. All other variants are enum additions on top of the Story 2 (Intermediate Events) infrastructure.*
+
+*⏱ Sessions: 3 · Breakdown: 1 backend (enum extensions, DB migration for boundary attachment, BpmnExportService) + 2 frontend (boundary event attachment points on task border, start/end type selectors, non-interrupting dashed ring) · Value: 6/10 · Score: 2.0*
+
+| Variant | Types | Notes |
+|---------|-------|-------|
+| **Start events** | Message, Timer, Signal, Conditional, Error, Escalation | Replace default plain Start |
+| **End events** | Message, Terminate, Signal, Error, Escalation, Compensation | Replace default plain End |
+| **Boundary events** | Timer, Message, Error, Escalation, Signal, Conditional, Compensation | Attached to Task/Sub-Process border |
+| **Intermediate throw events** | Message, Signal, Escalation, Compensation, Link | Filled symbol (throw vs catch) |
+| **Non-interrupting** | Timer, Message, Conditional (boundary + start) | Dashed circle border |
+
+Requires extending the `EventDefinition` enum and `FlowNodeType` enum in `openapi.yaml` + a DB migration to support boundary event attachment (parent node reference on boundary event nodes).
+
+#### USER STORY 'Replace plain Start Event with a typed start event'
+**AS A** process modeller\
+**IF** I am editing a process flow in the BPMN editor\
+**I WANT** to click a replace button on the Start Event node and choose from Message, Timer, Signal, Conditional, Error, or Escalation start event types\
+**SO THAT** the diagram accurately reflects the actual trigger mechanism of the process
+
+#### USER STORY 'Replace plain End Event with a typed end event'
+**AS A** process modeller\
+**IF** I am editing a process flow in the BPMN editor\
+**I WANT** to click a replace button on the End Event node and choose from Message, Terminate, Signal, Error, Escalation, or Compensation end event types\
+**SO THAT** the diagram accurately reflects how the process concludes
+
+#### USER STORY 'Attach a boundary event to a task or sub-process'
+**AS A** process modeller\
+**IF** I am editing a process flow and a Task or Sub-Process node is present\
+**I WANT** to attach a boundary event (Timer, Message, Error, Escalation, Signal, Conditional, or Compensation) to the border of that node\
+**SO THAT** I can model exception and error-handling paths anchored to the activity where they occur
+
+#### USER STORY 'Mark a boundary or start event as non-interrupting'
+**AS A** process modeller\
+**IF** I am attaching a Timer, Message, or Conditional boundary event (or choosing a corresponding start event type)\
+**I WANT** to mark it as non-interrupting, which renders the event circle with a dashed border\
+**SO THAT** the diagram correctly distinguishes between events that cancel the host activity and events that run in parallel with it
 
 ---
 

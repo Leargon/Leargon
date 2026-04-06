@@ -60,6 +60,12 @@ const EventIcon: React.FC<Props> = ({ definition, filled = false, size = 14 }) =
         </>
       );
       break;
+    case 'TERMINATE':
+      // Filled circle — BPMN terminate end event marker
+      content = (
+        <circle cx="10" cy="10" r="6" stroke={stroke} strokeWidth="1.5" fill="currentColor" />
+      );
+      break;
     default:
       return null;
   }

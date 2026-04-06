@@ -552,6 +552,7 @@ const en = {
       message: 'Message',
       signal: 'Signal',
       conditional: 'Conditional',
+      terminate: 'Terminate',
     },
     eventTypeDialog: {
       addTitle: 'Add intermediate event',

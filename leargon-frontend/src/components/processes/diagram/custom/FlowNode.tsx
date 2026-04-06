@@ -22,6 +22,7 @@ const FlowNode: React.FC<Props> = ({ node, isEditing, onEdit, onDelete, onNaviga
           label={node.label}
           eventDefinition={node.eventDefinition}
           isEditing={isEditing}
+          onEdit={() => onEdit(node)}
           onLabelChange={(label) => onLabelChange(node.id, label)}
         />
       );
@@ -31,6 +32,7 @@ const FlowNode: React.FC<Props> = ({ node, isEditing, onEdit, onDelete, onNaviga
           label={node.label}
           eventDefinition={node.eventDefinition}
           isEditing={isEditing}
+          onEdit={() => onEdit(node)}
           onLabelChange={(label) => onLabelChange(node.id, label)}
         />
       );

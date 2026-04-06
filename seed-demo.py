@@ -150,23 +150,12 @@ if isinstance(_all_classifs, list):
         api('DELETE', f'/classifications/{c["key"]}', token=T)
     print(f'  deleted {len(_deletable)} classifications (skipped {len(_all_classifs) - len(_deletable)} system)')
 
-print('[3/7] Processes (clear diagrams, deepest children first)...')
+print('[3/7] Processes (clear flows, deepest children first)...')
 processes = api('GET', '/processes', token=T)
 if isinstance(processes, list):
-    minimal_bpmn = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"'
-        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-        ' targetNamespace="http://bpmn.io/schema/bpmn">'
-        '<process id="wipe-process" isExecutable="false">'
-        '<startEvent id="wipe-start"/>'
-        '<endEvent id="wipe-end"/>'
-        '<sequenceFlow id="wipe-flow" sourceRef="wipe-start" targetRef="wipe-end"/>'
-        '</process>'
-        '</definitions>'
-    )
+    # Clear the structured flow for every process so FK-dependent child rows are removed
     for p in processes:
-        api('PUT', f'/processes/{p["key"]}/diagram', {'bpmnXml': minimal_bpmn}, T)
+        api('PUT', f'/processes/{p["key"]}/flow', {'nodes': [], 'tracks': []}, T)
     # Sort deepest children first so parents can be deleted after
     procs_by_key = {p['key']: p for p in processes}
     def proc_depth(p):
@@ -1619,20 +1608,83 @@ for proc_en, prio in [
     assign('processes', pk(proc_en), [(PP, prio)])
 
 
-# ── 8c. Process Diagrams ──────────────────────────────────────────────────────
-print('\n[8c/9] Process diagrams...')
+# ── 8c. Process Flows ─────────────────────────────────────────────────────────
+print('\n[8c/9] Process flows...')
 
-from xml.sax.saxutils import escape as _e
+import uuid as _uuid
 
 
+def _flow(steps):
+    """
+    Build a SaveProcessFlowRequest from a simplified step list.
+
+    Each step is a dict with 'type':
+      {'type': 'task',    'label': str, 'linked': processKey}
+      {'type': 'event',   'definition': str, 'label': str}
+      {'type': 'gateway', 'gatewayType': str, 'label': str,
+                          'trackLabels': [str, ...],
+                          'tracks': [[step, ...], [step, ...]]}
+
+    Returns {'nodes': [...], 'tracks': [...]} for PUT /processes/{key}/flow.
+    """
+    nodes = []
+    tracks = []
+    _pos = [0]
+
+    def _np():
+        p = _pos[0]; _pos[0] += 1; return p
+
+    def _add(step, track_id=None):
+        t = step.get('type', 'task')
+        if t == 'task':
+            nodes.append({
+                'id': str(_uuid.uuid4()), 'position': _np(), 'nodeType': 'TASK',
+                'label': step.get('label'), 'linkedProcessKey': step.get('linked'),
+                'trackId': track_id,
+            })
+        elif t == 'event':
+            nodes.append({
+                'id': str(_uuid.uuid4()), 'position': _np(),
+                'nodeType': 'INTERMEDIATE_EVENT',
+                'eventDefinition': step.get('definition', 'NONE'),
+                'label': step.get('label'), 'trackId': track_id,
+            })
+        elif t == 'gateway':
+            pair_id = str(_uuid.uuid4())
+            split_id = str(_uuid.uuid4())
+            join_id  = str(_uuid.uuid4())
+            gtype = step.get('gatewayType', 'EXCLUSIVE')
+            nodes.append({
+                'id': split_id, 'position': _np(), 'nodeType': 'GATEWAY_SPLIT',
+                'gatewayType': gtype, 'gatewayPairId': pair_id,
+                'label': step.get('label'), 'trackId': track_id,
+            })
+            labels = step.get('trackLabels', [])
+            for ti, tsteps in enumerate(step.get('tracks', [])):
+                tid = str(_uuid.uuid4())
+                tracks.append({
+                    'id': tid, 'gatewayNodeId': split_id, 'trackIndex': ti,
+                    'label': labels[ti] if ti < len(labels) else None,
+                })
+                for s in tsteps:
+                    _add(s, tid)
+            nodes.append({
+                'id': join_id, 'position': _np(), 'nodeType': 'GATEWAY_JOIN',
+                'gatewayType': gtype, 'gatewayPairId': pair_id, 'trackId': track_id,
+            })
+
+    nodes.append({'id': str(_uuid.uuid4()), 'position': _np(), 'nodeType': 'START_EVENT'})
+    for step in steps:
+        _add(step)
+    nodes.append({'id': str(_uuid.uuid4()), 'position': _np(), 'nodeType': 'END_EVENT'})
+
+    return {'nodes': nodes, 'tracks': tracks}
+
+
+# kept for reference — old BPMN builder no longer used
 def _bpmn(pid, nodes, edges, called=None):
-    """
-    Build BPMN 2.0 XML compatible with bpmn-js.
-    nodes: [(id, etype, label, cx, cy), ...]
-      etype: start | end | task | user | service | send | call | xgw | pgw
-    edges: [(src, tgt) | (src, tgt, label), ...]
-    called: {node_id: processKey} — calledElement for callActivity nodes
-    """
+    """Legacy BPMN XML builder — replaced by _flow(). Kept to avoid NameError in any
+    remaining reference but the return value is no longer sent to the API."""
     DIM = {
         'start':   (36,  36),
         'end':     (36,  36),
@@ -1718,347 +1770,144 @@ def _bpmn(pid, nodes, edges, called=None):
     )
 
 
-# ── Diagram definitions ────────────────────────────────────────────────────────
+# ── Flow definitions ───────────────────────────────────────────────────────────
 
 _D = {
 
 # ── Customer Registration ──────────────────────────────────────────────────────
-# Start → Collect Personal Data → Validate Customer Data (call) →
-# Confirm Email Address (call) → Activate Account → End
-'Customer Registration': _bpmn('p_cust_reg', [
-    ('cr_start',    'start',   'Start',                           175, 100),
-    ('cr_collect',  'call',    'Collect Personal Data',           355, 100),
-    ('cr_validate', 'call',    'Validate Customer Data',          535, 100),
-    ('cr_confirm',  'call',    'Confirm Email Address',           715, 100),
-    ('cr_activate', 'call',    'Activate Account',                895, 100),
-    ('cr_end',      'end',     'End',                            1050, 100),
-], [
-    ('cr_start',    'cr_collect'),
-    ('cr_collect',  'cr_validate'),
-    ('cr_validate', 'cr_confirm'),
-    ('cr_confirm',  'cr_activate'),
-    ('cr_activate', 'cr_end'),
-], called={
-    'cr_collect':  pk('Collect Personal Data'),
-    'cr_validate': pk('Validate Customer Data'),
-    'cr_confirm':  pk('Confirm Email Address'),
-    'cr_activate': pk('Activate Account'),
-}),
+'Customer Registration': _flow([
+    {'type': 'task', 'label': 'Collect Personal Data',  'linked': pk('Collect Personal Data')},
+    {'type': 'task', 'label': 'Validate Customer Data', 'linked': pk('Validate Customer Data')},
+    {'type': 'task', 'label': 'Confirm Email Address',  'linked': pk('Confirm Email Address')},
+    {'type': 'task', 'label': 'Activate Account',       'linked': pk('Activate Account')},
+]),
 
 # ── Validate Customer Data ─────────────────────────────────────────────────────
-# Start → Check Required Fields → [Data Complete?]
-#   Yes → Validate Format → [Format OK?] → Yes → End (Valid)
-#   No  → Request Missing Data → End (Rejected)
-'Validate Customer Data': _bpmn('p_val_data', [
-    ('vd_start',   'start',   'Start',                175, 120),
-    ('vd_check',   'call',    'Check Required Fields', 355, 120),
-    ('vd_gw1',     'xgw',     'Data Complete?',        535, 120),
-    ('vd_format',  'call',    'Validate Format',       715,  70),
-    ('vd_gw2',     'xgw',     'Format OK?',            895,  70),
-    ('vd_end_ok',  'end',     'Valid',                1055,  70),
-    ('vd_request', 'call',    'Request Missing Data',  715, 200),
-    ('vd_end_rej', 'end',     'Rejected',             1055, 200),
-], [
-    ('vd_start',   'vd_check'),
-    ('vd_check',   'vd_gw1'),
-    ('vd_gw1',     'vd_format',  'Complete'),
-    ('vd_format',  'vd_gw2'),
-    ('vd_gw2',     'vd_end_ok',  'Valid'),
-    ('vd_gw2',     'vd_end_rej', 'Invalid'),
-    ('vd_gw1',     'vd_request', 'Incomplete'),
-    ('vd_request', 'vd_end_rej'),
-], called={
-    'vd_check':   pk('Check Required Fields'),
-    'vd_format':  pk('Validate Format'),
-    'vd_request': pk('Request Missing Data'),
-}),
+'Validate Customer Data': _flow([
+    {'type': 'task', 'label': 'Check Required Fields', 'linked': pk('Check Required Fields')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'Data Complete?',
+     'trackLabels': ['Complete', 'Incomplete'], 'tracks': [
+        [{'type': 'task', 'label': 'Validate Format', 'linked': pk('Validate Format')}],
+        [{'type': 'task', 'label': 'Request Missing Data', 'linked': pk('Request Missing Data')}],
+    ]},
+]),
 
 # ── Confirm Email Address ──────────────────────────────────────────────────────
-# Start → Generate Token → Send Verification Email → [Token Verified?]
-#   Verified → Mark Email Confirmed → End (Confirmed)
-#   Timeout  → Send Reminder → End (Expired)
-'Confirm Email Address': _bpmn('p_conf_email', [
-    ('ce_start',    'start',   'Start',                     175, 120),
-    ('ce_token',    'call',    'Generate One-Time Token',   355, 120),
-    ('ce_send',     'call',    'Send Verification Email',   535, 120),
-    ('ce_gw',       'xgw',     'Token Verified?',           715, 120),
-    ('ce_confirm',  'call',    'Mark Email Confirmed',      895,  70),
-    ('ce_end_ok',   'end',     'Confirmed',                1050,  70),
-    ('ce_remind',   'call',    'Send Reminder Email',       895, 200),
-    ('ce_end_exp',  'end',     'Expired',                  1050, 200),
-], [
-    ('ce_start',   'ce_token'),
-    ('ce_token',   'ce_send'),
-    ('ce_send',    'ce_gw'),
-    ('ce_gw',      'ce_confirm', 'Token Received'),
-    ('ce_confirm', 'ce_end_ok'),
-    ('ce_gw',      'ce_remind',  'Timeout'),
-    ('ce_remind',  'ce_end_exp'),
-], called={
-    'ce_token':   pk('Generate One-Time Token'),
-    'ce_send':    pk('Send Verification Email'),
-    'ce_confirm': pk('Mark Email Confirmed'),
-    'ce_remind':  pk('Send Reminder Email'),
-}),
+'Confirm Email Address': _flow([
+    {'type': 'task', 'label': 'Generate One-Time Token',  'linked': pk('Generate One-Time Token')},
+    {'type': 'task', 'label': 'Send Verification Email',  'linked': pk('Send Verification Email')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'Token Verified?',
+     'trackLabels': ['Token Received', 'Timeout'], 'tracks': [
+        [{'type': 'task', 'label': 'Mark Email Confirmed', 'linked': pk('Mark Email Confirmed')}],
+        [{'type': 'task', 'label': 'Send Reminder Email',  'linked': pk('Send Reminder Email')}],
+    ]},
+]),
 
 # ── Place an Order ─────────────────────────────────────────────────────────────
-# Start → Search for Product (call) → Add to Cart (call) → Checkout (call) →
-# Send Order Confirmation → End
-'Place an Order': _bpmn('p_place_order', [
-    ('po_start',   'start',   'Start',                     175, 100),
-    ('po_search',  'call',    'Search for Product',        355, 100),
-    ('po_cart',    'call',    'Add to Cart',               535, 100),
-    ('po_checkout','call',    'Checkout',                  715, 100),
-    ('po_confirm', 'call',    'Send Order Confirmation',   895, 100),
-    ('po_end',     'end',     'Order Confirmed',          1050, 100),
-], [
-    ('po_start',    'po_search'),
-    ('po_search',   'po_cart'),
-    ('po_cart',     'po_checkout'),
-    ('po_checkout', 'po_confirm'),
-    ('po_confirm',  'po_end'),
-], called={
-    'po_search':   pk('Search for Product'),
-    'po_cart':     pk('Add to Cart'),
-    'po_checkout': pk('Checkout'),
-    'po_confirm':  pk('Send Order Confirmation'),
-}),
+'Place an Order': _flow([
+    {'type': 'task', 'label': 'Search for Product',       'linked': pk('Search for Product')},
+    {'type': 'task', 'label': 'Add to Cart',              'linked': pk('Add to Cart')},
+    {'type': 'task', 'label': 'Checkout',                 'linked': pk('Checkout')},
+    {'type': 'task', 'label': 'Send Order Confirmation',  'linked': pk('Send Order Confirmation')},
+]),
 
 # ── Search for Product ─────────────────────────────────────────────────────────
-# Start → Enter Search Query → Query Product Catalogue → Apply Filters →
-# Display Results → Customer Selects Product → End
-'Search for Product': _bpmn('p_search', [
-    ('sp_start',   'start',   'Start',                    175, 100),
-    ('sp_query',   'call',    'Enter Search Query',       355, 100),
-    ('sp_fetch',   'call',    'Query Product Catalogue',  535, 100),
-    ('sp_filter',  'call',    'Apply Filters',            715, 100),
-    ('sp_display', 'call',    'Display Results',          895, 100),
-    ('sp_select',  'call',    'Customer Selects Product', 1075, 100),
-    ('sp_end',     'end',     'Product Selected',         1230, 100),
-], [
-    ('sp_start',   'sp_query'),
-    ('sp_query',   'sp_fetch'),
-    ('sp_fetch',   'sp_filter'),
-    ('sp_filter',  'sp_display'),
-    ('sp_display', 'sp_select'),
-    ('sp_select',  'sp_end'),
-], called={
-    'sp_query':   pk('Enter Search Query'),
-    'sp_fetch':   pk('Query Product Catalogue'),
-    'sp_filter':  pk('Apply Filters'),
-    'sp_display': pk('Display Results'),
-    'sp_select':  pk('Customer Selects Product'),
-}),
+'Search for Product': _flow([
+    {'type': 'task', 'label': 'Enter Search Query',       'linked': pk('Enter Search Query')},
+    {'type': 'task', 'label': 'Query Product Catalogue',  'linked': pk('Query Product Catalogue')},
+    {'type': 'task', 'label': 'Apply Filters',            'linked': pk('Apply Filters')},
+    {'type': 'task', 'label': 'Display Results',          'linked': pk('Display Results')},
+    {'type': 'task', 'label': 'Customer Selects Product', 'linked': pk('Customer Selects Product')},
+]),
 
 # ── Add to Cart ────────────────────────────────────────────────────────────────
-# Start → Check Stock → [In Stock?]
-#   Yes → Add to Cart → Update Cart Total → End (Added)
-#   No  → Show Out-of-Stock Notice → End (Unavailable)
-'Add to Cart': _bpmn('p_add_cart', [
-    ('ac_start',  'start',   'Start',                    175, 120),
-    ('ac_stock',  'call',    'Check Stock Availability',  355, 120),
-    ('ac_gw',     'xgw',     'In Stock?',                535, 120),
-    ('ac_add',    'call',    'Add Item to Cart',          695,  70),
-    ('ac_total',  'call',    'Update Cart Total',         875,  70),
-    ('ac_end_ok', 'end',     'Item Added',               1010,  70),
-    ('ac_notice', 'call',    'Show Out-of-Stock Notice',  695, 200),
-    ('ac_end_no', 'end',     'Unavailable',              1010, 200),
-], [
-    ('ac_start',  'ac_stock'),
-    ('ac_stock',  'ac_gw'),
-    ('ac_gw',     'ac_add',    'In Stock'),
-    ('ac_add',    'ac_total'),
-    ('ac_total',  'ac_end_ok'),
-    ('ac_gw',     'ac_notice', 'Out of Stock'),
-    ('ac_notice', 'ac_end_no'),
-], called={
-    'ac_stock':  pk('Check Stock Availability'),
-    'ac_add':    pk('Add Item to Cart'),
-    'ac_total':  pk('Update Cart Total'),
-    'ac_notice': pk('Show Out-of-Stock Notice'),
-}),
+'Add to Cart': _flow([
+    {'type': 'task', 'label': 'Check Stock Availability', 'linked': pk('Check Stock Availability')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'In Stock?',
+     'trackLabels': ['In Stock', 'Out of Stock'], 'tracks': [
+        [
+            {'type': 'task', 'label': 'Add Item to Cart',        'linked': pk('Add Item to Cart')},
+            {'type': 'task', 'label': 'Update Cart Total',       'linked': pk('Update Cart Total')},
+        ],
+        [{'type': 'task', 'label': 'Show Out-of-Stock Notice',   'linked': pk('Show Out-of-Stock Notice')}],
+    ]},
+]),
 
 # ── Checkout ───────────────────────────────────────────────────────────────────
-# Start → Review Cart → Validate Shipping Address (call) →
-# [PGW split] → Process Payment (call) ──┐
-#              → Send Invoice (call)     ─┤
-# [PGW join]  → Confirm Order → End
-'Checkout': _bpmn('p_checkout', [
-    ('co_start',   'start',   'Start',                        175, 130),
-    ('co_review',  'call',    'Review Cart',                  355, 130),
-    ('co_addr',    'call',    'Validate Shipping Address',    535, 130),
-    ('co_split',   'pgw',     '',                             715, 130),
-    ('co_payment', 'call',    'Process Payment',              895,  70),
-    ('co_invoice', 'call',    'Send Invoice',                 895, 210),
-    ('co_join',    'pgw',     '',                            1095, 130),
-    ('co_confirm', 'call',    'Confirm Order',               1255, 130),
-    ('co_end',     'end',     'Order Placed',                1415, 130),
-], [
-    ('co_start',   'co_review'),
-    ('co_review',  'co_addr'),
-    ('co_addr',    'co_split'),
-    ('co_split',   'co_payment'),
-    ('co_split',   'co_invoice'),
-    ('co_payment', 'co_join'),
-    ('co_invoice', 'co_join'),
-    ('co_join',    'co_confirm'),
-    ('co_confirm', 'co_end'),
-], called={
-    'co_review':  pk('Review Cart'),
-    'co_addr':    pk('Validate Shipping Address'),
-    'co_payment': pk('Process Payment'),
-    'co_invoice': pk('Send Invoice'),
-    'co_confirm': pk('Confirm Order'),
-}),
+'Checkout': _flow([
+    {'type': 'task', 'label': 'Review Cart',                 'linked': pk('Review Cart')},
+    {'type': 'task', 'label': 'Validate Shipping Address',   'linked': pk('Validate Shipping Address')},
+    {'type': 'gateway', 'gatewayType': 'PARALLEL', 'tracks': [
+        [{'type': 'task', 'label': 'Process Payment', 'linked': pk('Process Payment')}],
+        [{'type': 'task', 'label': 'Send Invoice',    'linked': pk('Send Invoice')}],
+    ]},
+    {'type': 'task', 'label': 'Confirm Order',               'linked': pk('Confirm Order')},
+]),
 
 # ── Validate Shipping Address ──────────────────────────────────────────────────
-# Start → Parse Address → Check Completeness → [Valid?]
-#   Valid   → Verify Deliverability → End (Validated)
-#   Invalid → Return Validation Error → End (Rejected)
-'Validate Shipping Address': _bpmn('p_val_addr', [
-    ('va_start',   'start',   'Start',                      175, 120),
-    ('va_parse',   'call',    'Parse Address Fields',        355, 120),
-    ('va_check',   'call',    'Check Completeness',          535, 120),
-    ('va_gw',      'xgw',     'Address Valid?',              715, 120),
-    ('va_deliver', 'call',    'Verify Deliverability',       895,  70),
-    ('va_end_ok',  'end',     'Address Validated',          1050,  70),
-    ('va_error',   'call',    'Return Validation Error',     895, 200),
-    ('va_end_rej', 'end',     'Rejected',                   1050, 200),
-], [
-    ('va_start',   'va_parse'),
-    ('va_parse',   'va_check'),
-    ('va_check',   'va_gw'),
-    ('va_gw',      'va_deliver', 'Valid'),
-    ('va_deliver', 'va_end_ok'),
-    ('va_gw',      'va_error',   'Invalid'),
-    ('va_error',   'va_end_rej'),
-], called={
-    'va_parse':   pk('Parse Address Fields'),
-    'va_check':   pk('Check Completeness'),
-    'va_deliver': pk('Verify Deliverability'),
-    'va_error':   pk('Return Validation Error'),
-}),
+'Validate Shipping Address': _flow([
+    {'type': 'task', 'label': 'Parse Address Fields',       'linked': pk('Parse Address Fields')},
+    {'type': 'task', 'label': 'Check Completeness',         'linked': pk('Check Completeness')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'Address Valid?',
+     'trackLabels': ['Valid', 'Invalid'], 'tracks': [
+        [{'type': 'task', 'label': 'Verify Deliverability',    'linked': pk('Verify Deliverability')}],
+        [{'type': 'task', 'label': 'Return Validation Error',  'linked': pk('Return Validation Error')}],
+    ]},
+]),
 
 # ── Process Payment ────────────────────────────────────────────────────────────
-# Start → Tokenise Card Data → Submit to Payment Gateway → [Authorised?]
-#   Authorised → Capture Payment → Record Transaction → End (Success)
-#   Declined   → Decline Transaction → End (Failed)
-'Process Payment': _bpmn('p_proc_pay', [
-    ('pp_start',    'start',   'Start',                        175, 120),
-    ('pp_token',    'call',    'Tokenise Card Data',           355, 120),
-    ('pp_submit',   'call',    'Submit to Payment Gateway',    535, 120),
-    ('pp_gw',       'xgw',     'Authorised?',                  715, 120),
-    ('pp_capture',  'call',    'Capture Payment',              895,  70),
-    ('pp_record',   'call',    'Record Transaction',          1075,  70),
-    ('pp_end_ok',   'end',     'Payment Successful',          1230,  70),
-    ('pp_decline',  'call',    'Decline Transaction',          895, 200),
-    ('pp_end_fail', 'end',     'Payment Failed',              1230, 200),
-], [
-    ('pp_start',   'pp_token'),
-    ('pp_token',   'pp_submit'),
-    ('pp_submit',  'pp_gw'),
-    ('pp_gw',      'pp_capture',  'Authorised'),
-    ('pp_capture', 'pp_record'),
-    ('pp_record',  'pp_end_ok'),
-    ('pp_gw',      'pp_decline',  'Declined'),
-    ('pp_decline', 'pp_end_fail'),
-], called={
-    'pp_token':   pk('Tokenise Card Data'),
-    'pp_submit':  pk('Submit to Payment Gateway'),
-    'pp_capture': pk('Capture Payment'),
-    'pp_record':  pk('Record Transaction'),
-    'pp_decline': pk('Decline Transaction'),
-}),
+'Process Payment': _flow([
+    {'type': 'task', 'label': 'Tokenise Card Data',         'linked': pk('Tokenise Card Data')},
+    {'type': 'task', 'label': 'Submit to Payment Gateway',  'linked': pk('Submit to Payment Gateway')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'Authorised?',
+     'trackLabels': ['Authorised', 'Declined'], 'tracks': [
+        [
+            {'type': 'task', 'label': 'Capture Payment',    'linked': pk('Capture Payment')},
+            {'type': 'task', 'label': 'Record Transaction', 'linked': pk('Record Transaction')},
+        ],
+        [{'type': 'task', 'label': 'Decline Transaction',   'linked': pk('Decline Transaction')}],
+    ]},
+]),
 
 # ── Send Invoice ───────────────────────────────────────────────────────────────
-# Start → Generate Invoice → Render as PDF → Send Email → Log Delivery → End
-'Send Invoice': _bpmn('p_invoice', [
-    ('si_start',  'start',   'Start',                  175, 100),
-    ('si_gen',    'call',    'Generate Invoice',        355, 100),
-    ('si_pdf',    'call',    'Render as PDF',           535, 100),
-    ('si_send',   'call',    'Send Email to Customer',  715, 100),
-    ('si_log',    'call',    'Log Delivery Status',     895, 100),
-    ('si_end',    'end',     'Invoice Sent',           1050, 100),
-], [
-    ('si_start', 'si_gen'),
-    ('si_gen',   'si_pdf'),
-    ('si_pdf',   'si_send'),
-    ('si_send',  'si_log'),
-    ('si_log',   'si_end'),
-], called={
-    'si_gen':  pk('Generate Invoice'),
-    'si_pdf':  pk('Render as PDF'),
-    'si_send': pk('Send Email to Customer'),
-    'si_log':  pk('Log Delivery Status'),
-}),
+'Send Invoice': _flow([
+    {'type': 'task', 'label': 'Generate Invoice',       'linked': pk('Generate Invoice')},
+    {'type': 'task', 'label': 'Render as PDF',          'linked': pk('Render as PDF')},
+    {'type': 'task', 'label': 'Send Email to Customer', 'linked': pk('Send Email to Customer')},
+    {'type': 'task', 'label': 'Log Delivery Status',    'linked': pk('Log Delivery Status')},
+]),
 
 # ── Ship Order ─────────────────────────────────────────────────────────────────
-# Start → Pick and Pack (call) → Assign Carrier → Create Shipping Label →
-# Hand Over to Carrier → Update Tracking Status → End
-'Ship Order': _bpmn('p_ship', [
-    ('sh_start',    'start',   'Start',                   175, 100),
-    ('sh_pack',     'call',    'Pick and Pack',            355, 100),
-    ('sh_carrier',  'call',    'Assign Carrier',           535, 100),
-    ('sh_label',    'call',    'Create Shipping Label',    715, 100),
-    ('sh_handover', 'call',    'Hand Over to Carrier',     895, 100),
-    ('sh_tracking', 'call',    'Update Tracking Status',  1075, 100),
-    ('sh_end',      'end',     'Order Shipped',           1230, 100),
-], [
-    ('sh_start',    'sh_pack'),
-    ('sh_pack',     'sh_carrier'),
-    ('sh_carrier',  'sh_label'),
-    ('sh_label',    'sh_handover'),
-    ('sh_handover', 'sh_tracking'),
-    ('sh_tracking', 'sh_end'),
-], called={
-    'sh_pack':     pk('Pick and Pack'),
-    'sh_carrier':  pk('Assign Carrier'),
-    'sh_label':    pk('Create Shipping Label'),
-    'sh_handover': pk('Hand Over to Carrier'),
-    'sh_tracking': pk('Update Tracking Status'),
-}),
+'Ship Order': _flow([
+    {'type': 'task', 'label': 'Pick and Pack',          'linked': pk('Pick and Pack')},
+    {'type': 'task', 'label': 'Assign Carrier',         'linked': pk('Assign Carrier')},
+    {'type': 'task', 'label': 'Create Shipping Label',  'linked': pk('Create Shipping Label')},
+    {'type': 'task', 'label': 'Hand Over to Carrier',   'linked': pk('Hand Over to Carrier')},
+    {'type': 'task', 'label': 'Update Tracking Status', 'linked': pk('Update Tracking Status')},
+]),
 
 # ── Pick and Pack ──────────────────────────────────────────────────────────────
-# Start → Retrieve Order Manifest → Pick Items from Shelves → [All Items Available?]
-#   Yes → Pack Items → Seal Parcel → Apply Shipping Label → End (Ready)
-#   No  → Flag Backorder → End (Partial / Backorder)
-'Pick and Pack': _bpmn('p_pick_pack', [
-    ('pap_start',    'start',  'Start',                      175, 120),
-    ('pap_manifest', 'call',   'Retrieve Order Manifest',    355, 120),
-    ('pap_pick',     'call',   'Pick Items from Shelves',    535, 120),
-    ('pap_gw',       'xgw',    'All Items Available?',       715, 120),
-    ('pap_pack',     'call',   'Pack Items',                 895,  70),
-    ('pap_seal',     'call',   'Seal Parcel',               1075,  70),
-    ('pap_label',    'call',   'Apply Shipping Label',      1255,  70),
-    ('pap_end_ok',   'end',    'Parcel Ready',              1410,  70),
-    ('pap_backorder','call',   'Flag Backorder',             895, 200),
-    ('pap_end_bo',   'end',    'Backorder Created',         1075, 200),
-], [
-    ('pap_start',    'pap_manifest'),
-    ('pap_manifest', 'pap_pick'),
-    ('pap_pick',     'pap_gw'),
-    ('pap_gw',       'pap_pack',      'All Available'),
-    ('pap_pack',     'pap_seal'),
-    ('pap_seal',     'pap_label'),
-    ('pap_label',    'pap_end_ok'),
-    ('pap_gw',       'pap_backorder', 'Items Missing'),
-    ('pap_backorder','pap_end_bo'),
-], called={
-    'pap_manifest':  pk('Retrieve Order Manifest'),
-    'pap_pick':      pk('Pick Items from Shelves'),
-    'pap_pack':      pk('Pack Items'),
-    'pap_seal':      pk('Seal Parcel'),
-    'pap_label':     pk('Apply Shipping Label'),
-    'pap_backorder': pk('Flag Backorder'),
-}),
+'Pick and Pack': _flow([
+    {'type': 'task', 'label': 'Retrieve Order Manifest',   'linked': pk('Retrieve Order Manifest')},
+    {'type': 'task', 'label': 'Pick Items from Shelves',   'linked': pk('Pick Items from Shelves')},
+    {'type': 'gateway', 'gatewayType': 'EXCLUSIVE', 'label': 'All Items Available?',
+     'trackLabels': ['All Available', 'Items Missing'], 'tracks': [
+        [
+            {'type': 'task', 'label': 'Pack Items',             'linked': pk('Pack Items')},
+            {'type': 'task', 'label': 'Seal Parcel',            'linked': pk('Seal Parcel')},
+            {'type': 'task', 'label': 'Apply Shipping Label',   'linked': pk('Apply Shipping Label')},
+        ],
+        [{'type': 'task', 'label': 'Flag Backorder',            'linked': pk('Flag Backorder')}],
+    ]},
+]),
 
 }  # end _D
 
 
-for proc_en, bpmn_xml in _D.items():
+for proc_en, flow_data in _D.items():
     pkey = pk(proc_en)
-    ok(f'diagram: {proc_en}',
-       api('PUT', f'/processes/{pkey}/diagram', {'bpmnXml': bpmn_xml}, T))
+    ok(f'flow: {proc_en}',
+       api('PUT', f'/processes/{pkey}/flow', flow_data, T))
 
 
 # ── Field Configurations (Mandatory Fields) ─────────────────────────────────────

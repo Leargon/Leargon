@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, ClickAwayListener, TextField, Typography } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, TextField, Typography } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { useTranslation } from 'react-i18next';
 import type { EventDefinition } from '../../../../../api/generated/model/eventDefinition';
 import EventIcon from './EventIcon';
@@ -8,10 +9,11 @@ interface Props {
   label?: string | null;
   eventDefinition?: EventDefinition | null;
   isEditing: boolean;
+  onEdit?: () => void;
   onLabelChange: (label: string) => void;
 }
 
-const EndEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, onLabelChange }) => {
+const EndEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, onEdit, onLabelChange }) => {
   const { t } = useTranslation();
   const [editingLabel, setEditingLabel] = useState(false);
   const [draft, setDraft] = useState('');
@@ -32,23 +34,35 @@ const EndEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, onLa
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
       {/* Thick ring — BPMN end event; icon is filled (throwing) */}
-      <Box
-        data-testid="node-end-event"
-        sx={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          border: '4px solid',
-          borderColor: 'error.main',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'error.main',
-        }}
-      >
-        <EventIcon definition={eventDefinition} filled size={14} />
+      <Box sx={{ position: 'relative' }}>
+        <Box
+          data-testid="node-end-event"
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            border: '4px solid',
+            borderColor: 'error.main',
+            bgcolor: 'background.paper',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'error.main',
+          }}
+        >
+          <EventIcon definition={eventDefinition} filled size={14} />
+        </Box>
+        {isEditing && onEdit && (
+          <IconButton
+            size="small"
+            onClick={onEdit}
+            data-testid="end-event-replace-btn"
+            sx={{ position: 'absolute', top: -10, right: -10, p: '2px', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
+          >
+            <EditIcon sx={{ fontSize: 10 }} />
+          </IconButton>
+        )}
       </Box>
 
       {editingLabel ? (

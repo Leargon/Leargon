@@ -166,7 +166,7 @@ open class BpmnExportService {
                 } else {
                     ""
                 }
-            val nodeChildren = if (node.nodeType == FlowNodeType.INTERMEDIATE_EVENT) eventDefinitionXml(node) else ""
+            val nodeChildren = if (node.nodeType == FlowNodeType.INTERMEDIATE_EVENT || node.nodeType == FlowNodeType.END_EVENT || node.nodeType == FlowNodeType.START_EVENT) eventDefinitionXml(node) else ""
             shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, node.label, nodeExtra, nodeChildren))
             if (prevId != null) flows.add(FlowSpec("flow_${flowCounter.next()}", prevId, node.id))
             prevId = node.id
@@ -210,6 +210,7 @@ open class BpmnExportService {
             FlowEventDefinition.SIGNAL -> "<bpmn:signalEventDefinition id=\"${node.id}_sig\"/>"
             FlowEventDefinition.CONDITIONAL ->
                 "<bpmn:conditionalEventDefinition id=\"${node.id}_cond\"><bpmn:condition/></bpmn:conditionalEventDefinition>"
+            FlowEventDefinition.TERMINATE -> "<bpmn:terminateEventDefinition id=\"${node.id}_term\"/>"
             else -> ""
         }
 

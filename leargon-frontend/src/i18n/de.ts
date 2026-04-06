@@ -552,6 +552,7 @@ const de = {
       message: 'Nachricht',
       signal: 'Signal',
       conditional: 'Bedingung',
+      terminate: 'Terminieren',
     },
     eventTypeDialog: {
       addTitle: 'Zwischenereignis hinzufügen',
