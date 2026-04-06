@@ -33,6 +33,7 @@ const EndEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, onLa
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
       {/* Thick ring — BPMN end event; icon is filled (throwing) */}
       <Box
+        data-testid="node-end-event"
         sx={{
           width: 36,
           height: 36,

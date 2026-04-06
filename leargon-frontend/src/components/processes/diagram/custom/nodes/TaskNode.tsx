@@ -31,6 +31,7 @@ const TaskNode: React.FC<Props> = ({
     <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
       <Paper
         variant="outlined"
+        data-testid={isSubProcess ? 'node-subprocess' : 'node-task'}
         sx={{
           width: 110,
           minHeight: 52,

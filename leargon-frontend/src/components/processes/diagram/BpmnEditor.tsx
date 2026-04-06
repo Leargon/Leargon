@@ -497,13 +497,13 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       {/* Toolbar */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
         {canEdit && !isEditing && (
-          <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={enterEditMode}>
+          <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={enterEditMode} data-testid="flow-edit-btn">
             {t('common.edit')}
           </Button>
         )}
         {isEditing && (
           <>
-            <Button size="small" variant="outlined" startIcon={<Cancel />} onClick={handleCancel} color="inherit">
+            <Button size="small" variant="outlined" startIcon={<Cancel />} onClick={handleCancel} color="inherit" data-testid="flow-cancel-btn">
               {t('common.cancel')}
             </Button>
             <Button
@@ -512,6 +512,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
               startIcon={<Save />}
               onClick={handleSave}
               disabled={saveFlow.isPending}
+              data-testid="flow-save-btn"
             >
               {saveFlow.isPending ? t('common.saving') : t('common.save')}
             </Button>
@@ -522,6 +523,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
       {/* Flow canvas */}
       <Paper
         variant="outlined"
+        data-testid="flow-canvas"
         sx={{
           p: 2,
           overflowX: 'auto',

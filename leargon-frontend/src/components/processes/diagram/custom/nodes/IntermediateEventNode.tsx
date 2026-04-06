@@ -46,6 +46,7 @@ const IntermediateEventNode: React.FC<Props> = ({
     <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
       {/* Double ring — BPMN intermediate catching event */}
       <Box
+        data-testid="node-intermediate-event"
         sx={{
           position: 'relative',
           width: 40,

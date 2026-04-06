@@ -166,6 +166,14 @@ export const createCapability = (
 ): Promise<Record<string, unknown>> =>
   apiFetch('/capabilities', 'POST', { names: [{ locale: 'en', text: name }], ...extras }, as);
 
+export const saveProcessFlow = (
+  processKey: string,
+  nodes: Record<string, unknown>[],
+  tracks: Record<string, unknown>[] = [],
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/flow`, 'PUT', { nodes, tracks }, as);
+
 export const createDomainEvent = (
   publishingBoundedContextKey: string,
   name: string,

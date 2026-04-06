@@ -18,6 +18,7 @@ const InsertionPoint: React.FC<Props> = ({ onInsert }) => {
           color="primary"
           onClick={(e) => onInsert(e.currentTarget)}
           sx={{ width: 24, height: 24, border: '1px solid', borderColor: 'primary.main' }}
+          data-testid="insert-btn"
         >
           <AddIcon sx={{ fontSize: 14 }} />
         </IconButton>

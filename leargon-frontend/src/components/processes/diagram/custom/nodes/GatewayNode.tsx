@@ -73,6 +73,7 @@ const GatewayNode: React.FC<Props> = ({ gatewayType, label, isEditing, isSplit, 
       {/* Diamond */}
       <Box sx={{ position: 'relative', width: 46, height: 46, flexShrink: 0 }}>
         <Box
+          data-testid="node-gateway"
           sx={{
             position: 'absolute',
             top: 0, left: 0,

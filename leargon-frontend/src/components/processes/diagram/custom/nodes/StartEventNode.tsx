@@ -33,6 +33,7 @@ const StartEventNode: React.FC<Props> = ({ label, eventDefinition, isEditing, on
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
       {/* Single thin ring — BPMN start event */}
       <Box
+        data-testid="node-start-event"
         sx={{
           width: 36,
           height: 36,
