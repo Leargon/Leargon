@@ -531,6 +531,17 @@ const en = {
       gateway: 'Gateway',
       comingSoon: 'Coming soon',
     },
+    eventType: {
+      none: 'None',
+      timer: 'Timer',
+      message: 'Message',
+      signal: 'Signal',
+      conditional: 'Conditional',
+    },
+    eventTypeDialog: {
+      addTitle: 'Add intermediate event',
+      editTitle: 'Change event type',
+    },
     stepDialog: {
       addTitle: 'Add step',
       editTitle: 'Edit step',

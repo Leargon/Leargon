@@ -51,7 +51,7 @@ open class BpmnExportService {
         return buildXml(shapes, flows)
     }
 
-    private data class ShapeSpec(val id: String, val bpmnType: String, val x: Int, val y: Int, val w: Int, val h: Int, val name: String?, val extra: String = "")
+    private data class ShapeSpec(val id: String, val bpmnType: String, val x: Int, val y: Int, val w: Int, val h: Int, val name: String?, val extra: String = "", val childrenXml: String = "")
     private data class FlowSpec(val id: String, val sourceRef: String, val targetRef: String)
     private class Counter(var value: Int = 0) { fun next(): Int = ++value }
 
@@ -125,7 +125,9 @@ open class BpmnExportService {
 
             if (node.nodeType == FlowNodeType.GATEWAY_JOIN) continue // placed by split handler
 
-            shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, node.label, if (node.nodeType == FlowNodeType.TASK && node.linkedProcessKey != null) " calledElement=\"${node.linkedProcessKey}\"" else ""))
+            val nodeExtra = if (node.nodeType == FlowNodeType.TASK && node.linkedProcessKey != null) " calledElement=\"${node.linkedProcessKey}\"" else ""
+            val nodeChildren = if (node.nodeType == FlowNodeType.INTERMEDIATE_EVENT) eventDefinitionXml(node) else ""
+            shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, node.label, nodeExtra, nodeChildren))
             if (prevId != null) flows.add(FlowSpec("flow_${flowCounter.next()}", prevId, node.id))
             prevId = node.id
             x += H_GAP
@@ -176,7 +178,13 @@ open class BpmnExportService {
 """)
         shapes.forEach { s ->
             val nameAttr = if (s.name != null) " name=\"${s.name.xmlEscape()}\"" else ""
-            sb.append("    <${s.bpmnType} id=\"${s.id}\"$nameAttr${s.extra}/>\n")
+            if (s.childrenXml.isEmpty()) {
+                sb.append("    <${s.bpmnType} id=\"${s.id}\"$nameAttr${s.extra}/>\n")
+            } else {
+                sb.append("    <${s.bpmnType} id=\"${s.id}\"$nameAttr${s.extra}>\n")
+                sb.append("      ${s.childrenXml}\n")
+                sb.append("    </${s.bpmnType}>\n")
+            }
         }
         flows.forEach { f ->
             sb.append("    <bpmn:sequenceFlow id=\"${f.id}\" sourceRef=\"${f.sourceRef}\" targetRef=\"${f.targetRef}\"/>\n")

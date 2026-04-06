@@ -289,4 +289,160 @@ class ProcessDiagramControllerSpec extends Specification {
         def ex = thrown(HttpClientResponseException)
         ex.status == HttpStatus.NOT_FOUND
     }
+
+    // ===========================
+    // IS-SUB-PROCESS DETECTION
+    // ===========================
+
+    def "GET /processes/{key}/flow marks TASK node as isSubProcess when linked process has content beyond Start+End"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def parent = createProcess(userData.token, "Parent Process")
+        def child  = createProcess(userData.token, "Child Process")
+
+        // Give the child a non-trivial flow (Start + Task + End)
+        def childFlow = [
+            nodes: [
+                [id: "cs", position: 0, nodeType: "START_EVENT"],
+                [id: "ct", position: 1, nodeType: "TASK", label: "Do work"],
+                [id: "ce", position: 2, nodeType: "END_EVENT"]
+            ],
+            tracks: []
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${child.key}/flow", childFlow).bearerAuth(userData.token),
+                Map
+        )
+
+        // Save parent flow that references the child as a TASK
+        def parentFlow = [
+            nodes: [
+                [id: "ps", position: 0, nodeType: "START_EVENT"],
+                [id: "pt", position: 1, nodeType: "TASK", label: "Child step", linkedProcessKey: child.key],
+                [id: "pe", position: 2, nodeType: "END_EVENT"]
+            ],
+            tracks: []
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${parent.key}/flow", parentFlow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${parent.key}/flow").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def taskNode = response.body().nodes.find { it.nodeType == "TASK" }
+        taskNode != null
+        taskNode.isSubProcess == true
+        taskNode.linkedProcessKey == child.key
+    }
+
+    def "GET /processes/{key}/flow marks TASK node as NOT isSubProcess when linked process has only Start+End"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def parent = createProcess(userData.token, "Parent Process")
+        def child  = createProcess(userData.token, "Empty Child")
+
+        // Child has only Start+End (minimal flow)
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${child.key}/flow", minimalFlowRequest()).bearerAuth(userData.token),
+                Map
+        )
+
+        def parentFlow = [
+            nodes: [
+                [id: "ps", position: 0, nodeType: "START_EVENT"],
+                [id: "pt", position: 1, nodeType: "TASK", label: "Child step", linkedProcessKey: child.key],
+                [id: "pe", position: 2, nodeType: "END_EVENT"]
+            ],
+            tracks: []
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${parent.key}/flow", parentFlow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${parent.key}/flow").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def taskNode = response.body().nodes.find { it.nodeType == "TASK" }
+        taskNode.isSubProcess == false
+    }
+
+    // ===========================
+    // INTERMEDIATE EVENT EXPORT
+    // ===========================
+
+    def "GET /processes/{key}/diagram emits correct event definition for TIMER intermediate event"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "Timer Process")
+        def flow = [
+            nodes: [
+                [id: "s1", position: 0, nodeType: "START_EVENT"],
+                [id: "ev", position: 1, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "TIMER", label: "Wait"],
+                [id: "e1", position: 2, nodeType: "END_EVENT"]
+            ],
+            tracks: []
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${process.key}/diagram").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def xml = response.body().bpmnXml as String
+        xml.contains("bpmn:intermediateCatchEvent")
+        xml.contains("bpmn:timerEventDefinition")
+    }
+
+    def "GET /processes/{key}/diagram emits correct event definitions for all intermediate event types"() {
+        given:
+        def userData = createUserWithToken("owner@example.com", "owner")
+        def process = createProcess(userData.token, "Events Process")
+        def flow = [
+            nodes: [
+                [id: "s1",  position: 0, nodeType: "START_EVENT"],
+                [id: "ev1", position: 1, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "MESSAGE"],
+                [id: "ev2", position: 2, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "SIGNAL"],
+                [id: "ev3", position: 3, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "CONDITIONAL"],
+                [id: "e1",  position: 4, nodeType: "END_EVENT"]
+            ],
+            tracks: []
+        ]
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${process.key}/flow", flow).bearerAuth(userData.token),
+                Map
+        )
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${process.key}/diagram").bearerAuth(userData.token),
+                Map
+        )
+
+        then:
+        response.status() == HttpStatus.OK
+        def xml = response.body().bpmnXml as String
+        xml.contains("bpmn:messageEventDefinition")
+        xml.contains("bpmn:signalEventDefinition")
+        xml.contains("bpmn:conditionalEventDefinition")
+    }
 }

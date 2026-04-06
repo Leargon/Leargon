@@ -3,6 +3,7 @@ import type { LocalNode } from './types';
 import StartEventNode from './nodes/StartEventNode';
 import EndEventNode from './nodes/EndEventNode';
 import TaskNode from './nodes/TaskNode';
+import IntermediateEventNode from './nodes/IntermediateEventNode';
 
 interface Props {
   node: LocalNode;
@@ -41,6 +42,17 @@ const FlowNode: React.FC<Props> = ({ node, isEditing, onEdit, onDelete, onNaviga
           onEdit={() => onEdit(node)}
           onDelete={() => onDelete(node.id)}
           onNavigate={node.linkedProcessKey ? () => onNavigate(node.linkedProcessKey!) : undefined}
+        />
+      );
+    case 'INTERMEDIATE_EVENT':
+      return (
+        <IntermediateEventNode
+          label={node.label}
+          eventDefinition={node.eventDefinition}
+          isEditing={isEditing}
+          onEdit={() => onEdit(node)}
+          onDelete={() => onDelete(node.id)}
+          onLabelChange={(label) => onLabelChange(node.id, label)}
         />
       );
     default:

@@ -531,6 +531,17 @@ const fr = {
       gateway: 'Passerelle',
       comingSoon: 'Prochainement',
     },
+    eventType: {
+      none: 'Aucun',
+      timer: 'Minuterie',
+      message: 'Message',
+      signal: 'Signal',
+      conditional: 'Conditionnel',
+    },
+    eventTypeDialog: {
+      addTitle: 'Ajouter un événement intermédiaire',
+      editTitle: "Changer le type d'événement",
+    },
     stepDialog: {
       addTitle: 'Ajouter une étape',
       editTitle: "Modifier l'étape",

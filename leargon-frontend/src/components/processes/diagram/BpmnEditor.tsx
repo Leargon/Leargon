@@ -26,9 +26,12 @@ import type { FlowNodeResponse } from '../../../api/generated/model/flowNodeResp
 import type { ProcessFlowResponse } from '../../../api/generated/model/processFlowResponse';
 import type { ProcessResponse } from '../../../api/generated/model/processResponse';
 import type { LocalNode } from './custom/types';
+import { EventDefinition } from '../../../api/generated/model/eventDefinition';
+import { useLocale } from '../../../context/LocaleContext';
 import FlowCanvas from './custom/FlowCanvas';
 import InsertMenu from './custom/InsertMenu';
 import StepDialog from './custom/StepDialog';
+import EventTypeDialog from './custom/EventTypeDialog';
 
 interface Props {
   processKey: string;
@@ -61,8 +64,15 @@ interface StepDialogState {
   editNode?: LocalNode;
 }
 
+interface EventTypeDialogState {
+  open: boolean;
+  insertAfterPosition?: number;
+  editNode?: LocalNode;
+}
+
 const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -76,10 +86,23 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const allProcesses: ProcessResponse[] = (processesResponse?.data ?? []) as ProcessResponse[];
   const currentProcess = allProcesses.find((p) => p.key === processKey) ?? null;
 
+  // Always resolve TASK labels from the live process list so locale changes are reflected immediately.
+  const resolveLabel = (node: LocalNode): string | null => {
+    if (node.nodeType === 'TASK' && node.linkedProcessKey) {
+      const linked = allProcesses.find((p) => p.key === node.linkedProcessKey);
+      if (linked) return getLocalizedText(linked.names);
+    }
+    return node.label ?? null;
+  };
+
+  const withResolvedLabels = (nodes: LocalNode[]): LocalNode[] =>
+    nodes.map((n) => ({ ...n, label: resolveLabel(n) }));
+
   const [isEditing, setIsEditing] = useState(false);
   const [localNodes, setLocalNodes] = useState<LocalNode[]>([]);
   const [insertMenu, setInsertMenu] = useState<InsertState | null>(null);
   const [stepDialog, setStepDialog] = useState<StepDialogState>({ open: false });
+  const [eventTypeDialog, setEventTypeDialog] = useState<EventTypeDialogState>({ open: false });
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
   // Sync local nodes from server when not editing
@@ -121,7 +144,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   const handleSave = async () => {
     try {
-      const nodes = localNodes.map((n, i) => ({
+      const nodes = withResolvedLabels(localNodes).map((n, i) => ({
         id: n.id,
         position: i,
         nodeType: n.nodeType,
@@ -154,9 +177,44 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     setInsertMenu(null);
   };
 
-  // Step dialog for inserting a new node
+  const handleInsertMenuEvent = () => {
+    if (!insertMenu) return;
+    setEventTypeDialog({ open: true, insertAfterPosition: insertMenu.afterPosition });
+    setInsertMenu(null);
+  };
+
   const handleEditNode = (node: LocalNode) => {
-    setStepDialog({ open: true, editNode: node });
+    if (node.nodeType === 'TASK') {
+      setStepDialog({ open: true, editNode: node });
+    } else if (node.nodeType === 'INTERMEDIATE_EVENT') {
+      setEventTypeDialog({ open: true, editNode: node });
+    }
+  };
+
+  const handleEventTypeConfirm = (eventDefinition: EventDefinition) => {
+    if (eventTypeDialog.insertAfterPosition !== undefined) {
+      const afterPos = eventTypeDialog.insertAfterPosition;
+      setLocalNodes((prev) => {
+        const idx = prev.findIndex((n) => n.position === afterPos);
+        const newNode: LocalNode = {
+          id: crypto.randomUUID(),
+          position: 0,
+          nodeType: 'INTERMEDIATE_EVENT',
+          eventDefinition,
+          label: null,
+        };
+        const next = [...prev];
+        next.splice(idx + 1, 0, newNode);
+        return next.map((n, i) => ({ ...n, position: i }));
+      });
+    } else if (eventTypeDialog.editNode) {
+      setLocalNodes((prev) =>
+        prev.map((n) =>
+          n.id === eventTypeDialog.editNode!.id ? { ...n, eventDefinition } : n,
+        ),
+      );
+    }
+    setEventTypeDialog({ open: false });
   };
 
   const handleStepDialogConfirm = (linkedKey: string, processName: string) => {
@@ -204,7 +262,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
     );
   };
 
-  const displayNodes: LocalNode[] = isEditing ? localNodes : serverNodes;
+  const displayNodes: LocalNode[] = withResolvedLabels(isEditing ? localNodes : serverNodes);
 
   if (isLoading)
     return (
@@ -274,6 +332,15 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         anchorEl={insertMenu?.anchor ?? null}
         onClose={handleInsertMenuClose}
         onSelectStep={handleInsertMenuStep}
+        onSelectEvent={handleInsertMenuEvent}
+      />
+
+      <EventTypeDialog
+        open={eventTypeDialog.open}
+        isNew={eventTypeDialog.insertAfterPosition !== undefined}
+        current={eventTypeDialog.editNode?.eventDefinition}
+        onConfirm={handleEventTypeConfirm}
+        onCancel={() => setEventTypeDialog({ open: false })}
       />
 
       {/* Step insert/edit dialog */}

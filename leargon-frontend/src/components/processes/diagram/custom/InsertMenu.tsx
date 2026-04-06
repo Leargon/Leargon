@@ -6,16 +6,15 @@ interface Props {
   anchorEl: HTMLElement | null;
   onClose: () => void;
   onSelectStep: () => void;
-  // Event and Gateway are placeholders for Stories 2 and 3
+  onSelectEvent: () => void;
+  // Gateway is a placeholder for Story 3
 }
 
-const InsertMenu: React.FC<Props> = ({ anchorEl, onClose, onSelectStep }) => {
+const InsertMenu: React.FC<Props> = ({ anchorEl, onClose, onSelectStep, onSelectEvent }) => {
   const { t } = useTranslation();
 
-  const handleStep = () => {
-    onClose();
-    onSelectStep();
-  };
+  const handleStep = () => { onClose(); onSelectStep(); };
+  const handleEvent = () => { onClose(); onSelectEvent(); };
 
   return (
     <Menu
@@ -31,16 +30,13 @@ const InsertMenu: React.FC<Props> = ({ anchorEl, onClose, onSelectStep }) => {
         </ListItemIcon>
         <ListItemText primary={t('flowEditor.insertMenu.step')} />
       </MenuItem>
-      <Divider />
-      <MenuItem dense disabled>
+      <MenuItem dense onClick={handleEvent}>
         <ListItemIcon sx={{ minWidth: 32 }}>
-          <Typography sx={{ fontSize: '0.9rem', color: 'text.disabled' }}>○</Typography>
+          <Typography sx={{ fontSize: '0.9rem', color: 'text.secondary' }}>○</Typography>
         </ListItemIcon>
-        <ListItemText
-          primary={t('flowEditor.insertMenu.event')}
-          secondary={t('flowEditor.insertMenu.comingSoon')}
-        />
+        <ListItemText primary={t('flowEditor.insertMenu.event')} />
       </MenuItem>
+      <Divider />
       <MenuItem dense disabled>
         <ListItemIcon sx={{ minWidth: 32 }}>
           <Typography sx={{ fontSize: '0.9rem', color: 'text.disabled' }}>◇</Typography>

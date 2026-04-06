@@ -42,7 +42,7 @@ const TaskNode: React.FC<Props> = ({
           py: 0.5,
           cursor: isEditing ? 'pointer' : canNavigate ? 'pointer' : 'default',
           borderWidth: isSubProcess ? 2 : 1,
-          borderColor: 'primary.main',
+          borderColor: isSubProcess ? 'primary.main' : 'divider',
           borderStyle: isSubProcess ? 'double' : 'solid',
           borderRadius: 1,
           position: 'relative',

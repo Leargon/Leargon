@@ -531,6 +531,17 @@ const de = {
       gateway: 'Gateway',
       comingSoon: 'Demnächst verfügbar',
     },
+    eventType: {
+      none: 'Kein',
+      timer: 'Timer',
+      message: 'Nachricht',
+      signal: 'Signal',
+      conditional: 'Bedingung',
+    },
+    eventTypeDialog: {
+      addTitle: 'Zwischenereignis hinzufügen',
+      editTitle: 'Ereignistyp ändern',
+    },
     stepDialog: {
       addTitle: 'Schritt hinzufügen',
       editTitle: 'Schritt bearbeiten',
