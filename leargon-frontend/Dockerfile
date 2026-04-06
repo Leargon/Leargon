@@ -1,6 +1,10 @@
 # Build stage
 FROM node:24-alpine AS build
 
+# Version injected at build time by the release workflow
+ARG VITE_APP_VERSION=dev
+ENV VITE_APP_VERSION=$VITE_APP_VERSION
+
 WORKDIR /app
 
 # Copy package files
@@ -12,7 +16,7 @@ RUN npm ci --loglevel=error
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (VITE_APP_VERSION is baked into the bundle via vite.config.ts)
 RUN npm run build
 
 # Runtime stage
