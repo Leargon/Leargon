@@ -46,7 +46,7 @@ test.describe('Business Process CRUD — Admin', () => {
   test('can delete a business process', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByTestId('delete-process-btn').click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
     await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });
@@ -144,7 +144,7 @@ test.describe('Business Process CRUD — Owner', () => {
   test('can delete their business process', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
 
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.getByTestId('delete-process-btn').click();
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
     await expect(page).not.toHaveURL(new RegExp(`/processes/${processKey}`), { timeout: 10_000 });

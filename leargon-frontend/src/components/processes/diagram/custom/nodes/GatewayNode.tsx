@@ -111,6 +111,7 @@ const GatewayNode: React.FC<Props> = ({ gatewayType, label, isEditing, isSplit, 
             <Tooltip title={t('flowEditor.replaceGateway')}>
               <IconButton
                 size="small" color="primary"
+                title={t('flowEditor.replaceGateway')}
                 sx={{ position: 'absolute', top: -12, left: -12, width: 20, height: 20, zIndex: 1 }}
                 onClick={onEdit}
               >

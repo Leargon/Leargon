@@ -140,7 +140,7 @@ const StepDialog: React.FC<Props> = ({
           disabled={!canConfirm || createProcess.isPending}
           startIcon={createProcess.isPending ? <CircularProgress size={16} /> : undefined}
         >
-          {isNew ? t('common.add') : t('common.save')}
+          {isNew ? (tab === 1 ? t('common.create') : t('common.add')) : t('common.save')}
         </Button>
       </DialogActions>
     </Dialog>
