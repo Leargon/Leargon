@@ -6,7 +6,8 @@ test.describe('Classification multiValue — Settings', () => {
     await page.goto('/settings/classifications');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('button', { name: 'New Classification' }).click();
+    await page.getByRole('button', { name: 'New', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'New Classification' }).click();
 
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Name (English)').fill(uid('PW MultiValue Class'));
@@ -24,7 +25,8 @@ test.describe('Classification multiValue — Settings', () => {
     await page.goto('/settings/classifications');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('button', { name: 'New Classification' }).click();
+    await page.getByRole('button', { name: 'New', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'New Classification' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Name (English)').fill(uid('PW SingleValue Class'));
     // Do NOT toggle multiValue
