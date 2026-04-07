@@ -97,3 +97,7 @@ databaseChangeLog:
       file: db/changelog/changes/047-add-preferred-role-to-users.yaml
   - include:
       file: db/changelog/changes/048-localize-process-purpose-security-measures.yaml
+  - include:
+      file: db/changelog/changes/049-create-process-flow-tables.yaml
+  - include:
+      file: db/changelog/changes/050-add-track-label.yaml

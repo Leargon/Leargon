@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 050-add-track-label
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: process_flow_track
+            columns:
+              - column:
+                  name: label
+                  type: VARCHAR(512)
+                  constraints:
+                    nullable: true

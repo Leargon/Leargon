@@ -14,6 +14,7 @@ import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
+import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.service.FieldConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -23,7 +24,8 @@ import java.time.ZonedDateTime
 open class ProcessMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper,
-    private val capabilityMapper: CapabilityMapper
+    private val capabilityMapper: CapabilityMapper,
+    private val processFlowNodeRepository: ProcessFlowNodeRepository
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
         val fc =
@@ -87,15 +89,20 @@ open class ProcessMapper(
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
             .legalBasis(toLegalBasis(process.legalBasis))
-            .purpose(LocalizedTextMapper.toModel(process.purpose))
-            .securityMeasures(LocalizedTextMapper.toModel(process.securityMeasures))
+            .purpose(process.purpose?.let { LocalizedTextMapper.toModel(it) })
+            .securityMeasures(process.securityMeasures?.let { LocalizedTextMapper.toModel(it) })
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
-            .calledProcessKeys(extractCalledProcessKeys(process.bpmnXml))
+            .calledProcessKeys(
+                processFlowNodeRepository
+                    .findByProcessKeyOrderByPosition(process.key)
+                    .mapNotNull { it.linkedProcessKey }
+                    .distinct()
+            )
     }
 
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
@@ -127,8 +134,6 @@ open class ProcessMapper(
             }.sortedBy { it.key }
 
     companion object {
-        private val CALLED_ELEMENT_REGEX = Regex("""calledElement="([^"]+)"""")
-
         @JvmStatic
         fun collectEffectiveEntities(
             process: Process,
@@ -145,12 +150,6 @@ open class ProcessMapper(
             }
             collect(process)
             return result
-        }
-
-        @JvmStatic
-        fun extractCalledProcessKeys(bpmnXml: String?): List<String> {
-            if (bpmnXml.isNullOrBlank()) return emptyList()
-            return CALLED_ELEMENT_REGEX.findAll(bpmnXml).map { it.groupValues[1] }.toList()
         }
 
         @JvmStatic

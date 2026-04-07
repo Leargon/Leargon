@@ -44,10 +44,11 @@ import type {
   ErrorResponse,
   LocalizedText,
   ProcessDiagramResponse,
+  ProcessFlowResponse,
   ProcessResponse,
   ProcessTreeResponse,
   ProcessVersionResponse,
-  SaveProcessDiagramRequest,
+  SaveProcessFlowRequest,
   UpdateCrossBorderTransfersRequest,
   UpdateLinkedServiceProvidersRequest,
   UpdateOrgUnitParentsRequest,
@@ -2816,8 +2817,8 @@ export function useGetProcessVersionDiff<TData = Awaited<ReturnType<typeof getPr
 
 
 /**
- * Returns the diagram (elements and flows) of a process.
- * @summary Get process diagram
+ * Generates and returns a BPMN 2.0 XML export from the stored flow nodes. Read-only — use PUT /processes/{key}/flow to edit.
+ * @summary Export process diagram as BPMN XML
  */
 export type getProcessDiagramResponse200 = {
   data: ProcessDiagramResponse
@@ -2920,7 +2921,7 @@ export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProces
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Get process diagram
+ * @summary Export process diagram as BPMN XML
  */
 
 export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProcessDiagram>>, TError = void | ErrorResponse>(
@@ -2939,72 +2940,195 @@ export function useGetProcessDiagram<TData = Awaited<ReturnType<typeof getProces
 
 
 /**
- * Replaces the entire diagram (elements and flows) of a process. Only the process owner or an admin can save.
- * @summary Save process diagram
+ * Returns the structured flow model (nodes and tracks) of a process.
+ * @summary Get process flow
  */
-export type saveProcessDiagramResponse200 = {
-  data: ProcessDiagramResponse
+export type getProcessFlowResponse200 = {
+  data: ProcessFlowResponse
   status: 200
 }
 
-export type saveProcessDiagramResponse400 = {
-  data: ErrorResponse
-  status: 400
-}
-
-export type saveProcessDiagramResponse401 = {
+export type getProcessFlowResponse401 = {
   data: void
   status: 401
 }
 
-export type saveProcessDiagramResponse403 = {
-  data: void
-  status: 403
-}
-
-export type saveProcessDiagramResponse404 = {
+export type getProcessFlowResponse404 = {
   data: ErrorResponse
   status: 404
 }
 
-export type saveProcessDiagramResponseSuccess = (saveProcessDiagramResponse200) & {
+export type getProcessFlowResponseSuccess = (getProcessFlowResponse200) & {
   headers: Headers;
 };
-export type saveProcessDiagramResponseError = (saveProcessDiagramResponse400 | saveProcessDiagramResponse401 | saveProcessDiagramResponse403 | saveProcessDiagramResponse404) & {
+export type getProcessFlowResponseError = (getProcessFlowResponse401 | getProcessFlowResponse404) & {
   headers: Headers;
 };
 
-export type saveProcessDiagramResponse = (saveProcessDiagramResponseSuccess | saveProcessDiagramResponseError)
+export type getProcessFlowResponse = (getProcessFlowResponseSuccess | getProcessFlowResponseError)
 
-export const getSaveProcessDiagramUrl = (key: string,) => {
-
-
+export const getGetProcessFlowUrl = (key: string,) => {
 
 
-  return `/processes/${key}/diagram`
+
+
+  return `/processes/${key}/flow`
 }
 
-export const saveProcessDiagram = async (key: string,
-    saveProcessDiagramRequest: SaveProcessDiagramRequest, options?: RequestInit): Promise<saveProcessDiagramResponse> => {
+export const getProcessFlow = async (key: string, options?: RequestInit): Promise<getProcessFlowResponse> => {
 
-  return customAxios<saveProcessDiagramResponse>(getSaveProcessDiagramUrl(key),
+  return customAxios<getProcessFlowResponse>(getGetProcessFlowUrl(key),
   {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      saveProcessDiagramRequest,)
+    method: 'GET'
+
+
   }
 );}
 
 
 
 
-export const getSaveProcessDiagramMutationOptions = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext> => {
 
-const mutationKey = ['saveProcessDiagram'];
+export const getGetProcessFlowQueryKey = (key: string,) => {
+    return [
+    `/processes/${key}/flow`
+    ] as const;
+    }
+
+
+export const getGetProcessFlowQueryOptions = <TData = Awaited<ReturnType<typeof getProcessFlow>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessFlowQueryKey(key);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessFlow>>> = ({ signal }) => getProcessFlow(key, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(key), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProcessFlowQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessFlow>>>
+export type GetProcessFlowQueryError = void | ErrorResponse
+
+
+export function useGetProcessFlow<TData = Awaited<ReturnType<typeof getProcessFlow>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessFlow>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessFlow>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessFlow<TData = Awaited<ReturnType<typeof getProcessFlow>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessFlow>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessFlow>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessFlow<TData = Awaited<ReturnType<typeof getProcessFlow>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get process flow
+ */
+
+export function useGetProcessFlow<TData = Awaited<ReturnType<typeof getProcessFlow>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessFlow>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessFlowQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Replaces the entire flow (nodes and tracks) of a process atomically. Only the process owner or an admin can save.
+ * @summary Save process flow
+ */
+export type saveProcessFlowResponse200 = {
+  data: ProcessFlowResponse
+  status: 200
+}
+
+export type saveProcessFlowResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type saveProcessFlowResponse401 = {
+  data: void
+  status: 401
+}
+
+export type saveProcessFlowResponse403 = {
+  data: void
+  status: 403
+}
+
+export type saveProcessFlowResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type saveProcessFlowResponseSuccess = (saveProcessFlowResponse200) & {
+  headers: Headers;
+};
+export type saveProcessFlowResponseError = (saveProcessFlowResponse400 | saveProcessFlowResponse401 | saveProcessFlowResponse403 | saveProcessFlowResponse404) & {
+  headers: Headers;
+};
+
+export type saveProcessFlowResponse = (saveProcessFlowResponseSuccess | saveProcessFlowResponseError)
+
+export const getSaveProcessFlowUrl = (key: string,) => {
+
+
+
+
+  return `/processes/${key}/flow`
+}
+
+export const saveProcessFlow = async (key: string,
+    saveProcessFlowRequest: SaveProcessFlowRequest, options?: RequestInit): Promise<saveProcessFlowResponse> => {
+
+  return customAxios<saveProcessFlowResponse>(getSaveProcessFlowUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      saveProcessFlowRequest,)
+  }
+);}
+
+
+
+
+export const getSaveProcessFlowMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessFlow>>, TError,{key: string;data: SaveProcessFlowRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveProcessFlow>>, TError,{key: string;data: SaveProcessFlowRequest}, TContext> => {
+
+const mutationKey = ['saveProcessFlow'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -3014,10 +3138,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveProcessDiagram>>, {key: string;data: SaveProcessDiagramRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveProcessFlow>>, {key: string;data: SaveProcessFlowRequest}> = (props) => {
           const {key,data} = props ?? {};
 
-          return  saveProcessDiagram(key,data,requestOptions)
+          return  saveProcessFlow(key,data,requestOptions)
         }
 
 
@@ -3027,22 +3151,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SaveProcessDiagramMutationResult = NonNullable<Awaited<ReturnType<typeof saveProcessDiagram>>>
-    export type SaveProcessDiagramMutationBody = SaveProcessDiagramRequest
-    export type SaveProcessDiagramMutationError = ErrorResponse | void
+    export type SaveProcessFlowMutationResult = NonNullable<Awaited<ReturnType<typeof saveProcessFlow>>>
+    export type SaveProcessFlowMutationBody = SaveProcessFlowRequest
+    export type SaveProcessFlowMutationError = ErrorResponse | void
 
     /**
- * @summary Save process diagram
+ * @summary Save process flow
  */
-export const useSaveProcessDiagram = <TError = ErrorResponse | void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessDiagram>>, TError,{key: string;data: SaveProcessDiagramRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+export const useSaveProcessFlow = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveProcessFlow>>, TError,{key: string;data: SaveProcessFlowRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof saveProcessDiagram>>,
+        Awaited<ReturnType<typeof saveProcessFlow>>,
         TError,
-        {key: string;data: SaveProcessDiagramRequest},
+        {key: string;data: SaveProcessFlowRequest},
         TContext
       > => {
-      return useMutation(getSaveProcessDiagramMutationOptions(options), queryClient);
+      return useMutation(getSaveProcessFlowMutationOptions(options), queryClient);
     }
     /**
  * @summary Get DPIA for a process

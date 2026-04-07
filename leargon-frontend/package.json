@@ -25,7 +25,6 @@
     "@tanstack/react-query": "^5.95.2",
     "@xyflow/react": "^12.10.2",
     "axios": "^1.13.6",
-    "bpmn-js": "^18.14.0",
     "flatted": "^3.4.2",
     "i18next": "^25.10.10",
     "react": "^19.2.4",

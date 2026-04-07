@@ -88,9 +88,6 @@ class Process {
     @OneToMany(mappedBy = "process", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var versions: MutableSet<ProcessVersion> = mutableSetOf()
 
-    @Column(name = "bpmn_xml", columnDefinition = "MEDIUMTEXT")
-    var bpmnXml: String? = null
-
     @ManyToMany
     @JoinTable(
         name = "process_entity_inputs",

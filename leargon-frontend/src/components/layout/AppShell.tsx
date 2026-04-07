@@ -6,6 +6,7 @@ import { NavigationProvider } from '../../context/NavigationContext';
 import { WizardModeProvider } from '../../context/WizardModeContext';
 import TopNav from './TopNav';
 import Sidebar from './Sidebar';
+import AppFooter from './AppFooter';
 
 const AppShell: React.FC = () => {
   return (
@@ -30,6 +31,8 @@ const AppShell: React.FC = () => {
             <Outlet />
           </Box>
         </Box>
+
+        <AppFooter />
       </Box>
     </NavigationProvider>
     </WizardModeProvider>
