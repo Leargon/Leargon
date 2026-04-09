@@ -157,6 +157,7 @@ const GatewayTrackGroup: React.FC<Props> = ({
               <Tooltip title={t('flowEditor.deleteTrack')}>
                 <IconButton
                   size="small" color="error"
+                  title={t('flowEditor.deleteTrack')}
                   sx={{ width: 18, height: 18, ml: 0.25 }}
                   onClick={() => onDeleteTrack(track.id)}
                 >

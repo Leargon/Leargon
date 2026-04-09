@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -480,7 +480,14 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   // ── Display ────────────────────────────────────────────────────────────────
 
-  const displayNodes: LocalNode[] = withResolvedLabels(isEditing ? localNodes : serverNodes);
+  // Stable default Start+End for view mode when no flow has been saved yet
+  const defaultViewNodes = useMemo<LocalNode[]>(() => [
+    { id: 'default-start', position: 0, nodeType: 'START_EVENT' },
+    { id: 'default-end', position: 1, nodeType: 'END_EVENT' },
+  ], []);
+
+  const viewNodes = serverNodes.length > 0 ? serverNodes : defaultViewNodes;
+  const displayNodes: LocalNode[] = withResolvedLabels(isEditing ? localNodes : viewNodes);
   const displayTracks: LocalTrack[] = withResolvedTrackLabels(isEditing ? localTracks : serverTracks);
 
   if (isLoading)
@@ -531,28 +538,22 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           minHeight: 100,
         }}
       >
-        {displayNodes.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-            {t('flowEditor.empty')}
-          </Typography>
-        ) : (
-          <FlowCanvas
-            nodes={displayNodes}
-            tracks={displayTracks}
-            isEditing={isEditing}
-            onInsert={handleInsertPoint}
-            onEdit={handleEditNode}
-            onDelete={handleDelete}
-            onNavigate={handleNavigate}
-            onLabelChange={handleLabelChange}
-            onEditGateway={handleEditGateway}
-            onDeleteGateway={handleDeleteGateway}
-            onInsertInTrack={handleInsertInTrack}
-            onTrackLabelChange={handleTrackLabelChange}
-            onAddTrack={handleAddTrack}
-            onDeleteTrack={handleDeleteTrack}
-          />
-        )}
+        <FlowCanvas
+          nodes={displayNodes}
+          tracks={displayTracks}
+          isEditing={isEditing}
+          onInsert={handleInsertPoint}
+          onEdit={handleEditNode}
+          onDelete={handleDelete}
+          onNavigate={handleNavigate}
+          onLabelChange={handleLabelChange}
+          onEditGateway={handleEditGateway}
+          onDeleteGateway={handleDeleteGateway}
+          onInsertInTrack={handleInsertInTrack}
+          onTrackLabelChange={handleTrackLabelChange}
+          onAddTrack={handleAddTrack}
+          onDeleteTrack={handleDeleteTrack}
+        />
       </Paper>
 
       {/* Insert type menu */}

@@ -18,6 +18,7 @@ import {
   TextField,
   Select,
   MenuItem,
+  Menu,
   Tooltip,
   Divider,
   FormControlLabel,
@@ -27,6 +28,7 @@ import { AutoAwesome } from '@mui/icons-material';
 import ClassificationTaxonomyWizard from './ClassificationTaxonomyWizard';
 import {
   Add as AddIcon,
+  ArrowDropDown as ArrowDropDownIcon,
   Delete as DeleteIcon,
   ExpandMore,
   ChevronRight,
@@ -70,6 +72,7 @@ const ClassificationsTab: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const [taxonomyWizardOpen, setTaxonomyWizardOpen] = useState(false);
+  const [newMenuAnchor, setNewMenuAnchor] = useState<HTMLElement | null>(null);
 
   // Create classification dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -194,9 +197,31 @@ const ClassificationsTab: React.FC = () => {
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Classifications</Typography>
-        <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => { resetCreateForm(); setCreateOpen(true); }}>
-          New Classification
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddIcon />}
+          endIcon={<ArrowDropDownIcon />}
+          onClick={(e) => setNewMenuAnchor(e.currentTarget)}
+        >
+          New
         </Button>
+        <Menu
+          anchorEl={newMenuAnchor}
+          open={Boolean(newMenuAnchor)}
+          onClose={() => setNewMenuAnchor(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          <MenuItem onClick={() => { setNewMenuAnchor(null); resetCreateForm(); setCreateOpen(true); }}>
+            <AddIcon fontSize="small" sx={{ mr: 1 }} />
+            New Classification
+          </MenuItem>
+          <MenuItem onClick={() => { setNewMenuAnchor(null); setTaxonomyWizardOpen(true); }}>
+            <AutoAwesome fontSize="small" sx={{ mr: 1 }} />
+            From Template
+          </MenuItem>
+        </Menu>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}

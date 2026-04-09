@@ -48,6 +48,9 @@ export const OWNER = '.auth/owner.json';
 /** Generate a unique name for test isolation */
 export const uid = (base: string): string => `${base} ${Date.now()}`;
 
+/** Generate a unique node/track ID for process flow (avoids DB primary-key conflicts in parallel runs) */
+export const nid = (): string => crypto.randomUUID();
+
 export const createDomain = (name: string): Promise<Record<string, unknown>> =>
   apiFetch('/business-domains', 'POST', { names: [{ locale: 'en', text: name }] }, ADMIN);
 

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { createProcess, saveProcessFlow, uid, ADMIN } from './api-setup';
+import { createProcess, saveProcessFlow, uid, nid, ADMIN } from './api-setup';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -149,10 +149,11 @@ test.describe('BPMN Editor — Admin', () => {
     const subProcKey = subProc.key as string;
 
     // Give the sub-process a real flow so backend sets isSubProcess=true
+    const [sp1, sp2, sp3] = [nid(), nid(), nid()];
     await saveProcessFlow(subProcKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'TASK', label: 'Inner step' },
-      { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      { id: sp1, position: 0, nodeType: 'START_EVENT' },
+      { id: sp2, position: 1, nodeType: 'TASK', label: 'Inner step' },
+      { id: sp3, position: 2, nodeType: 'END_EVENT' },
     ]);
 
     await openDiagram(page, processKey);
@@ -177,17 +178,19 @@ test.describe('BPMN Editor — Admin', () => {
     const subProc = await createProcess(subProcName);
     const subProcKey = subProc.key as string;
 
+    const [sp1, sp2, sp3] = [nid(), nid(), nid()];
     await saveProcessFlow(subProcKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'TASK', label: 'Inner' },
-      { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      { id: sp1, position: 0, nodeType: 'START_EVENT' },
+      { id: sp2, position: 1, nodeType: 'TASK', label: 'Inner' },
+      { id: sp3, position: 2, nodeType: 'END_EVENT' },
     ]);
 
     // Pre-populate the parent flow via API so we don't need to build it through UI
+    const [p1, p2, p3] = [nid(), nid(), nid()];
     await saveProcessFlow(processKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'TASK', label: subProcName, linkedProcessKey: subProcKey },
-      { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      { id: p1, position: 0, nodeType: 'START_EVENT' },
+      { id: p2, position: 1, nodeType: 'TASK', label: subProcName, linkedProcessKey: subProcKey },
+      { id: p3, position: 2, nodeType: 'END_EVENT' },
     ]);
 
     await openDiagram(page, processKey);
@@ -242,10 +245,11 @@ test.describe('BPMN Editor — Admin', () => {
 
   test('can replace Timer event with Message event via replace button', async ({ page }) => {
     // Pre-seed the flow with a timer event via API
+    const [e1, e2, e3] = [nid(), nid(), nid()];
     await saveProcessFlow(processKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'INTERMEDIATE_EVENT', eventDefinition: 'TIMER' },
-      { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      { id: e1, position: 0, nodeType: 'START_EVENT' },
+      { id: e2, position: 1, nodeType: 'INTERMEDIATE_EVENT', eventDefinition: 'TIMER' },
+      { id: e3, position: 2, nodeType: 'END_EVENT' },
     ]);
 
     await openDiagram(page, processKey);
@@ -298,8 +302,8 @@ test.describe('BPMN Editor — Admin', () => {
     await page.getByRole('button', { name: 'Add track' }).click();
 
     // 3 track rows — easiest to count the track connector structure via add-track appearance
-    // Verify by counting delete-track buttons: at 3 tracks they become visible
-    await expect(page.getByTitle('Delete track')).toBeVisible({ timeout: 5_000 });
+    // Verify by counting delete-track buttons: at 3 tracks they become visible (one per track)
+    await expect(page.getByTitle('Delete track').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('cannot delete a track when only 2 remain', async ({ page }) => {
@@ -314,14 +318,17 @@ test.describe('BPMN Editor — Admin', () => {
   });
 
   test('can replace Exclusive gateway with Parallel gateway', async ({ page }) => {
+    const [gn1, gn2, gn3, gn4] = [nid(), nid(), nid(), nid()];
+    const [gt1, gt2] = [nid(), nid()];
+    const pairId = nid();
     await saveProcessFlow(processKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'GATEWAY_SPLIT', gatewayType: 'EXCLUSIVE', gatewayPairId: 'gw1' },
-      { id: 'n3', position: 3, nodeType: 'GATEWAY_JOIN',  gatewayType: 'EXCLUSIVE', gatewayPairId: 'gw1' },
-      { id: 'n4', position: 4, nodeType: 'END_EVENT' },
+      { id: gn1, position: 0, nodeType: 'START_EVENT' },
+      { id: gn2, position: 1, nodeType: 'GATEWAY_SPLIT', gatewayType: 'EXCLUSIVE', gatewayPairId: pairId },
+      { id: gn3, position: 3, nodeType: 'GATEWAY_JOIN',  gatewayType: 'EXCLUSIVE', gatewayPairId: pairId },
+      { id: gn4, position: 4, nodeType: 'END_EVENT' },
     ], [
-      { id: 't1', gatewayNodeId: 'n2', trackIndex: 0 },
-      { id: 't2', gatewayNodeId: 'n2', trackIndex: 1 },
+      { id: gt1, gatewayNodeId: gn2, trackIndex: 0 },
+      { id: gt2, gatewayNodeId: gn2, trackIndex: 1 },
     ]);
 
     await openDiagram(page, processKey);
@@ -353,10 +360,11 @@ test.describe('BPMN Editor — Admin', () => {
   // ── BPMN XML export ────────────────────────────────────────────────────────
 
   test('GET /processes/{key}/flow/export returns valid BPMN 2.0 XML', async ({ request }) => {
+    const [x1, x2, x3] = [nid(), nid(), nid()];
     await saveProcessFlow(processKey, [
-      { id: 'n1', position: 0, nodeType: 'START_EVENT' },
-      { id: 'n2', position: 1, nodeType: 'TASK', label: 'Export test step' },
-      { id: 'n3', position: 2, nodeType: 'END_EVENT' },
+      { id: x1, position: 0, nodeType: 'START_EVENT' },
+      { id: x2, position: 1, nodeType: 'TASK', label: 'Export test step' },
+      { id: x3, position: 2, nodeType: 'END_EVENT' },
     ]);
 
     const backendUrl = process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
@@ -365,7 +373,7 @@ test.describe('BPMN Editor — Admin', () => {
     const tokenFile = path.join(process.cwd(), '.auth/admin-token.txt');
     const token = fs.readFileSync(tokenFile, 'utf8').trim();
 
-    const res = await fetch(`${backendUrl}/processes/${processKey}/flow/export`, {
+    const res = await fetch(`${backendUrl}/processes/${processKey}/diagram`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

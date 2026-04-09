@@ -504,7 +504,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           )}
         </>}
         actions={isOwnerOrAdmin ? (
-          <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
+          <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)} data-testid="delete-process-btn">
             Delete
           </Button>
         ) : undefined}
@@ -1382,6 +1382,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         parentProcessKey={processKey}
       />
 
+        </AccordionDetails>
+      </Accordion>
+      )}
+
       {/* Process Diagram */}
       <Accordion
         expanded={diagramOpen}
@@ -1451,10 +1455,6 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Table>
           )}
         </Paper>
-      )}
-
-        </AccordionDetails>
-      </Accordion>
       )}
 
       {/* Item 6: What's next suggestion */}

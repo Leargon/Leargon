@@ -68,6 +68,7 @@ const TaskNode: React.FC<Props> = ({
               <IconButton
                 size="small"
                 color="error"
+                title={t('flowEditor.deleteNode')}
                 sx={{ position: 'absolute', top: -10, right: -10, width: 20, height: 20 }}
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
               >
@@ -78,6 +79,7 @@ const TaskNode: React.FC<Props> = ({
               <IconButton
                 size="small"
                 color="primary"
+                title={t('flowEditor.replaceNode')}
                 sx={{ position: 'absolute', top: -10, left: -10, width: 20, height: 20 }}
                 onClick={(e) => { e.stopPropagation(); onEdit(); }}
               >

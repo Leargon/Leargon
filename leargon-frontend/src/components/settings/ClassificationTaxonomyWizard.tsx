@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Checkbox,
   FormControl,
   IconButton,
   InputLabel,
   MenuItem,
+  Radio,
   Select,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import {
+  useGetClassifications,
   useCreateClassification,
   useCreateClassificationValue,
   getGetClassificationsQueryKey,
 } from '../../api/generated/classification/classification';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
-import type { ClassificationAssignableTo, SupportedLocaleResponse } from '../../api/generated/model';
+import type { ClassificationAssignableTo, ClassificationResponse, SupportedLocaleResponse } from '../../api/generated/model';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
 
@@ -292,7 +293,6 @@ interface ClassificationTaxonomyWizardProps {
 const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
   const { mode } = useWizardMode();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createClassification = useCreateClassification();
   const createValue = useCreateClassificationValue();
@@ -301,119 +301,106 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
-  // Step 2 — selected template ids
-  const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(
-    new Set(['confidentiality', 'personal-data']),
+  const { data: classificationsResponse } = useGetClassifications();
+  const existingClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
+
+  // Set of template ids that already have a matching classification name in the system
+  const existingTemplateIds = new Set(
+    TEMPLATES.filter((tpl) => {
+      const i18nId = TEMPLATE_I18N_ID[tpl.id];
+      const templateName = t(`wizard.taxonomy.templates.${i18nId}.name`).toLowerCase();
+      return existingClassifications.some((c) =>
+        c.names?.some((n) => n.text?.toLowerCase() === templateName),
+      );
+    }).map((tpl) => tpl.id),
   );
 
-  // Step 3 — editable classifications (rebuilt when templates change)
-  const [editables, setEditables] = useState<EditableClassification[]>(() =>
-    ['confidentiality', 'personal-data'].map((id) => buildInitialEditable(id, t)),
-  );
+  // Step 1 — single selected template id
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+
+  // Step 2 — editable classification (rebuilt when template changes)
+  const [editable, setEditable] = useState<EditableClassification | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Keep editables in sync when template selection changes
-  const toggleTemplate = (id: string) => {
-    setSelectedTemplates((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      // Rebuild editables to match new selection (preserve existing edits)
-      setEditables((prevEditables) => {
-        const existing = new Map(prevEditables.map((e) => [e.templateId, e]));
-        return [...next].map((tid) => existing.get(tid) || buildInitialEditable(tid, t));
-      });
-      return next;
-    });
+  const selectTemplate = (id: string) => {
+    if (existingTemplateIds.has(id)) return;
+    setSelectedTemplate(id);
+    setEditable(buildInitialEditable(id, t));
   };
 
-  const updateEditableName = (idx: number, name: string) => {
-    setEditables((prev) => prev.map((e, i) => (i === idx ? { ...e, name } : e)));
+  const updateName = (name: string) => {
+    setEditable((prev) => prev ? { ...prev, name } : prev);
   };
 
-  const updateValueName = (editIdx: number, valueIdx: number, name: string) => {
-    setEditables((prev) =>
-      prev.map((e, i) =>
-        i === editIdx
-          ? {
-              ...e,
-              values: e.values.map((v, vi) =>
-                vi === valueIdx ? { key: toKey(name) || v.key, name } : v,
-              ),
-            }
-          : e,
-      ),
+  const updateValueName = (valueIdx: number, name: string) => {
+    setEditable((prev) =>
+      prev
+        ? {
+            ...prev,
+            values: prev.values.map((v, vi) =>
+              vi === valueIdx ? { key: toKey(name) || v.key, name } : v,
+            ),
+          }
+        : prev,
     );
   };
 
-  const addValue = (editIdx: number) => {
-    setEditables((prev) =>
-      prev.map((e, i) =>
-        i === editIdx ? { ...e, values: [...e.values, { key: '', name: '' }] } : e,
-      ),
+  const addValue = () => {
+    setEditable((prev) =>
+      prev ? { ...prev, values: [...prev.values, { key: '', name: '' }] } : prev,
     );
   };
 
-  const removeValue = (editIdx: number, valueIdx: number) => {
-    setEditables((prev) =>
-      prev.map((e, i) =>
-        i === editIdx ? { ...e, values: e.values.filter((_, vi) => vi !== valueIdx) } : e,
-      ),
+  const removeValue = (valueIdx: number) => {
+    setEditable((prev) =>
+      prev ? { ...prev, values: prev.values.filter((_, vi) => vi !== valueIdx) } : prev,
     );
   };
 
-  const updateAssignableTo = (idx: number, assignableTo: ClassificationAssignableTo) => {
-    setEditables((prev) => prev.map((e, i) => (i === idx ? { ...e, assignableTo } : e)));
+  const updateAssignableTo = (assignableTo: ClassificationAssignableTo) => {
+    setEditable((prev) => prev ? { ...prev, assignableTo } : prev);
   };
 
   const handleFinish = async () => {
-    if (editables.length === 0) {
+    if (!editable) {
       setError(t('wizard.taxonomy.errorSelectTemplate'));
       return;
     }
-    for (const e of editables) {
-      if (!e.name.trim()) {
-        setError(t('wizard.taxonomy.errorNamesRequired'));
-        return;
-      }
+    if (!editable.name.trim()) {
+      setError(t('wizard.taxonomy.errorNamesRequired'));
+      return;
     }
     setError(null);
     setIsSubmitting(true);
     try {
-      for (const e of editables) {
-        const classResp = await createClassification.mutateAsync({
-          data: {
-            names: [{ locale: defaultLocale, text: e.name.trim() }],
-            descriptions: [],
-            assignableTo: e.assignableTo,
-            multiValue: e.multiValue,
-          },
-        });
-        const newKey = (classResp.data as any)?.key;
-        if (newKey) {
-          for (const v of e.values.filter((v) => v.name.trim())) {
-            const valueKey = v.key.trim() || toKey(v.name);
-            if (valueKey) {
-              await createValue.mutateAsync({
-                key: newKey,
-                data: {
-                  key: valueKey,
-                  names: [{ locale: defaultLocale, text: v.name.trim() }],
-                  descriptions: [],
-                },
-              });
-            }
+      const classResp = await createClassification.mutateAsync({
+        data: {
+          names: [{ locale: defaultLocale, text: editable.name.trim() }],
+          descriptions: [],
+          assignableTo: editable.assignableTo,
+          multiValue: editable.multiValue,
+        },
+      });
+      const newKey = (classResp.data as any)?.key;
+      if (newKey) {
+        for (const v of editable.values.filter((v) => v.name.trim())) {
+          const valueKey = v.key.trim() || toKey(v.name);
+          if (valueKey) {
+            await createValue.mutateAsync({
+              key: newKey,
+              data: {
+                key: valueKey,
+                names: [{ locale: defaultLocale, text: v.name.trim() }],
+                descriptions: [],
+              },
+            });
           }
         }
       }
       queryClient.invalidateQueries({ queryKey: getGetClassificationsQueryKey() });
       handleClose();
-      navigate('/entities');
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || t('wizard.taxonomy.errorFailed'));
     } finally {
@@ -422,8 +409,8 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
   };
 
   const handleClose = () => {
-    setSelectedTemplates(new Set(['confidentiality', 'personal-data']));
-    setEditables(['confidentiality', 'personal-data'].map((id) => buildInitialEditable(id, t)));
+    setSelectedTemplate(null);
+    setEditable(null);
     setError(null);
     onClose();
   };
@@ -432,63 +419,56 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
 
   const steps = [
     {
-      id: 'welcome',
-      title: t('wizard.taxonomy.stepWelcome'),
-      guidedExplanation: (
-        <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
-            {t('wizard.taxonomy.guidedWelcomeTitle')}
-          </Typography>
-          <Typography variant="body2">{t('wizard.taxonomy.guidedWelcomeText')}</Typography>
-        </Box>
-      ),
-      content: (
-        <Typography variant="body2" color="text.secondary">
-          {t('wizard.taxonomy.guidedWelcomeContent')}
-        </Typography>
-      ),
-    },
-    {
       id: 'templates',
       title: t('wizard.taxonomy.stepTemplates'),
-      isValid: selectedTemplates.size > 0,
+      isValid: selectedTemplate !== null,
       guidedExplanation: (
         <Typography variant="body2">{t('wizard.taxonomy.guidedTemplatesText')}</Typography>
       ),
       content: (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {TEMPLATES.map((tpl) => {
             const i18nId = TEMPLATE_I18N_ID[tpl.id];
+            const isExisting = existingTemplateIds.has(tpl.id);
+            const isSelected = selectedTemplate === tpl.id;
             return (
-              <Box
+              <Tooltip
                 key={tpl.id}
-                sx={{
-                  border: 1,
-                  borderColor: selectedTemplates.has(tpl.id) ? 'primary.main' : 'divider',
-                  borderRadius: 1,
-                  p: 1.5,
-                  cursor: 'pointer',
-                  bgcolor: selectedTemplates.has(tpl.id) ? 'primary.50' : 'transparent',
-                }}
-                onClick={() => toggleTemplate(tpl.id)}
+                title={isExisting ? t('wizard.taxonomy.templateAlreadyExists') : ''}
+                placement="left"
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Checkbox
-                    size="small"
-                    checked={selectedTemplates.has(tpl.id)}
-                    onChange={() => toggleTemplate(tpl.id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      {t(`wizard.taxonomy.templates.${i18nId}.label`)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t(`wizard.taxonomy.templates.${i18nId}.description`)}
-                    </Typography>
+                <Box
+                  sx={{
+                    border: 1,
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    borderRadius: 1,
+                    p: 1.5,
+                    cursor: isExisting ? 'not-allowed' : 'pointer',
+                    bgcolor: isSelected ? 'primary.50' : isExisting ? 'action.disabledBackground' : 'transparent',
+                    opacity: isExisting ? 0.5 : 1,
+                    transition: 'border-color 0.15s, background-color 0.15s',
+                  }}
+                  onClick={() => !isExisting && selectTemplate(tpl.id)}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Radio
+                      size="small"
+                      checked={isSelected}
+                      disabled={isExisting}
+                      onChange={() => selectTemplate(tpl.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Box>
+                      <Typography variant="body2" fontWeight={600} color={isExisting ? 'text.disabled' : 'text.primary'}>
+                        {t(`wizard.taxonomy.templates.${i18nId}.label`)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {t(`wizard.taxonomy.templates.${i18nId}.description`)}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
+              </Tooltip>
             );
           })}
         </Box>
@@ -497,55 +477,50 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
     {
       id: 'review',
       title: t('wizard.taxonomy.stepReview'),
-      skippable: false,
+      isValid: !!editable?.name.trim(),
       guidedExplanation: (
         <Typography variant="body2">{t('wizard.taxonomy.guidedReviewText')}</Typography>
       ),
-      content:
-        editables.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {t('wizard.taxonomy.noTemplatesSelected')}
+      content: !editable ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('wizard.taxonomy.noTemplatesSelected')}
+        </Typography>
+      ) : (
+        <Box>
+          <TextField
+            label={t('wizard.taxonomy.classificationNameLabel')}
+            size="small"
+            fullWidth
+            value={editable.name}
+            onChange={(ev) => updateName(ev.target.value)}
+            sx={{ mb: 1.5 }}
+          />
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+            {t('wizard.taxonomy.valuesLabel')}
           </Typography>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {editables.map((e, editIdx) => (
-              <Box key={e.templateId}>
-                <TextField
-                  label={t('wizard.taxonomy.classificationNameLabel')}
-                  size="small"
-                  fullWidth
-                  value={e.name}
-                  onChange={(ev) => updateEditableName(editIdx, ev.target.value)}
-                  sx={{ mb: 1.5 }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                  {t('wizard.taxonomy.valuesLabel')}
-                </Typography>
-                {e.values.map((v, valueIdx) => (
-                  <Box key={valueIdx} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      value={v.name}
-                      onChange={(ev) => updateValueName(editIdx, valueIdx, ev.target.value)}
-                      placeholder={t('wizard.taxonomy.valueNamePlaceholder')}
-                    />
-                    <IconButton size="small" onClick={() => removeValue(editIdx, valueIdx)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-                <Box
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, cursor: 'pointer', color: 'primary.main' }}
-                  onClick={() => addValue(editIdx)}
-                >
-                  <AddIcon sx={{ fontSize: 16 }} />
-                  <Typography variant="caption">{t('wizard.taxonomy.addValue')}</Typography>
-                </Box>
-              </Box>
-            ))}
+          {editable.values.map((v, valueIdx) => (
+            <Box key={valueIdx} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <TextField
+                size="small"
+                fullWidth
+                value={v.name}
+                onChange={(ev) => updateValueName(valueIdx, ev.target.value)}
+                placeholder={t('wizard.taxonomy.valueNamePlaceholder')}
+              />
+              <IconButton size="small" onClick={() => removeValue(valueIdx)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, cursor: 'pointer', color: 'primary.main' }}
+            onClick={addValue}
+          >
+            <AddIcon sx={{ fontSize: 16 }} />
+            <Typography variant="caption">{t('wizard.taxonomy.addValue')}</Typography>
           </Box>
-        ),
+        </Box>
+      ),
     },
     {
       id: 'assignable-to',
@@ -553,57 +528,43 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
       guidedExplanation: (
         <Typography variant="body2">{t('wizard.taxonomy.guidedAssignableToText')}</Typography>
       ),
-      content:
-        editables.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            {t('wizard.taxonomy.noClassificationsToConfig')}
-          </Typography>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {editables.map((e, idx) => (
-              <FormControl key={e.templateId} size="small" fullWidth>
-                <InputLabel>{e.name || t('wizard.taxonomy.classificationDefault')}</InputLabel>
-                <Select<ClassificationAssignableTo>
-                  value={e.assignableTo}
-                  onChange={(ev: SelectChangeEvent<ClassificationAssignableTo>) =>
-                    updateAssignableTo(idx, ev.target.value as ClassificationAssignableTo)
-                  }
-                  label={e.name || t('wizard.taxonomy.classificationDefault')}
-                >
-                  {ASSIGNABLE_TO_KEYS.map((k) => (
-                    <MenuItem key={k} value={k}>
-                      {t(`wizard.taxonomy.assignableTo.${k}`)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+      content: !editable ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('wizard.taxonomy.noClassificationsToConfig')}
+        </Typography>
+      ) : (
+        <FormControl size="small" fullWidth>
+          <InputLabel>{editable.name || t('wizard.taxonomy.classificationDefault')}</InputLabel>
+          <Select<ClassificationAssignableTo>
+            value={editable.assignableTo}
+            onChange={(ev: SelectChangeEvent<ClassificationAssignableTo>) =>
+              updateAssignableTo(ev.target.value as ClassificationAssignableTo)
+            }
+            label={editable.name || t('wizard.taxonomy.classificationDefault')}
+          >
+            {ASSIGNABLE_TO_KEYS.map((k) => (
+              <MenuItem key={k} value={k}>
+                {t(`wizard.taxonomy.assignableTo.${k}`)}
+              </MenuItem>
             ))}
-          </Box>
-        ),
+          </Select>
+        </FormControl>
+      ),
     },
     {
       id: 'summary',
       title: t('wizard.taxonomy.stepSummary'),
-      content: (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {editables.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {t('wizard.taxonomy.noClassificationsSelected')}
-            </Typography>
-          ) : (
-            editables.map((e) => {
-              const count = e.values.filter((v) => v.name.trim()).length;
-              return (
-                <Box key={e.templateId} sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 1.5 }}>
-                  <Typography variant="body2" fontWeight={600}>{e.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {t(`wizard.taxonomy.assignableTo.${e.assignableTo}`)} ·{' '}
-                    {t('wizard.taxonomy.summaryValues', { count })}
-                  </Typography>
-                </Box>
-              );
-            })
-          )}
+      content: !editable ? (
+        <Typography variant="body2" color="text.secondary">
+          {t('wizard.taxonomy.noClassificationsSelected')}
+        </Typography>
+      ) : (
+        <Box sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 1.5 }}>
+          <Typography variant="body2" fontWeight={600}>{editable.name}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {t(`wizard.taxonomy.assignableTo.${editable.assignableTo}`)} ·{' '}
+            {t('wizard.taxonomy.summaryValues', { count: editable.values.filter((v) => v.name.trim()).length })}
+          </Typography>
         </Box>
       ),
     },
@@ -620,7 +581,7 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
       isSubmitting={isSubmitting}
       submitLabel={t('wizard.taxonomy.submitLabel')}
       error={error}
-      canFinish={editables.length > 0 && editables.every((e) => e.name.trim())}
+      canFinish={!!editable?.name.trim()}
     />
   );
 };
