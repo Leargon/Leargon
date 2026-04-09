@@ -339,7 +339,8 @@ open class ProcessService(
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        if (process.boundedContext?.owningUnit?.businessOwner == null) {
+        val effectiveOwningUnit = process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit
+        if (effectiveOwningUnit?.businessOwner == null) {
             throw IllegalArgumentException(
                 "Cannot clear explicit process owner: no computed owner available from the bounded context's owning unit"
             )

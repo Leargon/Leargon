@@ -44,7 +44,11 @@ open class ProcessMapper(
                     }
 
                     fieldName == "processOwner" -> {
-                        (process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner) != null
+                        (
+                            process.processOwner
+                                ?: (process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit)
+                                    ?.businessOwner
+                        ) != null
                     }
 
                     fieldName == "executingUnits" -> {
@@ -75,7 +79,7 @@ open class ProcessMapper(
                     }
                 }
             }
-        val owningUnit = process.boundedContext?.owningUnit
+        val owningUnit = process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit
         val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
         val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
         val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian

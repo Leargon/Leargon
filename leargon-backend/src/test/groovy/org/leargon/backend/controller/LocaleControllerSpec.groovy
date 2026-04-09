@@ -403,7 +403,7 @@ class LocaleControllerSpec extends Specification {
                 new LocalizedText("en", "Customer"),
                 new LocalizedText("de", "Kunde")
         ])
-        def entityResponse = client.toBlocking().exchange(
+        client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities", entityRequest)
                         .bearerAuth(adminToken),
                 Map
