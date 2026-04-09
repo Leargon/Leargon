@@ -26,23 +26,40 @@ open class BusinessEntityMapper(
         val fc =
             fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
                 when {
-                    fieldName == "names" -> businessEntity.names.isNotEmpty()
-                    fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
-                    fieldName == "boundedContext" -> businessEntity.boundedContext != null
-                    fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
+                    fieldName == "names" -> {
+                        businessEntity.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        businessEntity.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "boundedContext" -> {
+                        businessEntity.boundedContext != null
+                    }
+
+                    fieldName == "retentionPeriod" -> {
+                        !businessEntity.retentionPeriod.isNullOrBlank()
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("descriptions.") -> {
                         val locale = fieldName.removePrefix("descriptions.")
                         businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         businessEntity.classificationAssignments.any { it.classificationKey == classKey }
                     }
-                    else -> true
+
+                    else -> {
+                        true
+                    }
                 }
             }
         val owningUnit = businessEntity.boundedContext?.owningUnit

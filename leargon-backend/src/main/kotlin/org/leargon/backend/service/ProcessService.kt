@@ -680,12 +680,19 @@ open class ProcessService(
         currentUser: User
     ): BusinessEntity =
         when {
-            request.entityKey != null ->
+            request.entityKey != null -> {
                 businessEntityRepository
                     .findByKey(request.entityKey)
                     .orElseThrow { ResourceNotFoundException("Business entity not found: ${request.entityKey}") }
-            request.createEntity != null -> businessEntityService.createBusinessEntity(request.createEntity!!, currentUser)
-            else -> throw IllegalArgumentException("Either entityKey or createEntity must be provided")
+            }
+
+            request.createEntity != null -> {
+                businessEntityService.createBusinessEntity(request.createEntity!!, currentUser)
+            }
+
+            else -> {
+                throw IllegalArgumentException("Either entityKey or createEntity must be provided")
+            }
         }
 
     private fun validateTranslations(

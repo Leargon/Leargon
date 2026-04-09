@@ -17,7 +17,7 @@ open class DpiaMapper {
                 ?: throw IllegalStateException("DPIA ${dpia.key} has no triggeredBy user")
         val (resourceType, resourceKey, resourceName) =
             when {
-                dpia.process != null ->
+                dpia.process != null -> {
                     Triple(
                         DpiaListItemResponseLinkedResourceType.PROCESS,
                         dpia.process!!.key,
@@ -31,7 +31,9 @@ open class DpiaMapper {
                                 ?.text
                             ?: dpia.process!!.key
                     )
-                dpia.entity != null ->
+                }
+
+                dpia.entity != null -> {
                     Triple(
                         DpiaListItemResponseLinkedResourceType.BUSINESS_ENTITY,
                         dpia.entity!!.key,
@@ -45,7 +47,11 @@ open class DpiaMapper {
                                 ?.text
                             ?: dpia.entity!!.key
                     )
-                else -> Triple(null, null, null)
+                }
+
+                else -> {
+                    Triple(null, null, null)
+                }
             }
         return DpiaListItemResponse(
             dpia.key,
