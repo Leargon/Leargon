@@ -121,7 +121,13 @@ const Login: React.FC = () => {
 
   if (azureConfigPending) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh"
+        }}>
         <CircularProgress />
       </Box>
     );
@@ -130,17 +136,24 @@ const Login: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="calc(100vh - 64px)"
-        py={4}
-      >
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "calc(100vh - 64px)",
+          py: 4
+        }}>
         <Card sx={{ width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
             <Box component="img" src="/LeargonLogo.png" sx={{ width: '100%', maxWidth: 400, display: 'block', mx: 'auto', mb: 2 }} />
-            <Typography variant="body2" color="text.secondary" align="center" mb={3}>
+            <Typography
+              variant="body2"
+              align="center"
+              sx={{
+                color: "text.secondary",
+                mb: 3
+              }}>
               Sign in to your Léargon account
             </Typography>
 
@@ -165,7 +178,9 @@ const Login: React.FC = () => {
 
                 <Divider sx={{ my: 2 }} />
 
-                <Box textAlign="center">
+                <Box sx={{
+                  textAlign: "center"
+                }}>
                   <Link
                     component="button"
                     variant="body2"
@@ -184,7 +199,11 @@ const Login: React.FC = () => {
               <>
                 {localLoginForm}
 
-                <Box textAlign="center" mt={2}>
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    mt: 2
+                  }}>
                   <Typography variant="body2">
                     Don't have an account?{' '}
                     <Link component={RouterLink} to="/signup" underline="hover">

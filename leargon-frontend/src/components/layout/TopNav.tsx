@@ -76,7 +76,6 @@ const TopNav: React.FC = () => {
         sx={{ height: 32, mr: 2, cursor: 'pointer' }}
         onClick={() => navigate('/')}
       />
-
       {/* Role switcher */}
       <Tooltip title={isTemporary ? 'Temporary view — resets on next login' : 'Current view'}>
         <Button
@@ -98,7 +97,6 @@ const TopNav: React.FC = () => {
           {t(ROLE_I18N_KEYS[role])}{isTemporary ? ' *' : ''}
         </Button>
       </Tooltip>
-
       {/* Role switcher menu */}
       <Menu
         anchorEl={roleMenuAnchor}
@@ -108,7 +106,9 @@ const TopNav: React.FC = () => {
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
         <Box sx={{ px: 2, py: 0.75 }}>
-          <Typography variant="caption" color="text.secondary">Switch view</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>Switch view</Typography>
         </Box>
         {(['compliance', 'architecture', 'operations', 'admin'] as Role[]).map((r) => (
           <MenuItem
@@ -126,14 +126,11 @@ const TopNav: React.FC = () => {
           </MenuItem>
         ))}
       </Menu>
-
       {/* Global search */}
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', px: 2 }}>
         <GlobalSearch />
       </Box>
-
       <Divider orientation="vertical" flexItem sx={{ borderColor: 'grey.700', mx: 1 }} />
-
       {/* Locale selector */}
       <Select
         value={preferredLocale}
@@ -152,14 +149,12 @@ const TopNav: React.FC = () => {
         ))}
         {locales.length === 0 && <MenuItem value="en">English</MenuItem>}
       </Select>
-
       {/* Dark mode toggle */}
       <Tooltip title={effectiveMode === 'dark' ? 'Light mode' : 'Dark mode'}>
         <IconButton size="small" onClick={toggleMode} sx={{ color: 'grey.400', '&:hover': { color: 'white' } }}>
           {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
         </IconButton>
       </Tooltip>
-
       {/* Settings (admin only) */}
       {isAdmin && (
         <Tooltip title="Settings">
@@ -177,7 +172,6 @@ const TopNav: React.FC = () => {
           </IconButton>
         </Tooltip>
       )}
-
       {/* Profile */}
       <Tooltip title={user?.username || 'Profile'}>
         <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
@@ -186,7 +180,6 @@ const TopNav: React.FC = () => {
           </Avatar>
         </IconButton>
       </Tooltip>
-
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -196,7 +189,9 @@ const TopNav: React.FC = () => {
       >
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="subtitle2">{user?.firstName} {user?.lastName}</Typography>
-          <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{user?.email}</Typography>
         </Box>
         <MenuItem onClick={() => { setAnchorEl(null); navigate('/profile'); }}>
           <ListItemIcon><Person fontSize="small" /></ListItemIcon>

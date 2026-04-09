@@ -94,14 +94,21 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
       skippable: false,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.org.guidedWelcomeTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.org.guidedWelcomeText')}</Typography>
         </Box>
       ),
       content: (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.onboarding.org.guidedWelcomeText')}
         </Typography>
       ),
@@ -205,7 +212,13 @@ const OrgSetupWizard: React.FC<OrgSetupWizardProps> = ({ open, onClose }) => {
 
 const SummaryRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', gap: 1 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: 130, flexShrink: 0 }}>{label}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        width: 130,
+        flexShrink: 0
+      }}>{label}</Typography>
     <Typography variant="body2">{value}</Typography>
   </Box>
 );

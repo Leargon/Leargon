@@ -90,7 +90,9 @@ const NavItemButton: React.FC<{ item: NavItem }> = ({ item }) => {
       </ListItemIcon>
       <ListItemText
         primary={t(item.labelKey)}
-        primaryTypographyProps={{ fontSize: '0.82rem', lineHeight: 1.3 }}
+        slotProps={{
+          primary: { sx: { fontSize: '0.82rem', lineHeight: 1.3 } }
+        }}
       />
     </ListItemButton>
   );

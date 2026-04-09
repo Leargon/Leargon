@@ -200,7 +200,8 @@ open class BusinessEntityService(
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
 
-        if (entity.boundedContext?.owningUnit?.businessOwner == null) {
+        val effectiveOwningUnit = entity.boundedContext?.owningUnit ?: entity.boundedContext?.domain?.owningUnit
+        if (effectiveOwningUnit?.businessOwner == null) {
             throw IllegalArgumentException(
                 "Cannot clear explicit data owner: no computed owner available from the bounded context's owning unit"
             )

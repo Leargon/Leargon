@@ -10,10 +10,14 @@ const OrgChartPage: React.FC = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant="h6" sx={{
+          fontWeight: 600
+        }}>
           {t('diagrams.orgChartTitle')}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('diagrams.orgChartSubtitle')}
         </Typography>
       </Box>

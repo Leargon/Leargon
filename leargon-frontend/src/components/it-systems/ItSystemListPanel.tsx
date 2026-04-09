@@ -69,14 +69,18 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
           </Button>
         )}
       </Box>
-
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>
         ) : filtered.length === 0 ? (
-          <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2,
+              textAlign: 'center'
+            }}>
             {filter ? t('itSystem.noResults') : t('itSystem.noSystemsYet')}
           </Typography>
         ) : (
@@ -92,8 +96,8 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
                   primary={getLocalizedText(s.names, s.key)}
                   secondary={s.vendor ?? s.key}
                   slotProps={{
-                    primary: { variant: 'body2', fontWeight: s.key === selectedKey ? 600 : 400 },
-                    secondary: { color: 'text.secondary', variant: 'caption' },
+                    primary: { variant: 'body2', sx: { fontWeight: s.key === selectedKey ? 600 : 400 } },
+                    secondary: { variant: 'caption', sx: { color: 'text.secondary' } },
                   }}
                 />
               </ListItemButton>

@@ -22,7 +22,7 @@ class ClassificationValue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
 
-    @Column(name = "`key`", nullable = false, length = 20)
+    @Column(name = "`key`", nullable = false, length = 200)
     var key: String = ""
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -38,7 +38,7 @@ class ClassificationValue {
     var classification: Classification? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_id", nullable = false)
+    @JoinColumn(name = "created_by_id", nullable = true)
     var createdBy: User? = null
 
     @DateCreated

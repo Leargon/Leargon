@@ -459,10 +459,14 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
                       onClick={(e) => e.stopPropagation()}
                     />
                     <Box>
-                      <Typography variant="body2" fontWeight={600} color={isExisting ? 'text.disabled' : 'text.primary'}>
+                      <Typography variant="body2" color={isExisting ? 'text.disabled' : 'text.primary'} sx={{
+                        fontWeight: 600
+                      }}>
                         {t(`wizard.taxonomy.templates.${i18nId}.label`)}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                      }}>
                         {t(`wizard.taxonomy.templates.${i18nId}.description`)}
                       </Typography>
                     </Box>
@@ -482,7 +486,9 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
         <Typography variant="body2">{t('wizard.taxonomy.guidedReviewText')}</Typography>
       ),
       content: !editable ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.taxonomy.noTemplatesSelected')}
         </Typography>
       ) : (
@@ -495,7 +501,13 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
             onChange={(ev) => updateName(ev.target.value)}
             sx={{ mb: 1.5 }}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: 'block'
+            }}>
             {t('wizard.taxonomy.valuesLabel')}
           </Typography>
           {editable.values.map((v, valueIdx) => (
@@ -529,7 +541,9 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
         <Typography variant="body2">{t('wizard.taxonomy.guidedAssignableToText')}</Typography>
       ),
       content: !editable ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.taxonomy.noClassificationsToConfig')}
         </Typography>
       ) : (
@@ -555,13 +569,19 @@ const ClassificationTaxonomyWizard: React.FC<ClassificationTaxonomyWizardProps> 
       id: 'summary',
       title: t('wizard.taxonomy.stepSummary'),
       content: !editable ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.taxonomy.noClassificationsSelected')}
         </Typography>
       ) : (
         <Box sx={{ borderLeft: 3, borderColor: 'primary.main', pl: 1.5 }}>
-          <Typography variant="body2" fontWeight={600}>{editable.name}</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>{editable.name}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t(`wizard.taxonomy.assignableTo.${editable.assignableTo}`)} ·{' '}
             {t('wizard.taxonomy.summaryValues', { count: editable.values.filter((v) => v.name.trim()).length })}
           </Typography>

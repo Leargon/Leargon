@@ -89,19 +89,25 @@ open class DashboardService(
             .forEach { dpia ->
                 val (type, key, name) =
                     when {
-                        dpia.process != null ->
+                        dpia.process != null -> {
                             Triple(
                                 AttentionItemResourceType.PROCESS,
                                 dpia.process!!.key,
                                 nameOf(dpia.process!!.names, dpia.process!!.key),
                             )
-                        dpia.entity != null ->
+                        }
+
+                        dpia.entity != null -> {
                             Triple(
                                 AttentionItemResourceType.ENTITY,
                                 dpia.entity!!.key,
                                 nameOf(dpia.entity!!.names, dpia.entity!!.key),
                             )
-                        else -> Triple(AttentionItemResourceType.DPIA, dpia.key, dpia.key)
+                        }
+
+                        else -> {
+                            Triple(AttentionItemResourceType.DPIA, dpia.key, dpia.key)
+                        }
                     }
                 needsAttention.add(
                     AttentionItem(

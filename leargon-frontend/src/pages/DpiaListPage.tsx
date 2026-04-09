@@ -178,7 +178,9 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
           {dpia.linkedResourceName ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Box>
-                <Typography variant="body2" fontWeight={500}>{dpia.linkedResourceName}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: 500
+                }}>{dpia.linkedResourceName}</Typography>
               </Box>
               {dpia.linkedResourceKey && (
                 <IconButton size="small" onClick={navigateToLinked} sx={{ p: 0.25, opacity: 0.4, '&:hover': { opacity: 1 } }}>
@@ -187,7 +189,9 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               )}
             </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary">—</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>—</Typography>
           )}
         </TableCell>
 
@@ -264,7 +268,6 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
           </Typography>
         </TableCell>
       </TableRow>
-
       {/* Expanded detail row */}
       <TableRow>
         <TableCell colSpan={7} sx={{ py: 0, border: expanded ? undefined : 0 }}>
@@ -272,7 +275,14 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
             <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, bgcolor: 'background.default', borderRadius: 1, m: 1 }}>
               {/* Risk Description */}
               <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    display: 'block',
+                    mb: 0.5
+                  }}>
                   {t('dpia.riskDescription')}
                 </Typography>
                 {canEdit ? (
@@ -304,7 +314,14 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
 
               {/* Measures */}
               <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    display: 'block',
+                    mb: 0.5
+                  }}>
                   {t('dpia.measures')}
                 </Typography>
                 {canEdit ? (
@@ -377,17 +394,19 @@ const DpiaListPage: React.FC = () => {
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 0.5 }}>
-        <Typography variant="h5" fontWeight={600}>{t('dpia.registerTitle')}</Typography>
-        <Typography variant="body2" color="text.secondary">{t('dpia.registerSubtitle')}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 600
+        }}>{t('dpia.registerTitle')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('dpia.registerSubtitle')}</Typography>
       </Box>
-
       {/* Summary chips */}
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
         <Chip label={t('dpia.chipInProgress', { count: inProgress })} color="info" size="small" variant="outlined" />
         <Chip label={t('dpia.chipCompleted', { count: completed })} color="success" size="small" variant="outlined" />
         {highRisk > 0 && <Chip label={t('dpia.chipHighRisk', { count: highRisk })} color="error" size="small" />}
       </Box>
-
       {/* Toolbar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <TextField
@@ -396,8 +415,10 @@ const DpiaListPage: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 280 }}
-          InputProps={{
-            startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
+          slotProps={{
+            input: {
+              startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>,
+            }
           }}
         />
         <Box sx={{ flex: 1 }} />
@@ -424,7 +445,6 @@ const DpiaListPage: React.FC = () => {
           </>
         )}
       </Box>
-
       {/* Table */}
       <TableContainer component={Paper} variant="outlined">
         <Table size="small" stickyHeader>
@@ -447,7 +467,12 @@ const DpiaListPage: React.FC = () => {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      py: 2
+                    }}>
                     {dpias.length === 0 ? t('dpia.noRecorded') : t('dpia.noResults')}
                   </Typography>
                 </TableCell>

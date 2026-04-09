@@ -212,14 +212,21 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       isValid: hasDefaultName,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.process.guidedIdentityTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.process.guidedIdentityTitle')}</Typography>
           <Typography variant="body2">{t('wizard.process.guidedIdentityText')}</Typography>
         </Box>
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {parentProcessKey && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('wizard.process.parentKeyDisplay', { key: parentProcessKey })}
             </Typography>
           )}
@@ -251,7 +258,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             </Select>
           </FormControl>
           {processType && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: -1
+              }}>
               {t(`wizard.process.typeHints.${processType}`)}
             </Typography>
           )}
@@ -338,7 +350,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.process.guidedDataFlowTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.process.guidedDataFlowTitle')}</Typography>
           <Typography variant="body2">{t('wizard.process.guidedDataFlowText')}</Typography>
         </Box>
       ),
@@ -393,7 +410,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.process.guidedComplianceTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.process.guidedComplianceTitle')}</Typography>
           <Typography variant="body2">{t('wizard.process.guidedComplianceText')}</Typography>
         </Box>
       ),
@@ -415,7 +437,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             </Select>
           </FormControl>
           {legalBasis && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: -1
+              }}>
               {t(`wizard.process.legalBasisHints.${legalBasis}`)}
             </Typography>
           )}
@@ -472,7 +499,13 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
 
 const SummaryRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', gap: 1 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: 130, flexShrink: 0 }}>{label}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        width: 130,
+        flexShrink: 0
+      }}>{label}</Typography>
     <Typography variant="body2">{value}</Typography>
   </Box>
 );

@@ -223,10 +223,8 @@ const ClassificationsTab: React.FC = () => {
           </MenuItem>
         </Menu>
       </Box>
-
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
-
       {classifications.length === 0 ? (
         <Paper
           variant="outlined"
@@ -234,7 +232,12 @@ const ClassificationsTab: React.FC = () => {
         >
           <AutoAwesome sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
           <Typography variant="h6" sx={{ mb: 0.5 }}>No classifications yet</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 2
+            }}>
             Classifications are metadata labels — like "Personal Data" or "Confidentiality" — that
             you attach to entities, domains, processes, and org units to drive governance rules and
             compliance reports.
@@ -261,7 +264,9 @@ const ClassificationsTab: React.FC = () => {
                     {isExpanded ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
                   </IconButton>
                   <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={500}>
+                    <Typography variant="subtitle1" sx={{
+                      fontWeight: 500
+                    }}>
                       {getLocalizedText(c.names, c.key)}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
@@ -293,12 +298,13 @@ const ClassificationsTab: React.FC = () => {
                     </Tooltip>
                   )}
                 </Box>
-
                 <Collapse in={isExpanded}>
                   <Divider />
                   <Box sx={{ p: 1.5 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="body2" fontWeight={500}>Values</Typography>
+                      <Typography variant="body2" sx={{
+                        fontWeight: 500
+                      }}>Values</Typography>
                       {!c.isSystem && (
                         <Button
                           size="small"
@@ -310,7 +316,9 @@ const ClassificationsTab: React.FC = () => {
                       )}
                     </Box>
                     {!c.values?.length ? (
-                      <Typography variant="body2" color="text.secondary">No values defined.</Typography>
+                      <Typography variant="body2" sx={{
+                        color: "text.secondary"
+                      }}>No values defined.</Typography>
                     ) : (
                       <List dense disablePadding>
                         {c.values.map((v) => (
@@ -339,7 +347,6 @@ const ClassificationsTab: React.FC = () => {
           })}
         </Box>
       )}
-
       {/* Create Classification Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>New Classification</DialogTitle>
@@ -376,7 +383,6 @@ const ClassificationsTab: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Create Value Dialog */}
       <Dialog open={createValueOpen} onClose={() => setCreateValueOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Add Classification Value</DialogTitle>
@@ -405,7 +411,6 @@ const ClassificationsTab: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       <ClassificationTaxonomyWizard
         open={taxonomyWizardOpen}
         onClose={() => setTaxonomyWizardOpen(false)}

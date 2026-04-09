@@ -178,7 +178,6 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
           ) : undefined
         }
       />
-
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names & Descriptions */}
         <Accordion defaultExpanded disableGutters>
@@ -269,19 +268,31 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>{t('itSystem.vendor')}:</Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      minWidth: 80
+                    }}>{t('itSystem.vendor')}:</Typography>
                   <Typography variant="body2">
                     {system.vendor ?? <span style={{ color: '#888' }}>{t('common.notSet')}</span>}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>{t('itSystem.systemUrl')}:</Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      minWidth: 80
+                    }}>{t('itSystem.systemUrl')}:</Typography>
                   {system.systemUrl ? (
                     <Typography variant="body2">
                       <a href={system.systemUrl} target="_blank" rel="noopener noreferrer">{system.systemUrl}</a>
                     </Typography>
                   ) : (
-                    <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>{t('common.notSet')}</Typography>
                   )}
                 </Box>
               </Box>
@@ -333,7 +344,9 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                 clickable
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notAssigned')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -370,9 +383,9 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                   value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
                   onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
                   renderInput={(params) => <TextField {...params} size="small" label={t('common.processes')} />}
-                  renderTags={(val, getTagProps) =>
+                  renderValue={(val, getItemProps) =>
                     val.map((option, index) => (
-                      <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                      <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
                     ))
                   }
                 />
@@ -392,12 +405,13 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('itSystem.noLinkedProcesses')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('itSystem.noLinkedProcesses')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
       </Box>
-
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>{t('itSystem.deleteTitle')}</DialogTitle>

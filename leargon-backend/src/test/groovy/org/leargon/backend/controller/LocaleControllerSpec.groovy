@@ -354,8 +354,8 @@ class LocaleControllerSpec extends Specification {
         given: "an admin token"
         String adminToken = createAdminToken()
 
-        and: "a new locale to delete"
-        def createRequest = new CreateSupportedLocaleRequest("fr", "French")
+        and: "a new locale to delete (use 'it' — not used by system classification translations)"
+        def createRequest = new CreateSupportedLocaleRequest("it", "Italian")
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/locales", createRequest)
                         .bearerAuth(adminToken),
@@ -394,7 +394,7 @@ class LocaleControllerSpec extends Specification {
         exception.status == HttpStatus.BAD_REQUEST
     }
 
-    def "DELETE /locales/{id} should not allow deleting a locale in use by translations"() {
+    def "DELETE /locales/{id} should clean up translations and delete locale"() {
         given: "an admin token"
         String adminToken = createAdminToken()
 
@@ -412,15 +412,17 @@ class LocaleControllerSpec extends Specification {
         and: "the 'de' locale"
         def deLocale = localeRepository.findByLocaleCode("de").get()
 
-        when: "deleting locale in use"
-        client.toBlocking().exchange(
+        when: "deleting the locale"
+        def response = client.toBlocking().exchange(
                 HttpRequest.DELETE("/locales/${deLocale.id}")
                         .bearerAuth(adminToken)
         )
 
-        then: "bad request exception is thrown"
-        def exception = thrown(HttpClientResponseException)
-        exception.status == HttpStatus.BAD_REQUEST
+        then: "deletion succeeds"
+        response.status == HttpStatus.NO_CONTENT
+
+        and: "locale no longer exists"
+        !localeRepository.findById(deLocale.id).isPresent()
     }
 
     def "DELETE /locales/{id} should return 404 for non-existent locale"() {

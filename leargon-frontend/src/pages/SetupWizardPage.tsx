@@ -44,7 +44,12 @@ const SetupWizardPage: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           Welcome to Léargon
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography
+          variant="body1"
+          sx={{
+            color: "text.secondary",
+            mb: 4
+          }}>
           Before you get started, please configure the supported languages for your organization.
           You can add, remove, or reorder locales below. The first active locale will be used as the default.
         </Typography>

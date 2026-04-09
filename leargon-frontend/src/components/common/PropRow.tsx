@@ -46,13 +46,21 @@ const PropRow: React.FC<PropRowProps> = ({
     >
       <Typography
         variant="caption"
-        color="text.secondary"
-        sx={{ fontWeight: 600, lineHeight: 1.4 }}
-      >
+        sx={{
+          color: "text.secondary",
+          fontWeight: 600,
+          lineHeight: 1.4
+        }}>
         {label}
       </Typography>
       {isMandatory && (
-        <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "warning.main",
+            fontWeight: 700,
+            lineHeight: 1
+          }}>
           *
         </Typography>
       )}

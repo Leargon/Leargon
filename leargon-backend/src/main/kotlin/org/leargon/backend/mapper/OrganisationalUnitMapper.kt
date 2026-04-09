@@ -24,23 +24,40 @@ open class OrganisationalUnitMapper(
         val fc =
             fieldConfigurationService.compute("ORGANISATIONAL_UNIT") { fieldName ->
                 when {
-                    fieldName == "names" -> unit.names.isNotEmpty()
-                    fieldName == "descriptions" -> unit.descriptions.isNotEmpty()
-                    fieldName == "unitType" -> !unit.unitType.isNullOrBlank()
-                    fieldName == "businessOwner" -> unit.businessOwner != null
+                    fieldName == "names" -> {
+                        unit.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        unit.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "unitType" -> {
+                        !unit.unitType.isNullOrBlank()
+                    }
+
+                    fieldName == "businessOwner" -> {
+                        unit.businessOwner != null
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         unit.names.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("descriptions.") -> {
                         val locale = fieldName.removePrefix("descriptions.")
                         unit.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         unit.classificationAssignments.any { it.classificationKey == classKey }
                     }
-                    else -> true
+
+                    else -> {
+                        true
+                    }
                 }
             }
         return OrganisationalUnitResponse(

@@ -3,14 +3,23 @@ package org.leargon.backend.service
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.exceptions.HttpStatusException
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.CreateSupportedLocaleRequest
 import org.leargon.backend.model.SupportedLocaleResponse
 import org.leargon.backend.model.UpdateSupportedLocaleRequest
+import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
+import org.leargon.backend.repository.BusinessEntityRelationshipRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.CapabilityRepository
 import org.leargon.backend.repository.ClassificationRepository
 import org.leargon.backend.repository.ClassificationValueRepository
+import org.leargon.backend.repository.DomainEventRepository
+import org.leargon.backend.repository.ItSystemRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
+import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 
 @Singleton
@@ -19,7 +28,15 @@ open class LocaleService(
     private val entityRepository: BusinessEntityRepository,
     private val domainRepository: BusinessDomainRepository,
     private val classificationRepository: ClassificationRepository,
-    private val classificationValueRepository: ClassificationValueRepository
+    private val classificationValueRepository: ClassificationValueRepository,
+    private val boundedContextRepository: BoundedContextRepository,
+    private val domainEventRepository: DomainEventRepository,
+    private val capabilityRepository: CapabilityRepository,
+    private val processRepository: ProcessRepository,
+    private val itSystemRepository: ItSystemRepository,
+    private val serviceProviderRepository: ServiceProviderRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
+    private val businessEntityRelationshipRepository: BusinessEntityRelationshipRepository,
 ) {
     open fun getActiveLocales(): List<SupportedLocale> = localeRepository.findByIsActiveOrderBySortOrder(true)
 
@@ -62,7 +79,7 @@ open class LocaleService(
 
     open fun updateLocale(
         id: Long,
-        request: UpdateSupportedLocaleRequest
+        request: UpdateSupportedLocaleRequest,
     ): SupportedLocaleResponse {
         var locale =
             localeRepository
@@ -97,6 +114,7 @@ open class LocaleService(
         return toResponse(locale)
     }
 
+    @Transactional
     open fun deleteLocale(id: Long) {
         val locale =
             localeRepository
@@ -106,20 +124,128 @@ open class LocaleService(
         if (locale.isDefault) {
             throw HttpStatusException(HttpStatus.BAD_REQUEST, "Cannot delete the default locale")
         }
-        if (isLocaleInUse(locale.localeCode)) {
-            throw HttpStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Cannot delete locale '${locale.localeCode}' because it is used by existing translations"
-            )
-        }
+
+        cleanupLocaleTranslations(locale.localeCode)
         localeRepository.deleteById(id)
     }
 
-    private fun isLocaleInUse(localeCode: String): Boolean =
-        entityRepository.countByLocaleInTranslations(localeCode) > 0 ||
-            domainRepository.countByLocaleInTranslations(localeCode) > 0 ||
-            classificationRepository.countByLocaleInTranslations(localeCode) > 0 ||
-            classificationValueRepository.countByLocaleInTranslations(localeCode) > 0
+    private fun cleanupLocaleTranslations(localeCode: String) {
+        entityRepository.findAll().forEach { entity ->
+            val namesBefore = entity.names.size
+            val descBefore = entity.descriptions.size
+            entity.names.removeIf { it.locale == localeCode }
+            entity.descriptions.removeIf { it.locale == localeCode }
+            if (entity.names.size != namesBefore || entity.descriptions.size != descBefore) {
+                entityRepository.update(entity)
+            }
+        }
+
+        domainRepository.findAll().forEach { domain ->
+            val namesBefore = domain.names.size
+            val descBefore = domain.descriptions.size
+            domain.names.removeIf { it.locale == localeCode }
+            domain.descriptions.removeIf { it.locale == localeCode }
+            if (domain.names.size != namesBefore || domain.descriptions.size != descBefore) {
+                domainRepository.update(domain)
+            }
+        }
+
+        classificationRepository.findAll().forEach { classification ->
+            val namesBefore = classification.names.size
+            val descBefore = classification.descriptions.size
+            classification.names.removeIf { it.locale == localeCode }
+            classification.descriptions.removeIf { it.locale == localeCode }
+            if (classification.names.size != namesBefore || classification.descriptions.size != descBefore) {
+                classificationRepository.update(classification)
+            }
+        }
+
+        classificationValueRepository.findAll().forEach { value ->
+            val namesBefore = value.names.size
+            val descBefore = value.descriptions.size
+            value.names.removeIf { it.locale == localeCode }
+            value.descriptions.removeIf { it.locale == localeCode }
+            if (value.names.size != namesBefore || value.descriptions.size != descBefore) {
+                classificationValueRepository.update(value)
+            }
+        }
+
+        boundedContextRepository.findAll().forEach { bc ->
+            val namesBefore = bc.names.size
+            val descBefore = bc.descriptions.size
+            bc.names.removeIf { it.locale == localeCode }
+            bc.descriptions.removeIf { it.locale == localeCode }
+            if (bc.names.size != namesBefore || bc.descriptions.size != descBefore) {
+                boundedContextRepository.update(bc)
+            }
+        }
+
+        domainEventRepository.findAll().forEach { event ->
+            val namesBefore = event.names.size
+            val descBefore = event.descriptions.size
+            event.names.removeIf { it.locale == localeCode }
+            event.descriptions.removeIf { it.locale == localeCode }
+            if (event.names.size != namesBefore || event.descriptions.size != descBefore) {
+                domainEventRepository.update(event)
+            }
+        }
+
+        capabilityRepository.findAll().forEach { capability ->
+            val namesBefore = capability.names.size
+            val descBefore = capability.descriptions.size
+            capability.names.removeIf { it.locale == localeCode }
+            capability.descriptions.removeIf { it.locale == localeCode }
+            if (capability.names.size != namesBefore || capability.descriptions.size != descBefore) {
+                capabilityRepository.update(capability)
+            }
+        }
+
+        processRepository.findAll().forEach { process ->
+            val namesBefore = process.names.size
+            val descBefore = process.descriptions.size
+            process.names.removeIf { it.locale == localeCode }
+            process.descriptions.removeIf { it.locale == localeCode }
+            if (process.names.size != namesBefore || process.descriptions.size != descBefore) {
+                processRepository.update(process)
+            }
+        }
+
+        itSystemRepository.findAll().forEach { system ->
+            val namesBefore = system.names.size
+            val descBefore = system.descriptions.size
+            system.names.removeIf { it.locale == localeCode }
+            system.descriptions.removeIf { it.locale == localeCode }
+            if (system.names.size != namesBefore || system.descriptions.size != descBefore) {
+                itSystemRepository.update(system)
+            }
+        }
+
+        serviceProviderRepository.findAll().forEach { sp ->
+            val namesBefore = sp.names.size
+            sp.names.removeIf { it.locale == localeCode }
+            if (sp.names.size != namesBefore) {
+                serviceProviderRepository.update(sp)
+            }
+        }
+
+        organisationalUnitRepository.findAll().forEach { ou ->
+            val namesBefore = ou.names.size
+            val descBefore = ou.descriptions.size
+            ou.names.removeIf { it.locale == localeCode }
+            ou.descriptions.removeIf { it.locale == localeCode }
+            if (ou.names.size != namesBefore || ou.descriptions.size != descBefore) {
+                organisationalUnitRepository.update(ou)
+            }
+        }
+
+        businessEntityRelationshipRepository.findAll().forEach { rel ->
+            val descBefore = rel.descriptions.size
+            rel.descriptions.removeIf { it.locale == localeCode }
+            if (rel.descriptions.size != descBefore) {
+                businessEntityRelationshipRepository.update(rel)
+            }
+        }
+    }
 
     private fun toResponse(locale: SupportedLocale): SupportedLocaleResponse =
         SupportedLocaleResponse(

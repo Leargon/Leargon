@@ -39,25 +39,48 @@ open class ExportService(
         val fc =
             fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
                 when {
-                    fieldName == "names" -> process.names.isNotEmpty()
-                    fieldName == "descriptions" -> process.descriptions.isNotEmpty()
-                    fieldName == "boundedContext" -> process.boundedContext != null
-                    fieldName == "processOwner" -> process.processOwner != null
-                    fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
-                    fieldName == "legalBasis" -> process.legalBasis != null
+                    fieldName == "names" -> {
+                        process.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        process.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "boundedContext" -> {
+                        process.boundedContext != null
+                    }
+
+                    fieldName == "processOwner" -> {
+                        process.processOwner != null
+                    }
+
+                    fieldName == "executingUnits" -> {
+                        process.executingUnits.isNotEmpty()
+                    }
+
+                    fieldName == "legalBasis" -> {
+                        process.legalBasis != null
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val l = fieldName.removePrefix("names.")
                         process.names.any { it.locale == l && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("descriptions.") -> {
                         val l = fieldName.removePrefix("descriptions.")
                         process.descriptions.any { it.locale == l && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         process.classificationAssignments.any { it.classificationKey == classKey }
                     }
-                    else -> true
+
+                    else -> {
+                        true
+                    }
                 }
             }
         return fc.missing?.joinToString("; ") ?: ""

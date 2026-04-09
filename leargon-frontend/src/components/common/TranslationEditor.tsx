@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, TextField, Tab, Tabs, Paper, Chip, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { SupportedLocaleResponse, LocalizedText } from '../../api/generated/model';
 
 interface TranslationEditorProps {
@@ -27,6 +28,7 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
   multilineNames = false,
   namePlaceholder,
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
   const activeLocales = locales.filter((l) => l.isActive);
 
@@ -49,7 +51,9 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
   };
 
   if (activeLocales.length === 0) {
-    return <Typography color="text.secondary">No locales configured.</Typography>;
+    return (
+      <Typography sx={{ color: 'text.secondary' }}>{t('translationEditor.noLocales')}</Typography>
+    );
   }
 
   return (
@@ -67,14 +71,13 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 {locale.displayName}
-                {locale.isDefault && <Chip label="Required" size="small" color="primary" />}
+                {locale.isDefault && <Chip label={t('translationEditor.required')} size="small" color="primary" />}
                 {nameErrors[locale.localeCode] && <Chip label="!" size="small" color="error" />}
               </Box>
             }
           />
         ))}
       </Tabs>
-
       {activeLocales.map((locale, index) => (
         <Box
           key={locale.localeCode}
@@ -85,7 +88,7 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
           {activeTab === index && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
-                label={`Name (${locale.displayName})`}
+                label={`${t('translationEditor.nameLabel')} (${locale.displayName})`}
                 value={getName(locale.localeCode)}
                 onChange={(e) => updateName(locale.localeCode, e.target.value)}
                 fullWidth
@@ -97,11 +100,13 @@ const TranslationEditor: React.FC<TranslationEditorProps> = ({
                 multiline={multilineNames}
                 rows={multilineNames ? 4 : undefined}
                 placeholder={namePlaceholder}
-                inputProps={multilineNames ? undefined : { maxLength: 255 }}
+                slotProps={{
+                  htmlInput: multilineNames ? undefined : { maxLength: 255 }
+                }}
               />
               {!hideDescriptions && (
                 <TextField
-                  label={`Description (${locale.displayName})`}
+                  label={`${t('translationEditor.descriptionLabel')} (${locale.displayName})`}
                   value={getDescription(locale.localeCode)}
                   onChange={(e) => updateDescription(locale.localeCode, e.target.value)}
                   fullWidth

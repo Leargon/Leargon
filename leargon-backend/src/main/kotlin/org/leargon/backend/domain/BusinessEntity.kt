@@ -88,7 +88,7 @@ class BusinessEntity {
     @Column(name = "classification_assignments", columnDefinition = "TEXT")
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
-    @Column(name = "retention_period", length = 100)
+    @Column(name = "retention_period", length = 500)
     var retentionPeriod: String? = null
 
     @JdbcTypeCode(SqlTypes.JSON)

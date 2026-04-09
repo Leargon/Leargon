@@ -18,14 +18,14 @@ interface ClassificationRepository : JpaRepository<Classification, Long> {
     fun countByLocaleInTranslations(localeCode: String): Long
 
     @Join(value = "values", type = Join.Type.LEFT_FETCH)
-    @Join(value = "createdBy", type = Join.Type.FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     fun findByKey(key: String): Optional<Classification>
 
     @Join(value = "values", type = Join.Type.LEFT_FETCH)
-    @Join(value = "createdBy", type = Join.Type.FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     fun findByAssignableTo(assignableTo: String): List<Classification>
 
     @Join(value = "values", type = Join.Type.LEFT_FETCH)
-    @Join(value = "createdBy", type = Join.Type.FETCH)
+    @Join(value = "createdBy", type = Join.Type.LEFT_FETCH)
     override fun findAll(): List<Classification>
 }

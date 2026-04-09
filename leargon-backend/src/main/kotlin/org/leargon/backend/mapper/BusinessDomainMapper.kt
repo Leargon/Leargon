@@ -24,22 +24,36 @@ open class BusinessDomainMapper(
         val fc =
             fieldConfigurationService.compute("BUSINESS_DOMAIN") { fieldName ->
                 when {
-                    fieldName == "names" -> domain.names.isNotEmpty()
-                    fieldName == "descriptions" -> domain.descriptions.isNotEmpty()
-                    fieldName == "type" -> domain.type != null
+                    fieldName == "names" -> {
+                        domain.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        domain.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "type" -> {
+                        domain.type != null
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("descriptions.") -> {
                         val locale = fieldName.removePrefix("descriptions.")
                         domain.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         domain.classificationAssignments.any { it.classificationKey == classKey }
                     }
-                    else -> true
+
+                    else -> {
+                        true
+                    }
                 }
             }
         return BusinessDomainResponse(

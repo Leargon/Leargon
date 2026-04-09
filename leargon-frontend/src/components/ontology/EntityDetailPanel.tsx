@@ -515,7 +515,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       ) : (
         <>
           {/* Names - horizontal table with all locales */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.names')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -538,7 +543,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Paper>
 
           {/* Descriptions - accordion */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.descriptions')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
             {descriptionLocales.map((l) => {
               const desc = entity.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -571,7 +581,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             <Box>
               <Autocomplete
                 options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
                 renderInput={(params) => <TextField {...params} label={t('entity.owner')} size="small" />}
@@ -586,7 +596,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               {entity.dataOwner ? (
                 <Typography variant="body2">{entity.dataOwner.firstName} {entity.dataOwner.lastName} ({entity.dataOwner.username})</Typography>
               ) : (
-                <Typography variant="body2" color="text.secondary">{t('common.unassigned')}</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>{t('common.unassigned')}</Typography>
               )}
               {!entity.ownerIsExplicit && entity.dataOwner && (
                 <Chip label={t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
@@ -607,7 +619,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               <Box>
                 <Autocomplete
                   options={allUsers.filter((u) => u.enabled)}
-                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === dataStewardEdit.editValue) || null}
                   onChange={(_, newVal) => dataStewardEdit.setEditValue(newVal?.username || null)}
                   renderInput={(params) => <TextField {...params} label={t('entity.dataSteward')} size="small" />}
@@ -634,7 +646,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               <Box>
                 <Autocomplete
                   options={allUsers.filter((u) => u.enabled)}
-                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
                   onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
                   renderInput={(params) => <TextField {...params} label={t('entity.technicalCustodian')} size="small" />}
@@ -675,7 +687,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ) : entity.parent ? (
               <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('entity.topLevel')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('entity.topLevel')}</Typography>
             )}
           </PropRow>
         )}
@@ -701,10 +715,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ) : entity.boundedContext ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Chip label={entity.boundedContext.name} size="small" />
-                <Typography variant="caption" color="text.secondary">({entity.boundedContext.domainName})</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>({entity.boundedContext.domainName})</Typography>
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notAssigned')}</Typography>
             )}
           </PropRow>
         )}
@@ -727,7 +745,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ) : entity.retentionPeriod ? (
               <Typography variant="body2">{entity.retentionPeriod}</Typography>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
         )}
@@ -765,7 +785,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">{t('entity.noStorageLocations')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('entity.noStorageLocations')}</Typography>
         )}
       </Box>
 
@@ -821,7 +843,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">{t('entity.noInterfaces')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('entity.noInterfaces')}</Typography>
         )}
       </Box>
 
@@ -877,7 +901,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Table>
         </Paper>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('entity.noRelationships')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>{t('entity.noRelationships')}</Typography>
       )}
 
       <Divider sx={{ my: 2 }} />
@@ -939,7 +968,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </Table>
         </Paper>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('entity.noTranslationLinks')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>{t('entity.noTranslationLinks')}</Typography>
       )}
 
       <Divider sx={{ my: 2 }} />
@@ -1084,7 +1118,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 <Typography variant="body2" sx={{ minWidth: 120 }}>
                   {getLocalizedText(c.names, c.key)}
                   {isClassificationMandatory(c.key) && (
-                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        color: "warning.main",
+                        fontWeight: 700,
+                        ml: 0.5
+                      }}>*</Typography>
                   )}:
                 </Typography>
                 {assignments.length > 0 ? (
@@ -1097,12 +1138,16 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     })}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>{t('common.notSet')}</Typography>
                 )}
               </Box>
             );
           }) : (
-            <Typography variant="body2" color="text.secondary">{t('common.noClassificationsConfigured')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('common.noClassificationsConfigured')}</Typography>
           )}
         </Box>
       )}
@@ -1144,7 +1189,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">{t('common.noVersionHistory')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('common.noVersionHistory')}</Typography>
           ) : (
             <Table size="small">
               <TableBody>
@@ -1218,7 +1265,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <DialogTitle>{t('entity.addRelationship')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('entity.firstEntity')}: <strong>{getLocalizedText(entity.names, entityKey)}</strong>
             </Typography>
             <Autocomplete
@@ -1234,17 +1283,25 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField label={t('entity.firstMin')} value={relFirstMin} onChange={(e) => setRelFirstMin(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+                size="small" type="number" sx={{ flex: 1 }} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
               <TextField label={t('entity.firstMax')} value={relFirstMax} onChange={(e) => setRelFirstMax(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
+                size="small" type="number" sx={{ flex: 1 }} placeholder={t('entity.emptyUnbounded')}
+                helperText={t('entity.emptyStar')} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField label={t('entity.secondMin')} value={relSecondMin} onChange={(e) => setRelSecondMin(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+                size="small" type="number" sx={{ flex: 1 }} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
               <TextField label={t('entity.secondMax')} value={relSecondMax} onChange={(e) => setRelSecondMax(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
+                size="small" type="number" sx={{ flex: 1 }} placeholder={t('entity.emptyUnbounded')}
+                helperText={t('entity.emptyStar')} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
             </Box>
             <TextField label={t('entity.description')} value={relDescription} onChange={(e) => setRelDescription(e.target.value)}
               size="small" multiline rows={2} fullWidth />
@@ -1268,24 +1325,34 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               const rel = entity.relationships?.find((r) => r.id === editRelId);
               if (!rel?.cardinality) return null;
               return (
-                <Typography variant="body2" color="text.secondary">
-                  {rel.cardinality[0]?.businessEntity.name} — {rel.cardinality[1]?.businessEntity.name}
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>
+                  {rel.cardinality[0]?.businessEntity.name}— {rel.cardinality[1]?.businessEntity.name}
                 </Typography>
               );
             })()}
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField label={t('entity.firstMin')} value={editRelFirstMin} onChange={(e) => setEditRelFirstMin(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+                size="small" type="number" sx={{ flex: 1 }} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
               <TextField label={t('entity.firstMax')} value={editRelFirstMax} onChange={(e) => setEditRelFirstMax(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
+                size="small" type="number" sx={{ flex: 1 }} placeholder={t('entity.emptyUnbounded')}
+                helperText={t('entity.emptyStar')} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField label={t('entity.secondMin')} value={editRelSecondMin} onChange={(e) => setEditRelSecondMin(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }} />
+                size="small" type="number" sx={{ flex: 1 }} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
               <TextField label={t('entity.secondMax')} value={editRelSecondMax} onChange={(e) => setEditRelSecondMax(e.target.value)}
-                size="small" type="number" sx={{ flex: 1 }} inputProps={{ min: 0 }}
-                placeholder={t('entity.emptyUnbounded')} helperText={t('entity.emptyStar')} />
+                size="small" type="number" sx={{ flex: 1 }} placeholder={t('entity.emptyUnbounded')}
+                helperText={t('entity.emptyStar')} slotProps={{
+                htmlInput: { min: 0 }
+              }} />
             </Box>
             <TextField label={t('entity.description')} value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)}
               size="small" multiline rows={2} fullWidth />
@@ -1382,9 +1449,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             onChange={(_, val) => setEditLocations(val.map((v) => v.code))}
             isOptionEqualToValue={(o, v) => o.code === v.code}
             renderInput={(params) => <TextField {...params} label={t('entity.countriesWhereDataStored')} size="small" />}
-            renderTags={(val, getTagProps) =>
+            renderValue={(val, getItemProps) =>
               val.map((option, index) => (
-                <Chip {...getTagProps({ index })} key={option.code} label={`${option.name} (${option.code})`} size="small" />
+                <Chip {...getItemProps({ index })} key={option.code} label={`${option.name} (${option.code})`} size="small" />
               ))
             }
           />
@@ -1430,7 +1497,13 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
     {isMandatory && (
-      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "warning.main",
+          fontWeight: 700,
+          lineHeight: 1
+        }}>*</Typography>
     )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
