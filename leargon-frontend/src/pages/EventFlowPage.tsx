@@ -249,14 +249,20 @@ const EventFlowPage: React.FC = () => {
           {domainEvents.map((ev) => (
             <TableRow key={ev.key}>
               <TableCell>
-                <Typography variant="body2" fontWeight={500}>{getLocalizedText(ev.names, ev.key)}</Typography>
-                <Typography variant="caption" color="text.secondary">{ev.key}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: 500
+                }}>{getLocalizedText(ev.names, ev.key)}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{ev.key}</Typography>
               </TableCell>
               <TableCell>
                 {ev.publishingBoundedContext ? (
                   <Chip label={ev.publishingBoundedContext.name} size="small" color="primary" variant="outlined" />
                 ) : showNoPublisher ? (
-                  <Typography variant="caption" color="text.secondary">No publishing context</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>No publishing context</Typography>
                 ) : null}
               </TableCell>
               <TableCell>
@@ -265,7 +271,9 @@ const EventFlowPage: React.FC = () => {
                     ? ev.consumers.map((c) => (
                         <Chip key={c.key} label={c.name} size="small" variant="outlined" />
                       ))
-                    : <Typography variant="caption" color="text.secondary">{t('domainEvent.noConsumers')}</Typography>}
+                    : <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{t('domainEvent.noConsumers')}</Typography>}
                   {isAdmin && (
                     <IconButton size="small" onClick={() => openConsumersEdit(ev)} title={t('domainEvent.addConsumer')}>
                       <Edit fontSize="small" />
@@ -285,7 +293,9 @@ const EventFlowPage: React.FC = () => {
                           variant="outlined"
                         />
                       ))
-                    : <Typography variant="caption" color="text.secondary">{t('domainEvent.noEntityLinks')}</Typography>}
+                    : <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{t('domainEvent.noEntityLinks')}</Typography>}
                   {isAdmin && (
                     <IconButton size="small" onClick={() => openEntityLinksEdit(ev)} title={t('domainEvent.addEntityLink')}>
                       <Edit fontSize="small" />
@@ -312,7 +322,9 @@ const EventFlowPage: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
         <Box>
           <Typography variant="h5" sx={{ mb: 0.5 }}>{t('diagrams.eventFlowTitle')}</Typography>
-          <Typography variant="body2" color="text.secondary">{t('diagrams.eventFlowSubtitle')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('diagrams.eventFlowSubtitle')}</Typography>
         </Box>
         {isAdmin && (
           <Button
@@ -325,7 +337,6 @@ const EventFlowPage: React.FC = () => {
           </Button>
         )}
       </Box>
-
       {events.length === 0 && (
         <Alert severity="info">
           {isAdmin
@@ -333,7 +344,6 @@ const EventFlowPage: React.FC = () => {
             : 'No domain events defined yet.'}
         </Alert>
       )}
-
       {Array.from(eventsByDomain.entries()).map(([domainKey, domainEvents]) => {
         const domain = domainMap.get(domainKey);
         const domainName = domain ? getLocalizedText(domain.names, domainKey) : domainKey;
@@ -347,14 +357,12 @@ const EventFlowPage: React.FC = () => {
           </Box>
         );
       })}
-
       {noDomainEvents.length > 0 && (
         <Box sx={{ mb: 4 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Unassigned</Typography>
           {renderEventsTable(noDomainEvents, true)}
         </Box>
       )}
-
       {/* Manage Consumers Dialog */}
       <Dialog open={!!consumersEditEvent} onClose={() => setConsumersEditEvent(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('domainEvent.addConsumer')}</DialogTitle>
@@ -414,14 +422,19 @@ const EventFlowPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Manage Entity Links Dialog */}
       <Dialog open={!!entityLinksEditEvent} onClose={() => setEntityLinksEditEvent(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('domainEvent.entityLinks')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           {currentEntityLinks.length > 0 && (
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  mb: 0.5,
+                  display: 'block'
+                }}>
                 {t('domainEvent.entityLinks')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -481,7 +494,6 @@ const EventFlowPage: React.FC = () => {
           <Button onClick={() => setEntityLinksEditEvent(null)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
-
       {/* Create Domain Event Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('domainEvent.create')}</DialogTitle>

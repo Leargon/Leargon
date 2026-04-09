@@ -93,11 +93,22 @@ const DomainNode: React.FC<{ data: DomainNodeData }> = ({ data }) => {
           />
         </Box>
       )}
-      <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.3 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 600,
+          lineHeight: 1.3
+        }}>
         {data.label}
       </Typography>
       {data.domainName && (
-        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontSize: '0.6rem',
+            lineHeight: 1.2
+          }}>
           {data.domainName}
         </Typography>
       )}
@@ -206,7 +217,13 @@ const RelationshipLegend: React.FC = () => {
         maxWidth: 200,
       }}
     >
-      <Typography variant="caption" fontWeight={700} display="block" mb={0.5}>
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 700,
+          display: "block",
+          mb: 0.5
+        }}>
         {t('domain.contextRelationships')}
       </Typography>
       {entries.map(([type, color]) => (

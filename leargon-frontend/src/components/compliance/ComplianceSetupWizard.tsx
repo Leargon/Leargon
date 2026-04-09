@@ -130,7 +130,9 @@ function ProcessingActivitiesStep({ processes }: { processes: ProcessResponse[] 
 
   if (processes.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('wizard.onboarding.compliance.noProcesses')}
       </Typography>
     );
@@ -141,7 +143,12 @@ function ProcessingActivitiesStep({ processes }: { processes: ProcessResponse[] 
 
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         {t('wizard.onboarding.compliance.processingActivitiesHint', {
           personal: withPersonalData.length,
           total: processes.length,
@@ -174,7 +181,13 @@ function ProcessingActivitiesStep({ processes }: { processes: ProcessResponse[] 
         </TableBody>
       </Table>
       {withoutPersonalData.length > 0 && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mt: 1,
+            display: 'block'
+          }}>
           {t('wizard.onboarding.compliance.processingActivitiesLinkHint')}
         </Typography>
       )}
@@ -222,7 +235,12 @@ function DataProcessorsStep({
   if (dataProcessors.length === 0) {
     return (
       <Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 1.5
+          }}>
           {t('wizard.onboarding.compliance.noDataProcessors')}
         </Typography>
         <Link to="/service-providers" style={{ textDecoration: 'none' }}>
@@ -244,7 +262,9 @@ function DataProcessorsStep({
         return (
           <Box key={provider.key} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" fontWeight={600}>{getLocalizedText(provider.names, provider.key)}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>{getLocalizedText(provider.names, provider.key)}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {state === 'saving' && <CircularProgress size={14} />}
                 {state === 'saved' && <CheckCircle color="success" fontSize="small" />}
@@ -267,12 +287,12 @@ function DataProcessorsStep({
               renderInput={(params) => (
                 <TextField {...params} placeholder={t('wizard.onboarding.compliance.linkProcessesPlaceholder')} size="small" />
               )}
-              renderTags={(value, getTagProps) =>
+              renderValue={(value, getItemProps) =>
                 value.map((option, index) => (
                   <Chip
                     label={getLocalizedText(option.names, option.key)}
                     size="small"
-                    {...getTagProps({ index })}
+                    {...getItemProps({ index })}
                     key={option.key}
                   />
                 ))
@@ -354,7 +374,9 @@ function CrossBorderTransfersStep({
 
   if (relevantProcesses.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('wizard.onboarding.compliance.noProcessesWithProviders')}
       </Typography>
     );
@@ -369,7 +391,9 @@ function CrossBorderTransfersStep({
         return (
           <Box key={process.key} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" fontWeight={600}>{getLocalizedText(process.names, process.key)}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 600
+              }}>{getLocalizedText(process.names, process.key)}</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {state === 'saving' && <CircularProgress size={14} />}
                 {state === 'saved' && <CheckCircle color="success" fontSize="small" />}
@@ -379,7 +403,6 @@ function CrossBorderTransfersStep({
                 </Button>
               </Box>
             </Box>
-
             {processTransfers.map((tr, i) => (
               <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                 <Chip label={tr.destinationCountry} size="small" variant="outlined" />
@@ -389,15 +412,16 @@ function CrossBorderTransfersStep({
                 </IconButton>
               </Box>
             ))}
-
             <Box sx={{ display: 'flex', gap: 1, mt: 1, alignItems: 'center' }}>
               <TextField
                 size="small"
                 placeholder={t('wizard.onboarding.compliance.countryCodePlaceholder')}
                 value={newCountry[process.key] ?? ''}
                 onChange={(e) => setNewCountry((prev) => ({ ...prev, [process.key]: e.target.value }))}
-                inputProps={{ maxLength: 2, style: { textTransform: 'uppercase' } }}
                 sx={{ width: 80 }}
+                slotProps={{
+                  htmlInput: { maxLength: 2, style: { textTransform: 'uppercase' } }
+                }}
               />
               <Select
                 size="small"
@@ -462,7 +486,9 @@ function DpiaStep({
 
   if (highRiskProcesses.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('wizard.onboarding.compliance.noDpiaRequired')}
       </Typography>
     );
@@ -470,7 +496,12 @@ function DpiaStep({
 
   return (
     <Box sx={{ overflow: 'auto' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         {t('wizard.onboarding.compliance.dpiaHint', { count: highRiskProcesses.length })}
       </Typography>
       <Table size="small">
@@ -613,14 +644,21 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       title: t('wizard.onboarding.compliance.stepWelcome'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedWelcomeTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedWelcomeText')}</Typography>
         </Box>
       ),
       content: (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.onboarding.compliance.guidedWelcomeText')}
         </Typography>
       ),
@@ -631,7 +669,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedPersonalDataClassificationTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedPersonalDataClassificationText')}</Typography>
@@ -645,7 +688,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedProcessingActivitiesTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedProcessingActivitiesText')}</Typography>
@@ -658,7 +706,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       title: t('wizard.onboarding.compliance.stepLegalBases'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedLegalBasesTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedLegalBasesText')}</Typography>
@@ -666,7 +719,9 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       ),
       content:
         processEdits.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('wizard.onboarding.compliance.noProcesses')}
           </Typography>
         ) : (
@@ -713,7 +768,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedPurposesTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedPurposesText')}</Typography>
@@ -721,14 +781,23 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       ),
       content:
         processEdits.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('wizard.onboarding.compliance.noProcesses')}
           </Typography>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {processEdits.map((edit) => (
               <Box key={edit.key}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}>
                   {edit.name}
                 </Typography>
                 <TextField
@@ -752,7 +821,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedDataProcessorsTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedDataProcessorsText')}</Typography>
@@ -772,7 +846,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedCrossBorderTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedCrossBorderText')}</Typography>
@@ -791,7 +870,12 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.compliance.guidedDpiaTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.compliance.guidedDpiaText')}</Typography>
@@ -810,7 +894,9 @@ const ComplianceSetupWizard: React.FC<ComplianceSetupWizardProps> = ({ open, onC
       title: t('wizard.onboarding.compliance.stepSummary'),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Typography variant="body2" fontWeight={600}>{t('wizard.onboarding.compliance.readinessTitle')}</Typography>
+          <Typography variant="body2" sx={{
+            fontWeight: 600
+          }}>{t('wizard.onboarding.compliance.readinessTitle')}</Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Chip

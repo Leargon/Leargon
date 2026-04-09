@@ -92,6 +92,23 @@ configurations.all {
     )
 }
 
+// Upgrade test code to Groovy 5 + Spock 2.4 — scoped to test configs only.
+// The 'codenarc' configuration is intentionally excluded: CodeNarc 3.7.0 uses
+// its own Groovy 3 classpath and must not be affected by this force.
+configurations.matching { c ->
+    c.name.startsWith('test') || c.name.startsWith('e2eTest')
+}.configureEach {
+    resolutionStrategy {
+        force("org.apache.groovy:groovy:5.0.5")
+        eachDependency { details ->
+            if (details.requested.group == 'org.spockframework' && details.requested.name == 'spock-core') {
+                details.useVersion('2.4-groovy-5.0')
+                details.because('Groovy 5 compatible Spock')
+            }
+        }
+    }
+}
+
 application {
     mainClass = "org.leargon.backend.ApplicationKt"
 }
@@ -223,7 +240,7 @@ codenarc {
 tasks.named("codenarcMain") { enabled = false }
 
 micronaut {
-    version = "4.10.10"
+    version = "4.10.11"
     runtime("netty")
     testRuntime("spock2")
     processing {

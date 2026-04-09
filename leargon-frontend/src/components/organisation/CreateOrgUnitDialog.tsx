@@ -115,7 +115,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
 
           <Autocomplete
             options={users}
-            getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.username})`}
+            getOptionLabel={(option) => `${option.firstName} ${option.lastName}`}
             value={users.find((u) => u.username === leadUsername) || null}
             onChange={(_, newVal) => setLeadUsername(newVal?.username || null)}
             renderInput={(params) => (

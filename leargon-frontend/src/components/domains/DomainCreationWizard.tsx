@@ -159,14 +159,21 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       isValid: hasDefaultName,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.domain.guidedIdentityTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.domain.guidedIdentityTitle')}</Typography>
           <Typography variant="body2">{t('wizard.domain.guidedIdentityText')}</Typography>
         </Box>
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {parentKey && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('wizard.domain.parentKeyDisplay', { key: parentKey })}
             </Typography>
           )}
@@ -191,7 +198,12 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
             </Select>
           </FormControl>
           {domainType && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: -1
+              }}>
               {t(`domainType.hint_${domainType}`)}
             </Typography>
           )}
@@ -264,7 +276,12 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.domain.guidedBcTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.domain.guidedBcTitle')}</Typography>
           <Typography variant="body2">{t('wizard.domain.guidedBcText')}</Typography>
         </Box>
       ),
@@ -330,7 +347,13 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
 
 const SummaryRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', gap: 1 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: 130, flexShrink: 0 }}>{label}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        width: 130,
+        flexShrink: 0
+      }}>{label}</Typography>
     <Typography variant="body2">{value}</Typography>
   </Box>
 );

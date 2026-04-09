@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Collapse, Link, Typography } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import { useTranslation } from 'react-i18next';
 
 interface TypeEntry {
@@ -62,15 +62,25 @@ const ServiceProviderTypeGuide: React.FC = () => {
         <HelpOutlineIcon sx={{ fontSize: 14 }} />
         {open ? t('serviceProviderTypeGuide.hide') : t('serviceProviderTypeGuide.show')}
       </Link>
-
       <Collapse in={open}>
         <Box sx={{ mt: 1, border: 1, borderColor: 'divider', borderRadius: 1, p: 1.5, bgcolor: 'action.hover' }}>
-          <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 600,
+              display: 'block',
+              mb: 1
+            }}>
             {t('serviceProviderTypeGuide.decisionQuestion')}
           </Typography>
           {entries.map((entry) => (
             <Box key={entry.type} sx={{ mb: 1.25 }}>
-              <Typography variant="caption" fontWeight={600} color="primary.main">
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 600,
+                  color: "primary.main"
+                }}>
                 {entry.label}
               </Typography>
               <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>

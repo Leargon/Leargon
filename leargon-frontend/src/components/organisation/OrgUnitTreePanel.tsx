@@ -76,12 +76,20 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
           </Button>
         )}
       </Box>
-
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
-          <Typography sx={{ p: 2 }} color="text.secondary">{t('common.loading')}</Typography>
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2
+            }}>{t('common.loading')}</Typography>
         ) : filteredTree.length === 0 ? (
-          <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2,
+              textAlign: 'center'
+            }}>
             {filter ? t('organisation.noMatches') : t('organisation.noUnitsYet')}
           </Typography>
         ) : (

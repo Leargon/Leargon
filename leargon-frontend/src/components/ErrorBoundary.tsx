@@ -16,7 +16,15 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh" gap={2}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            gap: 2
+          }}>
           <Typography variant="h5">Something went wrong</Typography>
           <Button variant="contained" onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}>
             Return to home

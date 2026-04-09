@@ -73,12 +73,20 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
           </Button>
         )}
       </Box>
-
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
-          <Typography sx={{ p: 2 }} color="text.secondary">Loading...</Typography>
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2
+            }}>Loading...</Typography>
         ) : filteredTree.length === 0 ? (
-          <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2,
+              textAlign: 'center'
+            }}>
             {filter ? 'No matches found.' : 'No processes yet. Create one to get started.'}
           </Typography>
         ) : (

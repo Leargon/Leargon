@@ -225,7 +225,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {parentKey && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('wizard.entity.parentKeyDisplay', { key: parentKey })}
             </Typography>
           )}
@@ -245,7 +247,12 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.entity.guidedPlacementTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.entity.guidedPlacementTitle')}</Typography>
           <Typography variant="body2">{t('wizard.entity.guidedPlacementText')}</Typography>
         </Box>
       ),
@@ -276,7 +283,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Autocomplete
             options={allUsers}
-            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
             value={dataOwner}
             onChange={(_, v) => setDataOwner(v)}
             isOptionEqualToValue={(o, v) => o.username === v.username}
@@ -288,7 +295,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
           />
           <Autocomplete
             options={allUsers}
-            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
             value={dataSteward}
             onChange={(_, v) => setDataSteward(v)}
             isOptionEqualToValue={(o, v) => o.username === v.username}
@@ -300,7 +307,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
           />
           <Autocomplete
             options={allUsers}
-            getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+            getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
             value={technicalCustodian}
             onChange={(_, v) => setTechnicalCustodian(v)}
             isOptionEqualToValue={(o, v) => o.username === v.username}
@@ -321,7 +328,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         <Typography variant="body2">{t('wizard.entity.guidedClassificationsText')}</Typography>
       ),
       content: entityClassifications.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.entity.noClassifications')}
         </Typography>
       ) : (
@@ -330,7 +339,14 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
             const label = getLocalizedText(c.names, c.key);
             return (
               <Box key={c.key}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}>
                   {label}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
@@ -395,7 +411,13 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
 
 const SummaryRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', gap: 1 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: 130, flexShrink: 0 }}>{label}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        width: 130,
+        flexShrink: 0
+      }}>{label}</Typography>
     <Typography variant="body2">{value}</Typography>
   </Box>
 );

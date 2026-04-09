@@ -84,14 +84,18 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
           </Button>
         )}
       </Box>
-
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>
         ) : filteredRoots.length === 0 ? (
-          <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2,
+              textAlign: 'center'
+            }}>
             {filter ? 'No results' : 'No capabilities yet'}
           </Typography>
         ) : (
@@ -172,13 +176,17 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
         </ListItemIcon>
         <ListItemText
           primary={
-            <Typography variant="body2" noWrap fontWeight={isSelected ? 600 : 400}>
+            <Typography variant="body2" noWrap sx={{
+              fontWeight: isSelected ? 600 : 400
+            }}>
               {getLocalizedText(capability.names, capability.key)}
             </Typography>
           }
           secondary={
             capability.owningUnit?.name ? (
-              <Typography variant="caption" noWrap color="text.secondary">
+              <Typography variant="caption" noWrap sx={{
+                color: "text.secondary"
+              }}>
                 {capability.owningUnit.name}
               </Typography>
             ) : undefined

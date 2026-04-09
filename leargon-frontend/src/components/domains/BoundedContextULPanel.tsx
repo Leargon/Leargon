@@ -67,19 +67,25 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
       {/* Owning Team */}
       {owningTeam && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>
             {t('boundedContext.owningTeam')}:
           </Typography>
           <Chip label={owningTeam.name} size="small" variant="outlined" color="primary" />
         </Box>
       )}
-
       {/* Nouns — Entities */}
       <Typography variant="subtitle2" sx={{ mb: 1, mt: 0 }}>
         {t('boundedContextUL.nouns')}
       </Typography>
       {entities.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('boundedContextUL.noEntities')}
         </Typography>
       ) : (
@@ -100,21 +106,22 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
                 onClick={() => navigate(`/entities/${entity.key}`)}
               >
                 <TableCell>
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 500
+                  }}>
                     {getLocalizedText(entity.names, entity.key)}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography
                     variant="caption"
-                    color="text.secondary"
                     sx={{
+                      color: "text.secondary",
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
+                      overflow: 'hidden'
+                    }}>
                     {getLocalizedText(entity.descriptions, '')}
                   </Typography>
                 </TableCell>
@@ -122,7 +129,9 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
                   {entity.qualityRules && entity.qualityRules.length > 0 ? (
                     <Chip label={entity.qualityRules.length} size="small" variant="outlined" color="info" />
                   ) : (
-                    <Typography variant="caption" color="text.secondary">—</Typography>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>—</Typography>
                   )}
                 </TableCell>
               </TableRow>
@@ -130,13 +139,17 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
           </TableBody>
         </Table>
       )}
-
       {/* Verbs — Processes */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         {t('boundedContextUL.verbs')}
       </Typography>
       {processes.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('boundedContextUL.noProcesses')}
         </Typography>
       ) : (
@@ -156,21 +169,22 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
                 onClick={() => navigate(`/processes/${process.key}`)}
               >
                 <TableCell>
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 500
+                  }}>
                     {getLocalizedText(process.names, process.key)}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography
                     variant="caption"
-                    color="text.secondary"
                     sx={{
+                      color: "text.secondary",
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
+                      overflow: 'hidden'
+                    }}>
                     {getLocalizedText(process.descriptions, '')}
                   </Typography>
                 </TableCell>
@@ -179,13 +193,17 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
           </TableBody>
         </Table>
       )}
-
       {/* Domain Events */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         {t('boundedContextUL.events')}
       </Typography>
       {allLinkedEvents.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('boundedContextUL.noEvents')}
         </Typography>
       ) : (
@@ -200,7 +218,9 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
             {allLinkedEvents.map(({ event, direction }) => (
               <TableRow key={`${direction}-${event.id}`}>
                 <TableCell>
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 500
+                  }}>
                     {getLocalizedText(event.names, event.key)}
                   </Typography>
                 </TableCell>

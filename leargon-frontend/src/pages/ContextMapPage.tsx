@@ -28,8 +28,12 @@ const ContextMapPage: React.FC = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box>
-          <Typography variant="h6" fontWeight={600}>{t('diagrams.contextMapTitle')}</Typography>
-          <Typography variant="body2" color="text.secondary">{t('diagrams.contextMapSubtitle')}</Typography>
+          <Typography variant="h6" sx={{
+            fontWeight: 600
+          }}>{t('diagrams.contextMapTitle')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('diagrams.contextMapSubtitle')}</Typography>
         </Box>
         <Button size="small" startIcon={<Download />} onClick={handleExport} variant="outlined">
           {t('diagrams.exportCml')}

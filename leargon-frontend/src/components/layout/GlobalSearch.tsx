@@ -150,7 +150,6 @@ const GlobalSearch: React.FC = () => {
                     '& .MuiInputBase-input::placeholder': { color: 'grey.500', opacity: 1 },
                 }}
             />
-
             <Popper
                 open={open}
                 anchorEl={anchorRef.current}
@@ -171,9 +170,11 @@ const GlobalSearch: React.FC = () => {
                     {results.length === 0 && !isFetching ? (
                         <Typography
                             variant="body2"
-                            color="text.secondary"
-                            sx={{ px: 2, py: 1.5 }}
-                        >
+                            sx={{
+                                color: "text.secondary",
+                                px: 2,
+                                py: 1.5
+                            }}>
                             No results for &quot;{debouncedQuery}&quot;
                         </Typography>
                     ) : (
@@ -194,7 +195,9 @@ const GlobalSearch: React.FC = () => {
                                         }}
                                     >
                                         {config?.icon}
-                                        <Typography variant="caption" fontWeight={600}>
+                                        <Typography variant="caption" sx={{
+                                            fontWeight: 600
+                                        }}>
                                             {config?.label ?? type}
                                         </Typography>
                                     </Box>
@@ -214,12 +217,16 @@ const GlobalSearch: React.FC = () => {
                                                         result.key ?? '',
                                                     )}
                                                     secondary={result.key}
-                                                    primaryTypographyProps={{ fontSize: '0.85rem' }}
-                                                    secondaryTypographyProps={{
-                                                        fontSize: '0.7rem',
-                                                        color: 'text.disabled',
-                                                    }}
-                                                />
+                                                    slotProps={{
+                                                        primary: { sx: { fontSize: '0.85rem' } },
+
+                                                        secondary: {
+                                                            sx: {
+                                                                fontSize: '0.7rem',
+                                                                color: 'text.disabled',
+                                                            }
+                                                        }
+                                                    }} />
                                             </ListItemButton>
                                         ))}
                                     </List>

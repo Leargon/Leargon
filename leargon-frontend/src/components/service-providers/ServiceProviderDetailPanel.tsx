@@ -218,7 +218,6 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           ) : undefined
         }
       />
-
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names & Descriptions */}
         <Accordion defaultExpanded disableGutters>
@@ -343,9 +342,9 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                   value={COUNTRY_OPTIONS.filter((c) => countriesEdit.editValue!.includes(c.code))}
                   onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
                   renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.countriesLabel')} />}
-                  renderTags={(val, getTagProps) =>
+                  renderValue={(val, getItemProps) =>
                     val.map((option, index) => (
-                      <Chip {...getTagProps({ index })} key={option.code} label={option.code} size="small" />
+                      <Chip {...getItemProps({ index })} key={option.code} label={option.code} size="small" />
                     ))
                   }
                 />
@@ -358,7 +357,9 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('serviceProvider.noCountries')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('serviceProvider.noCountries')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -459,9 +460,9 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                   value={allProcesses.filter((p) => processesEdit.editValue!.includes(p.key))}
                   onChange={(_, val) => processesEdit.setEditValue(val.map((v) => v.key))}
                   renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.processesLabel')} />}
-                  renderTags={(val, getTagProps) =>
+                  renderValue={(val, getItemProps) =>
                     val.map((option, index) => (
-                      <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                      <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
                     ))
                   }
                 />
@@ -481,12 +482,13 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('serviceProvider.noProcesses')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('serviceProvider.noProcesses')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
       </Box>
-
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>{t('serviceProvider.deleteTitle')}</DialogTitle>

@@ -134,9 +134,9 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
           value={COUNTRY_OPTIONS.filter((c) => countries.includes(c.code))}
           onChange={(_, val) => setCountries(val.map((v) => v.code))}
           renderInput={(params) => <TextField {...params} label={t('serviceProviderDialog.processingCountriesLabel')} size="small" sx={{ mt: 2 }} />}
-          renderTags={(val, getTagProps) =>
+          renderValue={(val, getItemProps) =>
             val.map((option, index) => (
-              <Chip {...getTagProps({ index })} key={option.code} label={option.code} size="small" />
+              <Chip {...getItemProps({ index })} key={option.code} label={option.code} size="small" />
             ))
           }
         />

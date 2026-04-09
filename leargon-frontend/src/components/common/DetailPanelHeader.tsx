@@ -21,10 +21,14 @@ const DetailPanelHeader: React.FC<DetailPanelHeaderProps> = ({ title, itemKey, c
   >
     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle1" fontWeight={600} noWrap>
+        <Typography variant="subtitle1" noWrap sx={{
+          fontWeight: 600
+        }}>
           {title}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {itemKey}
         </Typography>
       </Box>

@@ -55,10 +55,11 @@ export const EntityNode = memo(({ data, selected }: NodeProps) => {
     >
       <Handle type="target" position={Position.Left} style={{ background: '#1976d2' }} />
       <Handle type="source" position={Position.Right} style={{ background: '#1976d2' }} />
-
       {/* Name compartment */}
       <Box sx={{ px: 1.5, py: 1 }}>
-        <Typography variant="body2" fontWeight={600} noWrap title={d.label}>
+        <Typography variant="body2" noWrap title={d.label} sx={{
+          fontWeight: 600
+        }}>
           {d.label}
         </Typography>
         {d.domainName && (
@@ -71,7 +72,6 @@ export const EntityNode = memo(({ data, selected }: NodeProps) => {
           </Typography>
         )}
       </Box>
-
       {/* Children compartment — UML class diagram style */}
       {d.children && d.children.length > 0 && (
         <Box
@@ -87,11 +87,14 @@ export const EntityNode = memo(({ data, selected }: NodeProps) => {
             <Typography
               key={child.key}
               variant="caption"
-              display="block"
               noWrap
               title={child.name}
-              sx={{ lineHeight: 1.6, color: 'text.secondary', fontSize: '0.70rem' }}
-            >
+              sx={{
+                display: "block",
+                lineHeight: 1.6,
+                color: 'text.secondary',
+                fontSize: '0.70rem'
+              }}>
               {child.name}
             </Typography>
           ))}
@@ -125,7 +128,13 @@ export const ProcessNode = memo(({ data, selected }: NodeProps) => {
       <Handle type="target" position={Position.Top} style={{ background: '#388e3c' }} />
       <Handle type="source" position={Position.Bottom} style={{ background: '#388e3c' }} />
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
-        <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }} title={d.label}>
+        <Typography
+          variant="body2"
+          title={d.label}
+          sx={{
+            fontWeight: 600,
+            flex: 1
+          }}>
           {d.label}
         </Typography>
         {d.hasChildren && (
@@ -179,7 +188,14 @@ export const DataEntityNode = memo(({ data }: NodeProps) => {
     >
       <Handle type="source" position={Position.Right} style={{ background: '#5c6bc0' }} />
       <Handle type="target" position={Position.Left} style={{ background: '#5c6bc0' }} />
-      <Typography variant="caption" fontWeight={600} noWrap title={d.label} display="block">
+      <Typography
+        variant="caption"
+        noWrap
+        title={d.label}
+        sx={{
+          fontWeight: 600,
+          display: "block"
+        }}>
         {d.label}
       </Typography>
     </Box>
@@ -210,7 +226,13 @@ export const OrgUnitNode = memo(({ data, selected }: NodeProps) => {
       <Handle type="target" position={Position.Top} style={{ background: '#7b1fa2' }} />
       <Handle type="source" position={Position.Bottom} style={{ background: '#7b1fa2' }} />
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }} title={d.label}>
+        <Typography
+          variant="body2"
+          title={d.label}
+          sx={{
+            fontWeight: 600,
+            flex: 1
+          }}>
           {d.label}
         </Typography>
         {d.showProcessCount && d.processCount !== undefined && (
@@ -296,7 +318,14 @@ export const DomainGroupNode = memo(({ data }: NodeProps) => {
             sx={{ bgcolor: d.color, color: '#fff', fontWeight: 700, fontSize: '0.6rem', height: 16, pointerEvents: 'all' }}
           />
         )}
-        <Typography variant="caption" fontWeight={700} noWrap sx={{ color: d.color, pointerEvents: 'all' }}>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            fontWeight: 700,
+            color: d.color,
+            pointerEvents: 'all'
+          }}>
           {d.label}
         </Typography>
       </Box>
@@ -337,7 +366,13 @@ export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
           pointerEvents: 'all',
         }}
       >
-        <Typography variant="caption" fontWeight={700} noWrap sx={{ color: d.color }}>
+        <Typography
+          variant="caption"
+          noWrap
+          sx={{
+            fontWeight: 700,
+            color: d.color
+          }}>
           {d.label}
         </Typography>
       </Box>

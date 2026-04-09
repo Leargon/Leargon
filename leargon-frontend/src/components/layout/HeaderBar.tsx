@@ -82,14 +82,12 @@ const HeaderBar: React.FC = () => {
           <MenuItem value="en">English</MenuItem>
         )}
       </Select>
-
       {/* Dark mode toggle */}
       <Tooltip title={effectiveMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
         <IconButton size="small" onClick={toggleMode}>
           {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
         </IconButton>
       </Tooltip>
-
       {/* Settings (admin only) */}
       {isAdmin && (
         <Tooltip title="Settings">
@@ -98,7 +96,6 @@ const HeaderBar: React.FC = () => {
           </IconButton>
         </Tooltip>
       )}
-
       {/* Profile avatar + menu */}
       <Tooltip title={user?.username || 'Profile'}>
         <IconButton size="small" onClick={handleProfileMenuOpen}>
@@ -107,7 +104,6 @@ const HeaderBar: React.FC = () => {
           </Avatar>
         </IconButton>
       </Tooltip>
-
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -117,7 +113,9 @@ const HeaderBar: React.FC = () => {
       >
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="subtitle2">{user?.firstName} {user?.lastName}</Typography>
-          <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+          <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{user?.email}</Typography>
         </Box>
         <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/profile'); }}>
           <ListItemIcon><Person fontSize="small" /></ListItemIcon>

@@ -57,7 +57,7 @@ Léargon unifies three analytical frameworks — **Domain-Driven Design (DDD)**,
 | Backend | Kotlin 2.3, Micronaut 4.10, JVM 21, Hibernate JPA, Micronaut Data |
 | Database | MySQL 8.4 with Liquibase migrations |
 | Auth | Local JWT (HS256) + Azure Entra ID (RS256 / MSAL) |
-| Diagrams | BPMN.io / bpmn-js, React Flow, Dagre |
+| Diagrams | React Flow, Dagre |
 | API | OpenAPI 3 definition-first; Orval generates TypeScript client hooks |
 | Tests | Spock 2 (backend), Vitest + Testcontainers (integration), Playwright (E2E) |
 | CI/CD | GitHub Actions — build, Trivy scan, integration + E2E tests, GHCR publish |

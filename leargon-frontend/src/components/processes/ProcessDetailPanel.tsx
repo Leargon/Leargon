@@ -567,7 +567,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       ) : (
         <>
           {/* Names - horizontal table with all locales */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Names</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>Names</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -590,7 +595,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </Paper>
 
           {/* Descriptions - accordion */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>Descriptions</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>Descriptions</Typography>
           <Box sx={{ mb: 2 }}>
             {descriptionLocales.map((l) => {
               const desc = process.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -623,7 +633,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Box>
               <Autocomplete
                 options={allUsers.filter((u) => u.enabled)}
-                getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
                 renderInput={(params) => <TextField {...params} label="Owner" size="small" />}
@@ -638,7 +648,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {process.processOwner ? (
                 <Typography variant="body2">{process.processOwner.firstName} {process.processOwner.lastName} ({process.processOwner.username})</Typography>
               ) : (
-                <Typography variant="body2" color="text.secondary">{t('common.unassigned')}</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>{t('common.unassigned')}</Typography>
               )}
               {!process.ownerIsExplicit && process.processOwner && (
                 <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
@@ -659,7 +671,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               <Box>
                 <Autocomplete
                   options={allUsers.filter((u) => u.enabled)}
-                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
                   onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
                   renderInput={(params) => <TextField {...params} label={t('process.processSteward')} size="small" />}
@@ -686,7 +698,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               <Box>
                 <Autocomplete
                   options={allUsers.filter((u) => u.enabled)}
-                  getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
                   onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
                   renderInput={(params) => <TextField {...params} label={t('process.technicalCustodian')} size="small" />}
@@ -747,7 +759,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             ) : process.processType ? (
               <Chip label={PROCESS_TYPE_LABELS[process.processType] || process.processType} color="primary" size="small" />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
         )}
@@ -776,7 +790,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             ) : process.legalBasis ? (
               <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} color="secondary" size="small" />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
         )}
@@ -802,10 +818,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             ) : process.boundedContext ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Chip label={process.boundedContext.name} size="small" />
-                <Typography variant="caption" color="text.secondary">({process.boundedContext.domainName})</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>({process.boundedContext.domainName})</Typography>
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notAssigned')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notAssigned')}</Typography>
             )}
           </PropRow>
         )}
@@ -850,12 +870,19 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <>
           <Divider sx={{ my: 2 }} />
           <Box sx={{ mb: 1 }}>
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: "text.secondary",
+                mb: 1
+              }}>
               {t('process.effectiveEntitiesTitle')}
             </Typography>
             {effectiveInputEntities.length > 0 && (
               <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary">{t('process.effectiveInputEntities')}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{t('process.effectiveInputEntities')}</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                   {effectiveInputEntities.map((e) => (
                     <Chip
@@ -872,7 +899,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
             {effectiveOutputEntities.length > 0 && (
               <Box>
-                <Typography variant="caption" color="text.secondary">{t('process.effectiveOutputEntities')}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{t('process.effectiveOutputEntities')}</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                   {effectiveOutputEntities.map((e) => (
                     <Chip
@@ -887,7 +916,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 </Box>
               </Box>
             )}
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: 1,
+                display: 'block'
+              }}>
               {t('process.effectiveEntitiesHint')}
             </Typography>
           </Box>
@@ -934,7 +969,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               </Box>
             ) : (
               <>
-                <Typography variant="body2" color="text.secondary">None</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>None</Typography>
                 {/* Item 9: No executing unit nudge */}
                 {isOwnerOrAdmin && (
                   <NudgeBanner
@@ -1046,9 +1083,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
               onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
               renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
-              renderTags={(val, getTagProps) =>
+              renderValue={(val, getItemProps) =>
                 val.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                  <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
                 ))
               }
             />
@@ -1067,7 +1104,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No service providers linked</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>No service providers linked</Typography>
         )}
       </Box>
 
@@ -1102,9 +1141,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               value={allItSystems.filter((s) => itSystemsEdit.editValue!.includes(s.key))}
               onChange={(_, val) => itSystemsEdit.setEditValue(val.map((v) => v.key))}
               renderInput={(params) => <TextField {...params} size="small" label={t('itSystem.pageTitle')} />}
-              renderTags={(val, getTagProps) =>
+              renderValue={(val, getItemProps) =>
                 val.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                  <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
                 ))
               }
             />
@@ -1124,7 +1163,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">{t('itSystem.noLinkedProcesses')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('itSystem.noLinkedProcesses')}</Typography>
         )}
       </Box>
 
@@ -1157,12 +1198,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Chip label={COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} size="small" />
                 <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                {t.notes && <Typography variant="caption" color="text.secondary">{t.notes}</Typography>}
+                {t.notes && <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{t.notes}</Typography>}
               </Box>
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">No cross-border transfers recorded</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>No cross-border transfers recorded</Typography>
         )}
       </Box>
 
@@ -1282,7 +1327,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 <Typography variant="body2" sx={{ minWidth: 120 }}>
                   {getLocalizedText(c.names, c.key)}
                   {isClassificationMandatory(c.key) && (
-                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        color: "warning.main",
+                        fontWeight: 700,
+                        ml: 0.5
+                      }}>*</Typography>
                   )}:
                 </Typography>
                 {assignments.length > 0 ? (
@@ -1293,12 +1345,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     })}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>{t('common.notSet')}</Typography>
                 )}
               </Box>
             );
           }) : (
-            <Typography variant="body2" color="text.secondary">No classifications configured</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>No classifications configured</Typography>
           )}
         </Box>
       )}
@@ -1348,7 +1404,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             clickable
           />
         ) : (
-          <Typography variant="body2" color="text.secondary">Top-level process</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>Top-level process</Typography>
         )}
       </Box>
 
@@ -1438,7 +1496,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">No version history</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>No version history</Typography>
           ) : (
             <Table size="small">
               <TableBody>
@@ -1505,7 +1565,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               </Box>
             )}
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'flex-start', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>Add transfer</Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  width: '100%'
+                }}>Add transfer</Typography>
               <Autocomplete
                 options={COUNTRY_OPTIONS}
                 getOptionLabel={(o) => `${o.name} (${o.code})`}
@@ -1598,7 +1663,13 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
     {isMandatory && (
-      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "warning.main",
+          fontWeight: 700,
+          lineHeight: 1
+        }}>*</Typography>
     )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
@@ -1683,7 +1754,9 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" color="text.secondary">None</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>None</Typography>
         )}
         {hasRootEntities && entities.length > 0 && (
           <Alert severity="info" sx={{ mt: 1, py: 0, fontSize: '0.75rem' }}>

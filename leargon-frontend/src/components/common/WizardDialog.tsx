@@ -81,7 +81,16 @@ const WizardDialog: React.FC<WizardDialogProps> = ({
             {steps.map((step, i) => (
               <Box key={step.id}>
                 {i > 0 && <Divider sx={{ my: 2 }} />}
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: 0.5 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 600,
+                    mb: 1.5,
+                    color: 'text.secondary',
+                    textTransform: 'uppercase',
+                    fontSize: '0.7rem',
+                    letterSpacing: 0.5
+                  }}>
                   {step.title}
                 </Typography>
                 {step.content}

@@ -94,9 +94,10 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
               <ListItemText
                 primary={item.name}
                 secondary={issueLabel(item.issueCode)}
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
+                slotProps={{
+                  primary: { variant: 'body2', sx: { fontWeight: 500 } },
+                  secondary: { variant: 'caption' }
+                }} />
               <Chip
                 label={item.resourceType.toLowerCase()}
                 size="small"
@@ -145,9 +146,10 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
                     ? `${item.changeType.toLowerCase().replace('_', ' ')} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
                     : item.changeType.toLowerCase().replace('_', ' ')
                 }
-                primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
+                slotProps={{
+                  primary: { variant: 'body2', sx: { fontWeight: 500 } },
+                  secondary: { variant: 'caption' }
+                }} />
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25, flexShrink: 0, ml: 1 }}>
                 <Chip
                   label={item.resourceType.toLowerCase()}
@@ -155,7 +157,12 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
                   variant="outlined"
                   sx={{ textTransform: 'capitalize', fontSize: '0.7rem', height: 18 }}
                 />
-                <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    whiteSpace: 'nowrap'
+                  }}>
                   {formatRelativeTime(item.changedAt)}
                 </Typography>
               </Box>
@@ -172,7 +179,9 @@ function SectionCard({ title, icon, children }: { title: string; icon: React.Rea
     <Paper variant="outlined" sx={{ mb: 3 }}>
       <Box sx={{ px: 2, py: 1.25, display: 'flex', alignItems: 'center', gap: 1, borderBottom: 1, borderColor: 'divider' }}>
         <Box sx={{ color: 'text.secondary', display: 'flex' }}>{icon}</Box>
-        <Typography variant="subtitle2" fontWeight={600}>{title}</Typography>
+        <Typography variant="subtitle2" sx={{
+          fontWeight: 600
+        }}>{title}</Typography>
       </Box>
       {children}
     </Paper>
@@ -201,7 +210,9 @@ function ResponsibilitiesSection({ items, type }: { items: Array<{ key: string; 
             <ListItemButton onClick={() => navigate(`${path}/${item.key}`)} sx={{ py: 0.75, px: 2 }}>
               <ListItemText
                 primary={item.name}
-                primaryTypographyProps={{ variant: 'body2' }}
+                slotProps={{
+                  primary: { variant: 'body2' }
+                }}
               />
             </ListItemButton>
           </ListItem>
@@ -223,10 +234,14 @@ const HomePage: React.FC = () => {
     <Box sx={{ p: 3, height: '100%', overflow: 'auto', maxWidth: 900 }}>
       <Box sx={{ mb: 3, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
         <Box>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant="h5" sx={{
+            fontWeight: 600
+          }}>
             {user?.firstName ? t('home.welcomeNamed', { name: user.firstName }) : t('home.welcome')}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('home.subtitle')}
           </Typography>
         </Box>
@@ -242,14 +257,10 @@ const HomePage: React.FC = () => {
           </Button>
         )}
       </Box>
-
       {/* Item 11: Governance Maturity Overview — admin only */}
       {isAdmin && <Box sx={{ mb: 3 }}><MaturityOverview /></Box>}
-
       <GovernanceSetupWizard open={governanceWizardOpen} onClose={() => setGovernanceWizardOpen(false)} />
-
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
-
       {dashboard && (
         <>
           {/* Needs Attention */}
@@ -267,7 +278,14 @@ const HomePage: React.FC = () => {
             <Box>
               <Box sx={{ px: 2, pt: 1.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Storage fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}>
                   {t('home.entities', { count: (dashboard.myResponsibilities?.entities ?? []).length })}
                 </Typography>
               </Box>
@@ -277,7 +295,14 @@ const HomePage: React.FC = () => {
 
               <Box sx={{ px: 2, pt: 0.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <AccountTree fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5
+                  }}>
                   {t('home.processes', { count: (dashboard.myResponsibilities?.processes ?? []).length })}
                 </Typography>
               </Box>

@@ -74,7 +74,6 @@ const ProfilePage: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 600 }}>
       <Typography variant="h5" sx={{ mb: 3 }}>{t('profile.title')}</Typography>
-
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>{t('profile.accountInfo')}</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -82,16 +81,22 @@ const ProfilePage: React.FC = () => {
           <InfoRow icon={<Email color="primary" />} label={t('profile.email')} value={user?.email} />
           <InfoRow icon={<AccountCircle color="primary" />} label={t('profile.name')} value={`${user?.firstName || ''} ${user?.lastName || ''}`.trim()} />
           {user?.createdAt && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{
+              color: "text.secondary"
+            }}>
               {t('profile.memberSince', { date: new Date(user.createdAt).toLocaleDateString() })}
             </Typography>
           )}
         </Box>
       </Paper>
-
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" sx={{ mb: 0.5 }}>{t('profile.defaultView')}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('profile.defaultViewDescription')}
         </Typography>
         {isTemporary && (
@@ -116,10 +121,14 @@ const ProfilePage: React.FC = () => {
           ))}
         </ToggleButtonGroup>
       </Paper>
-
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" sx={{ mb: 0.5 }}>{t('profile.wizardMode')}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('profile.wizardModeDescription')}
         </Typography>
         <ToggleButtonGroup
@@ -132,7 +141,6 @@ const ProfilePage: React.FC = () => {
           <ToggleButton value="express">{t('profile.express')}</ToggleButton>
         </ToggleButtonGroup>
       </Paper>
-
       {!user?.isFallbackAdministrator && (
         <Paper variant="outlined" sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>{t('profile.changePassword')}</Typography>
@@ -205,7 +213,9 @@ const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value?: string }
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
     {icon}
     <Box>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
+      <Typography variant="caption" sx={{
+        color: "text.secondary"
+      }}>{label}</Typography>
       <Typography variant="body2">{value || '—'}</Typography>
     </Box>
   </Box>

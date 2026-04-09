@@ -45,7 +45,7 @@ class Classification {
     var isSystem: Boolean = false
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_id", nullable = false)
+    @JoinColumn(name = "created_by_id", nullable = true)
     var createdBy: User? = null
 
     @OneToMany(mappedBy = "classification", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)

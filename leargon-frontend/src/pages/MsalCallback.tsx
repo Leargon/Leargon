@@ -74,7 +74,15 @@ const MsalCallback: React.FC = () => {
 
   if (error) {
     return (
-      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh" gap={2}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          gap: 2
+        }}>
         <Alert severity="error">{error}</Alert>
         <Button variant="outlined" onClick={() => navigate('/login')}>Back to Login</Button>
       </Box>
@@ -82,7 +90,13 @@ const MsalCallback: React.FC = () => {
   }
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh"
+      }}>
       <CircularProgress />
     </Box>
   );

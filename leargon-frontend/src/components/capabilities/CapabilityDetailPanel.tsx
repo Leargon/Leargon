@@ -178,7 +178,6 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           ) : undefined
         }
       />
-
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names */}
         <Accordion defaultExpanded disableGutters>
@@ -210,7 +209,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 </Box>
               </>
             ) : (
-              <Typography variant="body2" color="text.secondary">{capabilityName}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{capabilityName}</Typography>
             )}
           </AccordionDetails>
         </Accordion>
@@ -222,7 +223,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           </AccordionSummary>
           <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Box>
-              <Typography variant="caption" color="text.secondary">Parent Capability</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>Parent Capability</Typography>
               <Box sx={{ mt: 0.5 }}>
                 {parentEdit.isEditing ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -239,7 +242,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       {capability.parent ? getLocalizedText(capability.parent ? (allCapabilities.find((c) => c.key === capability.parent!.key)?.names ?? []) : [], capability.parent.key) : '—'}
                     </Typography>
                     {isAdmin && (
@@ -252,7 +257,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
               </Box>
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary">Owning Unit</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>Owning Unit</Typography>
               <Box sx={{ mt: 0.5 }}>
                 {owningUnitEdit.isEditing ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -269,7 +276,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                   </Box>
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{
+                      color: "text.secondary"
+                    }}>
                       {capability.owningUnit?.name ?? '—'}
                     </Typography>
                     {isAdmin && (
@@ -328,9 +337,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                   value={allProcesses.filter((p) => processesEdit.editValue?.includes(p.key))}
                   onChange={(_, val) => processesEdit.startEdit(val.map((p) => p.key))}
                   renderInput={(params) => <TextField {...params} size="small" label="Select processes" />}
-                  renderTags={(val, getTagProps) =>
+                  renderValue={(val, getItemProps) =>
                     val.map((option, index) => (
-                      <Chip {...getTagProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                      <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
                     ))
                   }
                 />
@@ -341,7 +350,9 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 </Box>
               </>
             ) : linkedProcessKeys.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">No processes linked</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>No processes linked</Typography>
             ) : (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {capability.linkedProcesses!.map((p) => (
@@ -358,7 +369,6 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           </AccordionDetails>
         </Accordion>
       </Box>
-
       {/* Delete dialog */}
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
         <DialogTitle>Delete Capability</DialogTitle>

@@ -108,11 +108,15 @@ const SplitPageLayout: React.FC<SplitPageLayoutProps> = ({
           </Button>
         ) : (
           <>
-            <Typography variant="subtitle1" fontWeight={600}>
+            <Typography variant="subtitle1" sx={{
+              fontWeight: 600
+            }}>
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 {subtitle}
               </Typography>
             )}
@@ -136,7 +140,6 @@ const SplitPageLayout: React.FC<SplitPageLayoutProps> = ({
           </ToggleButtonGroup>
         )}
       </Box>
-
       {/* Body */}
       {isListView ? (
         isNarrow ? (
@@ -171,7 +174,6 @@ const SplitPageLayout: React.FC<SplitPageLayoutProps> = ({
           </Suspense>
         </Box>
       )}
-
       {children}
     </Box>
   );

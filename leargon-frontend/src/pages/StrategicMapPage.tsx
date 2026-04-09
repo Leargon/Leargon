@@ -117,11 +117,16 @@ export const StrategicMapContent: React.FC = () => {
             sx={{ bgcolor: DOMAIN_TYPE_COLORS[type], color: '#fff', fontSize: '0.7rem' }}
           />
         ))}
-        <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center', ml: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            alignSelf: 'center',
+            ml: 1
+          }}>
           Domain types
         </Typography>
       </Box>
-
       {/* Matrix table */}
       <Box sx={{ overflowX: 'auto' }}>
         <Box
@@ -134,14 +139,21 @@ export const StrategicMapContent: React.FC = () => {
         >
           {/* Header row */}
           <Box sx={{ bgcolor: 'action.selected', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary">
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 600,
+                color: "text.secondary"
+              }}>
               Domain / Capability
             </Typography>
           </Box>
 
           {rootCapabilities.length === 0 ? (
             <Box sx={{ bgcolor: 'action.hover', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary">No capabilities defined</Typography>
+              <Typography variant="caption" sx={{
+                color: "text.secondary"
+              }}>No capabilities defined</Typography>
             </Box>
           ) : (
             rootCapabilities.map((cap) => (
@@ -158,7 +170,12 @@ export const StrategicMapContent: React.FC = () => {
                   '&:hover': { opacity: 0.85 },
                 }}
               >
-                <Typography variant="caption" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 700,
+                    lineHeight: 1.2
+                  }}>
                   {getLocalizedText(cap.names, cap.key)}
                 </Typography>
                 {cap.owningUnit && (
@@ -201,7 +218,12 @@ export const StrategicMapContent: React.FC = () => {
                     minHeight: 72,
                   }}
                 >
-                  <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      lineHeight: 1.2
+                    }}>
                     {domainName}
                   </Typography>
                   {typeLabel && (
@@ -212,12 +234,16 @@ export const StrategicMapContent: React.FC = () => {
                     />
                   )}
                   {subdomains.length > 0 && (
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        fontSize: '0.65rem'
+                      }}>
                       {subdomains.length} subdomain{subdomains.length !== 1 ? 's' : ''}
                     </Typography>
                   )}
                 </Paper>
-
                 {/* Capability cells for this domain */}
                 {rootCapabilities.length === 0 ? (
                   <Paper variant="outlined" sx={{ p: 1, borderRadius: 1, minHeight: 72 }}>
@@ -233,7 +259,9 @@ export const StrategicMapContent: React.FC = () => {
                         </Tooltip>
                       ))}
                       {bcs.length === 0 && (
-                        <Typography variant="caption" color="text.disabled">—</Typography>
+                        <Typography variant="caption" sx={{
+                          color: "text.disabled"
+                        }}>—</Typography>
                       )}
                     </Box>
                   </Paper>
@@ -270,10 +298,19 @@ export const StrategicMapContent: React.FC = () => {
                             ))}
                           </Box>
                         ) : (
-                          <Typography variant="caption" color="text.disabled">—</Typography>
+                          <Typography variant="caption" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         )}
                         {capChildCount > 0 && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontSize: '0.6rem' }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "text.secondary",
+                              display: 'block',
+                              mt: 0.5,
+                              fontSize: '0.6rem'
+                            }}>
                             {capChildCount} sub-cap{capChildCount !== 1 ? 's' : ''}
                           </Typography>
                         )}
@@ -286,11 +323,15 @@ export const StrategicMapContent: React.FC = () => {
           })}
         </Box>
       </Box>
-
       {/* All bounded contexts summary */}
       {rootDomains.length > 0 && (
         <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 600,
+              mb: 1
+            }}>
             Bounded Contexts Overview
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -301,7 +342,14 @@ export const StrategicMapContent: React.FC = () => {
               const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
               return (
                 <Paper key={domain.key} variant="outlined" sx={{ p: 1, borderLeft: `3px solid ${typeColor}`, minWidth: 160 }}>
-                  <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      color: "text.secondary",
+                      display: 'block',
+                      mb: 0.5
+                    }}>
                     {getLocalizedText(domain.names, domain.key)}
                   </Typography>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -324,12 +372,15 @@ const StrategicMapPage: React.FC = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
-        <Typography variant="h6" fontWeight={600}>Strategic Map</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h6" sx={{
+          fontWeight: 600
+        }}>Strategic Map</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Business domains (rows) × top-level capabilities (columns) — bounded contexts and alignment overview.
         </Typography>
       </Box>
-
       <StrategicMapContent />
     </Box>
   );

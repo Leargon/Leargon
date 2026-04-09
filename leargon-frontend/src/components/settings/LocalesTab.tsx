@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Typography,
   Paper,
@@ -231,6 +232,7 @@ interface LocalesTabProps {
 }
 
 const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales({ 'include-inactive': true });
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
@@ -241,6 +243,9 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Delete confirmation dialog
+  const [deleteTarget, setDeleteTarget] = useState<SupportedLocaleResponse | null>(null);
 
   // Create dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -259,7 +264,7 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
 
   const handleCreate = async () => {
     if (!selectedLanguage) {
-      setError('Please select a language');
+      setError(t('localeManagement.errors.selectLanguage'));
       return;
     }
     try {
@@ -267,12 +272,12 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
       await createLocale.mutateAsync({
         data: { localeCode: selectedLanguage.code, displayName: selectedLanguage.name },
       });
-      setSuccess(`Locale "${selectedLanguage.code}" (${selectedLanguage.name}) created`);
+      setSuccess(t('localeManagement.success.created', { code: selectedLanguage.code, name: selectedLanguage.name }));
       setCreateOpen(false);
       setSelectedLanguage(null);
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to create locale');
+      setError(err?.response?.data?.message || t('localeManagement.errors.createFailed'));
     }
   };
 
@@ -281,10 +286,10 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
     try {
       setError('');
       await updateLocale.mutateAsync({ id: locale.id, data: { isDefault: true } });
-      setSuccess(`"${locale.displayName}" is now the default locale`);
+      setSuccess(t('localeManagement.success.setDefault', { name: locale.displayName }));
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to set default locale');
+      setError(err?.response?.data?.message || t('localeManagement.errors.updateFailed'));
     }
   };
 
@@ -292,10 +297,10 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
     try {
       setError('');
       await updateLocale.mutateAsync({ id: locale.id, data: { isActive: !locale.isActive } });
-      setSuccess(`Locale "${locale.localeCode}" ${locale.isActive ? 'deactivated' : 'activated'}`);
+      setSuccess(t(locale.isActive ? 'localeManagement.success.deactivated' : 'localeManagement.success.activated', { code: locale.localeCode }));
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to update locale');
+      setError(err?.response?.data?.message || t('localeManagement.errors.updateFailed'));
     }
   };
 
@@ -310,21 +315,24 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
       setError('');
       await updateLocale.mutateAsync({ id: locale.id, data: { sortOrder: other.sortOrder } });
       await updateLocale.mutateAsync({ id: other.id, data: { sortOrder: locale.sortOrder } });
-      setSuccess(`Moved "${locale.localeCode}" ${direction}`);
+      setSuccess(t('localeManagement.success.moved', { code: locale.localeCode, direction }));
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to update sort order');
+      setError(err?.response?.data?.message || t('localeManagement.errors.sortFailed'));
     }
   };
 
-  const handleDelete = async (locale: SupportedLocaleResponse) => {
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
     try {
       setError('');
-      await deleteLocale.mutateAsync({ id: locale.id });
-      setSuccess(`Locale "${locale.localeCode}" deleted`);
+      await deleteLocale.mutateAsync({ id: deleteTarget.id });
+      setSuccess(t('localeManagement.success.deleted', { code: deleteTarget.localeCode }));
+      setDeleteTarget(null);
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to delete locale');
+      setError(err?.response?.data?.message || t('localeManagement.errors.deleteFailed'));
+      setDeleteTarget(null);
     }
   };
 
@@ -333,32 +341,32 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">Locale Management</Typography>
+        <Typography variant="h6">{t('localeManagement.title')}</Typography>
         <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
-          Add Locale
+          {t('localeManagement.addLocale')}
         </Button>
       </Box>
-
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
-
       <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Locale Code</TableCell>
-              <TableCell>Display Name</TableCell>
-              <TableCell>Default</TableCell>
-              <TableCell>Active</TableCell>
-              <TableCell>Order</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{t('localeManagement.columns.localeCode')}</TableCell>
+              <TableCell>{t('localeManagement.columns.displayName')}</TableCell>
+              <TableCell>{t('localeManagement.columns.default')}</TableCell>
+              <TableCell>{t('localeManagement.columns.active')}</TableCell>
+              <TableCell>{t('localeManagement.columns.order')}</TableCell>
+              <TableCell align="right">{t('localeManagement.columns.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {sorted.map((locale, index) => (
               <TableRow key={locale.id}>
                 <TableCell>
-                  <Typography variant="body2" fontWeight={500}>{locale.localeCode}</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 500
+                  }}>{locale.localeCode}</Typography>
                 </TableCell>
                 <TableCell>{locale.displayName}</TableCell>
                 <TableCell>
@@ -366,10 +374,10 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
                     <Tooltip
                       title={
                         locale.isDefault
-                          ? 'Current default'
+                          ? t('localeManagement.tooltips.currentDefault')
                           : locale.isActive
-                            ? 'Set as default'
-                            : 'Activate locale first to set as default'
+                            ? t('localeManagement.tooltips.setAsDefault')
+                            : t('localeManagement.tooltips.activateFirst')
                       }
                     >
                       <span>
@@ -382,7 +390,7 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
                       </span>
                     </Tooltip>
                   ) : (
-                    locale.isDefault && <Chip label="Default" color="primary" size="small" />
+                    locale.isDefault && <Chip label={t('localeManagement.chips.default')} color="primary" size="small" />
                   )}
                 </TableCell>
                 <TableCell>
@@ -404,12 +412,12 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
                   </Box>
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title={locale.isDefault ? 'Cannot delete default locale' : 'Delete'}>
+                  <Tooltip title={locale.isDefault ? t('localeManagement.tooltips.cannotDeleteDefault') : t('localeManagement.tooltips.delete')}>
                     <span>
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => handleDelete(locale)}
+                        onClick={() => setDeleteTarget(locale)}
                         disabled={locale.isDefault}
                       >
                         <DeleteIcon fontSize="small" />
@@ -422,10 +430,35 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
           </TableBody>
         </Table>
       </TableContainer>
-
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('localeManagement.deleteDialog.title')}</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Trans
+              i18nKey="localeManagement.deleteDialog.warning"
+              values={{ code: deleteTarget?.localeCode, name: deleteTarget?.displayName }}
+              components={{ bold: <strong /> }}
+            />
+          </Alert>
+          <Typography variant="body2">
+            <Trans
+              i18nKey="localeManagement.deleteDialog.confirm"
+              values={{ name: deleteTarget?.displayName }}
+              components={{ bold: <strong /> }}
+            />
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>{t('localeManagement.deleteDialog.cancel')}</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" disabled={deleteLocale.isPending}>
+            {deleteLocale.isPending ? t('localeManagement.deleteDialog.deleting') : t('localeManagement.deleteDialog.delete')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Create Locale Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Add Locale</DialogTitle>
+        <DialogTitle>{t('localeManagement.createDialog.title')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Autocomplete
@@ -436,10 +469,10 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Language"
+                  label={t('localeManagement.createDialog.languageLabel')}
                   size="small"
-                  placeholder="Search languages..."
-                  helperText="Select an ISO 639-1 language"
+                  placeholder={t('localeManagement.createDialog.languagePlaceholder')}
+                  helperText={t('localeManagement.createDialog.languageHelper')}
                 />
               )}
               isOptionEqualToValue={(option, value) => option.code === value.code}
@@ -447,9 +480,9 @@ const LocalesTab: React.FC<LocalesTabProps> = ({ allowSetDefault = false }) => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setCreateOpen(false); setSelectedLanguage(null); }}>Cancel</Button>
+          <Button onClick={() => { setCreateOpen(false); setSelectedLanguage(null); }}>{t('localeManagement.createDialog.cancel')}</Button>
           <Button onClick={handleCreate} variant="contained" disabled={createLocale.isPending || !selectedLanguage}>
-            {createLocale.isPending ? 'Creating...' : 'Create'}
+            {createLocale.isPending ? t('localeManagement.createDialog.creating') : t('localeManagement.createDialog.create')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -126,10 +126,11 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
           />
         )}
       </Box>
-
       {!dpia ? (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body2" color="text.secondary">{t('dpia.noDpia')}</Typography>
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>{t('dpia.noDpia')}</Typography>
           {canEdit && (
             <Button
               size="small"
@@ -229,7 +230,9 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 size="small"
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
 
@@ -262,7 +265,9 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 size="small"
               />
             ) : (
-              <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
 
