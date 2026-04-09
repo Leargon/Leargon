@@ -39,6 +39,7 @@ const UbiquitousLanguagePage = lazy(() => import('./pages/UbiquitousLanguagePage
 const CapabilitiesPage = lazy(() => import('./pages/CapabilitiesPage'));
 const CapabilityMapPage = lazy(() => import('./pages/CapabilityMapPage'));
 const StrategicMapPage = lazy(() => import('./pages/StrategicMapPage'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +95,7 @@ const router = createBrowserRouter([
       { path: 'diagrams/capability-map', element: <CapabilityMapPage /> },
       { path: 'diagrams/strategic-map', element: <StrategicMapPage /> },
       { path: 'profile', element: <ProfilePage /> },
+      { path: 'help', element: <HelpPage /> },
     ],
   },
   { path: '*', element: <NotFoundPage /> },

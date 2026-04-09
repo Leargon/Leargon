@@ -6,7 +6,7 @@ import {
   Handshake, FactCheck, GppGood, Hub,
   FlashOn, Computer,
   People, Language, Label, Tune, AutoAwesomeMosaic,
-  Home, Groups, Map,
+  Home, Groups, Map, HelpOutline,
 } from '@mui/icons-material';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,7 @@ const CORE_ITEMS: NavItem[] = [
   { labelKey: 'nav.domainModel', path: '/domains', icon: <Category /> },
   { labelKey: 'nav.processMap', path: '/processes', icon: <Timeline /> },
   { labelKey: 'nav.orgStructure', path: '/organisation', icon: <CorporateFare /> },
+  { labelKey: 'nav.help', path: '/help', icon: <HelpOutline /> },
 ];
 
 const ROLE_EXTRA_ITEMS: Record<Role, NavItem[]> = {

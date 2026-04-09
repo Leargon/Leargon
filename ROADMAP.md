@@ -703,3 +703,96 @@ Requires extending the `EventDefinition` enum and `FlowNodeType` enum in `openap
 **IF** processes are documented with time metadata, activity classifications, and frequency\
 **I WANT** to see a value stream summary view showing: total lead time (sum of CT + WT across a process chain), value-adding ratio (VA time ÷ total lead time), and a breakdown of activity types across the stream\
 **SO THAT** I can identify the biggest improvement opportunities — steps with high wait time, low FPY, or Waste classification — and measure improvement over time as metadata is refined
+
+---
+
+## Localise all remaining free-text fields
+
+*All user-visible text fields that are currently plain `String` / `varchar` columns should become `LocalizedText[]` (JSON-stored lists), consistent with the pattern already used for `names`, `descriptions`, `purpose`, and `securityMeasures`. Existing values are migrated to the system default locale. The change touches openapi.yaml, domain entities, Liquibase migrations, mappers, services, and the frontend editor components.*
+
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
+
+**Fields in scope** (plain `String` today → `LocalizedText[]` after):
+
+| Entity | Field | DB column |
+|--------|-------|-----------|
+| `BusinessDomain` | `visionStatement` | `vision_statement` |
+| `BusinessEntity` | `retentionPeriod` | `retention_period` |
+| `ContextRelationship` | `description` | `description` |
+| `TranslationLink` | `semanticDifferenceNote` | `semantic_difference_note` |
+| `Dpia` | `riskDescription` | `risk_description` |
+| `Dpia` | `measures` | `measures` |
+| `Dpia` | `fdpicConsultationOutcome` | `fdpic_consultation_outcome` |
+| `CrossBorderTransfer` | `notes` | `notes` |
+| `Process` | `legalBasis` | `legal_basis` |
+| `ProcessFlowNode` | `label` | `label` |
+| `ProcessFlowTrack` | `label` | `label` |
+| `BusinessDataQualityRule` | `description` | `description` |
+
+**Migration strategy per field:**
+1. Add a new `TEXT` column (e.g. `vision_statement_i18n`) storing JSON.
+2. Migrate existing values: `UPDATE … SET vision_statement_i18n = JSON_ARRAY(JSON_OBJECT('locale', <defaultLocale>, 'text', vision_statement)) WHERE vision_statement IS NOT NULL`.
+3. Drop the old column.
+4. Rename the new column to the original name.
+
+All migrations run via Liquibase and apply automatically on startup.
+
+#### USER STORY 'Localise the domain vision statement'
+**AS A** data governance manager\
+**IF** I am editing a business domain in a multilingual organisation\
+**I WANT** to enter the vision statement in each active language using the standard translation editor\
+**SO THAT** domain vision is readable in the viewer's preferred language rather than always appearing in the language it was first written in
+
+#### USER STORY 'Localise the entity retention period'
+**AS A** privacy officer\
+**IF** I am documenting the retention period of a business entity in a multilingual organisation\
+**I WANT** to enter the retention period description in each active language using the standard translation editor\
+**SO THAT** retention policies are understandable to staff in all supported languages without requiring manual translation outside the system
+
+#### USER STORY 'Localise context relationship descriptions'
+**AS A** domain architect\
+**IF** I am documenting the relationship between two bounded contexts\
+**I WANT** to enter the relationship description in each active language\
+**SO THAT** the context map annotations are accessible to all stakeholders regardless of their preferred language
+
+#### USER STORY 'Localise translation link semantic difference notes'
+**AS A** domain architect\
+**IF** I am documenting a translation link between two entities in different bounded contexts\
+**I WANT** to enter the semantic difference note in each active language\
+**SO THAT** the explanation of the conceptual difference between the two entities is understandable to all team members
+
+#### USER STORY 'Localise DPIA narrative fields'
+**AS A** privacy officer\
+**IF** I am conducting a Data Protection Impact Assessment in a multilingual organisation\
+**I WANT** to enter the risk description, proposed measures, and FDPIC consultation outcome in each active language\
+**SO THAT** the DPIA documentation meets regulatory requirements in all relevant jurisdictions and is reviewable by local stakeholders
+
+#### USER STORY 'Localise cross-border transfer notes'
+**AS A** privacy officer\
+**IF** I am documenting a cross-border data transfer with additional context\
+**I WANT** to enter the transfer notes in each active language\
+**SO THAT** the notes are meaningful to reviewers who read documentation in different languages
+
+#### USER STORY 'Localise the process legal basis'
+**AS A** privacy officer\
+**IF** I am documenting the legal basis of a business process under GDPR or DSG\
+**I WANT** to enter the legal basis text in each active language\
+**SO THAT** the documented basis is understandable across jurisdictions and internal reviewers can read it in their preferred language
+
+#### USER STORY 'Localise BPMN node and lane labels'
+**AS A** process modeller\
+**IF** I am labelling a task, gateway, event, or swimlane in the BPMN diagram editor\
+**I WANT** to enter the label in each active language\
+**SO THAT** the diagram is readable to all stakeholders regardless of their preferred language, consistent with all other catalogue text
+
+#### USER STORY 'Localise data quality rule descriptions'
+**AS A** data steward\
+**IF** I am documenting a quality rule on a business entity\
+**I WANT** to enter the rule description in each active language\
+**SO THAT** quality rules are understandable to data consumers in all supported languages
+
+#### USER STORY 'Migrate all existing free-text values to the default locale'
+**AS AN** administrator upgrading Léargon to the localised free-text version\
+**IF** the system already contains vision statements, retention periods, legal bases, and other plain-text values entered before this feature existed\
+**I WANT** the upgrade migration to automatically preserve all existing text by associating it with the system default locale\
+**SO THAT** no information is lost during the upgrade and the system continues to display all previously entered content without any manual re-entry
