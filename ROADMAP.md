@@ -19,6 +19,7 @@
 | Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
 | Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
 | Extended BPMN event types (Story 2b)          | 3        | 30%    | 6/10  | **2.0**  |
+| Localise all remaining free-text fields       | 3        | 30%    | 7/10  | **2.3**  |
 
 ---
 
