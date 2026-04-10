@@ -46,6 +46,7 @@ Extend field configuration so an admin can:
 | `interfaceEntities` | Interface Entities | DDD | Advanced | no |
 | `implementationEntities` | Implementation Entities | DDD | Advanced | no |
 | `relationships` | Relationships | DDD | Advanced | no |
+| `translationLinks` | Translation Links | DDD | Advanced | no |
 
 **Sections for BUSINESS_ENTITY:**
 - **Core** — identity, ownership, hierarchy
@@ -66,6 +67,8 @@ Extend field configuration so an admin can:
 | `owningUnit` | Owning Unit | Core | Basic | yes |
 | `visionStatement` | Vision Statement | Strategic | Basic | yes |
 | `boundedContexts` | Bounded Contexts | DDD | Advanced | no |
+| `contextRelationships` | Context Relationships | DDD | Advanced | no |
+| `domainEvents` | Domain Events | DDD | Advanced | no |
 | `classification.<key>` | Classification (per key) | Data Governance | Basic | yes |
 
 **Sections for BUSINESS_DOMAIN:**
@@ -100,6 +103,7 @@ Extend field configuration so an admin can:
 | `capabilities` | Capabilities | BCM | Advanced | yes |
 | `itSystems` | IT Systems | Technical | Advanced | yes |
 | `serviceProviders` | Service Providers | Technical | Expert | yes |
+| `processDiagram` | Process Diagram | Technical | Advanced | no |
 | `calledProcesses` | Called Sub-Processes | BCM | Advanced | no |
 
 **Sections for BUSINESS_PROCESS:**
@@ -221,52 +225,68 @@ A new endpoint `GET /administration/field-configurations/definitions` returns th
 
 ## Batches & Estimates
 
-### Batch 1 — Backend data model & API (est. ~1 day)
+### Batch 1 — Backend data model & API (est. ~1 day) ✅ DONE
 
 **Goal:** Extend the persistence layer and API spec; no behaviour change yet.
 
 Tasks:
-1. Edit `openapi.yaml`:
+1. ✅ Edit `openapi.yaml`:
    - Extend `FieldConfigurationEntry` with `visibility`, `section`, `maturityLevel`
    - Add `FieldConfigurationDefinition` schema
    - Add `GET /administration/field-configurations/definitions` endpoint
-2. Write DB migration `052-extend-field-configurations.yaml`:
+2. ✅ Write DB migration `052-extend-field-configurations.yaml`:
    - `ALTER TABLE field_configurations ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'SHOWN'`
    - `ALTER TABLE field_configurations ADD COLUMN section VARCHAR(50) NOT NULL DEFAULT 'CORE'`
    - `ALTER TABLE field_configurations ADD COLUMN maturity_level VARCHAR(10) NOT NULL DEFAULT 'BASIC'`
-3. Update `FieldConfiguration.kt` — add the three Kotlin properties
-4. Update `FieldConfigurationService.kt`:
+3. ✅ Update `FieldConfiguration.kt` — add the three Kotlin properties
+4. ✅ Update `FieldConfigurationService.kt`:
    - `replace()` maps new fields from request
    - Enforce invariant: mandatory fields get `visibility = SHOWN` always
    - `getDefinitions()` returns the static field inventory dynamically expanded:
      - Locale-specific fields (e.g. `names.<locale>`) are expanded for each `SupportedLocale` in DB
      - Classification fields (`classification.<key>`) are expanded for each active `ClassificationValue` key
      - All other fields are returned as-is from the hardcoded inventory
-5. Implement `/definitions` in `AdministrationController.kt`
-6. Run `./gradlew build` — regenerate backend interfaces, ensure all existing tests pass
-7. Update existing backend test `FieldConfigurationControllerSpec` to cover new fields and the
-   mandatory-always-shown invariant
+5. ✅ Implement `/definitions` in `AdministrationController.kt`
+6. ✅ Run `./gradlew build` — regenerate backend interfaces, all 19 tests pass (0 failures)
+7. ✅ Update backend test `FieldConfigurationControllerSpec` — 12 new tests covering new fields,
+   definitions endpoint, locale expansion, `mandatoryCapable`, defaults, and 403 guards
+8. ✅ Run `npm run api:generate` — regenerated TypeScript types (`FieldConfigurationDefinition`,
+   updated `FieldConfigurationEntry` with `visibility`/`section`/`maturityLevel`)
+9. ✅ Extend `field-configuration.integration.test.ts` — 7 new integration tests for new fields
+   and the `/definitions` endpoint
+10. ✅ Update `field-configuration.spec.ts` — `setFieldConfigurations` signature updated to accept
+    new optional fields; hide/show UI tests deferred to Batch 2
 
 ---
 
-### Batch 2 — Frontend settings UI redesign (est. ~1.5 days)
+### Batch 2 — Frontend settings UI redesign (est. ~1.5 days) ✅ DONE
 
 **Goal:** Replace the flat list in `FieldConfigurationTab.tsx` with a sectioned, maturity-aware,
 hide/show UI.
 
 Tasks:
-1. Run `npm run api:generate` — pick up the new TypeScript types
-2. Redesign `FieldConfigurationTab.tsx`:
-   - Fetch `/definitions` to get all possible fields (no more hard-coded lists)
-   - Group fields by **section** (tabs or accordion) and within each section by **maturity level**
-     (sub-section: Basic / Advanced / Expert)
-   - For each field show a **three-option radio group**: `Mandatory | Shown | Hidden`
-     - `Mandatory` option only shown when `definition.mandatoryCapable === true`
-     - Selecting `Mandatory` forces `visibility = SHOWN` (backend also enforces this)
-   - Show count badges on sections: "3 mandatory, 2 hidden"
-3. Update the save/PUT payload to include `visibility`, `section`, `maturityLevel` per entry
-4. Add integration test coverage for new fields in `field-configurations.integration.test.ts`
-5. Update E2E test `field-configurations.spec.ts` to exercise hide/show toggles
+1. ✅ Run `npm run api:generate` — TypeScript types already regenerated in Batch 1
+2. ✅ Redesign `FieldConfigurationTab.tsx`:
+   - Fetches `/definitions` (no more hard-coded field lists)
+   - Entity type selector as MUI `Tabs`
+   - Sections rendered as `Accordion` components; Core expanded by default
+   - Within each section, maturity sub-sections (Basic / Advanced / Expert) as caption headers
+   - Each field row shows a `ToggleButtonGroup` with `Mandatory | Shown | Hidden`
+     - `Mandatory` button only rendered when `definition.mandatoryCapable === true`
+     - Default-locale name field (`names.{defaultLocale}`) is always MANDATORY and all buttons are disabled
+   - Section header shows count badge chips: "N mandatory" / "N hidden"
+   - `data-testid="field-toggle-{fieldName}"` on each toggle group for E2E targeting
+3. ✅ Save/PUT payload includes `visibility`, `section`, `maturityLevel` per entry; always-required
+   field is always included as MANDATORY in the saved entries
+4. ✅ Integration tests already updated in Batch 1 (new fields + definitions endpoint)
+5. ✅ E2E test `field-configuration.spec.ts` fully rewritten for the new UI:
+   - Page structure (tabs, accordions)
+   - Locked always-required name field
+   - Mark a field as Mandatory and save
+   - Hide a field and save
+   - Section badges update on state change
+   - Switching entity type tabs
+   - Non-mandatory-capable fields omit the Mandatory button
 
 ---
 
@@ -309,21 +329,21 @@ Tasks:
    enforcement, `hiddenFields` in mapper output)
 2. E2E happy-path test: admin hides a field → regular user cannot see it on entity detail page
 3. E2E negative test: admin marks a field mandatory → visibility toggle is disabled (cannot hide)
-4. Update `CLAUDE.md` if new architectural patterns are introduced
+4. Update `CLAUDE.md`, CONCEPTS.md, etc if new architectural patterns are introduced
 5. Smoke-test with `docker compose up` — confirm the new migration runs cleanly
 
 ---
 
 ## Total Estimate
 
-| Batch | Focus | Estimate |
-|---|---|---|
-| 1 | Backend data model & API | ~1 day |
-| 2 | Frontend settings UI | ~1.5 days |
-| 3 | Detail panels respect visibility | ~1 day |
-| 4 | Missing-fields banner & indicators | ~0.5 day |
-| 5 | Tests, polish, docs | ~0.5 day |
-| **Total** | | **~4.5 days** |
+| Batch | Focus | Estimate | Status |
+|---|---|---|---|
+| 1 | Backend data model & API | ~1 day | ✅ Done |
+| 2 | Frontend settings UI | ~1.5 days | ✅ Done |
+| 3 | Detail panels respect visibility | ~1 day | |
+| 4 | Missing-fields banner & indicators | ~0.5 day | |
+| 5 | Tests, polish, docs | ~0.5 day | |
+| **Total** | | **~4.5 days** | |
 
 ---
 

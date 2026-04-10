@@ -49,6 +49,7 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_ENTITY", "interfaceEntities", "Interface Entities", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_ENTITY", "implementationEntities", "Implementation Entities", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_ENTITY", "relationships", "Relationships", "DDD", "ADVANCED", false),
+            FieldDef("BUSINESS_ENTITY", "translationLinks", "Translation Links", "DDD", "ADVANCED", false),
             // ── BUSINESS_DOMAIN ──────────────────────────────────────────────────
             FieldDef("BUSINESS_DOMAIN", "names.{locale}", "Name", "CORE", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "descriptions.{locale}", "Description", "CORE", "BASIC", true),
@@ -57,6 +58,8 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_DOMAIN", "owningUnit", "Owning Unit", "CORE", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "visionStatement", "Vision Statement", "STRATEGIC", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "boundedContexts", "Bounded Contexts", "DDD", "ADVANCED", false),
+            FieldDef("BUSINESS_DOMAIN", "contextRelationships", "Context Relationships", "DDD", "ADVANCED", false),
+            FieldDef("BUSINESS_DOMAIN", "domainEvents", "Domain Events", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_DOMAIN", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true),
             // ── BUSINESS_PROCESS ─────────────────────────────────────────────────
             FieldDef("BUSINESS_PROCESS", "names.{locale}", "Name", "CORE", "BASIC", true),
@@ -79,6 +82,7 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_PROCESS", "capabilities", "Capabilities", "BCM", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "itSystems", "IT Systems", "TECHNICAL", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "serviceProviders", "Service Providers", "TECHNICAL", "EXPERT", true),
+            FieldDef("BUSINESS_PROCESS", "processDiagram", "Process Diagram", "TECHNICAL", "ADVANCED", false),
             FieldDef("BUSINESS_PROCESS", "calledProcesses", "Called Sub-Processes", "BCM", "ADVANCED", false),
             // ── ORGANISATIONAL_UNIT ──────────────────────────────────────────────
             FieldDef("ORGANISATIONAL_UNIT", "names.{locale}", "Name", "CORE", "BASIC", true),
@@ -91,9 +95,11 @@ open class FieldConfigurationService(
             FieldDef("ORGANISATIONAL_UNIT", "isExternal", "Is External", "EXTERNAL", "BASIC", false),
             FieldDef("ORGANISATIONAL_UNIT", "externalCompanyName", "External Company Name", "EXTERNAL", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "countryOfExecution", "Country of Execution", "EXTERNAL", "BASIC", true),
+            FieldDef("ORGANISATIONAL_UNIT", "executingProcesses", "Executing Processes", "DATA_ACCESS", "BASIC", false),
             FieldDef("ORGANISATIONAL_UNIT", "dataAccessEntities", "Data Access (Read)", "DATA_ACCESS", "ADVANCED", false),
             FieldDef("ORGANISATIONAL_UNIT", "dataManipulationEntities", "Data Manipulation (Write)", "DATA_ACCESS", "ADVANCED", false),
             FieldDef("ORGANISATIONAL_UNIT", "serviceProviders", "Service Providers", "DATA_ACCESS", "EXPERT", false),
+            FieldDef("ORGANISATIONAL_UNIT", "boundedContexts", "Bounded Contexts", "DDD", "ADVANCED", false),
             FieldDef("ORGANISATIONAL_UNIT", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true)
         )
 
