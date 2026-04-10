@@ -204,3 +204,76 @@ test.describe('Mandatory * Indicator — Section Headers', () => {
     await expect(namesSection.locator('..').locator('..').getByText('*').first()).toBeVisible();
   });
 });
+
+test.describe('Hidden Fields — Entity Detail Panel', () => {
+  test.afterEach(async () => {
+    await clearFieldConfigurations();
+  });
+
+  test('hidden field is not rendered on entity detail page', async ({ page }) => {
+    // Configure retentionPeriod as HIDDEN for BUSINESS_ENTITY
+    await setFieldConfigurations([
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'HIDDEN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+    ]);
+
+    const entity = await createEntity(uid('PW Hidden Field Entity'));
+
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+
+    // "Retention Period" label should not be visible anywhere on the page
+    await expect(page.getByText('Retention Period')).not.toBeVisible();
+  });
+
+  test('shown field is visible and hidden field is not, when both are configured', async ({ page }) => {
+    await setFieldConfigurations([
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'HIDDEN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'dataSteward', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+    ]);
+
+    const entity = await createEntity(uid('PW Mixed Visibility Entity'));
+
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+
+    // Retention Period (HIDDEN) should not be visible
+    await expect(page.getByText('Retention Period')).not.toBeVisible();
+    // Data Steward (SHOWN) should remain visible
+    await expect(page.getByText('Data Steward')).toBeVisible();
+  });
+
+  test('hiding a field does not show a missing mandatory fields warning for it', async ({ page }) => {
+    // retentionPeriod is HIDDEN — it should NOT appear in the missing mandatory warning
+    await setFieldConfigurations([
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'HIDDEN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+    ]);
+
+    const entity = await createEntity(uid('PW Hidden No Warning Entity'));
+
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+
+    // No missing-mandatory banner should appear for a hidden field
+    const banner = page.getByRole('alert').filter({ hasText: /mandatory field/i });
+    await expect(banner).not.toBeVisible();
+  });
+
+  test('mandatory field toggle is disabled (cannot hide mandatory field)', async ({ page }) => {
+    await setFieldConfigurations([
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+    ]);
+
+    await page.goto('/settings/field-configurations');
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('tab', { name: 'Business Entity' }).click();
+    await page.getByText('Data Governance').first().click();
+
+    // Set retentionPeriod to Mandatory first
+    const retentionToggle = page.locator('[data-testid="field-toggle-retentionPeriod"]');
+    await retentionToggle.getByRole('button', { name: 'Mandatory' }).click();
+
+    // Hidden button should now be disabled
+    await expect(retentionToggle.getByRole('button', { name: 'Hidden' })).toBeDisabled();
+  });
+});

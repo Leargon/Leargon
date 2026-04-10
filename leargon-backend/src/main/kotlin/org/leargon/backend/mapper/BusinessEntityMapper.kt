@@ -88,6 +88,7 @@ open class BusinessEntityMapper(
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .hiddenFields(fc.hidden)
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 

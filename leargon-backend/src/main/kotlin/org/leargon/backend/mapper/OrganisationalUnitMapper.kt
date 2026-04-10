@@ -83,6 +83,7 @@ open class OrganisationalUnitMapper(
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .hiddenFields(fc.hidden)
     }
 
     fun toTreeResponse(unit: OrganisationalUnit): OrganisationalUnitTreeResponse =

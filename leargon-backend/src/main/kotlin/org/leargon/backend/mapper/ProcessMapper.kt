@@ -124,6 +124,7 @@ open class ProcessMapper(
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .hiddenFields(fc.hidden)
             .calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)

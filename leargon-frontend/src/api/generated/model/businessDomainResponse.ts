@@ -47,6 +47,11 @@ export interface BusinessDomainResponse {
      */
   mandatoryFields?: string[] | null;
   /**
+     * List of fields configured as hidden for this entity type
+     * @nullable
+     */
+  hiddenFields?: string[] | null;
+  /**
      * Vision statement for the bounded context
      * @nullable
      */

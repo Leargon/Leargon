@@ -6351,6 +6351,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         visionStatement:
           type: string
           nullable: true
@@ -6699,6 +6705,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         qualityRules:
           type: array
           nullable: true
@@ -7434,6 +7446,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         createdAt:
           type: string
           format: date-time
@@ -7695,6 +7713,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         calledProcessKeys:
           type: array
           nullable: true

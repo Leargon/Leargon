@@ -333,6 +333,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
 
+  // Hidden field helpers
+  const hiddenList = domain?.hiddenFields ?? [];
+  const isHidden = (...fieldNames: string[]) =>
+    hiddenList.length > 0 &&
+    fieldNames.some((f) => hiddenList.includes(f));
+  const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
+  const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createSubdomainOpen, setCreateSubdomainOpen] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -550,14 +558,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
                       {domain.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
                     </TableCell>
@@ -575,7 +583,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               mb: 0.5
             }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
-            {descriptionLocales.map((l) => {
+            {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = domain.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
                 <Accordion key={l.localeCode} disableGutters variant="outlined"
@@ -595,7 +603,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {sections.type && (
+      {sections.type && !isHidden('type') && (
         <>
           <Divider sx={{ my: 2 }} />
           {/* Type */}
@@ -648,7 +656,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {sections.parent && (
+      {sections.parent && !isHidden('parent') && (
         <>
           <Divider sx={{ my: 2 }} />
           {/* Parent */}
@@ -716,7 +724,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {sections.visionStatement && (
+      {sections.visionStatement && !isHidden('visionStatement') && (
         <>
           {/* Vision Statement */}
           <SectionHeader
@@ -758,7 +766,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {sections.owningUnit && (
+      {sections.owningUnit && !isHidden('owningUnit') && (
         <>
           <Divider sx={{ my: 2 }} />
           {/* Owning Unit */}
@@ -800,7 +808,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
-      {sections.boundedContexts && (<>
+      {sections.boundedContexts && !isHidden('boundedContexts') && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Bounded Contexts */}
@@ -932,7 +940,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       })()}
       </>)}
 
-      {sections.contextRelationships && (<>
+      {sections.contextRelationships && !isHidden('contextRelationships') && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Context Relationships (between bounded contexts in this domain) */}
@@ -1094,7 +1102,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.map((c) => {
+          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             if (c.multiValue) {
               const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
               return (
@@ -1162,7 +1170,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.length > 0 ? availableClassifications.map((c) => {
+          {availableClassifications.length > 0 ? availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             const assignments = domain.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

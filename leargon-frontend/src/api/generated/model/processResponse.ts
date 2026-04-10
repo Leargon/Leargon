@@ -105,6 +105,11 @@ export interface ProcessResponse {
      */
   mandatoryFields?: string[] | null;
   /**
+     * List of fields configured as hidden for this entity type
+     * @nullable
+     */
+  hiddenFields?: string[] | null;
+  /**
      * Keys of processes referenced as callActivity in this process's BPMN diagram
      * @nullable
      */

@@ -200,6 +200,15 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
+
+  // Hidden field helpers
+  const hiddenList = entity?.hiddenFields ?? [];
+  const isHidden = (...fieldNames: string[]) =>
+    hiddenList.length > 0 &&
+    fieldNames.some((f) => hiddenList.includes(f));
+  const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
+  const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
+
   const descriptionLocales = isOwnerOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   const updateNames = useUpdateBusinessEntityNames();
@@ -525,14 +534,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
                       {entity.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
                     </TableCell>
@@ -550,7 +559,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               mb: 0.5
             }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
-            {descriptionLocales.map((l) => {
+            {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = entity.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
                 <Accordion key={l.localeCode} disableGutters variant="outlined"
@@ -611,7 +620,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             </Box>
           )}
         </PropRow>
-        {fields.dataSteward && (
+        {fields.dataSteward && !isHidden('dataSteward') && (
           <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
             onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
@@ -638,7 +647,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             )}
           </PropRow>
         )}
-        {fields.technicalCustodian && (
+        {fields.technicalCustodian && !isHidden('technicalCustodian') && (
           <PropRow label={t('entity.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
@@ -665,7 +674,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             )}
           </PropRow>
         )}
-        {fields.parentEntity && (
+        {fields.parentEntity && !isHidden('parent') && (
           <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
             onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
@@ -693,7 +702,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             )}
           </PropRow>
         )}
-        {fields.boundedContext && (
+        {fields.boundedContext && !isHidden('boundedContext') && (
           <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
@@ -726,7 +735,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             )}
           </PropRow>
         )}
-        {fields.retentionPeriod && (
+        {fields.retentionPeriod && !isHidden('retentionPeriod') && (
           <PropRow label={t('entity.retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
             onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
             onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
@@ -761,7 +770,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Storage Locations */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('storageLocations') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('entity.storageLocations')}</Typography>
         {isOwnerOrAdmin && (
           <IconButton
@@ -776,8 +785,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             <EditIcon fontSize="small" />
           </IconButton>
         )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
+      </Box>}
+      {!isHidden('storageLocations') && <Box sx={{ mb: 2 }}>
         {entity.storageLocations && entity.storageLocations.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {entity.storageLocations.map((code) => (
@@ -789,9 +798,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             color: "text.secondary"
           }}>{t('entity.noStorageLocations')}</Typography>
         )}
-      </Box>
+      </Box>}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('storageLocations') && <Divider sx={{ my: 2 }} />}
 
       <DpiaSection
         resourceKey={entityKey}
@@ -816,10 +825,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Interfaces */}
-      <SectionHeader title={t('entity.interfaces')} canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
+      {!isHidden('interfaceEntities') && <SectionHeader title={t('entity.interfaces')} canEdit={isOwnerOrAdmin} isEditing={interfacesEdit.isEditing}
         onEdit={() => interfacesEdit.startEdit(entity.interfacesEntities?.map((e) => e.key) || [])}
-        onSave={interfacesEdit.save} onCancel={interfacesEdit.cancel} isSaving={interfacesEdit.isSaving} />
-      <Box sx={{ mb: 2 }}>
+        onSave={interfacesEdit.save} onCancel={interfacesEdit.cancel} isSaving={interfacesEdit.isSaving} />}
+      {!isHidden('interfaceEntities') && <Box sx={{ mb: 2 }}>
         {interfacesEdit.isEditing ? (
           <Box>
             <Autocomplete
@@ -847,20 +856,20 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             color: "text.secondary"
           }}>{t('entity.noInterfaces')}</Typography>
         )}
-      </Box>
+      </Box>}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('interfaceEntities') && <Divider sx={{ my: 2 }} />}
 
       {/* Relationships */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('relationships') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('entity.relationships')}</Typography>
         {isOwnerOrAdmin && (
           <IconButton size="small" onClick={() => { resetRelForm(); setRelDialogOpen(true); }} color="primary">
             <Add fontSize="small" />
           </IconButton>
         )}
-      </Box>
-      {entity.relationships && entity.relationships.length > 0 ? (
+      </Box>}
+      {!isHidden('relationships') && (entity.relationships && entity.relationships.length > 0 ? (
         <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
           <Table size="small">
             <TableHead>
@@ -907,20 +916,20 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             color: "text.secondary",
             mb: 2
           }}>{t('entity.noRelationships')}</Typography>
-      )}
+      ))}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('relationships') && <Divider sx={{ my: 2 }} />}
 
       {/* Translation Links */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('translationLinks') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('entity.translationLinks')}</Typography>
         {isOwnerOrAdmin && (
           <IconButton size="small" onClick={() => { setTlEditingId(null); setTlTargetEntityKey(null); setTlSemanticNote(''); setTlError(''); setTlDialogOpen(true); }} color="primary">
             <Add fontSize="small" />
           </IconButton>
         )}
-      </Box>
-      {translationLinks.length > 0 ? (
+      </Box>}
+      {!isHidden('translationLinks') && (translationLinks.length > 0 ? (
         <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
           <Table size="small">
             <TableHead>
@@ -974,7 +983,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             color: "text.secondary",
             mb: 2
           }}>{t('entity.noTranslationLinks')}</Typography>
-      )}
+      ))}
 
       <Divider sx={{ my: 2 }} />
 
@@ -1056,7 +1065,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.map((c) => {
+          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             if (c.multiValue) {
               const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
               return (
@@ -1111,7 +1120,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.length > 0 ? availableClassifications.map((c) => {
+          {availableClassifications.length > 0 ? availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             const assignments = entity.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -1155,9 +1164,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Quality Rules */}
-      <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={isOwnerOrAdmin} />
+      {!isHidden('qualityRules') && <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={isOwnerOrAdmin} />}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('qualityRules') && <Divider sx={{ my: 2 }} />}
 
       {/* Metadata */}
       <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('common.metadata')}</Typography>

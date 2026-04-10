@@ -217,6 +217,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
 
+  // Hidden field helpers
+  const hiddenList = process?.hiddenFields ?? [];
+  const isHidden = (...fieldNames: string[]) =>
+    hiddenList.length > 0 &&
+    fieldNames.some((f) => hiddenList.includes(f));
+  const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
+  const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
+
   const updateNames = useUpdateProcessNames();
   const updateDescriptions = useUpdateProcessDescriptions();
   const updateType = useUpdateProcessType();
@@ -577,14 +585,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  {activeLocales.map((l) => (
+                  {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
                       {process.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
                     </TableCell>
@@ -602,7 +610,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               mb: 0.5
             }}>Descriptions</Typography>
           <Box sx={{ mb: 2 }}>
-            {descriptionLocales.map((l) => {
+            {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = process.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
                 <Accordion key={l.localeCode} disableGutters variant="outlined"
@@ -663,7 +671,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Box>
           )}
         </PropRow>
-        {fields.processSteward && (
+        {fields.processSteward && !isHidden('processSteward') && (
           <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
             onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
@@ -690,7 +698,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.technicalCustodian && (
+        {fields.technicalCustodian && !isHidden('technicalCustodian') && (
           <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
@@ -717,7 +725,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.code && (
+        {fields.code && !isHidden('code') && (
           <PropRow label={t('process.code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}
             onEdit={() => codeEdit.startEdit(process.code || '')} onSave={codeEdit.save}
             onCancel={codeEdit.cancel} isSaving={codeEdit.isSaving}>
@@ -734,7 +742,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.processType && (
+        {fields.processType && !isHidden('processType') && (
           <PropRow label={t('process.processType')} canEdit={isOwnerOrAdmin} isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(process.processType || '')} onSave={typeEdit.save}
             onCancel={typeEdit.cancel} isSaving={typeEdit.isSaving}>
@@ -765,7 +773,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.legalBasis && (
+        {fields.legalBasis && !isHidden('legalBasis') && (
           <PropRow label={t('process.legalBasis')} canEdit={isOwnerOrAdmin} isEditing={legalBasisEdit.isEditing}
             onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
             onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving}>
@@ -796,7 +804,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.boundedContext && (
+        {fields.boundedContext && !isHidden('boundedContext') && (
           <PropRow label={t('process.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
@@ -839,7 +847,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Input Entities */}
-      <EntityListSection
+      {!isHidden('inputEntities') && <EntityListSection
         title="Input Entities"
         entities={process.inputEntities || []}
         candidates={inputCandidates}
@@ -849,12 +857,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         getLocalizedText={getLocalizedText}
         navigate={navigate}
         t={t as (key: string) => string}
-      />
+      />}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('inputEntities') && <Divider sx={{ my: 2 }} />}
 
       {/* Output Entities */}
-      <EntityListSection
+      {!isHidden('outputEntities') && <EntityListSection
         title="Output Entities"
         entities={process.outputEntities || []}
         candidates={outputCandidates}
@@ -864,9 +872,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         getLocalizedText={getLocalizedText}
         navigate={navigate}
         t={t as (key: string) => string}
-      />
+      />}
 
-      {hasSubProcessEntities && (
+      {!isHidden('outputEntities') && hasSubProcessEntities && (
         <>
           <Divider sx={{ my: 2 }} />
           <Box sx={{ mb: 1 }}>
@@ -929,14 +937,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </>
       )}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('executingUnits') && <Divider sx={{ my: 2 }} />}
 
       {/* Executing Units */}
-      <SectionHeader title="Executing Units" canEdit={isOwnerOrAdmin} isEditing={execUnitsEdit.isEditing}
+      {!isHidden('executingUnits') && <SectionHeader title="Executing Units" canEdit={isOwnerOrAdmin} isEditing={execUnitsEdit.isEditing}
         onEdit={() => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || [])}
         onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving}
-        isMandatory={isMandatory('executingUnits')} />
-      <Box sx={{ mb: 2 }}>
+        isMandatory={isMandatory('executingUnits')} />}
+      {!isHidden('executingUnits') && <Box sx={{ mb: 2 }}>
         {execUnitsEdit.isEditing ? (
           <Box>
             <Autocomplete
@@ -987,7 +995,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </>
         )}
-      </Box>
+      </Box>}
 
         </AccordionDetails>
       </Accordion>
@@ -1002,7 +1010,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        <PropRow label={t('process.purpose')} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
+        {!isHidden('purpose') && <PropRow label={t('process.purpose')} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
           onEdit={() => purposeEdit.startEdit([...(process.purpose ?? [])])} onSave={purposeEdit.save}
           onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
           {purposeEdit.isEditing ? (
@@ -1025,8 +1033,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {getLocalizedText(process.purpose ?? [], t('common.notSet'))}
             </Typography>
           )}
-        </PropRow>
-        <PropRow label={t('process.securityMeasures')} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
+        </PropRow>}
+        {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
           onEdit={() => securityMeasuresEdit.startEdit([...(process.securityMeasures ?? [])])} onSave={securityMeasuresEdit.save}
           onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
           {securityMeasuresEdit.isEditing ? (
@@ -1049,13 +1057,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {getLocalizedText(process.securityMeasures ?? [], t('common.notSet'))}
             </Typography>
           )}
-        </PropRow>
+        </PropRow>}
       </Paper>
 
       <Divider sx={{ my: 2 }} />
 
       {/* Service Providers */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('serviceProviders') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">Service Providers</Typography>
         {isOwnerOrAdmin && !serviceProvidersEdit.isEditing && (
           <IconButton size="small" onClick={() => serviceProvidersEdit.startEdit((process.serviceProviders ?? []).map((s) => s.key))}>
@@ -1072,8 +1080,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </IconButton>
           </>
         )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
+      </Box>}
+      {!isHidden('serviceProviders') && <Box sx={{ mb: 2 }}>
         {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
           <Box>
             <Autocomplete
@@ -1108,12 +1116,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             color: "text.secondary"
           }}>No service providers linked</Typography>
         )}
-      </Box>
+      </Box>}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('serviceProviders') && <Divider sx={{ my: 2 }} />}
 
       {/* IT Systems */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('itSystems') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('itSystem.pageTitle')}</Typography>
         {isOwnerOrAdmin && !itSystemsEdit.isEditing && (
           <IconButton size="small" onClick={() => itSystemsEdit.startEdit((process.itSystems ?? []).map((s) => s.key))}>
@@ -1130,8 +1138,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </IconButton>
           </>
         )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
+      </Box>}
+      {!isHidden('itSystems') && <Box sx={{ mb: 2 }}>
         {itSystemsEdit.isEditing && itSystemsEdit.editValue !== null ? (
           <Box>
             <Autocomplete
@@ -1167,12 +1175,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             color: "text.secondary"
           }}>{t('itSystem.noLinkedProcesses')}</Typography>
         )}
-      </Box>
+      </Box>}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('itSystems') && <Divider sx={{ my: 2 }} />}
 
       {/* Cross-border Transfers */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('crossBorderTransfers') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">Cross-border Transfers</Typography>
         {isOwnerOrAdmin && (
           <IconButton
@@ -1190,8 +1198,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <EditIcon fontSize="small" />
           </IconButton>
         )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
+      </Box>}
+      {!isHidden('crossBorderTransfers') && <Box sx={{ mb: 2 }}>
         {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             {process.crossBorderTransfers.map((t, i) => (
@@ -1209,9 +1217,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             color: "text.secondary"
           }}>No cross-border transfers recorded</Typography>
         )}
-      </Box>
+      </Box>}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('crossBorderTransfers') && <Divider sx={{ my: 2 }} />}
 
       {/* Item 4: Legal basis nudge — personal data process with no legal basis */}
       {process.containsPersonalData && !process.legalBasis && isOwnerOrAdmin && (
@@ -1266,7 +1274,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.map((c) => {
+          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             if (c.multiValue) {
               const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
               return (
@@ -1320,7 +1328,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.length > 0 ? availableClassifications.map((c) => {
+          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).length > 0 ? availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             const assignments = process.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -1359,10 +1367,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </Box>
       )}
 
-      <Divider sx={{ my: 2 }} />
+      {!isHidden('parent') && <Divider sx={{ my: 2 }} />}
 
       {/* Parent Process */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      {!isHidden('parent') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">Parent Process</Typography>
         {isOwnerOrAdmin && !parentEdit.isEditing && (
           <IconButton size="small" onClick={() => parentEdit.startEdit(process.parentProcess?.key ?? null)}>
@@ -1379,8 +1387,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </IconButton>
           </>
         )}
-      </Box>
-      <Box sx={{ mb: 2 }}>
+      </Box>}
+      {!isHidden('parent') && <Box sx={{ mb: 2 }}>
         {parentEdit.isEditing ? (
           <Box>
             <Autocomplete
@@ -1408,7 +1416,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             color: "text.secondary"
           }}>Top-level process</Typography>
         )}
-      </Box>
+      </Box>}
 
       {/* Child Processes */}
       <Box sx={{ mb: 2 }}>

@@ -340,7 +340,7 @@ Tasks:
 |---|---|---|---|
 | 1 | Backend data model & API | ~1 day | ✅ Done |
 | 2 | Frontend settings UI | ~1.5 days | ✅ Done |
-| 3 | Detail panels respect visibility | ~1 day | |
+| 3 | Detail panels respect visibility | ~1 day | ✅ Done |
 | 4 | Missing-fields banner & indicators | ~0.5 day | |
 | 5 | Tests, polish, docs | ~0.5 day | |
 | **Total** | | **~4.5 days** | |
