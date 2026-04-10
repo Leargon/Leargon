@@ -133,6 +133,56 @@ class FieldConfigurationControllerSpec extends Specification {
         response.body().any { it.entityType == "BUSINESS_DOMAIN" && it.fieldName == "type" }
     }
 
+    def "PUT /administration/field-configurations should persist visibility, section, and maturityLevel"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        and: "a configuration with explicit new fields"
+        def configs = [
+                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                 visibility: "SHOWN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"],
+                [entityType: "BUSINESS_ENTITY", fieldName: "qualityRules",
+                 visibility: "HIDDEN", section: "DATA_QUALITY", maturityLevel: "ADVANCED"]
+        ]
+
+        when: "replacing configurations"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations", configs).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "new fields are persisted"
+        response.status == HttpStatus.OK
+        def retention = response.body().find { it.fieldName == "retentionPeriod" }
+        retention.visibility == "SHOWN"
+        retention.section == "DATA_GOVERNANCE"
+        retention.maturityLevel == "BASIC"
+
+        def quality = response.body().find { it.fieldName == "qualityRules" }
+        quality.visibility == "HIDDEN"
+        quality.section == "DATA_QUALITY"
+        quality.maturityLevel == "ADVANCED"
+    }
+
+    def "PUT /administration/field-configurations: omitted optional fields default to SHOWN/CORE/BASIC"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "replacing with a config that omits the new optional fields"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"]]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "defaults are applied"
+        def entry = response.body()[0]
+        entry.visibility == "SHOWN"
+        entry.section == "CORE"
+        entry.maturityLevel == "BASIC"
+    }
+
     def "PUT /administration/field-configurations should replace (not append) existing configurations"() {
         given: "an admin token with initial configurations"
         String token = createAdminToken()
@@ -182,6 +232,100 @@ class FieldConfigurationControllerSpec extends Specification {
         when: "attempting to get configurations"
         client.toBlocking().exchange(
                 HttpRequest.GET("/administration/field-configurations").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "403 forbidden"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
+    // FIELD CONFIGURATION DEFINITIONS
+    // =====================
+
+    def "GET /administration/field-configurations/definitions returns definitions for all entity types"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "response is OK with definitions for all four entity types"
+        response.status == HttpStatus.OK
+        def defs = response.body()
+        defs.size() > 0
+        defs.any { it.entityType == "BUSINESS_ENTITY" }
+        defs.any { it.entityType == "BUSINESS_DOMAIN" }
+        defs.any { it.entityType == "BUSINESS_PROCESS" }
+        defs.any { it.entityType == "ORGANISATIONAL_UNIT" }
+    }
+
+    def "GET /administration/field-configurations/definitions: each definition has required fields"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "every definition has entityType, fieldName, label, section, maturityLevel, mandatoryCapable"
+        response.body().every { d ->
+            d.entityType && d.fieldName && d.label && d.section && d.maturityLevel && d.mandatoryCapable != null
+        }
+    }
+
+    def "GET /administration/field-configurations/definitions: locale-specific fields are expanded"() {
+        given: "an admin token (English locale seeded in setup)"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "names.en is present (expanded from names.{locale}) for BUSINESS_ENTITY"
+        def defs = response.body()
+        defs.any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "names.en" }
+
+        and: "the template placeholder names.{locale} is NOT present"
+        !defs.any { it.fieldName?.contains("{locale}") }
+    }
+
+    def "GET /administration/field-configurations/definitions: non-mandatory-capable fields have mandatoryCapable=false"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "parent field for BUSINESS_ENTITY has mandatoryCapable=false"
+        def parentDef = response.body().find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "parent" }
+        parentDef != null
+        parentDef.mandatoryCapable == false
+
+        and: "retentionPeriod has mandatoryCapable=true"
+        def retentionDef = response.body().find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod" }
+        retentionDef != null
+        retentionDef.mandatoryCapable == true
+    }
+
+    def "GET /administration/field-configurations/definitions returns 403 for non-admin"() {
+        given: "a non-admin token"
+        String token = createUserToken()
+
+        when: "getting definitions"
+        client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
                 Argument.listOf(Map)
         )
 

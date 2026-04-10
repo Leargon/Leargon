@@ -16,18 +16,19 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FieldConfigurationEntryMaturityLevel } from './fieldConfigurationEntryMaturityLevel';
-import type { FieldConfigurationEntryVisibility } from './fieldConfigurationEntryVisibility';
+import type { FieldConfigurationDefinitionMaturityLevel } from './fieldConfigurationDefinitionMaturityLevel';
 
-export interface FieldConfigurationEntry {
+export interface FieldConfigurationDefinition {
   /** Entity type (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT) */
   entityType: string;
-  /** Field name that is mandatory (e.g. retentionPeriod, businessDomain, descriptions) */
+  /** Field name key used in configuration (e.g. retentionPeriod, names.en) */
   fieldName: string;
-  /** Whether the field is shown or hidden in entity detail panels */
-  visibility?: FieldConfigurationEntryVisibility;
+  /** Human-readable display name for the field */
+  label: string;
   /** Methodology section this field belongs to (e.g. CORE, GDPR, DDD) */
-  section?: string;
+  section: string;
   /** Maturity level of the field */
-  maturityLevel?: FieldConfigurationEntryMaturityLevel;
+  maturityLevel: FieldConfigurationDefinitionMaturityLevel;
+  /** Whether this field can be configured as mandatory. When false the Mandatory option is not shown in the UI. */
+  mandatoryCapable: boolean;
 }

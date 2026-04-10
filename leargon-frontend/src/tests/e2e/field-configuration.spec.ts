@@ -16,7 +16,9 @@ function getAdminToken(): string {
   return state.origins?.[0]?.localStorage?.find((i) => i.name === 'auth_token')?.value ?? '';
 }
 
-async function setFieldConfigurations(entries: Array<{ entityType: string; fieldName: string }>) {
+async function setFieldConfigurations(
+  entries: Array<{ entityType: string; fieldName: string; visibility?: string; section?: string; maturityLevel?: string }>,
+) {
   const res = await fetch(`${backendUrl()}/administration/field-configurations`, {
     method: 'PUT',
     headers: {

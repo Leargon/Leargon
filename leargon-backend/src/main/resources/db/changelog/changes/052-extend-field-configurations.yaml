@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 052-extend-field-configurations
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: field_configurations
+            columns:
+              - column:
+                  name: visibility
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+                  defaultValue: SHOWN
+              - column:
+                  name: section
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                  defaultValue: CORE
+              - column:
+                  name: maturity_level
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+                  defaultValue: BASIC

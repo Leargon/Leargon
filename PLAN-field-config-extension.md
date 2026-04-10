@@ -153,8 +153,8 @@ Add three new properties:
 | `maturityLevel` | enum | `BASIC`, `ADVANCED`, `EXPERT` | `BASIC` |
 
 **Business rule:** A field with `mandatory = true` (i.e. it appears in the configuration) can never
-be set to `HIDDEN`. The backend enforces this, and the frontend disables the hide toggle for
-mandatory fields.
+be set to `HIDDEN`. The backend enforces this, and the frontend hides the mandatory option
+entirely for fields that are not mandatory-capable.
 
 ### OpenAPI changes (`openapi.yaml`)
 
@@ -174,8 +174,17 @@ maturityLevel:
 ```
 
 A new read-only schema `FieldConfigurationDefinition` lists all *possible* fields for a given
-entity type (including their default section and maturity level), so the frontend can render the
-full picker without hard-coding field lists.
+entity type. Each definition includes:
+- `entityType`, `fieldName` — identity
+- `label` — human-readable display name (e.g. `"Data Owner"`)
+- `section` — which methodology section it belongs to
+- `maturityLevel` — `BASIC`, `ADVANCED`, or `EXPERT`
+- `mandatoryCapable` — boolean; when `false` the frontend hides the mandatory option entirely
+
+Locale-specific fields (`names.<locale>`, `descriptions.<locale>`, `purpose.<locale>`,
+`securityMeasures.<locale>`) and classification fields (`classification.<key>`) are **dynamically
+expanded** by the backend against the actual supported locales / active classification keys in the
+DB. This matches how the existing mandatory-field system already handles them.
 
 A new endpoint `GET /administration/field-configurations/definitions` returns these definitions:
 ```yaml
@@ -201,7 +210,7 @@ A new endpoint `GET /administration/field-configurations/definitions` returns th
 | `openapi.yaml` | Extend `FieldConfigurationEntry`, add `FieldConfigurationDefinition`, add `/definitions` endpoint |
 | DB migration (`009-...yaml`) | Add columns `visibility`, `section`, `maturity_level` to `field_configurations` |
 | `FieldConfiguration.kt` | Add the three new properties |
-| `FieldConfigurationService.kt` | `compute()` returns visibility; enforce mandatory → always SHOWN; add `getDefinitions()` |
+| `FieldConfigurationService.kt` | `compute()` returns visibility; enforce mandatory → always SHOWN; add `getDefinitions()` which dynamically expands locale and classification fields |
 | `AdministrationController.kt` | Implement `/definitions` endpoint |
 | All Mappers | Pass visibility info through; `missingMandatoryFields` unchanged |
 | `FieldConfigurationTab.tsx` | Full redesign: sections, maturity sub-sections, hide/show toggles |
@@ -221,7 +230,7 @@ Tasks:
    - Extend `FieldConfigurationEntry` with `visibility`, `section`, `maturityLevel`
    - Add `FieldConfigurationDefinition` schema
    - Add `GET /administration/field-configurations/definitions` endpoint
-2. Write DB migration `009-extend-field-configurations.yaml`:
+2. Write DB migration `052-extend-field-configurations.yaml`:
    - `ALTER TABLE field_configurations ADD COLUMN visibility VARCHAR(10) NOT NULL DEFAULT 'SHOWN'`
    - `ALTER TABLE field_configurations ADD COLUMN section VARCHAR(50) NOT NULL DEFAULT 'CORE'`
    - `ALTER TABLE field_configurations ADD COLUMN maturity_level VARCHAR(10) NOT NULL DEFAULT 'BASIC'`
@@ -229,7 +238,10 @@ Tasks:
 4. Update `FieldConfigurationService.kt`:
    - `replace()` maps new fields from request
    - Enforce invariant: mandatory fields get `visibility = SHOWN` always
-   - `getDefinitions()` returns the hardcoded list of all configurable fields per entity type
+   - `getDefinitions()` returns the static field inventory dynamically expanded:
+     - Locale-specific fields (e.g. `names.<locale>`) are expanded for each `SupportedLocale` in DB
+     - Classification fields (`classification.<key>`) are expanded for each active `ClassificationValue` key
+     - All other fields are returned as-is from the hardcoded inventory
 5. Implement `/definitions` in `AdministrationController.kt`
 6. Run `./gradlew build` — regenerate backend interfaces, ensure all existing tests pass
 7. Update existing backend test `FieldConfigurationControllerSpec` to cover new fields and the
@@ -247,10 +259,10 @@ Tasks:
 2. Redesign `FieldConfigurationTab.tsx`:
    - Fetch `/definitions` to get all possible fields (no more hard-coded lists)
    - Group fields by **section** (tabs or accordion) and within each section by **maturity level**
-     (chip group or nested accordion: Basic / Advanced / Expert)
-   - For each field show:
-     - A **Mandatory** toggle (as before, lock icon when default-locale names)
-     - A **Visibility** toggle (eye-on / eye-off icon) — disabled and forced SHOWN when mandatory
+     (sub-section: Basic / Advanced / Expert)
+   - For each field show a **three-option radio group**: `Mandatory | Shown | Hidden`
+     - `Mandatory` option only shown when `definition.mandatoryCapable === true`
+     - Selecting `Mandatory` forces `visibility = SHOWN` (backend also enforces this)
    - Show count badges on sections: "3 mandatory, 2 hidden"
 3. Update the save/PUT payload to include `visibility`, `section`, `maturityLevel` per entry
 4. Add integration test coverage for new fields in `field-configurations.integration.test.ts`
@@ -315,15 +327,21 @@ Tasks:
 
 ---
 
-## Open Questions / Decisions Needed
+## Decisions Recorded
 
-1. **Section definition location:** Should sections be defined in a DB table (configurable) or
-   hard-coded as an enum in the backend? Hard-coded is simpler and avoids an extra admin screen;
-   recommended for now.
-2. **Maturity enforcement:** Should admins be able to hide an entire maturity level (e.g. hide
-   all Expert fields globally)? Or is per-field hide sufficient? Per-field is more flexible.
-3. **Visibility for non-configured fields:** Fields not present in the configuration table are
-   currently always shown. Should the default change to HIDDEN for Advanced/Expert fields once
-   this feature ships? Or opt-in only (new installations start clean, existing ones unaffected)?
-4. **Conditional mandatory** (e.g. `externalCompanyName` only mandatory when `isExternal=true`):
+1. **Section definition location:** Hard-coded as a static inventory in the backend service.
+   No extra admin screen needed.
+2. **Maturity enforcement:** Per-field hide/show only. No bulk hide-by-maturity-level.
+3. **Visibility for non-configured fields:** Defaults to `SHOWN` — no behaviour change for
+   existing installations. If a field is not in the configuration table, it is always rendered.
+4. **FieldConfigurationDefinition label:** Human-readable (e.g. `"Data Owner"`), not the field
+   name key. The `mandatoryCapable` boolean is included; when `false` the frontend omits the
+   `Mandatory` radio option entirely.
+5. **Locale / classification field expansion:** The `/definitions` endpoint dynamically expands
+   template fields against the actual `SupportedLocale` rows and active `Classification` keys in
+   the DB, consistent with how the existing mandatory-field system works.
+6. **Frontend UI pattern for Batch 2:** Each field gets a three-option radio group:
+   `Mandatory | Shown | Hidden`. The `Mandatory` option is only rendered when
+   `definition.mandatoryCapable === true`.
+7. **Conditional mandatory** (e.g. `externalCompanyName` only when `isExternal=true`):
    out of scope for this plan — treat as a separate feature.
