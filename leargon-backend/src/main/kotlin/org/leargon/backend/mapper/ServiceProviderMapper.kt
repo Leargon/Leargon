@@ -2,7 +2,9 @@ package org.leargon.backend.mapper
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.ServiceProvider
+import org.leargon.backend.model.LegalBasis
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.model.ServiceProviderDataFlowEntry
 import org.leargon.backend.model.ServiceProviderResponse
 import org.leargon.backend.model.ServiceProviderSummaryResponse
 import org.leargon.backend.model.ServiceProviderType
@@ -23,6 +25,16 @@ class ServiceProviderMapper {
             .linkedProcesses(
                 sp.linkedProcesses.map {
                     ProcessSummaryResponse(it.key, it.getName("en"))
+                }
+            )
+            .processDataFlows(
+                sp.linkedProcesses.map { process ->
+                    ServiceProviderDataFlowEntry(process.key, process.getName("en"))
+                        .legalBasis(process.legalBasis?.let { LegalBasis.fromValue(it) })
+                        .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
+                        .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
+                        .crossBorderTransfers(process.crossBorderTransfers?.map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
+                        .securityMeasures(process.securityMeasures?.find { it.locale == "en" }?.text ?: process.securityMeasures?.firstOrNull()?.text)
                 }
             )
 

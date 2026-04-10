@@ -23,6 +23,11 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import { Edit as EditIcon, Check, Close, Delete, CheckCircle, Warning, ExpandMore } from '@mui/icons-material';
 import DetailPanelHeader from '../common/DetailPanelHeader';
@@ -46,6 +51,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import type {
   LocalizedText,
   ProcessResponse,
+  ServiceProviderDataFlowEntry,
   SupportedLocaleResponse,
 } from '../../api/generated/model';
 import { ServiceProviderType } from '../../api/generated/model';
@@ -488,6 +494,125 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             )}
           </AccordionDetails>
         </Accordion>
+
+        {/* Data Flow Summary */}
+        {(provider.processDataFlows ?? []).length > 0 && (
+          <Accordion disableGutters>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionDataFlow')}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('common.process')}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.dataFlowInputEntities')}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.dataFlowOutputEntities')}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('process.legalBasisLabel')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(provider.processDataFlows ?? []).map((entry: ServiceProviderDataFlowEntry) => (
+                    <TableRow key={entry.processKey} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/processes/${entry.processKey}`)}>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>{entry.processName}</TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>
+                        {(entry.inputEntities ?? []).length > 0
+                          ? (entry.inputEntities ?? []).map(e => e.name).join(', ')
+                          : <Typography variant="caption" sx={{ color: 'text.disabled' }}>{t('serviceProvider.dataFlowNoEntities')}</Typography>}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>
+                        {(entry.outputEntities ?? []).length > 0
+                          ? (entry.outputEntities ?? []).map(e => e.name).join(', ')
+                          : <Typography variant="caption" sx={{ color: 'text.disabled' }}>{t('serviceProvider.dataFlowNoEntities')}</Typography>}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: '0.75rem' }}>
+                        {entry.legalBasis
+                          ? t(`legalBasis.${entry.legalBasis}` as any, { defaultValue: entry.legalBasis as string })
+                          : <Typography variant="caption" sx={{ color: 'text.disabled' }}>{t('serviceProvider.dataFlowNoLegalBasis')}</Typography>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        {/* Cross-border Transfers */}
+        {(() => {
+          const transfers = (provider.processDataFlows ?? []).flatMap(
+            (entry: ServiceProviderDataFlowEntry) =>
+              (entry.crossBorderTransfers ?? []).map(t => ({ processName: entry.processName, processKey: entry.processKey, ...t }))
+          );
+          if (transfers.length === 0) return null;
+          return (
+            <Accordion disableGutters>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: 0 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderProcess')}</TableCell>
+                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderCountry')}</TableCell>
+                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderSafeguard')}</TableCell>
+                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderNotes')}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {transfers.map((tr, idx) => (
+                      <TableRow key={idx} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/processes/${tr.processKey}`)}>
+                        <TableCell sx={{ fontSize: '0.75rem' }}>{tr.processName}</TableCell>
+                        <TableCell sx={{ fontSize: '0.75rem' }}>{COUNTRY_NAMES[tr.destinationCountry] ? `${tr.destinationCountry} – ${COUNTRY_NAMES[tr.destinationCountry]}` : tr.destinationCountry}</TableCell>
+                        <TableCell sx={{ fontSize: '0.75rem' }}>{t(`crossBorderSafeguard.${tr.safeguard}` as any, { defaultValue: tr.safeguard as string })}</TableCell>
+                        <TableCell sx={{ fontSize: '0.75rem' }}>{tr.notes ?? ''}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </AccordionDetails>
+            </Accordion>
+          );
+        })()}
+
+        {/* DPA Compliance Checklist — DATA_PROCESSOR only */}
+        {provider.serviceProviderType === ServiceProviderType.DATA_PROCESSOR && (
+          <Accordion disableGutters>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionDpaChecklist')}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {(() => {
+                const flows = provider.processDataFlows ?? [];
+                const hasDataCategories = flows.some(e => (e.inputEntities ?? []).length > 0 || (e.outputEntities ?? []).length > 0);
+                const hasPurpose = flows.some(e => e.legalBasis != null);
+                const hasSecurityMeasures = flows.some(e => e.securityMeasures != null && e.securityMeasures !== '');
+                const items: { label: string; checked: boolean }[] = [
+                  { label: t('serviceProvider.dpaChecklistDpa'), checked: provider.processorAgreementInPlace },
+                  { label: t('serviceProvider.dpaChecklistSubProcessors'), checked: provider.subProcessorsApproved },
+                  { label: t('serviceProvider.dpaChecklistDataCategories'), checked: hasDataCategories },
+                  { label: t('serviceProvider.dpaChecklistPurpose'), checked: hasPurpose },
+                  { label: t('serviceProvider.dpaChecklistSecurityMeasures'), checked: hasSecurityMeasures },
+                ];
+                return (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    {items.map((item) => (
+                      <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {item.checked
+                          ? <CheckCircle fontSize="small" color="success" />
+                          : <Warning fontSize="small" color="warning" />}
+                        <Typography variant="body2" sx={{ color: item.checked ? 'text.primary' : 'warning.main' }}>
+                          {item.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })()}
+            </AccordionDetails>
+          </Accordion>
+        )}
       </Box>
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

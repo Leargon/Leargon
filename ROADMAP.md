@@ -25,31 +25,6 @@
 
 ---
 
-## Process effective entity roll-up
-
-*Adds computed `effectiveInputEntities` and `effectiveOutputEntities` fields to the process API response. These aggregate the direct entity assignments of a process with those of all its descendant sub-processes (recursively). The directly assigned entities remain editable; the effective view is read-only and displayed alongside them. Requires an openapi.yaml change and a backend recursive query.*
-*⏱ Sessions: 1.5 · Weekly effort: ~15% · Value: 8/10 · Score: 5.3*
-
-#### USER STORY 'View effective data flow across a process hierarchy'
-**AS A** logged in user\
-**IF** a business process has sub-processes that each assign input and output entities\
-**I WANT** to see the union of all input and output entities across the process and its entire sub-process hierarchy on the process detail panel\
-**SO THAT** I understand the full data footprint of a process group without having to open each sub-process individually
-
-#### USER STORY 'Compliance register uses effective entity roll-up'
-**AS A** privacy officer\
-**IF** a parent process has no directly assigned entities but its sub-processes collectively handle personal data\
-**I WANT** the processing register and compliance exports to reflect the aggregated entity scope from all sub-processes\
-**SO THAT** the register is complete and no processing activity is omitted from the Art. 30 / DSG Art. 12 record because entities were assigned only at sub-process level
-
-#### USER STORY 'Warn when process hierarchy has no entity coverage'
-**AS A** process owner or admin\
-**IF** a process has no input or output entities directly assigned AND none of its sub-processes or linked call-activity processes define any entities either\
-**I WANT** to see a warning on the process detail panel indicating that the data flow for this process is completely undocumented\
-**SO THAT** processes with no entity coverage are surfaced as gaps rather than silently passing compliance checks with an empty data footprint
-
----
-
 ## Extended BPMN Event Types (Story 2b)
 
 *Extends the custom BPMN editor with boundary events, extended start/end event types, intermediate throw events, and non-interrupting variants. The boundary event attachment UI is the hard part — requires hit-testing the task node border and rendering the event circle anchored to it. All other variants are enum additions on top of the Story 2 (Intermediate Events) infrastructure.*
@@ -151,37 +126,6 @@ Requires extending the `EventDefinition` enum and `FlowNodeType` enum in `openap
 **IF** one or more data processors (subcontractors) are linked to the process\
 **I WANT** to see a BPMN swim-lane pool per data processor automatically added to the diagram canvas\
 **SO THAT** tasks delegated to external processors are clearly separated from internally executed tasks
-
----
-
-## Service provider data flow transparency
-*Surfaces the data that flows to each external service provider — who the provider is, which processes use it, what entities are sent, and on what legal basis. Leverages the existing service provider model (type, linked processes, process entities). No new tables. Concrete compliance deliverable: DPA checklist, cross-border transfer register, and a machine-readable transparency summary per processor.*
-*⏱ Sessions: 1 · Weekly effort: ~10% · Value: 8/10 · Score: 8.0*
-
-**Data model note:** All building blocks already exist — `ServiceProvider` with type (`MANAGED_SERVICE`, `BODYLEASE`, `DATA_PROCESSOR`), `Process → ServiceProvider` links, `Process` input/output entities, `Process` legal basis and cross-border transfers.
-
-#### USER STORY 'View data flow summary for a service provider'
-**AS A** privacy officer or admin\
-**IF** one or more processes are linked to a service provider\
-**I WANT** to see, on the service provider detail page, a consolidated view of every process that uses this provider, which input and output entities are involved, and what the legal basis is for each process\
-**SO THAT** I can immediately understand what data the company sends to this provider and why, without manually tracing each process individually
-
-#### USER STORY 'View cross-border data flows via service providers'
-**AS A** privacy officer\
-**IF** a service provider is located in a country outside Switzerland or the EU/EEA\
-**I WANT** to see a list of all data entities transferred to that provider via linked processes, grouped by transfer mechanism (SCCs, adequacy decision, derogation)\
-**SO THAT** cross-border transfers are visible in one place for regulatory documentation and audit purposes (DSG Art. 16 / GDPR Art. 44)
-
-#### USER STORY 'Data processor agreement checklist'
-**AS AN** admin\
-**IF** a service provider has type DATA_PROCESSOR\
-**I WANT** to see a checklist on the provider's detail page verifying whether the key DPA elements are documented: contract reference, data categories covered, processing purpose, sub-processor list, and security measures\
-**SO THAT** gaps in the processor agreement documentation surface immediately rather than during an audit
-
-#### USER STORY 'Export service provider transparency summary'
-**AS AN** admin\
-**I WANT** to export a structured summary of all service providers with their linked processes, entity scope, legal basis, and transfer mechanism as a CSV or PDF\
-**SO THAT** the full processor inventory can be handed to external auditors or included in the Art. 30 / DSG Art. 12 documentation package
 
 ---
 

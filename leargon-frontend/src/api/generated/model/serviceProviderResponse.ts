@@ -18,6 +18,7 @@ The system includes a fallback admin user that cannot be modified or deleted thr
  */
 import type { LocalizedText } from './localizedText';
 import type { ProcessSummaryResponse } from './processSummaryResponse';
+import type { ServiceProviderDataFlowEntry } from './serviceProviderDataFlowEntry';
 import type { ServiceProviderType } from './serviceProviderType';
 
 export interface ServiceProviderResponse {
@@ -36,6 +37,11 @@ export interface ServiceProviderResponse {
      * @nullable
      */
   linkedProcesses?: ProcessSummaryResponse[] | null;
+  /**
+     * Data flow summary per linked process (entities, legal basis, cross-border transfers)
+     * @nullable
+     */
+  processDataFlows?: ServiceProviderDataFlowEntry[] | null;
   /** Creation timestamp */
   createdAt: string;
   /**
