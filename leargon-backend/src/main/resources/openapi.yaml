@@ -8534,6 +8534,12 @@ components:
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
           description: Processes linked to this service provider
+        processDataFlows:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ServiceProviderDataFlowEntry'
+          description: Data flow summary per linked process (entities, legal basis, cross-border transfers)
         createdAt:
           type: string
           format: date-time
@@ -8543,6 +8549,43 @@ components:
           format: date-time
           nullable: true
           description: Last update timestamp
+    ServiceProviderDataFlowEntry:
+      type: object
+      required:
+      - processKey
+      - processName
+      properties:
+        processKey:
+          type: string
+          description: Key of the linked process
+          example: hr-onboarding
+        processName:
+          type: string
+          description: Name of the linked process in default locale
+          example: HR Onboarding
+        legalBasis:
+          $ref: '#/components/schemas/LegalBasis'
+          nullable: true
+        inputEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+          description: Input entities of this process
+        outputEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusinessEntitySummaryResponse'
+          description: Output entities of this process
+        crossBorderTransfers:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/CrossBorderTransferEntry'
+          description: Cross-border transfers defined on this process
+        securityMeasures:
+          type: string
+          nullable: true
+          description: Security measures description (default locale)
     CreateServiceProviderRequest:
       type: object
       required:

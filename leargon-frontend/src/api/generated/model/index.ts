@@ -143,6 +143,7 @@ export * from './searchResponse';
 export * from './searchResultResponse';
 export * from './searchResultResponseMatchedIn';
 export * from './searchResultType';
+export * from './serviceProviderDataFlowEntry';
 export * from './serviceProviderResponse';
 export * from './serviceProviderSummaryResponse';
 export * from './serviceProviderType';

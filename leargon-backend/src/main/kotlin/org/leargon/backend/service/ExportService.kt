@@ -182,7 +182,12 @@ open class ExportService(
                 "Processing Countries",
                 "Processor Agreement In Place",
                 "Sub-processors Approved",
-                "Linked Processes"
+                "Linked Processes",
+                "Data Entities (Input)",
+                "Data Entities (Output)",
+                "Legal Bases",
+                "Cross-border Transfer Countries",
+                "Transfer Mechanisms"
             )
         )
         val processors = serviceProviderRepository.findAll()
@@ -193,6 +198,33 @@ open class ExportService(
                 processor.linkedProcesses.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
+            val inputEntities =
+                processor.linkedProcesses
+                    .flatMap { it.inputEntities }
+                    .distinctBy { it.key }
+                    .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+            val outputEntities =
+                processor.linkedProcesses
+                    .flatMap { it.outputEntities }
+                    .distinctBy { it.key }
+                    .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
+            val legalBases =
+                processor.linkedProcesses
+                    .mapNotNull { it.legalBasis }
+                    .distinct()
+                    .joinToString("; ") { translateLegalBasis(it) ?: it }
+            val transferCountries =
+                processor.linkedProcesses
+                    .flatMap { it.crossBorderTransfers.orEmpty() }
+                    .map { it.destinationCountry }
+                    .distinct()
+                    .joinToString("; ")
+            val transferMechanisms =
+                processor.linkedProcesses
+                    .flatMap { it.crossBorderTransfers.orEmpty() }
+                    .map { it.safeguard }
+                    .distinct()
+                    .joinToString("; ")
             sb.appendLine(
                 csvRow(
                     processor.key,
@@ -201,7 +233,12 @@ open class ExportService(
                     countries,
                     if (processor.processorAgreementInPlace) "Yes" else "No",
                     if (processor.subProcessorsApproved) "Yes" else "No",
-                    linkedProcesses
+                    linkedProcesses,
+                    inputEntities,
+                    outputEntities,
+                    legalBases,
+                    transferCountries,
+                    transferMechanisms
                 )
             )
         }
