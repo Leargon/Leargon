@@ -290,21 +290,21 @@ Tasks:
 
 ---
 
-### Batch 3 — Entity detail panels respect visibility (est. ~1 day)
+### Batch 3 — Entity detail panels respect visibility (est. ~1 day) ✅ DONE
 
 **Goal:** Hidden fields are not rendered in entity detail pages.
 
 Tasks:
-1. Extend the API response types for `BusinessEntityResponse`, `BusinessDomainResponse`,
+1. ✅ Extend the API response types for `BusinessEntityResponse`, `BusinessDomainResponse`,
    `ProcessResponse`, `OrganisationalUnitResponse` to include `hiddenFields: string[]`
    (analogous to existing `mandatoryFields`)
-2. Update all four mappers to compute `hiddenFields` from `FieldConfigurationService`
-3. In each detail panel (`EntityDetailPanel`, `DomainDetailPanel`, `ProcessDetailPanel`,
+2. ✅ Update all four mappers to compute `hiddenFields` from `FieldConfigurationService`
+3. ✅ In each detail panel (`EntityDetailPanel`, `DomainDetailPanel`, `ProcessDetailPanel`,
    `OrganisationalUnitDetailPanel`) add a helper `isHidden(...fieldNames)` alongside the
    existing `isMandatory()`, and wrap each field/section with a conditional render
-4. Mandatory fields (`isMandatory` true) always render even if `isHidden` would return true
+4. ✅ Mandatory fields (`isMandatory` true) always render even if `isHidden` would return true
    (double safety — backend already enforces this, frontend is belt-and-suspenders)
-5. Update E2E tests to assert that hiding a field from settings removes it from the detail panel
+5. ✅ Update E2E tests to assert that hiding a field from settings removes it from the detail panel
 
 ---
 
@@ -327,8 +327,8 @@ Tasks:
 Tasks:
 1. Full Spock test coverage for new backend service logic (definitions endpoint, visibility
    enforcement, `hiddenFields` in mapper output)
-2. E2E happy-path test: admin hides a field → regular user cannot see it on entity detail page
-3. E2E negative test: admin marks a field mandatory → visibility toggle is disabled (cannot hide)
+2. ✅ E2E happy-path test: admin hides a field → regular user cannot see it on entity detail page
+3. ✅ E2E negative test: admin marks a field mandatory → visibility toggle is disabled (cannot hide)
 4. Update `CLAUDE.md`, CONCEPTS.md, etc if new architectural patterns are introduced
 5. Smoke-test with `docker compose up` — confirm the new migration runs cleanly
 

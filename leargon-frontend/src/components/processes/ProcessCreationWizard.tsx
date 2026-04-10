@@ -43,6 +43,7 @@ import type {
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 
@@ -84,6 +85,8 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     query: { enabled: !!parentProcessKey && open },
   });
   const parentProcess = parentProcessKey ? (parentProcessResponse?.data as ProcessResponse | undefined) : undefined;
+
+  const isHidden = useWizardHiddenFields('BUSINESS_PROCESS');
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
@@ -205,7 +208,10 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     onClose();
   };
 
-  const steps = [
+  const dataFlowHidden = isHidden('inputEntities') && isHidden('outputEntities');
+  const complianceHidden = isHidden('legalBasis') && isHidden('purpose');
+
+  const allSteps = [
     {
       id: 'identity',
       title: t('wizard.process.stepIdentity'),
@@ -237,35 +243,41 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             onNamesChange={setNames}
             onDescriptionsChange={setDescriptions}
           />
-          <TextField
-            size="small"
-            label={t('wizard.process.codeLabel')}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            helperText={t('wizard.process.codeHelper')}
-          />
-          <FormControl size="small">
-            <InputLabel>{t('wizard.process.typeLabel')}</InputLabel>
-            <Select
-              value={processType}
-              onChange={(e: SelectChangeEvent) => setProcessType(e.target.value)}
-              label={t('wizard.process.typeLabel')}
-            >
-              <MenuItem value=""><em>{t('wizard.process.typeNotSet')}</em></MenuItem>
-              {PROCESS_TYPE_VALUES.map((pt) => (
-                <MenuItem key={pt} value={pt}>{t(PROCESS_TYPE_KEYS[pt])}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {processType && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                mt: -1
-              }}>
-              {t(`wizard.process.typeHints.${processType}`)}
-            </Typography>
+          {!isHidden('code') && (
+            <TextField
+              size="small"
+              label={t('wizard.process.codeLabel')}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              helperText={t('wizard.process.codeHelper')}
+            />
+          )}
+          {!isHidden('processType') && (
+            <>
+              <FormControl size="small">
+                <InputLabel>{t('wizard.process.typeLabel')}</InputLabel>
+                <Select
+                  value={processType}
+                  onChange={(e: SelectChangeEvent) => setProcessType(e.target.value)}
+                  label={t('wizard.process.typeLabel')}
+                >
+                  <MenuItem value=""><em>{t('wizard.process.typeNotSet')}</em></MenuItem>
+                  {PROCESS_TYPE_VALUES.map((pt) => (
+                    <MenuItem key={pt} value={pt}>{t(PROCESS_TYPE_KEYS[pt])}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {processType && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    mt: -1
+                  }}>
+                  {t(`wizard.process.typeHints.${processType}`)}
+                </Typography>
+              )}
+            </>
           )}
         </Box>
       ),
@@ -291,60 +303,66 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
                 helperText={t('wizard.process.ownerHelper', { username: user?.username || 'current user' })} />
             )}
           />
-          <Autocomplete
-            options={allUsers}
-            getOptionLabel={userLabel}
-            value={processSteward}
-            onChange={(_, v) => setProcessSteward(v)}
-            isOptionEqualToValue={(o, v) => o.username === v.username}
-            size="small"
-            renderInput={(params) => (
-              <TextField {...params} label={t('wizard.process.stewardLabel')} size="small"
-                helperText={t('wizard.process.stewardHelper')} />
-            )}
-          />
-          <Autocomplete
-            options={allUsers}
-            getOptionLabel={userLabel}
-            value={technicalCustodian}
-            onChange={(_, v) => setTechnicalCustodian(v)}
-            isOptionEqualToValue={(o, v) => o.username === v.username}
-            size="small"
-            renderInput={(params) => (
-              <TextField {...params} label={t('wizard.process.custodianLabel')} size="small"
-                helperText={t('wizard.process.custodianHelper')} />
-            )}
-          />
-          <FormControl size="small">
-            <InputLabel>{t('wizard.process.executingUnitsLabel')}</InputLabel>
-            <Select<string[]>
-              multiple
-              value={executingUnitKeys}
-              onChange={(e: SelectChangeEvent<string[]>) =>
-                setExecutingUnitKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
-              }
-              input={<OutlinedInput label={t('wizard.process.executingUnitsLabel')} />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((key) => {
-                    const unit = allUnits.find((u) => u.key === key);
-                    return <Chip key={key} label={unit?.names ? unit.names.find((n: any) => n.locale === 'en')?.text || unit.key : unit?.key || key} size="small" />;
-                  })}
-                </Box>
+          {!isHidden('processSteward') && (
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={userLabel}
+              value={processSteward}
+              onChange={(_, v) => setProcessSteward(v)}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              renderInput={(params) => (
+                <TextField {...params} label={t('wizard.process.stewardLabel')} size="small"
+                  helperText={t('wizard.process.stewardHelper')} />
               )}
-            >
-              {allUnits.map((u) => (
-                <MenuItem key={u.key} value={u.key}>
-                  <Checkbox checked={executingUnitKeys.includes(u.key)} size="small" />
-                  {u.names ? u.names.find((n: any) => n.locale === 'en')?.text || u.key : u.key}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            />
+          )}
+          {!isHidden('technicalCustodian') && (
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={userLabel}
+              value={technicalCustodian}
+              onChange={(_, v) => setTechnicalCustodian(v)}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              renderInput={(params) => (
+                <TextField {...params} label={t('wizard.process.custodianLabel')} size="small"
+                  helperText={t('wizard.process.custodianHelper')} />
+              )}
+            />
+          )}
+          {!isHidden('executingUnits') && (
+            <FormControl size="small">
+              <InputLabel>{t('wizard.process.executingUnitsLabel')}</InputLabel>
+              <Select<string[]>
+                multiple
+                value={executingUnitKeys}
+                onChange={(e: SelectChangeEvent<string[]>) =>
+                  setExecutingUnitKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
+                }
+                input={<OutlinedInput label={t('wizard.process.executingUnitsLabel')} />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((key) => {
+                      const unit = allUnits.find((u) => u.key === key);
+                      return <Chip key={key} label={unit?.names ? unit.names.find((n: any) => n.locale === 'en')?.text || unit.key : unit?.key || key} size="small" />;
+                    })}
+                  </Box>
+                )}
+              >
+                {allUnits.map((u) => (
+                  <MenuItem key={u.key} value={u.key}>
+                    <Checkbox checked={executingUnitKeys.includes(u.key)} size="small" />
+                    {u.names ? u.names.find((n: any) => n.locale === 'en')?.text || u.key : u.key}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Box>
       ),
     },
-    {
+    !dataFlowHidden && {
       id: 'data-flow',
       title: t('wizard.process.stepDataFlow'),
       skippable: true,
@@ -361,50 +379,54 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControl size="small">
-            <InputLabel>{t('wizard.process.inputEntitiesLabel')}</InputLabel>
-            <Select<string[]>
-              multiple
-              value={inputEntityKeys}
-              onChange={(e: SelectChangeEvent<string[]>) =>
-                setInputEntityKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
-              }
-              input={<OutlinedInput label={t('wizard.process.inputEntitiesLabel')} />}
-              renderValue={(selected) =>
-                selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
-              }
-            >
-              {allEntities.map((e) => (
-                <MenuItem key={e.key} value={e.key}>
-                  {e.name || e.key}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small">
-            <InputLabel>{t('wizard.process.outputEntitiesLabel')}</InputLabel>
-            <Select<string[]>
-              multiple
-              value={outputEntityKeys}
-              onChange={(e: SelectChangeEvent<string[]>) =>
-                setOutputEntityKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
-              }
-              input={<OutlinedInput label={t('wizard.process.outputEntitiesLabel')} />}
-              renderValue={(selected) =>
-                selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
-              }
-            >
-              {allEntities.map((e) => (
-                <MenuItem key={e.key} value={e.key}>
-                  {e.name || e.key}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {!isHidden('inputEntities') && (
+            <FormControl size="small">
+              <InputLabel>{t('wizard.process.inputEntitiesLabel')}</InputLabel>
+              <Select<string[]>
+                multiple
+                value={inputEntityKeys}
+                onChange={(e: SelectChangeEvent<string[]>) =>
+                  setInputEntityKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
+                }
+                input={<OutlinedInput label={t('wizard.process.inputEntitiesLabel')} />}
+                renderValue={(selected) =>
+                  selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
+                }
+              >
+                {allEntities.map((e) => (
+                  <MenuItem key={e.key} value={e.key}>
+                    {e.name || e.key}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          {!isHidden('outputEntities') && (
+            <FormControl size="small">
+              <InputLabel>{t('wizard.process.outputEntitiesLabel')}</InputLabel>
+              <Select<string[]>
+                multiple
+                value={outputEntityKeys}
+                onChange={(e: SelectChangeEvent<string[]>) =>
+                  setOutputEntityKeys(typeof e.target.value === 'string' ? [e.target.value] : e.target.value)
+                }
+                input={<OutlinedInput label={t('wizard.process.outputEntitiesLabel')} />}
+                renderValue={(selected) =>
+                  selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
+                }
+              >
+                {allEntities.map((e) => (
+                  <MenuItem key={e.key} value={e.key}>
+                    {e.name || e.key}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Box>
       ),
     },
-    {
+    !complianceHidden && {
       id: 'compliance',
       title: t('wizard.process.stepCompliance'),
       skippable: true,
@@ -421,41 +443,47 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <FormControl size="small">
-            <InputLabel>{t('wizard.process.legalBasisLabel')}</InputLabel>
-            <Select
-              value={legalBasis}
-              onChange={(e: SelectChangeEvent) => setLegalBasis(e.target.value)}
-              label={t('wizard.process.legalBasisLabel')}
-            >
-              <MenuItem value=""><em>{t('wizard.process.legalBasisNotApplicable')}</em></MenuItem>
-              {Object.values(LegalBasis).filter(Boolean).map((lb) => (
-                <MenuItem key={lb as string} value={lb as string}>
-                  {t(`legalBasis.${lb}`, { defaultValue: lb as string })}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {legalBasis && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                mt: -1
-              }}>
-              {t(`wizard.process.legalBasisHints.${legalBasis}`)}
-            </Typography>
+          {!isHidden('legalBasis') && (
+            <>
+              <FormControl size="small">
+                <InputLabel>{t('wizard.process.legalBasisLabel')}</InputLabel>
+                <Select
+                  value={legalBasis}
+                  onChange={(e: SelectChangeEvent) => setLegalBasis(e.target.value)}
+                  label={t('wizard.process.legalBasisLabel')}
+                >
+                  <MenuItem value=""><em>{t('wizard.process.legalBasisNotApplicable')}</em></MenuItem>
+                  {Object.values(LegalBasis).filter(Boolean).map((lb) => (
+                    <MenuItem key={lb as string} value={lb as string}>
+                      {t(`legalBasis.${lb}`, { defaultValue: lb as string })}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {legalBasis && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    mt: -1
+                  }}>
+                  {t(`wizard.process.legalBasisHints.${legalBasis}`)}
+                </Typography>
+              )}
+            </>
           )}
-          <TextField
-            label={t('wizard.process.purposeLabel')}
-            multiline
-            rows={2}
-            size="small"
-            fullWidth
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            placeholder={t('wizard.process.purposePlaceholder')}
-          />
+          {!isHidden('purpose') && (
+            <TextField
+              label={t('wizard.process.purposeLabel')}
+              multiline
+              rows={2}
+              size="small"
+              fullWidth
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              placeholder={t('wizard.process.purposePlaceholder')}
+            />
+          )}
         </Box>
       ),
     },
@@ -468,19 +496,20 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             <SummaryRow label={t('wizard.process.summaryParent')} value={parentProcessKey} />
           )}
           <SummaryRow label={t('wizard.process.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
-          <SummaryRow label={t('wizard.process.summaryCode')} value={code || t('wizard.process.summaryCodeAuto')} />
-          <SummaryRow label={t('wizard.process.summaryType')} value={processType ? t(PROCESS_TYPE_KEYS[processType]) : '—'} />
+          {!isHidden('code') && <SummaryRow label={t('wizard.process.summaryCode')} value={code || t('wizard.process.summaryCodeAuto')} />}
+          {!isHidden('processType') && <SummaryRow label={t('wizard.process.summaryType')} value={processType ? t(PROCESS_TYPE_KEYS[processType]) : '—'} />}
           <SummaryRow label={t('wizard.process.summaryOwner')} value={processOwner ? `${processOwner.firstName} ${processOwner.lastName}` : t('wizard.process.summaryOwnerDefault', { username: user?.username || '' })} />
-          <SummaryRow label={t('wizard.process.summaryExecutingUnits')} value={executingUnitKeys.length > 0 ? executingUnitKeys.map((k) => allUnits.find((u) => u.key === k)?.names?.find((n: any) => n.locale === 'en')?.text || k).join(', ') : '—'} />
-          <SummaryRow label={t('wizard.process.summarySteward')} value={processSteward ? `${processSteward.firstName} ${processSteward.lastName}` : '—'} />
-          <SummaryRow label={t('wizard.process.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />
-          <SummaryRow label={t('wizard.process.summaryInputEntities')} value={inputEntityKeys.length > 0 ? inputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />
-          <SummaryRow label={t('wizard.process.summaryOutputEntities')} value={outputEntityKeys.length > 0 ? outputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />
-          <SummaryRow label={t('wizard.process.summaryLegalBasis')} value={legalBasis ? t(`legalBasis.${legalBasis}`, { defaultValue: legalBasis }) : '—'} />
+          {!isHidden('executingUnits') && <SummaryRow label={t('wizard.process.summaryExecutingUnits')} value={executingUnitKeys.length > 0 ? executingUnitKeys.map((k) => allUnits.find((u) => u.key === k)?.names?.find((n: any) => n.locale === 'en')?.text || k).join(', ') : '—'} />}
+          {!isHidden('processSteward') && <SummaryRow label={t('wizard.process.summarySteward')} value={processSteward ? `${processSteward.firstName} ${processSteward.lastName}` : '—'} />}
+          {!isHidden('technicalCustodian') && <SummaryRow label={t('wizard.process.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />}
+          {!isHidden('inputEntities') && <SummaryRow label={t('wizard.process.summaryInputEntities')} value={inputEntityKeys.length > 0 ? inputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />}
+          {!isHidden('outputEntities') && <SummaryRow label={t('wizard.process.summaryOutputEntities')} value={outputEntityKeys.length > 0 ? outputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />}
+          {!isHidden('legalBasis') && <SummaryRow label={t('wizard.process.summaryLegalBasis')} value={legalBasis ? t(`legalBasis.${legalBasis}`, { defaultValue: legalBasis }) : '—'} />}
         </Box>
       ),
     },
   ];
+  const steps = allSteps.filter(Boolean) as typeof allSteps extends (infer S)[] ? Exclude<S, false>[] : never;
 
   return (
     <WizardDialog

@@ -42,6 +42,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useLocale } from '../../context/LocaleContext';
+import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
 
 interface BoundedContextOption {
   key: string;
@@ -67,6 +68,8 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const assignClassifications = useAssignClassificationsToEntity();
   const updateSteward = useUpdateBusinessEntityDataSteward();
   const updateCustodian = useUpdateBusinessEntityTechnicalCustodian();
+
+  const isHidden = useWizardHiddenFields('BUSINESS_ENTITY');
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
@@ -214,7 +217,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     onClose();
   };
 
-  const steps = [
+  const visibleClassifications = entityClassifications.filter((c) => !isHidden(`classification.${c.key}`));
+
+  const allSteps = [
     {
       id: 'identity',
       title: t('wizard.entity.stepIdentity'),
@@ -241,7 +246,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         </Box>
       ),
     },
-    {
+    !isHidden('boundedContext') && {
       id: 'placement',
       title: t('wizard.entity.stepPlacement'),
       skippable: true,
@@ -293,49 +298,47 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
                 helperText={t('wizard.entity.ownerHelper', { username: user?.username || 'current user' })} />
             )}
           />
-          <Autocomplete
-            options={allUsers}
-            getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
-            value={dataSteward}
-            onChange={(_, v) => setDataSteward(v)}
-            isOptionEqualToValue={(o, v) => o.username === v.username}
-            size="small"
-            renderInput={(params) => (
-              <TextField {...params} label={t('wizard.entity.stewardLabel')} size="small"
-                helperText={t('wizard.entity.stewardHelper')} />
-            )}
-          />
-          <Autocomplete
-            options={allUsers}
-            getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
-            value={technicalCustodian}
-            onChange={(_, v) => setTechnicalCustodian(v)}
-            isOptionEqualToValue={(o, v) => o.username === v.username}
-            size="small"
-            renderInput={(params) => (
-              <TextField {...params} label={t('wizard.entity.custodianLabel')} size="small"
-                helperText={t('wizard.entity.custodianHelper')} />
-            )}
-          />
+          {!isHidden('dataSteward') && (
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
+              value={dataSteward}
+              onChange={(_, v) => setDataSteward(v)}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              renderInput={(params) => (
+                <TextField {...params} label={t('wizard.entity.stewardLabel')} size="small"
+                  helperText={t('wizard.entity.stewardHelper')} />
+              )}
+            />
+          )}
+          {!isHidden('technicalCustodian') && (
+            <Autocomplete
+              options={allUsers}
+              getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
+              value={technicalCustodian}
+              onChange={(_, v) => setTechnicalCustodian(v)}
+              isOptionEqualToValue={(o, v) => o.username === v.username}
+              size="small"
+              renderInput={(params) => (
+                <TextField {...params} label={t('wizard.entity.custodianLabel')} size="small"
+                  helperText={t('wizard.entity.custodianHelper')} />
+              )}
+            />
+          )}
         </Box>
       ),
     },
-    {
+    visibleClassifications.length > 0 && {
       id: 'classifications',
       title: t('wizard.entity.stepClassifications'),
       skippable: true,
       guidedExplanation: (
         <Typography variant="body2">{t('wizard.entity.guidedClassificationsText')}</Typography>
       ),
-      content: entityClassifications.length === 0 ? (
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {t('wizard.entity.noClassifications')}
-        </Typography>
-      ) : (
+      content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {entityClassifications.map((c) => {
+          {visibleClassifications.map((c) => {
             const label = getLocalizedText(c.names, c.key);
             return (
               <Box key={c.key}>
@@ -381,18 +384,21 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <SummaryRow label={t('wizard.entity.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
           <SummaryRow label={t('wizard.entity.summaryParent')} value={parentKey || '—'} />
-          <SummaryRow label={t('wizard.entity.summaryBc')} value={boundedContextKey || '—'} />
+          {!isHidden('boundedContext') && <SummaryRow label={t('wizard.entity.summaryBc')} value={boundedContextKey || '—'} />}
           <SummaryRow label={t('wizard.entity.summaryOwner')} value={dataOwner ? `${dataOwner.firstName} ${dataOwner.lastName}` : t('wizard.entity.summaryOwnerDefault', { username: user?.username || '' })} />
-          <SummaryRow label={t('wizard.entity.summarySteward')} value={dataSteward ? `${dataSteward.firstName} ${dataSteward.lastName}` : '—'} />
-          <SummaryRow label={t('wizard.entity.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />
-          <SummaryRow
-            label={t('wizard.entity.summaryClassifications')}
-            value={assignments.length > 0 ? t('wizard.entity.summaryClassifications', { count: assignments.length }) : '—'}
-          />
+          {!isHidden('dataSteward') && <SummaryRow label={t('wizard.entity.summarySteward')} value={dataSteward ? `${dataSteward.firstName} ${dataSteward.lastName}` : '—'} />}
+          {!isHidden('technicalCustodian') && <SummaryRow label={t('wizard.entity.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />}
+          {visibleClassifications.length > 0 && (
+            <SummaryRow
+              label={t('wizard.entity.summaryClassifications')}
+              value={assignments.length > 0 ? t('wizard.entity.summaryClassifications', { count: assignments.length }) : '—'}
+            />
+          )}
         </Box>
       ),
     },
   ];
+  const steps = allSteps.filter(Boolean) as typeof allSteps extends (infer S)[] ? Exclude<S, false>[] : never;
 
   return (
     <WizardDialog
