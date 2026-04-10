@@ -26,16 +26,23 @@ class ServiceProviderMapper {
                 sp.linkedProcesses.map {
                     ProcessSummaryResponse(it.key, it.getName("en"))
                 }
-            )
-            .processDataFlows(
+            ).processDataFlows(
                 sp.linkedProcesses.map { process ->
                     ServiceProviderDataFlowEntry(process.key, process.getName("en"))
                         .legalBasis(process.legalBasis?.let { LegalBasis.fromValue(it) })
-                        .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
-                        .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
-                        .crossBorderTransfers(process.crossBorderTransfers?.map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
-                        .securityMeasures(process.securityMeasures?.find { it.locale == "en" }?.text ?: process.securityMeasures?.firstOrNull()?.text)
-                }
+                        .inputEntities(
+                            BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities),
+                        ).outputEntities(
+                            BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities),
+                        ).crossBorderTransfers(
+                            process.crossBorderTransfers?.map {
+                                CrossBorderTransferMapper.toCrossBorderTransferEntry(it)
+                            },
+                        ).securityMeasures(
+                            process.securityMeasures?.find { it.locale == "en" }?.text
+                                ?: process.securityMeasures?.firstOrNull()?.text,
+                        )
+                },
             )
 
     fun toServiceProviderSummaryResponse(sp: ServiceProvider): ServiceProviderSummaryResponse =
