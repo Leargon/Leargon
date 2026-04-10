@@ -505,10 +505,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('common.process')}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderProcess')}</TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.dataFlowInputEntities')}</TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.dataFlowOutputEntities')}</TableCell>
-                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('process.legalBasisLabel')}</TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('process.legalBasis')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
