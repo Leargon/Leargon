@@ -5,7 +5,6 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| Service provider data flow transparency       | 1        | 10%    | 8/10  | **8.0**  |
 | Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
 | Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
