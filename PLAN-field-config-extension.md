@@ -308,29 +308,32 @@ Tasks:
 
 ---
 
-### Batch 4 — Section-aware missing-fields banner & indicator (est. ~0.5 day)
+### Batch 4 — Section-aware missing-fields banner & indicator (est. ~0.5 day) ✅ DONE
 
 **Goal:** The `MissingFieldsBanner` and section-header `*` indicators remain accurate after
 hiding; also surface which *section* a missing field belongs to.
 
 Tasks:
-1. Extend `MissingFieldsBanner.tsx` to group missing fields by their section name when expanded
-   (e.g. "GDPR (2 missing): purpose.en, legalBasis")
-2. Section headers in detail panels already show `*` when any field in them is both mandatory
-   and missing — verify this still works correctly when some fields in the section are hidden
-3. Add frontend unit tests (Vitest) for the updated banner component
+1. ✅ Extend `MissingFieldsBanner.tsx` to group missing fields by their section name when expanded
+   — extracted `groupMissingBySection()` to `src/utils/missingFieldsGrouping.ts`; fetches definitions
+   via `useGetFieldConfigurationDefinitions()` (React Query cached); falls back to "Other" for
+   fields not found in definitions; sections shown in canonical order
+2. ✅ Section headers `*` indicators verified: `mandatoryFields` on the backend already excludes
+   hidden fields (`visibility != HIDDEN`), so `isMandatory()` in detail panels is unaffected
+3. ✅ 8 Vitest unit tests in `src/tests/unit/missingFieldsGrouping.unit.test.ts`; `npm run test:unit`
+   added to package.json; all 8 pass
 
 ---
 
-### Batch 5 — Tests, polish & documentation (est. ~0.5 day)
+### Batch 5 — Tests, polish & documentation (est. ~0.5 day) ✅ DONE
 
 Tasks:
-1. Full Spock test coverage for new backend service logic (definitions endpoint, visibility
-   enforcement, `hiddenFields` in mapper output)
+1. ✅ Full Spock test coverage for new backend service logic (definitions endpoint, visibility
+   enforcement, `hiddenFields` in mapper output) — 5 new tests in FieldConfigurationControllerSpec
 2. ✅ E2E happy-path test: admin hides a field → regular user cannot see it on entity detail page
 3. ✅ E2E negative test: admin marks a field mandatory → visibility toggle is disabled (cannot hide)
-4. Update `CLAUDE.md`, CONCEPTS.md, etc if new architectural patterns are introduced
-5. Smoke-test with `docker compose up` — confirm the new migration runs cleanly
+4. ✅ Update `CLAUDE.md` — added Field Configuration System section and unit test mention
+5. Smoke-test with `docker compose up` — confirm the new migration runs cleanly (runtime Docker)
 
 ---
 
@@ -341,8 +344,8 @@ Tasks:
 | 1 | Backend data model & API | ~1 day | ✅ Done |
 | 2 | Frontend settings UI | ~1.5 days | ✅ Done |
 | 3 | Detail panels respect visibility | ~1 day | ✅ Done |
-| 4 | Missing-fields banner & indicators | ~0.5 day | |
-| 5 | Tests, polish, docs | ~0.5 day | |
+| 4 | Missing-fields banner & indicators | ~0.5 day | ✅ Done |
+| 5 | Tests, polish, docs | ~0.5 day | ✅ Done |
 | **Total** | | **~4.5 days** | |
 
 ---

@@ -386,6 +386,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         <MissingFieldsBanner
           missingFields={unit.missingMandatoryFields ?? []}
           ownerOrAdmin={isLeadOrAdmin}
+          entityType="ORGANISATIONAL_UNIT"
         />
 
         {/* Names & Descriptions */}

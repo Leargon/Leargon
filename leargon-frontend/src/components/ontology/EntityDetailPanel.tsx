@@ -482,6 +482,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <MissingFieldsBanner
         missingFields={entity.missingMandatoryFields ?? []}
         ownerOrAdmin={isOwnerOrAdmin}
+        entityType="BUSINESS_ENTITY"
       />
 
       {/* Item 3: Owner resolution warning — no owner at all (neither explicit nor computed) */}

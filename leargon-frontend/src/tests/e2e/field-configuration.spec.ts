@@ -138,11 +138,11 @@ test.describe('Field Configuration — Sectioned UI', () => {
 
     // Business Process should have GDPR section
     await page.getByRole('tab', { name: 'Business Process' }).click();
-    await expect(page.getByText('GDPR').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('GDPR', { exact: true }).first()).toBeVisible({ timeout: 5000 });
 
-    // Business Domain should NOT have GDPR section
+    // Business Domain should NOT have GDPR section (use exact match to avoid matching 'GDPR / DSG' classification chips)
     await page.getByRole('tab', { name: 'Business Domain' }).click();
-    await expect(page.getByText('GDPR')).not.toBeVisible();
+    await expect(page.getByText('GDPR', { exact: true })).not.toBeVisible();
   });
 
   test('non-mandatory-capable fields do not show Mandatory button', async ({ page }) => {

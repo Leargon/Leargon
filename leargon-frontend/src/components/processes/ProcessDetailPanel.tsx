@@ -523,6 +523,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <MissingFieldsBanner
         missingFields={process.missingMandatoryFields ?? []}
         ownerOrAdmin={isOwnerOrAdmin}
+        entityType="BUSINESS_PROCESS"
       />
 
       {/* Item 3: Owner resolution warning */}

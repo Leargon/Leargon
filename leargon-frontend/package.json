@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "api:generate": "orval",
     "api:watch": "orval --watch",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test"
   },

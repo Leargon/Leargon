@@ -499,6 +499,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       <MissingFieldsBanner
         missingFields={domain.missingMandatoryFields ?? []}
         ownerOrAdmin={isAdmin}
+        entityType="BUSINESS_DOMAIN"
       />
 
       {/* Item 10: Domain without owning unit */}

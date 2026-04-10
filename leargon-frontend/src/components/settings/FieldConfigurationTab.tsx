@@ -31,6 +31,7 @@ import type {
   SupportedLocaleResponse,
 } from '../../api/generated/model';
 import { FieldConfigurationEntryVisibility } from '../../api/generated/model';
+import { SECTION_LABELS } from '../../utils/missingFieldsGrouping';
 
 type FieldState = 'MANDATORY' | 'SHOWN' | 'HIDDEN';
 
@@ -40,20 +41,6 @@ const ENTITY_TYPES = [
   { value: 'BUSINESS_PROCESS', label: 'Business Process' },
   { value: 'ORGANISATIONAL_UNIT', label: 'Organisational Unit' },
 ];
-
-const SECTION_LABELS: Record<string, string> = {
-  CORE: 'Core',
-  DATA_GOVERNANCE: 'Data Governance',
-  DATA_QUALITY: 'Data Quality',
-  DDD: 'DDD',
-  GDPR: 'GDPR',
-  BCM: 'BCM',
-  TECHNICAL: 'Technical',
-  STRATEGIC: 'Strategic',
-  EXTERNAL: 'External',
-  DATA_ACCESS: 'Data Access',
-  DATA_FLOW: 'Data Flow',
-};
 
 const MATURITY_LABELS: Record<string, string> = {
   BASIC: 'Basic',
@@ -304,7 +291,7 @@ const FieldConfigurationTab: React.FC = () => {
                             <ToggleButton value="SHOWN" disabled={locked}>
                               Shown
                             </ToggleButton>
-                            <ToggleButton value="HIDDEN" disabled={locked}>
+                            <ToggleButton value="HIDDEN" disabled={locked || state === 'MANDATORY'}>
                               Hidden
                             </ToggleButton>
                           </ToggleButtonGroup>

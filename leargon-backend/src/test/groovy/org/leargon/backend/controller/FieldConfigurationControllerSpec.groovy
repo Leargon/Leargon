@@ -555,4 +555,185 @@ class FieldConfigurationControllerSpec extends Specification {
         missing != null
         missing.contains("names.de")
     }
+
+    // =====================
+    // HIDDEN FIELDS
+    // =====================
+
+    def "BusinessEntity response should include hiddenFields when fields are configured as HIDDEN"() {
+        given: "admin configures retentionPeriod as HIDDEN and qualityRules as HIDDEN"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [
+                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                                 visibility: "HIDDEN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"],
+                                [entityType: "BUSINESS_ENTITY", fieldName: "qualityRules",
+                                 visibility: "HIDDEN", section: "DATA_QUALITY", maturityLevel: "ADVANCED"]
+                        ]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "hiddenFields contains both hidden field names"
+        def hidden = response.body().hiddenFields
+        hidden != null
+        hidden.contains("retentionPeriod")
+        hidden.contains("qualityRules")
+    }
+
+    def "BusinessEntity response should have null hiddenFields when no fields are configured as HIDDEN"() {
+        given: "admin configures a SHOWN field only"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                          visibility: "SHOWN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"]]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "hiddenFields is null (no hidden fields configured)"
+        response.body().hiddenFields == null
+    }
+
+    def "BusinessEntity response should have null hiddenFields when no configurations exist"() {
+        given: "no field configurations"
+        String token = createAdminToken()
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "hiddenFields is null"
+        response.body().hiddenFields == null
+    }
+
+    def "HIDDEN field must NOT appear in mandatoryFields (visibility enforcement)"() {
+        given: "admin configures qualityRules as HIDDEN and boundedContext as SHOWN (mandatory)"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [
+                                [entityType: "BUSINESS_ENTITY", fieldName: "qualityRules",
+                                 visibility: "HIDDEN", section: "DATA_QUALITY", maturityLevel: "ADVANCED"],
+                                [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext",
+                                 visibility: "SHOWN", section: "DDD", maturityLevel: "ADVANCED"]
+                        ]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity (no boundedContext set)"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "qualityRules is in hiddenFields"
+        response.body().hiddenFields?.contains("qualityRules")
+
+        and: "qualityRules is NOT in mandatoryFields (hidden fields are excluded)"
+        !response.body().mandatoryFields?.contains("qualityRules")
+
+        and: "qualityRules is NOT in missingMandatoryFields"
+        !response.body().missingMandatoryFields?.contains("qualityRules")
+
+        and: "boundedContext IS in mandatoryFields (SHOWN field is mandatory)"
+        response.body().mandatoryFields?.contains("boundedContext")
+
+        and: "boundedContext IS in missingMandatoryFields (no bounded context set)"
+        response.body().missingMandatoryFields?.contains("boundedContext")
+    }
+
+    def "hiddenFields only contains fields for the matching entityType"() {
+        given: "admin hides retentionPeriod for BUSINESS_ENTITY and type for BUSINESS_DOMAIN"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [
+                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                                 visibility: "HIDDEN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"],
+                                [entityType: "BUSINESS_DOMAIN", fieldName: "type",
+                                 visibility: "HIDDEN", section: "CORE", maturityLevel: "BASIC"]
+                        ]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "hiddenFields contains only BUSINESS_ENTITY hidden fields"
+        def hidden = response.body().hiddenFields
+        hidden != null
+        hidden.contains("retentionPeriod")
+        !hidden.contains("type")
+    }
 }
