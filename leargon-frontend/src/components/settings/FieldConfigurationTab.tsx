@@ -215,15 +215,17 @@ const FieldConfigurationTab: React.FC = () => {
           Save
         </Button>
       </Box>
-
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 2
+        }}>
         Configure which fields are mandatory for each entity type. Entities with missing mandatory fields will show a warning.
         The name in the default locale is always required and cannot be removed.
       </Typography>
-
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
-
       {/* Add new entry */}
       <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>Add Mandatory Field</Typography>
@@ -261,7 +263,6 @@ const FieldConfigurationTab: React.FC = () => {
           </Button>
         </Box>
       </Paper>
-
       {/* Current configuration grouped by entity type */}
       {grouped.map(({ entityType, label, fields }) => {
         const builtinForType = `names.${defaultLocale}`;
@@ -283,7 +284,12 @@ const FieldConfigurationTab: React.FC = () => {
               </Tooltip>
               {/* Configured mandatory fields */}
               {fields.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>No additional mandatory fields.</Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    alignSelf: 'center'
+                  }}>No additional mandatory fields.</Typography>
               ) : (
                 fields.map((f) => (
                   <Chip

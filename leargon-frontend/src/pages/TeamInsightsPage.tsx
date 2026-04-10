@@ -40,8 +40,12 @@ const Section: React.FC<SectionProps> = ({ title, subtitle, icon, count, severit
           {icon}
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle1" fontWeight={600}>{title}</Typography>
-          {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+          <Typography variant="subtitle1" sx={{
+            fontWeight: 600
+          }}>{title}</Typography>
+          {subtitle && <Typography variant="caption" sx={{
+            color: "text.secondary"
+          }}>{subtitle}</Typography>}
         </Box>
         {count !== undefined && (
           <Chip label={count} size="small" color={count === 0 ? 'default' : severity === 'warning' ? 'warning' : 'primary'} sx={{ mr: 2 }} />
@@ -56,7 +60,14 @@ const Section: React.FC<SectionProps> = ({ title, subtitle, icon, count, severit
 
 const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ data }) => {
   const { t } = useTranslation();
-  if (data.length === 0) return <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>{t('common.noResults')}</Typography>;
+  if (data.length === 0) return (
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        p: 2
+      }}>{t('common.noResults')}</Typography>
+  );
   return (
     <TableContainer>
       <Table size="small">
@@ -76,8 +87,12 @@ const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ d
             return (
               <TableRow key={row.userId} hover>
                 <TableCell>
-                  <Typography variant="body2" fontWeight={500}>{row.displayName}</Typography>
-                  <Typography variant="caption" color="text.secondary">@{row.username}</Typography>
+                  <Typography variant="body2" sx={{
+                    fontWeight: 500
+                  }}>{row.displayName}</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>@{row.username}</Typography>
                 </TableCell>
                 <TableCell align="right">{row.entityCount}</TableCell>
                 <TableCell align="right">{row.processCount}</TableCell>
@@ -100,7 +115,14 @@ const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ d
 
 const OrgUnitLoadTable: React.FC<{ data: OrgUnitProcessLoadItem[] }> = ({ data }) => {
   const { t } = useTranslation();
-  if (data.length === 0) return <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>{t('common.noResults')}</Typography>;
+  if (data.length === 0) return (
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        p: 2
+      }}>{t('common.noResults')}</Typography>
+  );
   const max = data[0]?.processCount ?? 1;
   return (
     <TableContainer>
@@ -141,7 +163,9 @@ const BottleneckTable: React.FC<{ data: BottleneckTeamItem[] }> = ({ data }) => 
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" color="text.secondary">{t('analytics.noBottlenecks')}</Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('analytics.noBottlenecks')}</Typography>
     </Box>
   );
   return (
@@ -188,7 +212,9 @@ const WronglyPlacedTable: React.FC<{ data: WronglyPlacedTeamItem[] }> = ({ data 
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" color="text.secondary">{t('analytics.noWronglyPlaced')}</Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('analytics.noWronglyPlaced')}</Typography>
     </Box>
   );
   return (
@@ -214,7 +240,9 @@ const WronglyPlacedTable: React.FC<{ data: WronglyPlacedTeamItem[] }> = ({ data 
                 <TableCell>
                   {row.dominantDomainName
                     ? <Chip label={row.dominantDomainName} size="small" variant="outlined" />
-                    : <Typography variant="body2" color="text.secondary">—</Typography>}
+                    : <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>—</Typography>}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -240,7 +268,9 @@ const SplitDomainsTable: React.FC<{ data: SplitDomainItem[] }> = ({ data }) => {
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" color="text.secondary">{t('analytics.noSplitDomains')}</Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('analytics.noSplitDomains')}</Typography>
     </Box>
   );
   return (
@@ -288,7 +318,12 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
   const { domainKeys, orgUnitKeys, domainNames, orgUnitNames, cells } = data;
 
   if (domainKeys.length === 0 || orgUnitKeys.length === 0) return (
-    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>{t('analytics.conwayNoData')}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        p: 2
+      }}>{t('analytics.conwayNoData')}</Typography>
   );
 
   // Build cell lookup
@@ -311,7 +346,13 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
 
   return (
     <Box sx={{ p: 2, overflowX: 'auto' }}>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          mb: 1,
+          display: 'block'
+        }}>
         {t('analytics.conwayHint')}
       </Typography>
       <Table size="small" sx={{ borderCollapse: 'collapse', width: 'auto' }}>
@@ -352,9 +393,16 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
                     sx={{ bgcolor: cellColor(count), border: '1px solid', borderColor: 'divider', p: 0.5 }}>
                     {count > 0
                       ? <Tooltip title={`${domainNames[dk] ?? dk} × ${orgUnitNames[uk] ?? uk}: ${count} process${count !== 1 ? 'es' : ''}`}>
-                          <Typography variant="body2" fontWeight={600} sx={{ cursor: 'default' }}>{count}</Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              cursor: 'default'
+                            }}>{count}</Typography>
                         </Tooltip>
-                      : <Typography variant="body2" color="text.disabled">·</Typography>}
+                      : <Typography variant="body2" sx={{
+                      color: "text.disabled"
+                    }}>·</Typography>}
                   </TableCell>
                 );
               })}
@@ -375,7 +423,9 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" color="text.secondary">{t('analytics.noConwaysLawMisalignments')}</Typography>
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>{t('analytics.noConwaysLawMisalignments')}</Typography>
     </Box>
   );
 
@@ -431,13 +481,15 @@ const TeamInsightsPage: React.FC = () => {
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 3 }}>
-        <Typography variant="h5" fontWeight={600}>{t('analytics.pageTitle')}</Typography>
-        <Typography variant="body2" color="text.secondary">{t('analytics.pageSubtitle')}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 600
+        }}>{t('analytics.pageTitle')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('analytics.pageSubtitle')}</Typography>
       </Box>
-
       {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>}
       {isError && <Alert severity="error">{t('common.error')}</Alert>}
-
       {insights ? <>
         {(() => {
           // Micronaut Serde excludes empty collections from JSON; normalise to [] so components are safe

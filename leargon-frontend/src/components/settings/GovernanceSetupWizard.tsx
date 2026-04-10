@@ -85,14 +85,21 @@ function EntityOwnershipStep({
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
         <CheckCircle color="success" sx={{ mb: 1 }} />
-        <Typography variant="body2" color="text.secondary">{t('wizard.governance.noUnownedEntities')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('wizard.governance.noUnownedEntities')}</Typography>
       </Box>
     );
   }
 
   return (
     <Box sx={{ overflow: 'auto' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         {t('wizard.governance.entityOwnershipHint', { count: unassigned.length })}
       </Typography>
       <Table size="small">
@@ -116,7 +123,7 @@ function EntityOwnershipStep({
                   <Autocomplete<UserResponse>
                     size="small"
                     options={users}
-                    getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                    getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                     onChange={(_, u) => { if (u) handleAssign(entity.key, u.username); }}
                     disabled={isDone || state === 'saving'}
                     renderInput={(params) => (
@@ -159,7 +166,9 @@ function ClassificationCoverageStep({
   if (classifications.length === 0) {
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">{t('wizard.governance.noClassificationsYet')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('wizard.governance.noClassificationsYet')}</Typography>
         <Link to="/settings/classifications" style={{ fontSize: 14 }}>
           <Settings fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
           {t('wizard.governance.goToSettings')}
@@ -172,7 +181,9 @@ function ClassificationCoverageStep({
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
         <CheckCircle color="success" sx={{ mb: 1 }} />
-        <Typography variant="body2" color="text.secondary">{t('wizard.governance.noUnclassifiedEntities')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('wizard.governance.noUnclassifiedEntities')}</Typography>
       </Box>
     );
   }
@@ -203,7 +214,12 @@ function ClassificationCoverageStep({
 
   return (
     <Box sx={{ overflow: 'auto' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         {t('wizard.governance.classificationCoverageHint', { count: entities.filter((e) => !saved[e.key]).length })}
       </Typography>
       <Table size="small">
@@ -299,14 +315,21 @@ function ProcessOwnershipStep({
     return (
       <Box sx={{ py: 2, textAlign: 'center' }}>
         <CheckCircle color="success" sx={{ mb: 1 }} />
-        <Typography variant="body2" color="text.secondary">{t('wizard.governance.noUnownedProcesses')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('wizard.governance.noUnownedProcesses')}</Typography>
       </Box>
     );
   }
 
   return (
     <Box sx={{ overflow: 'auto' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          mb: 1.5
+        }}>
         {t('wizard.governance.processOwnershipHint', { count: processes.filter((p) => !assigned[p.key]).length })}
       </Typography>
       <Table size="small">
@@ -330,7 +353,7 @@ function ProcessOwnershipStep({
                   <Autocomplete<UserResponse>
                     size="small"
                     options={users}
-                    getOptionLabel={(u) => `${u.firstName} ${u.lastName} (${u.username})`}
+                    getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                     onChange={(_, u) => { if (u) handleAssign(process.key, u.username); }}
                     disabled={isDone || state === 'saving'}
                     renderInput={(params) => (
@@ -391,13 +414,23 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       title: t('wizard.governance.stepWelcome'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedWelcomeTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedWelcomeTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedWelcomeText')}</Typography>
         </Box>
       ),
       content: (
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 2
+            }}>
             {t('wizard.governance.welcomeIntro')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -434,7 +467,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       title: t('wizard.governance.stepClassifications'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedClassificationsTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedClassificationsTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedClassificationsText')}</Typography>
         </Box>
       ),
@@ -442,7 +480,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
         <Box>
           {entityClassifications.length === 0 ? (
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mb: 1.5
+                }}>
                 {t('wizard.governance.noClassificationsYet')}
               </Typography>
               <Link to="/settings/classifications">
@@ -454,7 +497,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
             </Box>
           ) : (
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mb: 1.5
+                }}>
                 {t('wizard.governance.classificationsOk', { count: entityClassifications.length })}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
@@ -473,7 +521,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedEntityOwnershipTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedEntityOwnershipTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedEntityOwnershipText')}</Typography>
         </Box>
       ),
@@ -491,7 +544,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedClassificationCoverageTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedClassificationCoverageTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedClassificationCoverageText')}</Typography>
         </Box>
       ),
@@ -509,7 +567,12 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedProcessOwnershipTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedProcessOwnershipTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedProcessOwnershipText')}</Typography>
         </Box>
       ),
@@ -526,13 +589,23 @@ const GovernanceSetupWizard: React.FC<GovernanceSetupWizardProps> = ({ open, onC
       title: t('wizard.governance.stepSummary'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>{t('wizard.governance.guidedSummaryTitle')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>{t('wizard.governance.guidedSummaryTitle')}</Typography>
           <Typography variant="body2">{t('wizard.governance.guidedSummaryText')}</Typography>
         </Box>
       ),
       content: (
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 2
+            }}>
             {t('wizard.governance.summaryIntro')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

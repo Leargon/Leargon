@@ -99,11 +99,15 @@ const UbiquitousLanguagePage: React.FC = () => {
     <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
         <Typography variant="h5">{t('ubiquitousLanguage.title')}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mt: 0.5
+          }}>
           {t('ubiquitousLanguage.subtitle')}
         </Typography>
       </Box>
-
       {/* ── Nouns (Entities) ────────────────────────────────────────────── */}
       <Paper variant="outlined">
         <Box sx={{ px: 2, pt: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
@@ -113,8 +117,10 @@ const UbiquitousLanguagePage: React.FC = () => {
             placeholder={t('ubiquitousLanguage.searchNouns')}
             value={entitySearch}
             onChange={(e) => { setEntitySearch(e.target.value); setEntityPage(0); }}
-            InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
             sx={{ width: 260 }}
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }
+            }}
           />
         </Box>
 
@@ -163,12 +169,16 @@ const UbiquitousLanguagePage: React.FC = () => {
                             <span>{desc}</span>
                           </Tooltip>
                         ) : (
-                          <Typography variant="body2" color="text.disabled">—</Typography>
+                          <Typography variant="body2" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         )}
                       </TableCell>
                       <TableCell>
                         {qualityRules.length === 0 ? (
-                          <Typography variant="body2" color="text.disabled">—</Typography>
+                          <Typography variant="body2" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         ) : (
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             {qualityRules.map((rule) => {
@@ -208,7 +218,6 @@ const UbiquitousLanguagePage: React.FC = () => {
           onRowsPerPageChange={(e) => { setEntityRowsPerPage(parseInt(e.target.value, 10)); setEntityPage(0); }}
         />
       </Paper>
-
       {/* ── Verbs (Processes) ───────────────────────────────────────────── */}
       <Paper variant="outlined">
         <Box sx={{ px: 2, pt: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
@@ -218,8 +227,10 @@ const UbiquitousLanguagePage: React.FC = () => {
             placeholder={t('ubiquitousLanguage.searchVerbs')}
             value={processSearch}
             onChange={(e) => { setProcessSearch(e.target.value); setProcessPage(0); }}
-            InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
             sx={{ width: 260 }}
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }
+            }}
           />
         </Box>
 
@@ -266,7 +277,9 @@ const UbiquitousLanguagePage: React.FC = () => {
                             <span>{desc}</span>
                           </Tooltip>
                         ) : (
-                          <Typography variant="body2" color="text.disabled">—</Typography>
+                          <Typography variant="body2" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         )}
                       </TableCell>
                     </TableRow>
@@ -287,7 +300,6 @@ const UbiquitousLanguagePage: React.FC = () => {
           onRowsPerPageChange={(e) => { setProcessRowsPerPage(parseInt(e.target.value, 10)); setProcessPage(0); }}
         />
       </Paper>
-
       {/* ── Events (Domain Events) ───────────────────────────────────────── */}
       <Paper variant="outlined">
         <Box sx={{ px: 2, pt: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
@@ -297,8 +309,10 @@ const UbiquitousLanguagePage: React.FC = () => {
             placeholder={t('ubiquitousLanguage.searchEvents')}
             value={eventSearch}
             onChange={(e) => { setEventSearch(e.target.value); setEventPage(0); }}
-            InputProps={{ startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }}
             sx={{ width: 260 }}
+            slotProps={{
+              input: { startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment> }
+            }}
           />
         </Box>
 
@@ -337,7 +351,9 @@ const UbiquitousLanguagePage: React.FC = () => {
                       <TableCell>{event.publishingBoundedContext?.domainName ?? noBc}</TableCell>
                       <TableCell>
                         {(event.consumers ?? []).length === 0 ? (
-                          <Typography variant="body2" color="text.disabled">—</Typography>
+                          <Typography variant="body2" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         ) : (
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {(event.consumers ?? []).map((c) => (
@@ -352,7 +368,9 @@ const UbiquitousLanguagePage: React.FC = () => {
                             <span>{desc}</span>
                           </Tooltip>
                         ) : (
-                          <Typography variant="body2" color="text.disabled">—</Typography>
+                          <Typography variant="body2" sx={{
+                            color: "text.disabled"
+                          }}>—</Typography>
                         )}
                       </TableCell>
                     </TableRow>

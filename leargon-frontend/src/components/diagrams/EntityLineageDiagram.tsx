@@ -183,7 +183,9 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
   if (!hasLineage)
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="text.secondary">{t('diagrams.noLineage')}</Typography>
+        <Typography sx={{
+          color: "text.secondary"
+        }}>{t('diagrams.noLineage')}</Typography>
       </Box>
     );
 

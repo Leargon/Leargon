@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 051-widen-retention-period-column
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: business_entities
+            columnName: retention_period
+            newDataType: varchar(500)

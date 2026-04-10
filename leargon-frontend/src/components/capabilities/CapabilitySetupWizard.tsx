@@ -121,14 +121,21 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
       title: t('wizard.onboarding.capabilities.stepWelcome'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.capabilities.guidedWelcomeTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.capabilities.guidedWelcomeText')}</Typography>
         </Box>
       ),
       content: (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.onboarding.capabilities.guidedWelcomeText')}
         </Typography>
       ),
@@ -210,7 +217,9 @@ const CapabilitySetupWizard: React.FC<CapabilitySetupWizardProps> = ({ open, onC
       title: t('wizard.onboarding.capabilities.stepSummary'),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {t('wizard.onboarding.capabilities.summaryCapabilities', { count: validCapabilities.length })}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>

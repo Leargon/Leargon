@@ -26,26 +26,43 @@ open class BusinessEntityMapper(
         val fc =
             fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
                 when {
-                    fieldName == "names" -> businessEntity.names.isNotEmpty()
-                    fieldName == "descriptions" -> businessEntity.descriptions.isNotEmpty()
-                    fieldName == "boundedContext" -> businessEntity.boundedContext != null
-                    fieldName == "retentionPeriod" -> !businessEntity.retentionPeriod.isNullOrBlank()
+                    fieldName == "names" -> {
+                        businessEntity.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        businessEntity.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "boundedContext" -> {
+                        businessEntity.boundedContext != null
+                    }
+
+                    fieldName == "retentionPeriod" -> {
+                        !businessEntity.retentionPeriod.isNullOrBlank()
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("descriptions.") -> {
                         val locale = fieldName.removePrefix("descriptions.")
                         businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         businessEntity.classificationAssignments.any { it.classificationKey == classKey }
                     }
-                    else -> true
+
+                    else -> {
+                        true
+                    }
                 }
             }
-        val owningUnit = businessEntity.boundedContext?.owningUnit
+        val owningUnit = businessEntity.boundedContext?.owningUnit ?: businessEntity.boundedContext?.domain?.owningUnit
         val effectiveOwner = businessEntity.dataOwner ?: owningUnit?.businessOwner
         val effectiveSteward = businessEntity.dataSteward ?: owningUnit?.businessSteward
         val effectiveCustodian = businessEntity.technicalCustodian ?: owningUnit?.technicalCustodian
@@ -76,18 +93,23 @@ open class BusinessEntityMapper(
 
     fun toLocalizedBusinessEntityResponse(
         entity: BusinessEntity,
-        locale: String
-    ): LocalizedBusinessEntityResponse =
-        LocalizedBusinessEntityResponse(
+        locale: String,
+    ): LocalizedBusinessEntityResponse {
+        val effectiveBcOwningUnit =
+            entity.boundedContext?.owningUnit ?: entity.boundedContext?.domain?.owningUnit
+        return LocalizedBusinessEntityResponse(
             entity.key,
             entity.getName(locale),
             toZonedDateTime(entity.createdAt),
-            toZonedDateTime(entity.updatedAt)
+            toZonedDateTime(entity.updatedAt),
         ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
-            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: entity.boundedContext?.owningUnit?.businessOwner))
+            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: effectiveBcOwningUnit?.businessOwner))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
-            .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments))
+            .classificationAssignments(
+                ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments),
+            )
+    }
 
     fun toBusinessEntityRelationships(
         businessEntityRelationships: Set<BusinessEntityRelationship>?

@@ -96,18 +96,27 @@ const MaturityOverview: React.FC = () => {
         title={t('maturity.title')}
         subheader={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               {t('maturity.overall', { pct: overallPct })}
             </Typography>
             {urgent > 0 && (
-              <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "error.main",
+                  fontWeight: 600
+                }}>
                 {t('maturity.areasNeedAttention', { count: urgent })}
               </Typography>
             )}
           </Box>
         }
-        titleTypographyProps={{ variant: 'h6' }}
         sx={{ pb: 0 }}
+        slotProps={{
+          title: { variant: 'h6' }
+        }}
       />
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>

@@ -157,7 +157,9 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
               : <CheckCircle fontSize="small" color="success" />
             }
             <Box sx={{ ml: 0.5, flex: 1 }}>
-              <Typography variant="body2" fontWeight={500}>{getLocalizedText(process.names, process.key)}</Typography>
+              <Typography variant="body2" sx={{
+                fontWeight: 500
+              }}>{getLocalizedText(process.names, process.key)}</Typography>
             </Box>
             <IconButton
               size="small"
@@ -250,7 +252,11 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
                 rootMap.set(e.rootKey, e.rootName);
               }
             }
-            if (rootMap.size === 0) return <Typography variant="body2" color="text.secondary">—</Typography>;
+            if (rootMap.size === 0) return (
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>—</Typography>
+            );
             const label = Array.from(rootMap.values()).join(', ');
             return (
               <Tooltip title={label}>
@@ -267,7 +273,11 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           {(() => {
             const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
             const unique = Array.from(new Map(allEntities.map((e) => [e.key, e.name])).entries());
-            if (unique.length === 0) return <Typography variant="body2" color="text.secondary">—</Typography>;
+            if (unique.length === 0) return (
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>—</Typography>
+            );
             const label = unique.map(([, name]) => name).join(', ');
             return (
               <Tooltip title={label}>
@@ -306,7 +316,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           </Box>
         </TableCell>
       </TableRow>
-
       {/* Purpose edit dialog */}
       <Dialog open={editingField === 'purpose'} onClose={() => setEditingField(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('process.purpose')}</DialogTitle>
@@ -329,7 +338,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Security measures edit dialog */}
       <Dialog open={editingField === 'securityMeasures'} onClose={() => setEditingField(null)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('process.securityMeasures')}</DialogTitle>
@@ -352,7 +360,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
       {hasChildren && expanded && children.map((child) => (
         <ProcessRow
           key={child.key}
@@ -431,10 +438,13 @@ const ProcessingRegisterPage: React.FC = () => {
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 0.5 }}>
-        <Typography variant="h5" fontWeight={600}>{t('compliance.pageTitle')}</Typography>
-        <Typography variant="body2" color="text.secondary">{t('compliance.pageSubtitle')}</Typography>
+        <Typography variant="h5" sx={{
+          fontWeight: 600
+        }}>{t('compliance.pageTitle')}</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>{t('compliance.pageSubtitle')}</Typography>
       </Box>
-
       {/* Toolbar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
         <TextField
@@ -443,12 +453,14 @@ const ProcessingRegisterPage: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 280 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search fontSize="small" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }
           }}
         />
         <FormControlLabel
@@ -490,7 +502,6 @@ const ProcessingRegisterPage: React.FC = () => {
           </>
         )}
       </Box>
-
       {/* Table */}
       <TableContainer component={Paper} variant="outlined">
         <Table size="small" stickyHeader>
@@ -516,7 +527,12 @@ const ProcessingRegisterPage: React.FC = () => {
             ) : topLevelProcesses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} align="center">
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>{t('common.noResults')}</Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      py: 2
+                    }}>{t('common.noResults')}</Typography>
                 </TableCell>
               </TableRow>
             ) : (

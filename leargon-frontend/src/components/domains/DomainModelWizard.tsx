@@ -120,7 +120,12 @@ const ContextRelationshipStep: React.FC<ContextRelationshipStepProps> = ({ allBo
   if (allBoundedContexts.length < 2) {
     return (
       <Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>
           {t('wizard.onboarding.domainModel.contextRel.noBcs')}
         </Typography>
         {existingRels.length > 0 && (
@@ -140,7 +145,13 @@ const ContextRelationshipStep: React.FC<ContextRelationshipStepProps> = ({ allBo
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {existingRels.length > 0 && (
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5,
+              display: 'block'
+            }}>
             {t('wizard.onboarding.domainModel.contextRel.existing')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
@@ -154,9 +165,10 @@ const ContextRelationshipStep: React.FC<ContextRelationshipStepProps> = ({ allBo
           </Box>
         </Box>
       )}
-
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: existingRels.length > 0 ? 1 : 0 }}>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.onboarding.domainModel.contextRel.addNew')}
         </Typography>
         <Autocomplete
@@ -247,7 +259,9 @@ const DomainEventsStep: React.FC<DomainEventsStepProps> = ({ allBoundedContexts,
 
   if (allBoundedContexts.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('wizard.onboarding.domainModel.domainEvents.noBcs')}
       </Typography>
     );
@@ -338,7 +352,9 @@ const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }
 
   if (domains.length === 0) {
     return (
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{
+        color: "text.secondary"
+      }}>
         {t('wizard.onboarding.domainModel.teamAssignment.noDomains')}
       </Typography>
     );
@@ -348,7 +364,9 @@ const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {domains.map((domain) => (
         <Box key={domain.key} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-          <Typography variant="body2" fontWeight={500}>{domain.names[0]?.text || domain.key}</Typography>
+          <Typography variant="body2" sx={{
+            fontWeight: 500
+          }}>{domain.names[0]?.text || domain.key}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Autocomplete
               size="small"
@@ -499,14 +517,21 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       title: t('wizard.onboarding.domainModel.stepWelcome'),
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedWelcomeTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedWelcomeText')}</Typography>
         </Box>
       ),
       content: (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('wizard.onboarding.domainModel.guidedWelcomeText')}
         </Typography>
       ),
@@ -517,7 +542,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       isValid: hasDefaultName,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedDomainTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedDomainText')}</Typography>
@@ -546,7 +576,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
             </Select>
           </FormControl>
           {domainType && (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: -1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: -1
+              }}>
               {t(`domainType.hint_${domainType}`)}
             </Typography>
           )}
@@ -568,7 +603,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedBcTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedBcText')}</Typography>
@@ -592,7 +632,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedEntityTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedEntityText')}</Typography>
@@ -615,7 +660,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedContextRelTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedContextRelText')}</Typography>
@@ -629,7 +679,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedDomainEventsTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedDomainEventsText')}</Typography>
@@ -643,7 +698,12 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       skippable: true,
       guidedExplanation: (
         <Box>
-          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              mb: 0.5
+            }}>
             {t('wizard.onboarding.domainModel.guidedTeamAssignmentTitle')}
           </Typography>
           <Typography variant="body2">{t('wizard.onboarding.domainModel.guidedTeamAssignmentText')}</Typography>
@@ -656,7 +716,9 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
       title: t('wizard.onboarding.domainModel.stepSummary'),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          <Typography variant="subtitle2" gutterBottom sx={{
+            color: "text.secondary"
+          }}>
             {t('wizard.onboarding.domainModel.summaryNewDomain')}
           </Typography>
           <SummaryRow label={t('wizard.onboarding.domainModel.summaryDomain')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
@@ -666,7 +728,13 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
 
           {allDomains.length > 0 && (
             <>
-              <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 1 }} gutterBottom>
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                sx={{
+                  color: "text.secondary",
+                  mt: 1
+                }}>
                 {t('wizard.onboarding.domainModel.summaryDddReadiness')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -712,7 +780,13 @@ const DomainModelWizard: React.FC<DomainModelWizardProps> = ({ open, onClose }) 
 
 const SummaryRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <Box sx={{ display: 'flex', gap: 1 }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: 130, flexShrink: 0 }}>{label}</Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: "text.secondary",
+        width: 130,
+        flexShrink: 0
+      }}>{label}</Typography>
     <Typography variant="body2">{value}</Typography>
   </Box>
 );

@@ -85,7 +85,9 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           {parentKey && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Parent: <strong>{parentKey}</strong>
             </Typography>
           )}

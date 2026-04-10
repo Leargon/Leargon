@@ -52,19 +52,26 @@ const Signup: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="calc(100vh - 64px)"
-        py={4}
-      >
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "calc(100vh - 64px)",
+          py: 4
+        }}>
         <Card sx={{ width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center">
               Sign Up
             </Typography>
-            <Typography variant="body2" color="text.secondary" align="center" mb={3}>
+            <Typography
+              variant="body2"
+              align="center"
+              sx={{
+                color: "text.secondary",
+                mb: 3
+              }}>
               Create your Léargon account
             </Typography>
 
@@ -140,7 +147,11 @@ const Signup: React.FC = () => {
               </Button>
             </form>
 
-            <Box textAlign="center" mt={2}>
+            <Box
+              sx={{
+                textAlign: "center",
+                mt: 2
+              }}>
               <Typography variant="body2">
                 Already have an account?{' '}
                 <Link component={RouterLink} to="/login" underline="hover">

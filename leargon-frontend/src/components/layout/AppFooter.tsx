@@ -22,7 +22,12 @@ const AppFooter: React.FC = () => (
       bgcolor: 'background.paper',
     }}
   >
-    <Typography variant="caption" color="text.disabled" sx={{ fontFamily: 'monospace' }}>
+    <Typography
+      variant="caption"
+      sx={{
+        color: "text.disabled",
+        fontFamily: 'monospace'
+      }}>
       v{__APP_VERSION__}
     </Typography>
 

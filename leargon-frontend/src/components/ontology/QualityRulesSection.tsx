@@ -203,11 +203,12 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
           </Button>
         )}
       </Box>
-
       {isLoading ? (
         <CircularProgress size={20} />
       ) : rules.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {t('qualityRule.noRules')}
         </Typography>
       ) : (
@@ -249,7 +250,6 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
           ))}
         </List>
       )}
-
       {/* Add Dialog */}
       <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('qualityRule.addRule')}</DialogTitle>
@@ -261,7 +261,6 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t('qualityRule.editRule')}</DialogTitle>
@@ -273,7 +272,6 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>{t('common.confirm')}</DialogTitle>

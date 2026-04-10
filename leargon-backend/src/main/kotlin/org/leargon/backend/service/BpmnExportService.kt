@@ -191,17 +191,30 @@ open class BpmnExportService {
 
     private fun bpmnType(node: ProcessFlowNode): String =
         when (node.nodeType) {
-            FlowNodeType.START_EVENT -> "bpmn:startEvent"
-            FlowNodeType.END_EVENT -> "bpmn:endEvent"
-            FlowNodeType.INTERMEDIATE_EVENT -> "bpmn:intermediateCatchEvent"
-            FlowNodeType.TASK -> "bpmn:callActivity"
-            FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN ->
+            FlowNodeType.START_EVENT -> {
+                "bpmn:startEvent"
+            }
+
+            FlowNodeType.END_EVENT -> {
+                "bpmn:endEvent"
+            }
+
+            FlowNodeType.INTERMEDIATE_EVENT -> {
+                "bpmn:intermediateCatchEvent"
+            }
+
+            FlowNodeType.TASK -> {
+                "bpmn:callActivity"
+            }
+
+            FlowNodeType.GATEWAY_SPLIT, FlowNodeType.GATEWAY_JOIN -> {
                 when (node.gatewayType) {
                     FlowGatewayType.INCLUSIVE -> "bpmn:inclusiveGateway"
                     FlowGatewayType.PARALLEL -> "bpmn:parallelGateway"
                     FlowGatewayType.COMPLEX -> "bpmn:complexGateway"
                     else -> "bpmn:exclusiveGateway"
                 }
+            }
         }
 
     private fun gatewayMarker(node: ProcessFlowNode): String =
@@ -212,13 +225,29 @@ open class BpmnExportService {
 
     private fun eventDefinitionXml(node: ProcessFlowNode): String =
         when (node.eventDefinition) {
-            FlowEventDefinition.TIMER -> "<bpmn:timerEventDefinition id=\"${node.id}_timer\"/>"
-            FlowEventDefinition.MESSAGE -> "<bpmn:messageEventDefinition id=\"${node.id}_msg\"/>"
-            FlowEventDefinition.SIGNAL -> "<bpmn:signalEventDefinition id=\"${node.id}_sig\"/>"
-            FlowEventDefinition.CONDITIONAL ->
+            FlowEventDefinition.TIMER -> {
+                "<bpmn:timerEventDefinition id=\"${node.id}_timer\"/>"
+            }
+
+            FlowEventDefinition.MESSAGE -> {
+                "<bpmn:messageEventDefinition id=\"${node.id}_msg\"/>"
+            }
+
+            FlowEventDefinition.SIGNAL -> {
+                "<bpmn:signalEventDefinition id=\"${node.id}_sig\"/>"
+            }
+
+            FlowEventDefinition.CONDITIONAL -> {
                 "<bpmn:conditionalEventDefinition id=\"${node.id}_cond\"><bpmn:condition/></bpmn:conditionalEventDefinition>"
-            FlowEventDefinition.TERMINATE -> "<bpmn:terminateEventDefinition id=\"${node.id}_term\"/>"
-            else -> ""
+            }
+
+            FlowEventDefinition.TERMINATE -> {
+                "<bpmn:terminateEventDefinition id=\"${node.id}_term\"/>"
+            }
+
+            else -> {
+                ""
+            }
         }
 
     private fun buildXml(

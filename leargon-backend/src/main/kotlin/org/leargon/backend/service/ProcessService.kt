@@ -339,7 +339,8 @@ open class ProcessService(
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        if (process.boundedContext?.owningUnit?.businessOwner == null) {
+        val effectiveOwningUnit = process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit
+        if (effectiveOwningUnit?.businessOwner == null) {
             throw IllegalArgumentException(
                 "Cannot clear explicit process owner: no computed owner available from the bounded context's owning unit"
             )
@@ -680,12 +681,19 @@ open class ProcessService(
         currentUser: User
     ): BusinessEntity =
         when {
-            request.entityKey != null ->
+            request.entityKey != null -> {
                 businessEntityRepository
                     .findByKey(request.entityKey)
                     .orElseThrow { ResourceNotFoundException("Business entity not found: ${request.entityKey}") }
-            request.createEntity != null -> businessEntityService.createBusinessEntity(request.createEntity!!, currentUser)
-            else -> throw IllegalArgumentException("Either entityKey or createEntity must be provided")
+            }
+
+            request.createEntity != null -> {
+                businessEntityService.createBusinessEntity(request.createEntity!!, currentUser)
+            }
+
+            else -> {
+                throw IllegalArgumentException("Either entityKey or createEntity must be provided")
+            }
         }
 
     private fun validateTranslations(

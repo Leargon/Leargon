@@ -540,7 +540,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       ) : (
         <>
           {/* Names - horizontal table with all locales */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.names')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -563,7 +568,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           </Paper>
 
           {/* Descriptions - accordion */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>{t('common.descriptions')}</Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              mb: 0.5
+            }}>{t('common.descriptions')}</Typography>
           <Box sx={{ mb: 2 }}>
             {descriptionLocales.map((l) => {
               const desc = domain.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -624,10 +634,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               ) : domain.effectiveType ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Chip label={domain.effectiveType} variant="outlined" size="small" />
-                  <Typography variant="caption" color="text.secondary">{t('common.inheritedFromParent')}</Typography>
+                  <Typography variant="caption" sx={{
+                    color: "text.secondary"
+                  }}>{t('common.inheritedFromParent')}</Typography>
                 </Box>
               ) : (
-                <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+                <Typography variant="body2" sx={{
+                  color: "text.secondary"
+                }}>{t('common.notSet')}</Typography>
               )}
             </Box>
           )}
@@ -732,7 +746,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               {domain.visionStatement ? (
                 <Typography variant="body2">{domain.visionStatement}</Typography>
               ) : (
-                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>{t('common.notSet')}</Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    fontStyle: 'italic'
+                  }}>{t('common.notSet')}</Typography>
               )}
             </Box>
           )}
@@ -794,7 +813,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         )}
       </Box>
       {boundedContexts.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('domain.noBoundedContexts')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>{t('domain.noBoundedContexts')}</Typography>
       ) : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
           {boundedContexts.map((bc) => (
@@ -824,12 +848,23 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 <Tab label={t('boundedContextUL.title')} />
               </Tabs>
             </Box>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mb: 1.5
+              }}>
               {selectedBc ? getLocalizedText(selectedBc.names, selectedBc.key) : selectedBcKey}
             </Typography>
             {/* Owning Team */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                  minWidth: 100
+                }}>
                 {t('boundedContext.owningTeam')}:
               </Typography>
               {owningTeamEditBcKey === selectedBcKey ? (
@@ -871,7 +906,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   {selectedBc?.owningTeam ? (
                     <Chip label={selectedBc.owningTeam.name} size="small" variant="outlined" />
                   ) : (
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>
                       {t('boundedContext.noOwningTeam')}
                     </Typography>
                   )}
@@ -908,7 +945,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         )}
       </Box>
       {domainRels.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('domain.noContextRelationships')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>{t('domain.noContextRelationships')}</Typography>
       ) : (
         <Box sx={{ mb: 2 }}>
           {domainRels.map((rel) => {
@@ -929,13 +971,23 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-                    <Typography variant="caption" color="text.secondary">{t('domain.upstream')}:</Typography>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>{t('domain.upstream')}:</Typography>
                     {upstreamBc && <Chip label={upstreamBc.name} size="small" variant="outlined" />}
-                    <Typography variant="caption" color="text.secondary">→ {t('domain.downstream')}:</Typography>
+                    <Typography variant="caption" sx={{
+                      color: "text.secondary"
+                    }}>→ {t('domain.downstream')}:</Typography>
                     {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
                   </Box>
                   {rel.description && (
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        display: "block",
+                        mt: 0.25
+                      }}>
                       {rel.description}
                     </Typography>
                   )}
@@ -986,14 +1038,23 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         )}
       </Box>
       {domainEventsList.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('boundedContext.noDomainEvents')}</Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2
+          }}>{t('boundedContext.noDomainEvents')}</Typography>
       ) : (
         <Box sx={{ mb: 2 }}>
           {domainEventsList.map((ev) => (
             <Paper key={ev.key} variant="outlined" sx={{ p: 1.5, mb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" fontWeight={500}>{getLocalizedText(ev.names, ev.key)}</Typography>
-                <Typography variant="caption" color="text.secondary">{ev.publishingBoundedContext?.name}</Typography>
+                <Typography variant="body2" sx={{
+                  fontWeight: 500
+                }}>{getLocalizedText(ev.names, ev.key)}</Typography>
+                <Typography variant="caption" sx={{
+                  color: "text.secondary"
+                }}>{ev.publishingBoundedContext?.name}</Typography>
               </Box>
               {isAdmin && (
                 <IconButton
@@ -1108,7 +1169,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 <Typography variant="body2" sx={{ minWidth: 120 }}>
                   {getLocalizedText(c.names, c.key)}
                   {isClassificationMandatory(c.key) && (
-                    <Typography component="span" variant="caption" color="warning.main" sx={{ fontWeight: 700, ml: 0.5 }}>*</Typography>
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        color: "warning.main",
+                        fontWeight: 700,
+                        ml: 0.5
+                      }}>*</Typography>
                   )}:
                 </Typography>
                 {assignments.length > 0 ? (
@@ -1119,12 +1187,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     })}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>
+                  <Typography variant="body2" sx={{
+                    color: "text.secondary"
+                  }}>{t('common.notSet')}</Typography>
                 )}
               </Box>
             );
           }) : (
-            <Typography variant="body2" color="text.secondary">{t('common.noClassificationsConfigured')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('common.noClassificationsConfigured')}</Typography>
           )}
         </Box>
       )}
@@ -1166,7 +1238,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">{t('common.noVersionHistory')}</Typography>
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>{t('common.noVersionHistory')}</Typography>
           ) : (
             <Table size="small">
               <TableBody>
@@ -1423,7 +1497,13 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
     {isMandatory && (
-      <Typography variant="caption" color="warning.main" sx={{ fontWeight: 700, lineHeight: 1 }}>*</Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "warning.main",
+          fontWeight: 700,
+          lineHeight: 1
+        }}>*</Typography>
     )}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}>

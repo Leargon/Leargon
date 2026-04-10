@@ -75,7 +75,13 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
           '&:hover': { opacity: 0.85 },
         }}
       >
-        <Typography variant="body2" fontWeight={600} sx={{ flexGrow: 1, lineHeight: 1.2 }}>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 600,
+            flexGrow: 1,
+            lineHeight: 1.2
+          }}>
           {name}
         </Typography>
         {node.linkedProcesses && node.linkedProcesses.length > 0 && (
@@ -95,7 +101,6 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
           </Tooltip>
         )}
       </Box>
-
       {/* Children */}
       {hasChildren && (
         <Box sx={{ p: 1, display: 'flex', flexWrap: 'wrap', gap: 1, bgcolor: 'background.paper' }}>
@@ -162,12 +167,15 @@ const CapabilityMapPage: React.FC = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" fontWeight={600}>Capability Map</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="h6" sx={{
+          fontWeight: 600
+        }}>Capability Map</Typography>
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           Business Capability Model — nested hierarchy view. Click any capability to open its detail.
         </Typography>
       </Box>
-
       <CapabilityMapContent />
     </Box>
   );

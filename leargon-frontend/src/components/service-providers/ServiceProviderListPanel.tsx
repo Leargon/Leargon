@@ -69,14 +69,18 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
           </Button>
         )}
       </Box>
-
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>
         ) : filtered.length === 0 ? (
-          <Typography sx={{ p: 2, textAlign: 'center' }} color="text.secondary">
+          <Typography
+            sx={{
+              color: "text.secondary",
+              p: 2,
+              textAlign: 'center'
+            }}>
             {filter ? t('serviceProvider.noResults') : t('serviceProvider.noProvidersYet')}
           </Typography>
         ) : (
@@ -91,7 +95,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
                 <ListItemText
                   primary={getLocalizedText(p.names, p.key)}
                   secondary={p.key}
-                  slotProps={{ primary: { variant: 'body2', fontWeight: p.key === selectedKey ? 600 : 400 } }}
+                  slotProps={{ primary: { variant: 'body2', sx: { fontWeight: p.key === selectedKey ? 600 : 400 } } }}
                 />
                 <Chip
                   icon={p.processorAgreementInPlace ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}

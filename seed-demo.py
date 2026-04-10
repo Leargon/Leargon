@@ -1440,10 +1440,10 @@ for proc_en, details in process_details.items():
     pkey = pk(proc_en)
     ok(f'  purpose: {proc_en}',
        api('PUT', f'/processes/{pkey}/purpose',
-           {'purpose': details['purpose']}, T))
+           {'purpose': [{'locale': 'en', 'text': details['purpose']}]}, T))
     ok(f'  securityMeasures: {proc_en}',
        api('PUT', f'/processes/{pkey}/security-measures',
-           {'securityMeasures': details['securityMeasures']}, T))
+           {'securityMeasures': [{'locale': 'en', 'text': details['securityMeasures']}]}, T))
     for entity_en in details.get('inputs', []):
         ekey = ek(entity_en)
         ok(f'  input {entity_en} -> {proc_en}',
@@ -2202,9 +2202,6 @@ translation_links = [
      'An Order in the Sales context is the upstream representation of the same transaction '
      'that appears as an Invoice in the Billing context. They share the same identity '
      '(order ID = invoice reference) but carry domain-specific attributes.'),
-    ('Customer', 'Natural Person',
-     'A Customer in the Sales/Customer Care context is a Natural Person who has completed '
-     'registration. Natural Person is the privacy-law entity; Customer is the commercial identity.'),
     ('Product', 'Parcel',
      'A Product in the Sales context is the commercial item. When shipped, it is tracked '
      'as a physical Parcel in the Warehouse/Shipping context.'),
