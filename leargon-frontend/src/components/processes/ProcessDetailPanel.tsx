@@ -603,14 +603,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Table>
           </Paper>
 
-          {/* Descriptions - accordion */}
+          {/* Descriptions - accordion (hidden when all description locales are hidden) */}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && (
           <Typography
             variant="body2"
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>Descriptions</Typography>
-          <Box sx={{ mb: 2 }}>
+            }}>Descriptions</Typography>)}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
             {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = process.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
@@ -627,7 +628,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 </Accordion>
               );
             })}
-          </Box>
+          </Box>}
         </>
       )}
 
@@ -635,7 +636,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        <PropRow label={t('process.processOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -671,7 +672,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               )}
             </Box>
           )}
-        </PropRow>
+        </PropRow>}
         {fields.processSteward && !isHidden('processSteward') && (
           <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
@@ -840,7 +841,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         )}
       </Paper>
 
-      {visibleTabs.includes(0) && (
+      {visibleTabs.includes(0) && (!isHidden('inputEntities') || !isHidden('outputEntities') || !isHidden('executingUnits')) && (
       <Accordion defaultExpanded={visibleTabs[0] === 0} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.dataAndTeams')}</Typography>
@@ -1454,7 +1455,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {/* Process Diagram */}
-      <Accordion
+      {!isHidden('processDiagram') && <Accordion
         expanded={diagramOpen}
         onChange={(_, expanded) => setDiagramOpen(expanded)}
         disableGutters
@@ -1471,7 +1472,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Suspense>
           )}
         </AccordionDetails>
-      </Accordion>
+      </Accordion>}
 
       <Divider sx={{ my: 2 }} />
 

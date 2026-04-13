@@ -298,6 +298,93 @@ class FieldConfigurationControllerSpec extends Specification {
         !defs.any { it.fieldName?.contains("{locale}") }
     }
 
+    def "GET /administration/field-configurations/definitions: locale fields include a group entry with localeGroup=true"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "a group entry 'names' exists for BUSINESS_ENTITY with localeGroup=true and mandatoryCapable=false"
+        def defs = response.body()
+        def namesGroup = defs.find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "names" }
+        namesGroup != null
+        namesGroup.localeGroup == true
+        namesGroup.mandatoryCapable == false
+
+        and: "per-locale entry names.en has localeGroup=false and mandatoryCapable=true"
+        def namesEn = defs.find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "names.en" }
+        namesEn != null
+        namesEn.localeGroup == false
+        namesEn.mandatoryCapable == true
+    }
+
+    def "hiding locale group (names) hides all locale name fields in entity response"() {
+        given: "admin sets 'names' locale group to HIDDEN"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "names",
+                          visibility: "HIDDEN", section: "CORE", maturityLevel: "BASIC"]]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "hiddenFields contains names.en (expanded from the 'names' group entry)"
+        def hidden = response.body().hiddenFields
+        hidden != null
+        hidden.contains("names.en")
+
+        and: "'names' group entry itself is not in hiddenFields (expanded to per-locale)"
+        !hidden.contains("names")
+
+        and: "names group is NOT in mandatoryFields"
+        !response.body().mandatoryFields?.contains("names")
+    }
+
+    def "locale group HIDDEN with per-locale mandatory in payload — backend drops the mandatory entry"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "admin sends both 'names' group HIDDEN and 'names.en' mandatory"
+        def putResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [
+                                [entityType: "BUSINESS_ENTITY", fieldName: "names",
+                                 visibility: "HIDDEN", section: "CORE", maturityLevel: "BASIC"],
+                                [entityType: "BUSINESS_ENTITY", fieldName: "names.en",
+                                 visibility: "SHOWN", section: "CORE", maturityLevel: "BASIC"]
+                        ]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "only the group HIDDEN entry is persisted; per-locale entry is dropped"
+        def saved = putResponse.body()
+        saved.size() == 1
+        saved[0].fieldName == "names"
+        saved[0].visibility == "HIDDEN"
+    }
+
     def "GET /administration/field-configurations/definitions: non-mandatory-capable fields have mandatoryCapable=false"() {
         given: "an admin token"
         String token = createAdminToken()

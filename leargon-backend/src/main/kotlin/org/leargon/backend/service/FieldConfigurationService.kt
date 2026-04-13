@@ -103,18 +103,57 @@ open class FieldConfigurationService(
             FieldDef("ORGANISATIONAL_UNIT", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true)
         )
 
+    /**
+     * Base names of locale fields — used to identify locale group entries and expand them
+     * in compute(). A locale group entry has fieldName = "names" (no locale suffix) and
+     * controls SHOW/HIDE for all locales of that field at once.
+     */
+    private val localeGroupBases: Set<String> =
+        fieldInventory
+            .filter { it.fieldName.contains(".{locale}") }
+            .map { it.fieldName.substringBefore(".{locale}") }
+            .toSet()
+
     @Transactional
     open fun getAll(): List<FieldConfigurationEntry> = fieldConfigurationRepository.findAll().map { toEntry(it) }
 
     @Transactional
     open fun replace(entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> {
+        // Locale group entries: only persist when HIDDEN (SHOWN means "not hidden", so omit)
+        // Per-locale entries: only persist when SHOWN (= mandatory); HIDDEN is not valid for locales
+        // If a group is HIDDEN, drop any per-locale mandatory entries for that group
+        val hiddenGroups =
+            entries
+                .filter { it.fieldName in localeGroupBases && it.visibility == FieldConfigurationEntryVisibility.HIDDEN }
+                .map { it.fieldName }
+                .toSet()
+
+        val toSave =
+            entries.filter { entry ->
+                when {
+                    entry.fieldName in localeGroupBases -> {
+                        // Keep group entries only when explicitly HIDDEN
+                        entry.visibility == FieldConfigurationEntryVisibility.HIDDEN
+                    }
+
+                    entry.fieldName.substringBefore(".") in localeGroupBases -> {
+                        // Keep per-locale entries only when SHOWN (= mandatory) and group is not hidden
+                        entry.fieldName.substringBefore(".") !in hiddenGroups &&
+                            entry.visibility != FieldConfigurationEntryVisibility.HIDDEN
+                    }
+
+                    else -> {
+                        true
+                    }
+                }
+            }
+
         fieldConfigurationRepository.deleteAll()
         val saved =
-            entries.map { entry ->
+            toSave.map { entry ->
                 val config = FieldConfiguration()
                 config.entityType = entry.entityType
                 config.fieldName = entry.fieldName
-                // Mandatory fields are always SHOWN — backend enforces the invariant
                 config.visibility = if (entry.visibility == FieldConfigurationEntryVisibility.HIDDEN) "HIDDEN" else "SHOWN"
                 config.section = entry.section ?: "CORE"
                 config.maturityLevel = entry.maturityLevel?.name ?: "BASIC"
@@ -126,6 +165,12 @@ open class FieldConfigurationService(
     /**
      * Returns all configurable field definitions for all entity types, with locale-specific and
      * classification-specific placeholders expanded against the actual DB rows.
+     *
+     * For locale fields (e.g. "names.{locale}"), two kinds of definitions are emitted:
+     *   1. A locale group entry ("names") with localeGroup=true and mandatoryCapable=false —
+     *      controls show/hide for all locales at once.
+     *   2. Per-locale entries ("names.en", "names.de", …) with localeGroup=false and
+     *      mandatoryCapable=true — control whether each individual locale is mandatory.
      */
     @Transactional
     open fun getDefinitions(): List<FieldConfigurationDefinition> {
@@ -141,22 +186,26 @@ open class FieldConfigurationService(
         return fieldInventory.flatMap { def ->
             when {
                 def.fieldName.contains("{locale}") -> {
-                    localeCodes.map { locale ->
-                        toDefinition(
-                            def,
-                            def.fieldName.replace("{locale}", locale),
-                            "${def.label} ($locale)"
-                        )
-                    }
+                    val base = def.fieldName.substringBefore(".{locale}")
+                    // Group entry: controls visibility for all locales together
+                    val groupEntry = toDefinition(def, base, def.label, mandatoryCapable = false, localeGroup = true)
+                    // Per-locale entries: control mandatory per locale
+                    val localeEntries =
+                        localeCodes.map { locale ->
+                            toDefinition(
+                                def,
+                                def.fieldName.replace("{locale}", locale),
+                                "${def.label} ($locale)",
+                                mandatoryCapable = def.mandatoryCapable,
+                                localeGroup = false
+                            )
+                        }
+                    listOf(groupEntry) + localeEntries
                 }
 
                 def.fieldName.contains("{classKey}") -> {
                     classificationKeys.map { key ->
-                        toDefinition(
-                            def,
-                            def.fieldName.replace("{classKey}", key),
-                            "${def.label}: $key"
-                        )
+                        toDefinition(def, def.fieldName.replace("{classKey}", key), "${def.label}: $key")
                     }
                 }
 
@@ -179,8 +228,30 @@ open class FieldConfigurationService(
     ): FieldConfigResult {
         val configs = fieldConfigurationRepository.findByEntityType(entityType)
         if (configs.isEmpty()) return FieldConfigResult(null, null, null)
-        val hiddenNames = configs.filter { it.visibility == "HIDDEN" }.map { it.fieldName }
-        val mandatoryNames = configs.filter { it.visibility != "HIDDEN" }.map { it.fieldName }
+
+        val localeCodes =
+            supportedLocaleRepository
+                .findByIsActiveOrderBySortOrder(true)
+                .map { it.localeCode }
+
+        // Expand hidden group entries (e.g. "names" HIDDEN → "names.en", "names.de", …)
+        val rawHidden = configs.filter { it.visibility == "HIDDEN" }.map { it.fieldName }
+        val hiddenNames =
+            rawHidden.flatMap { fieldName ->
+                if (fieldName in localeGroupBases) {
+                    localeCodes.map { "$fieldName.$it" }
+                } else {
+                    listOf(fieldName)
+                }
+            }
+
+        // Mandatory names: per-locale entries (SHOWN) and regular fields (SHOWN)
+        // Locale group entries are never in mandatoryNames — they only control visibility
+        val mandatoryNames =
+            configs
+                .filter { it.visibility != "HIDDEN" && it.fieldName !in localeGroupBases }
+                .map { it.fieldName }
+
         val missing = mandatoryNames.filter { !isPresent(it) }
         return FieldConfigResult(
             mandatoryNames.ifEmpty { null },
@@ -199,7 +270,9 @@ open class FieldConfigurationService(
     private fun toDefinition(
         def: FieldDef,
         fieldName: String,
-        label: String
+        label: String,
+        mandatoryCapable: Boolean = def.mandatoryCapable,
+        localeGroup: Boolean = false
     ): FieldConfigurationDefinition =
         FieldConfigurationDefinition(
             def.entityType,
@@ -207,6 +280,8 @@ open class FieldConfigurationService(
             label,
             def.section,
             FieldConfigurationDefinitionMaturityLevel.valueOf(def.maturityLevel),
-            def.mandatoryCapable
-        )
+            mandatoryCapable
+        ).also {
+            it.localeGroup = localeGroup
+        }
 }

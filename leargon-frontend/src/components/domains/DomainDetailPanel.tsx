@@ -576,14 +576,15 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             </Table>
           </Paper>
 
-          {/* Descriptions - accordion */}
+          {/* Descriptions - accordion (hidden when all description locales are hidden) */}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && (
           <Typography
             variant="body2"
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>{t('common.descriptions')}</Typography>
-          <Box sx={{ mb: 2 }}>
+            }}>{t('common.descriptions')}</Typography>)}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
             {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = domain.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
@@ -600,7 +601,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 </Accordion>
               );
             })}
-          </Box>
+          </Box>}
         </>
       )}
 

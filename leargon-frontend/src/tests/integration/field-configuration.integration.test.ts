@@ -287,6 +287,25 @@ describe('Field Configuration E2E', () => {
     expect(res.data.some((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'names.en')).toBe(true);
   });
 
+  it('GET /administration/field-configurations/definitions: locale group entry has localeGroup=true and mandatoryCapable=false', async () => {
+    const res = await adminClient.get<FieldConfigurationDefinition[]>(
+      '/administration/field-configurations/definitions',
+    );
+    expect(res.status).toBe(200);
+
+    // The "names" group entry for BUSINESS_ENTITY should have localeGroup=true
+    const namesGroup = res.data.find((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'names');
+    expect(namesGroup).toBeDefined();
+    expect(namesGroup?.localeGroup).toBe(true);
+    expect(namesGroup?.mandatoryCapable).toBe(false);
+
+    // Per-locale entry should have localeGroup=false and mandatoryCapable=true
+    const namesEn = res.data.find((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'names.en');
+    expect(namesEn).toBeDefined();
+    expect(namesEn?.localeGroup).toBe(false);
+    expect(namesEn?.mandatoryCapable).toBe(true);
+  });
+
   it('GET /administration/field-configurations/definitions: mandatoryCapable is false for non-capable fields', async () => {
     const res = await adminClient.get<FieldConfigurationDefinition[]>(
       '/administration/field-configurations/definitions',
@@ -300,6 +319,31 @@ describe('Field Configuration E2E', () => {
     const retention = res.data.find((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'retentionPeriod');
     expect(retention).toBeDefined();
     expect(retention?.mandatoryCapable).toBe(true);
+  });
+
+  it('hiding locale group "names" expands hiddenFields to per-locale entries in entity response', async () => {
+    await adminClient.put('/administration/field-configurations', [
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'names', visibility: 'HIDDEN', section: 'CORE', maturityLevel: 'BASIC' },
+    ]);
+
+    const entity = await createEntity(adminClient, 'FC Locale Group Hidden Entity');
+    const res = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+
+    expect(res.status).toBe(200);
+    expect(res.data.hiddenFields).toContain('names.en');
+    expect(res.data.hiddenFields).not.toContain('names'); // expanded, not kept as group
+  });
+
+  it('locale group HIDDEN + per-locale mandatory in payload — backend drops per-locale entry', async () => {
+    const res = await adminClient.put<FieldConfigurationEntry[]>('/administration/field-configurations', [
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'names', visibility: 'HIDDEN', section: 'CORE', maturityLevel: 'BASIC' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'names.en', visibility: 'SHOWN', section: 'CORE', maturityLevel: 'BASIC' },
+    ]);
+    expect(res.status).toBe(200);
+    // Only the group HIDDEN entry should be persisted
+    expect(res.data.length).toBe(1);
+    expect(res.data[0].fieldName).toBe('names');
+    expect(res.data[0].visibility).toBe('HIDDEN');
   });
 
   it('GET /administration/field-configurations/definitions returns 403 for non-admin', async () => {

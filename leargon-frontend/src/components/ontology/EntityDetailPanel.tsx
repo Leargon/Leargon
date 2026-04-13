@@ -552,14 +552,15 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             </Table>
           </Paper>
 
-          {/* Descriptions - accordion */}
+          {/* Descriptions - accordion (hidden when all description locales are hidden) */}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && (
           <Typography
             variant="body2"
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>{t('common.descriptions')}</Typography>
-          <Box sx={{ mb: 2 }}>
+            }}>{t('common.descriptions')}</Typography>)}
+          {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
             {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = entity.descriptions?.find((d) => d.locale === l.localeCode)?.text;
               return (
@@ -576,7 +577,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 </Accordion>
               );
             })}
-          </Box>
+          </Box>}
         </>
       )}
 
@@ -584,7 +585,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        <PropRow label={t('entity.dataOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(entity.dataOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -620,7 +621,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               )}
             </Box>
           )}
-        </PropRow>
+        </PropRow>}
         {fields.dataSteward && !isHidden('dataSteward') && (
           <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}

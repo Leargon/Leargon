@@ -63,14 +63,18 @@ test.describe('Field Configuration — Sectioned UI', () => {
     await page.goto('/settings/field-configurations');
     await page.waitForLoadState('networkidle');
 
-    // Lock icon should be visible for the default-locale name field
+    // Lock icon should be visible (for the group and for the default-locale name field)
     await expect(page.locator('[data-testid="LockIcon"]').first()).toBeVisible({ timeout: 5000 });
 
-    // The Mandatory toggle for the name field should be selected and all buttons disabled
+    // The locale group row "names" has Shown/Hidden — group is locked to Shown
+    const namesGroupRow = page.locator('[data-testid="field-toggle-names"]');
+    await expect(namesGroupRow.getByRole('button', { name: 'Shown' })).toBeDisabled();
+    await expect(namesGroupRow.getByRole('button', { name: 'Hidden' })).toBeDisabled();
+
+    // Per-locale row for names.en has Mandatory/Optional — locked because it's the default locale
     const nameRow = page.locator('[data-testid="field-toggle-names\\.en"]');
     await expect(nameRow.getByRole('button', { name: 'Mandatory' })).toBeDisabled();
-    await expect(nameRow.getByRole('button', { name: 'Shown' })).toBeDisabled();
-    await expect(nameRow.getByRole('button', { name: 'Hidden' })).toBeDisabled();
+    await expect(nameRow.getByRole('button', { name: 'Optional' })).toBeDisabled();
   });
 
   test('can mark a field as Mandatory and save', async ({ page }) => {

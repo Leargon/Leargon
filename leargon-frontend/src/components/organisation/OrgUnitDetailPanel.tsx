@@ -433,13 +433,15 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               </Table>
             </Paper>
 
+            {/* Descriptions - accordion (hidden when all description locales are hidden) */}
+            {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && (
             <Typography
               variant="body2"
               sx={{
                 color: "text.secondary",
                 mb: 0.5
-              }}>Descriptions</Typography>
-            <Box sx={{ mb: 2 }}>
+              }}>Descriptions</Typography>)}
+            {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
               {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
                 const desc = unit.descriptions?.find((d) => d.locale === l.localeCode)?.text;
                 return (
@@ -456,7 +458,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   </Accordion>
                 );
               })}
-            </Box>
+            </Box>}
           </>
         )}
 
