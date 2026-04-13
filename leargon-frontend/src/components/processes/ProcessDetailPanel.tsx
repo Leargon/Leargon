@@ -511,11 +511,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
           )}
         </>}
-        actions={isOwnerOrAdmin ? (
+        actions={isOwnerOrAdmin ? (<>
+          <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
+            {t('process.addSubProcess')}
+          </Button>
           <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)} data-testid="delete-process-btn">
             Delete
           </Button>
-        ) : undefined}
+        </>) : undefined}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
 
@@ -1422,14 +1425,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Child Processes */}
       <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-          <Typography variant="subtitle2">Child Processes</Typography>
-          {isOwnerOrAdmin && (
-            <Button size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
-              {t('process.addSubProcess')}
-            </Button>
-          )}
-        </Box>
+        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Child Processes</Typography>
         {process.childProcesses && process.childProcesses.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {process.childProcesses.map((child) => (
