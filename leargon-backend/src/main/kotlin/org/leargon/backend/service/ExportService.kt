@@ -99,7 +99,8 @@ open class ExportService(
             else -> legalBasis
         }
 
-    fun exportProcessingRegister(locale: String = "en"): String {
+    @jakarta.transaction.Transactional
+    open fun exportProcessingRegister(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
@@ -172,7 +173,8 @@ open class ExportService(
         return sb.toString()
     }
 
-    fun exportServiceProviders(locale: String = "en"): String {
+    @jakarta.transaction.Transactional
+    open fun exportServiceProviders(locale: String = "en"): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
