@@ -66,6 +66,11 @@ export interface BusinessEntityResponse {
      */
   mandatoryFields?: string[] | null;
   /**
+     * List of fields configured as hidden for this entity type
+     * @nullable
+     */
+  hiddenFields?: string[] | null;
+  /**
      * Data quality rules defined for this entity
      * @nullable
      */

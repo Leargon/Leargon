@@ -103,3 +103,5 @@ databaseChangeLog:
       file: db/changelog/changes/050-add-track-label.yaml
   - include:
       file: db/changelog/changes/051-widen-retention-period-column.yaml
+  - include:
+      file: db/changelog/changes/052-extend-field-configurations.yaml

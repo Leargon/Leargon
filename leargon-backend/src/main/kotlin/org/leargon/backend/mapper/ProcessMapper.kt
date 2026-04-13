@@ -69,6 +69,16 @@ open class ProcessMapper(
                         process.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
 
+                    fieldName.startsWith("purpose.") -> {
+                        val locale = fieldName.removePrefix("purpose.")
+                        process.purpose?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    }
+
+                    fieldName.startsWith("securityMeasures.") -> {
+                        val locale = fieldName.removePrefix("securityMeasures.")
+                        process.securityMeasures?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    }
+
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
                         process.classificationAssignments.any { it.classificationKey == classKey }
@@ -124,6 +134,7 @@ open class ProcessMapper(
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .hiddenFields(fc.hidden)
             .calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)

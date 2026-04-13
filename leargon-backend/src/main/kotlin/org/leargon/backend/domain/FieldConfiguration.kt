@@ -19,4 +19,13 @@ class FieldConfiguration {
 
     @Column(name = "field_name", nullable = false, length = 100)
     var fieldName: String = ""
+
+    @Column(name = "visibility", nullable = false, length = 10)
+    var visibility: String = "SHOWN"
+
+    @Column(name = "section", nullable = false, length = 50)
+    var section: String = "CORE"
+
+    @Column(name = "maturity_level", nullable = false, length = 10)
+    var maturityLevel: String = "BASIC"
 }

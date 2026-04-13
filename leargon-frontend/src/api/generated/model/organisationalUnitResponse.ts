@@ -86,6 +86,11 @@ export interface OrganisationalUnitResponse {
      * @nullable
      */
   mandatoryFields?: string[] | null;
+  /**
+     * List of fields configured as hidden for this entity type
+     * @nullable
+     */
+  hiddenFields?: string[] | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

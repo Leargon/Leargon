@@ -37,6 +37,7 @@ import type {
 
 import type {
   AdministrationChangePasswordRequest,
+  FieldConfigurationDefinition,
   FieldConfigurationEntry,
   SignupRequest,
   UpdateUserRequest,
@@ -800,6 +801,129 @@ export const useEnableUser = <TError = void,
       return useMutation(getEnableUserMutationOptions(options), queryClient);
     }
     /**
+ * Returns all possible configurable fields per entity type, including default section and maturity level. Requires ROLE_ADMIN.
+ * @summary Get all configurable field definitions with their defaults
+ */
+export type getFieldConfigurationDefinitionsResponse200 = {
+  data: FieldConfigurationDefinition[]
+  status: 200
+}
+
+export type getFieldConfigurationDefinitionsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getFieldConfigurationDefinitionsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type getFieldConfigurationDefinitionsResponseSuccess = (getFieldConfigurationDefinitionsResponse200) & {
+  headers: Headers;
+};
+export type getFieldConfigurationDefinitionsResponseError = (getFieldConfigurationDefinitionsResponse401 | getFieldConfigurationDefinitionsResponse403) & {
+  headers: Headers;
+};
+
+export type getFieldConfigurationDefinitionsResponse = (getFieldConfigurationDefinitionsResponseSuccess | getFieldConfigurationDefinitionsResponseError)
+
+export const getGetFieldConfigurationDefinitionsUrl = () => {
+
+
+
+
+  return `/administration/field-configurations/definitions`
+}
+
+export const getFieldConfigurationDefinitions = async ( options?: RequestInit): Promise<getFieldConfigurationDefinitionsResponse> => {
+
+  return customAxios<getFieldConfigurationDefinitionsResponse>(getGetFieldConfigurationDefinitionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFieldConfigurationDefinitionsQueryKey = () => {
+    return [
+    `/administration/field-configurations/definitions`
+    ] as const;
+    }
+
+
+export const getGetFieldConfigurationDefinitionsQueryOptions = <TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFieldConfigurationDefinitionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>> = ({ signal }) => getFieldConfigurationDefinitions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFieldConfigurationDefinitionsQueryResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>>
+export type GetFieldConfigurationDefinitionsQueryError = void
+
+
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all configurable field definitions with their defaults
+ */
+
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFieldConfigurationDefinitionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
  * Returns the list of mandatory field configurations per entity type. Requires ROLE_ADMIN.
  * @summary Get all field configurations
  */

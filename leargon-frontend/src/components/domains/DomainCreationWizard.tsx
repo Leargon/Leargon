@@ -31,6 +31,7 @@ import type {
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -55,6 +56,8 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
   const units = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: domainsResponse } = useGetAllBusinessDomains();
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
+
+  const isHidden = useWizardHiddenFields('BUSINESS_DOMAIN');
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
   const parentDomain = parentKey ? allDomains.find((d) => d.key === parentKey) : undefined;
@@ -152,7 +155,9 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
     onClose();
   };
 
-  const steps = [
+  const placementHidden = isHidden('parent') && isHidden('owningUnit');
+
+  const allSteps = [
     {
       id: 'identity',
       title: t('wizard.domain.stepIdentity'),
@@ -184,33 +189,37 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
             onNamesChange={setNames}
             onDescriptionsChange={setDescriptions}
           />
-          <FormControl size="small">
-            <InputLabel>{t('wizard.domain.domainType') || 'Domain Type'}</InputLabel>
-            <Select
-              value={domainType}
-              onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
-              label={t('wizard.domain.domainType') || 'Domain Type'}
-            >
-              <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
-              {DOMAIN_TYPE_VALUES.map((dt) => (
-                <MenuItem key={dt} value={dt}>{t(`domainType.${dt}`)}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          {domainType && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                mt: -1
-              }}>
-              {t(`domainType.hint_${domainType}`)}
-            </Typography>
+          {!isHidden('type') && (
+            <>
+              <FormControl size="small">
+                <InputLabel>{t('wizard.domain.domainType') || 'Domain Type'}</InputLabel>
+                <Select
+                  value={domainType}
+                  onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
+                  label={t('wizard.domain.domainType') || 'Domain Type'}
+                >
+                  <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                  {DOMAIN_TYPE_VALUES.map((dt) => (
+                    <MenuItem key={dt} value={dt}>{t(`domainType.${dt}`)}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {domainType && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    mt: -1
+                  }}>
+                  {t(`domainType.hint_${domainType}`)}
+                </Typography>
+              )}
+            </>
           )}
         </Box>
       ),
     },
-    {
+    !placementHidden && {
       id: 'placement',
       title: t('wizard.domain.stepPlacement'),
       skippable: true,
@@ -219,7 +228,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {!parentKey && (
+          {!parentKey && !isHidden('parent') && (
             <FormControl size="small">
               <InputLabel>{t('wizard.domain.parentLabel')}</InputLabel>
               <Select
@@ -234,23 +243,25 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               </Select>
             </FormControl>
           )}
-          <FormControl size="small">
-            <InputLabel>{t('wizard.domain.owningUnitLabel')}</InputLabel>
-            <Select
-              value={owningUnitKey}
-              onChange={(e: SelectChangeEvent) => setOwningUnitKey(e.target.value)}
-              label={t('wizard.domain.owningUnitLabel')}
-            >
-              <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
-              {units.map((u) => (
-                <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {!isHidden('owningUnit') && (
+            <FormControl size="small">
+              <InputLabel>{t('wizard.domain.owningUnitLabel')}</InputLabel>
+              <Select
+                value={owningUnitKey}
+                onChange={(e: SelectChangeEvent) => setOwningUnitKey(e.target.value)}
+                label={t('wizard.domain.owningUnitLabel')}
+              >
+                <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
+                {units.map((u) => (
+                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Box>
       ),
     },
-    {
+    !isHidden('visionStatement') && {
       id: 'vision',
       title: t('wizard.domain.stepVision'),
       skippable: true,
@@ -270,7 +281,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
         />
       ),
     },
-    {
+    !isHidden('boundedContexts') && {
       id: 'bounded-context',
       title: t('wizard.domain.stepBoundedContext'),
       skippable: true,
@@ -320,15 +331,16 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <SummaryRow label={t('wizard.domain.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
-          <SummaryRow label={t('wizard.domain.summaryType')} value={domainType ? t(`domainType.${domainType}`) : '—'} />
-          <SummaryRow label={t('wizard.domain.summaryParent')} value={selectedParentKey || '—'} />
-          <SummaryRow label={t('wizard.domain.summaryOwningUnit')} value={owningUnitKey || '—'} />
-          <SummaryRow label={t('wizard.domain.summaryVision')} value={visionText.trim() || '—'} />
-          <SummaryRow label={t('wizard.domain.summaryBoundedContext')} value={bcName.trim() || '—'} />
+          {!isHidden('type') && <SummaryRow label={t('wizard.domain.summaryType')} value={domainType ? t(`domainType.${domainType}`) : '—'} />}
+          {!isHidden('parent') && <SummaryRow label={t('wizard.domain.summaryParent')} value={selectedParentKey || '—'} />}
+          {!isHidden('owningUnit') && <SummaryRow label={t('wizard.domain.summaryOwningUnit')} value={owningUnitKey || '—'} />}
+          {!isHidden('visionStatement') && <SummaryRow label={t('wizard.domain.summaryVision')} value={visionText.trim() || '—'} />}
+          {!isHidden('boundedContexts') && <SummaryRow label={t('wizard.domain.summaryBoundedContext')} value={bcName.trim() || '—'} />}
         </Box>
       ),
     },
   ];
+  const steps = allSteps.filter(Boolean) as typeof allSteps extends (infer S)[] ? Exclude<S, false>[] : never;
 
   return (
     <WizardDialog

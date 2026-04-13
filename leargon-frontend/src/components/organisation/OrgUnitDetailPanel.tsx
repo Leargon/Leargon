@@ -157,6 +157,14 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
 
+  // Hidden field helpers
+  const hiddenList = unit?.hiddenFields ?? [];
+  const isHidden = (...fieldNames: string[]) =>
+    hiddenList.length > 0 &&
+    fieldNames.some((f) => hiddenList.includes(f));
+  const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
+  const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [createChildOpen, setCreateChildOpen] = useState(false);
   const [assignBcDialogOpen, setAssignBcDialogOpen] = useState(false);
@@ -378,6 +386,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         <MissingFieldsBanner
           missingFields={unit.missingMandatoryFields ?? []}
           ownerOrAdmin={isLeadOrAdmin}
+          entityType="ORGANISATIONAL_UNIT"
         />
 
         {/* Names & Descriptions */}
@@ -407,14 +416,14 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    {activeLocales.map((l) => (
+                    {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                       <TableCell key={l.localeCode} sx={{ fontWeight: 500 }}>{l.displayName}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   <TableRow>
-                    {activeLocales.map((l) => (
+                    {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                       <TableCell key={l.localeCode}>
                         {unit.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
                       </TableCell>
@@ -424,14 +433,16 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               </Table>
             </Paper>
 
+            {/* Descriptions - accordion (hidden when all description locales are hidden) */}
+            {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && (
             <Typography
               variant="body2"
               sx={{
                 color: "text.secondary",
                 mb: 0.5
-              }}>Descriptions</Typography>
-            <Box sx={{ mb: 2 }}>
-              {descriptionLocales.map((l) => {
+              }}>Descriptions</Typography>)}
+            {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
+              {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
                 const desc = unit.descriptions?.find((d) => d.locale === l.localeCode)?.text;
                 return (
                   <Accordion key={l.localeCode} disableGutters variant="outlined"
@@ -447,7 +458,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   </Accordion>
                 );
               })}
-            </Box>
+            </Box>}
           </>
         )}
 
@@ -562,7 +573,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </Accordion>
 
         {/* Stewardship */}
-        {sections.stewardship && <Accordion disableGutters>
+        {sections.stewardship && (!isHidden('businessOwner') || !isHidden('businessSteward') || !isHidden('technicalCustodian')) && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Stewardship</Typography>
           </AccordionSummary>
@@ -610,6 +621,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
       <Divider sx={{ my: 2 }} />
 
+      {!isHidden('businessSteward') && <><Divider sx={{ my: 2 }} />
       {/* Business Steward */}
       <SectionHeader
         title="Business Steward"
@@ -648,10 +660,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             )}
           </Typography>
         )}
-      </Box>
+      </Box></>}
 
-      <Divider sx={{ my: 2 }} />
-
+      {!isHidden('technicalCustodian') && <><Divider sx={{ my: 2 }} />
       {/* Technical Custodian */}
       <SectionHeader
         title="Technical Custodian"
@@ -690,12 +701,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             )}
           </Typography>
         )}
-          </Box>
+          </Box></>}
           </AccordionDetails>
         </Accordion>}
 
         {/* Bounded Contexts */}
-        {sections.boundedContexts && <Accordion disableGutters>
+        {sections.boundedContexts && !isHidden('boundedContexts') && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Bounded Contexts</Typography>
           </AccordionSummary>
@@ -768,7 +779,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         )}
 
         {/* External Party Details */}
-        {sections.externalFields && (isAdmin || unit.isExternal) && (
+        {sections.externalFields && !isHidden('isExternal') && (isAdmin || unit.isExternal) && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -953,7 +964,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         )}
 
         {/* Service Providers */}
-        {sections.serviceProviders && <Accordion disableGutters>
+        {sections.serviceProviders && !isHidden('serviceProviders') && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2">Service Providers</Typography>
@@ -1033,7 +1044,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <AccordionDetails>
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.map((c) => {
+          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             if (c.multiValue) {
               const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
               return (
@@ -1092,7 +1103,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.length > 0 ? availableClassifications.map((c) => {
+          {availableClassifications.length > 0 ? availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
             const assignments = unit.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

@@ -279,6 +279,28 @@ paths:
           description: User not found
         '401':
           description: Not authenticated
+  /administration/field-configurations/definitions:
+    get:
+      tags:
+      - Administration
+      summary: Get all configurable field definitions with their defaults
+      description: Returns all possible configurable fields per entity type, including default section and maturity level. Requires ROLE_ADMIN.
+      operationId: getFieldConfigurationDefinitions
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of field configuration definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FieldConfigurationDefinition'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /administration/field-configurations:
     get:
       tags:
@@ -6329,6 +6351,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         visionStatement:
           type: string
           nullable: true
@@ -6677,6 +6705,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         qualityRules:
           type: array
           nullable: true
@@ -7412,6 +7446,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         createdAt:
           type: string
           format: date-time
@@ -7673,6 +7713,12 @@ components:
           items:
             type: string
           description: List of fields configured as mandatory for this entity type
+        hiddenFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: List of fields configured as hidden for this entity type
         calledProcessKeys:
           type: array
           nullable: true
@@ -8392,6 +8438,63 @@ components:
           type: string
           description: Field name that is mandatory (e.g. retentionPeriod, businessDomain, descriptions)
           example: retentionPeriod
+        visibility:
+          type: string
+          enum: [SHOWN, HIDDEN]
+          default: SHOWN
+          description: Whether the field is shown or hidden in entity detail panels
+        section:
+          type: string
+          default: CORE
+          description: Methodology section this field belongs to (e.g. CORE, GDPR, DDD)
+        maturityLevel:
+          type: string
+          enum: [BASIC, ADVANCED, EXPERT]
+          default: BASIC
+          description: Maturity level of the field
+    FieldConfigurationDefinition:
+      type: object
+      required:
+      - entityType
+      - fieldName
+      - label
+      - section
+      - maturityLevel
+      - mandatoryCapable
+      properties:
+        entityType:
+          type: string
+          description: Entity type (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT)
+          example: BUSINESS_ENTITY
+        fieldName:
+          type: string
+          description: Field name key used in configuration (e.g. retentionPeriod, names.en)
+          example: retentionPeriod
+        label:
+          type: string
+          description: Human-readable display name for the field
+          example: Retention Period
+        section:
+          type: string
+          description: Methodology section this field belongs to (e.g. CORE, GDPR, DDD)
+          example: DATA_GOVERNANCE
+        maturityLevel:
+          type: string
+          enum: [BASIC, ADVANCED, EXPERT]
+          description: Maturity level of the field
+          example: BASIC
+        mandatoryCapable:
+          type: boolean
+          description: Whether this field can be configured as mandatory. When false the Mandatory option is not shown in the UI.
+          example: true
+        localeGroup:
+          type: boolean
+          description: >
+            True when this definition represents the show/hide control for all locales of a locale
+            field (e.g. "names", "descriptions"). When true the field only supports SHOWN/HIDDEN
+            visibility; mandatory is not applicable. Per-locale mandatory entries are separate
+            definitions with localeGroup false.
+          example: false
     UpdateRetentionPeriodRequest:
       type: object
       properties:

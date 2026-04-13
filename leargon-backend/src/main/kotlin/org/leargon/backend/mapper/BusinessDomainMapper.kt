@@ -73,6 +73,7 @@ open class BusinessDomainMapper(
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(domain.classificationAssignments))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
+            .hiddenFields(fc.hidden)
     }
 
     fun toLocalizedBusinessDomainResponse(

@@ -16,18 +16,15 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { FieldConfigurationEntryMaturityLevel } from './fieldConfigurationEntryMaturityLevel';
-import type { FieldConfigurationEntryVisibility } from './fieldConfigurationEntryVisibility';
 
-export interface FieldConfigurationEntry {
-  /** Entity type (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT) */
-  entityType: string;
-  /** Field name that is mandatory (e.g. retentionPeriod, businessDomain, descriptions) */
-  fieldName: string;
-  /** Whether the field is shown or hidden in entity detail panels */
-  visibility?: FieldConfigurationEntryVisibility;
-  /** Methodology section this field belongs to (e.g. CORE, GDPR, DDD) */
-  section?: string;
-  /** Maturity level of the field */
-  maturityLevel?: FieldConfigurationEntryMaturityLevel;
-}
+/**
+ * Maturity level of the field
+ */
+export type FieldConfigurationDefinitionMaturityLevel = typeof FieldConfigurationDefinitionMaturityLevel[keyof typeof FieldConfigurationDefinitionMaturityLevel];
+
+
+export const FieldConfigurationDefinitionMaturityLevel = {
+  BASIC: 'BASIC',
+  ADVANCED: 'ADVANCED',
+  EXPERT: 'EXPERT',
+} as const;

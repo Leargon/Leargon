@@ -8,6 +8,7 @@ import io.micronaut.security.annotation.Secured
 import jakarta.validation.Valid
 import org.leargon.backend.api.AdministrationApi
 import org.leargon.backend.model.AdministrationChangePasswordRequest
+import org.leargon.backend.model.FieldConfigurationDefinition
 import org.leargon.backend.model.FieldConfigurationEntry
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
@@ -73,6 +74,9 @@ open class AdministrationController(
     ) {
         userService.adminChangePassword(id, administrationChangePasswordRequest)
     }
+
+    @Secured("ROLE_ADMIN")
+    override fun getFieldConfigurationDefinitions(): List<FieldConfigurationDefinition> = fieldConfigurationService.getDefinitions()
 
     @Secured("ROLE_ADMIN")
     override fun getFieldConfigurations(): List<FieldConfigurationEntry> = fieldConfigurationService.getAll()
