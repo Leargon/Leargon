@@ -119,11 +119,10 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Expand the German description accordion
-    await page.getByRole('button', { name: /German|Deutsch/i }).first().click();
-
+    // The accordion preview shows the description in the summary without expanding.
+    // Use .first() because the same text also appears in the collapsed AccordionDetails DOM.
     await expect(
-      page.getByText('Deutsche Beschreibung für Akkordeon-Test'),
+      page.getByText('Deutsche Beschreibung für Akkordeon-Test').first(),
     ).toBeVisible({ timeout: 5_000 });
   });
 
@@ -136,22 +135,23 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.locator('button:has([data-testid="EditIcon"])').first().click();
 
     // Switch to the German tab in the TranslationEditor
-    await page.getByRole('tab', { name: /German|Deutsch/i }).click();
+    await page.getByRole('tab', { name: /Deutsch/i }).click();
 
-    // Enter a description
-    const deDescInput = page.getByLabel(/Description.*German|Beschreibung.*Deutsch/i);
-    await deDescInput.fill('E2E Deutsche Beschreibung');
+    // Enter a description — label is "Description (Deutsch)" (UI locale is English, DB locale is Deutsch)
+    await page.getByLabel(/Description.*Deutsch/i).fill('E2E Deutsche Beschreibung');
 
-    // Save
-    await page.locator('button:has([data-testid="CheckIcon"])').click();
-
-    // Reload the page to verify persistence
-    await page.reload();
+    // Save and wait for all pending API calls to finish before navigating away
+    await page.locator('button:has([data-testid="CheckIcon"])').first().click();
     await page.waitForLoadState('networkidle');
 
-    // Expand the German accordion and verify the text
-    await page.getByRole('button', { name: /German|Deutsch/i }).first().click();
-    await expect(page.getByText('E2E Deutsche Beschreibung')).toBeVisible({ timeout: 5_000 });
+    // Navigate fresh to verify persistence
+    await page.goto(`/processes/${processKey}`);
+    // Wait for the page to fully render (not just networkidle — React may still be hydrating)
+    await page.waitForSelector('text=Names & Descriptions', { timeout: 15_000 });
+
+    // After reload the accordion preview shows the saved text in the summary.
+    // Use .first() because the text also exists in the collapsed AccordionDetails DOM.
+    await expect(page.getByText('E2E Deutsche Beschreibung').first()).toBeVisible({ timeout: 5_000 });
   });
 
   test('description accordion preview is shown in summary when description exists', async ({ page }) => {
@@ -162,8 +162,9 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    // The preview caption should be visible without expanding the accordion
-    await expect(page.getByText('Preview text for summary test')).toBeVisible({ timeout: 5_000 });
+    // The preview caption should be visible without expanding the accordion.
+    // Use .first() because the same text also exists in the collapsed AccordionDetails DOM.
+    await expect(page.getByText('Preview text for summary test').first()).toBeVisible({ timeout: 5_000 });
   });
 });
 
