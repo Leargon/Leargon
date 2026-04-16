@@ -1,5 +1,6 @@
 package org.leargon.backend.service
 
+import io.micronaut.retry.annotation.Retryable
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
@@ -113,6 +114,7 @@ open class OrganisationalUnitService(
         return unit
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateNames(
         key: String,
@@ -132,6 +134,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateDescriptions(
         key: String,
@@ -146,6 +149,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessOwner(
         key: String,
@@ -166,6 +170,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessSteward(
         key: String,
@@ -184,6 +189,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateTechnicalCustodian(
         key: String,
@@ -202,6 +208,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateType(
         key: String,
@@ -213,6 +220,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateParents(
         key: String,
@@ -239,6 +247,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateExternalFields(
         key: String,
@@ -252,6 +261,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateDataAccessEntities(
         key: String,
@@ -264,6 +274,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateDataManipulationEntities(
         key: String,

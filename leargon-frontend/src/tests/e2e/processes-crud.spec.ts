@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
+import { createProcess, setProcessDescriptions, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -108,6 +108,68 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('E2E compliance page purpose', { exact: false })).toBeVisible();
+  });
+
+  test('non-default locale description is visible in accordion after being set via API', async ({ page }) => {
+    await setProcessDescriptions(processKey, [
+      { locale: 'en', text: 'English description for accordion test' },
+      { locale: 'de', text: 'Deutsche Beschreibung für Akkordeon-Test' },
+    ]);
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // The accordion preview shows the description in the summary without expanding.
+    // Use .first() because the same text also appears in the collapsed AccordionDetails DOM.
+    await expect(
+      page.getByText('Deutsche Beschreibung für Akkordeon-Test').first(),
+    ).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('description in non-default locale persists after edit and page reload', async ({ page }) => {
+    // Start with no descriptions
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForSelector('text=Names & Descriptions', { timeout: 10_000 });
+
+    // Click edit on the Names & Descriptions section
+    await page.locator('button:has([data-testid="EditIcon"])').first().click();
+
+    // Switch to the German tab in the TranslationEditor
+    await page.getByRole('tab', { name: /Deutsch/i }).click();
+
+    // Enter a description — label is "Description (Deutsch)" (UI locale is English, DB locale is Deutsch)
+    await page.getByLabel(/Description.*Deutsch/i).fill('E2E Deutsche Beschreibung');
+
+    // Click save and wait for the descriptions PUT to the backend to complete
+    const [descResponse] = await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/descriptions') && resp.request().method() === 'PUT',
+        { timeout: 15_000 },
+      ),
+      page.locator('button:has([data-testid="CheckIcon"])').first().click(),
+    ]);
+    expect(descResponse.status()).toBe(200);
+
+    // Navigate fresh to verify persistence
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForSelector('text=Names & Descriptions', { timeout: 10_000 });
+
+    // After reload the accordion preview shows the saved text in the summary.
+    // Use .first() because the text also exists in the collapsed AccordionDetails DOM.
+    await expect(page.getByText('E2E Deutsche Beschreibung').first()).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('description accordion preview is shown in summary when description exists', async ({ page }) => {
+    await setProcessDescriptions(processKey, [
+      { locale: 'en', text: 'Preview text for summary test' },
+    ]);
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // The preview caption should be visible without expanding the accordion.
+    // Use .first() because the same text also exists in the collapsed AccordionDetails DOM.
+    await expect(page.getByText('Preview text for summary test').first()).toBeVisible({ timeout: 5_000 });
   });
 });
 

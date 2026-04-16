@@ -705,6 +705,120 @@ class BusinessEntityControllerSpec extends Specification {
         e.status == HttpStatus.FORBIDDEN
     }
 
+    // =====================
+    // DESCRIPTION PERSISTENCE TESTS
+    // =====================
+
+    def "PUT /business-entities/{key}/descriptions should persist descriptions and be visible on GET"() {
+        given:
+        def userData = createUserWithToken("owner@test.com", "owner")
+        def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "MyEntity")])
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", createRequest).bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when:
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/descriptions",
+                        [new LocalizedText("en", "English description"), new LocalizedText("de", "Deutsche Beschreibung")])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then:
+        updateResponse.status() == HttpStatus.OK
+        updateResponse.body().descriptions.size() == 2
+        updateResponse.body().descriptions.find { it.locale == "en" }?.text == "English description"
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
+
+        and: "GET also returns the persisted descriptions"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        fetched.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
+    }
+
+    def "PUT /business-entities/{key}/descriptions should overwrite existing description when updated again"() {
+        given:
+        def userData = createUserWithToken("owner2@test.com", "owner2")
+        def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "MyEntity2")])
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", createRequest).bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        and: "first description update"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/descriptions",
+                        [new LocalizedText("en", "First English"), new LocalizedText("de", "Erste Deutsche")])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        when: "second description update overwrites previous"
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/descriptions",
+                        [new LocalizedText("en", "Updated English"), new LocalizedText("de", "Aktualisierte Deutsche")])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then:
+        updateResponse.status() == HttpStatus.OK
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
+
+        and: "GET returns the second update, not the first"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        fetched.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
+        fetched.body().descriptions.find { it.locale == "de" }?.text != "Erste Deutsche"
+    }
+
+    def "PUT /business-entities/{key}/descriptions after names update — UI save sequence — both should persist"() {
+        given:
+        def userData = createUserWithToken("owner3@test.com", "owner3")
+        def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "SequenceEntity")])
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", createRequest).bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "names are updated (first step of UI save sequence)"
+        def namesResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entityKey}/names",
+                        [new LocalizedText("en", "Updated Sequence Entity")])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        def newKey = namesResponse.body().key
+
+        and: "descriptions are updated with new key (second step of UI save sequence)"
+        def descResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${newKey}/descriptions",
+                        [new LocalizedText("de", "Beschreibung nach Namen-Update")])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then:
+        descResponse.status() == HttpStatus.OK
+        descResponse.body().descriptions.find { it.locale == "de" }?.text == "Beschreibung nach Namen-Update"
+
+        and: "GET confirms description is persisted"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${newKey}").bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+        fetched.body().descriptions.find { it.locale == "de" }?.text == "Beschreibung nach Namen-Update"
+    }
+
     def "GET /business-entities/{key}/versions/{v}/diff should return 404 for non-existent version"() {
         given: "a created entity"
         def userData = createUserWithToken("creator@example.com", "creator")

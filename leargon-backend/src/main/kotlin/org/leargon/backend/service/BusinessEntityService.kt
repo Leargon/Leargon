@@ -116,6 +116,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityParent(
         entityKey: String,
@@ -162,6 +163,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityDataOwner(
         entityKey: String,
@@ -192,6 +194,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun clearBusinessEntityDataOwner(
         entityKey: String,
@@ -212,6 +215,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityDataSteward(
         entityKey: String,
@@ -235,6 +239,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityTechnicalCustodian(
         entityKey: String,
@@ -258,6 +263,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityNames(
         entityKey: String,
@@ -295,6 +301,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessEntityDescriptions(
         entityKey: String,
@@ -322,6 +329,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateRetentionPeriod(
         entityKey: String,
@@ -336,6 +344,7 @@ open class BusinessEntityService(
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateStorageLocations(
         entityKey: String,

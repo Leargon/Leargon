@@ -1,6 +1,7 @@
 package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.micronaut.retry.annotation.Retryable
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessDomain
@@ -119,6 +120,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessDomainParent(
         domainKey: String,
@@ -157,6 +159,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessDomainVisionStatement(
         domainKey: String,
@@ -175,6 +178,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessDomainType(
         domainKey: String,
@@ -196,6 +200,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateOwningUnit(
         domainKey: String,
@@ -216,6 +221,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessDomainNames(
         domainKey: String,
@@ -241,6 +247,7 @@ open class BusinessDomainService(
         return domain
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateBusinessDomainDescriptions(
         domainKey: String,

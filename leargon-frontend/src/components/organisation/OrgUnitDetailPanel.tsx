@@ -448,7 +448,14 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   <Accordion key={l.localeCode} disableGutters variant="outlined"
                     sx={{ '&:before': { display: 'none' }, '&:not(:last-child)': { borderBottom: 0 } }}>
                     <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Typography variant="body2">{l.displayName}</Typography>
+                      <Box sx={{ overflow: 'hidden' }}>
+                        <Typography variant="body2">{l.displayName}</Typography>
+                        {desc && (
+                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                            {desc}
+                          </Typography>
+                        )}
+                      </Box>
                     </AccordionSummary>
                     <AccordionDetails>
                       <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
