@@ -8,8 +8,8 @@ class LocalizedText(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val that = other as LocalizedText
-        return locale == that.locale
+        return locale == that.locale && text == that.text
     }
 
-    override fun hashCode(): Int = locale.hashCode()
+    override fun hashCode(): Int = 31 * locale.hashCode() + text.hashCode()
 }

@@ -484,6 +484,167 @@ class ProcessControllerSpec extends Specification {
         response.body().descriptions[0].text == "A great process"
     }
 
+    def "PUT /processes/{key}/descriptions should persist multi-locale descriptions and be visible on GET"() {
+        given:
+        def userData = createUserWithToken("desc-multi@example.com", "descmulti")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Multi Desc Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when: "setting descriptions in two locales"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/descriptions", [
+                        new LocalizedText("en", "English description"),
+                        new LocalizedText("de", "Deutsche Beschreibung")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+
+        and: "fetching the process again"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${created.key}").bearerAuth(token),
+                ProcessResponse
+        ).body()
+
+        then: "both locale descriptions are persisted"
+        fetched.descriptions.size() == 2
+        fetched.descriptions.find { it.locale == "en" }?.text == "English description"
+        fetched.descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
+    }
+
+    def "PUT /processes/{key}/descriptions should persist a non-default locale description updated independently"() {
+        given: "a process created with English name only — German description added separately"
+        def userData = createUserWithToken("desc-de@example.com", "descde")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "German Desc Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when: "updating only the German description"
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/descriptions", [
+                        new LocalizedText("de", "Nur auf Deutsch")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+
+        then: "response immediately contains the German description"
+        updateResponse.status == HttpStatus.OK
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Nur auf Deutsch"
+
+        and: "subsequent GET also returns the German description"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${created.key}").bearerAuth(token),
+                ProcessResponse
+        ).body()
+        fetched.descriptions.find { it.locale == "de" }?.text == "Nur auf Deutsch"
+    }
+
+    def "PUT /processes/{key}/descriptions should overwrite existing description when updated again"() {
+        given:
+        def userData = createUserWithToken("desc-update@example.com", "descupdate")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Update Desc Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        and: "initial description set"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/descriptions", [
+                        new LocalizedText("en", "Original description"),
+                        new LocalizedText("de", "Ursprüngliche Beschreibung")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+
+        when: "German description is updated"
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/descriptions", [
+                        new LocalizedText("en", "Original description"),
+                        new LocalizedText("de", "Aktualisierte Beschreibung")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+
+        then: "PUT response immediately shows updated description"
+        updateResponse.status == HttpStatus.OK
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Beschreibung"
+
+        and: "subsequent GET also returns the updated description"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${created.key}").bearerAuth(token),
+                ProcessResponse
+        ).body()
+        fetched.descriptions.find { it.locale == "de" }?.text == "Aktualisierte Beschreibung"
+        fetched.descriptions.find { it.locale == "en" }?.text == "Original description"
+    }
+
+    def "PUT /processes/{key}/descriptions should return 403 for non-owner non-admin"() {
+        given:
+        def ownerData = createUserWithToken("desc-owner@example.com", "descowner")
+        def otherData = createUserWithToken("desc-other@example.com", "descother")
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Owner Process")]))
+                        .bearerAuth(ownerData.token), ProcessResponse).body()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/descriptions", [
+                        new LocalizedText("en", "Should be rejected")
+                ]).bearerAuth(otherData.token),
+                Map
+        )
+
+        then:
+        def e = thrown(io.micronaut.http.client.exceptions.HttpClientResponseException)
+        e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /processes/{key}/names followed by PUT descriptions should both persist — concurrent update scenario"() {
+        given:
+        def userData = createUserWithToken("desc-concurrent@example.com", "descconcurrent")
+        String token = userData.token
+
+        and:
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Concurrent Process")]))
+                        .bearerAuth(token), ProcessResponse).body()
+
+        when: "names update followed immediately by descriptions update (the typical UI save sequence)"
+        def namesResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${created.key}/names", [
+                        new LocalizedText("en", "Concurrent Process Updated")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+        def newKey = namesResponse.body().key
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${newKey}/descriptions", [
+                        new LocalizedText("en", "English description"),
+                        new LocalizedText("de", "Deutsche Beschreibung nach Umbenennung")
+                ]).bearerAuth(token),
+                ProcessResponse
+        )
+
+        then: "both names and descriptions are correctly stored"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${newKey}").bearerAuth(token),
+                ProcessResponse
+        ).body()
+        fetched.names.find { it.locale == "en" }?.text == "Concurrent Process Updated"
+        fetched.descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung nach Umbenennung"
+    }
+
     // =====================
     // INPUT/OUTPUT ENTITY TESTS
     // =====================

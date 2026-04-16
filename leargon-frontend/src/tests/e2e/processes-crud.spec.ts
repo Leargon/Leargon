@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
+import { createProcess, setProcessDescriptions, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -108,6 +108,62 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.getByText('E2E compliance page purpose', { exact: false })).toBeVisible();
+  });
+
+  test('non-default locale description is visible in accordion after being set via API', async ({ page }) => {
+    await setProcessDescriptions(processKey, [
+      { locale: 'en', text: 'English description for accordion test' },
+      { locale: 'de', text: 'Deutsche Beschreibung für Akkordeon-Test' },
+    ]);
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // Expand the German description accordion
+    await page.getByRole('button', { name: /German|Deutsch/i }).first().click();
+
+    await expect(
+      page.getByText('Deutsche Beschreibung für Akkordeon-Test'),
+    ).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('description in non-default locale persists after edit and page reload', async ({ page }) => {
+    // Start with no descriptions
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // Click edit on the Names & Descriptions section
+    await page.locator('button:has([data-testid="EditIcon"])').first().click();
+
+    // Switch to the German tab in the TranslationEditor
+    await page.getByRole('tab', { name: /German|Deutsch/i }).click();
+
+    // Enter a description
+    const deDescInput = page.getByLabel(/Description.*German|Beschreibung.*Deutsch/i);
+    await deDescInput.fill('E2E Deutsche Beschreibung');
+
+    // Save
+    await page.locator('button:has([data-testid="CheckIcon"])').click();
+
+    // Reload the page to verify persistence
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Expand the German accordion and verify the text
+    await page.getByRole('button', { name: /German|Deutsch/i }).first().click();
+    await expect(page.getByText('E2E Deutsche Beschreibung')).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('description accordion preview is shown in summary when description exists', async ({ page }) => {
+    await setProcessDescriptions(processKey, [
+      { locale: 'en', text: 'Preview text for summary test' },
+    ]);
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // The preview caption should be visible without expanding the accordion
+    await expect(page.getByText('Preview text for summary test')).toBeVisible({ timeout: 5_000 });
   });
 });
 

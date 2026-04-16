@@ -143,6 +143,7 @@ open class ProcessService(
         return process
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessNames(
         key: String,
@@ -172,6 +173,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessDescriptions(
         key: String,
@@ -191,6 +193,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateLegalBasis(
         key: String,
@@ -215,6 +218,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updatePurpose(
         key: String,
@@ -236,6 +240,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateSecurityMeasures(
         key: String,
@@ -257,6 +262,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessType(
         key: String,
@@ -281,6 +287,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessParent(
         key: String,
@@ -304,6 +311,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessOwner(
         key: String,
@@ -331,6 +339,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun clearProcessOwner(
         key: String,
@@ -352,6 +361,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessSteward(
         key: String,
@@ -376,6 +386,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessTechnicalCustodian(
         key: String,
@@ -400,6 +411,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateProcessCode(
         key: String,
@@ -426,6 +438,7 @@ open class ProcessService(
         return processMapper.toProcessResponse(process)
     }
 
+    @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun updateCrossBorderTransfers(
         processKey: String,

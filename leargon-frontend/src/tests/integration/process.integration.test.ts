@@ -122,6 +122,76 @@ describe('Process E2E', () => {
     expect(res.data.descriptions[0].text).toBe('A great FE description');
   });
 
+  it('should persist non-default locale description and return it on subsequent GET', async () => {
+    const proc = await createProcess(client, 'FE German Desc Process');
+
+    // Set German description only (no English description)
+    const updateRes = await client.put(`/processes/${proc.key}/descriptions`, [
+      { locale: 'de', text: 'Deutsche Beschreibung' },
+    ]);
+    expect(updateRes.status).toBe(200);
+    const deDesc = (updateRes.data.descriptions as { locale: string; text: string }[]).find(
+      (d) => d.locale === 'de',
+    );
+    expect(deDesc?.text).toBe('Deutsche Beschreibung');
+
+    // Verify it persists via a separate GET request
+    const getRes = await client.get<ProcessResponse>(`/processes/${proc.key}`);
+    expect(getRes.status).toBe(200);
+    const deDescAfterGet = (getRes.data.descriptions as { locale: string; text: string }[] | null)?.find(
+      (d) => d.locale === 'de',
+    );
+    expect(deDescAfterGet?.text).toBe('Deutsche Beschreibung');
+  });
+
+  it('should persist updated non-default locale description when re-edited', async () => {
+    const proc = await createProcess(client, 'FE German Desc Update Process');
+
+    // Initial descriptions: English + German
+    await client.put(`/processes/${proc.key}/descriptions`, [
+      { locale: 'en', text: 'English description' },
+      { locale: 'de', text: 'Erste Beschreibung' },
+    ]);
+
+    // Update only German (the exact scenario that was causing the deadlock bug)
+    const updateRes = await client.put(`/processes/${proc.key}/descriptions`, [
+      { locale: 'en', text: 'English description' },
+      { locale: 'de', text: 'Aktualisierte Beschreibung' },
+    ]);
+    expect(updateRes.status).toBe(200);
+
+    // GET must reflect the update
+    const getRes = await client.get<ProcessResponse>(`/processes/${proc.key}`);
+    const deDesc = (getRes.data.descriptions as { locale: string; text: string }[] | null)?.find(
+      (d) => d.locale === 'de',
+    );
+    expect(deDesc?.text).toBe('Aktualisierte Beschreibung');
+  });
+
+  it('should persist descriptions after names-then-descriptions sequential update (UI save sequence)', async () => {
+    const proc = await createProcess(client, 'FE Sequential Save Process');
+
+    // Step 1: update names (this changes the key)
+    const namesRes = await client.put(`/processes/${proc.key}/names`, [
+      { locale: 'en', text: 'FE Sequential Save Process Renamed' },
+    ]);
+    expect(namesRes.status).toBe(200);
+    const newKey = (namesRes.data as ProcessResponse).key;
+
+    // Step 2: update descriptions using the new key (exactly how the UI does it)
+    const descRes = await client.put(`/processes/${newKey}/descriptions`, [
+      { locale: 'en', text: 'English description after rename' },
+      { locale: 'de', text: 'Deutsche Beschreibung nach Umbenennung' },
+    ]);
+    expect(descRes.status).toBe(200);
+
+    // Verify both are persisted
+    const getRes = await client.get<ProcessResponse>(`/processes/${newKey}`);
+    const descriptions = getRes.data.descriptions as { locale: string; text: string }[] | null;
+    expect(descriptions?.find((d) => d.locale === 'en')?.text).toBe('English description after rename');
+    expect(descriptions?.find((d) => d.locale === 'de')?.text).toBe('Deutsche Beschreibung nach Umbenennung');
+  });
+
   // =====================
   // FLOW - SAVE & GET
   // =====================

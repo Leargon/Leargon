@@ -177,6 +177,13 @@ export const saveProcessFlow = (
 ): Promise<Record<string, unknown>> =>
   apiFetch(`/processes/${processKey}/flow`, 'PUT', { nodes, tracks }, as);
 
+export const setProcessDescriptions = (
+  processKey: string,
+  descriptions: Array<{ locale: string; text: string }>,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/descriptions`, 'PUT', descriptions, as);
+
 export const createDomainEvent = (
   publishingBoundedContextKey: string,
   name: string,

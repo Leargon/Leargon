@@ -917,4 +917,79 @@ class OrganisationalUnitControllerSpec extends Specification {
         response.status == HttpStatus.OK
         response.body().classificationAssignments == null || response.body().classificationAssignments.isEmpty()
     }
+
+    // =====================
+    // DESCRIPTION PERSISTENCE TESTS
+    // =====================
+
+    def "PUT /organisational-units/{key}/descriptions should persist descriptions and be visible on GET"() {
+        given:
+        def adminToken = createAdminToken()
+        def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "TestUnit")])
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", createRequest).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        def unitKey = createResponse.body().key
+
+        when:
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/descriptions",
+                        [new LocalizedText("en", "English description"), new LocalizedText("de", "Deutsche Beschreibung")])
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then:
+        updateResponse.status() == HttpStatus.OK
+        updateResponse.body().descriptions.size() == 2
+        updateResponse.body().descriptions.find { it.locale == "en" }?.text == "English description"
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
+
+        and: "GET also returns the persisted descriptions"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/organisational-units/${unitKey}").bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        fetched.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
+    }
+
+    def "PUT /organisational-units/{key}/descriptions should overwrite existing description when updated again"() {
+        given:
+        def adminToken = createAdminToken()
+        def createRequest = new CreateOrganisationalUnitRequest([new LocalizedText("en", "TestUnit2")])
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", createRequest).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        def unitKey = createResponse.body().key
+
+        and: "first description update"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/descriptions",
+                        [new LocalizedText("en", "First English"), new LocalizedText("de", "Erste Deutsche")])
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        when: "second description update overwrites previous"
+        def updateResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/descriptions",
+                        [new LocalizedText("en", "Updated English"), new LocalizedText("de", "Aktualisierte Deutsche")])
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then:
+        updateResponse.status() == HttpStatus.OK
+        updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
+
+        and: "GET returns the second update, not the first"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/organisational-units/${unitKey}").bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        fetched.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
+        fetched.body().descriptions.find { it.locale == "de" }?.text != "Erste Deutsche"
+    }
 }
