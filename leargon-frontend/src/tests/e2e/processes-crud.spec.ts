@@ -129,7 +129,7 @@ test.describe('Business Process CRUD — Admin', () => {
   test('description in non-default locale persists after edit and page reload', async ({ page }) => {
     // Start with no descriptions
     await page.goto(`/processes/${processKey}`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text=Names & Descriptions', { timeout: 10_000 });
 
     // Click edit on the Names & Descriptions section
     await page.locator('button:has([data-testid="EditIcon"])').first().click();
@@ -140,14 +140,19 @@ test.describe('Business Process CRUD — Admin', () => {
     // Enter a description — label is "Description (Deutsch)" (UI locale is English, DB locale is Deutsch)
     await page.getByLabel(/Description.*Deutsch/i).fill('E2E Deutsche Beschreibung');
 
-    // Save and wait for all pending API calls to finish before navigating away
-    await page.locator('button:has([data-testid="CheckIcon"])').first().click();
-    await page.waitForLoadState('networkidle');
+    // Click save and wait for the descriptions PUT to the backend to complete
+    const [descResponse] = await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/descriptions') && resp.request().method() === 'PUT',
+        { timeout: 15_000 },
+      ),
+      page.locator('button:has([data-testid="CheckIcon"])').first().click(),
+    ]);
+    expect(descResponse.status()).toBe(200);
 
     // Navigate fresh to verify persistence
     await page.goto(`/processes/${processKey}`);
-    // Wait for the page to fully render (not just networkidle — React may still be hydrating)
-    await page.waitForSelector('text=Names & Descriptions', { timeout: 15_000 });
+    await page.waitForSelector('text=Names & Descriptions', { timeout: 10_000 });
 
     // After reload the accordion preview shows the saved text in the summary.
     // Use .first() because the text also exists in the collapsed AccordionDetails DOM.

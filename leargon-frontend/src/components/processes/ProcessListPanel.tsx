@@ -129,7 +129,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   getLocalizedText,
   matchesFilter,
 }) => {
-  const [open, setOpen] = useState(!filter);
+  const [open, setOpen] = useState(false);
   const hasChildren = process.children && process.children.length > 0;
   const isSelected = process.key === selectedKey;
   const filteredChildren = [...(process.children || [])].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);

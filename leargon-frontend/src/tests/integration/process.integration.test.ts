@@ -111,6 +111,21 @@ describe('Process E2E', () => {
     expect(res.data.names[0].text).toBe('FE New Name');
   });
 
+  it('should persist name change when slug stays the same (same-key update)', async () => {
+    // "Fe Test" and "FE TEST" produce the same slug "fe-test"
+    const proc = await createProcess(client, 'Fe Test');
+
+    const res = await client.put(`/processes/${proc.key}/names`, [
+      { locale: 'en', text: 'FE TEST' }, // different text, same slug
+    ]);
+    expect(res.status).toBe(200);
+    expect(res.data.key).toBe('fe-test'); // key unchanged
+
+    // Verify via a subsequent GET that the new text was actually persisted
+    const getRes = await client.get(`/processes/fe-test`);
+    expect(getRes.data.names[0].text).toBe('FE TEST');
+  });
+
   it('should update process descriptions', async () => {
     const proc = await createProcess(client, 'FE Desc Process');
 
