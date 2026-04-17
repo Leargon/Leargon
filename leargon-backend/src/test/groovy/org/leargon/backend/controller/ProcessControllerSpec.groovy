@@ -597,7 +597,7 @@ class ProcessControllerSpec extends Specification {
                         .bearerAuth(ownerData.token), ProcessResponse).body()
 
         when:
-        def response = client.toBlocking().exchange(
+        client.toBlocking().exchange(
                 HttpRequest.PUT("/processes/${created.key}/descriptions", [
                         new LocalizedText("en", "Should be rejected")
                 ]).bearerAuth(otherData.token),
@@ -605,7 +605,7 @@ class ProcessControllerSpec extends Specification {
         )
 
         then:
-        def e = thrown(io.micronaut.http.client.exceptions.HttpClientResponseException)
+        def e = thrown(HttpClientResponseException)
         e.status == HttpStatus.FORBIDDEN
     }
 
