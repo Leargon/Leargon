@@ -10,7 +10,8 @@ test.describe('Classification multiValue — Settings', () => {
     await page.getByRole('menuitem', { name: 'New Classification' }).click();
 
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Name (English)').fill(uid('PW MultiValue Class'));
+    const name = uid('PW MultiValue Class');
+    await dialog.getByLabel('Name (English)').fill(name);
 
     // Enable multi-value toggle
     await dialog.locator('input[type="checkbox"][role="checkbox"], input[type="checkbox"]').last().check();
@@ -18,7 +19,8 @@ test.describe('Classification multiValue — Settings', () => {
     await dialog.getByRole('button', { name: 'Create' }).click();
 
     // The new classification card should appear with the multi-value chip
-    await expect(page.getByText('multi-value')).toBeVisible({ timeout: 10_000 });
+    const card = page.locator('.MuiPaper-outlined').filter({ hasText: name });
+    await expect(card.getByText('multi-value')).toBeVisible({ timeout: 10_000 });
   });
 
   test('single-value classification does not show multi-value chip', async ({ page }) => {
