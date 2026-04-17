@@ -728,7 +728,7 @@ class BusinessEntityControllerSpec extends Specification {
         )
 
         then:
-        updateResponse.status() == HttpStatus.OK
+        updateResponse.status == HttpStatus.OK
         updateResponse.body().descriptions.size() == 2
         updateResponse.body().descriptions.find { it.locale == "en" }?.text == "English description"
         updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
@@ -768,7 +768,7 @@ class BusinessEntityControllerSpec extends Specification {
         )
 
         then:
-        updateResponse.status() == HttpStatus.OK
+        updateResponse.status == HttpStatus.OK
         updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
 
         and: "GET returns the second update, not the first"
@@ -808,7 +808,7 @@ class BusinessEntityControllerSpec extends Specification {
         )
 
         then:
-        descResponse.status() == HttpStatus.OK
+        descResponse.status == HttpStatus.OK
         descResponse.body().descriptions.find { it.locale == "de" }?.text == "Beschreibung nach Namen-Update"
 
         and: "GET confirms description is persisted"

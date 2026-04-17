@@ -12,11 +12,14 @@ import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPag
 import { useGetAllCapabilities } from '../api/generated/capability/capability';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
+import { useAuth } from '../context/AuthContext';
 
 const CapabilitiesPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
@@ -28,8 +31,8 @@ const CapabilitiesPage: React.FC = () => {
   const isEmpty = !isLoading && caps.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed, mode]);
+    if (isAdmin && isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isAdmin, isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -56,7 +59,7 @@ const CapabilitiesPage: React.FC = () => {
             icon={<AccountTree sx={{ fontSize: 64 }} />}
             title={isEmpty ? t('wizard.onboarding.capabilities.emptyTitle') : 'Select a capability'}
             subtitle={isEmpty ? t('wizard.onboarding.capabilities.emptyDescription') : 'Choose a capability from the list to view its details'}
-            action={isEmpty ? (
+            action={isAdmin && isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.capabilities.emptyButton')}
               </Button>

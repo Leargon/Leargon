@@ -10,12 +10,15 @@ import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPag
 import { useGetAllProcesses } from '../api/generated/process/process';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
+import { useAuth } from '../context/AuthContext';
 
 const ProcessLandscapeDiagram = lazy(() => import('../components/diagrams/ProcessLandscapeDiagram'));
 
 const ProcessesPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
@@ -27,8 +30,8 @@ const ProcessesPage: React.FC = () => {
   const isEmpty = !isLoading && processes.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed, mode]);
+    if (isAdmin && isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isAdmin, isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -54,7 +57,7 @@ const ProcessesPage: React.FC = () => {
             icon={<Timeline sx={{ fontSize: 64 }} />}
             title={isEmpty ? t('wizard.onboarding.processLandscape.emptyTitle') : t('pages.selectProcess')}
             subtitle={isEmpty ? t('wizard.onboarding.processLandscape.emptyDescription') : t('pages.chooseProcess')}
-            action={isEmpty ? (
+            action={isAdmin && isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.processLandscape.emptyButton')}
               </Button>

@@ -117,7 +117,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().processKey == process.key
         response.body().nodes == []
         response.body().tracks == []
@@ -139,7 +139,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().processKey == process.key
         response.body().nodes.size() == 2
         response.body().nodes.any { it.nodeType == "START_EVENT" }
@@ -163,7 +163,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().nodes.size() == 2
     }
 
@@ -191,7 +191,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().nodes.size() == 3
         response.body().nodes.any { it.nodeType == "TASK" && it.label == "Do something" }
     }
@@ -212,7 +212,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().bpmnXml == null
     }
 
@@ -232,7 +232,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().bpmnXml != null
         response.body().bpmnXml.contains("bpmn:definitions")
     }
@@ -271,7 +271,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().nodes.size() == 2
     }
 
@@ -335,7 +335,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def taskNode = response.body().nodes.find { it.nodeType == "TASK" }
         taskNode != null
         taskNode.isSubProcess == true
@@ -374,7 +374,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def taskNode = response.body().nodes.find { it.nodeType == "TASK" }
         taskNode.isSubProcess == false
     }
@@ -407,7 +407,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def xml = response.body().bpmnXml as String
         xml.contains("bpmn:intermediateCatchEvent")
         xml.contains("bpmn:timerEventDefinition")
@@ -442,7 +442,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         response.body().nodes.size() == 4
         response.body().tracks.size() == 2
         response.body().tracks.any { it.gatewayNodeId == "sp1" && it.trackIndex == 0 }
@@ -477,7 +477,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         // Root nodes should only contain the 4 root-level nodes
         response.body().nodes.size() == 4
         response.body().nodes.every { it.trackId == null }
@@ -521,7 +521,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def xml = response.body().bpmnXml as String
         xml.contains("bpmn:exclusiveGateway")
         // Two exclusive gateways (split + join)
@@ -557,7 +557,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def xml = response.body().bpmnXml as String
         xml.contains("bpmn:parallelGateway")
         xml.count("bpmn:parallelGateway") == 2
@@ -592,7 +592,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def xml = response.body().bpmnXml as String
         xml.contains("bpmn:inclusiveGateway")
         xml.count("bpmn:inclusiveGateway") == 2
@@ -624,7 +624,7 @@ class ProcessDiagramControllerSpec extends Specification {
         )
 
         then:
-        response.status() == HttpStatus.OK
+        response.status == HttpStatus.OK
         def xml = response.body().bpmnXml as String
         xml.contains("bpmn:messageEventDefinition")
         xml.contains("bpmn:signalEventDefinition")

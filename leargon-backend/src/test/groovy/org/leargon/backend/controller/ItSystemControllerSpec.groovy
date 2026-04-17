@@ -88,7 +88,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.CREATED
+        resp.status == HttpStatus.CREATED
         resp.body().key == "crm-system"
         resp.body().names[0].text == "CRM System"
         resp.body().owningUnit == null
@@ -131,7 +131,7 @@ class ItSystemControllerSpec extends Specification {
             Argument.listOf(ItSystemResponse))
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().size() >= 2
     }
 
@@ -146,7 +146,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().key == created.key
         resp.body().names[0].text == "HR System"
     }
@@ -181,7 +181,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().names[0].text == "New System"
         resp.body().vendor == "Acme Corp"
     }
@@ -216,7 +216,7 @@ class ItSystemControllerSpec extends Specification {
             HttpRequest.DELETE("/it-systems/${created.key}").bearerAuth(adminToken))
 
         then:
-        del.status() == HttpStatus.NO_CONTENT
+        del.status == HttpStatus.NO_CONTENT
 
         when:
         client.toBlocking().exchange(
@@ -258,7 +258,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.CREATED
+        resp.status == HttpStatus.CREATED
         resp.body().owningUnit != null
         resp.body().owningUnit.key == orgUnit.key
     }
@@ -279,7 +279,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().owningUnit != null
         resp.body().owningUnit.key == orgUnit.key
     }
@@ -305,7 +305,7 @@ class ItSystemControllerSpec extends Specification {
             ItSystemResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().owningUnit == null
     }
 

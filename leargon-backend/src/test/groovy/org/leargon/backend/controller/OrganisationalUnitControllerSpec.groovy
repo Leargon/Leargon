@@ -941,7 +941,7 @@ class OrganisationalUnitControllerSpec extends Specification {
         )
 
         then:
-        updateResponse.status() == HttpStatus.OK
+        updateResponse.status == HttpStatus.OK
         updateResponse.body().descriptions.size() == 2
         updateResponse.body().descriptions.find { it.locale == "en" }?.text == "English description"
         updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Deutsche Beschreibung"
@@ -981,7 +981,7 @@ class OrganisationalUnitControllerSpec extends Specification {
         )
 
         then:
-        updateResponse.status() == HttpStatus.OK
+        updateResponse.status == HttpStatus.OK
         updateResponse.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
 
         and: "GET returns the second update, not the first"

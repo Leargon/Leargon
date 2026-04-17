@@ -86,7 +86,7 @@ class CapabilityControllerSpec extends Specification {
             CapabilityResponse)
 
         then:
-        resp.status() == HttpStatus.CREATED
+        resp.status == HttpStatus.CREATED
         resp.body().key == "order-management"
         resp.body().names[0].text == "Order Management"
     }
@@ -128,7 +128,7 @@ class CapabilityControllerSpec extends Specification {
             Argument.listOf(CapabilityResponse))
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().size() >= 2
     }
 
@@ -143,7 +143,7 @@ class CapabilityControllerSpec extends Specification {
             CapabilityResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().key == created.key
         resp.body().names[0].text == "Billing Management"
     }
@@ -177,7 +177,7 @@ class CapabilityControllerSpec extends Specification {
             CapabilityResponse)
 
         then:
-        resp.status() == HttpStatus.OK
+        resp.status == HttpStatus.OK
         resp.body().names[0].text == "New Name"
     }
 
@@ -211,7 +211,7 @@ class CapabilityControllerSpec extends Specification {
             HttpRequest.DELETE("/capabilities/${created.key}").bearerAuth(adminToken))
 
         then:
-        del.status() == HttpStatus.NO_CONTENT
+        del.status == HttpStatus.NO_CONTENT
 
         when:
         client.toBlocking().exchange(HttpRequest.GET("/capabilities/${created.key}").bearerAuth(adminToken), Map)
@@ -252,7 +252,7 @@ class CapabilityControllerSpec extends Specification {
             CapabilityResponse)
 
         then:
-        child.status() == HttpStatus.CREATED
+        child.status == HttpStatus.CREATED
         child.body().parent?.key == parent.key
     }
 
@@ -274,7 +274,7 @@ class CapabilityControllerSpec extends Specification {
                 [processKeys: [processKey]]).bearerAuth(adminToken))
 
         then:
-        linkResp.status() == HttpStatus.NO_CONTENT
+        linkResp.status == HttpStatus.NO_CONTENT
 
         and:
         def get = client.toBlocking().exchange(
