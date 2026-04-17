@@ -11,12 +11,15 @@ import { tokenStorage } from '../utils/tokenStorage';
 import { useGetAllBusinessDomains } from '../api/generated/business-domain/business-domain';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
+import { useAuth } from '../context/AuthContext';
 
 const ContextMapDiagram = lazy(() => import('../components/diagrams/ContextMapDiagram'));
 
 const DomainsPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
@@ -28,8 +31,8 @@ const DomainsPage: React.FC = () => {
   const isEmpty = !isLoading && domains.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed, mode]);
+    if (isAdmin && isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isAdmin, isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -77,7 +80,7 @@ const DomainsPage: React.FC = () => {
             icon={<Category sx={{ fontSize: 64 }} />}
             title={isEmpty ? t('wizard.onboarding.domainModel.emptyTitle') : t('pages.selectDomain')}
             subtitle={isEmpty ? t('wizard.onboarding.domainModel.emptyDescription') : t('pages.chooseDomain')}
-            action={isEmpty ? (
+            action={isAdmin && isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.domainModel.emptyButton')}
               </Button>

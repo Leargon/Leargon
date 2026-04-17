@@ -399,8 +399,8 @@ const ProcessingRegisterPage: React.FC = () => {
   const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => (p as any).legalBasis);
 
   useEffect(() => {
-    if (hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
-  }, [hasNoLegalBases, complianceWizardDismissed, mode]);
+    if (isAdmin && hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
+  }, [isAdmin, hasNoLegalBases, complianceWizardDismissed, mode]);
 
   const handleComplianceWizardClose = () => {
     setComplianceWizardOpen(false);
@@ -468,7 +468,7 @@ const ProcessingRegisterPage: React.FC = () => {
           label={<Typography variant="body2">{t('compliance.filterMissingOnly')}</Typography>}
         />
         <Box sx={{ flex: 1 }} />
-        {hasNoLegalBases && (
+        {isAdmin && hasNoLegalBases && (
           <Button variant="contained" size="small" onClick={() => setComplianceWizardOpen(true)}>
             {t('wizard.onboarding.compliance.emptyButton')}
           </Button>

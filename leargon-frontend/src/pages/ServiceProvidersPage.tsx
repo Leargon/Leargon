@@ -29,8 +29,8 @@ const ServiceProvidersPage: React.FC = () => {
   const isEmpty = !isLoading && providers.length === 0;
 
   useEffect(() => {
-    if (isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
-  }, [isEmpty, setupWizardDismissed, mode]);
+    if (isAdmin && isEmpty && !setupWizardDismissed && mode !== 'express') setSetupWizardOpen(true);
+  }, [isAdmin, isEmpty, setupWizardDismissed, mode]);
 
   const handleSetupClose = () => {
     setSetupWizardOpen(false);
@@ -84,7 +84,7 @@ const ServiceProvidersPage: React.FC = () => {
             icon={<Handshake sx={{ fontSize: 64 }} />}
             title={isEmpty ? t('wizard.onboarding.serviceProviders.emptyTitle') : t('serviceProvider.selectTitle')}
             subtitle={isEmpty ? t('wizard.onboarding.serviceProviders.emptyDescription') : t('serviceProvider.selectSubtitle')}
-            action={isEmpty ? (
+            action={isAdmin && isEmpty ? (
               <Button variant="contained" size="small" onClick={() => setSetupWizardOpen(true)}>
                 {t('wizard.onboarding.serviceProviders.emptyButton')}
               </Button>

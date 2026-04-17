@@ -269,4 +269,12 @@ test.describe('Business Process CRUD — Viewer', () => {
 
     await expect(page.getByRole('button', { name: 'Delete' })).not.toBeVisible();
   });
+
+  test('does not see setup wizard when list is empty', async ({ page }) => {
+    // Navigate to processes page — even if empty, no wizard should appear for a viewer
+    await page.goto('/processes');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+  });
 });
