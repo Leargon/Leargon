@@ -193,3 +193,17 @@ export const createDomainEvent = (
     publishingBoundedContextKey,
     names: [{ locale: 'en', text: name }],
   }, as);
+
+export const assignOwningUnitToEntity = (
+  entityKey: string,
+  owningUnitKey: string | null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/business-entities/${entityKey}/owning-unit`, 'PUT', { owningUnitKey }, as);
+
+export const assignOwningUnitToProcess = (
+  processKey: string,
+  owningUnitKey: string | null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/owning-unit`, 'PUT', { owningUnitKey }, as);

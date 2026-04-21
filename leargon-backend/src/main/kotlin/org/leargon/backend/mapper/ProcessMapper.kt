@@ -16,6 +16,7 @@ import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
 import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -23,13 +24,15 @@ import java.time.ZonedDateTime
 @Singleton
 open class ProcessMapper(
     private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper,
     private val capabilityMapper: CapabilityMapper,
     private val processFlowNodeRepository: ProcessFlowNodeRepository
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
+        val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
-            fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
+            fieldConfigurationService.compute("BUSINESS_PROCESS", disabledMethodologies) { fieldName ->
                 when {
                     fieldName == "names" -> {
                         process.names.isNotEmpty()
@@ -46,7 +49,7 @@ open class ProcessMapper(
                     fieldName == "processOwner" -> {
                         (
                             process.processOwner
-                                ?: (process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit)
+                                ?: (process.owningUnit ?: process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit)
                                     ?.businessOwner
                         ) != null
                     }
@@ -89,10 +92,13 @@ open class ProcessMapper(
                     }
                 }
             }
-        val owningUnit = process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit
-        val effectiveOwner = process.processOwner ?: owningUnit?.businessOwner
-        val effectiveSteward = process.processSteward ?: owningUnit?.businessSteward
-        val effectiveCustodian = process.technicalCustodian ?: owningUnit?.technicalCustodian
+        val effectiveOwningUnit =
+            process.owningUnit
+                ?: process.boundedContext?.owningUnit
+                ?: process.boundedContext?.domain?.owningUnit
+        val effectiveOwner = process.processOwner ?: effectiveOwningUnit?.businessOwner
+        val effectiveSteward = process.processSteward ?: effectiveOwningUnit?.businessSteward
+        val effectiveCustodian = process.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
         val effectiveOutputEntities = collectEffectiveEntities(process) { it.outputEntities }
         val allEffectiveEntities = (effectiveInputEntities + effectiveOutputEntities).distinctBy { it.key }
@@ -111,7 +117,8 @@ open class ProcessMapper(
             LocalizedTextMapper.toModel(process.descriptions),
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
-        ).processOwner(UserMapper.toUserSummary(effectiveOwner))
+        ).owningUnit(process.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
+            .processOwner(UserMapper.toUserSummary(effectiveOwner))
             .processSteward(UserMapper.toUserSummary(effectiveSteward))
             .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
             .code(process.code)

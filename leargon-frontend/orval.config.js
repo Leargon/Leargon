@@ -9,7 +9,6 @@ export default defineConfig({
             schemas: './src/api/generated/model',
             client: 'react-query',
             mode: 'tags-split',
-            prettier: true,
             override: {
                 mutator: {
                     path: './src/api/customAxios.ts',

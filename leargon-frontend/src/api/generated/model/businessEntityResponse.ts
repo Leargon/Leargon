@@ -22,12 +22,15 @@ import type { BusinessEntityRelationshipResponse } from './businessEntityRelatio
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse';
 import type { LocalizedText } from './localizedText';
+import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse';
 import type { UserSummaryResponse } from './userSummaryResponse';
 
 export interface BusinessEntityResponse {
   /** BusinessEntity key (hierarchical slug) */
   key: string;
-  /** Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  /** Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship) */
+  owningUnit?: OrganisationalUnitSummaryResponse | null;
+  /** Effective data owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set) */
   dataOwner?: UserSummaryResponse | null;
   /** True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context */
   ownerIsExplicit: boolean;

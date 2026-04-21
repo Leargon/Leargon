@@ -10,16 +10,19 @@ import org.leargon.backend.api.AdministrationApi
 import org.leargon.backend.model.AdministrationChangePasswordRequest
 import org.leargon.backend.model.FieldConfigurationDefinition
 import org.leargon.backend.model.FieldConfigurationEntry
+import org.leargon.backend.model.MethodologyConfigEntry
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.MethodologyConfigurationService
 import org.leargon.backend.service.UserService
 
 @Controller
 open class AdministrationController(
     private val userService: UserService,
-    private val fieldConfigurationService: FieldConfigurationService
+    private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService
 ) : AdministrationApi {
     @Secured("ROLE_ADMIN")
     override fun createUser(
@@ -76,7 +79,10 @@ open class AdministrationController(
     }
 
     @Secured("ROLE_ADMIN")
-    override fun getFieldConfigurationDefinitions(): List<FieldConfigurationDefinition> = fieldConfigurationService.getDefinitions()
+    override fun getFieldConfigurationDefinitions(): List<FieldConfigurationDefinition> {
+        val disabled = methodologyConfigurationService.getDisabledMethodologies()
+        return fieldConfigurationService.getDefinitions(disabled)
+    }
 
     @Secured("ROLE_ADMIN")
     override fun getFieldConfigurations(): List<FieldConfigurationEntry> = fieldConfigurationService.getAll()
@@ -85,4 +91,12 @@ open class AdministrationController(
     override fun replaceFieldConfigurations(
         @Body @Valid entries: List<FieldConfigurationEntry>
     ): List<FieldConfigurationEntry> = fieldConfigurationService.replace(entries)
+
+    @Secured("ROLE_ADMIN")
+    override fun getMethodologyConfigurations(): List<MethodologyConfigEntry> = methodologyConfigurationService.getAll()
+
+    @Secured("ROLE_ADMIN")
+    override fun replaceMethodologyConfigurations(
+        @Body @Valid methodologyConfigEntries: List<MethodologyConfigEntry>
+    ): List<MethodologyConfigEntry> = methodologyConfigurationService.replace(methodologyConfigEntries)
 }

@@ -38,7 +38,8 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_ENTITY", "names.{locale}", "Name", "CORE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "descriptions.{locale}", "Description", "CORE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "dataOwner", "Data Owner", "CORE", "BASIC", true),
-            FieldDef("BUSINESS_ENTITY", "dataSteward", "Data Steward", "CORE", "BASIC", true),
+            FieldDef("BUSINESS_ENTITY", "owningUnit", "Owning Unit", "CORE", "BASIC", false),
+            FieldDef("BUSINESS_ENTITY", "dataSteward", "Data Steward", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "technicalCustodian", "Technical Custodian", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "parent", "Parent Entity", "CORE", "BASIC", false),
             FieldDef("BUSINESS_ENTITY", "retentionPeriod", "Retention Period", "DATA_GOVERNANCE", "BASIC", true),
@@ -46,9 +47,9 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_ENTITY", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "qualityRules", "Data Quality Rules", "DATA_QUALITY", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "boundedContext", "Bounded Context", "DDD", "ADVANCED", true),
-            FieldDef("BUSINESS_ENTITY", "interfaceEntities", "Interface Entities", "DDD", "ADVANCED", false),
-            FieldDef("BUSINESS_ENTITY", "implementationEntities", "Implementation Entities", "DDD", "ADVANCED", false),
-            FieldDef("BUSINESS_ENTITY", "relationships", "Relationships", "DDD", "ADVANCED", false),
+            FieldDef("BUSINESS_ENTITY", "interfaceEntities", "Interface Entities", "DATA_GOVERNANCE", "ADVANCED", false),
+            FieldDef("BUSINESS_ENTITY", "implementationEntities", "Implementation Entities", "DATA_GOVERNANCE", "ADVANCED", false),
+            FieldDef("BUSINESS_ENTITY", "relationships", "Relationships", "DATA_GOVERNANCE", "ADVANCED", false),
             FieldDef("BUSINESS_ENTITY", "translationLinks", "Translation Links", "DDD", "ADVANCED", false),
             // ── BUSINESS_DOMAIN ──────────────────────────────────────────────────
             FieldDef("BUSINESS_DOMAIN", "names.{locale}", "Name", "CORE", "BASIC", true),
@@ -67,7 +68,8 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_PROCESS", "processType", "Process Type", "CORE", "BASIC", true),
             FieldDef("BUSINESS_PROCESS", "code", "Process Code", "CORE", "BASIC", true),
             FieldDef("BUSINESS_PROCESS", "processOwner", "Process Owner", "CORE", "BASIC", true),
-            FieldDef("BUSINESS_PROCESS", "processSteward", "Process Steward", "CORE", "BASIC", true),
+            FieldDef("BUSINESS_PROCESS", "owningUnit", "Owning Unit", "CORE", "BASIC", false),
+            FieldDef("BUSINESS_PROCESS", "processSteward", "Process Steward", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "technicalCustodian", "Technical Custodian", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "parent", "Parent Process", "CORE", "BASIC", false),
             FieldDef("BUSINESS_PROCESS", "inputEntities", "Input Data Entities", "DATA_FLOW", "BASIC", true),
@@ -80,16 +82,16 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_PROCESS", "crossBorderTransfers", "Cross-Border Transfers", "GDPR", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "boundedContext", "Bounded Context", "DDD", "ADVANCED", true),
             FieldDef("BUSINESS_PROCESS", "capabilities", "Capabilities", "BCM", "ADVANCED", true),
-            FieldDef("BUSINESS_PROCESS", "itSystems", "IT Systems", "TECHNICAL", "ADVANCED", true),
-            FieldDef("BUSINESS_PROCESS", "serviceProviders", "Service Providers", "TECHNICAL", "EXPERT", true),
-            FieldDef("BUSINESS_PROCESS", "processDiagram", "Process Diagram", "TECHNICAL", "ADVANCED", false),
+            FieldDef("BUSINESS_PROCESS", "itSystems", "IT Systems", "GDPR", "ADVANCED", true),
+            FieldDef("BUSINESS_PROCESS", "serviceProviders", "Service Providers", "GDPR", "EXPERT", true),
+            FieldDef("BUSINESS_PROCESS", "processDiagram", "Process Diagram", "DATA_FLOW", "ADVANCED", false),
             FieldDef("BUSINESS_PROCESS", "calledProcesses", "Called Sub-Processes", "BCM", "ADVANCED", false),
             // ── ORGANISATIONAL_UNIT ──────────────────────────────────────────────
             FieldDef("ORGANISATIONAL_UNIT", "names.{locale}", "Name", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "descriptions.{locale}", "Description", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "unitType", "Unit Type", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "businessOwner", "Business Owner", "CORE", "BASIC", true),
-            FieldDef("ORGANISATIONAL_UNIT", "businessSteward", "Business Steward", "CORE", "BASIC", true),
+            FieldDef("ORGANISATIONAL_UNIT", "businessSteward", "Business Steward", "CORE", "ADVANCED", true),
             FieldDef("ORGANISATIONAL_UNIT", "technicalCustodian", "Technical Custodian", "CORE", "ADVANCED", true),
             FieldDef("ORGANISATIONAL_UNIT", "parents", "Parent Units", "CORE", "BASIC", false),
             FieldDef("ORGANISATIONAL_UNIT", "isExternal", "Is External", "EXTERNAL", "BASIC", false),
@@ -101,6 +103,67 @@ open class FieldConfigurationService(
             FieldDef("ORGANISATIONAL_UNIT", "serviceProviders", "Service Providers", "DATA_ACCESS", "EXPERT", false),
             FieldDef("ORGANISATIONAL_UNIT", "boundedContexts", "Bounded Contexts", "DDD", "ADVANCED", false),
             FieldDef("ORGANISATIONAL_UNIT", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true)
+        )
+
+    // methodology key → entity type → field patterns (same as MethodologyConfigurationService)
+    private val methodologyPatterns: Map<String, Map<String, List<String>>> =
+        mapOf(
+            "DATA_GOVERNANCE" to
+                mapOf(
+                    "BUSINESS_ENTITY" to
+                        listOf(
+                            "descriptions",
+                            "dataOwner",
+                            "owningUnit",
+                            "dataSteward",
+                            "technicalCustodian",
+                            "section:DATA_GOVERNANCE",
+                            "section:DATA_QUALITY"
+                        ),
+                ),
+            "PROCESS_GOVERNANCE" to
+                mapOf(
+                    "BUSINESS_PROCESS" to
+                        listOf(
+                            "descriptions",
+                            "processOwner",
+                            "owningUnit",
+                            "processType",
+                            "code",
+                            "processSteward",
+                            "technicalCustodian",
+                            "section:DATA_FLOW",
+                        ),
+                ),
+            "GDPR" to mapOf("BUSINESS_PROCESS" to listOf("section:GDPR")),
+            "DDD" to
+                mapOf(
+                    "BUSINESS_ENTITY" to listOf("section:DDD"),
+                    "BUSINESS_DOMAIN" to
+                        listOf(
+                            "type",
+                            "descriptions",
+                            "owningUnit",
+                            "section:DATA_GOVERNANCE",
+                            "section:DDD",
+                            "section:STRATEGIC",
+                        ),
+                    "BUSINESS_PROCESS" to listOf("section:DDD"),
+                    "ORGANISATIONAL_UNIT" to listOf("section:DDD"),
+                ),
+            "BCM" to mapOf("BUSINESS_PROCESS" to listOf("section:BCM")),
+            "TEAM_TOPOLOGIES" to
+                mapOf(
+                    "ORGANISATIONAL_UNIT" to
+                        listOf(
+                            "unitType",
+                            "descriptions",
+                            "businessOwner",
+                            "businessSteward",
+                            "technicalCustodian",
+                            "section:DATA_GOVERNANCE"
+                        ),
+                ),
         )
 
     /**
@@ -173,47 +236,46 @@ open class FieldConfigurationService(
      *      mandatoryCapable=true — control whether each individual locale is mandatory.
      */
     @Transactional
-    open fun getDefinitions(): List<FieldConfigurationDefinition> {
+    open fun getDefinitions(disabledMethodologies: Set<String> = emptySet()): List<FieldConfigurationDefinition> {
         val localeCodes =
             supportedLocaleRepository
                 .findByIsActiveOrderBySortOrder(true)
                 .map { it.localeCode }
-        val classificationKeys =
-            classificationRepository
-                .findAll()
-                .map { it.key }
+        val classifications = classificationRepository.findAll()
 
-        return fieldInventory.flatMap { def ->
-            when {
-                def.fieldName.contains("{locale}") -> {
-                    val base = def.fieldName.substringBefore(".{locale}")
-                    // Group entry: controls visibility for all locales together
-                    val groupEntry = toDefinition(def, base, def.label, mandatoryCapable = false, localeGroup = true)
-                    // Per-locale entries: control mandatory per locale
-                    val localeEntries =
-                        localeCodes.map { locale ->
-                            toDefinition(
-                                def,
-                                def.fieldName.replace("{locale}", locale),
-                                "${def.label} ($locale)",
-                                mandatoryCapable = def.mandatoryCapable,
-                                localeGroup = false
-                            )
-                        }
-                    listOf(groupEntry) + localeEntries
-                }
+        return fieldInventory
+            .filter { def -> !isFieldExcluded(def.entityType, def.fieldName.substringBefore(".{"), def.section, disabledMethodologies) }
+            .flatMap { def ->
+                when {
+                    def.fieldName.contains("{locale}") -> {
+                        val base = def.fieldName.substringBefore(".{locale}")
+                        val groupEntry = toDefinition(def, base, def.label, mandatoryCapable = false, localeGroup = true)
+                        val localeEntries =
+                            localeCodes.map { locale ->
+                                toDefinition(
+                                    def,
+                                    def.fieldName.replace("{locale}", locale),
+                                    "${def.label} ($locale)",
+                                    mandatoryCapable = def.mandatoryCapable,
+                                    localeGroup = false
+                                )
+                            }
+                        listOf(groupEntry) + localeEntries
+                    }
 
-                def.fieldName.contains("{classKey}") -> {
-                    classificationKeys.map { key ->
-                        toDefinition(def, def.fieldName.replace("{classKey}", key), "${def.label}: $key")
+                    def.fieldName.contains("{classKey}") -> {
+                        classifications
+                            .filter { it.assignableTo == def.entityType }
+                            .map { c ->
+                                toDefinition(def, def.fieldName.replace("{classKey}", c.key), "${def.label}: ${c.key}")
+                            }
+                    }
+
+                    else -> {
+                        listOf(toDefinition(def, def.fieldName, def.label))
                     }
                 }
-
-                else -> {
-                    listOf(toDefinition(def, def.fieldName, def.label))
-                }
             }
-        }
     }
 
     data class FieldConfigResult(
@@ -224,33 +286,55 @@ open class FieldConfigurationService(
 
     fun compute(
         entityType: String,
+        disabledMethodologies: Set<String> = emptySet(),
         isPresent: (String) -> Boolean
     ): FieldConfigResult {
         val configs = fieldConfigurationRepository.findByEntityType(entityType)
-        if (configs.isEmpty()) return FieldConfigResult(null, null, null)
+        if (configs.isEmpty() && disabledMethodologies.isEmpty()) return FieldConfigResult(null, null, null)
 
         val localeCodes =
             supportedLocaleRepository
                 .findByIsActiveOrderBySortOrder(true)
                 .map { it.localeCode }
 
-        // Expand hidden group entries (e.g. "names" HIDDEN → "names.en", "names.de", …)
-        val rawHidden = configs.filter { it.visibility == "HIDDEN" }.map { it.fieldName }
-        val hiddenNames =
-            rawHidden.flatMap { fieldName ->
-                if (fieldName in localeGroupBases) {
-                    localeCodes.map { "$fieldName.$it" }
-                } else {
-                    listOf(fieldName)
-                }
+        // Build the set of fields excluded by disabled methodologies (expanded for locale groups)
+        val methodologyExcluded: Set<String> =
+            if (disabledMethodologies.isEmpty()) {
+                emptySet()
+            } else {
+                fieldInventory
+                    .filter { def ->
+                        def.entityType == entityType &&
+                            isFieldExcluded(entityType, def.fieldName.substringBefore(".{"), def.section, disabledMethodologies)
+                    }.flatMap { def ->
+                        if (def.fieldName.contains("{locale}")) {
+                            val base = def.fieldName.substringBefore(".{locale}")
+                            listOf(base) + localeCodes.map { "$base.$it" }
+                        } else {
+                            listOf(def.fieldName)
+                        }
+                    }.toSet()
             }
 
-        // Mandatory names: per-locale entries (SHOWN) and regular fields (SHOWN)
-        // Locale group entries are never in mandatoryNames — they only control visibility
+        // Expand hidden group entries (e.g. "names" HIDDEN → "names.en", "names.de", …)
+        val rawHidden = configs.filter { it.visibility == "HIDDEN" && it.fieldName !in methodologyExcluded }.map { it.fieldName }
+        val hiddenNames =
+            rawHidden
+                .flatMap { fieldName ->
+                    if (fieldName in localeGroupBases) {
+                        localeCodes.map { "$fieldName.$it" }
+                    } else {
+                        listOf(fieldName)
+                    }
+                }.filter { it !in methodologyExcluded }
+
+        // Mandatory names: per-locale entries (SHOWN) and regular fields (SHOWN), excluding methodology-disabled fields
         val mandatoryNames =
             configs
-                .filter { it.visibility != "HIDDEN" && it.fieldName !in localeGroupBases }
+                .filter { it.visibility != "HIDDEN" && it.fieldName !in localeGroupBases && it.fieldName !in methodologyExcluded }
                 .map { it.fieldName }
+
+        if (mandatoryNames.isEmpty() && hiddenNames.isEmpty()) return FieldConfigResult(null, null, null)
 
         val missing = mandatoryNames.filter { !isPresent(it) }
         return FieldConfigResult(
@@ -258,6 +342,25 @@ open class FieldConfigurationService(
             missing.ifEmpty { null },
             hiddenNames.ifEmpty { null }
         )
+    }
+
+    private fun isFieldExcluded(
+        entityType: String,
+        fieldBase: String,
+        section: String,
+        disabledMethodologies: Set<String>
+    ): Boolean {
+        for (methodology in disabledMethodologies) {
+            val patterns = methodologyPatterns[methodology]?.get(entityType) ?: continue
+            for (pattern in patterns) {
+                if (pattern.startsWith("section:")) {
+                    if (section == pattern.removePrefix("section:")) return true
+                } else {
+                    if (fieldBase == pattern || fieldBase.startsWith("$pattern.")) return true
+                }
+            }
+        }
+        return false
     }
 
     private fun toEntry(config: FieldConfiguration): FieldConfigurationEntry =

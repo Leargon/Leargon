@@ -8,6 +8,7 @@ import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -15,14 +16,16 @@ import java.time.ZonedDateTime
 @Singleton
 open class OrganisationalUnitMapper(
     private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper
 ) {
     fun toResponse(
         unit: OrganisationalUnit,
         executingProcesses: List<Process> = emptyList()
     ): OrganisationalUnitResponse {
+        val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
-            fieldConfigurationService.compute("ORGANISATIONAL_UNIT") { fieldName ->
+            fieldConfigurationService.compute("ORGANISATIONAL_UNIT", disabledMethodologies) { fieldName ->
                 when {
                     fieldName == "names" -> {
                         unit.names.isNotEmpty()

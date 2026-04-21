@@ -38,6 +38,11 @@ export interface CreateProcessRequest {
      * @nullable
      */
   processOwnerUsername?: string | null;
+  /**
+     * Key of the organisational unit directly owning this process
+     * @nullable
+     */
+  owningUnitKey?: string | null;
   /** Keys of business entities to add as inputs */
   inputEntityKeys?: string[];
   /** Keys of business entities to add as outputs */

@@ -105,3 +105,5 @@ databaseChangeLog:
       file: db/changelog/changes/051-widen-retention-period-column.yaml
   - include:
       file: db/changelog/changes/052-extend-field-configurations.yaml
+  - include:
+      file: db/changelog/changes/053-add-owning-unit-to-entities-and-processes.yaml

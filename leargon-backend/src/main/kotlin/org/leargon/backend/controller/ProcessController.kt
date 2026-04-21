@@ -14,6 +14,7 @@ import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.AddProcessEntityRequest
 import org.leargon.backend.model.AssignBoundedContextRequest
+import org.leargon.backend.model.AssignOwningUnitRequest
 import org.leargon.backend.model.ClassificationAssignmentRequest
 import org.leargon.backend.model.CreateProcessRequest
 import org.leargon.backend.model.DpiaResponse
@@ -179,6 +180,14 @@ open class ProcessController(
     ): ProcessResponse {
         val currentUser = getCurrentUser()
         return processService.assignBoundedContext(key, request.boundedContextKey, currentUser)
+    }
+
+    override fun assignOwningUnitToProcess(
+        key: String,
+        @Valid @Body request: AssignOwningUnitRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.assignOwningUnit(key, request.owningUnitKey, currentUser)
     }
 
     override fun assignClassificationsToProcess(

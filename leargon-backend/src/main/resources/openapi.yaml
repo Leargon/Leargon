@@ -279,6 +279,57 @@ paths:
           description: User not found
         '401':
           description: Not authenticated
+  /administration/methodology-configurations:
+    get:
+      tags:
+      - Administration
+      summary: Get all methodology configurations
+      description: Returns enabled/disabled state for all six methodologies. Requires ROLE_ADMIN.
+      operationId: getMethodologyConfigurations
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of methodology configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MethodologyConfigEntry'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+    put:
+      tags:
+      - Administration
+      summary: Replace all methodology configurations
+      description: Replaces the enabled/disabled state for all methodologies. Requires ROLE_ADMIN.
+      operationId: replaceMethodologyConfigurations
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/MethodologyConfigEntry'
+      responses:
+        '200':
+          description: Updated list of methodology configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MethodologyConfigEntry'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /administration/field-configurations/definitions:
     get:
       tags:
@@ -2387,6 +2438,49 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /business-entities/{key}/owning-unit:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Assign owning unit to business entity
+      description: Assigns an owning organisational unit directly to a business entity. Only the Data Owner or an Administrator can assign.
+      operationId: assignOwningUnitToBusinessEntity
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignOwningUnitRequest'
+      responses:
+        '200':
+          description: Owning unit assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner or an Administrator can assign owning unit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity or organisational unit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
   /business-entities/{key}/interfaces:
     put:
       tags:
@@ -4243,6 +4337,45 @@ paths:
           description: Not authorized
         '404':
           description: Process or domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/owning-unit:
+    put:
+      tags:
+      - Process
+      summary: Assign owning unit to process
+      description: Assigns an owning organisational unit directly to a process. Only the process owner or an admin can assign.
+      operationId: assignOwningUnitToProcess
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Process key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignOwningUnitRequest'
+      responses:
+        '200':
+          description: Owning unit assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process or organisational unit not found
           content:
             application/json:
               schema:
@@ -6241,6 +6374,13 @@ components:
           format: password
           minLength: 8
           description: New password (minimum 8 characters)
+    AssignOwningUnitRequest:
+      type: object
+      properties:
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit to assign as owning unit (null to unassign)
     AssignBoundedContextRequest:
       type: object
       properties:
@@ -6632,10 +6772,14 @@ components:
           type: string
           description: BusinessEntity key (hierarchical slug)
           example: sales.retail.customer
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship)
         dataOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Effective data owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+          description: Effective data owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
         ownerIsExplicit:
           type: boolean
           description: True if dataOwner was explicitly set; false if computed from the owning org unit of the bounded context
@@ -7081,6 +7225,10 @@ components:
           type: string
           nullable: true
           description: Username of the data owner (defaults to creator if not specified)
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit directly owning this entity
         parentKey:
           type: string
           nullable: true
@@ -7168,6 +7316,10 @@ components:
           type: string
           nullable: true
           description: Username of the process owner (defaults to creator if not specified)
+        owningUnitKey:
+          type: string
+          nullable: true
+          description: Key of the organisational unit directly owning this process
         inputEntityKeys:
           type: array
           items:
@@ -7614,10 +7766,14 @@ components:
           description: Technical and organisational security measures (TOM) — localised
           items:
             $ref: '#/components/schemas/LocalizedText'
+        owningUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+          nullable: true
+          description: Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship)
         processOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set)
+          description: Effective process owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
         ownerIsExplicit:
           type: boolean
           description: True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context
@@ -9774,3 +9930,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProcessSummaryResponse'
+    MethodologyConfigEntry:
+      type: object
+      required:
+      - key
+      - enabled
+      properties:
+        key:
+          type: string
+          enum: [DATA_GOVERNANCE, PROCESS_GOVERNANCE, GDPR, DDD, BCM, TEAM_TOPOLOGIES]
+          description: Methodology identifier
+          example: GDPR
+        enabled:
+          type: boolean
+          description: Whether this methodology is enabled for the organisation
+          example: true

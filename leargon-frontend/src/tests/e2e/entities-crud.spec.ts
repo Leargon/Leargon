@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createEntity, uid, OWNER } from './api-setup';
+import { createEntity, createOrgUnit, assignOwningUnitToEntity, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -109,6 +109,40 @@ test.describe('Business Entity CRUD — Owner', () => {
     await expect(
       dataOwnerSection.locator('..').locator('button:has([data-testid="EditIcon"])'),
     ).not.toBeVisible();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Owning unit tests
+// ──────────────────────────────────────────────────────────────────────────────
+
+test.describe('Business Entity — Owning Unit', () => {
+  let entityKey: string;
+
+  test.beforeEach(async () => {
+    const entity = await createEntity(uid('PW OU Entity'));
+    entityKey = entity.key as string;
+  });
+
+  test('owning unit chip is visible after assignment via API', async ({ page }) => {
+    const unit = await createOrgUnit(uid('PW Engineering Unit'));
+    await assignOwningUnitToEntity(entityKey, unit.key as string);
+
+    await page.goto(`/entities/${entityKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText(unit.key as string, { exact: false }).or(
+      page.getByText('Engineering Unit', { exact: false }),
+    ).first()).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('owning unit shows Not assigned when not set', async ({ page }) => {
+    await page.goto(`/entities/${entityKey}`);
+    await page.waitForLoadState('networkidle');
+
+    const owningUnitRow = page.getByText('Owning Unit', { exact: true });
+    await expect(owningUnitRow).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Not assigned').first()).toBeVisible({ timeout: 10_000 });
   });
 });
 

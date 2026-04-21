@@ -26,6 +26,7 @@ import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRelationshipRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.TranslationLinkRepository
 import org.leargon.backend.repository.UserRepository
 import org.leargon.backend.util.SlugUtil
@@ -38,6 +39,7 @@ open class BusinessEntityService(
     private val userRepository: UserRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val boundedContextRepository: BoundedContextRepository,
+    private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val translationLinkRepository: TranslationLinkRepository,
     private val localeService: LocaleService,
     private val businessEntityMapper: BusinessEntityMapper
@@ -96,6 +98,13 @@ open class BusinessEntityService(
             entity.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
         entity.retentionPeriod = request.retentionPeriod
+
+        if (request.owningUnitKey != null) {
+            entity.owningUnit =
+                organisationalUnitRepository
+                    .findByKey(request.owningUnitKey!!)
+                    .orElseThrow { ResourceNotFoundException("Owning unit not found") }
+        }
 
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = entity.names.find { it.locale == defaultLocale?.localeCode }?.text
@@ -622,6 +631,41 @@ open class BusinessEntityService(
             currentUser,
             "UPDATE",
             "BoundedContext assignment changed from '$oldName' to '$newName'"
+        )
+
+        entity = getBusinessEntityByKey(entityKey)
+        return businessEntityMapper.toBusinessEntityResponse(entity)
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun assignOwningUnit(
+        entityKey: String,
+        owningUnitKey: String?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        checkEditPermission(entity, currentUser)
+
+        val oldName = entity.owningUnit?.getName("en") ?: "none"
+
+        entity.owningUnit =
+            if (owningUnitKey != null) {
+                organisationalUnitRepository
+                    .findByKey(owningUnitKey)
+                    .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
+            } else {
+                null
+            }
+
+        entity = businessEntityRepository.update(entity)
+
+        val newName = entity.owningUnit?.getName("en") ?: "none"
+        createBusinessEntityVersion(
+            entity,
+            currentUser,
+            "UPDATE",
+            "Owning unit assignment changed from '$oldName' to '$newName'"
         )
 
         entity = getBusinessEntityByKey(entityKey)

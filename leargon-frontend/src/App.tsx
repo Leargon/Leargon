@@ -8,6 +8,7 @@ import Box from '@mui/material/Box';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { LocaleProvider } from './context/LocaleContext';
+import { MethodologyProvider } from './context/MethodologyContext';
 import { ThemeModeProvider, useThemeMode } from './context/ThemeContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import AppShell from './components/layout/AppShell';
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
       { path: 'settings/locales', element: <SettingsPage /> },
       { path: 'settings/classifications', element: <SettingsPage /> },
       { path: 'settings/field-configurations', element: <SettingsPage /> },
+      { path: 'settings/methodologies', element: <SettingsPage /> },
       { path: 'service-providers', element: <ServiceProvidersPage /> },
       { path: 'service-providers/:key', element: <ServiceProvidersPage /> },
       { path: 'compliance', element: <ProcessingRegisterPage /> },
@@ -126,11 +128,13 @@ const ThemedRoutes: React.FC = () => {
       <CssBaseline />
       <ErrorBoundary>
         <AuthProvider>
-          <LocaleProvider>
-            <Suspense fallback={<PageLoader />}>
-              <RouterProvider router={router} />
-            </Suspense>
-          </LocaleProvider>
+          <MethodologyProvider>
+            <LocaleProvider>
+              <Suspense fallback={<PageLoader />}>
+                <RouterProvider router={router} />
+              </Suspense>
+            </LocaleProvider>
+          </MethodologyProvider>
         </AuthProvider>
       </ErrorBoundary>
     </ThemeProvider>

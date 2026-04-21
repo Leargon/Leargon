@@ -46,6 +46,7 @@ import {
   useUpdateBusinessEntityTechnicalCustodian,
   useUpdateBusinessEntityParent,
   useAssignBoundedContextToBusinessEntity,
+  useAssignOwningUnitToBusinessEntity,
   useUpdateBusinessEntityInterfaces,
   useAssignClassificationsToEntity,
   useDeleteBusinessEntity,
@@ -72,6 +73,7 @@ import {
 } from '../../api/generated/translation-link/translation-link';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllProcesses } from '../../api/generated/process/process';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
@@ -98,6 +100,7 @@ import type {
   ProcessResponse,
   UserResponse,
   TranslationLinkResponse,
+  OrganisationalUnitResponse,
 } from '../../api/generated/model';
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -146,6 +149,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
   const { data: allUsersResponse } = useGetAllUsers();
   const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
+  const allUnits = (allUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetEntityDpia(entityKey, {
     query: { retry: false },
   });
@@ -219,6 +224,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateTechnicalCustodian = useUpdateBusinessEntityTechnicalCustodian();
   const updateParent = useUpdateBusinessEntityParent();
   const assignBoundedContext = useAssignBoundedContextToBusinessEntity();
+  const assignOwningUnit = useAssignOwningUnitToBusinessEntity();
   const createTranslationLink = useCreateTranslationLink();
   const updateTranslationLink = useUpdateTranslationLink();
   const deleteTranslationLink = useDeleteTranslationLink();
@@ -298,6 +304,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     },
   });
 
+  // Owning unit inline edit
+  const owningUnitEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await assignOwningUnit.mutateAsync({ key: entityKey, data: { owningUnitKey: val } });
+      invalidate();
+    },
+  });
+
   // Bounded context inline edit
   const boundedContextEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
@@ -337,6 +351,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     dataStewardEdit.cancel();
     technicalCustodianEdit.cancel();
     parentEdit.cancel();
+    owningUnitEdit.cancel();
     boundedContextEdit.cancel();
     classEdit.cancel();
     interfacesEdit.cancel();
@@ -629,6 +644,30 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             </Box>
           )}
         </PropRow>}
+        {fields.owningUnit && !isHidden('owningUnit') && (
+          <PropRow label={t('common.owningUnit')} canEdit={isOwnerOrAdmin} isEditing={owningUnitEdit.isEditing}
+            onEdit={() => owningUnitEdit.startEdit(entity.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
+            onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
+            {owningUnitEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allUnits}
+                  getOptionLabel={(u) => getLocalizedText(u.names, u.key)}
+                  value={allUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
+                  onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key ?? null)}
+                  renderInput={(params) => <TextField {...params} size="small" placeholder={t('common.searchUnit')} sx={{ width: 300 }} />}
+                  isOptionEqualToValue={(o, v) => o.key === v.key}
+                  size="small"
+                />
+                {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+              </Box>
+            ) : entity.owningUnit ? (
+              <Chip label={entity.owningUnit.name} size="small" variant="outlined" />
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notAssigned')}</Typography>
+            )}
+          </PropRow>
+        )}
         {fields.dataSteward && !isHidden('dataSteward') && (
           <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}

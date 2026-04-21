@@ -138,6 +138,13 @@ open class ProcessService(
             }
         }
 
+        if (request.owningUnitKey != null) {
+            process.owningUnit =
+                organisationalUnitRepository
+                    .findByKey(request.owningUnitKey!!)
+                    .orElseThrow { ResourceNotFoundException("Owning unit not found") }
+        }
+
         process = processRepository.save(process)
         createProcessVersion(process, currentUser, "CREATE", "Initial creation")
         return process
@@ -488,6 +495,41 @@ open class ProcessService(
             currentUser,
             "UPDATE",
             "BoundedContext assignment changed from '$oldName' to '$newName'"
+        )
+
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun assignOwningUnit(
+        key: String,
+        owningUnitKey: String?,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        checkEditPermission(process, currentUser)
+
+        val oldName = process.owningUnit?.getName("en") ?: "none"
+
+        process.owningUnit =
+            if (owningUnitKey != null) {
+                organisationalUnitRepository
+                    .findByKey(owningUnitKey)
+                    .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
+            } else {
+                null
+            }
+
+        process = processRepository.update(process)
+
+        val newName = process.owningUnit?.getName("en") ?: "none"
+        createProcessVersion(
+            process,
+            currentUser,
+            "UPDATE",
+            "Owning unit assignment changed from '$oldName' to '$newName'"
         )
 
         process = getProcessByKey(process.key)

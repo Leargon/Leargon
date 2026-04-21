@@ -5,11 +5,12 @@ import {
   Category, AccountTree, Timeline, CorporateFare,
   Handshake, FactCheck, GppGood, Hub,
   FlashOn, Computer,
-  People, Language, Label, Tune, AutoAwesomeMosaic,
-  Home, Groups, Map, HelpOutlined,
+  People, Language, Label, AutoAwesomeMosaic,
+  Home, Groups, Map, HelpOutlined, Schema,
 } from '@mui/icons-material';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useTranslation } from 'react-i18next';
+import { useMethodology } from '../../context/MethodologyContext';
 
 export const SIDEBAR_WIDTH = 220;
 
@@ -65,7 +66,7 @@ const SETTINGS_ITEMS: NavItem[] = [
   { labelKey: 'nav.users', path: '/settings/users', icon: <People /> },
   { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language /> },
   { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label /> },
-  { labelKey: 'nav.fieldConfig', path: '/settings/field-configurations', icon: <Tune /> },
+{ labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
 ];
 
 const NavItemButton: React.FC<{ item: NavItem }> = ({ item }) => {
@@ -114,6 +115,7 @@ const Sidebar: React.FC = () => {
   const { role } = useRole();
   const location = useLocation();
   const { t } = useTranslation();
+  const { isNavPathEnabled } = useMethodology();
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
 
   if (isSettingsRoute) {
@@ -145,7 +147,7 @@ const Sidebar: React.FC = () => {
     );
   }
 
-  const extraItems = ROLE_EXTRA_ITEMS[role];
+  const extraItems = ROLE_EXTRA_ITEMS[role].filter((item) => isNavPathEnabled(item.path));
   const sectionLabelKey = ROLE_SECTION_LABEL[role];
 
   return (

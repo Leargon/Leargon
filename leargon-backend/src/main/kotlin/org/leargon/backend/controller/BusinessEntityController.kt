@@ -12,6 +12,7 @@ import org.leargon.backend.api.BusinessEntityApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.AssignBoundedContextRequest
+import org.leargon.backend.model.AssignOwningUnitRequest
 import org.leargon.backend.model.BusinessEntityResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
@@ -85,6 +86,14 @@ open class BusinessEntityController(
     ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.assignBoundedContext(key, assignBoundedContextRequest.boundedContextKey, currentUser)
+    }
+
+    override fun assignOwningUnitToBusinessEntity(
+        key: String,
+        @Valid @Body assignOwningUnitRequest: AssignOwningUnitRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.assignOwningUnit(key, assignOwningUnitRequest.owningUnitKey, currentUser)
     }
 
     override fun updateBusinessEntityParent(

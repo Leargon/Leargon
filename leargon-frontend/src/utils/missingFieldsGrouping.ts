@@ -1,5 +1,16 @@
 import type { FieldConfigurationDefinition } from '../api/generated/model';
 
+export const SECTION_TO_METHODOLOGY: Partial<Record<string, string>> = {
+  DATA_GOVERNANCE: 'DATA_GOVERNANCE',
+  DATA_QUALITY: 'DATA_GOVERNANCE',
+  DATA_FLOW: 'PROCESS_GOVERNANCE',
+  GDPR: 'GDPR',
+  DDD: 'DDD',
+  STRATEGIC: 'DDD',
+  BCM: 'BCM',
+  TECHNICAL: 'TECHNICAL',
+};
+
 export const SECTION_LABELS: Record<string, string> = {
   CORE: 'Core',
   DATA_GOVERNANCE: 'Data Governance',
@@ -45,6 +56,7 @@ export function groupMissingBySection(
   missingFields: string[],
   definitions: FieldConfigurationDefinition[],
   entityType: string,
+  isSectionEnabled?: (section: string) => boolean,
 ): FieldGroup[] {
   const sectionMap = new Map<string, string>();
   definitions
@@ -59,7 +71,7 @@ export function groupMissingBySection(
   }
 
   return SECTION_ORDER
-    .filter((s) => grouped.has(s))
+    .filter((s) => grouped.has(s) && (isSectionEnabled ? isSectionEnabled(s) : true))
     .map((s) => ({
       section: s,
       label: SECTION_LABELS[s] ?? s,
