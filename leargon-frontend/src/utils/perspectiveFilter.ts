@@ -73,14 +73,15 @@ export const ENTITY_FIELDS_BY_PERSPECTIVE: Record<Perspective, {
   dataSteward: boolean;
   technicalCustodian: boolean;
   parentEntity: boolean;
+  owningUnit: boolean;
   boundedContext: boolean;
   retentionPeriod: boolean;
 }> = {
-  gdpr:       { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: true  },
-  governance: { dataSteward: true,  technicalCustodian: true,  parentEntity: true,  boundedContext: true,  retentionPeriod: true  },
-  ddd:        { dataSteward: false, technicalCustodian: false, parentEntity: true,  boundedContext: true,  retentionPeriod: false },
-  orgdev:     { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: false },
-  bcm:        { dataSteward: false, technicalCustodian: false, parentEntity: false, boundedContext: false, retentionPeriod: false },
+  gdpr:       { dataSteward: false, technicalCustodian: false, parentEntity: false, owningUnit: false, boundedContext: false, retentionPeriod: true  },
+  governance: { dataSteward: true,  technicalCustodian: true,  parentEntity: true,  owningUnit: true,  boundedContext: true,  retentionPeriod: true  },
+  ddd:        { dataSteward: false, technicalCustodian: false, parentEntity: true,  owningUnit: false, boundedContext: true,  retentionPeriod: false },
+  orgdev:     { dataSteward: false, technicalCustodian: false, parentEntity: false, owningUnit: true,  boundedContext: false, retentionPeriod: false },
+  bcm:        { dataSteward: false, technicalCustodian: false, parentEntity: false, owningUnit: false, boundedContext: false, retentionPeriod: false },
 };
 
 /**
@@ -93,13 +94,14 @@ export const PROCESS_FIELDS_BY_PERSPECTIVE: Record<Perspective, {
   code: boolean;
   processType: boolean;
   legalBasis: boolean;
+  owningUnit: boolean;
   boundedContext: boolean;
 }> = {
-  gdpr:       { processSteward: false, technicalCustodian: false, code: false, processType: false, legalBasis: true,  boundedContext: false },
-  governance: { processSteward: true,  technicalCustodian: true,  code: true,  processType: true,  legalBasis: true,  boundedContext: true  },
-  ddd:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: true  },
-  orgdev:     { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: false },
-  bcm:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, boundedContext: false },
+  gdpr:       { processSteward: false, technicalCustodian: false, code: false, processType: false, legalBasis: true,  owningUnit: false, boundedContext: false },
+  governance: { processSteward: true,  technicalCustodian: true,  code: true,  processType: true,  legalBasis: true,  owningUnit: true,  boundedContext: true  },
+  ddd:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, owningUnit: false, boundedContext: true  },
+  orgdev:     { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, owningUnit: true,  boundedContext: false },
+  bcm:        { processSteward: false, technicalCustodian: false, code: true,  processType: true,  legalBasis: false, owningUnit: false, boundedContext: false },
 };
 
 /**

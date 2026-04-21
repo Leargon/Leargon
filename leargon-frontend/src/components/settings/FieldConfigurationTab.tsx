@@ -48,13 +48,20 @@ const ENTITY_TYPES = [
   { value: 'ORGANISATIONAL_UNIT', label: 'Organisational Unit' },
 ];
 
-const MATURITY_LABELS: Record<string, string> = {
+export const MATURITY_LABELS: Record<string, string> = {
   BASIC: 'Basic',
   ADVANCED: 'Advanced',
   EXPERT: 'Expert',
 };
 
-const MATURITY_ORDER = ['BASIC', 'ADVANCED', 'EXPERT'];
+export const MATURITY_ORDER = ['BASIC', 'ADVANCED', 'EXPERT'] as const;
+
+export const ENTITY_TYPE_LABELS: Record<string, string> = {
+  BUSINESS_ENTITY: 'Business Entity',
+  BUSINESS_DOMAIN: 'Business Domain',
+  BUSINESS_PROCESS: 'Business Process',
+  ORGANISATIONAL_UNIT: 'Organisational Unit',
+};
 
 function stateKey(entityType: string, fieldName: string): string {
   return `${entityType}::${fieldName}`;

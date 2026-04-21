@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, setProcessDescriptions, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
+import { createProcess, createOrgUnit, assignOwningUnitToProcess, setProcessDescriptions, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -229,6 +229,40 @@ test.describe('Business Process CRUD — Owner', () => {
     await expect(
       ownerSection.locator('..').locator('button:has([data-testid="EditIcon"])'),
     ).not.toBeVisible();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Owning unit tests
+// ──────────────────────────────────────────────────────────────────────────────
+
+test.describe('Business Process — Owning Unit', () => {
+  let processKey: string;
+
+  test.beforeEach(async () => {
+    const process = await createProcess(uid('PW OU Process'));
+    processKey = process.key as string;
+  });
+
+  test('owning unit chip is visible after assignment via API', async ({ page }) => {
+    const unit = await createOrgUnit(uid('PW Ops Unit'));
+    await assignOwningUnitToProcess(processKey, unit.key as string);
+
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText(unit.key as string, { exact: false }).or(
+      page.getByText('Ops Unit', { exact: false }),
+    ).first()).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('owning unit shows Not assigned when not set', async ({ page }) => {
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    const owningUnitRow = page.getByText('Owning Unit', { exact: true });
+    await expect(owningUnitRow).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Not assigned').first()).toBeVisible({ timeout: 10_000 });
   });
 });
 

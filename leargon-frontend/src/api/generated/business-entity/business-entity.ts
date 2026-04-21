@@ -37,6 +37,7 @@ import type {
 
 import type {
   AssignBoundedContextRequest,
+  AssignOwningUnitRequest,
   BusinessEntityResponse,
   BusinessEntityTreeResponse,
   BusinessEntityVersionResponse,
@@ -1338,6 +1339,107 @@ export const useAssignBoundedContextToBusinessEntity = <TError = ErrorResponse |
         TContext
       > => {
       return useMutation(getAssignBoundedContextToBusinessEntityMutationOptions(options), queryClient);
+    }
+    /**
+ * Assigns an owning organisational unit directly to a business entity. Only the Data Owner or an Administrator can assign.
+ * @summary Assign owning unit to business entity
+ */
+export type assignOwningUnitToBusinessEntityResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type assignOwningUnitToBusinessEntityResponse401 = {
+  data: void
+  status: 401
+}
+
+export type assignOwningUnitToBusinessEntityResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type assignOwningUnitToBusinessEntityResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type assignOwningUnitToBusinessEntityResponseSuccess = (assignOwningUnitToBusinessEntityResponse200) & {
+  headers: Headers;
+};
+export type assignOwningUnitToBusinessEntityResponseError = (assignOwningUnitToBusinessEntityResponse401 | assignOwningUnitToBusinessEntityResponse403 | assignOwningUnitToBusinessEntityResponse404) & {
+  headers: Headers;
+};
+
+export type assignOwningUnitToBusinessEntityResponse = (assignOwningUnitToBusinessEntityResponseSuccess | assignOwningUnitToBusinessEntityResponseError)
+
+export const getAssignOwningUnitToBusinessEntityUrl = (key: string,) => {
+
+
+
+
+  return `/business-entities/${key}/owning-unit`
+}
+
+export const assignOwningUnitToBusinessEntity = async (key: string,
+    assignOwningUnitRequest: AssignOwningUnitRequest, options?: RequestInit): Promise<assignOwningUnitToBusinessEntityResponse> => {
+
+  return customAxios<assignOwningUnitToBusinessEntityResponse>(getAssignOwningUnitToBusinessEntityUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      assignOwningUnitRequest,)
+  }
+);}
+
+
+
+
+export const getAssignOwningUnitToBusinessEntityMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext> => {
+
+const mutationKey = ['assignOwningUnitToBusinessEntity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>, {key: string;data: AssignOwningUnitRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignOwningUnitToBusinessEntity(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignOwningUnitToBusinessEntityMutationResult = NonNullable<Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>>
+    export type AssignOwningUnitToBusinessEntityMutationBody = AssignOwningUnitRequest
+    export type AssignOwningUnitToBusinessEntityMutationError = void | ErrorResponse
+
+    /**
+ * @summary Assign owning unit to business entity
+ */
+export const useAssignOwningUnitToBusinessEntity = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignOwningUnitToBusinessEntity>>,
+        TError,
+        {key: string;data: AssignOwningUnitRequest},
+        TContext
+      > => {
+      return useMutation(getAssignOwningUnitToBusinessEntityMutationOptions(options), queryClient);
     }
     /**
  * Updates the interface entities of a business entity. Only the Data Owner or an Administrator can edit an entity.

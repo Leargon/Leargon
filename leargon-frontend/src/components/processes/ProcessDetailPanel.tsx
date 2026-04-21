@@ -49,6 +49,7 @@ import {
   useUpdateProcessCode,
   useUpdateProcessParent,
   useAssignBoundedContextToProcess,
+  useAssignOwningUnitToProcess,
   useAssignClassificationsToProcess,
   useDeleteProcess,
   useGetProcessVersions,
@@ -235,6 +236,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateTechnicalCustodian = useUpdateProcessTechnicalCustodian();
   const updateCode = useUpdateProcessCode();
   const assignBoundedContext = useAssignBoundedContextToProcess();
+  const assignOwningUnit = useAssignOwningUnitToProcess();
   const assignClassifications = useAssignClassificationsToProcess();
   const deleteProcess = useDeleteProcess();
   const addInput = useAddProcessInput();
@@ -339,6 +341,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   });
 
   // Bounded context inline edit
+  const owningUnitEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await assignOwningUnit.mutateAsync({ key: processKey, data: { owningUnitKey: val } });
+      invalidate();
+    },
+  });
+
   const boundedContextEdit = useInlineEdit<string | null>({
     onSave: async (val) => {
       await assignBoundedContext.mutateAsync({ key: processKey, data: { boundedContextKey: val } });
@@ -406,6 +415,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     stewardEdit.cancel();
     technicalCustodianEdit.cancel();
     codeEdit.cancel();
+    owningUnitEdit.cancel();
     boundedContextEdit.cancel();
     classEdit.cancel();
     execUnitsEdit.cancel();
@@ -683,6 +693,30 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Box>
           )}
         </PropRow>}
+        {fields.owningUnit && !isHidden('owningUnit') && (
+          <PropRow label={t('common.owningUnit')} canEdit={isOwnerOrAdmin} isEditing={owningUnitEdit.isEditing}
+            onEdit={() => owningUnitEdit.startEdit(process.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
+            onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
+            {owningUnitEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={allOrgUnits}
+                  getOptionLabel={(u) => getLocalizedText(u.names, u.key)}
+                  value={allOrgUnits.find((u) => u.key === owningUnitEdit.editValue) ?? null}
+                  onChange={(_, newVal) => owningUnitEdit.setEditValue(newVal?.key ?? null)}
+                  renderInput={(params) => <TextField {...params} size="small" placeholder={t('common.searchUnit')} sx={{ width: 300 }} />}
+                  isOptionEqualToValue={(o, v) => o.key === v.key}
+                  size="small"
+                />
+                {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
+              </Box>
+            ) : process.owningUnit ? (
+              <Chip label={process.owningUnit.name} size="small" variant="outlined" />
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notAssigned')}</Typography>
+            )}
+          </PropRow>
+        )}
         {fields.processSteward && !isHidden('processSteward') && (
           <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}

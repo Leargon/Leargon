@@ -11,6 +11,7 @@ import org.leargon.backend.model.BusinessDomainVersionResponse
 import org.leargon.backend.model.BusinessDomainVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -18,11 +19,13 @@ import java.time.ZonedDateTime
 @Singleton
 open class BusinessDomainMapper(
     private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService,
     private val organisationalUnitMapper: OrganisationalUnitMapper
 ) {
     fun toBusinessDomainResponse(domain: BusinessDomain): BusinessDomainResponse {
+        val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
-            fieldConfigurationService.compute("BUSINESS_DOMAIN") { fieldName ->
+            fieldConfigurationService.compute("BUSINESS_DOMAIN", disabledMethodologies) { fieldName ->
                 when {
                     fieldName == "names" -> {
                         domain.names.isNotEmpty()

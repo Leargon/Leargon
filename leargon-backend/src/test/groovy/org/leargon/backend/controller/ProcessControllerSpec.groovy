@@ -1041,4 +1041,136 @@ class ProcessControllerSpec extends Specification {
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.FORBIDDEN
     }
+
+    // =====================
+    // OWNING UNIT TESTS
+    // =====================
+
+    def "PUT /processes/{key}/owning-unit should assign owning unit"() {
+        given: "a process and an org unit"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String adminToken = createAdminToken()
+
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Owned Process")]))
+                        .bearerAuth(userData.token), ProcessResponse).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Process Owner Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        when: "assigning the owning unit"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(userData.token),
+                ProcessResponse
+        )
+
+        then: "the owning unit is returned on the response"
+        response.status == HttpStatus.OK
+        response.body().owningUnit != null
+        response.body().owningUnit.key == unit.key
+    }
+
+    def "PUT /processes/{key}/owning-unit should clear owning unit when null"() {
+        given: "a process with an assigned owning unit"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String adminToken = createAdminToken()
+
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Clearable Process")]))
+                        .bearerAuth(userData.token), ProcessResponse).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Temp Process Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(userData.token), ProcessResponse)
+
+        when: "clearing the owning unit"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/owning-unit", [owningUnitKey: null])
+                        .bearerAuth(userData.token),
+                ProcessResponse
+        )
+
+        then: "owning unit is null"
+        response.status == HttpStatus.OK
+        response.body().owningUnit == null
+    }
+
+    def "PUT /processes/{key}/owning-unit should return 403 for non-owner"() {
+        given: "a process and two users"
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+        String adminToken = createAdminToken()
+
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Protected Process")]))
+                        .bearerAuth(creatorData.token), ProcessResponse).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Access Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        when: "non-owner tries to assign owning unit"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(otherData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /processes/{key}/owning-unit should return 404 for unknown unit key"() {
+        given: "a process"
+        def userData = createUserWithToken("creator@example.com", "creator")
+
+        def proc = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", new CreateProcessRequest([new LocalizedText("en", "Process 404")]))
+                        .bearerAuth(userData.token), ProcessResponse).body()
+
+        when: "assigning a non-existent unit key"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/owning-unit", [owningUnitKey: "does-not-exist"])
+                        .bearerAuth(userData.token),
+                ProcessResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.NOT_FOUND
+    }
+
+    def "GET /processes/{key} should reflect owningUnit set at creation time"() {
+        given: "an org unit"
+        String adminToken = createAdminToken()
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Initial Process Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        and: "a process is created with owningUnitKey"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        def createRequest = new CreateProcessRequest([new LocalizedText("en", "Process With Initial Unit")])
+        createRequest.owningUnitKey = unit.key as String
+
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/processes", createRequest)
+                        .bearerAuth(userData.token), ProcessResponse).body()
+
+        when: "fetching the process"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/${created.key}").bearerAuth(userData.token),
+                ProcessResponse
+        ).body()
+
+        then: "owningUnit is present"
+        fetched.owningUnit != null
+        fetched.owningUnit.key == unit.key
+    }
 }

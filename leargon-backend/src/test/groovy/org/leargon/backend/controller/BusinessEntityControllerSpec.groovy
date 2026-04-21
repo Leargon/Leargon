@@ -17,6 +17,7 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
 import spock.lang.Specification
@@ -36,6 +37,9 @@ class BusinessEntityControllerSpec extends Specification {
 
     @Inject
     BusinessEntityVersionRepository businessEntityVersionRepository
+
+    @Inject
+    OrganisationalUnitRepository organisationalUnitRepository
 
     @Inject
     SupportedLocaleRepository localeRepository
@@ -64,6 +68,7 @@ class BusinessEntityControllerSpec extends Specification {
     def cleanup() {
         businessEntityVersionRepository.deleteAll()
         businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        organisationalUnitRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -840,5 +845,147 @@ class BusinessEntityControllerSpec extends Specification {
         then: "not found exception is thrown"
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.NOT_FOUND
+    }
+
+    // =====================
+    // OWNING UNIT TESTS
+    // =====================
+
+    def "PUT /business-entities/{key}/owning-unit should assign owning unit"() {
+        given: "an entity and an org unit"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String adminToken = createAdminToken()
+
+        def entity = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", "Owned Entity")]))
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        ).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Engineering Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        when: "assigning the owning unit"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entity.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then: "the owning unit is returned on the response"
+        response.status == HttpStatus.OK
+        response.body().owningUnit != null
+        response.body().owningUnit.key == unit.key
+    }
+
+    def "PUT /business-entities/{key}/owning-unit should clear owning unit when null"() {
+        given: "an entity with an assigned owning unit"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        String adminToken = createAdminToken()
+
+        def entity = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", "Clearable Entity")]))
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        ).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Temp Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entity.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(userData.token), BusinessEntityResponse)
+
+        when: "clearing the owning unit"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entity.key}/owning-unit", [owningUnitKey: null])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then: "owning unit is null"
+        response.status == HttpStatus.OK
+        response.body().owningUnit == null
+    }
+
+    def "PUT /business-entities/{key}/owning-unit should return 403 for non-owner"() {
+        given: "an entity owned by creator and another user"
+        def creatorData = createUserWithToken("creator@example.com", "creator")
+        def otherData = createUserWithToken("other@example.com", "other")
+        String adminToken = createAdminToken()
+
+        def entity = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", "Protected Entity")]))
+                        .bearerAuth(creatorData.token),
+                BusinessEntityResponse
+        ).body()
+
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Some Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        when: "non-owner tries to assign owning unit"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entity.key}/owning-unit", [owningUnitKey: unit.key])
+                        .bearerAuth(otherData.token),
+                BusinessEntityResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /business-entities/{key}/owning-unit should return 404 for unknown unit key"() {
+        given: "an entity"
+        def userData = createUserWithToken("creator@example.com", "creator")
+
+        def entity = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", "Entity 404")]))
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        ).body()
+
+        when: "assigning a non-existent unit key"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${entity.key}/owning-unit", [owningUnitKey: "does-not-exist"])
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        )
+
+        then:
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.NOT_FOUND
+    }
+
+    def "GET /business-entities/{key} should reflect owningUnit set at creation time"() {
+        given: "an org unit"
+        String adminToken = createAdminToken()
+        def unit = client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", [names: [[locale: "en", text: "Initial Owner Team"]]])
+                        .bearerAuth(adminToken), Map).body()
+
+        and: "a user creates an entity with owningUnitKey set"
+        def userData = createUserWithToken("creator@example.com", "creator")
+        def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "Entity With Initial Unit")])
+        createRequest.owningUnitKey = unit.key as String
+
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", createRequest)
+                        .bearerAuth(userData.token),
+                BusinessEntityResponse
+        ).body()
+
+        when: "fetching the entity"
+        def fetched = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${created.key}").bearerAuth(userData.token),
+                BusinessEntityResponse
+        ).body()
+
+        then: "owningUnit is present"
+        fetched.owningUnit != null
+        fetched.owningUnit.key == unit.key
     }
 }

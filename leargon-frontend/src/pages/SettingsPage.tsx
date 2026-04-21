@@ -5,6 +5,7 @@ import UsersTab from '../components/settings/UsersTab';
 import LocalesTab from '../components/settings/LocalesTab';
 import ClassificationsTab from '../components/settings/ClassificationsTab';
 import FieldConfigurationTab from '../components/settings/FieldConfigurationTab';
+import MethodologiesTab from '../components/settings/MethodologiesTab';
 
 const SettingsPage: React.FC = () => {
   const location = useLocation();
@@ -15,6 +16,7 @@ const SettingsPage: React.FC = () => {
       {location.pathname === '/settings/locales' && <LocalesTab />}
       {location.pathname === '/settings/classifications' && <ClassificationsTab />}
       {location.pathname === '/settings/field-configurations' && <FieldConfigurationTab />}
+      {location.pathname === '/settings/methodologies' && <MethodologiesTab />}
     </Box>
   );
 };

@@ -39,6 +39,7 @@ import type {
   AdministrationChangePasswordRequest,
   FieldConfigurationDefinition,
   FieldConfigurationEntry,
+  MethodologyConfigEntry,
   SignupRequest,
   UpdateUserRequest,
   UserResponse
@@ -799,6 +800,224 @@ export const useEnableUser = <TError = void,
         TContext
       > => {
       return useMutation(getEnableUserMutationOptions(options), queryClient);
+    }
+    /**
+ * Returns enabled/disabled state for all six methodologies. Requires ROLE_ADMIN.
+ * @summary Get all methodology configurations
+ */
+export type getMethodologyConfigurationsResponse200 = {
+  data: MethodologyConfigEntry[]
+  status: 200
+}
+
+export type getMethodologyConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getMethodologyConfigurationsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type getMethodologyConfigurationsResponseSuccess = (getMethodologyConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type getMethodologyConfigurationsResponseError = (getMethodologyConfigurationsResponse401 | getMethodologyConfigurationsResponse403) & {
+  headers: Headers;
+};
+
+export type getMethodologyConfigurationsResponse = (getMethodologyConfigurationsResponseSuccess | getMethodologyConfigurationsResponseError)
+
+export const getGetMethodologyConfigurationsUrl = () => {
+
+
+
+
+  return `/administration/methodology-configurations`
+}
+
+export const getMethodologyConfigurations = async ( options?: RequestInit): Promise<getMethodologyConfigurationsResponse> => {
+
+  return customAxios<getMethodologyConfigurationsResponse>(getGetMethodologyConfigurationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMethodologyConfigurationsQueryKey = () => {
+    return [
+    `/administration/methodology-configurations`
+    ] as const;
+    }
+
+
+export const getGetMethodologyConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMethodologyConfigurationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMethodologyConfigurations>>> = ({ signal }) => getMethodologyConfigurations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMethodologyConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof getMethodologyConfigurations>>>
+export type GetMethodologyConfigurationsQueryError = void
+
+
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all methodology configurations
+ */
+
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMethodologyConfigurationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * Replaces the enabled/disabled state for all methodologies. Requires ROLE_ADMIN.
+ * @summary Replace all methodology configurations
+ */
+export type replaceMethodologyConfigurationsResponse200 = {
+  data: MethodologyConfigEntry[]
+  status: 200
+}
+
+export type replaceMethodologyConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type replaceMethodologyConfigurationsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type replaceMethodologyConfigurationsResponseSuccess = (replaceMethodologyConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type replaceMethodologyConfigurationsResponseError = (replaceMethodologyConfigurationsResponse401 | replaceMethodologyConfigurationsResponse403) & {
+  headers: Headers;
+};
+
+export type replaceMethodologyConfigurationsResponse = (replaceMethodologyConfigurationsResponseSuccess | replaceMethodologyConfigurationsResponseError)
+
+export const getReplaceMethodologyConfigurationsUrl = () => {
+
+
+
+
+  return `/administration/methodology-configurations`
+}
+
+export const replaceMethodologyConfigurations = async (methodologyConfigEntry: MethodologyConfigEntry[], options?: RequestInit): Promise<replaceMethodologyConfigurationsResponse> => {
+
+  return customAxios<replaceMethodologyConfigurationsResponse>(getReplaceMethodologyConfigurationsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      methodologyConfigEntry,)
+  }
+);}
+
+
+
+
+export const getReplaceMethodologyConfigurationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext> => {
+
+const mutationKey = ['replaceMethodologyConfigurations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, {data: MethodologyConfigEntry[]}> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceMethodologyConfigurations(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMethodologyConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>>
+    export type ReplaceMethodologyConfigurationsMutationBody = MethodologyConfigEntry[]
+    export type ReplaceMethodologyConfigurationsMutationError = void
+
+    /**
+ * @summary Replace all methodology configurations
+ */
+export const useReplaceMethodologyConfigurations = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMethodologyConfigurations>>,
+        TError,
+        {data: MethodologyConfigEntry[]},
+        TContext
+      > => {
+      return useMutation(getReplaceMethodologyConfigurationsMutationOptions(options), queryClient);
     }
     /**
  * Returns all possible configurable fields per entity type, including default section and maturity level. Requires ROLE_ADMIN.

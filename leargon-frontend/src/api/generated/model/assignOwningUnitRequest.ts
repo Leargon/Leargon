@@ -16,35 +16,11 @@ The system includes a fallback admin user that cannot be modified or deleted thr
 
  * OpenAPI spec version: 1.0.0
  */
-import type { LocalizedText } from './localizedText';
 
-export interface CreateBusinessEntityRequest {
+export interface AssignOwningUnitRequest {
   /**
-     * Names for the entity (at least one required)
-     * @minItems 1
-     */
-  names: LocalizedText[];
-  /** Descriptions for the entity */
-  descriptions?: LocalizedText[];
-  /**
-     * Username of the data owner (defaults to creator if not specified)
-     * @nullable
-     */
-  dataOwnerUsername?: string | null;
-  /**
-     * Key of the organisational unit directly owning this entity
+     * Key of the organisational unit to assign as owning unit (null to unassign)
      * @nullable
      */
   owningUnitKey?: string | null;
-  /**
-     * Parent entity key (null for top-level entity)
-     * @nullable
-     */
-  parentKey?: string | null;
-  interfaces?: string[];
-  /**
-     * Retention period description for the entity
-     * @nullable
-     */
-  retentionPeriod?: string | null;
 }

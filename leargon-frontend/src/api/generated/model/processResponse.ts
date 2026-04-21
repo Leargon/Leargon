@@ -50,7 +50,9 @@ export interface ProcessResponse {
      * @nullable
      */
   securityMeasures?: LocalizedText[] | null;
-  /** Effective process owner (explicit override, or computed from bounded context owning unit; null if neither is set) */
+  /** Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship) */
+  owningUnit?: OrganisationalUnitSummaryResponse | null;
+  /** Effective process owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set) */
   processOwner?: UserSummaryResponse | null;
   /** True if processOwner was explicitly set; false if computed from the owning org unit of the bounded context */
   ownerIsExplicit: boolean;

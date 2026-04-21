@@ -75,6 +75,10 @@ class Process {
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owning_unit_id")
+    var owningUnit: OrganisationalUnit? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bounded_context_id")
     var boundedContext: BoundedContext? = null
 

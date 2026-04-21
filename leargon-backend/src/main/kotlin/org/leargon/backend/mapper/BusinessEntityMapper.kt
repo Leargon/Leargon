@@ -12,7 +12,9 @@ import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.BusinessEntityVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
+import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -20,11 +22,13 @@ import java.time.ZonedDateTime
 @Singleton
 open class BusinessEntityMapper(
     private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService,
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
+        val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
-            fieldConfigurationService.compute("BUSINESS_ENTITY") { fieldName ->
+            fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies) { fieldName ->
                 when {
                     fieldName == "names" -> {
                         businessEntity.names.isNotEmpty()
@@ -62,10 +66,13 @@ open class BusinessEntityMapper(
                     }
                 }
             }
-        val owningUnit = businessEntity.boundedContext?.owningUnit ?: businessEntity.boundedContext?.domain?.owningUnit
-        val effectiveOwner = businessEntity.dataOwner ?: owningUnit?.businessOwner
-        val effectiveSteward = businessEntity.dataSteward ?: owningUnit?.businessSteward
-        val effectiveCustodian = businessEntity.technicalCustodian ?: owningUnit?.technicalCustodian
+        val effectiveOwningUnit =
+            businessEntity.owningUnit
+                ?: businessEntity.boundedContext?.owningUnit
+                ?: businessEntity.boundedContext?.domain?.owningUnit
+        val effectiveOwner = businessEntity.dataOwner ?: effectiveOwningUnit?.businessOwner
+        val effectiveSteward = businessEntity.dataSteward ?: effectiveOwningUnit?.businessSteward
+        val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         return BusinessEntityResponse(
             businessEntity.key,
             businessEntity.dataOwner != null,
@@ -74,7 +81,8 @@ open class BusinessEntityMapper(
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
-        ).dataOwner(UserMapper.toUserSummary(effectiveOwner))
+        ).owningUnit(businessEntity.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
+            .dataOwner(UserMapper.toUserSummary(effectiveOwner))
             .dataSteward(UserMapper.toUserSummary(effectiveSteward))
             .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
             .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
@@ -96,15 +104,17 @@ open class BusinessEntityMapper(
         entity: BusinessEntity,
         locale: String,
     ): LocalizedBusinessEntityResponse {
-        val effectiveBcOwningUnit =
-            entity.boundedContext?.owningUnit ?: entity.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit =
+            entity.owningUnit
+                ?: entity.boundedContext?.owningUnit
+                ?: entity.boundedContext?.domain?.owningUnit
         return LocalizedBusinessEntityResponse(
             entity.key,
             entity.getName(locale),
             toZonedDateTime(entity.createdAt),
             toZonedDateTime(entity.updatedAt),
         ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
-            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: effectiveBcOwningUnit?.businessOwner))
+            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: effectiveOwningUnit?.businessOwner))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(

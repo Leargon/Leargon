@@ -10,6 +10,10 @@ import java.util.Optional
 @Repository
 interface ProcessRepository : JpaRepository<Process, Long> {
     @Join(value = "processOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
@@ -32,6 +36,10 @@ interface ProcessRepository : JpaRepository<Process, Long> {
     override fun findAll(): List<Process>
 
     @Join(value = "processOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)
+    @Join(value = "owningUnit.technicalCustodian", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit.businessOwner", type = Join.Type.LEFT_FETCH)
     @Join(value = "boundedContext.owningUnit.businessSteward", type = Join.Type.LEFT_FETCH)

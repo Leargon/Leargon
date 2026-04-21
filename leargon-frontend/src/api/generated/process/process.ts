@@ -38,6 +38,7 @@ import type {
 import type {
   AddProcessEntityRequest,
   AssignBoundedContextRequest,
+  AssignOwningUnitRequest,
   ClassificationAssignmentRequest,
   CreateProcessRequest,
   DpiaResponse,
@@ -1235,6 +1236,107 @@ export const useAssignBoundedContextToProcess = <TError = void | ErrorResponse,
         TContext
       > => {
       return useMutation(getAssignBoundedContextToProcessMutationOptions(options), queryClient);
+    }
+    /**
+ * Assigns an owning organisational unit directly to a process. Only the process owner or an admin can assign.
+ * @summary Assign owning unit to process
+ */
+export type assignOwningUnitToProcessResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type assignOwningUnitToProcessResponse401 = {
+  data: void
+  status: 401
+}
+
+export type assignOwningUnitToProcessResponse403 = {
+  data: void
+  status: 403
+}
+
+export type assignOwningUnitToProcessResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type assignOwningUnitToProcessResponseSuccess = (assignOwningUnitToProcessResponse200) & {
+  headers: Headers;
+};
+export type assignOwningUnitToProcessResponseError = (assignOwningUnitToProcessResponse401 | assignOwningUnitToProcessResponse403 | assignOwningUnitToProcessResponse404) & {
+  headers: Headers;
+};
+
+export type assignOwningUnitToProcessResponse = (assignOwningUnitToProcessResponseSuccess | assignOwningUnitToProcessResponseError)
+
+export const getAssignOwningUnitToProcessUrl = (key: string,) => {
+
+
+
+
+  return `/processes/${key}/owning-unit`
+}
+
+export const assignOwningUnitToProcess = async (key: string,
+    assignOwningUnitRequest: AssignOwningUnitRequest, options?: RequestInit): Promise<assignOwningUnitToProcessResponse> => {
+
+  return customAxios<assignOwningUnitToProcessResponse>(getAssignOwningUnitToProcessUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      assignOwningUnitRequest,)
+  }
+);}
+
+
+
+
+export const getAssignOwningUnitToProcessMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToProcess>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToProcess>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext> => {
+
+const mutationKey = ['assignOwningUnitToProcess'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignOwningUnitToProcess>>, {key: string;data: AssignOwningUnitRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  assignOwningUnitToProcess(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignOwningUnitToProcessMutationResult = NonNullable<Awaited<ReturnType<typeof assignOwningUnitToProcess>>>
+    export type AssignOwningUnitToProcessMutationBody = AssignOwningUnitRequest
+    export type AssignOwningUnitToProcessMutationError = void | ErrorResponse
+
+    /**
+ * @summary Assign owning unit to process
+ */
+export const useAssignOwningUnitToProcess = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignOwningUnitToProcess>>, TError,{key: string;data: AssignOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignOwningUnitToProcess>>,
+        TError,
+        {key: string;data: AssignOwningUnitRequest},
+        TContext
+      > => {
+      return useMutation(getAssignOwningUnitToProcessMutationOptions(options), queryClient);
     }
     /**
  * Adds a business entity as input to a process. Can reference existing entity or create one on-the-fly.
