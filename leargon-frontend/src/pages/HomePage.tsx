@@ -40,7 +40,7 @@ function useFormatRelativeTime() {
     if (hours < 24) return t('home.timeHours', { count: hours });
     const days = Math.floor(hours / 24);
     if (days < 7) return t('home.timeDays', { count: days });
-    return new Date(dateStr).toLocaleDateString();
+    return new Date(dateStr).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
   };
 }
 
@@ -141,11 +141,12 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
             >
               <ListItemText
                 primary={item.name}
-                secondary={
-                  item.changedBy
-                    ? `${item.changeType.toLowerCase().replace('_', ' ')} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
-                    : item.changeType.toLowerCase().replace('_', ' ')
-                }
+                secondary={(() => {
+                  const action = item.changeType.toLowerCase().replace('_', ' ').replace(/e$/, '') + 'ed';
+                  return item.changedBy
+                    ? `${action} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
+                    : action;
+                })()}
                 slotProps={{
                   primary: { variant: 'body2', sx: { fontWeight: 500 } },
                   secondary: { variant: 'caption' }
@@ -263,15 +264,12 @@ const HomePage: React.FC = () => {
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       {dashboard && (
         <>
-          {/* Needs Attention */}
-          <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
-            <AttentionSection items={dashboard.needsAttention ?? []} />
-          </SectionCard>
-
-          {/* Recently Modified */}
-          <SectionCard title={t('home.recentlyModified')} icon={<Schedule fontSize="small" />}>
-            <ActivitySection items={dashboard.recentActivity ?? []} />
-          </SectionCard>
+          {/* Needs Attention — always shown to admin; shown to others only when there are items */}
+          {(isAdmin || (dashboard.needsAttention ?? []).length > 0) && (
+            <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
+              <AttentionSection items={dashboard.needsAttention ?? []} />
+            </SectionCard>
+          )}
 
           {/* My Responsibilities */}
           <SectionCard title={t('home.myResponsibilities')} icon={<AssignmentInd fontSize="small" />}>
@@ -308,6 +306,11 @@ const HomePage: React.FC = () => {
               </Box>
               <ResponsibilitiesSection items={dashboard.myResponsibilities?.processes ?? []} type="processes" />
             </Box>
+          </SectionCard>
+
+          {/* Recent Activity (created & modified) */}
+          <SectionCard title={t('home.recentlyModified')} icon={<Schedule fontSize="small" />}>
+            <ActivitySection items={dashboard.recentActivity ?? []} />
           </SectionCard>
         </>
       )}

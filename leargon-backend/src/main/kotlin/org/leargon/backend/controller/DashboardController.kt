@@ -21,7 +21,8 @@ open class DashboardController(
             securityService
                 .username()
                 .orElseThrow { ResourceNotFoundException("User not authenticated") }
-        return dashboardService.getDashboard(email)
+        val isAdmin = securityService.hasRole("ROLE_ADMIN")
+        return dashboardService.getDashboard(email, isAdmin = isAdmin)
     }
 
     @Secured("ROLE_ADMIN")
