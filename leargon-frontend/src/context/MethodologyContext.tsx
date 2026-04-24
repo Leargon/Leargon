@@ -16,7 +16,7 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
     label: 'Data Governance',
     description: 'Track data ownership, stewardship, descriptions, quality rules, and data governance policies.',
     sections: ['DATA_GOVERNANCE', 'DATA_QUALITY'],
-    navPaths: ['/entities', '/domains'],
+    navPaths: ['/entities'],
   },
   PROCESS_GOVERNANCE: {
     label: 'Process Governance',
@@ -34,7 +34,7 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
     label: 'Domain-Driven Design',
     description: 'Manage bounded contexts, ubiquitous language, context map, domain events, and strategic vision statements.',
     sections: ['DDD', 'STRATEGIC'],
-    navPaths: ['/ubiquitous-language', '/diagrams/context-map', '/diagrams/event-flow'],
+    navPaths: ['/domains', '/ubiquitous-language', '/diagrams/context-map', '/diagrams/event-flow'],
   },
   BCM: {
     label: 'Business Continuity Management',

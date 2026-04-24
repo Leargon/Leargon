@@ -8,6 +8,17 @@ import { OpenInNew } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useGetMaturityMetrics } from '../../api/generated/dashboard/dashboard';
 import type { MaturityMetricItem } from '../../api/generated/model';
+import { useMethodology } from '../../context/MethodologyContext';
+
+const METRIC_METHODOLOGY: Record<string, string> = {
+  entityOwnership: 'DATA_GOVERNANCE',
+  domainStructure: 'DDD',
+  processUnitCoverage: 'PROCESS_GOVERNANCE',
+  processCompliance: 'GDPR',
+  dpiasCoverage: 'GDPR',
+  dataProcessorDocs: 'GDPR',
+  processPurpose: 'GDPR',
+};
 
 const METRIC_ROUTES: Record<string, string> = {
   entityOwnership:    '/entities',
@@ -73,7 +84,12 @@ const MetricRow: React.FC<{ metric: MaturityMetricItem }> = ({ metric }) => {
 const MaturityOverview: React.FC = () => {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useGetMaturityMetrics();
-  const metrics = (data?.data?.metrics ?? []) as MaturityMetricItem[];
+  const { isMethodologyEnabled } = useMethodology();
+  const allMetrics = (data?.data?.metrics ?? []) as MaturityMetricItem[];
+  const metrics = allMetrics.filter((m) => {
+    const methodology = METRIC_METHODOLOGY[m.key];
+    return !methodology || isMethodologyEnabled(methodology);
+  });
 
   if (isLoading) {
     return (

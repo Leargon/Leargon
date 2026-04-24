@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useRole } from '../context/RoleContext';
+import { useAuth } from '../context/AuthContext';
 import { useMethodology } from '../context/MethodologyContext';
 
 type GoalKey = 'dataGov' | 'ddd' | 'bcm' | 'bpm' | 'compliance' | 'orgDesign';
@@ -104,12 +104,13 @@ interface EntityRoleRow {
   ownerKey: string;
   stewardKey: string;
   custodianKey: string;
+  methodologyKey: string;
 }
 
 const ENTITY_ROLE_ROWS: EntityRoleRow[] = [
-  { entityKey: 'help.entityData',    ownerKey: 'help.roleDataOwner',    stewardKey: 'help.roleDataSteward',    custodianKey: 'help.roleTechnicalCustodian' },
-  { entityKey: 'help.entityProcess', ownerKey: 'help.roleProcessOwner', stewardKey: 'help.roleProcessSteward', custodianKey: 'help.roleTechnicalCustodian' },
-  { entityKey: 'help.entityOrgUnit', ownerKey: 'help.roleBusinessOwner',stewardKey: 'help.roleBusinessSteward',custodianKey: 'help.roleTechnicalCustodian' },
+  { entityKey: 'help.entityData',    ownerKey: 'help.roleDataOwner',    stewardKey: 'help.roleDataSteward',    custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'DATA_GOVERNANCE' },
+  { entityKey: 'help.entityProcess', ownerKey: 'help.roleProcessOwner', stewardKey: 'help.roleProcessSteward', custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'PROCESS_GOVERNANCE' },
+  { entityKey: 'help.entityOrgUnit', ownerKey: 'help.roleBusinessOwner',stewardKey: 'help.roleBusinessSteward',custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'TEAM_TOPOLOGIES' },
 ];
 
 interface RoleDesc {
@@ -173,8 +174,8 @@ const FRAMEWORKS: Framework[] = [
 
 const HelpPage: React.FC = () => {
   const { t } = useTranslation();
-  const { role } = useRole();
-  const isAdmin = role === 'admin';
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { isMethodologyEnabled } = useMethodology();
   const enabledFrameworks = FRAMEWORKS.filter((fw) => isMethodologyEnabled(fw.methodologyKey));
   const [selectedGoals, setSelectedGoals] = useState<Set<GoalKey>>(new Set());
@@ -258,7 +259,7 @@ const HelpPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {ENTITY_ROLE_ROWS.map((row) => (
+            {(isAdmin ? ENTITY_ROLE_ROWS : ENTITY_ROLE_ROWS.filter((r) => isMethodologyEnabled(r.methodologyKey))).map((row) => (
               <TableRow key={row.entityKey} sx={{ '&:last-child td': { border: 0 } }}>
                 <TableCell sx={{ fontWeight: 600 }}>{t(row.entityKey)}</TableCell>
                 {[row.ownerKey, row.stewardKey, row.custodianKey].map((key) => (
