@@ -16,13 +16,13 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
     label: 'Data Governance',
     description: 'Track data ownership, stewardship, descriptions, quality rules, and data governance policies.',
     sections: ['DATA_GOVERNANCE', 'DATA_QUALITY'],
-    navPaths: [],
+    navPaths: ['/entities', '/domains'],
   },
   PROCESS_GOVERNANCE: {
     label: 'Process Governance',
     description: 'Manage process descriptions, stewardship, and data flow relationships between processes and entities.',
     sections: ['DATA_FLOW'],
-    navPaths: [],
+    navPaths: ['/processes'],
   },
   GDPR: {
     label: 'GDPR / DSG — Legal & Privacy',
@@ -46,7 +46,7 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
     label: 'Team Topologies',
     description: 'Define team ownership, stewardship roles, and organisational unit descriptions.',
     sections: ['DATA_GOVERNANCE'],
-    navPaths: [],
+    navPaths: ['/organisation'],
   },
 };
 
@@ -80,22 +80,21 @@ const MethodologyContext = createContext<MethodologyContextValue>({
 
 export const MethodologyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const { data, isLoading } = useGetMethodologyConfigurations({
-    query: { enabled: isAdmin, retry: false },
+    query: { enabled: !!user, retry: false },
   });
 
   const methodologies: MethodologyConfigEntry[] = data?.data ?? [];
 
   const enabledKeys = useMemo<Set<string>>(() => {
-    if (!isAdmin || methodologies.length === 0) {
+    if (isLoading || methodologies.length === 0) {
       return new Set(ALL_METHODOLOGY_KEYS);
     }
     return new Set(
       methodologies.filter((m) => m.enabled).map((m) => m.key as string),
     );
-  }, [isAdmin, methodologies]);
+  }, [isLoading, methodologies]);
 
   const isMethodologyEnabled = (key: string) => enabledKeys.has(key);
 

@@ -660,8 +660,13 @@ open class BusinessEntityService(
             } else {
                 val fallbackOwner =
                     entity.dataOwner
-                        ?: entity.boundedContext?.owningUnit?.businessOwner
-                        ?: entity.boundedContext?.domain?.owningUnit?.businessOwner
+                        ?: entity.boundedContext
+                            ?.owningUnit
+                            ?.businessOwner
+                        ?: entity.boundedContext
+                            ?.domain
+                            ?.owningUnit
+                            ?.businessOwner
                 if (fallbackOwner == null) {
                     throw IllegalArgumentException(
                         "Cannot remove owning unit: no direct data owner or bounded context owner exists as fallback"

@@ -524,8 +524,13 @@ open class ProcessService(
             } else {
                 val fallbackOwner =
                     process.processOwner
-                        ?: process.boundedContext?.owningUnit?.businessOwner
-                        ?: process.boundedContext?.domain?.owningUnit?.businessOwner
+                        ?: process.boundedContext
+                            ?.owningUnit
+                            ?.businessOwner
+                        ?: process.boundedContext
+                            ?.domain
+                            ?.owningUnit
+                            ?.businessOwner
                 if (fallbackOwner == null) {
                     throw IllegalArgumentException(
                         "Cannot remove owning unit: no direct process owner or bounded context owner exists as fallback"

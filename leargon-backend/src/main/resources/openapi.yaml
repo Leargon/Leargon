@@ -284,7 +284,7 @@ paths:
       tags:
       - Administration
       summary: Get all methodology configurations
-      description: Returns enabled/disabled state for all six methodologies. Requires ROLE_ADMIN.
+      description: Returns enabled/disabled state for all six methodologies. Requires authentication.
       operationId: getMethodologyConfigurations
       security:
       - bearerAuth: []
@@ -299,8 +299,6 @@ paths:
                   $ref: '#/components/schemas/MethodologyConfigEntry'
         '401':
           description: Not authenticated
-        '403':
-          description: Insufficient permissions (requires ROLE_ADMIN)
     put:
       tags:
       - Administration
