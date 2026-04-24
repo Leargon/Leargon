@@ -46,6 +46,7 @@ const de = {
     owningUnit: 'Zuständige Einheit',
     searchUnit: 'Organisationseinheit suchen...',
     clearOverride: 'Überschreibung aufheben',
+    viaOwningUnit: 'über Eigentümereinheit',
     none: 'Keine',
     loading: 'Laden...',
     error: 'Fehler',

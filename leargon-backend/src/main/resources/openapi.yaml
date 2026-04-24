@@ -6786,11 +6786,17 @@ components:
         dataSteward:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Business steward override (falls back to owning org unit steward)
+          description: Effective data steward (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
+        stewardIsExplicit:
+          type: boolean
+          description: True if dataSteward was explicitly set; false if computed from owning unit or bounded context
         technicalCustodian:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Technical custodian override (falls back to owning org unit technical custodian)
+          description: Effective technical custodian (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
+        custodianIsExplicit:
+          type: boolean
+          description: True if technicalCustodian was explicitly set; false if computed from owning unit or bounded context
         parent:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         children:
@@ -7783,11 +7789,17 @@ components:
         processSteward:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Business steward override (falls back to owning org unit steward)
+          description: Effective process steward (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
+        stewardIsExplicit:
+          type: boolean
+          description: True if processSteward was explicitly set; false if computed from owning unit or bounded context
         technicalCustodian:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
-          description: Technical custodian override (falls back to owning org unit technical custodian)
+          description: Effective technical custodian (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set)
+        custodianIsExplicit:
+          type: boolean
+          description: True if technicalCustodian was explicitly set; false if computed from owning unit or bounded context
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         names:

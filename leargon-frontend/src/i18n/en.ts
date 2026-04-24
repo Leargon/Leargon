@@ -46,6 +46,7 @@ const en = {
     owningUnit: 'Owning Unit',
     searchUnit: 'Search for organisational unit...',
     clearOverride: 'Clear override',
+    viaOwningUnit: 'via Owning Unit',
     none: 'None',
     loading: 'Loading...',
     error: 'Error',

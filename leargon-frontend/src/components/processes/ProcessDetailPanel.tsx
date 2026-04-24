@@ -685,7 +685,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {!process.ownerIsExplicit && process.processOwner && (
                 <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
               )}
-              {process.ownerIsExplicit && isAdmin && process.boundedContext?.owningUnitName && (
+              {process.ownerIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
@@ -736,11 +736,23 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
-                {process.processSteward
-                  ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
-                  : t('common.notSet')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color={process.processSteward ? 'text.primary' : 'text.secondary'}>
+                  {process.processSteward
+                    ? `${process.processSteward.firstName} ${process.processSteward.lastName} (${process.processSteward.username})`
+                    : t('common.notSet')}
+                </Typography>
+                {!process.stewardIsExplicit && process.processSteward && (
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                )}
+                {process.stewardIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                  <Button size="small" variant="text" color="warning"
+                    onClick={async () => { await updateSteward.mutateAsync({ key: processKey, data: { processStewardUsername: null } }); invalidate(); }}
+                    sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                    {t('common.clearOverride')}
+                  </Button>
+                )}
+              </Box>
             )}
           </PropRow>
         )}
@@ -763,11 +775,23 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
-                {process.technicalCustodian
-                  ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
-                  : t('common.notSet')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color={process.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+                  {process.technicalCustodian
+                    ? `${process.technicalCustodian.firstName} ${process.technicalCustodian.lastName} (${process.technicalCustodian.username})`
+                    : t('common.notSet')}
+                </Typography>
+                {!process.custodianIsExplicit && process.technicalCustodian && (
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                )}
+                {process.custodianIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                  <Button size="small" variant="text" color="warning"
+                    onClick={async () => { await updateTechnicalCustodian.mutateAsync({ key: processKey, data: { technicalCustodianUsername: null } }); invalidate(); }}
+                    sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                    {t('common.clearOverride')}
+                  </Button>
+                )}
+              </Box>
             )}
           </PropRow>
         )}

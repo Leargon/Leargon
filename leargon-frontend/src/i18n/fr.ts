@@ -46,6 +46,7 @@ const fr = {
     owningUnit: 'Unité responsable',
     searchUnit: 'Rechercher une unité organisationnelle...',
     clearOverride: 'Supprimer la substitution',
+    viaOwningUnit: "via l'unité propriétaire",
     none: 'Aucun',
     loading: 'Chargement…',
     error: 'Erreur',
