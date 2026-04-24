@@ -91,19 +91,19 @@ class MethodologyConfigurationControllerSpec extends Specification {
         body*.key.containsAll(["DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES"])
     }
 
-    def "GET /administration/methodology-configurations returns 403 for non-admin"() {
+    def "GET /administration/methodology-configurations returns 200 for non-admin"() {
         given:
         def token = createUserToken()
 
         when:
-        client.toBlocking().exchange(
+        def response = client.toBlocking().exchange(
                 HttpRequest.GET("/administration/methodology-configurations").bearerAuth(token),
                 Argument.listOf(Map)
         )
 
         then:
-        def e = thrown(HttpClientResponseException)
-        e.status == HttpStatus.FORBIDDEN
+        response.status() == HttpStatus.OK
+        response.body().size() == 6
     }
 
     def "GET /administration/methodology-configurations returns 401 without auth"() {
