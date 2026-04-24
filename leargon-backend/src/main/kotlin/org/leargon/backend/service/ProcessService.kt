@@ -355,10 +355,13 @@ open class ProcessService(
         var process = getProcessByKey(key)
         checkEditPermission(process, currentUser)
 
-        val effectiveOwningUnit = process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit =
+            process.owningUnit
+                ?: process.boundedContext?.owningUnit
+                ?: process.boundedContext?.domain?.owningUnit
         if (effectiveOwningUnit?.businessOwner == null) {
             throw IllegalArgumentException(
-                "Cannot clear explicit process owner: no computed owner available from the bounded context's owning unit"
+                "Cannot clear explicit process owner: no computed owner available from the owning unit or bounded context"
             )
         }
         process.processOwner = null
@@ -519,6 +522,20 @@ open class ProcessService(
                     .findByKey(owningUnitKey)
                     .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
             } else {
+                val fallbackOwner =
+                    process.processOwner
+                        ?: process.boundedContext
+                            ?.owningUnit
+                            ?.businessOwner
+                        ?: process.boundedContext
+                            ?.domain
+                            ?.owningUnit
+                            ?.businessOwner
+                if (fallbackOwner == null) {
+                    throw IllegalArgumentException(
+                        "Cannot remove owning unit: no direct process owner or bounded context owner exists as fallback"
+                    )
+                }
                 null
             }
 
@@ -842,7 +859,10 @@ open class ProcessService(
             process: Process,
             currentUser: User
         ) {
-            val effectiveOwner = process.processOwner ?: process.boundedContext?.owningUnit?.businessOwner
+            val effectiveOwner =
+                process.processOwner
+                    ?: process.owningUnit?.businessOwner
+                    ?: process.boundedContext?.owningUnit?.businessOwner
             val isOwner = effectiveOwner?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {

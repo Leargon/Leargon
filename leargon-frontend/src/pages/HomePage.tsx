@@ -26,8 +26,20 @@ import { useTranslation } from 'react-i18next';
 import { useGetDashboard } from '../api/generated/dashboard/dashboard';
 import type { AttentionItem, ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
+import { useMethodology } from '../context/MethodologyContext';
 import MaturityOverview from '../components/dashboard/MaturityOverview';
 import GovernanceSetupWizard from '../components/settings/GovernanceSetupWizard';
+
+const ATTENTION_METHODOLOGY: (item: import('../api/generated/model').AttentionItem) => string | null = (item) => {
+  if (item.resourceType === 'ENTITY') return 'DATA_GOVERNANCE';
+  if (item.resourceType === 'DOMAIN') return 'DDD';
+  if (item.resourceType === 'DPIA') return 'GDPR';
+  if (item.resourceType === 'PROCESS') {
+    if (item.issueCode === 'NO_LEGAL_BASIS' || item.issueCode === 'DPIA_IN_PROGRESS') return 'GDPR';
+    return 'PROCESS_GOVERNANCE';
+  }
+  return null;
+};
 
 function useFormatRelativeTime() {
   const { t } = useTranslation();
@@ -40,7 +52,7 @@ function useFormatRelativeTime() {
     if (hours < 24) return t('home.timeHours', { count: hours });
     const days = Math.floor(hours / 24);
     if (days < 7) return t('home.timeDays', { count: days });
-    return new Date(dateStr).toLocaleDateString();
+    return new Date(dateStr).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' });
   };
 }
 
@@ -141,11 +153,12 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
             >
               <ListItemText
                 primary={item.name}
-                secondary={
-                  item.changedBy
-                    ? `${item.changeType.toLowerCase().replace('_', ' ')} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
-                    : item.changeType.toLowerCase().replace('_', ' ')
-                }
+                secondary={(() => {
+                  const action = item.changeType.toLowerCase().replace('_', ' ').replace(/e$/, '') + 'ed';
+                  return item.changedBy
+                    ? `${action} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
+                    : action;
+                })()}
                 slotProps={{
                   primary: { variant: 'body2', sx: { fontWeight: 500 } },
                   secondary: { variant: 'caption' }
@@ -228,7 +241,15 @@ const HomePage: React.FC = () => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: response, isLoading } = useGetDashboard();
   const dashboard = (response?.data) as import('../api/generated/model').DashboardResponse | undefined;
+  const { isMethodologyEnabled } = useMethodology();
   const [governanceWizardOpen, setGovernanceWizardOpen] = useState(false);
+
+  const filteredAttention = (dashboard?.needsAttention ?? []).filter((item) => {
+    const m = ATTENTION_METHODOLOGY(item);
+    return !m || isMethodologyEnabled(m);
+  });
+  const showEntities = isMethodologyEnabled('DATA_GOVERNANCE');
+  const showProcesses = isMethodologyEnabled('PROCESS_GOVERNANCE');
 
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto', maxWidth: 900 }}>
@@ -263,19 +284,18 @@ const HomePage: React.FC = () => {
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       {dashboard && (
         <>
-          {/* Needs Attention */}
-          <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
-            <AttentionSection items={dashboard.needsAttention ?? []} />
-          </SectionCard>
-
-          {/* Recently Modified */}
-          <SectionCard title={t('home.recentlyModified')} icon={<Schedule fontSize="small" />}>
-            <ActivitySection items={dashboard.recentActivity ?? []} />
-          </SectionCard>
+          {/* Needs Attention — always shown to admin; shown to others only when there are items */}
+          {(isAdmin || filteredAttention.length > 0) && (
+            <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
+              <AttentionSection items={filteredAttention} />
+            </SectionCard>
+          )}
 
           {/* My Responsibilities */}
+          {(showEntities || showProcesses) && (
           <SectionCard title={t('home.myResponsibilities')} icon={<AssignmentInd fontSize="small" />}>
             <Box>
+              {showEntities && (<>
               <Box sx={{ px: 2, pt: 1.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <Storage fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
                 <Typography
@@ -290,9 +310,11 @@ const HomePage: React.FC = () => {
                 </Typography>
               </Box>
               <ResponsibilitiesSection items={dashboard.myResponsibilities?.entities ?? []} type="entities" />
+              </>)}
 
-              <Divider sx={{ my: 1 }} />
+              {showEntities && showProcesses && <Divider sx={{ my: 1 }} />}
 
+              {showProcesses && (<>
               <Box sx={{ px: 2, pt: 0.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.75 }}>
                 <AccountTree fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
                 <Typography
@@ -307,7 +329,14 @@ const HomePage: React.FC = () => {
                 </Typography>
               </Box>
               <ResponsibilitiesSection items={dashboard.myResponsibilities?.processes ?? []} type="processes" />
+              </>)}
             </Box>
+          </SectionCard>
+          )}
+
+          {/* Recent Activity (created & modified) */}
+          <SectionCard title={t('home.recentlyModified')} icon={<Schedule fontSize="small" />}>
+            <ActivitySection items={dashboard.recentActivity ?? []} />
           </SectionCard>
         </>
       )}

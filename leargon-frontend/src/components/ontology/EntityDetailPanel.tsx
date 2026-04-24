@@ -636,7 +636,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               {!entity.ownerIsExplicit && entity.dataOwner && (
                 <Chip label={t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
               )}
-              {entity.ownerIsExplicit && isAdmin && entity.boundedContext?.owningUnitName && (
+              {entity.ownerIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
@@ -687,11 +687,23 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 {dataStewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{dataStewardEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={entity.dataSteward ? 'text.primary' : 'text.secondary'}>
-                {entity.dataSteward
-                  ? `${entity.dataSteward.firstName} ${entity.dataSteward.lastName} (${entity.dataSteward.username})`
-                  : t('common.notSet')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color={entity.dataSteward ? 'text.primary' : 'text.secondary'}>
+                  {entity.dataSteward
+                    ? `${entity.dataSteward.firstName} ${entity.dataSteward.lastName} (${entity.dataSteward.username})`
+                    : t('common.notSet')}
+                </Typography>
+                {!entity.stewardIsExplicit && entity.dataSteward && (
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                )}
+                {entity.stewardIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
+                  <Button size="small" variant="text" color="warning"
+                    onClick={async () => { await updateDataSteward.mutateAsync({ key: entityKey, data: { dataStewardUsername: null } }); invalidate(); }}
+                    sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                    {t('common.clearOverride')}
+                  </Button>
+                )}
+              </Box>
             )}
           </PropRow>
         )}
@@ -714,11 +726,23 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 {technicalCustodianEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{technicalCustodianEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={entity.technicalCustodian ? 'text.primary' : 'text.secondary'}>
-                {entity.technicalCustodian
-                  ? `${entity.technicalCustodian.firstName} ${entity.technicalCustodian.lastName} (${entity.technicalCustodian.username})`
-                  : t('common.notSet')}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color={entity.technicalCustodian ? 'text.primary' : 'text.secondary'}>
+                  {entity.technicalCustodian
+                    ? `${entity.technicalCustodian.firstName} ${entity.technicalCustodian.lastName} (${entity.technicalCustodian.username})`
+                    : t('common.notSet')}
+                </Typography>
+                {!entity.custodianIsExplicit && entity.technicalCustodian && (
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                )}
+                {entity.custodianIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
+                  <Button size="small" variant="text" color="warning"
+                    onClick={async () => { await updateTechnicalCustodian.mutateAsync({ key: entityKey, data: { technicalCustodianUsername: null } }); invalidate(); }}
+                    sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
+                    {t('common.clearOverride')}
+                  </Button>
+                )}
+              </Box>
             )}
           </PropRow>
         )}

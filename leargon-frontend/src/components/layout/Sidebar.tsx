@@ -20,13 +20,16 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const CORE_ITEMS: NavItem[] = [
+const ALWAYS_VISIBLE_ITEMS: NavItem[] = [
   { labelKey: 'nav.home', path: '/home', icon: <Home /> },
+  { labelKey: 'nav.help', path: '/help', icon: <HelpOutlined /> },
+];
+
+const CORE_ITEMS: NavItem[] = [
   { labelKey: 'nav.dataOntology', path: '/entities', icon: <AccountTree /> },
   { labelKey: 'nav.domainModel', path: '/domains', icon: <Category /> },
   { labelKey: 'nav.processMap', path: '/processes', icon: <Timeline /> },
   { labelKey: 'nav.orgStructure', path: '/organisation', icon: <CorporateFare /> },
-  { labelKey: 'nav.help', path: '/help', icon: <HelpOutlined /> },
 ];
 
 const ROLE_EXTRA_ITEMS: Record<Role, NavItem[]> = {
@@ -148,6 +151,7 @@ const Sidebar: React.FC = () => {
   }
 
   const extraItems = ROLE_EXTRA_ITEMS[role].filter((item) => isNavPathEnabled(item.path));
+  const coreItems = CORE_ITEMS.filter((item) => isNavPathEnabled(item.path));
   const sectionLabelKey = ROLE_SECTION_LABEL[role];
 
   return (
@@ -166,11 +170,13 @@ const Sidebar: React.FC = () => {
       }}
     >
       <List component="nav" sx={{ px: 1, pt: 1 }}>
-        <NavItemButton key={CORE_ITEMS[0].path} item={CORE_ITEMS[0]} />
-        <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />
-        {CORE_ITEMS.slice(1).map((item) => (
+        <NavItemButton key="/home" item={ALWAYS_VISIBLE_ITEMS[0]} />
+        {coreItems.length > 0 && <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />}
+        {coreItems.map((item) => (
           <NavItemButton key={item.path} item={item} />
         ))}
+        <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />
+        <NavItemButton key="/help" item={ALWAYS_VISIBLE_ITEMS[1]} />
       </List>
 
       {extraItems.length > 0 && (

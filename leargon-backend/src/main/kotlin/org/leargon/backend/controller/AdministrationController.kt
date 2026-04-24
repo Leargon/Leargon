@@ -5,6 +5,7 @@ import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.security.annotation.Secured
+import io.micronaut.security.rules.SecurityRule
 import jakarta.validation.Valid
 import org.leargon.backend.api.AdministrationApi
 import org.leargon.backend.model.AdministrationChangePasswordRequest
@@ -92,7 +93,7 @@ open class AdministrationController(
         @Body @Valid entries: List<FieldConfigurationEntry>
     ): List<FieldConfigurationEntry> = fieldConfigurationService.replace(entries)
 
-    @Secured("ROLE_ADMIN")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun getMethodologyConfigurations(): List<MethodologyConfigEntry> = methodologyConfigurationService.getAll()
 
     @Secured("ROLE_ADMIN")

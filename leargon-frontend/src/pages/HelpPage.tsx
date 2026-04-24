@@ -10,6 +10,11 @@ import {
   Divider,
   Button,
   Stack,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from '@mui/material';
 import {
   AccountTree,
@@ -19,9 +24,15 @@ import {
   GppGood,
   Groups,
   ArrowForward,
+  ManageAccounts,
+  EngineeringOutlined,
+  SupervisorAccount,
+  Visibility,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useMethodology } from '../context/MethodologyContext';
 
 type GoalKey = 'dataGov' | 'ddd' | 'bcm' | 'bpm' | 'compliance' | 'orgDesign';
 
@@ -69,6 +80,15 @@ const RECOMMENDATIONS: Record<GoalKey, Step[]> = {
   ],
 };
 
+const GOAL_METHODOLOGY: Record<GoalKey, string> = {
+  dataGov: 'DATA_GOVERNANCE',
+  ddd: 'DDD',
+  bcm: 'BCM',
+  bpm: 'PROCESS_GOVERNANCE',
+  compliance: 'GDPR',
+  orgDesign: 'TEAM_TOPOLOGIES',
+};
+
 const GOALS: GoalKey[] = ['dataGov', 'ddd', 'bcm', 'bpm', 'compliance', 'orgDesign'];
 
 interface Framework {
@@ -76,7 +96,36 @@ interface Framework {
   descKey: string;
   icon: React.ReactNode;
   viewKeys: string[];
+  methodologyKey: string;
 }
+
+interface EntityRoleRow {
+  entityKey: string;
+  ownerKey: string;
+  stewardKey: string;
+  custodianKey: string;
+  methodologyKey: string;
+}
+
+const ENTITY_ROLE_ROWS: EntityRoleRow[] = [
+  { entityKey: 'help.entityData',    ownerKey: 'help.roleDataOwner',    stewardKey: 'help.roleDataSteward',    custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'DATA_GOVERNANCE' },
+  { entityKey: 'help.entityProcess', ownerKey: 'help.roleProcessOwner', stewardKey: 'help.roleProcessSteward', custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'PROCESS_GOVERNANCE' },
+  { entityKey: 'help.entityOrgUnit', ownerKey: 'help.roleBusinessOwner',stewardKey: 'help.roleBusinessSteward',custodianKey: 'help.roleTechnicalCustodian', methodologyKey: 'TEAM_TOPOLOGIES' },
+];
+
+interface RoleDesc {
+  titleKey: string;
+  descKey: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const ROLE_DESCS: RoleDesc[] = [
+  { titleKey: 'help.roleOwner',    descKey: 'help.roleOwnerDesc',    icon: <ManageAccounts />,   color: '#1976d2' },
+  { titleKey: 'help.roleSteward',  descKey: 'help.roleStewardDesc',  icon: <SupervisorAccount />,color: '#00796b' },
+  { titleKey: 'help.roleCustodian',descKey: 'help.roleCustodianDesc',icon: <EngineeringOutlined />, color: '#e65100' },
+  { titleKey: 'help.roleConsumer', descKey: 'help.roleConsumerDesc', icon: <Visibility />,       color: '#455a64' },
+];
 
 const FRAMEWORKS: Framework[] = [
   {
@@ -84,41 +133,51 @@ const FRAMEWORKS: Framework[] = [
     descKey: 'help.dgDesc',
     icon: <AccountTree color="primary" />,
     viewKeys: ['help.viewDataOntology', 'help.viewDomainModel'],
+    methodologyKey: 'DATA_GOVERNANCE',
   },
   {
     titleKey: 'help.dddTitle',
     descKey: 'help.dddDesc',
     icon: <Category color="primary" />,
     viewKeys: ['help.viewDomainModel', 'help.viewUbiquitousLanguage', 'help.viewContextMap', 'help.viewEventFlow'],
+    methodologyKey: 'DDD',
   },
   {
     titleKey: 'help.bcmTitle',
     descKey: 'help.bcmDesc',
     icon: <AutoAwesomeMosaic color="primary" />,
     viewKeys: ['help.viewCapabilities', 'help.viewCapabilityMap'],
+    methodologyKey: 'BCM',
   },
   {
     titleKey: 'help.bpmTitle',
     descKey: 'help.bpmDesc',
     icon: <Timeline color="primary" />,
     viewKeys: ['help.viewProcessMap'],
+    methodologyKey: 'PROCESS_GOVERNANCE',
   },
   {
     titleKey: 'help.complianceTitle',
     descKey: 'help.complianceDesc',
     icon: <GppGood color="primary" />,
     viewKeys: ['help.viewProcessingRegister', 'help.viewDpiaRegister', 'help.viewServiceProviders'],
+    methodologyKey: 'GDPR',
   },
   {
     titleKey: 'help.ttTitle',
     descKey: 'help.ttDesc',
     icon: <Groups color="primary" />,
     viewKeys: ['help.viewOrgStructure', 'help.viewTeamInsights'],
+    methodologyKey: 'TEAM_TOPOLOGIES',
   },
 ];
 
 const HelpPage: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { isMethodologyEnabled } = useMethodology();
+  const enabledFrameworks = FRAMEWORKS.filter((fw) => isMethodologyEnabled(fw.methodologyKey));
   const [selectedGoals, setSelectedGoals] = useState<Set<GoalKey>>(new Set());
 
   const toggleGoal = (goal: GoalKey) => {
@@ -164,7 +223,7 @@ const HelpPage: React.FC = () => {
           mb: 5,
         }}
       >
-        {FRAMEWORKS.map((fw) => (
+        {(isAdmin ? FRAMEWORKS : enabledFrameworks).map((fw) => (
           <Paper key={fw.titleKey} variant="outlined" sx={{ p: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               {fw.icon}
@@ -184,70 +243,119 @@ const HelpPage: React.FC = () => {
 
       <Divider sx={{ mb: 4 }} />
 
-      {/* Section 2: Where do I start? */}
-      <Typography variant="h6" sx={{ mb: 0.5 }}>{t('help.startTitle')}</Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{t('help.startSubtitle')}</Typography>
+      {/* Section 2: Roles & Responsibilities */}
+      <Typography variant="h6" sx={{ mb: 0.5 }}>{t('help.rolesTitle')}</Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{t('help.rolesSubtitle')}</Typography>
 
-      <Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
-        <FormGroup sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0.5 }}>
-          {GOALS.map((goal) => (
-            <FormControlLabel
-              key={goal}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={selectedGoals.has(goal)}
-                  onChange={() => toggleGoal(goal)}
-                />
-              }
-              label={<Typography variant="body2">{t(`help.goal${goal.charAt(0).toUpperCase() + goal.slice(1)}`)}</Typography>}
-            />
-          ))}
-        </FormGroup>
+      {/* Role assignment table */}
+      <Paper variant="outlined" sx={{ mb: 3, overflow: 'hidden' }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'action.hover' }}>
+              <TableCell sx={{ fontWeight: 700, width: '22%' }}>{t('help.roleColObject')}</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: '#1976d2' }}>{t('help.roleColOwner')}</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: '#00796b' }}>{t('help.roleColSteward')}</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: '#e65100' }}>{t('help.roleColCustodian')}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(isAdmin ? ENTITY_ROLE_ROWS : ENTITY_ROLE_ROWS.filter((r) => isMethodologyEnabled(r.methodologyKey))).map((row) => (
+              <TableRow key={row.entityKey} sx={{ '&:last-child td': { border: 0 } }}>
+                <TableCell sx={{ fontWeight: 600 }}>{t(row.entityKey)}</TableCell>
+                {[row.ownerKey, row.stewardKey, row.custodianKey].map((key) => (
+                  <TableCell key={key}>
+                    <Typography variant="body2">{t(key)}</Typography>
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </Paper>
 
-      {selectedGoals.size === 0 ? (
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('help.noGoalSelected')}</Typography>
-      ) : (
+      {/* Generic role descriptions */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr 1fr' }, gap: 2, mb: 5 }}>
+        {ROLE_DESCS.map((rd) => (
+          <Paper key={rd.titleKey} variant="outlined" sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
+              <Box sx={{ color: rd.color, display: 'flex' }}>{rd.icon}</Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{t(rd.titleKey)}</Typography>
+            </Box>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t(rd.descKey)}</Typography>
+          </Paper>
+        ))}
+      </Box>
+
+      {isAdmin && (
         <>
-          <Typography variant="subtitle2" sx={{ mb: 1.5 }}>{t('help.recommendedPath')}</Typography>
-          <Stack spacing={1.5}>
-            {recommendedSteps.map((step, i) => (
-              <Paper key={step.labelKey} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box
-                  sx={{
-                    minWidth: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}
-                >
-                  {i + 1}
-                </Box>
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{t(step.labelKey)}</Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t(step.descKey)}</Typography>
-                </Box>
-                <Button
-                  component={Link}
-                  to={step.path}
-                  variant="outlined"
-                  size="small"
-                  endIcon={<ArrowForward fontSize="small" />}
-                  sx={{ flexShrink: 0 }}
-                >
-                  {t('help.go')}
-                </Button>
-              </Paper>
-            ))}
-          </Stack>
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 3: Where do I start? — admin only */}
+          <Typography variant="h6" sx={{ mb: 0.5 }}>{t('help.startTitle')}</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{t('help.startSubtitle')}</Typography>
+
+          <Paper variant="outlined" sx={{ p: 2.5, mb: 3 }}>
+            <FormGroup sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 0.5 }}>
+              {(isAdmin ? GOALS : GOALS.filter((goal) => isMethodologyEnabled(GOAL_METHODOLOGY[goal]))).map((goal) => (
+                <FormControlLabel
+                  key={goal}
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={selectedGoals.has(goal)}
+                      onChange={() => toggleGoal(goal)}
+                    />
+                  }
+                  label={<Typography variant="body2">{t(`help.goal${goal.charAt(0).toUpperCase() + goal.slice(1)}`)}</Typography>}
+                />
+              ))}
+            </FormGroup>
+          </Paper>
+
+          {selectedGoals.size === 0 ? (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('help.noGoalSelected')}</Typography>
+          ) : (
+            <>
+              <Typography variant="subtitle2" sx={{ mb: 1.5 }}>{t('help.recommendedPath')}</Typography>
+              <Stack spacing={1.5}>
+                {recommendedSteps.map((step, i) => (
+                  <Paper key={step.labelKey} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      sx={{
+                        minWidth: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {i + 1}
+                    </Box>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{t(step.labelKey)}</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t(step.descKey)}</Typography>
+                    </Box>
+                    <Button
+                      component={Link}
+                      to={step.path}
+                      variant="outlined"
+                      size="small"
+                      endIcon={<ArrowForward fontSize="small" />}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      {t('help.go')}
+                    </Button>
+                  </Paper>
+                ))}
+              </Stack>
+            </>
+          )}
         </>
       )}
     </Box>

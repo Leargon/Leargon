@@ -56,13 +56,13 @@ const METHODOLOGY_FILTER: Record<string, (d: FieldConfigurationDefinition) => bo
   DATA_GOVERNANCE: (d) =>
     (d.entityType === 'BUSINESS_ENTITY' && ['DATA_GOVERNANCE', 'DATA_QUALITY'].includes(d.section)) ||
     (d.entityType === 'BUSINESS_ENTITY' &&
-      ['descriptions', 'dataOwner', 'dataSteward', 'technicalCustodian'].some(
+      ['descriptions', 'dataOwner', 'owningUnit', 'dataSteward', 'technicalCustodian'].some(
         (n) => d.fieldName === n || d.fieldName.startsWith(n + '.'),
       )),
   PROCESS_GOVERNANCE: (d) =>
     (d.entityType === 'BUSINESS_PROCESS' && d.section === 'DATA_FLOW') ||
     (d.entityType === 'BUSINESS_PROCESS' &&
-      ['descriptions', 'processOwner', 'processType', 'code', 'processSteward', 'technicalCustodian'].some(
+      ['descriptions', 'processOwner', 'owningUnit', 'processType', 'code', 'processSteward', 'technicalCustodian'].some(
         (n) => d.fieldName === n || d.fieldName.startsWith(n + '.'),
       )),
   GDPR: (d) => d.entityType === 'BUSINESS_PROCESS' && d.section === 'GDPR',

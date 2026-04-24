@@ -212,10 +212,13 @@ open class BusinessEntityService(
         var entity = getBusinessEntityByKey(entityKey)
         checkEditPermission(entity, currentUser)
 
-        val effectiveOwningUnit = entity.boundedContext?.owningUnit ?: entity.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit =
+            entity.owningUnit
+                ?: entity.boundedContext?.owningUnit
+                ?: entity.boundedContext?.domain?.owningUnit
         if (effectiveOwningUnit?.businessOwner == null) {
             throw IllegalArgumentException(
-                "Cannot clear explicit data owner: no computed owner available from the bounded context's owning unit"
+                "Cannot clear explicit data owner: no computed owner available from the owning unit or bounded context"
             )
         }
         entity.dataOwner = null
@@ -655,6 +658,20 @@ open class BusinessEntityService(
                     .findByKey(owningUnitKey)
                     .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
             } else {
+                val fallbackOwner =
+                    entity.dataOwner
+                        ?: entity.boundedContext
+                            ?.owningUnit
+                            ?.businessOwner
+                        ?: entity.boundedContext
+                            ?.domain
+                            ?.owningUnit
+                            ?.businessOwner
+                if (fallbackOwner == null) {
+                    throw IllegalArgumentException(
+                        "Cannot remove owning unit: no direct data owner or bounded context owner exists as fallback"
+                    )
+                }
                 null
             }
 
@@ -789,7 +806,10 @@ open class BusinessEntityService(
             entity: BusinessEntity,
             currentUser: User
         ) {
-            val effectiveOwner = entity.dataOwner ?: entity.boundedContext?.owningUnit?.businessOwner
+            val effectiveOwner =
+                entity.dataOwner
+                    ?: entity.owningUnit?.businessOwner
+                    ?: entity.boundedContext?.owningUnit?.businessOwner
             val isOwner = effectiveOwner?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {

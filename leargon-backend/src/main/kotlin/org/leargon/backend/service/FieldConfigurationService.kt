@@ -318,7 +318,7 @@ open class FieldConfigurationService(
 
         // Expand hidden group entries (e.g. "names" HIDDEN → "names.en", "names.de", …)
         val rawHidden = configs.filter { it.visibility == "HIDDEN" && it.fieldName !in methodologyExcluded }.map { it.fieldName }
-        val hiddenNames =
+        val hiddenFromConfig =
             rawHidden
                 .flatMap { fieldName ->
                     if (fieldName in localeGroupBases) {
@@ -327,6 +327,9 @@ open class FieldConfigurationService(
                         listOf(fieldName)
                     }
                 }.filter { it !in methodologyExcluded }
+
+        // Methodology-disabled fields are always hidden, regardless of field-level config
+        val hiddenNames = (hiddenFromConfig + methodologyExcluded).distinct()
 
         // Mandatory names: per-locale entries (SHOWN) and regular fields (SHOWN), excluding methodology-disabled fields
         val mandatoryNames =

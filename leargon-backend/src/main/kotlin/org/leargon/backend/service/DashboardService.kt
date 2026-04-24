@@ -38,7 +38,8 @@ open class DashboardService(
 ) {
     fun getDashboard(
         email: String,
-        locale: String = "en"
+        locale: String = "en",
+        isAdmin: Boolean = true,
     ): DashboardResponse {
         // Capture for AOP proxy safety
         val procRepo = this.processRepository
@@ -64,7 +65,8 @@ open class DashboardService(
         val processes = procRepo.findAll()
         processes
             .filter { process ->
-                process.legalBasis == null &&
+                (isAdmin || process.processOwner?.id == userId) &&
+                    process.legalBasis == null &&
                     (process.inputEntities + process.outputEntities).any { entity ->
                         entity.classificationAssignments.any {
                             it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
@@ -85,7 +87,7 @@ open class DashboardService(
         // Active DPIAs
         dpiaRepo
             .findAll()
-            .filter { it.status == "IN_PROGRESS" }
+            .filter { it.status == "IN_PROGRESS" && (isAdmin || it.triggeredBy?.id == userId) }
             .forEach { dpia ->
                 val (type, key, name) =
                     when {
