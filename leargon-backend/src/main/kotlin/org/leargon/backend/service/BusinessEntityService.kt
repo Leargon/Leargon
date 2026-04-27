@@ -48,6 +48,14 @@ open class BusinessEntityService(
 
     open fun getAllBusinessEntities(): List<BusinessEntity> = businessEntityRepository.findAll()
 
+    fun canEdit(entity: BusinessEntity, currentUser: User): Boolean {
+        val effectiveOwner =
+            entity.dataOwner
+                ?: entity.owningUnit?.businessOwner
+                ?: entity.boundedContext?.owningUnit?.businessOwner
+        return effectiveOwner?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
+    }
+
     @Transactional
     open fun getAllBusinessEntitiesAsResponses(): List<BusinessEntityResponse> =
         getAllBusinessEntities().map { businessEntityMapper.toBusinessEntityResponse(it) }
