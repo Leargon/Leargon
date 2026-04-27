@@ -656,7 +656,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} canEdit={isOwnerOrAdmin} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -683,9 +683,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 }}>{t('common.unassigned')}</Typography>
               )}
               {!process.ownerIsExplicit && process.processOwner && (
-                <Chip label={t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
               )}
-              {process.ownerIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+              {process.ownerIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
@@ -718,7 +718,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.processSteward && !isHidden('processSteward') && (
-          <PropRow label={t('process.processSteward')} canEdit={isAdmin} isEditing={stewardEdit.isEditing}
+          <PropRow label={t('process.processSteward')} canEdit={isOwnerOrAdmin} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
             onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
             {stewardEdit.isEditing ? (
@@ -743,9 +743,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     : t('common.notSet')}
                 </Typography>
                 {!process.stewardIsExplicit && process.processSteward && (
-                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {process.stewardIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                {process.stewardIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateSteward.mutateAsync({ key: processKey, data: { processStewardUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -757,7 +757,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('process.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow label={t('process.technicalCustodian')} canEdit={isOwnerOrAdmin} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
@@ -782,9 +782,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     : t('common.notSet')}
                 </Typography>
                 {!process.custodianIsExplicit && process.technicalCustodian && (
-                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: process.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {process.custodianIsExplicit && isAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                {process.custodianIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateTechnicalCustodian.mutateAsync({ key: processKey, data: { technicalCustodianUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
