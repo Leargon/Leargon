@@ -8,6 +8,7 @@ import CreateItSystemDialog from '../components/it-systems/CreateItSystemDialog'
 import ItSystemsSetupWizard from '../components/it-systems/ItSystemsSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllItSystems } from '../api/generated/it-system/it-system';
+import type { ItSystemResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +24,7 @@ const ItSystemsPage: React.FC = () => {
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
 
   const { data: systemsResponse, isLoading } = useGetAllItSystems();
-  const systems = (systemsResponse?.data as any[] | undefined) ?? [];
+  const systems = (systemsResponse?.data as ItSystemResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && systems.length === 0;
 
   useEffect(() => {

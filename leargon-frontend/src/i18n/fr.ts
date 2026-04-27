@@ -45,6 +45,7 @@ const fr = {
     owningUnit: 'Unité responsable',
     searchUnit: 'Rechercher une unité organisationnelle...',
     clearOverride: 'Supprimer la substitution',
+    sessionExpiring: 'Votre session expire dans moins de 5 minutes. Veuillez sauvegarder votre travail.',
     viaOwningUnit: "via l'unité propriétaire",
     viaBoundedContext: 'via le contexte délimité',
     viaSubdomain: 'via le sous-domaine',

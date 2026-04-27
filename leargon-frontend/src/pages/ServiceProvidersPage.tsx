@@ -10,6 +10,7 @@ import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPag
 import { useAuth } from '../context/AuthContext';
 import { downloadExport } from '../api/exportApi';
 import { useGetAllServiceProviders } from '../api/generated/service-provider/service-provider';
+import type { ServiceProviderResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 
@@ -25,7 +26,7 @@ const ServiceProvidersPage: React.FC = () => {
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
   const { data: providersResponse, isLoading } = useGetAllServiceProviders();
-  const providers = (providersResponse?.data as any[] | undefined) ?? [];
+  const providers = (providersResponse?.data as ServiceProviderResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && providers.length === 0;
 
   useEffect(() => {

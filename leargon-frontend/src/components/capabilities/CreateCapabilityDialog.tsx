@@ -17,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   useCreateCapability,
   getGetAllCapabilitiesQueryKey,
+  getGetCapabilityByKeyQueryKey,
 } from '../../api/generated/capability/capability';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllCapabilities } from '../../api/generated/capability/capability';
@@ -73,6 +74,9 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetAllCapabilitiesQueryKey() });
+      if (parentKey) {
+        queryClient.invalidateQueries({ queryKey: getGetCapabilityByKeyQueryKey(parentKey) });
+      }
       handleClose();
       if (res.status === 201) {
         navigate(`/capabilities/${res.data.key}`);

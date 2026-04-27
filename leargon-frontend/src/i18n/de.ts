@@ -45,6 +45,7 @@ const de = {
     owningUnit: 'Zuständige Einheit',
     searchUnit: 'Organisationseinheit suchen...',
     clearOverride: 'Überschreibung aufheben',
+    sessionExpiring: 'Ihre Sitzung läuft in weniger als 5 Minuten ab. Bitte speichern Sie Ihre Arbeit.',
     viaOwningUnit: 'über Eigentümereinheit',
     viaBoundedContext: 'über Bounded Context',
     viaSubdomain: 'über Subdomain',

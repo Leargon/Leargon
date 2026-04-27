@@ -8,6 +8,7 @@ import CreateOrgUnitDialog from '../components/organisation/CreateOrgUnitDialog'
 import OrgSetupWizard from '../components/organisation/OrgSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllOrganisationalUnits } from '../api/generated/organisational-unit/organisational-unit';
+import type { OrganisationalUnitResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +27,7 @@ const OrganisationPage: React.FC = () => {
   const [view, setView] = useState('list');
 
   const { data: unitsResponse, isLoading } = useGetAllOrganisationalUnits();
-  const units = (unitsResponse?.data as any[] | undefined) ?? [];
+  const units = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && units.length === 0;
 
   useEffect(() => {

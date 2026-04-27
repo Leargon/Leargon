@@ -58,7 +58,7 @@ interface ProcessRowProps {
   onSaved: () => void;
   getLocalizedText: (names: any, fallback?: string) => string;
   locales: SupportedLocaleResponse[];
-  t: (key: string, opts?: any) => string;
+  t: ReturnType<typeof useTranslation>['t'];
 }
 
 const ProcessRow: React.FC<ProcessRowProps> = ({
@@ -396,7 +396,7 @@ const ProcessingRegisterPage: React.FC = () => {
   const { data: processesResponse, isLoading } = useGetAllProcesses();
   const processes: ProcessResponse[] = ((processesResponse?.data) as ProcessResponse[] | undefined) ?? [];
 
-  const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => (p as any).legalBasis);
+  const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => p.legalBasis);
 
   useEffect(() => {
     if (isAdmin && hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
@@ -546,7 +546,7 @@ const ProcessingRegisterPage: React.FC = () => {
                   onSaved={invalidateProcesses}
                   getLocalizedText={getLocalizedText}
                   locales={locales}
-                  t={t as any}
+                  t={t}
                 />
               ))
             )}

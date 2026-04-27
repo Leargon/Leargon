@@ -45,6 +45,7 @@ const en = {
     owningUnit: 'Owning Unit',
     searchUnit: 'Search for organisational unit...',
     clearOverride: 'Clear override',
+    sessionExpiring: 'Your session will expire in less than 5 minutes. Please save your work.',
     viaOwningUnit: 'via Owning Unit',
     viaBoundedContext: 'via Bounded Context',
     viaSubdomain: 'via Subdomain',

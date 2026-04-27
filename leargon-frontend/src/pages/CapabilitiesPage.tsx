@@ -10,6 +10,7 @@ import { CapabilityMapContent } from './CapabilityMapPage';
 import { StrategicMapContent } from './StrategicMapPage';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllCapabilities } from '../api/generated/capability/capability';
+import type { CapabilityResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +28,7 @@ const CapabilitiesPage: React.FC = () => {
   const [view, setView] = useState('list');
 
   const { data: capsResponse, isLoading } = useGetAllCapabilities();
-  const caps = (capsResponse?.data as any[] | undefined) ?? [];
+  const caps = (capsResponse?.data as CapabilityResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && caps.length === 0;
 
   useEffect(() => {
