@@ -1,11 +1,13 @@
 import { memo } from 'react';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, Position, BaseEdge, EdgeLabelRenderer, getBezierPath, type NodeProps, type EdgeProps } from '@xyflow/react';
 import { Box, Chip, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 // ─── Data types (exported for use in parent components) ───────────────────────
 
 export interface EntityNodeData {
   label: string;
+  description?: string;
   domainName?: string;
   domainColor?: string;
   /** Direct child entities shown as a UML compartment within this node */
@@ -62,6 +64,16 @@ export const EntityNode = memo(({ data, selected }: NodeProps) => {
         }}>
           {d.label}
         </Typography>
+        {d.description && (
+          <Typography
+            variant="caption"
+            noWrap
+            title={d.description}
+            sx={{ color: 'text.secondary', display: 'block', mt: 0.25, fontSize: '0.68rem' }}
+          >
+            {d.description}
+          </Typography>
+        )}
         {d.domainName && (
           <Typography
             variant="caption"
@@ -390,4 +402,64 @@ export const SHARED_NODE_TYPES = {
   orgUnitNode: OrgUnitNode,
   domainGroupNode: DomainGroupNode,
   orgUnitGroupNode: OrgUnitGroupNode,
+};
+
+// ─── Relationship Edge ─────────────────────────────────────────────────────────
+
+export interface RelationshipEdgeData extends Record<string, unknown> {
+  desc: string;
+  descDisplay: string;
+  cardLabel: string;
+}
+
+export const RelationshipEdge = memo(({
+  id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd, data,
+}: EdgeProps) => {
+  const theme = useTheme();
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition,
+  });
+  const d = data as unknown as RelationshipEdgeData;
+  const hasLabel = !!(d?.desc || d?.cardLabel);
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      {hasLabel && (
+        <EdgeLabelRenderer>
+          <div
+            className="nodrag nopan"
+            title={d?.desc || undefined}
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: 'all',
+              background: theme.palette.background.paper,
+              opacity: 0.95,
+              padding: '2px 6px',
+              borderRadius: 3,
+              fontSize: 10,
+              textAlign: 'center',
+              color: theme.palette.text.secondary,
+              cursor: 'default',
+            }}
+          >
+            {d?.desc && (
+              <div style={{ fontWeight: 700, color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                {d.descDisplay}
+              </div>
+            )}
+            {d?.cardLabel && (
+              <div style={{ whiteSpace: 'nowrap' }}>{d.cardLabel}</div>
+            )}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+});
+RelationshipEdge.displayName = 'RelationshipEdge';
+
+export const SHARED_EDGE_TYPES = {
+  relationshipEdge: RelationshipEdge,
 };
