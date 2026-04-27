@@ -48,7 +48,10 @@ open class BusinessEntityService(
 
     open fun getAllBusinessEntities(): List<BusinessEntity> = businessEntityRepository.findAll()
 
-    fun canEdit(entity: BusinessEntity, currentUser: User): Boolean {
+    fun canEdit(
+        entity: BusinessEntity,
+        currentUser: User,
+    ): Boolean {
         val effectiveOwner =
             entity.dataOwner
                 ?: entity.owningUnit?.businessOwner
