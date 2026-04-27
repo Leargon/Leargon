@@ -1,6 +1,7 @@
 package org.leargon.backend.service
 
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.model.BottleneckTeamItem
@@ -24,7 +25,8 @@ open class AnalyticsService(
     private val boundedContextRepository: BoundedContextRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
 ) {
-    fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
+    @Transactional
+    open fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
         // Capture for AOP proxy safety
         val procRepo = this.processRepository
         val entityRepo = this.businessEntityRepository

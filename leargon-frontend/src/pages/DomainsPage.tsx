@@ -9,6 +9,7 @@ import DomainModelWizard from '../components/domains/DomainModelWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { tokenStorage } from '../utils/tokenStorage';
 import { useGetAllBusinessDomains } from '../api/generated/business-domain/business-domain';
+import type { BusinessDomainResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +28,7 @@ const DomainsPage: React.FC = () => {
   const [view, setView] = useState('list');
 
   const { data: domainsResponse, isLoading } = useGetAllBusinessDomains();
-  const domains = (domainsResponse?.data as any[] | undefined) ?? [];
+  const domains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && domains.length === 0;
 
   useEffect(() => {

@@ -12,6 +12,7 @@ interface AuthContextType {
   updateUser: (user: UserResponse) => void;
   isAuthenticated: boolean;
   loading: boolean;
+  sessionExpiring: boolean;
 }
 
 function isTokenExpired(token: string): boolean {
@@ -40,6 +41,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpiring, setSessionExpiring] = useState(false);
 
   useEffect(() => {
     const initAuth = () => {
@@ -58,6 +60,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initAuth();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const token = tokenStorage.getToken();
+      if (!token) return;
+      if (isTokenExpired(token)) {
+        tokenStorage.clear();
+        setUser(null);
+        setSessionExpiring(false);
+      } else {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const msRemaining = payload.exp * 1000 - Date.now();
+          setSessionExpiring(msRemaining < 5 * 60 * 1000);
+        } catch {
+          // malformed token — leave it to the next API call to handle
+        }
+      }
+    }, 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
@@ -106,6 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
     isAuthenticated: !!tokenStorage.getToken() && !isTokenExpired(tokenStorage.getToken()!),
     loading,
+    sessionExpiring,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

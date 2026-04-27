@@ -1,6 +1,7 @@
 package org.leargon.backend.service
 
 import jakarta.inject.Singleton
+import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.model.ActivityItem
 import org.leargon.backend.model.ActivityItemResourceType
@@ -36,7 +37,8 @@ open class DashboardService(
     private val userRepository: UserRepository,
     private val businessDomainRepository: BusinessDomainRepository,
 ) {
-    fun getDashboard(
+    @Transactional
+    open fun getDashboard(
         email: String,
         locale: String = "en",
         isAdmin: Boolean = true,
@@ -206,7 +208,8 @@ open class DashboardService(
         )
     }
 
-    fun getMaturityMetrics(): MaturityMetricsResponse {
+    @Transactional
+    open fun getMaturityMetrics(): MaturityMetricsResponse {
         val entityRepo = this.businessEntityRepository
         val procRepo = this.processRepository
         val domainRepo = this.businessDomainRepository

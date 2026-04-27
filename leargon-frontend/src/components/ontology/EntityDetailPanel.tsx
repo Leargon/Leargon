@@ -607,7 +607,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} canEdit={isAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} canEdit={isOwnerOrAdmin} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(entity.dataOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -634,9 +634,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 }}>{t('common.unassigned')}</Typography>
               )}
               {!entity.ownerIsExplicit && entity.dataOwner && (
-                <Chip label={t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
               )}
-              {entity.ownerIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
+              {entity.ownerIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
@@ -669,7 +669,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.dataSteward && !isHidden('dataSteward') && (
-          <PropRow label={t('entity.dataSteward')} canEdit={isAdmin} isEditing={dataStewardEdit.isEditing}
+          <PropRow label={t('entity.dataSteward')} canEdit={isOwnerOrAdmin} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
             onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
             {dataStewardEdit.isEditing ? (
@@ -694,9 +694,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     : t('common.notSet')}
                 </Typography>
                 {!entity.stewardIsExplicit && entity.dataSteward && (
-                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {entity.stewardIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
+                {entity.stewardIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateDataSteward.mutateAsync({ key: entityKey, data: { dataStewardUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -708,7 +708,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('entity.technicalCustodian')} canEdit={isAdmin} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow label={t('entity.technicalCustodian')} canEdit={isOwnerOrAdmin} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
@@ -733,9 +733,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     : t('common.notSet')}
                 </Typography>
                 {!entity.custodianIsExplicit && entity.technicalCustodian && (
-                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : t('common.computed', { unit: entity.boundedContext?.owningUnitName ?? t('common.owningUnit') })} size="small" variant="outlined" color="info" />
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {entity.custodianIsExplicit && isAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
+                {entity.custodianIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateTechnicalCustodian.mutateAsync({ key: entityKey, data: { technicalCustodianUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>

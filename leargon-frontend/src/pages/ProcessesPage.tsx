@@ -8,6 +8,7 @@ import ProcessCreationWizard from '../components/processes/ProcessCreationWizard
 import ProcessLandscapeWizard from '../components/processes/ProcessLandscapeWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useGetAllProcesses } from '../api/generated/process/process';
+import type { ProcessResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +27,7 @@ const ProcessesPage: React.FC = () => {
   const [view, setView] = useState('list');
 
   const { data: processesResponse, isLoading } = useGetAllProcesses();
-  const processes = (processesResponse?.data as any[] | undefined) ?? [];
+  const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? [];
   const isEmpty = !isLoading && processes.length === 0;
 
   useEffect(() => {

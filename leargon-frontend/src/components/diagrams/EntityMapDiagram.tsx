@@ -20,47 +20,22 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { Palette } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
-import { SHARED_NODE_TYPES, type EntityNodeData, type GroupNodeData } from './sharedNodes';
+import { SHARED_NODE_TYPES, SHARED_EDGE_TYPES, type EntityNodeData, type GroupNodeData, type RelationshipEdgeData } from './sharedNodes';
 import { applyDagreLayout, layoutGroups, domainColor, cardinalityLabel } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
-/** SVG marker definitions for UML realization (implements) arrow */
-const UmlMarkers: React.FC = () => {
-  const theme = useTheme();
-  return (
-    <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden' }}>
-      <defs>
-        <marker
-          id="uml-realizes"
-          viewBox="0 0 12 12"
-          refX="11"
-          refY="6"
-          markerUnits="userSpaceOnUse"
-          markerWidth="12"
-          markerHeight="12"
-          orient="auto"
-        >
-          {/* Hollow triangle = UML realization / implements */}
-          <path
-            d="M 0 0 L 12 6 L 0 12 Z"
-            fill={theme.palette.background.paper}
-            stroke="#9c27b0"
-            strokeWidth="1.5"
-          />
-        </marker>
-      </defs>
-    </svg>
-  );
-};
 
-function buildEdges(rootEntities: BusinessEntityResponse[], childKeys: Set<string>): Edge[] {
+function buildEdges(
+  rootEntities: BusinessEntityResponse[],
+  childKeys: Set<string>,
+  getLocalizedText: (texts: { locale: string; text: string }[], fallback?: string) => string,
+): Edge[] {
   const seen = new Set<string>();
   const edges: Edge[] = [];
   rootEntities.forEach((entity) => {
@@ -72,15 +47,16 @@ function buildEdges(rootEntities: BusinessEntityResponse[], childKeys: Set<strin
       const edgeId = [a.businessEntity.key, b.businessEntity.key].sort().join('__rel__') + (rel.id ?? '');
       if (seen.has(edgeId)) return;
       seen.add(edgeId);
+      const cardLabel = `${cardinalityLabel(a.minimum, a.maximum)} — ${cardinalityLabel(b.minimum, b.maximum)}`;
+      const desc = rel.descriptions ? getLocalizedText(rel.descriptions, '') : '';
+      const descDisplay = desc.length > 15 ? `${desc.slice(0, 15)}…` : desc;
       edges.push({
         id: edgeId,
         source: a.businessEntity.key,
         target: b.businessEntity.key,
-        label: `${cardinalityLabel(a.minimum, a.maximum)} — ${cardinalityLabel(b.minimum, b.maximum)}`,
-        type: 'default',
+        type: 'relationshipEdge',
         style: { stroke: '#90a4ae' },
-        labelStyle: { fontSize: 10, fill: '#607d8b' },
-        labelBgStyle: { fillOpacity: 0.9 },
+        data: { desc, descDisplay, cardLabel } satisfies RelationshipEdgeData,
       });
     });
     (entity.interfacesEntities ?? []).forEach((iface) => {
@@ -92,9 +68,8 @@ function buildEdges(rootEntities: BusinessEntityResponse[], childKeys: Set<strin
         id: edgeId,
         source: entity.key,
         target: iface.key,
-        type: 'default',
+        type: 'interfaceEdge',
         style: { stroke: '#9c27b0', strokeDasharray: '6,4', strokeWidth: 1.5 },
-        markerEnd: 'url(#uml-realizes)',
       });
     });
   });
@@ -102,18 +77,19 @@ function buildEdges(rootEntities: BusinessEntityResponse[], childKeys: Set<strin
 }
 
 function entityHeight(entity: BusinessEntityResponse): number {
+  const hasDescription = (entity.descriptions ?? []).some((d) => d.text);
   const childrenHeight = (entity.children ?? []).length > 0 ? 8 + (entity.children ?? []).length * 19 : 0;
-  return 48 + childrenHeight;
+  return 48 + (hasDescription ? 16 : 0) + childrenHeight;
 }
 
 function buildGraph(
   entities: BusinessEntityResponse[],
   showDomainLayer: boolean,
-  getLocalizedText: (texts: { locale: string; text: string }[]) => string,
+  getLocalizedText: (texts: { locale: string; text: string }[], fallback?: string) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   const childKeys = new Set(entities.flatMap((e) => (e.children ?? []).map((c) => c.key)));
   const rootEntities = entities.filter((e) => !childKeys.has(e.key));
-  const edges = buildEdges(rootEntities, childKeys);
+  const edges = buildEdges(rootEntities, childKeys, getLocalizedText);
 
   if (!showDomainLayer) {
     // Flat layout — no containers
@@ -125,6 +101,7 @@ function buildGraph(
       height: entityHeight(entity),
       data: {
         label: getLocalizedText(entity.names),
+        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
         children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
       } satisfies EntityNodeData,
     }));
@@ -157,6 +134,7 @@ function buildGraph(
       height: entityHeight(entity),
       data: {
         label: getLocalizedText(entity.names),
+        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
         children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
       } satisfies EntityNodeData,
     }));
@@ -171,6 +149,7 @@ function buildGraph(
       height: entityHeight(entity),
       data: {
         label: getLocalizedText(entity.names),
+        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
         children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
       } satisfies EntityNodeData,
     }));
@@ -231,8 +210,6 @@ const EntityMapDiagram: React.FC = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <UmlMarkers />
-
       {/* Toolbar */}
       <Box
         sx={{
@@ -297,7 +274,7 @@ const EntityMapDiagram: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <svg width="28" height="12" style={{ overflow: 'visible' }}>
             <line x1="0" y1="6" x2="16" y2="6" stroke="#9c27b0" strokeWidth="1.5" strokeDasharray="4,3" />
-            <polygon points="16,2 28,6 16,10" fill="transparent" stroke="#9c27b0" strokeWidth="1.5" />
+            <polygon points="16,2 28,6 16,10" fill="transparent" stroke="#9c27b0" strokeWidth="1.5" strokeLinejoin="round" />
           </svg>
           <Typography variant="caption">{t('diagrams.legendInterface')}</Typography>
         </Box>
@@ -312,6 +289,7 @@ const EntityMapDiagram: React.FC = () => {
           onEdgesChange={onEdgesChange}
           onNodeClick={onNodeClick}
           nodeTypes={SHARED_NODE_TYPES}
+          edgeTypes={SHARED_EDGE_TYPES}
           colorMode={colorMode}
           fitView
           fitViewOptions={{ padding: 0.12 }}
