@@ -20,7 +20,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { Palette } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -31,34 +30,6 @@ import { SHARED_NODE_TYPES, SHARED_EDGE_TYPES, type EntityNodeData, type GroupNo
 import { applyDagreLayout, layoutGroups, domainColor, cardinalityLabel } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
-/** SVG marker definitions for UML realization (implements) arrow */
-const UmlMarkers: React.FC = () => {
-  const theme = useTheme();
-  return (
-    <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden' }}>
-      <defs>
-        <marker
-          id="uml-realizes"
-          viewBox="0 0 12 12"
-          refX="11"
-          refY="6"
-          markerUnits="userSpaceOnUse"
-          markerWidth="12"
-          markerHeight="12"
-          orient="auto"
-        >
-          {/* Hollow triangle = UML realization / implements */}
-          <path
-            d="M 0 0 L 12 6 L 0 12 Z"
-            fill={theme.palette.background.paper}
-            stroke="#9c27b0"
-            strokeWidth="1.5"
-          />
-        </marker>
-      </defs>
-    </svg>
-  );
-};
 
 function buildEdges(
   rootEntities: BusinessEntityResponse[],
@@ -97,9 +68,8 @@ function buildEdges(
         id: edgeId,
         source: entity.key,
         target: iface.key,
-        type: 'default',
+        type: 'interfaceEdge',
         style: { stroke: '#9c27b0', strokeDasharray: '6,4', strokeWidth: 1.5 },
-        markerEnd: 'url(#uml-realizes)',
       });
     });
   });
@@ -240,8 +210,6 @@ const EntityMapDiagram: React.FC = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <UmlMarkers />
-
       {/* Toolbar */}
       <Box
         sx={{
@@ -306,7 +274,7 @@ const EntityMapDiagram: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <svg width="28" height="12" style={{ overflow: 'visible' }}>
             <line x1="0" y1="6" x2="16" y2="6" stroke="#9c27b0" strokeWidth="1.5" strokeDasharray="4,3" />
-            <polygon points="16,2 28,6 16,10" fill="transparent" stroke="#9c27b0" strokeWidth="1.5" />
+            <polygon points="16,2 28,6 16,10" fill="transparent" stroke="#9c27b0" strokeWidth="1.5" strokeLinejoin="round" />
           </svg>
           <Typography variant="caption">{t('diagrams.legendInterface')}</Typography>
         </Box>
