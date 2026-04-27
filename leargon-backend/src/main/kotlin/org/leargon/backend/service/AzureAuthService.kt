@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Requires
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.AuthenticationException
 import org.leargon.backend.repository.UserRepository
 import org.leargon.backend.security.AzureTokenValidator
 import org.slf4j.LoggerFactory
@@ -23,8 +24,8 @@ open class AzureAuthService(
     open fun authenticateWithAzure(idToken: String): User {
         val claims = tokenValidator.validate(idToken)
 
-        val oid = claims["oid"]!!
-        val email = claims["email"]!!
+        val oid = claims["oid"] ?: throw AuthenticationException("Missing required claim: oid")
+        val email = claims["email"] ?: throw AuthenticationException("Missing required claim: email")
         var givenName = claims["givenName"] ?: ""
         var familyName = claims["familyName"] ?: ""
 

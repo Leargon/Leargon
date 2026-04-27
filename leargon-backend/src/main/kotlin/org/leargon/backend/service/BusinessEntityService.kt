@@ -818,16 +818,6 @@ open class BusinessEntityService(
         }
 
         @JvmStatic
-        fun canEdit(
-            entity: BusinessEntity,
-            currentUser: User
-        ): Boolean {
-            val isOwner = entity.dataOwner!!.id == currentUser.id
-            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            return isOwner || isAdmin
-        }
-
-        @JvmStatic
         @Suppress("UNCHECKED_CAST")
         fun calculateDiff(
             previous: Map<String, Any?>,
