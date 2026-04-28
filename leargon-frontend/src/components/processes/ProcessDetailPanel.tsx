@@ -1761,21 +1761,14 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
               />
             ))}
             {inheritedEntities.map((e) => (
-              <React.Fragment key={e.key}>
-                <Chip
-                  label={e.name || e.key}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => navigate(`/entities/${e.key}`)}
-                  clickable
-                />
-                <Chip
-                  label={t('process.inheritedFromSubProcess')}
-                  size="small"
-                  variant="outlined"
-                  color="info"
-                />
-              </React.Fragment>
+              <Chip
+                key={e.key}
+                label={e.name || e.key}
+                size="small"
+                variant="outlined"
+                onClick={() => navigate(`/entities/${e.key}`)}
+                clickable
+              />
             ))}
           </Box>
         ) : (
@@ -1786,6 +1779,11 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
         {hasRootEntities && entities.length > 0 && (
           <Alert severity="info" sx={{ mt: 1, py: 0, fontSize: '0.75rem' }}>
             {t('process.rootEntityHint')}
+          </Alert>
+        )}
+        {(inheritedEntities.length > 0 || inheritedEntities.length > 0) && (
+          <Alert severity="info" sx={{ mt: 2, fontSize: '0.75rem' }}>
+            {t('process.effectiveEntitiesHint')}
           </Alert>
         )}
       </Box>
