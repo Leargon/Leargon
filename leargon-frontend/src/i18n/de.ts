@@ -1701,6 +1701,7 @@ const de = {
     roleColSteward: 'Steward',
     roleColCustodian: 'Technical Custodian',
     roleInheritedVia: 'via Owning Unit',
+    classificationInheritedVia: 'via Schnittstelle',
     entityData: 'Business-Entität',
     entityProcess: 'Geschäftsprozess',
     entityOrgUnit: 'Organisationseinheit',

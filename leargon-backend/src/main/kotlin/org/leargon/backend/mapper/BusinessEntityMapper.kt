@@ -27,6 +27,12 @@ open class BusinessEntityMapper(
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
+        val effectiveClassifications =
+            ClassificationMapper.computeEffectiveAssignments(
+                businessEntity.classificationAssignments,
+                businessEntity.interfaceEntities,
+            )
+        val effectiveClassificationKeys = effectiveClassifications.map { it.classificationKey }.toSet()
         val fc =
             fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies) { fieldName ->
                 when {
@@ -58,7 +64,7 @@ open class BusinessEntityMapper(
 
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
-                        businessEntity.classificationAssignments.any { it.classificationKey == classKey }
+                        classKey in effectiveClassificationKeys
                     }
 
                     else -> {
@@ -93,7 +99,7 @@ open class BusinessEntityMapper(
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
-            .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(businessEntity.classificationAssignments))
+            .classificationAssignments(effectiveClassifications)
             .retentionPeriod(businessEntity.retentionPeriod)
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .missingMandatoryFields(fc.missing)
@@ -120,7 +126,10 @@ open class BusinessEntityMapper(
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(
-                ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments),
+                ClassificationMapper.computeEffectiveAssignments(
+                    entity.classificationAssignments,
+                    entity.interfaceEntities
+                )
             )
     }
 

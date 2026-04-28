@@ -1130,9 +1130,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Classifications */}
       <SectionHeader title={t('common.classifications')} canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
-        onEdit={() => classEdit.startEdit(entity.classificationAssignments?.map((a) => ({
-          classificationKey: a.classificationKey, valueKey: a.valueKey,
-        })) || [])}
+        onEdit={() => classEdit.startEdit(
+          (entity.classificationAssignments ?? [])
+            .filter((a) => !a.inherited)
+            .map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey }))
+        )}
         onSave={classEdit.save} onCancel={classEdit.cancel} isSaving={classEdit.isSaving}
         isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
@@ -1214,7 +1216,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     {assignments.map((a) => {
                       const value = c.values?.find((v) => v.key === a.valueKey);
                       return value ? (
-                        <Chip key={a.valueKey} label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
+                        <React.Fragment key={a.valueKey}>
+                          <Chip label={getLocalizedText(value.names, value.key)} size="small" variant="outlined" />
+                          {a.inherited && (
+                            <Chip label={t('common.classificationInheritedVia')} size="small" variant="outlined" color="info" />
+                          )}
+                        </React.Fragment>
                       ) : null;
                     })}
                   </Box>

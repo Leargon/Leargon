@@ -806,7 +806,7 @@ export const useEnableUser = <TError = void,
       return useMutation(getEnableUserMutationOptions(options), queryClient);
     }
     /**
- * Returns enabled/disabled state for all six methodologies. Requires ROLE_ADMIN.
+ * Returns enabled/disabled state for all six methodologies. Requires authentication.
  * @summary Get all methodology configurations
  */
 export type getMethodologyConfigurationsResponse200 = {
@@ -819,15 +819,10 @@ export type getMethodologyConfigurationsResponse401 = {
   status: 401
 }
 
-export type getMethodologyConfigurationsResponse403 = {
-  data: void
-  status: 403
-}
-
 export type getMethodologyConfigurationsResponseSuccess = (getMethodologyConfigurationsResponse200) & {
   headers: Headers;
 };
-export type getMethodologyConfigurationsResponseError = (getMethodologyConfigurationsResponse401 | getMethodologyConfigurationsResponse403) & {
+export type getMethodologyConfigurationsResponseError = (getMethodologyConfigurationsResponse401) & {
   headers: Headers;
 };
 

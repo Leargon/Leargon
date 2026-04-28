@@ -1701,6 +1701,7 @@ const fr = {
     roleColSteward: 'Steward',
     roleColCustodian: 'Custodien technique',
     roleInheritedVia: 'via Unité propriétaire',
+    classificationInheritedVia: 'via Interface',
     entityData: 'Entité métier',
     entityProcess: 'Processus métier',
     entityOrgUnit: 'Unité organisationnelle',
