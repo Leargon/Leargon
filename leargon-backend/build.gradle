@@ -9,6 +9,7 @@ plugins {
     id("io.micronaut.openapi") version "4.6.2"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("codenarc")
+    id("de.aaschmid.cpd") version "3.5"
     id("com.github.ben-manes.versions") version "0.54.0"
 }
 
@@ -237,6 +238,20 @@ codenarc {
 
 // Only run CodeNarc on test sources (main sources are Kotlin, not Groovy)
 tasks.named("codenarcMain") { enabled = false }
+
+cpd {
+    minimumTokenCount = 80   // ~5-8 lines of Kotlin
+    ignoreFailures = true    // report only; not wired into build lifecycle
+}
+
+tasks.named('cpdCheck', de.aaschmid.gradle.plugins.cpd.Cpd) {
+    language = 'kotlin'
+    source = fileTree('src/main/kotlin')
+    reports {
+        xml.required = false
+        text.required = true
+    }
+}
 
 micronaut {
     version = "4.10.11"
