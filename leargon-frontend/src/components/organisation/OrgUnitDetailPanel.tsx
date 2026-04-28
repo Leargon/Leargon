@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -102,6 +103,7 @@ interface OrgUnitDetailPanelProps {
 
 const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
@@ -411,7 +413,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               sx={{
                 color: "text.secondary",
                 mb: 0.5
-              }}>Names</Typography>
+              }}>{t('common.names')}</Typography>
             <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
               <Table size="small">
                 <TableHead>
@@ -440,7 +442,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               sx={{
                 color: "text.secondary",
                 mb: 0.5
-              }}>Descriptions</Typography>)}
+              }}>{t('common.descriptions')}</Typography>)}
             {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
               {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
                 const desc = unit.descriptions?.find((d) => d.locale === l.localeCode)?.text;

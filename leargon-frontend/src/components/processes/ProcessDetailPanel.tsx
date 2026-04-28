@@ -591,7 +591,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>Names</Typography>
+            }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -620,7 +620,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>Descriptions</Typography>)}
+            }}>{t('common.descriptions')}</Typography>)}
           {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
             {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = process.descriptions?.find((d) => d.locale === l.localeCode)?.text;
