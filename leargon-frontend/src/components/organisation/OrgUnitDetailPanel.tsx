@@ -450,16 +450,11 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     <AccordionSummary expandIcon={<ExpandMore />}>
                       <Box sx={{ overflow: 'hidden' }}>
                         <Typography variant="body2">{l.displayName}</Typography>
-                        {desc && (
-                          <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-                            {desc}
-                          </Typography>
-                        )}
                       </Box>
                     </AccordionSummary>
                     <AccordionDetails>
                       <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                        {desc || 'No description'}
+                        {desc || t('common.noDescription')}
                       </Typography>
                     </AccordionDetails>
                   </Accordion>

@@ -584,11 +584,6 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   <AccordionSummary expandIcon={<ExpandMore />}>
                     <Box sx={{ overflow: 'hidden' }}>
                       <Typography variant="body2">{l.displayName}</Typography>
-                      {desc && (
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-                          {desc}
-                        </Typography>
-                      )}
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
