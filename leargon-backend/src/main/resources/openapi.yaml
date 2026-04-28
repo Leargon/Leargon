@@ -7075,6 +7075,14 @@ components:
         valueKey:
           type: string
           description: Key of the value within the classification
+        inherited:
+          type: boolean
+          nullable: true
+          description: True if this assignment was inherited from an interface entity, not explicitly set on this entity.
+        inheritedFromEntityKey:
+          type: string
+          nullable: true
+          description: Key of the interface entity this assignment was inherited from. Present only when inherited is true.
     ClassificationResponse:
       type: object
       required:

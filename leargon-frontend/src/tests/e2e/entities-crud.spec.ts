@@ -99,7 +99,7 @@ test.describe('Business Entity CRUD — Owner', () => {
     await expect(page.getByRole('button', { name: 'New' })).not.toBeVisible();
   });
 
-  test('cannot change the data owner', async ({ page }) => {
+  test('can change the data owner', async ({ page }) => {
     await page.goto(`/entities/${entityKey}`);
     await page.waitForLoadState('networkidle');
 
@@ -108,7 +108,7 @@ test.describe('Business Entity CRUD — Owner', () => {
     await expect(dataOwnerSection).toBeVisible();
     await expect(
       dataOwnerSection.locator('..').locator('button:has([data-testid="EditIcon"])'),
-    ).not.toBeVisible();
+    ).toBeVisible();
   });
 });
 

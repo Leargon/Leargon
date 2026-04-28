@@ -488,13 +488,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const outputEntityKeys = new Set((process.outputEntities || []).map((e) => e.key));
   const inputCandidates = allEntities.filter((e) => !inputEntityKeys.has(e.key));
   const outputCandidates = allEntities.filter((e) => !outputEntityKeys.has(e.key));
-
-  const effectiveInputEntities = process.effectiveInputEntities || [];
-  const effectiveOutputEntities = process.effectiveOutputEntities || [];
-  const hasSubProcessEntities =
-    effectiveInputEntities.some((e) => !inputEntityKeys.has(e.key)) ||
-    effectiveOutputEntities.some((e) => !outputEntityKeys.has(e.key));
-  const hasAnyEffectiveEntities = effectiveInputEntities.length > 0 || effectiveOutputEntities.length > 0;
+  const inheritedInputEntities = (process.effectiveInputEntities || []).filter((e) => !inputEntityKeys.has(e.key));
+  const inheritedOutputEntities = (process.effectiveOutputEntities || []).filter((e) => !outputEntityKeys.has(e.key));
+  const hasAnyEffectiveEntities =
+    (process.effectiveInputEntities?.length ?? 0) > 0 || (process.effectiveOutputEntities?.length ?? 0) > 0;
   const hasChildProcesses = (process.childProcesses?.length ?? 0) > 0;
 
   return (
@@ -594,7 +591,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>Names</Typography>
+            }}>{t('common.names')}</Typography>
           <Paper variant="outlined" sx={{ mb: 2, overflow: 'auto' }}>
             <Table size="small">
               <TableHead>
@@ -623,7 +620,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             sx={{
               color: "text.secondary",
               mb: 0.5
-            }}>Descriptions</Typography>)}
+            }}>{t('common.descriptions')}</Typography>)}
           {descriptionLocales.some((l) => !isLocaleHidden('descriptions', l.localeCode)) && <Box sx={{ mb: 2 }}>
             {descriptionLocales.filter((l) => !isLocaleHidden('descriptions', l.localeCode)).map((l) => {
               const desc = process.descriptions?.find((d) => d.locale === l.localeCode)?.text;
@@ -633,16 +630,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   <AccordionSummary expandIcon={<ExpandMore />}>
                     <Box sx={{ overflow: 'hidden' }}>
                       <Typography variant="body2">{l.displayName}</Typography>
-                      {desc && (
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-                          {desc}
-                        </Typography>
-                      )}
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || 'No description'}
+                      {desc || t('common.noDescription')}
                     </Typography>
                   </AccordionDetails>
                 </Accordion>
@@ -920,6 +912,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {!isHidden('inputEntities') && <EntityListSection
         title="Input Entities"
         entities={process.inputEntities || []}
+        inheritedEntities={inheritedInputEntities}
         candidates={inputCandidates}
         canEdit={isOwnerOrAdmin}
         onAdd={handleAddInput}
@@ -935,6 +928,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {!isHidden('outputEntities') && <EntityListSection
         title="Output Entities"
         entities={process.outputEntities || []}
+        inheritedEntities={inheritedOutputEntities}
         candidates={outputCandidates}
         canEdit={isOwnerOrAdmin}
         onAdd={handleAddOutput}
@@ -943,69 +937,6 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         navigate={navigate}
         t={t as (key: string) => string}
       />}
-
-      {!isHidden('outputEntities') && hasSubProcessEntities && (
-        <>
-          <Divider sx={{ my: 2 }} />
-          <Box sx={{ mb: 1 }}>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                color: "text.secondary",
-                mb: 1
-              }}>
-              {t('process.effectiveEntitiesTitle')}
-            </Typography>
-            {effectiveInputEntities.length > 0 && (
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>{t('process.effectiveInputEntities')}</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                  {effectiveInputEntities.map((e) => (
-                    <Chip
-                      key={e.key}
-                      label={e.name || e.key}
-                      size="small"
-                      variant={inputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
-                      onClick={() => navigate(`/entities/${e.key}`)}
-                      sx={{ cursor: 'pointer' }}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-            {effectiveOutputEntities.length > 0 && (
-              <Box>
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>{t('process.effectiveOutputEntities')}</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                  {effectiveOutputEntities.map((e) => (
-                    <Chip
-                      key={e.key}
-                      label={e.name || e.key}
-                      size="small"
-                      variant={outputEntityKeys.has(e.key) ? 'filled' : 'outlined'}
-                      onClick={() => navigate(`/entities/${e.key}`)}
-                      sx={{ cursor: 'pointer' }}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                mt: 1,
-                display: 'block'
-              }}>
-              {t('process.effectiveEntitiesHint')}
-            </Typography>
-          </Box>
-        </>
-      )}
 
       {!isHidden('executingUnits') && <Divider sx={{ my: 2 }} />}
 
@@ -1760,6 +1691,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, canEdit, isEditing
 interface EntityListSectionProps {
   title: string;
   entities: { key: string; name?: string; parentKey?: string | null }[];
+  inheritedEntities?: { key: string; name?: string; parentKey?: string | null }[];
   candidates: { key: string; names?: LocalizedText[] }[];
   canEdit: boolean;
   onAdd: (entityKey: string) => Promise<void>;
@@ -1770,7 +1702,7 @@ interface EntityListSectionProps {
 }
 
 const EntityListSection: React.FC<EntityListSectionProps> = ({
-  title, entities, candidates, canEdit, onAdd, onRemove, getLocalizedText, navigate, t,
+  title, entities, inheritedEntities = [], candidates, canEdit, onAdd, onRemove, getLocalizedText, navigate, t,
 }) => {
   const [adding, setAdding] = useState(false);
   const hasRootEntities = entities.some((e) => !e.parentKey);
@@ -1810,7 +1742,7 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
         </Box>
       )}
       <Box sx={{ mb: 2 }}>
-        {entities.length > 0 ? (
+        {entities.length > 0 || inheritedEntities.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {entities.map((e) => (
               <Chip
@@ -1823,6 +1755,16 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
                 clickable
               />
             ))}
+            {inheritedEntities.map((e) => (
+              <Chip
+                key={e.key}
+                label={e.name || e.key}
+                size="small"
+                variant="outlined"
+                onClick={() => navigate(`/entities/${e.key}`)}
+                clickable
+              />
+            ))}
           </Box>
         ) : (
           <Typography variant="body2" sx={{
@@ -1832,6 +1774,11 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
         {hasRootEntities && entities.length > 0 && (
           <Alert severity="info" sx={{ mt: 1, py: 0, fontSize: '0.75rem' }}>
             {t('process.rootEntityHint')}
+          </Alert>
+        )}
+        {(inheritedEntities.length > 0) && (
+          <Alert severity="info" sx={{ mt: 2, fontSize: '0.75rem' }}>
+            {t('process.effectiveEntitiesHint')}
           </Alert>
         )}
       </Box>

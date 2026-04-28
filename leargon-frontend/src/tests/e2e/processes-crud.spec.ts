@@ -219,7 +219,7 @@ test.describe('Business Process CRUD — Owner', () => {
     await expect(page.getByRole('button', { name: 'New' })).not.toBeVisible();
   });
 
-  test('cannot change the process owner', async ({ page }) => {
+  test('can change the process owner', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
@@ -228,7 +228,7 @@ test.describe('Business Process CRUD — Owner', () => {
     await expect(ownerSection).toBeVisible();
     await expect(
       ownerSection.locator('..').locator('button:has([data-testid="EditIcon"])'),
-    ).not.toBeVisible();
+    ).toBeVisible();
   });
 });
 

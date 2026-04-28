@@ -329,7 +329,7 @@ open class ClassificationService(
                 .findByKey(entityKey)
                 .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
-        val isOwner = entity.dataOwner!!.id == currentUser.id
+        val isOwner = entity.effectiveOwner()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isOwner && !isAdmin) {
             throw ForbiddenOperationException("Only the data owner or an admin can assign classifications")
@@ -386,7 +386,7 @@ open class ClassificationService(
                 .findByKey(processKey)
                 .orElseThrow { ResourceNotFoundException("Process not found") }
 
-        val isOwner = process.processOwner!!.id == currentUser.id
+        val isOwner = process.effectiveOwner()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isOwner && !isAdmin) {
             throw ForbiddenOperationException("Only the process owner or an admin can assign classifications")

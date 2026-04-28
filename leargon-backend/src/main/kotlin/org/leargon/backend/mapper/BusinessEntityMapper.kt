@@ -27,6 +27,12 @@ open class BusinessEntityMapper(
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
+        val effectiveClassifications =
+            ClassificationMapper.computeEffectiveAssignments(
+                businessEntity.classificationAssignments,
+                businessEntity.interfaceEntities,
+            )
+        val effectiveClassificationKeys = effectiveClassifications.map { it.classificationKey }.toSet()
         val fc =
             fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies) { fieldName ->
                 when {
@@ -58,7 +64,7 @@ open class BusinessEntityMapper(
 
                     fieldName.startsWith("classification.") -> {
                         val classKey = fieldName.removePrefix("classification.")
-                        businessEntity.classificationAssignments.any { it.classificationKey == classKey }
+                        classKey in effectiveClassificationKeys
                     }
 
                     else -> {
@@ -70,7 +76,6 @@ open class BusinessEntityMapper(
             businessEntity.owningUnit
                 ?: businessEntity.boundedContext?.owningUnit
                 ?: businessEntity.boundedContext?.domain?.owningUnit
-        val effectiveOwner = businessEntity.dataOwner ?: effectiveOwningUnit?.businessOwner
         val effectiveSteward = businessEntity.dataSteward ?: effectiveOwningUnit?.businessSteward
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         return BusinessEntityResponse(
@@ -82,7 +87,7 @@ open class BusinessEntityMapper(
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
         ).owningUnit(businessEntity.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
-            .dataOwner(UserMapper.toUserSummary(effectiveOwner))
+            .dataOwner(UserMapper.toUserSummary(businessEntity.effectiveOwner()))
             .dataSteward(UserMapper.toUserSummary(effectiveSteward))
             .stewardIsExplicit(businessEntity.dataSteward != null)
             .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
@@ -93,7 +98,7 @@ open class BusinessEntityMapper(
             .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
-            .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(businessEntity.classificationAssignments))
+            .classificationAssignments(effectiveClassifications)
             .retentionPeriod(businessEntity.retentionPeriod)
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .missingMandatoryFields(fc.missing)
@@ -105,24 +110,22 @@ open class BusinessEntityMapper(
     fun toLocalizedBusinessEntityResponse(
         entity: BusinessEntity,
         locale: String,
-    ): LocalizedBusinessEntityResponse {
-        val effectiveOwningUnit =
-            entity.owningUnit
-                ?: entity.boundedContext?.owningUnit
-                ?: entity.boundedContext?.domain?.owningUnit
-        return LocalizedBusinessEntityResponse(
+    ): LocalizedBusinessEntityResponse =
+        LocalizedBusinessEntityResponse(
             entity.key,
             entity.getName(locale),
             toZonedDateTime(entity.createdAt),
             toZonedDateTime(entity.updatedAt),
         ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
-            .dataOwner(UserMapper.toUserSummary(entity.dataOwner ?: effectiveOwningUnit?.businessOwner))
+            .dataOwner(UserMapper.toUserSummary(entity.effectiveOwner()))
             .parent(toBusinessEntitySummaryResponse(entity.parent))
             .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
             .classificationAssignments(
-                ClassificationMapper.toClassificationAssignmentResponses(entity.classificationAssignments),
+                ClassificationMapper.computeEffectiveAssignments(
+                    entity.classificationAssignments,
+                    entity.interfaceEntities
+                )
             )
-    }
 
     fun toBusinessEntityRelationships(
         businessEntityRelationships: Set<BusinessEntityRelationship>?

@@ -22,4 +22,14 @@ export interface ClassificationAssignmentResponse {
   classificationKey: string;
   /** Key of the value within the classification */
   valueKey: string;
+  /**
+     * True if this assignment was inherited from an interface entity, not explicitly set on this entity.
+     * @nullable
+     */
+  inherited?: boolean | null;
+  /**
+     * Key of the interface entity this assignment was inherited from. Present only when inherited is true.
+     * @nullable
+     */
+  inheritedFromEntityKey?: string | null;
 }
