@@ -1776,7 +1776,7 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
             {t('process.rootEntityHint')}
           </Alert>
         )}
-        {(inheritedEntities.length > 0 || inheritedEntities.length > 0) && (
+        {(inheritedEntities.length > 0) && (
           <Alert severity="info" sx={{ mt: 2, fontSize: '0.75rem' }}>
             {t('process.effectiveEntitiesHint')}
           </Alert>
