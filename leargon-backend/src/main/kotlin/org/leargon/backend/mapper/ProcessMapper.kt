@@ -96,7 +96,6 @@ open class ProcessMapper(
             process.owningUnit
                 ?: process.boundedContext?.owningUnit
                 ?: process.boundedContext?.domain?.owningUnit
-        val effectiveOwner = process.processOwner ?: effectiveOwningUnit?.businessOwner
         val effectiveSteward = process.processSteward ?: effectiveOwningUnit?.businessSteward
         val effectiveCustodian = process.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
@@ -118,7 +117,7 @@ open class ProcessMapper(
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
         ).owningUnit(process.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
-            .processOwner(UserMapper.toUserSummary(effectiveOwner))
+            .processOwner(UserMapper.toUserSummary(process.effectiveOwner()))
             .processSteward(UserMapper.toUserSummary(effectiveSteward))
             .stewardIsExplicit(process.processSteward != null)
             .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))

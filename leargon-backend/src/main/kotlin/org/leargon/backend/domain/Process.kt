@@ -142,6 +142,14 @@ class Process {
         version.process = this
     }
 
+    fun effectiveOwner(): User? {
+        val effectiveOwningUnit =
+            owningUnit
+                ?: boundedContext?.owningUnit
+                ?: boundedContext?.domain?.owningUnit
+        return processOwner ?: effectiveOwningUnit?.businessOwner
+    }
+
     fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
     fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
