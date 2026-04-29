@@ -48,6 +48,10 @@ open class BusinessEntityMapper(
                         businessEntity.boundedContext != null
                     }
 
+                    fieldName == "dataOwner" -> {
+                        businessEntity.effectiveOwner() != null
+                    }
+
                     fieldName == "retentionPeriod" -> {
                         !businessEntity.retentionPeriod.isNullOrBlank()
                     }

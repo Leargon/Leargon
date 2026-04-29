@@ -859,11 +859,7 @@ open class ProcessService(
             process: Process,
             currentUser: User
         ) {
-            val effectiveOwner =
-                process.processOwner
-                    ?: process.owningUnit?.businessOwner
-                    ?: process.boundedContext?.owningUnit?.businessOwner
-            val isOwner = effectiveOwner?.id == currentUser.id
+            val isOwner = process.effectiveOwner()?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the process owner or an admin can edit this process")

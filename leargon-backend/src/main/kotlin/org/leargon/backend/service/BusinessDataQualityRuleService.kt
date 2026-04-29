@@ -42,7 +42,7 @@ open class BusinessDataQualityRuleService(
                 ResourceNotFoundException("Business entity not found: $entityKey")
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isAdmin && entity.dataOwner?.id != currentUser.id) {
+        if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id) {
             throw ForbiddenOperationException("Only the data owner or an admin can add quality rules")
         }
         val m = this.mapper
@@ -69,7 +69,7 @@ open class BusinessDataQualityRuleService(
                 ResourceNotFoundException("Business entity not found: $entityKey")
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isAdmin && entity.dataOwner?.id != currentUser.id) {
+        if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id) {
             throw ForbiddenOperationException("Only the data owner or an admin can edit quality rules")
         }
         val repo = this.ruleRepository
@@ -97,7 +97,7 @@ open class BusinessDataQualityRuleService(
                 ResourceNotFoundException("Business entity not found: $entityKey")
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isAdmin && entity.dataOwner?.id != currentUser.id) {
+        if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id) {
             throw ForbiddenOperationException("Only the data owner or an admin can delete quality rules")
         }
         val removed = entity.qualityRules.removeIf { it.id == ruleId }
