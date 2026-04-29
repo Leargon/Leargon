@@ -65,9 +65,10 @@ describe('Methodology Configuration', () => {
     }
   });
 
-  it('GET /administration/methodology-configurations returns 403 for non-admin', async () => {
-    const res = await userClient.get('/administration/methodology-configurations');
-    expect(res.status).toBe(403);
+  it('GET /administration/methodology-configurations returns 200 for non-admin', async () => {
+    const res = await userClient.get<MethodologyConfigEntry[]>('/administration/methodology-configurations');
+    expect(res.status).toBe(200);
+    expect(res.data.length).toBe(6);
   });
 
   it('GET /administration/methodology-configurations returns 401 for unauthenticated', async () => {

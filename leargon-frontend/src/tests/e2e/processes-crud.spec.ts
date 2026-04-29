@@ -119,10 +119,10 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    // The accordion preview shows the description in the summary without expanding.
-    // Use .first() because the same text also appears in the collapsed AccordionDetails DOM.
+    await page.getByRole('button', { name: /Deutsch/i }).click();
+
     await expect(
-      page.getByText('Deutsche Beschreibung für Akkordeon-Test').first(),
+      page.getByText('Deutsche Beschreibung für Akkordeon-Test'),
     ).toBeVisible({ timeout: 5_000 });
   });
 
@@ -154,22 +154,9 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForSelector('text=Names & Descriptions', { timeout: 10_000 });
 
-    // After reload the accordion preview shows the saved text in the summary.
-    // Use .first() because the text also exists in the collapsed AccordionDetails DOM.
-    await expect(page.getByText('E2E Deutsche Beschreibung').first()).toBeVisible({ timeout: 5_000 });
-  });
+    await page.getByRole('button', { name: /Deutsch/i }).click();
 
-  test('description accordion preview is shown in summary when description exists', async ({ page }) => {
-    await setProcessDescriptions(processKey, [
-      { locale: 'en', text: 'Preview text for summary test' },
-    ]);
-
-    await page.goto(`/processes/${processKey}`);
-    await page.waitForLoadState('networkidle');
-
-    // The preview caption should be visible without expanding the accordion.
-    // Use .first() because the same text also exists in the collapsed AccordionDetails DOM.
-    await expect(page.getByText('Preview text for summary test').first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText('E2E Deutsche Beschreibung')).toBeVisible({ timeout: 5_000 });
   });
 });
 
