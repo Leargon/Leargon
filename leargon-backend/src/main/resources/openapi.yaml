@@ -78,6 +78,8 @@ tags:
   description: Business Capability management endpoints
 - name: Search
   description: Full-text catalogue search endpoint
+- name: ProcessingRegister
+  description: Processing register (Verzeichnis der Bearbeitungstätigkeiten) endpoints
 paths:
   /administration/users:
     get:
@@ -5917,6 +5919,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /processing-register:
+    get:
+      tags:
+      - ProcessingRegister
+      summary: Get processing register entries
+      description: Returns pre-computed processing register rows (Verzeichnis der Bearbeitungstätigkeiten). All columns are locale-aware and computed server-side. Requires authentication.
+      operationId: getProcessingRegister
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        schema:
+          type: string
+          default: en
+        description: Locale code for localised names
+      responses:
+        '200':
+          description: List of processing register entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessingRegisterEntryResponse'
+        '401':
+          description: Not authenticated
   /export/processing-register:
     get:
       tags:
@@ -10038,3 +10068,101 @@ components:
           type: string
           nullable: true
           description: Data protection officer or advisor
+    ProcessingRegisterEntryResponse:
+      type: object
+      required:
+      - key
+      - name
+      - hasChildren
+      - canEdit
+      - changedBy
+      - department
+      - responsible
+      - euRepresentative
+      - dpo
+      - jointControllers
+      - purposes
+      - personCategories
+      - dataCategories
+      - recipients
+      - crossBorderTransfers
+      - retentionPeriods
+      - securityMeasures
+      properties:
+        key:
+          type: string
+          description: Process key
+        parentKey:
+          type: string
+          nullable: true
+          description: Parent process key, null if top-level
+        hasChildren:
+          type: boolean
+          description: Whether this process has child processes
+        canEdit:
+          type: boolean
+          description: Whether the current user can edit this process
+        lastModified:
+          type: string
+          nullable: true
+          description: Last modification date (yyyy-MM-dd)
+        changedBy:
+          type: string
+          description: Name of the user who last changed this process
+        department:
+          type: string
+          description: Owning organisational unit name (Bereich)
+        name:
+          type: string
+          description: Process name in the requested locale
+        responsible:
+          type: string
+          description: Effective process owner full name (Verantwortliche)
+        euRepresentative:
+          type: string
+          description: Organisation-level EU/CH representative
+        dpo:
+          type: string
+          description: Organisation-level data protection officer
+        jointControllers:
+          type: string
+          description: Joint controllers (Gemeinsame Verantwortliche) — empty until modelled
+        purposes:
+          type: string
+          description: Processing purposes in the requested locale, joined by semicolons
+        personCategories:
+          type: string
+          description: Categories of data subjects (entity-type--role entities mapped to root), joined by semicolons
+        dataCategories:
+          type: string
+          description: Categories of personal data (personal-data entities mapped to root), joined by semicolons
+        recipients:
+          type: string
+          description: External recipients / service providers, joined by semicolons
+        crossBorderTransfers:
+          type: string
+          description: Cross-border transfer destinations and safeguards
+        retentionPeriods:
+          type: string
+          description: Retention periods per entity, joined by semicolons
+        securityMeasures:
+          type: string
+          description: Technical and organisational security measures in the requested locale
+        purposeRaw:
+          type: array
+          nullable: true
+          description: Raw localised purpose values for inline editing
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        securityMeasuresRaw:
+          type: array
+          nullable: true
+          description: Raw localised security measures values for inline editing
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        missingMandatoryFields:
+          type: array
+          nullable: true
+          description: Field names that are mandatory but not yet filled in
+          items:
+            type: string
