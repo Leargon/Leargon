@@ -9,28 +9,19 @@ test.describe('Compliance Exports (Admin)', () => {
     await expect(page.getByRole('button', { name: /export/i })).toBeVisible({ timeout: 10_000 });
   });
 
-  test('export button opens a menu with three options', async ({ page }) => {
+  test('compliance page has a direct export button for processing register', async ({ page }) => {
     await page.goto('/compliance');
     await page.waitForLoadState('networkidle');
 
-    await page.getByRole('button', { name: /export/i }).click();
-
-    await expect(page.getByRole('menuitem', { name: /processing register/i })).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByRole('menuitem', { name: /sub-processor/i })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: /dpia/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /export processing register/i })).toBeVisible({ timeout: 10_000 });
   });
 
   test('clicking processing register export triggers download', async ({ page }) => {
-    // Create a process to have data in the export
-    await createProcess(uid('PW Export Process'));
-
     await page.goto('/compliance');
     await page.waitForLoadState('networkidle');
 
-    // Start waiting for download before clicking
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: /export/i }).click();
-    await page.getByRole('menuitem', { name: /processing register/i }).click();
+    await page.getByRole('button', { name: /export processing register/i }).click();
 
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe('processing-register.csv');
@@ -49,7 +40,7 @@ test.describe('Compliance Exports (Admin)', () => {
   });
 
   test('clicking DPIA register export triggers download', async ({ page }) => {
-    await page.goto('/compliance');
+    await page.goto('/dpia');
     await page.waitForLoadState('networkidle');
 
     const downloadPromise = page.waitForEvent('download');
