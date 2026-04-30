@@ -78,6 +78,7 @@ open class ProcessService(
 
         var process = Process()
         process.createdBy = currentUser
+        process.updatedBy = currentUser
 
         process.processOwner =
             if (request.processOwnerUsername != null) {
@@ -171,6 +172,7 @@ open class ProcessService(
         }
 
         val newKey = process.key
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated names")
 
@@ -193,6 +195,7 @@ open class ProcessService(
         validateTranslations(descriptions, false)
 
         process.descriptions = descriptions.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated descriptions")
 
@@ -213,6 +216,7 @@ open class ProcessService(
         val oldBasis = process.legalBasis ?: "none"
         process.legalBasis = legalBasis
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(
             process,
@@ -241,6 +245,7 @@ open class ProcessService(
                         .LocalizedText(it.locale, it.text)
                 }?.toMutableList()
         process.purpose = domainPurpose
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated purpose")
         process = getProcessByKey(process.key)
@@ -263,6 +268,7 @@ open class ProcessService(
                         .LocalizedText(it.locale, it.text)
                 }?.toMutableList()
         process.securityMeasures = domainMeasures
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated security measures")
         process = getProcessByKey(process.key)
@@ -282,6 +288,7 @@ open class ProcessService(
         val oldType = process.processType ?: "none"
         process.processType = processType
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(
             process,
@@ -312,6 +319,7 @@ open class ProcessService(
             process.parent = null
         }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Changed parent to ${parentKey ?: "none"}")
         process = getProcessByKey(process.key)
@@ -334,6 +342,7 @@ open class ProcessService(
                 .orElseThrow { ResourceNotFoundException("Process owner user not found") }
         process.processOwner = newOwner
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(
             process,
@@ -365,6 +374,7 @@ open class ProcessService(
             )
         }
         process.processOwner = null
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "OWNER_CHANGE", "Cleared explicit process owner (reverted to computed)")
         process = getProcessByKey(process.key)
@@ -390,6 +400,7 @@ open class ProcessService(
                 null
             }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated process steward to ${stewardUsername ?: "none"}")
         process = getProcessByKey(process.key)
@@ -415,6 +426,7 @@ open class ProcessService(
                 null
             }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated technical custodian to ${custodianUsername ?: "none"}")
         process = getProcessByKey(process.key)
@@ -439,6 +451,7 @@ open class ProcessService(
         }
 
         val newKey = process.key
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated code to '${code ?: "none"}'")
 
@@ -463,6 +476,7 @@ open class ProcessService(
                     org.leargon.backend.mapper.CrossBorderTransferMapper
                         .fromCrossBorderTransferEntry(it)
                 }.toMutableList()
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated cross-border transfers")
         process = getProcessByKey(process.key)
@@ -490,6 +504,7 @@ open class ProcessService(
                 null
             }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
 
         val newName = process.boundedContext?.getName("en") ?: "none"
@@ -539,6 +554,7 @@ open class ProcessService(
                 null
             }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
 
         val newName = process.owningUnit?.getName("en") ?: "none"
@@ -566,6 +582,7 @@ open class ProcessService(
         val entity = resolveOrCreateEntity(request, currentUser)
         process.inputEntities.add(entity)
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Added input entity '${entity.key}'")
 
@@ -585,6 +602,7 @@ open class ProcessService(
 
         process.inputEntities.removeIf { it.key == entityKey }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Removed input entity '$entityKey'")
 
@@ -605,6 +623,7 @@ open class ProcessService(
         val entity = resolveOrCreateEntity(request, currentUser)
         process.outputEntities.add(entity)
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Added output entity '${entity.key}'")
 
@@ -624,6 +643,7 @@ open class ProcessService(
 
         process.outputEntities.removeIf { it.key == entityKey }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Removed output entity '$entityKey'")
 
@@ -653,6 +673,7 @@ open class ProcessService(
             }
         }
 
+        process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated executing units")
 

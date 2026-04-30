@@ -116,7 +116,8 @@ open class ProcessMapper(
             LocalizedTextMapper.toModel(process.descriptions),
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
-        ).owningUnit(process.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
+        ).updatedBy(UserMapper.toUserSummary(process.updatedBy))
+            .owningUnit(process.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
             .processOwner(UserMapper.toUserSummary(process.effectiveOwner()))
             .processSteward(UserMapper.toUserSummary(effectiveSteward))
             .stewardIsExplicit(process.processSteward != null)

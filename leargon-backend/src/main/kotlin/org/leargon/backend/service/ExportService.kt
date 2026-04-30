@@ -10,6 +10,7 @@ import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
 import org.leargon.backend.repository.DpiaRepository
+import org.leargon.backend.repository.OrganisationSettingsRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ServiceProviderRepository
 import java.time.ZoneOffset
@@ -25,6 +26,7 @@ open class ExportService(
     private val boundedContextRepository: BoundedContextRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val businessEntityRepository: BusinessEntityRepository,
+    private val organisationSettingsRepository: OrganisationSettingsRepository,
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -101,23 +103,36 @@ open class ExportService(
 
     @jakarta.transaction.Transactional
     open fun exportProcessingRegister(locale: String = "en"): String {
+        val orgSettings = organisationSettingsRepository.findFirst().orElse(null)
+        val euRepresentative = orgSettings?.euRepresentative ?: ""
+        val dpo = orgSettings?.dataProtectionOfficer ?: ""
+
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
-                "Process Name",
-                "Process Owner",
-                "Legal Basis",
-                "Purpose",
-                "Security Measures",
-                "Data Subject Categories",
-                "Personal Data Categories",
-                "Retention Periods",
-                "Service Providers",
-                "Cross-border Transfers"
+                "Letzte Änderung",
+                "Änderung durch",
+                "Bereich",
+                "Bezeichnung der Bearbeitungstätigkeit",
+                "Verantwortliche",
+                "EU-Vertreter",
+                "Datenschutzbeauftragter/-berater",
+                "gemeinsame Verwantwortliche",
+                "Bearbeitungszweck/e",
+                "Kategorien betroffener Personen",
+                "Kategorien von Personendaten",
+                "Kategorien von Empfängern",
+                "Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)",
+                "Aufbewahrungsdauer bzw. Kriterien",
+                "Datensicherheitsmassnahmen"
             )
         )
         val processes = processRepository.findAll().filter { it.legalBasis != null }
         for (process in processes) {
+            val lastChanged = process.updatedAt?.atZone(java.time.ZoneOffset.UTC)?.format(dateFormatter) ?: ""
+            val changedBy = process.updatedBy?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
+            val owningUnitNames = process.owningUnit?.names
+            val bereich = owningUnitNames?.find { it.locale == locale }?.text ?: owningUnitNames?.firstOrNull()?.text ?: ""
             val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
             val processOwnerName = process.effectiveOwner()?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
             val allEntities =
@@ -147,7 +162,7 @@ open class ExportService(
                         val entityName = e.names.find { n -> n.locale == locale }?.text ?: e.names.firstOrNull()?.text ?: e.key
                         "$entityName: ${e.retentionPeriod}"
                     }
-            val dataProcessors =
+            val recipients =
                 process.serviceProviders.joinToString("; ") {
                     it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
                 }
@@ -155,18 +170,27 @@ open class ExportService(
                 process.crossBorderTransfers?.joinToString("; ") {
                     "${it.destinationCountry}: ${it.safeguard}"
                 } ?: ""
+            val purposeLocalized = process.purpose?.find { it.locale == locale }?.text
+            val purpose = purposeLocalized ?: process.purpose?.firstOrNull()?.text ?: ""
+            val securityMeasuresLocalized = process.securityMeasures?.find { it.locale == locale }?.text
+            val securityMeasures = securityMeasuresLocalized ?: process.securityMeasures?.firstOrNull()?.text ?: ""
             sb.appendLine(
                 csvRow(
+                    lastChanged,
+                    changedBy,
+                    bereich,
                     name,
                     processOwnerName,
-                    translateLegalBasis(process.legalBasis),
-                    process.purpose?.firstOrNull()?.text ?: "",
-                    process.securityMeasures?.firstOrNull()?.text ?: "",
+                    euRepresentative,
+                    dpo,
+                    "",
+                    purpose,
                     dataSubjectCategories,
                     personalDataCategories,
+                    recipients,
+                    transfers,
                     retentionPeriods,
-                    dataProcessors,
-                    transfers
+                    securityMeasures
                 )
             )
         }

@@ -21,6 +21,7 @@ const en = {
     classifications: 'Classifications',
     fieldConfig: 'Field Configuration',
     methodologies: 'Methodologies',
+    organisationSettings: 'Organisation',
     teamTopologies: 'Team Topologies',
     profile: 'Profile',
     help: 'Help',

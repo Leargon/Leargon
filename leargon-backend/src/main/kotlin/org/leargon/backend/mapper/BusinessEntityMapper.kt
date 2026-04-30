@@ -198,6 +198,7 @@ open class BusinessEntityMapper(
                 .rootName(root?.getName("en"))
                 .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
                 .description(entity.descriptions.firstOrNull()?.text)
+                .retentionPeriod(entity.retentionPeriod)
         }
 
         @JvmStatic
