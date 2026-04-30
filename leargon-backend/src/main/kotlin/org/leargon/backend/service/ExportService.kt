@@ -52,7 +52,7 @@ open class ExportService(
                     }
 
                     fieldName == "processOwner" -> {
-                        process.processOwner != null
+                        process.effectiveOwner() != null
                     }
 
                     fieldName == "executingUnits" -> {
@@ -119,7 +119,7 @@ open class ExportService(
         val processes = processRepository.findAll().filter { it.legalBasis != null }
         for (process in processes) {
             val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
-            val processOwnerName = process.processOwner?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
+            val processOwnerName = process.effectiveOwner()?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
             val allEntities =
                 (
                     ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +

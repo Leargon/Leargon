@@ -67,7 +67,7 @@ open class DashboardService(
         val processes = procRepo.findAll()
         processes
             .filter { process ->
-                (isAdmin || process.processOwner?.id == userId) &&
+                (isAdmin || process.effectiveOwner()?.id == userId) &&
                     process.legalBasis == null &&
                     (process.inputEntities + process.outputEntities).any { entity ->
                         entity.classificationAssignments.any {
@@ -185,18 +185,23 @@ open class DashboardService(
         // --- My Responsibilities ---
         val myEntities =
             if (userId != null) {
-                entityRepo.findByDataOwnerId(userId).map { entity ->
-                    BusinessEntitySummaryResponse(entity.key, nameOf(entity.names, entity.key))
-                }
+                entityRepo
+                    .findAll()
+                    .filter { it.effectiveOwner()?.id == userId }
+                    .map { entity ->
+                        BusinessEntitySummaryResponse(entity.key, nameOf(entity.names, entity.key))
+                    }
             } else {
                 emptyList()
             }
 
         val myProcesses =
             if (userId != null) {
-                procRepo.findByProcessOwnerId(userId).map { process ->
-                    ProcessSummaryResponse(process.key, nameOf(process.names, process.key))
-                }
+                processes
+                    .filter { it.effectiveOwner()?.id == userId }
+                    .map { process ->
+                        ProcessSummaryResponse(process.key, nameOf(process.names, process.key))
+                    }
             } else {
                 emptyList()
             }
@@ -231,7 +236,7 @@ open class DashboardService(
         }
 
         // 1. Entity ownership coverage
-        val entitiesWithOwner = allEntities.count { it.dataOwner != null }
+        val entitiesWithOwner = allEntities.count { it.effectiveOwner() != null }
 
         // 2. Process compliance coverage (has legal basis)
         val processesWithLegalBasis = allProcesses.count { it.legalBasis != null }

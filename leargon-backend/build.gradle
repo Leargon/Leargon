@@ -37,7 +37,7 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.sql:micronaut-hibernate-jpa")
-    runtimeOnly("com.mysql:mysql-connector-j:9.6.0")
+    runtimeOnly("com.mysql:mysql-connector-j:9.7.0")
 
     // Database migrations
     implementation("io.micronaut.liquibase:micronaut-liquibase")
@@ -80,7 +80,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:2.0.5")
     testImplementation("org.testcontainers:testcontainers-mysql:2.0.5")
     testImplementation("org.testcontainers:testcontainers-spock:2.0.5")
-    testRuntimeOnly("com.mysql:mysql-connector-j:9.6.0")
+    testRuntimeOnly("com.mysql:mysql-connector-j:9.7.0")
 }
 
 // Force vulnerable transitive dependencies to patched versions

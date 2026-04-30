@@ -51,13 +51,7 @@ open class BusinessEntityService(
     fun canEdit(
         entity: BusinessEntity,
         currentUser: User,
-    ): Boolean {
-        val effectiveOwner =
-            entity.dataOwner
-                ?: entity.owningUnit?.businessOwner
-                ?: entity.boundedContext?.owningUnit?.businessOwner
-        return effectiveOwner?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
-    }
+    ): Boolean = entity.effectiveOwner()?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
 
     @Transactional
     open fun getAllBusinessEntitiesAsResponses(): List<BusinessEntityResponse> =
@@ -817,11 +811,7 @@ open class BusinessEntityService(
             entity: BusinessEntity,
             currentUser: User
         ) {
-            val effectiveOwner =
-                entity.dataOwner
-                    ?: entity.owningUnit?.businessOwner
-                    ?: entity.boundedContext?.owningUnit?.businessOwner
-            val isOwner = effectiveOwner?.id == currentUser.id
+            val isOwner = entity.effectiveOwner()?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
             if (!isOwner && !isAdmin) {
                 throw ForbiddenOperationException("Only the data owner or an admin can edit this entity")

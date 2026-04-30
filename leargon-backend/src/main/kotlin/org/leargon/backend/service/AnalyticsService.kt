@@ -43,20 +43,20 @@ open class AnalyticsService(
         // 1. User ownership workload
         val entityCountByOwner =
             entities
-                .filter { it.dataOwner != null }
-                .groupBy { it.dataOwner!!.id }
+                .mapNotNull { it.effectiveOwner() }
+                .groupBy { it.id }
                 .mapValues { it.value.size }
         val processCountByOwner =
             processes
-                .filter { it.processOwner != null }
-                .groupBy { it.processOwner!!.id }
+                .mapNotNull { it.effectiveOwner() }
+                .groupBy { it.id }
                 .mapValues { it.value.size }
         val allOwnerIds = (entityCountByOwner.keys + processCountByOwner.keys).toSet()
         // Build user map from processes and entities
         val userById =
             (
-                processes.mapNotNull { it.processOwner } +
-                    entities.mapNotNull { it.dataOwner }
+                processes.mapNotNull { it.effectiveOwner() } +
+                    entities.mapNotNull { it.effectiveOwner() }
             ).associateBy { it.id }
 
         val userOwnershipWorkload =
