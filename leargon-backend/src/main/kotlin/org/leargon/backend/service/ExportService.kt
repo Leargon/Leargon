@@ -47,8 +47,9 @@ open class ExportService(
 
     @jakarta.transaction.Transactional
     open fun exportProcessingRegister(locale: String = "en"): String {
-        val adminUser = userRepository.findAll().firstOrNull { it.roles.contains("ROLE_ADMIN") }
-            ?: userRepository.findAll().first()
+        val adminUser =
+            userRepository.findAll().firstOrNull { it.roles.contains("ROLE_ADMIN") }
+                ?: userRepository.findAll().first()
         val entries = processingRegisterService.getEntries(locale, adminUser)
 
         val sb = StringBuilder()

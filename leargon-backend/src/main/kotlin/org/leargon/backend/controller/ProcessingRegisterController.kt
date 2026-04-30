@@ -19,14 +19,15 @@ open class ProcessingRegisterController(
     private val userService: UserService,
     private val securityService: SecurityService,
 ) : ProcessingRegisterApi {
-
-    override fun getProcessingRegister(@QueryValue(defaultValue = "en") locale: String): List<ProcessingRegisterEntryResponse> =
-        processingRegisterService.getEntries(locale, getCurrentUser())
+    override fun getProcessingRegister(
+        @QueryValue(defaultValue = "en") locale: String
+    ): List<ProcessingRegisterEntryResponse> = processingRegisterService.getEntries(locale, getCurrentUser())
 
     private fun getCurrentUser(): User {
-        val email = securityService
-            .username()
-            .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
         return userService
             .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }

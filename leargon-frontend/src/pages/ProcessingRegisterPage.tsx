@@ -12,14 +12,14 @@ import {
 } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useGetAllProcesses,
-  getGetAllProcessesQueryKey,
+  useGetProcessingRegister,
+  getGetProcessingRegisterQueryKey,
+} from '../api/generated/processing-register/processing-register';
+import {
   useUpdateProcessPurpose,
   useUpdateProcessSecurityMeasures,
 } from '../api/generated/process/process';
-import { useGetOrganisationSettings } from '../api/generated/administration/administration';
-import type { ProcessResponse } from '../api/generated/model/processResponse';
-import type { LocalizedText, SupportedLocaleResponse, CrossBorderTransferEntry } from '../api/generated/model';
+import type { ProcessingRegisterEntryResponse, LocalizedText, SupportedLocaleResponse } from '../api/generated/model';
 import { useLocale } from '../context/LocaleContext';
 import { useAuth } from '../context/AuthContext';
 import { useGetSupportedLocales } from '../api/generated/locale/locale';
@@ -29,38 +29,26 @@ import { useNavigate } from 'react-router-dom';
 import ComplianceSetupWizard from '../components/compliance/ComplianceSetupWizard';
 import { useWizardMode } from '../context/WizardModeContext';
 
-function formatDate(isoString?: string | null): string {
-  if (!isoString) return '—';
-  try {
-    return new Date(isoString).toLocaleDateString('de-CH', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  } catch {
-    return '—';
-  }
-}
-
-function userName(user?: { firstName?: string; lastName?: string } | null): string {
-  if (!user) return '—';
-  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || '—';
+function formatDate(isoDate?: string | null): string {
+  if (!isoDate) return '—';
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
 type EditingField = 'purpose' | 'securityMeasures' | null;
 
 interface ProcessRowProps {
-  process: ProcessResponse;
-  allProcesses: ProcessResponse[];
+  row: ProcessingRegisterEntryResponse;
+  allRows: ProcessingRegisterEntryResponse[];
   level: number;
-  canEdit: boolean;
   onSaved: () => void;
-  getLocalizedText: (names: LocalizedText[], fallback?: string) => string;
   locales: SupportedLocaleResponse[];
-  euRepresentative: string;
-  dpo: string;
   t: ReturnType<typeof useTranslation>['t'];
 }
 
 const ProcessRow: React.FC<ProcessRowProps> = ({
-  process, allProcesses, level, canEdit, onSaved, getLocalizedText, locales,
-  euRepresentative, dpo, t,
+  row, allRows, level, onSaved, locales, t,
 }) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -72,79 +60,44 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
 
-  const children = allProcesses.filter((p) => p.parentProcess?.key === process.key);
-  const hasChildren = children.length > 0;
-  const hasMissing = (process.missingMandatoryFields?.length ?? 0) > 0;
+  const children = allRows.filter((r) => r.parentKey === row.key);
+  const hasMissing = row.canEdit && (row.missingMandatoryFields?.length ?? 0) > 0;
 
   const handlePurposeSave = useCallback(async () => {
     setSaving(true);
     try {
-      await updatePurpose.mutateAsync({ key: process.key, data: { purpose: purposeValue.length > 0 ? purposeValue : undefined } });
+      await updatePurpose.mutateAsync({ key: row.key, data: { purpose: purposeValue.length > 0 ? purposeValue : undefined } });
       onSaved();
     } finally {
       setSaving(false);
       setEditingField(null);
     }
-  }, [process.key, purposeValue, updatePurpose, onSaved]);
+  }, [row.key, purposeValue, updatePurpose, onSaved]);
 
   const handleSecurityMeasuresSave = useCallback(async () => {
     setSaving(true);
     try {
-      await updateSecurityMeasures.mutateAsync({ key: process.key, data: { securityMeasures: securityMeasuresValue.length > 0 ? securityMeasuresValue : undefined } });
+      await updateSecurityMeasures.mutateAsync({ key: row.key, data: { securityMeasures: securityMeasuresValue.length > 0 ? securityMeasuresValue : undefined } });
       onSaved();
     } finally {
       setSaving(false);
       setEditingField(null);
     }
-  }, [process.key, securityMeasuresValue, updateSecurityMeasures, onSaved]);
+  }, [row.key, securityMeasuresValue, updateSecurityMeasures, onSaved]);
 
   const startEditPurpose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!canEdit) return;
-    setPurposeValue([...(process.purpose ?? [])]);
+    if (!row.canEdit) return;
+    setPurposeValue([...(row.purposeRaw ?? [])]);
     setEditingField('purpose');
   };
 
   const startEditSecurityMeasures = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!canEdit) return;
-    setSecurityMeasuresValue([...(process.securityMeasures ?? [])]);
+    if (!row.canEdit) return;
+    setSecurityMeasuresValue([...(row.securityMeasuresRaw ?? [])]);
     setEditingField('securityMeasures');
   };
-
-  // Compute data subject categories (root entities of input+output)
-  const allEntities = [...(process.effectiveInputEntities ?? []), ...(process.effectiveOutputEntities ?? [])];
-  const rootMap = new Map<string, string>();
-  for (const e of allEntities) {
-    if (!e.parentKey) {
-      rootMap.set(e.key, e.name);
-    } else if (e.rootKey && e.rootName) {
-      rootMap.set(e.rootKey, e.rootName);
-    }
-  }
-  const dataSubjectCategories = Array.from(rootMap.values()).join('; ') || '—';
-
-  // Personal data categories — all effective entities
-  const uniqueEntities = Array.from(new Map(allEntities.map((e) => [e.key, e.name])).values());
-  const personalDataCategories = uniqueEntities.join('; ') || '—';
-
-  // Recipients (service providers)
-  const recipients = (process.serviceProviders ?? [])
-    .map((sp) => getLocalizedText(sp.names, sp.key))
-    .filter(Boolean)
-    .join('; ') || '—';
-
-  // Cross-border transfers
-  const transfers = (process.crossBorderTransfers ?? [])
-    .map((t: CrossBorderTransferEntry) => `${t.destinationCountry}: ${t.safeguard}`.trim())
-    .filter(Boolean)
-    .join('; ') || '—';
-
-  // Retention periods (entity: period pairs)
-  const retentionPeriods = allEntities
-    .filter((e) => e.retentionPeriod)
-    .map((e) => `${e.name ?? e.key}: ${e.retentionPeriod}`)
-    .join('; ') || '—';
 
   const tdText = { variant: 'body2' as const, sx: { fontSize: '0.8125rem', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } };
 
@@ -154,23 +107,23 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
 
         {/* 1. Letzte Änderung */}
         <TableCell>
-          <Typography {...tdText}>{formatDate(process.updatedAt?.toString())}</Typography>
+          <Typography {...tdText}>{formatDate(row.lastModified)}</Typography>
         </TableCell>
 
         {/* 2. Änderung durch */}
         <TableCell>
-          <Typography {...tdText}>{userName(process.updatedBy)}</Typography>
+          <Typography {...tdText}>{row.changedBy || '—'}</Typography>
         </TableCell>
 
         {/* 3. Bereich */}
         <TableCell>
-          <Typography {...tdText}>{process.owningUnit?.name ?? '—'}</Typography>
+          <Typography {...tdText}>{row.department || '—'}</Typography>
         </TableCell>
 
         {/* 4. Bezeichnung der Bearbeitungstätigkeit */}
         <TableCell>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pl: level * 3 }}>
-            {hasChildren ? (
+            {row.hasChildren ? (
               <IconButton size="small" onClick={() => setExpanded((v) => !v)} sx={{ p: 0.25 }}>
                 {expanded ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
               </IconButton>
@@ -178,15 +131,15 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
               <Box sx={{ width: 28 }} />
             )}
             {hasMissing
-              ? <Tooltip title={process.missingMandatoryFields!.join(', ')}><Warning fontSize="small" color="warning" /></Tooltip>
+              ? <Tooltip title={row.missingMandatoryFields!.join(', ')}><Warning fontSize="small" color="warning" /></Tooltip>
               : <CheckCircle fontSize="small" color="success" />
             }
             <Typography variant="body2" sx={{ fontWeight: 500, ml: 0.5, flex: 1 }}>
-              {getLocalizedText(process.names, process.key)}
+              {row.name}
             </Typography>
             <IconButton
               size="small"
-              onClick={() => navigate(`/processes/${process.key}`)}
+              onClick={() => navigate(`/processes/${row.key}`)}
               sx={{ p: 0.25, opacity: 0.4, '&:hover': { opacity: 1 } }}
             >
               <OpenInNew sx={{ fontSize: 14 }} />
@@ -196,84 +149,92 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
 
         {/* 5. Verantwortliche */}
         <TableCell>
-          <Typography {...tdText}>{userName(process.processOwner)}</Typography>
+          <Typography {...tdText}>{row.responsible || '—'}</Typography>
         </TableCell>
 
         {/* 6. EU-Vertreter */}
         <TableCell>
-          <Tooltip title={euRepresentative || ''}>
-            <Typography {...tdText} sx={{ ...tdText.sx, color: euRepresentative ? 'text.primary' : 'text.disabled' }}>
-              {euRepresentative || '—'}
+          <Tooltip title={row.euRepresentative || ''}>
+            <Typography {...tdText} sx={{ ...tdText.sx, color: row.euRepresentative ? 'text.primary' : 'text.disabled' }}>
+              {row.euRepresentative || '—'}
             </Typography>
           </Tooltip>
         </TableCell>
 
         {/* 7. Datenschutzbeauftragter/-berater */}
         <TableCell>
-          <Tooltip title={dpo || ''}>
-            <Typography {...tdText} sx={{ ...tdText.sx, color: dpo ? 'text.primary' : 'text.disabled' }}>
-              {dpo || '—'}
+          <Tooltip title={row.dpo || ''}>
+            <Typography {...tdText} sx={{ ...tdText.sx, color: row.dpo ? 'text.primary' : 'text.disabled' }}>
+              {row.dpo || '—'}
             </Typography>
           </Tooltip>
         </TableCell>
 
-        {/* 8. gemeinsame Verwantwortliche */}
+        {/* 8. Gemeinsame Verantwortliche */}
         <TableCell>
           <Typography {...tdText} sx={{ ...tdText.sx, color: 'text.disabled' }}>—</Typography>
         </TableCell>
 
         {/* 9. Bearbeitungszweck/e — click-to-edit */}
-        <TableCell onClick={startEditPurpose}
-          sx={canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
-          <Typography variant="body2"
-            color={process.purpose?.length ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
-            sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.purpose?.length && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
-            {getLocalizedText(process.purpose ?? [], canEdit ? t('common.clickToEdit') : '—')}
+        <TableCell
+          onClick={startEditPurpose}
+          sx={row.canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}
+        >
+          <Typography
+            variant="body2"
+            color={row.purposes ? 'text.primary' : (row.canEdit ? 'primary' : 'text.secondary')}
+            sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !row.purposes && row.canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}
+          >
+            {row.purposes || (row.canEdit ? t('common.clickToEdit') : '—')}
           </Typography>
         </TableCell>
 
         {/* 10. Kategorien betroffener Personen */}
         <TableCell>
-          <Tooltip title={dataSubjectCategories}>
-            <Typography {...tdText}>{dataSubjectCategories}</Typography>
+          <Tooltip title={row.personCategories || ''}>
+            <Typography {...tdText}>{row.personCategories || '—'}</Typography>
           </Tooltip>
         </TableCell>
 
         {/* 11. Kategorien von Personendaten */}
         <TableCell>
-          <Tooltip title={personalDataCategories}>
-            <Typography {...tdText}>{personalDataCategories}</Typography>
+          <Tooltip title={row.dataCategories || ''}>
+            <Typography {...tdText}>{row.dataCategories || '—'}</Typography>
           </Tooltip>
         </TableCell>
 
         {/* 12. Kategorien von Empfängern */}
         <TableCell>
-          <Tooltip title={recipients}>
-            <Typography {...tdText}>{recipients}</Typography>
+          <Tooltip title={row.recipients || ''}>
+            <Typography {...tdText}>{row.recipients || '—'}</Typography>
           </Tooltip>
         </TableCell>
 
         {/* 13. Übermittlung ins Ausland */}
         <TableCell>
-          <Tooltip title={transfers}>
-            <Typography {...tdText}>{transfers}</Typography>
+          <Tooltip title={row.crossBorderTransfers || ''}>
+            <Typography {...tdText}>{row.crossBorderTransfers || '—'}</Typography>
           </Tooltip>
         </TableCell>
 
         {/* 14. Aufbewahrungsdauer bzw. Kriterien */}
         <TableCell>
-          <Tooltip title={retentionPeriods}>
-            <Typography {...tdText}>{retentionPeriods}</Typography>
+          <Tooltip title={row.retentionPeriods || ''}>
+            <Typography {...tdText}>{row.retentionPeriods || '—'}</Typography>
           </Tooltip>
         </TableCell>
 
         {/* 15. Datensicherheitsmassnahmen — click-to-edit */}
-        <TableCell onClick={startEditSecurityMeasures}
-          sx={canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}>
-          <Typography variant="body2"
-            color={process.securityMeasures?.length ? 'text.primary' : (canEdit ? 'primary' : 'text.secondary')}
-            sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !process.securityMeasures?.length && canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}>
-            {getLocalizedText(process.securityMeasures ?? [], canEdit ? t('common.clickToEdit') : '—')}
+        <TableCell
+          onClick={startEditSecurityMeasures}
+          sx={row.canEdit ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } } : {}}
+        >
+          <Typography
+            variant="body2"
+            color={row.securityMeasures ? 'text.primary' : (row.canEdit ? 'primary' : 'text.secondary')}
+            sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: !row.securityMeasures && row.canEdit ? 'italic' : 'normal', fontSize: '0.8125rem' }}
+          >
+            {row.securityMeasures || (row.canEdit ? t('common.clickToEdit') : '—')}
           </Typography>
         </TableCell>
       </TableRow>
@@ -324,18 +285,14 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
         </DialogActions>
       </Dialog>
 
-      {hasChildren && expanded && children.map((child) => (
+      {row.hasChildren && expanded && children.map((child) => (
         <ProcessRow
           key={child.key}
-          process={child}
-          allProcesses={allProcesses}
+          row={child}
+          allRows={allRows}
           level={level + 1}
-          canEdit={canEdit}
           onSaved={onSaved}
-          getLocalizedText={getLocalizedText}
           locales={locales}
-          euRepresentative={euRepresentative}
-          dpo={dpo}
           t={t}
         />
       ))}
@@ -347,7 +304,7 @@ const COL_SPAN = 15;
 
 const ProcessingRegisterPage: React.FC = () => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { preferredLocale } = useLocale();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales();
@@ -359,46 +316,39 @@ const ProcessingRegisterPage: React.FC = () => {
   const [complianceWizardOpen, setComplianceWizardOpen] = useState(false);
   const [complianceWizardDismissed, setComplianceWizardDismissed] = useState(false);
 
-  const { data: processesResponse, isLoading } = useGetAllProcesses();
-  const processes: ProcessResponse[] = ((processesResponse?.data) as ProcessResponse[] | undefined) ?? [];
+  const { data: registerResponse, isLoading } = useGetProcessingRegister({ locale: preferredLocale });
+  const entries: ProcessingRegisterEntryResponse[] = (registerResponse?.data as ProcessingRegisterEntryResponse[] | undefined) ?? [];
 
-  const { data: orgSettingsResponse } = useGetOrganisationSettings();
-  const euRepresentative = orgSettingsResponse?.data?.euRepresentative ?? '';
-  const dpo = orgSettingsResponse?.data?.dataProtectionOfficer ?? '';
-
-  const hasNoLegalBases = !isLoading && processes.length > 0 && !processes.some((p) => p.legalBasis);
+  const hasNoEntries = !isLoading && entries.length === 0;
 
   useEffect(() => {
-    if (isAdmin && hasNoLegalBases && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
-  }, [isAdmin, hasNoLegalBases, complianceWizardDismissed, mode]);
+    if (isAdmin && hasNoEntries && !complianceWizardDismissed && mode !== 'express') setComplianceWizardOpen(true);
+  }, [isAdmin, hasNoEntries, complianceWizardDismissed, mode]);
 
   const handleComplianceWizardClose = () => {
     setComplianceWizardOpen(false);
     setComplianceWizardDismissed(true);
   };
 
-  const invalidateProcesses = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
-  }, [queryClient]);
-
-  const canEdit = true;
+  const invalidateRegister = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: getGetProcessingRegisterQueryKey({ locale: preferredLocale }) });
+  }, [queryClient, preferredLocale]);
 
   const filteredAll = useMemo(() => {
-    return processes.filter((p) => {
-      const name = getLocalizedText(p.names, p.key).toLowerCase();
-      if (search && !name.includes(search.toLowerCase()) && !p.key.includes(search.toLowerCase())) return false;
-      if (missingOnly && (!p.missingMandatoryFields || p.missingMandatoryFields.length === 0)) return false;
+    return entries.filter((row) => {
+      if (search && !row.name.toLowerCase().includes(search.toLowerCase()) && !row.key.includes(search.toLowerCase())) return false;
+      if (missingOnly && !(row.canEdit && row.missingMandatoryFields && row.missingMandatoryFields.length > 0)) return false;
       return true;
     });
-  }, [processes, search, missingOnly, getLocalizedText]);
+  }, [entries, search, missingOnly]);
 
   const showFlat = search.trim() !== '' || missingOnly;
-  const processKeys = new Set(filteredAll.map((p) => p.key));
-  const topLevelProcesses = showFlat
+  const rowKeys = new Set(filteredAll.map((r) => r.key));
+  const topLevelRows = showFlat
     ? filteredAll
     : filteredAll
-        .filter((p) => !p.parentProcess || !processKeys.has(p.parentProcess.key))
-        .sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key)));
+        .filter((r) => !r.parentKey || !rowKeys.has(r.parentKey))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
   const headers = [
     'Letzte Änderung',
@@ -448,7 +398,7 @@ const ProcessingRegisterPage: React.FC = () => {
           label={<Typography variant="body2">{t('compliance.filterMissingOnly')}</Typography>}
         />
         <Box sx={{ flex: 1 }} />
-        {isAdmin && hasNoLegalBases && (
+        {isAdmin && hasNoEntries && (
           <Button variant="contained" size="small" onClick={() => setComplianceWizardOpen(true)}>
             {t('wizard.onboarding.compliance.emptyButton')}
           </Button>
@@ -481,25 +431,21 @@ const ProcessingRegisterPage: React.FC = () => {
               <TableRow>
                 <TableCell colSpan={COL_SPAN}><LinearProgress /></TableCell>
               </TableRow>
-            ) : topLevelProcesses.length === 0 ? (
+            ) : topLevelRows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={COL_SPAN} align="center">
                   <Typography variant="body2" sx={{ color: 'text.secondary', py: 2 }}>{t('common.noResults')}</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              topLevelProcesses.map((process) => (
+              topLevelRows.map((row) => (
                 <ProcessRow
-                  key={process.key}
-                  process={process}
-                  allProcesses={processes}
+                  key={row.key}
+                  row={row}
+                  allRows={entries}
                   level={0}
-                  canEdit={canEdit}
-                  onSaved={invalidateProcesses}
-                  getLocalizedText={getLocalizedText}
+                  onSaved={invalidateRegister}
                   locales={locales}
-                  euRepresentative={euRepresentative}
-                  dpo={dpo}
                   t={t}
                 />
               ))

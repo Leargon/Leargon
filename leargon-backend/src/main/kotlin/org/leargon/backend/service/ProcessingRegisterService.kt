@@ -21,55 +21,87 @@ open class ProcessingRegisterService(
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-    private fun rootEntity(e: BusinessEntity): BusinessEntity =
-        if (e.parent == null) e else rootEntity(e.parent!!)
+    private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
 
-    private fun localizedName(entity: BusinessEntity, locale: String): String =
-        entity.names.find { it.locale == locale }?.text ?: entity.names.firstOrNull()?.text ?: entity.key
+    private fun localizedName(
+        entity: BusinessEntity,
+        locale: String
+    ): String = entity.names.find { it.locale == locale }?.text ?: entity.names.firstOrNull()?.text ?: entity.key
 
-    private fun canEdit(process: Process, currentUser: User): Boolean {
+    private fun canEdit(
+        process: Process,
+        currentUser: User
+    ): Boolean {
         val isOwner = process.effectiveOwner()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         return isOwner || isAdmin
     }
 
     private fun missingFields(process: Process): List<String>? {
-        val fc = fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
-            when {
-                fieldName == "names" -> process.names.isNotEmpty()
-                fieldName == "descriptions" -> process.descriptions.isNotEmpty()
-                fieldName == "boundedContext" -> process.boundedContext != null
-                fieldName == "processOwner" -> process.effectiveOwner() != null
-                fieldName == "executingUnits" -> process.executingUnits.isNotEmpty()
-                fieldName == "legalBasis" -> process.legalBasis != null
-                fieldName.startsWith("names.") -> {
-                    val l = fieldName.removePrefix("names.")
-                    process.names.any { it.locale == l && !it.text.isNullOrBlank() }
+        val fc =
+            fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
+                when {
+                    fieldName == "names" -> {
+                        process.names.isNotEmpty()
+                    }
+
+                    fieldName == "descriptions" -> {
+                        process.descriptions.isNotEmpty()
+                    }
+
+                    fieldName == "boundedContext" -> {
+                        process.boundedContext != null
+                    }
+
+                    fieldName == "processOwner" -> {
+                        process.effectiveOwner() != null
+                    }
+
+                    fieldName == "executingUnits" -> {
+                        process.executingUnits.isNotEmpty()
+                    }
+
+                    fieldName == "legalBasis" -> {
+                        process.legalBasis != null
+                    }
+
+                    fieldName.startsWith("names.") -> {
+                        val l = fieldName.removePrefix("names.")
+                        process.names.any { it.locale == l && !it.text.isNullOrBlank() }
+                    }
+
+                    fieldName.startsWith("descriptions.") -> {
+                        val l = fieldName.removePrefix("descriptions.")
+                        process.descriptions.any { it.locale == l && !it.text.isNullOrBlank() }
+                    }
+
+                    fieldName.startsWith("classification.") -> {
+                        val classKey = fieldName.removePrefix("classification.")
+                        process.classificationAssignments.any { it.classificationKey == classKey }
+                    }
+
+                    else -> {
+                        true
+                    }
                 }
-                fieldName.startsWith("descriptions.") -> {
-                    val l = fieldName.removePrefix("descriptions.")
-                    process.descriptions.any { it.locale == l && !it.text.isNullOrBlank() }
-                }
-                fieldName.startsWith("classification.") -> {
-                    val classKey = fieldName.removePrefix("classification.")
-                    process.classificationAssignments.any { it.classificationKey == classKey }
-                }
-                else -> true
             }
-        }
         return fc.missing?.takeIf { it.isNotEmpty() }
     }
 
     @Transactional
-    open fun getEntries(locale: String, currentUser: User): List<ProcessingRegisterEntryResponse> {
+    open fun getEntries(
+        locale: String,
+        currentUser: User
+    ): List<ProcessingRegisterEntryResponse> {
         val orgSettings = organisationSettingsRepository.findFirst().orElse(null)
         val euRepresentative = orgSettings?.euRepresentative ?: ""
         val dpo = orgSettings?.dataProtectionOfficer ?: ""
 
         val allProcesses = processRepository.findAll()
-        val childKeysByParent = allProcesses
-            .filter { it.parent != null }
-            .groupBy { it.parent!!.key }
+        val childKeysByParent =
+            allProcesses
+                .filter { it.parent != null }
+                .groupBy { it.parent!!.key }
 
         return allProcesses
             .filter { it.legalBasis != null }
@@ -84,10 +116,11 @@ open class ProcessingRegisterService(
         currentUser: User,
         childKeysByParent: Map<String, List<Process>>,
     ): ProcessingRegisterEntryResponse {
-        val allEntities = (
-            ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
-                ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
-        ).distinctBy { it.key }
+        val allEntities =
+            (
+                ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
+                    ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
+            ).distinctBy { it.key }
 
         val owningUnitNames = process.owningUnit?.names
         val lastModified = process.updatedAt?.atZone(ZoneOffset.UTC)?.format(dateFormatter)
@@ -111,10 +144,15 @@ open class ProcessingRegisterService(
             allEntities.filter { e ->
                 e.classificationAssignments.any {
                     it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                }
+                } &&
+                    e.classificationAssignments.none {
+                        it.classificationKey == "entity-type" && it.valueKey == "entity-type--role"
+                    }
             }
         val dataCategories =
-            personalDataEntities.map { rootEntity(it) }.distinctBy { it.key }
+            personalDataEntities
+                .map { rootEntity(it) }
+                .distinctBy { it.key }
                 .joinToString("; ") { localizedName(it, locale) }
 
         val retentionEntities = allEntities.filter { !it.retentionPeriod.isNullOrBlank() }
