@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, TextField, Table, TableHead, TableBody, TableRow, TableCell,
   TableContainer, Paper, LinearProgress, Tooltip, FormControlLabel,
-  Switch, Button, InputAdornment, Menu, MenuItem, IconButton,
+  Switch, Button, InputAdornment, IconButton,
   CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
-  Search, FileDownload, CheckCircle, Warning, ArrowDropDown,
+  Search, FileDownload, CheckCircle, Warning,
   ExpandMore, ChevronRight, OpenInNew,
 } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
@@ -356,8 +356,6 @@ const ProcessingRegisterPage: React.FC = () => {
   const { mode } = useWizardMode();
   const [search, setSearch] = useState('');
   const [missingOnly, setMissingOnly] = useState(false);
-  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
-  const exportMenuOpen = Boolean(exportAnchorEl);
   const [complianceWizardOpen, setComplianceWizardOpen] = useState(false);
   const [complianceWizardDismissed, setComplianceWizardDismissed] = useState(false);
 
@@ -456,28 +454,14 @@ const ProcessingRegisterPage: React.FC = () => {
           </Button>
         )}
         {isAdmin && (
-          <>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<FileDownload />}
-              endIcon={<ArrowDropDown />}
-              onClick={(e) => setExportAnchorEl(e.currentTarget)}
-            >
-              {t('compliance.exportBtn')}
-            </Button>
-            <Menu anchorEl={exportAnchorEl} open={exportMenuOpen} onClose={() => setExportAnchorEl(null)}>
-              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/processing-register', 'processing-register.csv'); }}>
-                {t('compliance.exportProcessingRegister')}
-              </MenuItem>
-              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/data-processors', 'service-providers.csv'); }}>
-                {t('compliance.exportDataProcessors')}
-              </MenuItem>
-              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/dpia-register', 'dpia-register.csv'); }}>
-                {t('compliance.exportDpiaRegister')}
-              </MenuItem>
-            </Menu>
-          </>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<FileDownload />}
+            onClick={() => downloadExport('/export/processing-register', 'processing-register.csv')}
+          >
+            {t('compliance.exportProcessingRegister')}
+          </Button>
         )}
       </Box>
       {/* Table */}

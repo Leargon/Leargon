@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: 054-create-organisation-settings-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: organisation_settings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: eu_representative
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: data_protection_officer
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: 054-add-updated-by-to-processes
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: updated_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_process_updated_by
+                    references: users(id)
