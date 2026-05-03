@@ -53,8 +53,8 @@ describe('Export API', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(res.data).toContain('Bezeichnung der Bearbeitungstätigkeit');
-    expect(res.data).toContain('Bearbeitungszweck/e');
+    expect(res.data).toContain('Processing Activity');
+    expect(res.data).toContain('Processing Purposes');
     expect(res.data).toContain('CSV Export Test Process');
   });
 
