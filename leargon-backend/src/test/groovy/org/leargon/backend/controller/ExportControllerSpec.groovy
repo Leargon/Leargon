@@ -124,12 +124,12 @@ class ExportControllerSpec extends Specification {
         then:
         response.status == HttpStatus.OK
         def body = response.body()
-        body.contains("Letzte Änderung")
-        body.contains("Bezeichnung der Bearbeitungstätigkeit")
-        body.contains("Verantwortliche")
-        body.contains("Datensicherheitsmassnahmen")
-        body.contains("Kategorien betroffener Personen")
-        body.contains("Kategorien von Personendaten")
+        body.contains("Last Modified")
+        body.contains("Processing Activity")
+        body.contains("Responsible")
+        body.contains("Security Measures")
+        body.contains("Categories of Data Subjects")
+        body.contains("Categories of Personal Data")
         body.contains("Export Test Process")
     }
 

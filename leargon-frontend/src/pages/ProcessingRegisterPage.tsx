@@ -351,21 +351,21 @@ const ProcessingRegisterPage: React.FC = () => {
         .sort((a, b) => a.name.localeCompare(b.name));
 
   const headers = [
-    'Letzte Änderung',
-    'Änderung durch',
-    'Bereich',
-    'Bezeichnung der Bearbeitungstätigkeit',
-    'Verantwortliche',
-    'EU-Vertreter',
-    'Datenschutzbeauftragter/-berater',
-    'gemeinsame Verwantwortliche',
-    'Bearbeitungszweck/e',
-    'Kategorien betroffener Personen',
-    'Kategorien von Personendaten',
-    'Kategorien von Empfängern',
-    'Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)',
-    'Aufbewahrungsdauer bzw. Kriterien',
-    'Datensicherheitsmassnahmen',
+    t('compliance.colReg1'),
+    t('compliance.colReg2'),
+    t('compliance.colReg3'),
+    t('compliance.colReg4'),
+    t('compliance.colReg5'),
+    t('compliance.colReg6'),
+    t('compliance.colReg7'),
+    t('compliance.colReg8'),
+    t('compliance.colReg9'),
+    t('compliance.colReg10'),
+    t('compliance.colReg11'),
+    t('compliance.colReg12'),
+    t('compliance.colReg13'),
+    t('compliance.colReg14'),
+    t('compliance.colReg15'),
   ];
 
   return (
@@ -408,7 +408,7 @@ const ProcessingRegisterPage: React.FC = () => {
             variant="outlined"
             size="small"
             startIcon={<FileDownload />}
-            onClick={() => downloadExport('/export/processing-register', 'processing-register.csv')}
+            onClick={() => downloadExport(`/export/processing-register?locale=${preferredLocale}`, 'processing-register.csv')}
           >
             {t('compliance.exportProcessingRegister')}
           </Button>

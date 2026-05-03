@@ -8,6 +8,7 @@ import CreateServiceProviderDialog from '../components/service-providers/CreateS
 import ServiceProvidersSetupWizard from '../components/service-providers/ServiceProvidersSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../context/LocaleContext';
 import { downloadExport } from '../api/exportApi';
 import { useGetAllServiceProviders } from '../api/generated/service-provider/service-provider';
 import type { ServiceProviderResponse } from '../api/generated/model';
@@ -18,6 +19,7 @@ const ServiceProvidersPage: React.FC = () => {
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
+  const { preferredLocale } = useLocale();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -62,7 +64,7 @@ const ServiceProvidersPage: React.FC = () => {
               <MenuItem
                 onClick={() => {
                   setExportAnchorEl(null);
-                  downloadExport('/export/service-providers', 'service-providers.csv');
+                  downloadExport(`/export/service-providers?locale=${preferredLocale}`, 'service-providers.csv');
                 }}
               >
                 {t('serviceProvider.exportCsv')}
