@@ -45,6 +45,112 @@ open class ExportService(
             else -> legalBasis
         }
 
+    private fun processingRegisterHeaders(locale: String): Array<String?> =
+        when (locale) {
+            "de" -> arrayOf(
+                "Letzte Änderung", "Änderung durch", "Bereich",
+                "Bezeichnung der Bearbeitungstätigkeit", "Verantwortliche",
+                "EU-Vertreter", "Datenschutzbeauftragter/-berater",
+                "gemeinsame Verwantwortliche", "Bearbeitungszweck/e",
+                "Kategorien betroffener Personen", "Kategorien von Personendaten",
+                "Kategorien von Empfängern",
+                "Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)",
+                "Aufbewahrungsdauer bzw. Kriterien", "Datensicherheitsmassnahmen",
+            )
+            "fr" -> arrayOf(
+                "Dernière modification", "Modifié par", "Département",
+                "Désignation de l'activité de traitement", "Responsable",
+                "Représentant UE", "Délégué à la protection des données",
+                "Responsables conjoints", "Finalités du traitement",
+                "Catégories de personnes concernées", "Catégories de données personnelles",
+                "Catégories de destinataires",
+                "Transferts vers des pays tiers (pays et bases légales)",
+                "Durée de conservation / critères", "Mesures de sécurité",
+            )
+            else -> arrayOf(
+                "Last Modified", "Changed By", "Department",
+                "Processing Activity", "Responsible",
+                "EU Representative", "Data Protection Officer/Advisor",
+                "Joint Controllers", "Processing Purposes",
+                "Categories of Data Subjects", "Categories of Personal Data",
+                "Categories of Recipients",
+                "Transfers to Third Countries (Countries and Legal Basis)",
+                "Retention Period / Criteria", "Security Measures",
+            )
+        }
+
+    private fun serviceProviderHeaders(locale: String): Array<String?> =
+        when (locale) {
+            "de" -> arrayOf(
+                "Auftragsverarbeiter-Schlüssel", "Auftragsverarbeiter-Name", "Typ",
+                "Verarbeitungsländer", "Auftragsverarbeitungsvertrag vorhanden",
+                "Unterauftragsverarbeiter genehmigt", "Verknüpfte Prozesse",
+                "Datenkategorien (Eingabe)", "Datenkategorien (Ausgabe)",
+                "Rechtsgrundlagen", "Drittland-Übermittlungen", "Übermittlungsmechanismen",
+            )
+            "fr" -> arrayOf(
+                "Clé du sous-traitant", "Nom du sous-traitant", "Type",
+                "Pays de traitement", "Accord de sous-traitance en place",
+                "Sous-traitants approuvés", "Processus liés",
+                "Entités de données (entrée)", "Entités de données (sortie)",
+                "Bases légales", "Pays de transfert transfrontalier", "Mécanismes de transfert",
+            )
+            else -> arrayOf(
+                "Service Provider Key", "Service Provider Name", "Service Provider Type",
+                "Processing Countries", "Processor Agreement In Place",
+                "Sub-processors Approved", "Linked Processes",
+                "Data Entities (Input)", "Data Entities (Output)",
+                "Legal Bases", "Cross-border Transfer Countries", "Transfer Mechanisms",
+            )
+        }
+
+    private fun dpiaRegisterHeaders(locale: String): Array<String?> =
+        when (locale) {
+            "de" -> arrayOf(
+                "DSFA-Schlüssel", "Ressource-Schlüssel", "Ressource-Typ",
+                "Status", "Initiales Risiko", "Restrisiko", "Maßnahmen",
+                "Risikobeschreibung", "EDÖB-Konsultation erforderlich",
+                "EDÖB-Konsultation abgeschlossen", "EDÖB-Konsultationsdatum",
+                "EDÖB-Konsultationsergebnis", "Ausgelöst von", "Erstellt am",
+            )
+            "fr" -> arrayOf(
+                "Clé AIPD", "Clé de la ressource liée", "Type de ressource liée",
+                "Statut", "Risque initial", "Risque résiduel", "Mesures",
+                "Description du risque", "Consultation CNIL requise",
+                "Consultation CNIL terminée", "Date de consultation CNIL",
+                "Résultat de la consultation CNIL", "Déclenché par", "Créé le",
+            )
+            else -> arrayOf(
+                "DPIA Key", "Related Resource Key", "Related Resource Type",
+                "Status", "Initial Risk", "Residual Risk", "Measures",
+                "Risk Description", "DPA Consultation Required",
+                "DPA Consultation Completed", "DPA Consultation Date",
+                "DPA Consultation Outcome", "Triggered By", "Created At",
+            )
+        }
+
+    private fun yesNo(value: Boolean, locale: String): String =
+        when (locale) {
+            "de" -> if (value) "Ja" else "Nein"
+            "fr" -> if (value) "Oui" else "Non"
+            else -> if (value) "Yes" else "No"
+        }
+
+    private fun translateStatus(status: String?, locale: String): String? =
+        when (status) {
+            "IN_PROGRESS" -> when (locale) { "de" -> "In Bearbeitung"; "fr" -> "En cours"; else -> "In Progress" }
+            "COMPLETED" -> when (locale) { "de" -> "Abgeschlossen"; "fr" -> "Terminé"; else -> "Completed" }
+            else -> status
+        }
+
+    private fun translateRisk(risk: String?, locale: String): String? =
+        when (risk) {
+            "LOW" -> when (locale) { "de" -> "Niedrig"; "fr" -> "Faible"; else -> "Low" }
+            "MEDIUM" -> when (locale) { "de" -> "Mittel"; "fr" -> "Moyen"; else -> "Medium" }
+            "HIGH" -> when (locale) { "de" -> "Hoch"; "fr" -> "Élevé"; else -> "High" }
+            else -> risk
+        }
+
     @jakarta.transaction.Transactional
     open fun exportProcessingRegister(locale: String = "en"): String {
         val adminUser =
@@ -53,25 +159,7 @@ open class ExportService(
         val entries = processingRegisterService.getEntries(locale, adminUser)
 
         val sb = StringBuilder()
-        sb.appendLine(
-            csvRow(
-                "Letzte Änderung",
-                "Änderung durch",
-                "Bereich",
-                "Bezeichnung der Bearbeitungstätigkeit",
-                "Verantwortliche",
-                "EU-Vertreter",
-                "Datenschutzbeauftragter/-berater",
-                "gemeinsame Verwantwortliche",
-                "Bearbeitungszweck/e",
-                "Kategorien betroffener Personen",
-                "Kategorien von Personendaten",
-                "Kategorien von Empfängern",
-                "Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)",
-                "Aufbewahrungsdauer bzw. Kriterien",
-                "Datensicherheitsmassnahmen"
-            )
-        )
+        sb.appendLine(csvRow(*processingRegisterHeaders(locale)))
         for (entry in entries) {
             sb.appendLine(
                 csvRow(
@@ -99,22 +187,7 @@ open class ExportService(
     @jakarta.transaction.Transactional
     open fun exportServiceProviders(locale: String = "en"): String {
         val sb = StringBuilder()
-        sb.appendLine(
-            csvRow(
-                "Service Provider Key",
-                "Service Provider Name",
-                "Service Provider Type",
-                "Processing Countries",
-                "Processor Agreement In Place",
-                "Sub-processors Approved",
-                "Linked Processes",
-                "Data Entities (Input)",
-                "Data Entities (Output)",
-                "Legal Bases",
-                "Cross-border Transfer Countries",
-                "Transfer Mechanisms"
-            )
-        )
+        sb.appendLine(csvRow(*serviceProviderHeaders(locale)))
         val processors = serviceProviderRepository.findAll()
         for (processor in processors) {
             val name = processor.names.find { it.locale == locale }?.text ?: processor.names.firstOrNull()?.text ?: processor.key
@@ -156,8 +229,8 @@ open class ExportService(
                     name,
                     processor.serviceProviderType,
                     countries,
-                    if (processor.processorAgreementInPlace) "Yes" else "No",
-                    if (processor.subProcessorsApproved) "Yes" else "No",
+                    yesNo(processor.processorAgreementInPlace, locale),
+                    yesNo(processor.subProcessorsApproved, locale),
                     linkedProcesses,
                     inputEntities,
                     outputEntities,
@@ -396,26 +469,9 @@ open class ExportService(
         return sb.toString()
     }
 
-    fun exportDpiaRegister(): String {
+    fun exportDpiaRegister(locale: String = "en"): String {
         val sb = StringBuilder()
-        sb.appendLine(
-            csvRow(
-                "DPIA Key",
-                "Related Resource Key",
-                "Related Resource Type",
-                "Status",
-                "Initial Risk",
-                "Residual Risk",
-                "Measures",
-                "Risk Description",
-                "DPA Consultation Required",
-                "DPA Consultation Completed",
-                "DPA Consultation Date",
-                "DPA Consultation Outcome",
-                "Triggered By",
-                "Created At"
-            )
-        )
+        sb.appendLine(csvRow(*dpiaRegisterHeaders(locale)))
         val dpias = dpiaRepository.findAll()
         for (dpia in dpias) {
             val (relatedKey, relatedType) =
@@ -427,26 +483,9 @@ open class ExportService(
             val triggeredBy = dpia.triggeredBy?.let { "${it.firstName} ${it.lastName} (${it.username})" } ?: ""
             val createdAt = dpia.createdAt?.atZone(ZoneOffset.UTC)?.format(dateFormatter) ?: ""
             val fdpicDate = dpia.fdpicConsultationDate?.format(dateFormatter) ?: ""
-            val statusLabel =
-                when (dpia.status) {
-                    "IN_PROGRESS" -> "In Progress"
-                    "COMPLETED" -> "Completed"
-                    else -> dpia.status
-                }
-            val riskLabel =
-                when (dpia.residualRisk) {
-                    "LOW" -> "Low"
-                    "MEDIUM" -> "Medium"
-                    "HIGH" -> "High"
-                    else -> dpia.residualRisk
-                }
-            val initialRiskLabel =
-                when (dpia.initialRisk) {
-                    "LOW" -> "Low"
-                    "MEDIUM" -> "Medium"
-                    "HIGH" -> "High"
-                    else -> dpia.initialRisk
-                }
+            val statusLabel = translateStatus(dpia.status, locale)
+            val riskLabel = translateRisk(dpia.residualRisk, locale)
+            val initialRiskLabel = translateRisk(dpia.initialRisk, locale)
             sb.appendLine(
                 csvRow(
                     dpia.key,

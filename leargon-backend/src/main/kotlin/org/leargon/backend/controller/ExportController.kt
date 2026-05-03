@@ -38,8 +38,10 @@ open class ExportController(
     }
 
     @Get("/dpia-register")
-    fun exportDpiaRegister(): HttpResponse<String> {
-        val csv = exportService.exportDpiaRegister()
+    fun exportDpiaRegister(
+        @QueryValue(defaultValue = "en") locale: String,
+    ): HttpResponse<String> {
+        val csv = exportService.exportDpiaRegister(locale)
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))

@@ -24,6 +24,7 @@ import type { DpiaListItemResponse } from '../api/generated/model/dpiaListItemRe
 import { DpiaListItemResponseLinkedResourceType } from '../api/generated/model/dpiaListItemResponseLinkedResourceType';
 import { ResidualRisk } from '../api/generated/model/residualRisk';
 import { useAuth } from '../context/AuthContext';
+import { useLocale } from '../context/LocaleContext';
 import { useTranslation } from 'react-i18next';
 import { downloadExport } from '../api/exportApi';
 
@@ -361,6 +362,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
 const DpiaListPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { preferredLocale } = useLocale();
   const queryClient = useQueryClient();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const [search, setSearch] = useState('');
@@ -438,7 +440,7 @@ const DpiaListPage: React.FC = () => {
               open={Boolean(exportAnchorEl)}
               onClose={() => setExportAnchorEl(null)}
             >
-              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport('/export/dpia-register', 'dpia-register.csv'); }}>
+              <MenuItem onClick={() => { setExportAnchorEl(null); downloadExport(`/export/dpia-register?locale=${preferredLocale}`, 'dpia-register.csv'); }}>
                 {t('dpia.exportCsv')}
               </MenuItem>
             </Menu>
