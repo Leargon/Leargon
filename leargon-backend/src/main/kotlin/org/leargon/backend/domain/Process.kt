@@ -62,6 +62,10 @@ class Process {
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_id")
+    var updatedBy: User? = null
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "names", columnDefinition = "TEXT")
     var names: MutableList<LocalizedText> = mutableListOf()

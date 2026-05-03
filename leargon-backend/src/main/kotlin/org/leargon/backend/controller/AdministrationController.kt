@@ -12,18 +12,22 @@ import org.leargon.backend.model.AdministrationChangePasswordRequest
 import org.leargon.backend.model.FieldConfigurationDefinition
 import org.leargon.backend.model.FieldConfigurationEntry
 import org.leargon.backend.model.MethodologyConfigEntry
+import org.leargon.backend.model.OrganisationSettingsRequest
+import org.leargon.backend.model.OrganisationSettingsResponse
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.MethodologyConfigurationService
+import org.leargon.backend.service.OrganisationSettingsService
 import org.leargon.backend.service.UserService
 
 @Controller
 open class AdministrationController(
     private val userService: UserService,
     private val fieldConfigurationService: FieldConfigurationService,
-    private val methodologyConfigurationService: MethodologyConfigurationService
+    private val methodologyConfigurationService: MethodologyConfigurationService,
+    private val organisationSettingsService: OrganisationSettingsService
 ) : AdministrationApi {
     @Secured("ROLE_ADMIN")
     override fun createUser(
@@ -100,4 +104,12 @@ open class AdministrationController(
     override fun replaceMethodologyConfigurations(
         @Body @Valid methodologyConfigEntries: List<MethodologyConfigEntry>
     ): List<MethodologyConfigEntry> = methodologyConfigurationService.replace(methodologyConfigEntries)
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    override fun getOrganisationSettings(): OrganisationSettingsResponse = organisationSettingsService.get()
+
+    @Secured("ROLE_ADMIN")
+    override fun updateOrganisationSettings(
+        @Body organisationSettingsRequest: OrganisationSettingsRequest
+    ): OrganisationSettingsResponse = organisationSettingsService.update(organisationSettingsRequest)
 }

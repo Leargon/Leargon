@@ -102,6 +102,7 @@ test.describe('Business Process CRUD — Admin', () => {
   });
 
   test('purpose appears in CompliancePage table', async ({ page }) => {
+    await setProcessLegalBasis(processKey, 'LEGAL_OBLIGATION');
     await setProcessPurpose(processKey, 'E2E compliance page purpose');
 
     await page.goto('/compliance');

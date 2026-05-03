@@ -2,9 +2,6 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDataQualityRule
-import org.leargon.backend.domain.BusinessEntity
-import org.leargon.backend.domain.Process
-import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -12,6 +9,7 @@ import org.leargon.backend.repository.ContextRelationshipRepository
 import org.leargon.backend.repository.DpiaRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ServiceProviderRepository
+import org.leargon.backend.repository.UserRepository
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
@@ -20,11 +18,12 @@ open class ExportService(
     private val processRepository: ProcessRepository,
     private val serviceProviderRepository: ServiceProviderRepository,
     private val dpiaRepository: DpiaRepository,
-    private val fieldConfigurationService: FieldConfigurationService,
     private val contextRelationshipRepository: ContextRelationshipRepository,
     private val boundedContextRepository: BoundedContextRepository,
     private val businessDomainRepository: BusinessDomainRepository,
     private val businessEntityRepository: BusinessEntityRepository,
+    private val processingRegisterService: ProcessingRegisterService,
+    private val userRepository: UserRepository,
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -34,59 +33,6 @@ open class ExportService(
     }
 
     private fun csvRow(vararg fields: String?): String = fields.joinToString(",") { csvField(it) }
-
-    private fun computeMissingFields(process: Process): String {
-        val fc =
-            fieldConfigurationService.compute("BUSINESS_PROCESS") { fieldName ->
-                when {
-                    fieldName == "names" -> {
-                        process.names.isNotEmpty()
-                    }
-
-                    fieldName == "descriptions" -> {
-                        process.descriptions.isNotEmpty()
-                    }
-
-                    fieldName == "boundedContext" -> {
-                        process.boundedContext != null
-                    }
-
-                    fieldName == "processOwner" -> {
-                        process.effectiveOwner() != null
-                    }
-
-                    fieldName == "executingUnits" -> {
-                        process.executingUnits.isNotEmpty()
-                    }
-
-                    fieldName == "legalBasis" -> {
-                        process.legalBasis != null
-                    }
-
-                    fieldName.startsWith("names.") -> {
-                        val l = fieldName.removePrefix("names.")
-                        process.names.any { it.locale == l && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("descriptions.") -> {
-                        val l = fieldName.removePrefix("descriptions.")
-                        process.descriptions.any { it.locale == l && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("classification.") -> {
-                        val classKey = fieldName.removePrefix("classification.")
-                        process.classificationAssignments.any { it.classificationKey == classKey }
-                    }
-
-                    else -> {
-                        true
-                    }
-                }
-            }
-        return fc.missing?.joinToString("; ") ?: ""
-    }
-
-    private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
 
     private fun translateLegalBasis(legalBasis: String?): String? =
         when (legalBasis) {
@@ -101,72 +47,49 @@ open class ExportService(
 
     @jakarta.transaction.Transactional
     open fun exportProcessingRegister(locale: String = "en"): String {
+        val adminUser =
+            userRepository.findAll().firstOrNull { it.roles.contains("ROLE_ADMIN") }
+                ?: userRepository.findAll().first()
+        val entries = processingRegisterService.getEntries(locale, adminUser)
+
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
-                "Process Name",
-                "Process Owner",
-                "Legal Basis",
-                "Purpose",
-                "Security Measures",
-                "Data Subject Categories",
-                "Personal Data Categories",
-                "Retention Periods",
-                "Service Providers",
-                "Cross-border Transfers"
+                "Letzte Änderung",
+                "Änderung durch",
+                "Bereich",
+                "Bezeichnung der Bearbeitungstätigkeit",
+                "Verantwortliche",
+                "EU-Vertreter",
+                "Datenschutzbeauftragter/-berater",
+                "gemeinsame Verwantwortliche",
+                "Bearbeitungszweck/e",
+                "Kategorien betroffener Personen",
+                "Kategorien von Personendaten",
+                "Kategorien von Empfängern",
+                "Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)",
+                "Aufbewahrungsdauer bzw. Kriterien",
+                "Datensicherheitsmassnahmen"
             )
         )
-        val processes = processRepository.findAll().filter { it.legalBasis != null }
-        for (process in processes) {
-            val name = process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
-            val processOwnerName = process.effectiveOwner()?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
-            val allEntities =
-                (
-                    ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
-                        ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
-                ).distinctBy { it.key }
-            val dataSubjectCategories =
-                allEntities
-                    .map { rootEntity(it) }
-                    .distinctBy { it.key }
-                    .joinToString("; ") { it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key }
-            val personalEntities =
-                allEntities.filter { entity ->
-                    entity.classificationAssignments.any {
-                        it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                    }
-                }
-            val personalDataCategories =
-                personalEntities.joinToString("; ") {
-                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
-                }
-            val retentionPeriods =
-                allEntities
-                    .filter { !it.retentionPeriod.isNullOrBlank() }
-                    .joinToString("; ") { e ->
-                        val entityName = e.names.find { n -> n.locale == locale }?.text ?: e.names.firstOrNull()?.text ?: e.key
-                        "$entityName: ${e.retentionPeriod}"
-                    }
-            val dataProcessors =
-                process.serviceProviders.joinToString("; ") {
-                    it.names.find { n -> n.locale == locale }?.text ?: it.names.firstOrNull()?.text ?: it.key
-                }
-            val transfers =
-                process.crossBorderTransfers?.joinToString("; ") {
-                    "${it.destinationCountry}: ${it.safeguard}"
-                } ?: ""
+        for (entry in entries) {
             sb.appendLine(
                 csvRow(
-                    name,
-                    processOwnerName,
-                    translateLegalBasis(process.legalBasis),
-                    process.purpose?.firstOrNull()?.text ?: "",
-                    process.securityMeasures?.firstOrNull()?.text ?: "",
-                    dataSubjectCategories,
-                    personalDataCategories,
-                    retentionPeriods,
-                    dataProcessors,
-                    transfers
+                    entry.lastModified,
+                    entry.changedBy,
+                    entry.department,
+                    entry.name,
+                    entry.responsible,
+                    entry.euRepresentative,
+                    entry.dpo,
+                    entry.jointControllers,
+                    entry.purposes,
+                    entry.personCategories,
+                    entry.dataCategories,
+                    entry.recipients,
+                    entry.crossBorderTransfers,
+                    entry.retentionPeriods,
+                    entry.securityMeasures
                 )
             )
         }

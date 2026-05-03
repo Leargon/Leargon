@@ -69,7 +69,8 @@ const SETTINGS_ITEMS: NavItem[] = [
   { labelKey: 'nav.users', path: '/settings/users', icon: <People /> },
   { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language /> },
   { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label /> },
-{ labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
+  { labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
+  { labelKey: 'nav.organisationSettings', path: '/settings/organisation', icon: <CorporateFare /> },
 ];
 
 const NavItemButton: React.FC<{ item: NavItem }> = ({ item }) => {
