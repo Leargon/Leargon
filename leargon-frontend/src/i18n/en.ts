@@ -420,7 +420,7 @@ const en = {
     pageTitle: 'Processing Register',
     pageSubtitle: 'Art. 12 revDSG / Art. 30 GDPR',
     exportBtn: 'Export',
-    exportProcessingRegister: 'Export Processing Register (CSV)',
+    exportProcessingRegister: 'Export Processing Register (CSV, personal data only)',
     exportDataProcessors: 'Export Sub-processor Register (CSV)',
     exportDpiaRegister: 'Export DPIA Register (CSV)',
     exportQualityRules: 'Export Quality Rules (CSV)',

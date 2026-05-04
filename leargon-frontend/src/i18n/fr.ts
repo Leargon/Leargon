@@ -420,7 +420,7 @@ const fr = {
     pageTitle: 'Registre des traitements',
     pageSubtitle: 'Art. 12 nLPD / Art. 30 RGPD',
     exportBtn: 'Exporter',
-    exportProcessingRegister: 'Exporter le registre des traitements (CSV)',
+    exportProcessingRegister: 'Exporter le registre des traitements (CSV, données personnelles uniquement)',
     exportDataProcessors: 'Exporter le registre des sous-traitants (CSV)',
     exportDpiaRegister: 'Exporter le registre AIPD (CSV)',
     exportQualityRules: 'Exporter les règles de qualité (CSV)',

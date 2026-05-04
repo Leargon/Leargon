@@ -420,7 +420,7 @@ const de = {
     pageTitle: 'Bearbeitungsverzeichnis',
     pageSubtitle: 'Art. 12 revDSG / Art. 30 DSGVO',
     exportBtn: 'Exportieren',
-    exportProcessingRegister: 'Bearbeitungsverzeichnis exportieren (CSV)',
+    exportProcessingRegister: 'Bearbeitungsverzeichnis exportieren (CSV, nur Personendaten)',
     exportDataProcessors: 'Auftragsverarbeitungsregister exportieren (CSV)',
     exportDpiaRegister: 'DSFA-Register exportieren (CSV)',
     exportQualityRules: 'Qualitätsregeln exportieren (CSV)',
