@@ -305,26 +305,29 @@ open class ExportService(
         val exportDate = dateFormatter.format(java.time.LocalDate.now())
         val (titleLine, scopeLine, dateLine) =
             when (locale) {
-                "de" ->
+                "de" -> {
                     Triple(
                         "Verzeichnis der Bearbeitungstätigkeiten gemäss Art. 30 DSGVO / Art. 12 DSG",
                         "Enthält nur Bearbeitungstätigkeiten mit Personenbezug",
                         "Exportdatum: $exportDate",
                     )
+                }
 
-                "fr" ->
+                "fr" -> {
                     Triple(
                         "Registre des activités de traitement conformément à l'Art. 30 RGPD / Art. 12 LPD",
                         "Contient uniquement les activités de traitement impliquant des données personnelles",
                         "Date d'exportation: $exportDate",
                     )
+                }
 
-                else ->
+                else -> {
                     Triple(
                         "Record of Processing Activities pursuant to Art. 30 GDPR / Art. 12 DSG",
                         "Contains only processing activities involving personal data",
                         "Export date: $exportDate",
                     )
+                }
             }
 
         val sb = StringBuilder()
