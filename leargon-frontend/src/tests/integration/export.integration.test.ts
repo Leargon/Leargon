@@ -47,7 +47,15 @@ describe('Export API', () => {
 
   it('admin can export processing register as CSV', async () => {
     const proc = await createProcess(userClient, 'CSV Export Test Process');
+    // Link a personal-data entity (required by the current filter)
+    const entity = await createEntity(adminClient, 'CSV Export Personal Data Entity');
+    await adminClient.put(`/business-entities/${entity.key}/classifications`, [
+      { classificationKey: 'personal-data', valueKey: 'personal-data--contains' },
+    ]);
+    await userClient.post(`/processes/${proc.key}/inputs`, { entityKey: entity.key });
+    // Keep legal basis for compatibility with older backend images
     await userClient.put(`/processes/${proc.key}/legal-basis`, { legalBasis: 'CONSENT' });
+
     const res = await adminClient.get<string>('/export/processing-register', {
       responseType: 'text',
     });
