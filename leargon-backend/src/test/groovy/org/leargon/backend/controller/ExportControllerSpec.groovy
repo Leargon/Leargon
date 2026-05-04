@@ -127,7 +127,7 @@ class ExportControllerSpec extends Specification {
         businessEntityRepository.update(entity)
         // Link entity to process so it appears in dataCategories
         client.toBlocking().exchange(
-            HttpRequest.PUT("/processes/${processKey}/inputs/${entityKey}", null).bearerAuth(adminToken), Map)
+            HttpRequest.POST("/processes/${processKey}/inputs", [entityKey: entityKey]).bearerAuth(adminToken), Map)
 
         when:
         def response = client.toBlocking().exchange(
