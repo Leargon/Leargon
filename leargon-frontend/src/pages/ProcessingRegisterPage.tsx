@@ -312,7 +312,7 @@ const ProcessingRegisterPage: React.FC = () => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [search, setSearch] = useState('');
-  const [missingOnly, setMissingOnly] = useState(false);
+  const [personalDataOnly, setPersonalDataOnly] = useState(false);
   const [complianceWizardOpen, setComplianceWizardOpen] = useState(false);
   const [complianceWizardDismissed, setComplianceWizardDismissed] = useState(false);
 
@@ -337,12 +337,12 @@ const ProcessingRegisterPage: React.FC = () => {
   const filteredAll = useMemo(() => {
     return entries.filter((row) => {
       if (search && !row.name.toLowerCase().includes(search.toLowerCase()) && !row.key.includes(search.toLowerCase())) return false;
-      if (missingOnly && !(row.canEdit && row.missingMandatoryFields && row.missingMandatoryFields.length > 0)) return false;
+      if (personalDataOnly && !row.personCategories && !row.dataCategories) return false;
       return true;
     });
-  }, [entries, search, missingOnly]);
+  }, [entries, search, personalDataOnly]);
 
-  const showFlat = search.trim() !== '' || missingOnly;
+  const showFlat = search.trim() !== '';
   const rowKeys = new Set(filteredAll.map((r) => r.key));
   const topLevelRows = showFlat
     ? filteredAll
@@ -394,8 +394,8 @@ const ProcessingRegisterPage: React.FC = () => {
           }}
         />
         <FormControlLabel
-          control={<Switch checked={missingOnly} onChange={(e) => setMissingOnly(e.target.checked)} size="small" />}
-          label={<Typography variant="body2">{t('compliance.filterMissingOnly')}</Typography>}
+          control={<Switch checked={personalDataOnly} onChange={(e) => setPersonalDataOnly(e.target.checked)} size="small" />}
+          label={<Typography variant="body2">{t('compliance.filterPersonalDataOnly')}</Typography>}
         />
         <Box sx={{ flex: 1 }} />
         {isAdmin && hasNoEntries && (

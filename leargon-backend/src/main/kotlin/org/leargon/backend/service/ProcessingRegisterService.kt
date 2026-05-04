@@ -104,7 +104,6 @@ open class ProcessingRegisterService(
                 .groupBy { it.parent!!.key }
 
         return allProcesses
-            .filter { it.legalBasis != null }
             .map { process -> buildEntry(process, locale, euRepresentative, dpo, currentUser, childKeysByParent) }
     }
 

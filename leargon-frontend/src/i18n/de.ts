@@ -437,7 +437,7 @@ const de = {
     colCompleteness: 'Vollständigkeit',
     noLegalBasis: 'Nicht gesetzt',
     complete: 'Vollständig',
-    filterMissingOnly: 'Nur fehlende Felder',
+    filterPersonalDataOnly: 'Nur Personendaten',
     searchPlaceholder: 'Prozesse suchen...',
     noDomain: 'Keine Domäne',
     processors_one: '{{count}} Verarbeiter',

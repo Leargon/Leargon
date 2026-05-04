@@ -437,7 +437,7 @@ const fr = {
     colCompleteness: 'Complétude',
     noLegalBasis: 'Non défini',
     complete: 'Complet',
-    filterMissingOnly: 'Champs manquants uniquement',
+    filterPersonalDataOnly: 'Données personnelles uniquement',
     searchPlaceholder: 'Rechercher des processus…',
     noDomain: 'Aucun domaine',
     processors_one: '{{count}} sous-traitant',

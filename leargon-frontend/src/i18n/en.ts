@@ -437,7 +437,7 @@ const en = {
     colCompleteness: 'Completeness',
     noLegalBasis: 'Not set',
     complete: 'Complete',
-    filterMissingOnly: 'Missing fields only',
+    filterPersonalDataOnly: 'Personal data only',
     searchPlaceholder: 'Search processes...',
     noDomain: 'No domain',
     processors_one: '{{count}} processor',
