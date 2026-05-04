@@ -7,6 +7,7 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.ClassificationAssignment
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
@@ -79,6 +80,13 @@ class ExportControllerSpec extends Specification {
         resp.body().key
     }
 
+    private String createBusinessEntity(String token, String name = "Test Entity") {
+        def req = [names: [[locale: "en", text: name]]]
+        def resp = client.toBlocking().exchange(
+            HttpRequest.POST("/business-entities", req).bearerAuth(token), Map)
+        resp.body().key
+    }
+
     private String createServiceProvider(String adminToken, String name = "Test Provider") {
         def req = [
             names: [[locale: "en", text: name]],
@@ -112,10 +120,14 @@ class ExportControllerSpec extends Specification {
         given:
         String adminToken = createAdminToken()
         String processKey = createProcess(adminToken, "Export Test Process")
-        // Set a legal basis so the process is included in the personal data register
+        String entityKey = createBusinessEntity(adminToken, "Test Person Entity")
+        // Stamp personal-data classification directly — Liquibase doesn't run in H2 tests
+        def entity = businessEntityRepository.findByKey(entityKey).get()
+        entity.classificationAssignments = [new ClassificationAssignment("personal-data", "personal-data--contains")]
+        businessEntityRepository.update(entity)
+        // Link entity to process so it appears in dataCategories
         client.toBlocking().exchange(
-            HttpRequest.PUT("/processes/${processKey}/legal-basis",
-                [legalBasis: "CONSENT"]).bearerAuth(adminToken), Map)
+            HttpRequest.POST("/processes/${processKey}/inputs", [entityKey: entityKey]).bearerAuth(adminToken), Map)
 
         when:
         def response = client.toBlocking().exchange(
@@ -124,6 +136,7 @@ class ExportControllerSpec extends Specification {
         then:
         response.status == HttpStatus.OK
         def body = response.body()
+        body.contains("Record of Processing Activities")
         body.contains("Last Modified")
         body.contains("Processing Activity")
         body.contains("Responsible")

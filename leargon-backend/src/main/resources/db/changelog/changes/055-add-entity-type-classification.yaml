@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: 055-add-entity-type-classification
+      author: leargon
+      changes:
+        # Entity Type classification
+        - insert:
+            tableName: classifications
+            columns:
+              - column:
+                  name: key
+                  value: entity-type
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Entity Type"},{"locale":"de","text":"Entitätstyp"},{"locale":"fr","text":"Type d''entité"}]'
+              - column:
+                  name: descriptions
+                  value: '[{"locale":"en","text":"Classifies whether this business entity represents a data subject role (e.g. customer, employee) or a plain data object."}]'
+              - column:
+                  name: assignable_to
+                  value: BUSINESS_ENTITY
+              - column:
+                  name: multi_value
+                  valueBoolean: false
+              - column:
+                  name: is_system
+                  valueBoolean: true
+              - column:
+                  name: created_by_id
+                  valueComputed: "(SELECT id FROM users WHERE is_fallback_administrator = true LIMIT 1)"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        # Entity Type values
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: key
+                  value: entity-type--role
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"Role (Data Subject)"},{"locale":"de","text":"Rolle (Betroffene Person)"},{"locale":"fr","text":"Rôle (Personne concernée)"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'entity-type')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
+
+        - insert:
+            tableName: classification_values
+            columns:
+              - column:
+                  name: key
+                  value: entity-type--none
+              - column:
+                  name: names
+                  value: '[{"locale":"en","text":"None (Data Object)"},{"locale":"de","text":"Keine (Datenobjekt)"},{"locale":"fr","text":"Aucun (Objet de données)"}]'
+              - column:
+                  name: descriptions
+                  value: '[]'
+              - column:
+                  name: classification_id
+                  valueComputed: "(SELECT id FROM classifications WHERE `key` = 'entity-type')"
+              - column:
+                  name: created_at
+                  valueDate: now()
+              - column:
+                  name: updated_at
+                  valueDate: now()
