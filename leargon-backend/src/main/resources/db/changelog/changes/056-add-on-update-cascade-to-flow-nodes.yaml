@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 056-add-on-update-cascade-to-flow-nodes
+      author: leargon
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: process_flow_node
+            constraintName: fk_flow_node_process
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_node
+            baseColumnNames: process_key
+            constraintName: fk_flow_node_process
+            referencedTableName: processes
+            referencedColumnNames: key
+            onDelete: CASCADE
+            onUpdate: CASCADE
+        - dropForeignKeyConstraint:
+            baseTableName: process_flow_node
+            constraintName: fk_flow_node_linked_process
+        - addForeignKeyConstraint:
+            baseTableName: process_flow_node
+            baseColumnNames: linked_process_key
+            constraintName: fk_flow_node_linked_process
+            referencedTableName: processes
+            referencedColumnNames: key
+            onDelete: SET NULL
+            onUpdate: CASCADE
