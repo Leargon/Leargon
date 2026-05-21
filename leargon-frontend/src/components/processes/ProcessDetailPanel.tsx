@@ -902,7 +902,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Paper>
 
       {visibleTabs.includes(0) && (!isHidden('inputEntities') || !isHidden('outputEntities') || !isHidden('executingUnits')) && (
-      <Accordion defaultExpanded={visibleTabs[0] === 0} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.dataAndTeams')}</Typography>
         </AccordionSummary>
@@ -1003,7 +1003,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {visibleTabs.includes(1) && (
-      <Accordion defaultExpanded={visibleTabs[0] === 1} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.compliance')}</Typography>
         </AccordionSummary>
@@ -1260,7 +1260,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {visibleTabs.includes(2) && (
-      <Accordion defaultExpanded={visibleTabs[0] === 2} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.governance')}</Typography>
         </AccordionSummary>

@@ -467,7 +467,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         )}
 
         {/* Properties: Type + Parents + Children */}
-        <Accordion defaultExpanded disableGutters>
+        <Accordion expanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Properties</Typography>
           </AccordionSummary>
