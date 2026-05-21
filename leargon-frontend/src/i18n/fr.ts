@@ -1649,7 +1649,7 @@ const fr = {
     dgDesc: 'La gouvernance des données établit des responsabilités claires sur vos données métier. Léargon vous permet de cataloguer les entités métier, d\'affecter des propriétaires de données, de classifier les données et de suivre où elles sont stockées.',
     dddTitle: 'Domain-Driven Design (DDD)',
     dddDesc: 'Le DDD aligne la conception logicielle sur le domaine métier en définissant des contextes délimités, un langage omniprésent et des événements de domaine. Dans Léargon, vous modélisez les domaines, les relations de contexte et le vocabulaire partagé.',
-    bcmTitle: 'Cartographie des capacités métier (BCM)',
+    bcmTitle: 'Modèle de capacités métier (BCM)',
     bcmDesc: 'La BCM documente ce que votre organisation est capable de faire, indépendamment de sa structure ou des exécutants. Utilisez le module Capacités de Léargon pour créer une carte hiérarchique, évaluer l\'importance stratégique et lier les capacités aux processus.',
     bpmTitle: 'Gouvernance des processus métier (BPMN)',
     bpmDesc: 'La gouvernance des processus garantit que les processus métier sont documentés, responsabilisés et alignés sur les données et les responsabilités organisationnelles. Léargon prend en charge la modélisation BPMN avec assignation d\'entités et liens de conformité.',

@@ -1649,7 +1649,7 @@ const en = {
     dgDesc: 'Data Governance establishes clear ownership and stewardship of your business data. Léargon lets you catalogue business entities, assign data owners, classify data by sensitivity and type, and track where data is stored — giving your organisation a single source of truth for its data landscape.',
     dddTitle: 'Domain-Driven Design (DDD)',
     dddDesc: 'DDD aligns software design with the business domain by defining bounded contexts, ubiquitous language, and domain events. In Léargon you model domains and sub-domains, map context relationships, and document the shared vocabulary and asynchronous events that cross context boundaries.',
-    bcmTitle: 'Business Capability Mapping (BCM)',
+    bcmTitle: 'Business Capability Model (BCM)',
     bcmDesc: 'BCM documents what your organisation can do, independent of how it is structured or who executes each task. Use Léargon\'s Capabilities section to build a hierarchical capability map, rate strategic importance and maturity, and link capabilities to the processes that realise them.',
     bpmTitle: 'Business Process Governance (BPMN)',
     bpmDesc: 'Process governance ensures that business processes are documented, owned, and aligned with data and organisational responsibilities. Léargon supports BPMN-style process modelling with input/output entity assignments, sub-processes, and compliance linkage.',

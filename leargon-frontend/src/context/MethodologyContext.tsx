@@ -37,7 +37,7 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
     navPaths: ['/domains', '/ubiquitous-language', '/diagrams/context-map', '/diagrams/event-flow'],
   },
   BCM: {
-    label: 'Business Continuity Management',
+    label: 'Business Capability Model',
     description: 'Manage capabilities, team insights, and business continuity planning.',
     sections: ['BCM'],
     navPaths: ['/capabilities', '/team-insights'],

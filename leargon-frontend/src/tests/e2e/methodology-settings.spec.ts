@@ -52,7 +52,7 @@ test.describe('Methodology Settings', () => {
     await expect(page.getByText('Process Governance').first()).toBeVisible();
     await expect(page.getByText('GDPR / DSG — Legal & Privacy').first()).toBeVisible();
     await expect(page.getByText('Domain-Driven Design').first()).toBeVisible();
-    await expect(page.getByText('Business Continuity Management').first()).toBeVisible();
+    await expect(page.getByText('Business Capability Model').first()).toBeVisible();
     await expect(page.getByText('Team Topologies').first()).toBeVisible();
 
     // All 6 methodology switches should be present
