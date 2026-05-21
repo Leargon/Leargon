@@ -10009,6 +10009,9 @@ components:
           type: string
         changeType:
           type: string
+        changeSummary:
+          type: string
+          description: Optional human-readable summary of the change
         changedBy:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true

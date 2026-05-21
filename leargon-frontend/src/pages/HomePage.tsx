@@ -14,8 +14,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Warning,
-  Error as ErrorIcon,
   Schedule,
   AssignmentInd,
   Storage,
@@ -24,22 +22,11 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useGetDashboard } from '../api/generated/dashboard/dashboard';
-import type { AttentionItem, ActivityItem } from '../api/generated/model';
+import type { ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
 import { useMethodology } from '../context/MethodologyContext';
 import MaturityOverview from '../components/dashboard/MaturityOverview';
 import GovernanceSetupWizard from '../components/settings/GovernanceSetupWizard';
-
-const ATTENTION_METHODOLOGY: (item: import('../api/generated/model').AttentionItem) => string | null = (item) => {
-  if (item.resourceType === 'ENTITY') return 'DATA_GOVERNANCE';
-  if (item.resourceType === 'DOMAIN') return 'DDD';
-  if (item.resourceType === 'DPIA') return 'GDPR';
-  if (item.resourceType === 'PROCESS') {
-    if (item.issueCode === 'NO_LEGAL_BASIS' || item.issueCode === 'DPIA_IN_PROGRESS') return 'GDPR';
-    return 'PROCESS_GOVERNANCE';
-  }
-  return null;
-};
 
 function useFormatRelativeTime() {
   const { t } = useTranslation();
@@ -65,6 +52,7 @@ const RESOURCE_TYPE_PATHS: Record<string, string> = {
 
 const RESOURCE_TYPE_NO_DETAIL = new Set(['DPIA']);
 
+/*
 function AttentionSection({ items }: { items: AttentionItem[] }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -123,6 +111,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
     </List>
   );
 }
+*/
 
 function ActivitySection({ items }: { items: ActivityItem[] }) {
   const { t } = useTranslation();
@@ -155,9 +144,11 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
                 primary={item.name}
                 secondary={(() => {
                   const action = item.changeType.toLowerCase().replace('_', ' ').replace(/e$/, '') + 'ed';
-                  return item.changedBy
-                    ? `${action} by ${item.changedBy.firstName} ${item.changedBy.lastName}`
-                    : action;
+                  const by = item.changedBy
+                    ? ` by ${item.changedBy.firstName} ${item.changedBy.lastName}`
+                    : '';
+                  const summary = item.changeSummary ? ` (${item.changeSummary})` : '';
+                  return `${action}${by}${summary}`;
                 })()}
                 slotProps={{
                   primary: { variant: 'body2', sx: { fontWeight: 500 } },
@@ -244,10 +235,12 @@ const HomePage: React.FC = () => {
   const { isMethodologyEnabled } = useMethodology();
   const [governanceWizardOpen, setGovernanceWizardOpen] = useState(false);
 
+  /*
   const filteredAttention = (dashboard?.needsAttention ?? []).filter((item) => {
     const m = ATTENTION_METHODOLOGY(item);
     return !m || isMethodologyEnabled(m);
   });
+  */
   const showEntities = isMethodologyEnabled('DATA_GOVERNANCE');
   const showProcesses = isMethodologyEnabled('PROCESS_GOVERNANCE');
 
@@ -285,11 +278,13 @@ const HomePage: React.FC = () => {
       {dashboard && (
         <>
           {/* Needs Attention — always shown to admin; shown to others only when there are items */}
+          {/*
           {(isAdmin || filteredAttention.length > 0) && (
             <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
               <AttentionSection items={filteredAttention} />
             </SectionCard>
           )}
+          */}
 
           {/* My Responsibilities */}
           {(showEntities || showProcesses) && (
