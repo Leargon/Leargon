@@ -226,7 +226,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names & Descriptions */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2">{t('serviceProvider.sectionNames')}</Typography>
@@ -271,7 +271,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         </Accordion>
 
         {/* Provider Type */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2">{t('serviceProvider.sectionProviderType')}</Typography>

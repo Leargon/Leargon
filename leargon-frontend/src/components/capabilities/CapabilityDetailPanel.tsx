@@ -180,7 +180,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Name</Typography>
           </AccordionSummary>
@@ -217,7 +217,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         </Accordion>
 
         {/* Properties */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Properties</Typography>
           </AccordionSummary>

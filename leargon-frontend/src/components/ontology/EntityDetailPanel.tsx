@@ -830,7 +830,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       </Paper>
 
       {visibleTabs.includes(0) && (
-      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion defaultExpanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.compliance')}</Typography>
         </AccordionSummary>
@@ -885,7 +885,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       {visibleTabs.includes(1) && (
-      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion defaultExpanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.relationships')}</Typography>
         </AccordionSummary>
@@ -1117,7 +1117,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       {visibleTabs.includes(2) && (
-      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion defaultExpanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('tabs.governance')}</Typography>
         </AccordionSummary>
@@ -1298,7 +1298,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       {visibleTabs.includes(3) && (
-      <Accordion expanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+      <Accordion defaultExpanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
         <AccordionSummary expandIcon={<ExpandMore />}>
           <Typography variant="subtitle2">{t('diagrams.lineageTab')}</Typography>
         </AccordionSummary>

@@ -180,7 +180,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
         {/* Names & Descriptions */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2">{t('common.namesAndDescriptions')}</Typography>
@@ -224,7 +224,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         </Accordion>
 
         {/* Details */}
-        <Accordion expanded={false} disableGutters>
+        <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="subtitle2">{t('common.details')}</Typography>

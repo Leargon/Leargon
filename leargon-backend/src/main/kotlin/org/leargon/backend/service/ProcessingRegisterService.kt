@@ -134,9 +134,10 @@ open class ProcessingRegisterService(
             allEntities.filter { e ->
                 e.classificationAssignments.any {
                     it.classificationKey == "entity-type" && it.valueKey == "entity-type--role"
-                } && e.classificationAssignments.any {
-                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                }
+                } &&
+                    e.classificationAssignments.any {
+                        it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
+                    }
             }
         val personCategories =
             roleEntities.map { rootEntity(it) }.distinctBy { it.key }.joinToString("; ") { localizedName(it, locale) }
