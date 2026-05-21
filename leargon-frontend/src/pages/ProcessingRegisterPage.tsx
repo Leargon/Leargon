@@ -344,7 +344,7 @@ const ProcessingRegisterPage: React.FC = () => {
         const row = entries.find(r => r.key === key);
         if (!row) return false;
         
-        let keep = hasPersonalData(row);
+        let keep: boolean = !!hasPersonalData(row);
         const children = entries.filter(r => r.parentKey === key);
         for (const child of children) {
             if (processHasPersonalData(child.key)) {
