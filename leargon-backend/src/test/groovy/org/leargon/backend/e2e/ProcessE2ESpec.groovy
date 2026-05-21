@@ -615,4 +615,48 @@ class ProcessE2ESpec extends AbstractE2ESpec {
         then:
         delResp.status == HttpStatus.NO_CONTENT
     }
+
+    def "should successfully rename process when it has a flow diagram (DB cascade handled)"() {
+        given:
+        def token = signupAdmin("rename-bug@example.com", "renamebug")
+
+        // 1. Create a process without a code (so key is name-based)
+        def proc = createProcess(token, "Original Name")
+        assert proc.key == "original-name"
+
+        // 2. Add a complex flow diagram
+        def saveFlowRequest = [
+                nodes: [
+                        [id: "start", nodeType: "START_EVENT", position: 0, trackId: null],
+                        [id: "task1", nodeType: "TASK", label: "Do something", position: 1, trackId: null],
+                        [id: "task2", nodeType: "TASK", label: "Link to self", position: 2, trackId: null, linkedProcessKey: proc.key],
+                        [id: "end", nodeType: "END_EVENT", position: 3, trackId: null]
+                ],
+                tracks: []
+        ]
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/flow", saveFlowRequest).bearerAuth(token), Map
+        )
+
+        when: "3. Rename the process, which changes the key"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/processes/${proc.key}/names", [
+                        [locale: "en", text: "New Name"]
+                ]).bearerAuth(token), Map
+        )
+
+        then: "It should work because of ON UPDATE CASCADE in DB"
+        noExceptionThrown()
+        response.body().key == "new-name"
+
+        when: "verifying diagram still exists and references new key"
+        def flowResp = client.toBlocking().exchange(
+                HttpRequest.GET("/processes/new-name/flow").bearerAuth(token), Map
+        )
+
+        then:
+        flowResp.body().nodes.size() == 4
+        flowResp.body().nodes.find { it.id == "task2" }.linkedProcessKey == "new-name"
+    }
 }

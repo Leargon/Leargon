@@ -1,31 +1,30 @@
 package org.leargon.backend.e2e
 
 import io.micronaut.http.HttpRequest
-import io.micronaut.http.HttpStatus
-import io.micronaut.http.client.exceptions.HttpClientResponseException
 
 class ProcessKeyUpdateE2ESpec extends AbstractE2ESpec {
 
     def "should successfully rename process when it has a flow diagram (DB cascade handled)"() {
         given:
-        def token = signup("rename-bug@example.com", "renamebug")
+        def token = signupAdmin("rename-bug@example.com", "renamebug")
         
         // 1. Create a process without a code (so key is name-based)
         def proc = createProcess(token, "Original Name")
         assert proc.key == "original-name"
 
-        // 2. Add a simple flow diagram
+        // 2. Add a complex flow diagram
         def saveFlowRequest = [
             nodes: [
                 [id: "start", nodeType: "START_EVENT", position: 0, trackId: null],
-                [id: "task", nodeType: "TASK", label: "Do something", position: 1, trackId: null],
-                [id: "end", nodeType: "END_EVENT", position: 2, trackId: null]
+                [id: "task1", nodeType: "TASK", label: "Do something", position: 1, trackId: null],
+                [id: "task2", nodeType: "TASK", label: "Link to self", position: 2, trackId: null, linkedProcessKey: proc.key],
+                [id: "end", nodeType: "END_EVENT", position: 3, trackId: null]
             ],
             tracks: []
         ]
         
         client.toBlocking().exchange(
-            HttpRequest.POST("/processes/${proc.key}/flow", saveFlowRequest).bearerAuth(token), Map
+            HttpRequest.PUT("/processes/${proc.key}/flow", saveFlowRequest).bearerAuth(token), Map
         )
 
         when: "3. Rename the process, which changes the key"
