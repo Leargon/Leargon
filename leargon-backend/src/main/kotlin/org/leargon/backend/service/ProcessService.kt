@@ -171,12 +171,9 @@ open class ProcessService(
             process.key = SlugUtil.slugify(defaultName)
         }
 
-        val newKey = process.key
         process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated names")
-
-        if (newKey != key) updateDiagramReferences(key, newKey)
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
@@ -450,12 +447,9 @@ open class ProcessService(
             process.code = null
         }
 
-        val newKey = process.key
         process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated code to '${code ?: "none"}'")
-
-        if (newKey != key) updateDiagramReferences(key, newKey)
 
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
@@ -818,16 +812,6 @@ open class ProcessService(
                     "Translation for default locale '${defaultLocale.localeCode}' (${defaultLocale.displayName}) is required"
                 )
             }
-        }
-    }
-
-    private fun updateDiagramReferences(
-        oldKey: String,
-        newKey: String
-    ) {
-        processFlowNodeRepository.findByLinkedProcessKey(oldKey).forEach { node ->
-            node.linkedProcessKey = newKey
-            processFlowNodeRepository.update(node)
         }
     }
 
