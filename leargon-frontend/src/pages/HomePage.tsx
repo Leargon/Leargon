@@ -273,7 +273,7 @@ const HomePage: React.FC = () => {
       </Box>
       {/* Item 11: Governance Maturity Overview — admin only */}
       {isAdmin && <Box sx={{ mb: 3 }}><MaturityOverview /></Box>}
-      <GovernanceSetupWizard open={governanceWizardOpen} onClose={() => setGovernanceWizardOpen(false)} />
+      {isAdmin && <GovernanceSetupWizard open={governanceWizardOpen} onClose={() => setGovernanceWizardOpen(false)} />}
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       {dashboard && (
         <>
