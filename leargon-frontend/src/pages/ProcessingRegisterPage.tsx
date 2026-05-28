@@ -7,7 +7,7 @@ import {
   CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
 } from '@mui/material';
 import {
-  Search, FileDownload, CheckCircle, Warning,
+  Search, FileDownload,
   ExpandMore, ChevronRight, OpenInNew,
 } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
@@ -61,7 +61,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
 
   const children = allRows.filter((r) => r.parentKey === row.key);
-  const hasMissing = row.canEdit && (row.missingMandatoryFields?.length ?? 0) > 0;
 
   const handlePurposeSave = useCallback(async () => {
     setSaving(true);
@@ -130,10 +129,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
             ) : (
               <Box sx={{ width: 28 }} />
             )}
-            {hasMissing
-              ? <Tooltip title={row.missingMandatoryFields!.join(', ')}><Warning fontSize="small" color="warning" /></Tooltip>
-              : <CheckCircle fontSize="small" color="success" />
-            }
             <Typography variant="body2" sx={{ fontWeight: 500, ml: 0.5, flex: 1 }}>
               {row.name}
             </Typography>
@@ -312,7 +307,7 @@ const ProcessingRegisterPage: React.FC = () => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
   const [search, setSearch] = useState('');
-  const [personalDataOnly, setPersonalDataOnly] = useState(false);
+  const [personalDataOnly, setPersonalDataOnly] = useState(true);
   const [complianceWizardOpen, setComplianceWizardOpen] = useState(false);
   const [complianceWizardDismissed, setComplianceWizardDismissed] = useState(false);
 
@@ -335,9 +330,41 @@ const ProcessingRegisterPage: React.FC = () => {
   }, [queryClient, preferredLocale]);
 
   const filteredAll = useMemo(() => {
+    // If filtering, we need to preserve the process hierarchy.
+    // 1. Identify all entries that directly process personal data.
+    const hasPersonalData = (row: ProcessingRegisterEntryResponse) => 
+        (row.personCategories || row.dataCategories);
+
+    // 2. Identify keys of processes that have personal data OR have children that do.
+    const keysWithPersonalData = new Set<string>();
+    
+    // We do a recursive check to mark paths as "keep".
+    const processHasPersonalData = (key: string): boolean => {
+        if (keysWithPersonalData.has(key)) return true;
+        const row = entries.find(r => r.key === key);
+        if (!row) return false;
+        
+        let keep: boolean = !!hasPersonalData(row);
+        const children = entries.filter(r => r.parentKey === key);
+        for (const child of children) {
+            if (processHasPersonalData(child.key)) {
+                keep = true;
+            }
+        }
+        
+        if (keep) keysWithPersonalData.add(key);
+        return keep;
+    };
+
+    if (!personalDataOnly && !search) return entries;
+    
+    if (personalDataOnly) {
+        entries.forEach(r => processHasPersonalData(r.key));
+    }
+
     return entries.filter((row) => {
       if (search && !row.name.toLowerCase().includes(search.toLowerCase()) && !row.key.includes(search.toLowerCase())) return false;
-      if (personalDataOnly && !row.personCategories && !row.dataCategories) return false;
+      if (personalDataOnly && !keysWithPersonalData.has(row.key)) return false;
       return true;
     });
   }, [entries, search, personalDataOnly]);

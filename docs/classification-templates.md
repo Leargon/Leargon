@@ -183,7 +183,7 @@ Classifies the data sensitivity level for regulatory and handling purposes. Comp
 
 ---
 
-## Business Capability Modeling (BCM)
+## Business Capability Model (BCM)
 
 ### Strategic Importance
 Rates the strategic role of a domain or capability within the business capability map.

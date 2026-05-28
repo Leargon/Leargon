@@ -24,6 +24,8 @@ export interface ActivityItem {
   key: string;
   name: string;
   changeType: string;
+  /** Optional human-readable summary of the change */
+  changeSummary?: string;
   changedBy?: UserSummaryResponse | null;
   changedAt: string;
 }

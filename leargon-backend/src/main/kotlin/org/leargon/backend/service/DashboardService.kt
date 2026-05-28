@@ -144,7 +144,10 @@ open class DashboardService(
                         nameOf(v.businessEntity!!.names, v.businessEntity!!.key),
                         v.changeType,
                         v.createdAt!!.atZone(ZoneOffset.UTC),
-                    ).also { it.changedBy = toUserSummary(v.changedBy) }
+                    ).also {
+                        it.changedBy = toUserSummary(v.changedBy)
+                        it.changeSummary = v.changeSummary
+                    }
                 }
 
         val processActivity =
@@ -159,7 +162,10 @@ open class DashboardService(
                         nameOf(v.process!!.names, v.process!!.key),
                         v.changeType,
                         v.createdAt!!.atZone(ZoneOffset.UTC),
-                    ).also { it.changedBy = toUserSummary(v.changedBy) }
+                    ).also {
+                        it.changedBy = toUserSummary(v.changedBy)
+                        it.changeSummary = v.changeSummary
+                    }
                 }
 
         val domainActivity =
@@ -174,7 +180,10 @@ open class DashboardService(
                         nameOf(v.businessDomain!!.names, v.businessDomain!!.key),
                         v.changeType,
                         v.createdAt!!.atZone(ZoneOffset.UTC),
-                    ).also { it.changedBy = toUserSummary(v.changedBy) }
+                    ).also {
+                        it.changedBy = toUserSummary(v.changedBy)
+                        it.changeSummary = v.changeSummary
+                    }
                 }
 
         val recentActivity =
