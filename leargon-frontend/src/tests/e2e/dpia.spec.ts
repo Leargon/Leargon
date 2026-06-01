@@ -80,8 +80,8 @@ test.describe('DPIA — Entity Detail (Admin)', () => {
     await page.goto(`/entities/${entityKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Entity compliance is the first tab (tab index 0)
-    // It should already be visible by default
+    // Ensure Compliance tab is active
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
     await expect(page.getByText('No DPIA recorded')).toBeVisible({ timeout: 10_000 });
   });
 
@@ -92,6 +92,8 @@ test.describe('DPIA — Entity Detail (Admin)', () => {
     await page.goto(`/entities/${entityKey}`);
     await page.waitForLoadState('networkidle');
 
+    // Ensure Compliance tab is active
+    await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
     await page.getByRole('button', { name: 'Trigger DPIA' }).click();
     await page.waitForLoadState('networkidle');
 
