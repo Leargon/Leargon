@@ -201,6 +201,20 @@ export const assignOwningUnitToEntity = (
 ): Promise<Record<string, unknown>> =>
   apiFetch(`/business-entities/${entityKey}/owning-unit`, 'PUT', { owningUnitKey }, as);
 
+export const assignClassificationsToEntity = (
+  entityKey: string,
+  assignments: Array<{ classificationKey: string; valueKey: string }>,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/business-entities/${entityKey}/classifications`, 'PUT', assignments, as);
+
+export const addProcessInput = (
+  processKey: string,
+  entityKey: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/inputs`, 'POST', { entityKey }, as);
+
 export const assignOwningUnitToProcess = (
   processKey: string,
   owningUnitKey: string | null,

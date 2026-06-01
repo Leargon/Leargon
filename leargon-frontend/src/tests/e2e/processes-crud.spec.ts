@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { createProcess, createOrgUnit, assignOwningUnitToProcess, setProcessDescriptions, setProcessLegalBasis, setProcessPurpose, uid, OWNER } from './api-setup';
+import {
+  createProcess,
+  createOrgUnit,
+  assignOwningUnitToProcess,
+  setProcessDescriptions,
+  setProcessLegalBasis,
+  setProcessPurpose,
+  uid,
+  OWNER,
+  createEntity,
+  assignClassificationsToEntity,
+  addProcessInput,
+} from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -13,6 +25,14 @@ test.describe('Business Process CRUD — Admin', () => {
     processName = uid('PW Process');
     const process = await createProcess(processName);
     processKey = process.key as string;
+
+    // Link an entity with personal data so compliance fields (Legal Basis) are visible
+    const entity = await createEntity(uid('PW Admin Personal Data Entity'));
+    const entityKey = entity.key as string;
+    await assignClassificationsToEntity(entityKey, [
+      { classificationKey: 'personal-data', valueKey: 'personal-data--contains' },
+    ]);
+    await addProcessInput(processKey, entityKey);
   });
 
   test('can create a business process via UI', async ({ page }) => {
@@ -56,18 +76,21 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    // Find the Legal Basis section and click its edit button
-    const legalBasisSection = page.getByText('Legal Basis', { exact: true });
-    await legalBasisSection.locator('..').getByRole('button', { name: '' }).first().click();
+    // Find the Legal Basis label and its sibling edit button
+    const label = page.getByText('Legal Basis', { exact: true });
+    await label.locator('..').getByRole('button').click();
 
     // Select "Contract" from the dropdown
-    await page.getByRole('combobox').last().click();
+    const valueContainer = label.locator('..').locator('xpath=following-sibling::div');
+    await valueContainer.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Contract' }).click();
 
     // Save
-    await page.locator('button:has([data-testid="CheckIcon"])').last().click();
+    await page.locator('button:has([data-testid="CheckIcon"])').click();
 
-    await expect(page.getByText('Contract', { exact: false })).toBeVisible({ timeout: 10_000 });
+    // Verify the value in the row (using exact to avoid the nudge text)
+    // The value is in the next sibling Box of the label's parent Box
+    await expect(valueContainer.getByText('Contract', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test('legal basis chip is visible when set', async ({ page }) => {
@@ -76,17 +99,18 @@ test.describe('Business Process CRUD — Admin', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Legal Obligation', { exact: false }).first()).toBeVisible({ timeout: 10_000 });
+    // Verify the chip is visible. Use a more specific locator to avoid the header chip if needed, 
+    // but here we just want to ensure it's visible somewhere.
+    await expect(page.getByText('Legal Obligation', { exact: true }).first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('legal basis shows "Not set" when not set', async ({ page }) => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    const legalBasisSection = page.getByText('Legal Basis', { exact: true });
-    await expect(legalBasisSection).toBeVisible({ timeout: 10_000 });
-    // The Not set text is within the same section
-    await expect(page.getByText('Not set').first()).toBeVisible({ timeout: 10_000 });
+    // Find the value container for Legal Basis
+    const valueContainer = page.getByText('Legal Basis', { exact: true }).locator('..').locator('xpath=following-sibling::div');
+    await expect(valueContainer.getByText('Not set', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test('purpose is visible in Compliance tab when set', async ({ page }) => {
@@ -266,6 +290,14 @@ test.describe('Business Process CRUD — Viewer', () => {
   test.beforeEach(async () => {
     const process = await createProcess(uid('PW Viewer Process'));
     processKey = process.key as string;
+
+    // Link an entity with personal data so compliance fields (Legal Basis) are visible
+    const entity = await createEntity(uid('PW Personal Data Entity'));
+    const entityKey = entity.key as string;
+    await assignClassificationsToEntity(entityKey, [
+      { classificationKey: 'personal-data', valueKey: 'personal-data--contains' },
+    ]);
+    await addProcessInput(processKey, entityKey);
   });
 
   test('cannot see edit controls on process detail', async ({ page }) => {
@@ -281,7 +313,9 @@ test.describe('Business Process CRUD — Viewer', () => {
     await page.goto(`/processes/${processKey}`);
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('Consent', { exact: false })).toBeVisible();
+    // Find the value container for Legal Basis
+    const valueContainer = page.getByText('Legal Basis', { exact: true }).locator('..').locator('xpath=following-sibling::div');
+    await expect(valueContainer.locator('span:has-text("Consent")')).toBeVisible();
     await expect(page.locator('button:has([data-testid="EditIcon"])')).not.toBeVisible();
   });
 
