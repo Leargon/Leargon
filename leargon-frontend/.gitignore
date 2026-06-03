@@ -26,3 +26,4 @@ dist-ssr
 /.auth/
 /playwright-report/
 /.eslintcache
+/.npm-cache/
