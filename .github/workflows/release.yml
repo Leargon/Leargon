@@ -47,6 +47,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
         working-directory: leargon-frontend
+        timeout-minutes: 10
 
       - name: Run E2E tests (Playwright)
         run: npm run test:e2e
