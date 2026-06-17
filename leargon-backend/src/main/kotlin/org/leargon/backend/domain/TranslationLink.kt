@@ -28,8 +28,11 @@ class TranslationLink {
     @JoinColumn(name = "second_entity_id")
     var secondEntity: BusinessEntity? = null
 
-    @Column(name = "semantic_difference_note", columnDefinition = "TEXT")
+    @Column(name = "semantic_difference_note", columnDefinition = "LONGTEXT")
     var semanticDifferenceNote: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

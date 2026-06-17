@@ -26,11 +26,11 @@ class ItSystem {
     var key: String = ""
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "LONGTEXT", nullable = false)
     var names: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "LONGTEXT", nullable = false)
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @Column(name = "vendor", length = 500)

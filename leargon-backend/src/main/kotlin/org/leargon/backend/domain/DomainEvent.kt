@@ -32,11 +32,11 @@ class DomainEvent {
     var publishingBoundedContext: BoundedContext? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "names", columnDefinition = "TEXT")
+    @Column(name = "names", columnDefinition = "LONGTEXT")
     var names: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "descriptions", columnDefinition = "TEXT")
+    @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToMany(fetch = FetchType.LAZY)
