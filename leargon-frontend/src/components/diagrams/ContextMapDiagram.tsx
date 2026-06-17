@@ -158,7 +158,7 @@ function buildGraph(
       width: 180,
       height: 80,
       data: {
-        label: getLocalizedText(bc.names, bc.name),
+        label: bc.name,
         domainType,
         domainKey: bc.domainKey,
         domainName: bc.domainName,

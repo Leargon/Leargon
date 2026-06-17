@@ -15,6 +15,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   useCreateBusinessDomain,
@@ -33,6 +34,7 @@ interface CreateDomainDialogProps {
 }
 
 const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, parentKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createDomain = useCreateBusinessDomain();

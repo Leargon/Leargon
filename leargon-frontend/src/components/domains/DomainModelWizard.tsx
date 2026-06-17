@@ -51,6 +51,7 @@ import { ContextMapperRelationshipType as RelType } from '../../api/generated/mo
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useLocale } from '../../context/LocaleContext';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 

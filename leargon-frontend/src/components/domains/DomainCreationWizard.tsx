@@ -32,6 +32,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
+import { useLocale } from '../../context/LocaleContext';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -43,6 +44,7 @@ interface DomainCreationWizardProps {
 
 const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClose, parentKey }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const { mode } = useWizardMode();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
