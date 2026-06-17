@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -32,6 +33,7 @@ interface DomainTreePanelProps {
 }
 
 const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();

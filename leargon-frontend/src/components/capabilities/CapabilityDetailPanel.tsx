@@ -50,6 +50,7 @@ interface CapabilityDetailPanelProps {
 }
 
 const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilityKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
@@ -188,7 +189,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
               {isAdmin && !namesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => namesEdit.startEdit(capability.names)}>
-                  Edit
+                  {t('common.edit')}
                 </Button>
               )}
             </Box>
@@ -204,8 +205,8 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 />
                 {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
                 <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                  <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>Save</Button>
-                  <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>Cancel</Button>
+                  <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>{t('common.save')}</Button>
+                  <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>{t('common.cancel')}</Button>
                 </Box>
               </>
             ) : (
@@ -324,7 +325,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
               {isAdmin && !processesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => processesEdit.startEdit(linkedProcessKeys)}>
-                  Edit
+                  {t('common.edit')}
                 </Button>
               )}
             </Box>
@@ -345,8 +346,8 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 />
                 {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
                 <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                  <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>Save</Button>
-                  <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>Cancel</Button>
+                  <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>{t('common.save')}</Button>
+                  <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>{t('common.cancel')}</Button>
                 </Box>
               </>
             ) : linkedProcessKeys.length === 0 ? (
@@ -378,13 +379,13 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteOpen(false)}>{t('common.cancel')}</Button>
           <Button
             color="error"
             onClick={handleDelete}
             disabled={deleteCapability.isPending}
           >
-            {deleteCapability.isPending ? <CircularProgress size={16} /> : 'Delete'}
+            {deleteCapability.isPending ? <CircularProgress size={16} /> : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
