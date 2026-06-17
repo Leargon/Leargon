@@ -40,8 +40,11 @@ class BusinessDomainVersion {
     @Column(name = "snapshot_json", nullable = false, columnDefinition = "JSON")
     var snapshotJson: String = ""
 
-    @Column(name = "change_summary", columnDefinition = "TEXT")
+    @Column(name = "change_summary", columnDefinition = "LONGTEXT")
     var changeSummary: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -43,11 +43,11 @@ class BusinessDomain {
     var createdBy: User? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "names", columnDefinition = "TEXT")
+    @Column(name = "names", columnDefinition = "LONGTEXT")
     var names: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "descriptions", columnDefinition = "TEXT")
+    @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @OneToMany(mappedBy = "businessDomain", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
@@ -57,7 +57,7 @@ class BusinessDomain {
     var boundedContexts: MutableSet<BoundedContext> = mutableSetOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "classification_assignments", columnDefinition = "TEXT")
+    @Column(name = "classification_assignments", columnDefinition = "LONGTEXT")
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
     @DateCreated
@@ -71,8 +71,11 @@ class BusinessDomain {
     @Column(name = "business_domain_type", length = 20)
     var type: String? = null
 
-    @Column(name = "vision_statement", columnDefinition = "TEXT")
+    @Column(name = "vision_statement", columnDefinition = "LONGTEXT")
     var visionStatement: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     fun addChild(child: BusinessDomain) {
         children.add(child)

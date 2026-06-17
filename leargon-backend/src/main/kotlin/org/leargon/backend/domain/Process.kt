@@ -39,11 +39,11 @@ class Process {
     var legalBasis: String? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "purpose", columnDefinition = "TEXT")
+    @Column(name = "purpose", columnDefinition = "LONGTEXT")
     var purpose: MutableList<LocalizedText>? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "security_measures", columnDefinition = "TEXT")
+    @Column(name = "security_measures", columnDefinition = "LONGTEXT")
     var securityMeasures: MutableList<LocalizedText>? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -67,15 +67,15 @@ class Process {
     var updatedBy: User? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "names", columnDefinition = "TEXT")
+    @Column(name = "names", columnDefinition = "LONGTEXT")
     var names: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "descriptions", columnDefinition = "TEXT")
+    @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "classification_assignments", columnDefinition = "TEXT")
+    @Column(name = "classification_assignments", columnDefinition = "LONGTEXT")
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)

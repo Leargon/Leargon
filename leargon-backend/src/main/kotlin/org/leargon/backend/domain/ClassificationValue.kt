@@ -26,11 +26,11 @@ class ClassificationValue {
     var key: String = ""
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "names", columnDefinition = "TEXT")
+    @Column(name = "names", columnDefinition = "LONGTEXT")
     var names: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "descriptions", columnDefinition = "TEXT")
+    @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)

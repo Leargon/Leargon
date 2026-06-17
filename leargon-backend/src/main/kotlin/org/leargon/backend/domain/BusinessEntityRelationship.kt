@@ -43,7 +43,7 @@ class BusinessEntityRelationship {
     var secondCardinalityMaximum: Int? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "descriptions", columnDefinition = "TEXT")
+    @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @DateCreated

@@ -35,11 +35,17 @@ class Dpia {
     @JoinColumn(name = "entity_id")
     var entity: BusinessEntity? = null
 
-    @Column(name = "risk_description", columnDefinition = "TEXT")
+    @Column(name = "risk_description", columnDefinition = "LONGTEXT")
     var riskDescription: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
-    @Column(name = "measures", columnDefinition = "TEXT")
+    @Column(name = "measures", columnDefinition = "LONGTEXT")
     var measures: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     @Column(name = "initial_risk", length = 10)
     var initialRisk: String? = null
@@ -56,8 +62,11 @@ class Dpia {
     @Column(name = "fdpic_consultation_date")
     var fdpicConsultationDate: LocalDate? = null
 
-    @Column(name = "fdpic_consultation_outcome", columnDefinition = "TEXT")
+    @Column(name = "fdpic_consultation_outcome", columnDefinition = "LONGTEXT")
     var fdpicConsultationOutcome: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "triggered_by_id")

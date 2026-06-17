@@ -37,8 +37,11 @@ class ContextRelationship {
     @Column(name = "downstream_role", length = 100)
     var downstreamRole: String? = null
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     var description: String? = null
+        set(value) {
+            field = value?.trimEnd()
+        }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

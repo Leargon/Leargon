@@ -7571,7 +7571,6 @@ components:
         text:
           type: string
           minLength: 1
-          maxLength: 255
           description: Localized text
           example: Customer
     LoginRequest:

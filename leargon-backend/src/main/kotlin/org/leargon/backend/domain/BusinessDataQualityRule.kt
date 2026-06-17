@@ -22,8 +22,11 @@ class BusinessDataQualityRule {
     @JoinColumn(name = "business_entity_id", nullable = false)
     var businessEntity: BusinessEntity? = null
 
-    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "description", columnDefinition = "LONGTEXT", nullable = false)
     var description: String = ""
+        set(value) {
+            field = value.trimEnd()
+        }
 
     @Column(name = "severity", length = 10)
     var severity: String? = null
