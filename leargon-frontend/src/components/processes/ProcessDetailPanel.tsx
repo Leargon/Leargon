@@ -81,6 +81,7 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -160,7 +161,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { isMethodologyEnabled } = useMethodology();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const isDddEnabled = isMethodologyEnabled('DDD');
+
 
   const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
   const fields = PROCESS_FIELDS_BY_PERSPECTIVE[perspective];
@@ -675,7 +679,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 }}>{t('common.unassigned')}</Typography>
               )}
               {!process.ownerIsExplicit && process.processOwner && (
-                <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
               )}
               {process.ownerIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -735,7 +739,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     : t('common.notSet')}
                 </Typography>
                 {!process.stewardIsExplicit && process.processSteward && (
-                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
                 {process.stewardIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
@@ -774,7 +778,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     : t('common.notSet')}
                 </Typography>
                 {!process.custodianIsExplicit && process.technicalCustodian && (
-                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : process.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                  <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
                 {process.custodianIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
@@ -866,7 +870,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             )}
           </PropRow>
         )}
-        {fields.boundedContext && !isHidden('boundedContext') && (
+        {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
           <PropRow label={t('process.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
