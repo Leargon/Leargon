@@ -23,7 +23,6 @@ import { CorporateFare, Category, Schema } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetAllProcesses } from '../../api/generated/process/process';
-import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import type { ProcessResponse } from '../../api/generated/model/processResponse';
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
