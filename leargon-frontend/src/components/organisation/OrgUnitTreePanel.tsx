@@ -104,6 +104,7 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
                 onSelect={(key) => navigate(`/organisation/${key}`)}
                 getLocalizedText={getLocalizedText}
                 matchesFilter={matchesFilter}
+                t={t}
               />
             ))}
           </List>
@@ -121,6 +122,7 @@ interface TreeItemProps {
   onSelect: (key: string) => void;
   getLocalizedText: (translations: any[], fallback?: string) => string;
   matchesFilter: (unit: OrganisationalUnitTreeResponse) => boolean;
+  t: (key: string) => string;
 }
 
 const TreeItem: React.FC<TreeItemProps> = ({
@@ -131,6 +133,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   onSelect,
   getLocalizedText,
   matchesFilter,
+  t,
 }) => {
   const [open, setOpen] = useState(false);
   const hasChildren = unit.children && unit.children.length > 0;
@@ -191,6 +194,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
               onSelect={onSelect}
               getLocalizedText={getLocalizedText}
               matchesFilter={matchesFilter}
+              t={t}
             />
           ))}
         </Collapse>

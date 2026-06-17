@@ -104,6 +104,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
                 onSelect={(key) => navigate(`/domains/${key}`)}
                 getLocalizedText={getLocalizedText}
                 matchesFilter={matchesFilter}
+                t={t}
               />
             ))}
           </List>
@@ -121,6 +122,7 @@ interface TreeItemProps {
   onSelect: (key: string) => void;
   getLocalizedText: (translations: any[], fallback?: string) => string;
   matchesFilter: (domain: BusinessDomainTreeResponse) => boolean;
+  t: (key: string) => string;
 }
 
 const TreeItem: React.FC<TreeItemProps> = ({
@@ -131,6 +133,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   onSelect,
   getLocalizedText,
   matchesFilter,
+  t,
 }) => {
   const [open, setOpen] = useState(false);
   const hasChildren = domain.children && domain.children.length > 0;
@@ -191,6 +194,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
               onSelect={onSelect}
               getLocalizedText={getLocalizedText}
               matchesFilter={matchesFilter}
+              t={t}
             />
           ))}
         </Collapse>
