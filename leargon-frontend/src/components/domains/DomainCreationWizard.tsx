@@ -238,7 +238,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('wizard.domain.parentNone')}</em></MenuItem>
                 {allDomains.filter((d) => d.key !== selectedParentKey).map((d) => (
-                  <MenuItem key={d.key} value={d.key}>{d.key}</MenuItem>
+                  <MenuItem key={d.key} value={d.key}>{getLocalizedText(d.names, d.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -253,7 +253,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                 {units.map((u) => (
-                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+                  <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -317,7 +317,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                 {units.map((u) => (
-                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+                  <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>

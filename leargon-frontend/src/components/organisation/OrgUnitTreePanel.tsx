@@ -168,7 +168,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
               </Typography>
               {unit.unitType && (
                 <Chip
-                  label={unit.unitType}
+                  label={t(`orgUnitType.${unit.unitType}`)}
                   size="small"
                   color="primary"
                   variant="filled"

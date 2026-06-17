@@ -98,6 +98,10 @@ const en = {
     governance: 'Governance',
     dataAndTeams: 'Data & Teams',
   },
+  capability: {
+    realizedByProcesses: 'Realized by processes',
+    deleteTitle: 'Delete Capability',
+  },
   entity: {
     pageTitle: 'Data Ontology',
     dataOwner: 'Data Owner',

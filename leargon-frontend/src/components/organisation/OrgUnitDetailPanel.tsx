@@ -469,7 +469,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Properties: Type + Parents + Children */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Properties</Typography>
+            <Typography variant="subtitle2">{t('common.properties')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {/* Type */}
@@ -559,7 +559,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {unit.children && unit.children.length > 0 && (
               <>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>Children</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('common.children')}</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
                   {unit.children.map((child) => (
                     <Chip
@@ -579,12 +579,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Stewardship */}
         {sections.stewardship && (!isHidden('businessOwner') || !isHidden('businessSteward') || !isHidden('technicalCustodian')) && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Stewardship</Typography>
+            <Typography variant="subtitle2">{t('organisation.stewardship')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             {/* Business Owner */}
       <SectionHeader
-        title="Business Owner"
+        title={t('organisation.businessOwner')}
         canEdit={isAdmin}
         isEditing={leadEdit.isEditing}
         onEdit={() => leadEdit.startEdit(unit.businessOwner?.username || null)}
@@ -628,7 +628,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       {!isHidden('businessSteward') && <><Divider sx={{ my: 2 }} />
       {/* Business Steward */}
       <SectionHeader
-        title="Business Steward"
+        title={t('organisation.businessSteward')}
         canEdit={isAdmin}
         isEditing={stewardEdit.isEditing}
         onEdit={() => stewardEdit.startEdit(unit.businessSteward?.username || null)}
@@ -669,7 +669,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       {!isHidden('technicalCustodian') && <><Divider sx={{ my: 2 }} />
       {/* Technical Custodian */}
       <SectionHeader
-        title="Technical Custodian"
+        title={t('organisation.technicalCustodian')}
         canEdit={isAdmin}
         isEditing={technicalCustodianEdit.isEditing}
         onEdit={() => technicalCustodianEdit.startEdit(unit.technicalCustodian?.username || null)}
@@ -1027,7 +1027,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {sections.classifications && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Classifications</Typography>
+              <Typography variant="subtitle2">{t('common.classifications')}</Typography>
               {isLeadOrAdmin && !classEdit.isEditing && (
                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || []); }}>
                   <Edit fontSize="small" />
@@ -1152,7 +1152,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Metadata */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Metadata</Typography>
+            <Typography variant="subtitle2">{t('common.metadata')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -1178,7 +1178,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       </Box>
       {/* Assign Bounded Context Dialog */}
       <Dialog open={assignBcDialogOpen} onClose={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }} maxWidth="sm" fullWidth>
-        <DialogTitle>Assign Bounded Context</DialogTitle>
+        <DialogTitle>{t('organisation.assignBoundedContext')}</DialogTitle>
         <DialogContent>
           <Autocomplete
             options={allBoundedContexts}
@@ -1186,34 +1186,34 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             value={allBoundedContexts.find((bc) => bc.key === selectedBcKey) || null}
             onChange={(_, newVal) => setSelectedBcKey(newVal?.key || null)}
             renderInput={(params) => (
-              <TextField {...params} size="small" label="Select bounded context" sx={{ mt: 1 }} />
+              <TextField {...params} size="small" label={t('organisation.selectBoundedContext')} sx={{ mt: 1 }} />
             )}
             isOptionEqualToValue={(option, value) => option.key === value.key}
             size="small"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }}>Cancel</Button>
+          <Button onClick={() => { setAssignBcDialogOpen(false); setSelectedBcKey(null); }}>{t('common.cancel')}</Button>
           <Button
             onClick={handleAssignBc}
             variant="contained"
             disabled={!selectedBcKey || updateBcOwningTeam.isPending}
           >
-            Assign
+            {t('common.assign')}
           </Button>
         </DialogActions>
       </Dialog>
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Organisational Unit</DialogTitle>
+        <DialogTitle>{t('organisation.deleteOrgUnit')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{getLocalizedText(unit.names)}"?
+            {t('organisation.deleteConfirm', { name: getLocalizedText(unit.names) })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">{t('common.delete')}</Button>
         </DialogActions>
       </Dialog>
       {/* Create Child Unit Dialog */}

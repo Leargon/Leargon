@@ -54,7 +54,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search domains..."
+          placeholder={t('domainTree.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -70,7 +70,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
         />
         {isAdmin && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.new')}
           </Button>
         )}
       </Box>
@@ -80,7 +80,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
             sx={{
               color: "text.secondary",
               p: 2
-            }}>Loading...</Typography>
+            }}>{t('common.loading')}</Typography>
         ) : filteredTree.length === 0 ? (
           <Typography
             sx={{
@@ -88,7 +88,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
               p: 2,
               textAlign: 'center'
             }}>
-            {filter ? 'No matches found.' : 'No domains yet. Create one to get started.'}
+            {filter ? t('domainTree.noMatches') : t('domainTree.noDomainsYet')}
           </Typography>
         ) : (
           <List dense disablePadding>
@@ -166,7 +166,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
               </Typography>
               {domain.effectiveType && (
                 <Chip
-                  label={domain.effectiveType}
+                  label={t(`domainType.${domain.effectiveType}`)}
                   size="small"
                   color={domain.type ? 'primary' : 'default'}
                   variant={domain.type ? 'filled' : 'outlined'}

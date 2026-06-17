@@ -327,6 +327,7 @@ interface TeamAssignmentStepProps {
 
 const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const { data: unitsResponse } = useGetAllOrganisationalUnits({ query: { enabled: open } });
   const updateOwning = useUpdateBusinessDomainOwningUnit();
   const queryClient = useQueryClient();
@@ -366,13 +367,13 @@ const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }
         <Box key={domain.key} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography variant="body2" sx={{
             fontWeight: 500
-          }}>{domain.names[0]?.text || domain.key}</Typography>
+          }}>{getLocalizedText(domain.names, domain.key)}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Autocomplete
               size="small"
               sx={{ flex: 1 }}
               options={allUnits}
-              getOptionLabel={(u: OrganisationalUnitSummaryResponse) => u.name || u.key}
+              getOptionLabel={(u: OrganisationalUnitSummaryResponse) => getLocalizedText(u.names, u.key)}
               value={allUnits.find((u) => u.key === domain.owningUnit?.key) ?? null}
               onChange={(_, v) => handleAssign(domain.key, v as OrganisationalUnitSummaryResponse | null)}
               renderInput={(params) => (

@@ -182,7 +182,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Names */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Name</Typography>
+            <Typography variant="subtitle2">{t('common.name')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -219,7 +219,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Properties */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Properties</Typography>
+            <Typography variant="subtitle2">{t('common.properties')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Box>
@@ -297,7 +297,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {(capability.children?.length ?? 0) > 0 && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle2">Sub-capabilities ({capability.children!.length})</Typography>
+              <Typography variant="subtitle2">{t('capability.subCapabilities', { count: capability.children!.length })}</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -318,7 +318,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Linked Processes */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Realized by Processes</Typography>
+            <Typography variant="subtitle2">{t('capability.realizedByProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -371,7 +371,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
       </Box>
       {/* Delete dialog */}
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-        <DialogTitle>Delete Capability</DialogTitle>
+        <DialogTitle>{t('capability.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Delete <strong>{capabilityName}</strong>? This action cannot be undone.
