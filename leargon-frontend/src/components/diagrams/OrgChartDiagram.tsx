@@ -35,7 +35,7 @@ function buildGraph(
   units: OrganisationalUnitResponse[],
   processCountByUnit: Map<string, number>,
   showProcessCount: boolean,
-  getLocalizedText: (texts: { locale: string; text: string }[]) => string,
+  getLocalizedText: (texts: { locale: string; text: string }[], fallback?: string) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = units.map((unit) => ({
     id: unit.key,
@@ -44,7 +44,7 @@ function buildGraph(
     width: 200,
     height: 70,
     data: {
-      label: getLocalizedText(unit.names),
+      label: getLocalizedText(unit.names, unit.name),
       unitType: unit.unitType ?? undefined,
       leadName: unit.businessOwner ? `${unit.businessOwner.firstName} ${unit.businessOwner.lastName}` : undefined,
       processCount: processCountByUnit.get(unit.key) ?? 0,

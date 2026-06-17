@@ -14,7 +14,9 @@ import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetAllProcesses } from '../../api/generated/process/process';
+import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import type { ProcessResponse } from '../../api/generated/model/processResponse';
+import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
 import { SHARED_NODE_TYPES, type EntityNodeData, type ProcessNodeData } from './sharedNodes';
 import { applyDagreLayout } from './diagramUtils';
@@ -29,6 +31,7 @@ function buildLineage(
   entityKey: string,
   entityName: string,
   processes: ProcessResponse[] | undefined,
+  allEntities: BusinessEntityResponse[],
   getLocalizedText: (texts: { locale: string; text: string }[]) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   if (!processes) return { nodes: [], edges: [] };
@@ -48,6 +51,7 @@ function buildLineage(
   const addEntityNode = (key: string, name: string, isFocus = false) => {
     if (addedNodes.has(key)) return;
     addedNodes.add(key);
+    const entity = allEntities.find(e => e.key === key);
     nodes.push({
       id: key,
       type: 'entityNode',
@@ -55,7 +59,7 @@ function buildLineage(
       width: 180,
       height: isFocus ? 64 : 56,
       data: {
-        label: name,
+        label: entity ? getLocalizedText(entity.names) : name,
         domainColor: isFocus ? '#1565c0' : undefined,
       } satisfies EntityNodeData,
     });
@@ -95,7 +99,7 @@ function buildLineage(
     // Other outputs of the consuming process (downstream entities)
     (p.outputEntities ?? []).forEach((out) => {
       if (out.key === entityKey) return;
-      addEntityNode(out.key, out.name);
+      addEntityNode(out.key, '');
       edges.push({
         id: `out__${p.key}__${out.key}`,
         source: procNodeId,
@@ -125,7 +129,7 @@ function buildLineage(
     // Other inputs of the producing process (upstream entities)
     (p.inputEntities ?? []).forEach((inp) => {
       if (inp.key === entityKey) return;
-      addEntityNode(inp.key, inp.name);
+      addEntityNode(inp.key, '');
       edges.push({
         id: `inp__${inp.key}__${p.key}`,
         source: inp.key,
@@ -149,15 +153,17 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
 
   const { data: processesResponse, isLoading, isError } = useGetAllProcesses();
   const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? undefined;
+  const { data: entitiesResponse } = useGetAllBusinessEntities();
+  const entities = (entitiesResponse?.data as BusinessEntityResponse[] | undefined) ?? [];
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    const { nodes: n, edges: e } = buildLineage(entityKey, entityName, processes, getLocalizedText);
+    const { nodes: n, edges: e } = buildLineage(entityKey, entityName, processes, entities, getLocalizedText);
     setNodes(n);
     setEdges(e);
-  }, [entityKey, entityName, processes, getLocalizedText, setNodes, setEdges]);
+  }, [entityKey, entityName, processes, entities, getLocalizedText, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {

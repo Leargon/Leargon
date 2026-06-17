@@ -1011,7 +1011,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 <TableRow key={link.id}>
                   <TableCell>
                     {link.linkedEntity && (
-                      <Chip label={link.linkedEntity.name} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
+                      <Chip label={getLocalizedText(allEntities.find(e => e.key === link.linkedEntity!.key)?.names ?? [], link.linkedEntity.name)} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
                     )}
                   </TableCell>
                   <TableCell>{link.semanticDifferenceNote || '—'}</TableCell>
@@ -1060,7 +1060,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.children')}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
             {entity.children.map((c) => (
-              <Chip key={c.key} label={c.name} size="small" onClick={() => navigate(`/entities/${c.key}`)} clickable />
+              <Chip key={c.key} label={getLocalizedText(allEntities.find(e => e.key === c.key)?.names ?? [], c.name)} size="small" onClick={() => navigate(`/entities/${c.key}`)} clickable />
             ))}
           </Box>
           <Divider sx={{ my: 2 }} />
@@ -1073,7 +1073,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.implements')}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
             {entity.implementsEntities.map((e) => (
-              <Chip key={e.key} label={e.name} size="small" variant="outlined" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+              <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" onClick={() => navigate(`/entities/${e.key}`)} clickable />
             ))}
           </Box>
           <Divider sx={{ my: 2 }} />

@@ -167,7 +167,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         itemKey={capability.key}
         chips={
           capability.owningUnit ? (
-            <Chip label={capability.owningUnit.name} size="small" variant="outlined" />
+            <Chip label={getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name)} size="small" variant="outlined" />
           ) : undefined
         }
         actions={
@@ -279,7 +279,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>
-                      {capability.owningUnit?.name ?? '—'}
+                      {capability.owningUnit ? getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name) : '—'}
                     </Typography>
                     {isAdmin && (
                       <Button size="small" onClick={() => owningUnitEdit.startEdit(capability.owningUnit?.key ?? null)}>
@@ -304,7 +304,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 {capability.children!.map((child) => (
                   <Chip
                     key={child.key}
-                    label={child.name}
+                    label={getLocalizedText(allCapabilities.find(c => c.key === child.key)?.names ?? [], child.name)}
                     size="small"
                     onClick={() => navigate(`/capabilities/${child.key}`)}
                     clickable
@@ -358,7 +358,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 {capability.linkedProcesses!.map((p) => (
                   <Chip
                     key={p.key}
-                    label={p.name}
+                    label={getLocalizedText(allProcesses.find(proc => proc.key === p.key)?.names ?? [], p.name)}
                     size="small"
                     onClick={() => navigate(`/processes/${p.key}`)}
                     clickable
