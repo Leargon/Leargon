@@ -12,6 +12,7 @@ import {
   MoveToInbox, SyncAlt,
 } from '@mui/icons-material';
 import { useGetTeamInsights } from '../api/generated/analytics/analytics';
+import { useMethodology } from '../context/MethodologyContext';
 import type { BottleneckTeamItem } from '../api/generated/model/bottleneckTeamItem';
 import type { WronglyPlacedTeamItem } from '../api/generated/model/wronglyPlacedTeamItem';
 import type { SplitDomainItem } from '../api/generated/model/splitDomainItem';
@@ -476,7 +477,9 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
 const TeamInsightsPage: React.FC = () => {
   const { t } = useTranslation();
   const { data: response, isLoading, isError } = useGetTeamInsights();
+  const { isMethodologyEnabled } = useMethodology();
   const insights = response?.data;
+  const isDddEnabled = isMethodologyEnabled('DDD');
 
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
@@ -518,34 +521,44 @@ const TeamInsightsPage: React.FC = () => {
               <OrgUnitLoadTable data={orgUnitProcessLoad} />
             </Section>
 
-            <Section title={t('analytics.bottleneckTeams')} subtitle={t('analytics.bottleneckHint')}
-              icon={<Warning />} count={bottleneckTeams.length}
-              severity={bottleneckTeams.length > 0 ? 'warning' : 'info'}>
-              <BottleneckTable data={bottleneckTeams} />
-            </Section>
+            {isDddEnabled && (
+              <Section title={t('analytics.bottleneckTeams')} subtitle={t('analytics.bottleneckHint')}
+                icon={<Warning />} count={bottleneckTeams.length}
+                severity={bottleneckTeams.length > 0 ? 'warning' : 'info'}>
+                <BottleneckTable data={bottleneckTeams} />
+              </Section>
+            )}
 
-            <Section title={t('analytics.wronglyPlaced')} subtitle={t('analytics.wronglyPlacedHint')}
-              icon={<MoveToInbox />} count={wronglyPlacedTeams.length}
-              severity={wronglyPlacedTeams.length > 0 ? 'warning' : 'info'}>
-              <WronglyPlacedTable data={wronglyPlacedTeams} />
-            </Section>
+            {isDddEnabled && (
+              <Section title={t('analytics.wronglyPlaced')} subtitle={t('analytics.wronglyPlacedHint')}
+                icon={<MoveToInbox />} count={wronglyPlacedTeams.length}
+                severity={wronglyPlacedTeams.length > 0 ? 'warning' : 'info'}>
+                <WronglyPlacedTable data={wronglyPlacedTeams} />
+              </Section>
+            )}
 
-            <Section title={t('analytics.splitDomains')} subtitle={t('analytics.splitDomainsHint')}
-              icon={<DomainVerification />} count={splitDomains.length}
-              severity={splitDomains.length > 0 ? 'warning' : 'info'}>
-              <SplitDomainsTable data={splitDomains} />
-            </Section>
+            {isDddEnabled && (
+              <Section title={t('analytics.splitDomains')} subtitle={t('analytics.splitDomainsHint')}
+                icon={<DomainVerification />} count={splitDomains.length}
+                severity={splitDomains.length > 0 ? 'warning' : 'info'}>
+                <SplitDomainsTable data={splitDomains} />
+              </Section>
+            )}
 
-            <Section title={t('analytics.conwayMatrix')} subtitle={t('analytics.conwayHint')}
-              icon={<SyncAlt />} defaultExpanded>
-              <ConwayMatrix data={conwaysLawAlignment} />
-            </Section>
+            {isDddEnabled && (
+              <Section title={t('analytics.conwayMatrix')} subtitle={t('analytics.conwayHint')}
+                icon={<SyncAlt />} defaultExpanded>
+                <ConwayMatrix data={conwaysLawAlignment} />
+              </Section>
+            )}
 
-            <Section title={t('analytics.conwaysLawMisalignments')} subtitle={t('analytics.conwaysLawMisalignmentsHint')}
-              icon={<Warning />} count={conwaysLawMisalignments.length}
-              severity={conwaysLawMisalignments.length > 0 ? 'warning' : 'info'}>
-              <ConwayMisalignmentsTable data={conwaysLawMisalignments} />
-            </Section>
+            {isDddEnabled && (
+              <Section title={t('analytics.conwaysLawMisalignments')} subtitle={t('analytics.conwaysLawMisalignmentsHint')}
+                icon={<Warning />} count={conwaysLawMisalignments.length}
+                severity={conwaysLawMisalignments.length > 0 ? 'warning' : 'info'}>
+                <ConwayMisalignmentsTable data={conwaysLawMisalignments} />
+              </Section>
+            )}
           </>;
         })()}
       </> : null}

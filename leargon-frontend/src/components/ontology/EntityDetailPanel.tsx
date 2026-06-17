@@ -77,6 +77,7 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '../../context/NavigationContext';
+import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -126,7 +127,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const { isMethodologyEnabled } = useMethodology();
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const isDddEnabled = isMethodologyEnabled('DDD');
+
 
   const visibleTabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
   const fields = ENTITY_FIELDS_BY_PERSPECTIVE[perspective];
@@ -513,7 +517,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       )}
 
       {/* Item 8: Orphaned entity — no bounded context */}
-      {isOwnerOrAdmin && !entity.boundedContext && (
+      {isDddEnabled && isOwnerOrAdmin && !entity.boundedContext && (
         <NudgeBanner
           severity="info"
           title={t('nudge.entity.noBcTitle')}
@@ -629,7 +633,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 }}>{t('common.unassigned')}</Typography>
               )}
               {!entity.ownerIsExplicit && entity.dataOwner && (
-                <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && entity.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
               )}
               {entity.ownerIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -689,7 +693,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     : t('common.notSet')}
                 </Typography>
                 {!entity.stewardIsExplicit && entity.dataSteward && (
-                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && entity.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
                 {entity.stewardIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
@@ -728,7 +732,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     : t('common.notSet')}
                 </Typography>
                 {!entity.custodianIsExplicit && entity.technicalCustodian && (
-                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : entity.boundedContext?.owningUnitName ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
+                  <Chip label={entity.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && entity.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
                 {entity.custodianIsExplicit && isOwnerOrAdmin && (entity.owningUnit || entity.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
@@ -769,7 +773,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             )}
           </PropRow>
         )}
-        {fields.boundedContext && !isHidden('boundedContext') && (
+        {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
           <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
