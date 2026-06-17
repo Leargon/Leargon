@@ -564,7 +564,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   {unit.children.map((child) => (
                     <Chip
                       key={child.key}
-                      label={child.name}
+                      label={getLocalizedText(allUnits.find(u => u.key === child.key)?.names ?? [], child.name)}
                       size="small"
                       onClick={() => navigate(`/organisation/${child.key}`)}
                       clickable
@@ -771,7 +771,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 {unit.executingProcesses.map((proc) => (
                   <Chip
                     key={proc.key}
-                    label={proc.name}
+                    label={getLocalizedText(allUnits.find(u => u.key === proc.key)?.names ?? [], proc.name)}
                     size="small"
                     onClick={() => navigate(`/processes/${proc.key}`)}
                     clickable
@@ -911,7 +911,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (unit.dataAccessEntities ?? []).length > 0 ? (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(unit.dataAccessEntities ?? []).map((e) => (
-                      <Chip key={e.key} label={e.name || e.key} size="small" variant="outlined" />
+                      <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
                     ))}
                   </Box>
                 ) : (
@@ -952,7 +952,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (unit.dataManipulationEntities ?? []).length > 0 ? (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(unit.dataManipulationEntities ?? []).map((e) => (
-                      <Chip key={e.key} label={e.name || e.key} size="small" variant="outlined" />
+                      <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
                     ))}
                   </Box>
                 ) : (

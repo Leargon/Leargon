@@ -716,7 +716,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 {domain.subdomains.map((sub) => (
                   <Chip
                     key={sub.key}
-                    label={sub.name}
+                    label={getLocalizedText(allDomains.find(d => d.key === sub.key)?.names ?? [], sub.name)}
                     size="small"
                     onClick={() => navigate(`/domains/${sub.key}`)}
                     clickable
