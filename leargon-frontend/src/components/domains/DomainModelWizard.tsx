@@ -374,7 +374,7 @@ const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }
               size="small"
               sx={{ flex: 1 }}
               options={allUnits}
-              getOptionLabel={(u: OrganisationalUnitSummaryResponse) => getLocalizedText(u.names, u.key)}
+              getOptionLabel={(u: OrganisationalUnitSummaryResponse) => u.name || u.key}
               value={allUnits.find((u) => u.key === domain.owningUnit?.key) ?? null}
               onChange={(_, v) => handleAssign(domain.key, v as OrganisationalUnitSummaryResponse | null)}
               renderInput={(params) => (

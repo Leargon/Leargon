@@ -44,7 +44,7 @@ function buildGraph(
     width: 200,
     height: 70,
     data: {
-      label: getLocalizedText(unit.names, unit.name),
+      label: getLocalizedText(unit.names, unit.key),
       unitType: unit.unitType ?? undefined,
       leadName: unit.businessOwner ? `${unit.businessOwner.firstName} ${unit.businessOwner.lastName}` : undefined,
       processCount: processCountByUnit.get(unit.key) ?? 0,
