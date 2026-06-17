@@ -32,6 +32,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
+import { useLocale } from '../../context/LocaleContext';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -43,6 +44,7 @@ interface DomainCreationWizardProps {
 
 const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClose, parentKey }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const { mode } = useWizardMode();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -238,7 +240,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('wizard.domain.parentNone')}</em></MenuItem>
                 {allDomains.filter((d) => d.key !== selectedParentKey).map((d) => (
-                  <MenuItem key={d.key} value={d.key}>{d.key}</MenuItem>
+                  <MenuItem key={d.key} value={d.key}>{getLocalizedText(d.names, d.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -253,7 +255,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                 {units.map((u) => (
-                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+                  <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -317,7 +319,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
               >
                 <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                 {units.map((u) => (
-                  <MenuItem key={u.key} value={u.key}>{u.key}</MenuItem>
+                  <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
                 ))}
               </Select>
             </FormControl>

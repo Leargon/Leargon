@@ -211,7 +211,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600 }}>{t('boundedContextUL.events')}</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Direction</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{t('boundedContextUL.direction')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

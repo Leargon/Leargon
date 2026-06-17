@@ -102,7 +102,7 @@ function buildGraph(
       data: {
         label: getLocalizedText(entity.names),
         description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
       } satisfies EntityNodeData,
     }));
     return { nodes: applyDagreLayout(nodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 }), edges };
@@ -135,7 +135,7 @@ function buildGraph(
       data: {
         label: getLocalizedText(entity.names),
         description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
       } satisfies EntityNodeData,
     }));
 
@@ -150,7 +150,7 @@ function buildGraph(
       data: {
         label: getLocalizedText(entity.names),
         description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: c.name })),
+        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
       } satisfies EntityNodeData,
     }));
 

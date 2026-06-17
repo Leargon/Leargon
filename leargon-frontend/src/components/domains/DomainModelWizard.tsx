@@ -51,6 +51,7 @@ import { ContextMapperRelationshipType as RelType } from '../../api/generated/mo
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
+import { useLocale } from '../../context/LocaleContext';
 
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
@@ -327,6 +328,7 @@ interface TeamAssignmentStepProps {
 
 const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const { data: unitsResponse } = useGetAllOrganisationalUnits({ query: { enabled: open } });
   const updateOwning = useUpdateBusinessDomainOwningUnit();
   const queryClient = useQueryClient();
@@ -366,7 +368,7 @@ const TeamAssignmentStep: React.FC<TeamAssignmentStepProps> = ({ domains, open }
         <Box key={domain.key} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography variant="body2" sx={{
             fontWeight: 500
-          }}>{domain.names[0]?.text || domain.key}</Typography>
+          }}>{getLocalizedText(domain.names, domain.key)}</Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Autocomplete
               size="small"

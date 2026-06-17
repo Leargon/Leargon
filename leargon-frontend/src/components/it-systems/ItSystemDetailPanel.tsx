@@ -162,7 +162,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         chips={
           system.owningUnit ? (
             <Chip
-              label={system.owningUnit.name || system.owningUnit.key}
+              label={getLocalizedText(allOrgUnits.find(u => u.key === system.owningUnit!.key)?.names ?? [], system.owningUnit.name)}
               size="small"
               variant="outlined"
               onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
@@ -337,7 +337,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
               </Box>
             ) : system.owningUnit ? (
               <Chip
-                label={system.owningUnit.name || system.owningUnit.key}
+                label={getLocalizedText(allOrgUnits.find(u => u.key === system.owningUnit!.key)?.names ?? [], system.owningUnit.name)}
                 size="small"
                 variant="outlined"
                 onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
@@ -396,7 +396,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                 {(system.linkedProcesses ?? []).map((p) => (
                   <Chip
                     key={p.key}
-                    label={p.name || p.key}
+                    label={getLocalizedText(allProcesses.find(proc => proc.key === p.key)?.names ?? [], p.name)}
                     size="small"
                     variant="outlined"
                     onClick={() => navigate(`/processes/${p.key}`)}

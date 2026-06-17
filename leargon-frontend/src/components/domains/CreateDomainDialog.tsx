@@ -15,6 +15,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   useCreateBusinessDomain,
@@ -33,6 +34,7 @@ interface CreateDomainDialogProps {
 }
 
 const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, parentKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createDomain = useCreateBusinessDomain();
@@ -87,14 +89,14 @@ const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, 
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create Business Domain</DialogTitle>
+      <DialogTitle>{t('domainDialog.createTitle')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           {parentKey && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Parent: <strong>{parentKey}</strong>
+              {t('domainDialog.parent')}: <strong>{parentKey}</strong>
             </Typography>
           )}
 
@@ -107,14 +109,14 @@ const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, 
           />
 
           <FormControl size="small">
-            <InputLabel>Type</InputLabel>
+            <InputLabel>{t('domainDialog.typeLabel')}</InputLabel>
             <Select
               value={domainType}
               onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
-              label="Type"
+              label={t('domainDialog.typeLabel')}
             >
               <MenuItem value="">
-                <em>None (inherit from parent)</em>
+                <em>{t('domainDialog.typeNone')}</em>
               </MenuItem>
               {DOMAIN_TYPE_VALUES.map((t) => (
                 <MenuItem key={t} value={t}>{t}</MenuItem>
@@ -126,13 +128,13 @@ const CreateDomainDialog: React.FC<CreateDomainDialogProps> = ({ open, onClose, 
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           onClick={handleCreate}
           variant="contained"
           disabled={createDomain.isPending || !hasDefaultName}
         >
-          {createDomain.isPending ? 'Creating...' : 'Create'}
+          {createDomain.isPending ? t('common.creating') : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>

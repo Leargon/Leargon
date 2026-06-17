@@ -1751,7 +1751,7 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
             {entities.map((e) => (
               <Chip
                 key={e.key}
-                label={e.name || e.key}
+                label={getLocalizedText(candidates.find(c => c.key === e.key)?.names ?? [], e.name ?? e.key)}
                 size="small"
                 onClick={() => navigate(`/entities/${e.key}`)}
                 onDelete={canEdit ? () => onRemove(e.key) : undefined}
@@ -1762,7 +1762,7 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
             {inheritedEntities.map((e) => (
               <Chip
                 key={e.key}
-                label={e.name || e.key}
+                label={getLocalizedText(candidates.find(c => c.key === e.key)?.names ?? [], e.name ?? e.key)}
                 size="small"
                 variant="outlined"
                 onClick={() => navigate(`/entities/${e.key}`)}

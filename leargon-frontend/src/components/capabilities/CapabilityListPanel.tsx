@@ -15,9 +15,10 @@ import {
 } from '@mui/material';
 import { Add, Search, ExpandMore, ChevronRight, AccountTree } from '@mui/icons-material';
 import { useGetAllCapabilities } from '../../api/generated/capability/capability';
+import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import type { CapabilityResponse, CapabilitySummaryResponse } from '../../api/generated/model';
+import type { CapabilityResponse, CapabilitySummaryResponse, OrganisationalUnitResponse } from '../../api/generated/model';
 
 interface CapabilityListPanelProps {
   selectedKey?: string;
@@ -30,11 +31,14 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { data: response, isLoading } = useGetAllCapabilities();
+  const { data: unitsResponse } = useGetAllOrganisationalUnits();
   const capabilities = (response?.data as CapabilityResponse[] | undefined) ?? [];
+  const allUnits = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
 
   // Build key → capability map for child lookups
   const capMap = new Map<string, CapabilityResponse>(capabilities.map((c) => [c.key, c]));
+  const unitMap = new Map<string, OrganisationalUnitResponse>(allUnits.map((u) => [u.key, u]));
 
   // Roots are capabilities with no parent
   const roots = [...capabilities]
@@ -108,6 +112,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
                 selectedKey={selectedKey}
                 filter={filter}
                 capMap={capMap}
+                unitMap={unitMap}
                 matchesFilter={matchesFilter}
                 onSelect={(key) => navigate(`/capabilities/${key}`)}
                 getLocalizedText={getLocalizedText}
@@ -126,6 +131,7 @@ interface TreeItemProps {
   selectedKey?: string;
   filter: string;
   capMap: Map<string, CapabilityResponse>;
+  unitMap: Map<string, OrganisationalUnitResponse>;
   matchesFilter: (cap: CapabilityResponse) => boolean;
   onSelect: (key: string) => void;
   getLocalizedText: (translations: any[], fallback?: string) => string;
@@ -137,6 +143,7 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
   selectedKey,
   filter,
   capMap,
+  unitMap,
   matchesFilter,
   onSelect,
   getLocalizedText,
@@ -144,6 +151,7 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
   const [open, setOpen] = useState(!filter);
   const hasChildren = (capability.children?.length ?? 0) > 0;
   const isSelected = capability.key === selectedKey;
+  const owningUnit = capability.owningUnit ? unitMap.get(capability.owningUnit.key) : undefined;
 
   const sortedChildren = [...(capability.children ?? [])]
     .map((s: CapabilitySummaryResponse) => capMap.get(s.key))
@@ -183,11 +191,11 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
             </Typography>
           }
           secondary={
-            capability.owningUnit?.name ? (
+            capability.owningUnit ? (
               <Typography variant="caption" noWrap sx={{
                 color: "text.secondary"
               }}>
-                {capability.owningUnit.name}
+                {getLocalizedText(owningUnit?.names ?? [], capability.owningUnit.name)}
               </Typography>
             ) : undefined
           }
@@ -203,6 +211,7 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
               selectedKey={selectedKey}
               filter={filter}
               capMap={capMap}
+              unitMap={unitMap}
               matchesFilter={matchesFilter}
               onSelect={onSelect}
               getLocalizedText={getLocalizedText}

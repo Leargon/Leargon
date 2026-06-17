@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -50,6 +51,7 @@ interface CapabilityDetailPanelProps {
 }
 
 const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilityKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
@@ -167,7 +169,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         itemKey={capability.key}
         chips={
           capability.owningUnit ? (
-            <Chip label={capability.owningUnit.name} size="small" variant="outlined" />
+            <Chip label={getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name)} size="small" variant="outlined" />
           ) : undefined
         }
         actions={
@@ -182,13 +184,13 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Names */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Name</Typography>
+            <Typography variant="subtitle2">{t('common.name')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
               {isAdmin && !namesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => namesEdit.startEdit(capability.names)}>
-                  Edit
+                  {t('common.edit')}
                 </Button>
               )}
             </Box>
@@ -204,8 +206,8 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 />
                 {namesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{namesEdit.error}</Alert>}
                 <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                  <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>Save</Button>
-                  <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>Cancel</Button>
+                  <Button size="small" variant="contained" startIcon={namesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={namesEdit.save} disabled={namesEdit.isSaving}>{t('common.save')}</Button>
+                  <Button size="small" startIcon={<Close />} onClick={namesEdit.cancel}>{t('common.cancel')}</Button>
                 </Box>
               </>
             ) : (
@@ -219,7 +221,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Properties */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Properties</Typography>
+            <Typography variant="subtitle2">{t('common.properties')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Box>
@@ -279,7 +281,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>
-                      {capability.owningUnit?.name ?? '—'}
+                      {capability.owningUnit ? getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name) : '—'}
                     </Typography>
                     {isAdmin && (
                       <Button size="small" onClick={() => owningUnitEdit.startEdit(capability.owningUnit?.key ?? null)}>
@@ -297,14 +299,14 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {(capability.children?.length ?? 0) > 0 && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle2">Sub-capabilities ({capability.children!.length})</Typography>
+              <Typography variant="subtitle2">{t('capability.subCapabilities', { count: capability.children!.length })}</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {capability.children!.map((child) => (
                   <Chip
                     key={child.key}
-                    label={child.name}
+                    label={getLocalizedText(allCapabilities.find(c => c.key === child.key)?.names ?? [], child.name)}
                     size="small"
                     onClick={() => navigate(`/capabilities/${child.key}`)}
                     clickable
@@ -318,13 +320,13 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         {/* Linked Processes */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Realized by Processes</Typography>
+            <Typography variant="subtitle2">{t('capability.realizedByProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
               {isAdmin && !processesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => processesEdit.startEdit(linkedProcessKeys)}>
-                  Edit
+                  {t('common.edit')}
                 </Button>
               )}
             </Box>
@@ -345,8 +347,8 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 />
                 {processesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{processesEdit.error}</Alert>}
                 <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                  <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>Save</Button>
-                  <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>Cancel</Button>
+                  <Button size="small" variant="contained" startIcon={processesEdit.isSaving ? <CircularProgress size={14} /> : <Check />} onClick={processesEdit.save} disabled={processesEdit.isSaving}>{t('common.save')}</Button>
+                  <Button size="small" startIcon={<Close />} onClick={processesEdit.cancel}>{t('common.cancel')}</Button>
                 </Box>
               </>
             ) : linkedProcessKeys.length === 0 ? (
@@ -358,7 +360,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 {capability.linkedProcesses!.map((p) => (
                   <Chip
                     key={p.key}
-                    label={p.name}
+                    label={getLocalizedText(allProcesses.find(proc => proc.key === p.key)?.names ?? [], p.name)}
                     size="small"
                     onClick={() => navigate(`/processes/${p.key}`)}
                     clickable
@@ -371,20 +373,20 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
       </Box>
       {/* Delete dialog */}
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-        <DialogTitle>Delete Capability</DialogTitle>
+        <DialogTitle>{t('capability.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Delete <strong>{capabilityName}</strong>? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteOpen(false)}>{t('common.cancel')}</Button>
           <Button
             color="error"
             onClick={handleDelete}
             disabled={deleteCapability.isPending}
           >
-            {deleteCapability.isPending ? <CircularProgress size={16} /> : 'Delete'}
+            {deleteCapability.isPending ? <CircularProgress size={16} /> : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

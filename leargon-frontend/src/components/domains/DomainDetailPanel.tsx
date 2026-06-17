@@ -469,14 +469,14 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         chips={<>
           {(domain.type || domain.effectiveType) && (
             <Chip
-              label={domain.type ?? domain.effectiveType}
+              label={t(`domainType.${domain.type ?? domain.effectiveType}`)}
               size="small"
               color="primary"
               variant={domain.type ? 'filled' : 'outlined'}
             />
           )}
           {domain.owningUnit?.name && (
-            <Chip label={domain.owningUnit.name} size="small" variant="outlined" />
+            <Chip label={getLocalizedText(allOrgUnits.find(u => u.key === domain.owningUnit!.key)?.names ?? [], domain.owningUnit.name)} size="small" variant="outlined" />
           )}
           {isAdmin && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
             <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: domain.missingMandatoryFields!.length })} size="small" color="warning" />
@@ -716,7 +716,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 {domain.subdomains.map((sub) => (
                   <Chip
                     key={sub.key}
-                    label={sub.name}
+                    label={getLocalizedText(allDomains.find(d => d.key === sub.key)?.names ?? [], sub.name)}
                     size="small"
                     onClick={() => navigate(`/domains/${sub.key}`)}
                     clickable
@@ -802,7 +802,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             ) : (
               <Typography variant="body2">
                 {domain.owningUnit ? (
-                  <Chip label={domain.owningUnit.name} size="small" />
+                  <Chip label={getLocalizedText(allOrgUnits.find(u => u.key === domain.owningUnit!.key)?.names ?? [], domain.owningUnit.name)} size="small" />
                 ) : (
                   <span style={{ color: '#888' }}>{t('common.notSet')}</span>
                 )}
