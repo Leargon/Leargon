@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useGetFieldConfigurationDefinitions } from '../../api/generated/administration/administration';
 import type { FieldConfigurationDefinition } from '../../api/generated/model';
 import { groupMissingBySection } from '../../utils/missingFieldsGrouping';
+import { useMethodology } from '../../context/MethodologyContext';
 
 interface MissingFieldsBannerProps {
   missingFields: string[];
@@ -21,13 +22,14 @@ const MissingFieldsBanner: React.FC<MissingFieldsBannerProps> = ({
 }) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
+  const { isSectionEnabled } = useMethodology();
 
   const { data: definitionsResponse } = useGetFieldConfigurationDefinitions();
   const definitions = (definitionsResponse?.data as FieldConfigurationDefinition[] | undefined) ?? [];
 
   if (!ownerOrAdmin || !missingFields.length) return null;
 
-  const groups = groupMissingBySection(missingFields, definitions, entityType);
+  const groups = groupMissingBySection(missingFields, definitions, entityType, isSectionEnabled);
 
   const fieldLabel = (field: string): string => {
     const key = `nudge.missingFields.fields.${field}` as Parameters<typeof t>[0];
