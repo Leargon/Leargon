@@ -48,7 +48,7 @@ import type {
   SupportedLocaleResponse,
   ItSystemResponse,
 } from '../../api/generated/model';
-import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 interface ItSystemDetailPanelProps {
   systemKey: string;
@@ -58,9 +58,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetItSystem(systemKey);
   const system = response?.data as ItSystemResponse | undefined;
@@ -409,21 +410,21 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
                   options={
                     (system.serviceProviders ?? []).length > 0
                       ? [
-                          ...COUNTRY_OPTIONS.filter((c) =>
+                          ...countryOptions.filter((c) =>
                             (system.serviceProviders ?? []).some((sp) =>
                               allServiceProviders.find((s) => s.key === sp.key)?.processingCountries?.includes(c.code)
                             )
                           ),
-                          ...COUNTRY_OPTIONS.filter((c) =>
+                          ...countryOptions.filter((c) =>
                             !(system.serviceProviders ?? []).some((sp) =>
                               allServiceProviders.find((s) => s.key === sp.key)?.processingCountries?.includes(c.code)
                             )
                           ),
                         ]
-                      : COUNTRY_OPTIONS
+                      : countryOptions
                   }
                   getOptionLabel={(o) => `${o.code} – ${o.name}`}
-                  value={COUNTRY_OPTIONS.filter((c) => countriesEdit.editValue!.includes(c.code))}
+                  value={countryOptions.filter((c) => countriesEdit.editValue!.includes(c.code))}
                   onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
                   renderInput={(params) => <TextField {...params} size="small" label={t('itSystem.deploymentCountriesLabel')} />}
                   renderValue={(val, getItemProps) =>
@@ -437,7 +438,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             ) : (system.processingCountries ?? []).length > 0 ? (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {(system.processingCountries ?? []).map((code) => (
-                  <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" />
+                  <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" />
                 ))}
               </Box>
             ) : (

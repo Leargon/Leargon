@@ -29,7 +29,8 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
 import { ServiceProviderType } from '../../api/generated/model';
-import { COUNTRY_OPTIONS } from '../../utils/countries';
+import { getCountryOptions } from '../../utils/countries';
+import { useLocale } from '../../context/LocaleContext';
 
 interface CreateServiceProviderDialogProps {
   open: boolean;
@@ -40,6 +41,8 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { preferredLocale } = useLocale();
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const createProvider = useCreateServiceProvider();
@@ -118,9 +121,9 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
         </Box>
         <Autocomplete
           multiple
-          options={COUNTRY_OPTIONS}
+          options={countryOptions}
           getOptionLabel={(o) => `${o.code} – ${o.name}`}
-          value={COUNTRY_OPTIONS.filter((c) => countries.includes(c.code))}
+          value={countryOptions.filter((c) => countries.includes(c.code))}
           onChange={(_, val) => setCountries(val.map((v) => v.code))}
           renderInput={(params) => <TextField {...params} label={t('serviceProviderDialog.processingCountriesLabel')} size="small" sx={{ mt: 2 }} />}
           renderValue={(val, getItemProps) =>

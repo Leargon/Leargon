@@ -112,7 +112,7 @@ import type {
   ServiceProviderResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
-import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 const PROCESS_TYPE_LABELS: Record<string, string> = {
@@ -154,6 +154,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const { isMethodologyEnabled } = useMethodology();
   const isAdmin = user?.roles?.includes('ADMIN');
   const isDddEnabled = isMethodologyEnabled('DDD');
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
 
   const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
@@ -1182,7 +1183,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         {process.derivedProcessingCountries && process.derivedProcessingCountries.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {process.derivedProcessingCountries.map((code) => (
-              <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" variant="outlined" />
+              <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" variant="outlined" />
             ))}
           </Box>
         ) : (
@@ -1217,7 +1218,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             {process.crossBorderTransfers.map((t, i) => (
               <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Chip label={COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} size="small" />
+                <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
                 <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
                 {t.notes && <Typography variant="caption" sx={{
                   color: "text.secondary"
@@ -1568,7 +1569,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {editTransfers.map((t, i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Typography variant="body2" sx={{ flex: 1 }}>
-                      {COUNTRY_NAMES[t.destinationCountry] || t.destinationCountry} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
+                      {getCountryName(t.destinationCountry, preferredLocale ?? 'en')} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
                       {t.notes && ` (${t.notes})`}
                     </Typography>
                     <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
@@ -1586,7 +1587,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   width: '100%'
                 }}>Add transfer</Typography>
               <Autocomplete
-                options={COUNTRY_OPTIONS}
+                options={countryOptions}
                 getOptionLabel={(o) => `${o.name} (${o.code})`}
                 value={newTransferCountry}
                 onChange={(_, v) => setNewTransferCountry(v)}

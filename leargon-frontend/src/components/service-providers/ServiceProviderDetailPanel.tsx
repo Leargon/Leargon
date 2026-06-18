@@ -55,7 +55,7 @@ import type {
   SupportedLocaleResponse,
 } from '../../api/generated/model';
 import { ServiceProviderType } from '../../api/generated/model';
-import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 interface ServiceProviderDetailPanelProps {
   providerKey: string;
@@ -65,9 +65,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetServiceProvider(providerKey);
   const provider = response?.data;
@@ -334,9 +335,9 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
               <Box>
                 <Autocomplete
                   multiple
-                  options={COUNTRY_OPTIONS}
+                  options={countryOptions}
                   getOptionLabel={(o) => `${o.code} – ${o.name}`}
-                  value={COUNTRY_OPTIONS.filter((c) => countriesEdit.editValue!.includes(c.code))}
+                  value={countryOptions.filter((c) => countriesEdit.editValue!.includes(c.code))}
                   onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
                   renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.countriesLabel')} />}
                   renderValue={(val, getItemProps) =>
@@ -350,7 +351,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             ) : (provider.processingCountries ?? []).length > 0 ? (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                 {(provider.processingCountries ?? []).map((code) => (
-                  <Chip key={code} label={`${code} – ${COUNTRY_NAMES[code] ?? code}`} size="small" />
+                  <Chip key={code} label={`${code} – ${getCountryName(code, preferredLocale ?? 'en')}`} size="small" />
                 ))}
               </Box>
             ) : (
@@ -555,7 +556,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                     {transfers.map((tr, idx) => (
                       <TableRow key={idx} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/processes/${tr.processKey}`)}>
                         <TableCell sx={{ fontSize: '0.75rem' }}>{tr.processName}</TableCell>
-                        <TableCell sx={{ fontSize: '0.75rem' }}>{COUNTRY_NAMES[tr.destinationCountry] ? `${tr.destinationCountry} – ${COUNTRY_NAMES[tr.destinationCountry]}` : tr.destinationCountry}</TableCell>
+                        <TableCell sx={{ fontSize: '0.75rem' }}>{`${tr.destinationCountry} – ${getCountryName(tr.destinationCountry, preferredLocale ?? 'en')}`}</TableCell>
                         <TableCell sx={{ fontSize: '0.75rem' }}>{t(`crossBorderSafeguard.${tr.safeguard}` as any, { defaultValue: tr.safeguard as string })}</TableCell>
                         <TableCell sx={{ fontSize: '0.75rem' }}>{tr.notes ?? ''}</TableCell>
                       </TableRow>

@@ -104,7 +104,7 @@ import type {
   OrganisationalUnitResponse,
 } from '../../api/generated/model';
 
-import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 interface EntityDetailPanelProps {
   entityKey: string;
@@ -120,6 +120,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const { isMethodologyEnabled } = useMethodology();
   const isAdmin = user?.roles?.includes('ADMIN');
   const isDddEnabled = isMethodologyEnabled('DDD');
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
 
   const visibleTabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
@@ -851,7 +852,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         {entity.storageLocations && entity.storageLocations.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {entity.storageLocations.map((code) => (
-              <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" />
+              <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" />
             ))}
           </Box>
         ) : (
@@ -869,7 +870,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           {entity.derivedStorageLocations && entity.derivedStorageLocations.length > 0 ? (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
               {entity.derivedStorageLocations.map((code) => (
-                <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" variant="outlined" sx={{ color: 'text.secondary' }} />
+                <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" variant="outlined" sx={{ color: 'text.secondary' }} />
               ))}
             </Box>
           ) : (
@@ -1537,9 +1538,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Autocomplete
             multiple
             sx={{ mt: 1 }}
-            options={COUNTRY_OPTIONS}
+            options={countryOptions}
             getOptionLabel={(o) => `${o.name} (${o.code})`}
-            value={COUNTRY_OPTIONS.filter((o) => editLocations.includes(o.code))}
+            value={countryOptions.filter((o) => editLocations.includes(o.code))}
             onChange={(_, val) => setEditLocations(val.map((v) => v.code))}
             isOptionEqualToValue={(o, v) => o.code === v.code}
             renderInput={(params) => <TextField {...params} label={t('entity.countriesWhereDataStored')} size="small" />}
