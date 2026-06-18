@@ -19,4 +19,7 @@ class OrganisationSettings {
 
     @Column(name = "data_protection_officer", length = 500)
     var dataProtectionOfficer: String? = null
+
+    @Column(name = "home_country", length = 2)
+    var homeCountry: String? = null
 }

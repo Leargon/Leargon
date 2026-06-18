@@ -1,12 +1,14 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 
+ARG APP_VERSION=vdev
+
 WORKDIR /app
 
 COPY gradle gradle
 COPY gradlew gradlew.bat gradle.properties build.gradle settings.gradle ./
 COPY src src
 
-RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew shadowJar --no-daemon -x test
+RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew shadowJar --no-daemon -x test -Pversion=${APP_VERSION}
 
 FROM eclipse-temurin:21-jre-alpine
 

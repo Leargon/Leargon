@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 059-add-organisation-home-country
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: organisation_settings
+            columns:
+              - column:
+                  name: home_country
+                  type: VARCHAR(2)
+                  constraints:
+                    nullable: true

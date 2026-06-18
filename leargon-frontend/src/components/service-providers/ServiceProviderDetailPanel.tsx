@@ -308,59 +308,6 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           </AccordionDetails>
         </Accordion>
 
-        {/* Processing Countries */}
-        <Accordion disableGutters>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionCountries')}</Typography>
-              {isAdmin && !countriesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(provider.processingCountries ?? [])]); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {countriesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); countriesEdit.save(); }} disabled={countriesEdit.isSaving}>
-                    {countriesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.cancel(); }} disabled={countriesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {countriesEdit.isEditing && countriesEdit.editValue !== null ? (
-              <Box>
-                <Autocomplete
-                  multiple
-                  options={countryOptions}
-                  getOptionLabel={(o) => `${o.code} – ${o.name}`}
-                  value={countryOptions.filter((c) => countriesEdit.editValue!.includes(c.code))}
-                  onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
-                  renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.countriesLabel')} />}
-                  renderValue={(val, getItemProps) =>
-                    val.map((option, index) => (
-                      <Chip {...getItemProps({ index })} key={option.code} label={option.code} size="small" />
-                    ))
-                  }
-                />
-                {countriesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{countriesEdit.error}</Alert>}
-              </Box>
-            ) : (provider.processingCountries ?? []).length > 0 ? (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {(provider.processingCountries ?? []).map((code) => (
-                  <Chip key={code} label={`${code} – ${getCountryName(code, preferredLocale ?? 'en')}`} size="small" />
-                ))}
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>{t('serviceProvider.noCountries')}</Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
 
         {/* Agreement Status */}
         <Accordion disableGutters>
@@ -530,43 +477,94 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           </Accordion>
         )}
 
-        {/* Cross-border Transfers */}
-        {(() => {
-          const transfers = (provider.processDataFlows ?? []).flatMap(
-            (entry: ServiceProviderDataFlowEntry) =>
-              (entry.crossBorderTransfers ?? []).map(t => ({ processName: entry.processName, processKey: entry.processKey, ...t }))
-          );
-          if (transfers.length === 0) return null;
-          return (
-            <Accordion disableGutters>
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderProcess')}</TableCell>
-                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderCountry')}</TableCell>
-                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderSafeguard')}</TableCell>
-                      <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderNotes')}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {transfers.map((tr, idx) => (
-                      <TableRow key={idx} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/processes/${tr.processKey}`)}>
-                        <TableCell sx={{ fontSize: '0.75rem' }}>{tr.processName}</TableCell>
-                        <TableCell sx={{ fontSize: '0.75rem' }}>{`${tr.destinationCountry} – ${getCountryName(tr.destinationCountry, preferredLocale ?? 'en')}`}</TableCell>
-                        <TableCell sx={{ fontSize: '0.75rem' }}>{t(`crossBorderSafeguard.${tr.safeguard}` as any, { defaultValue: tr.safeguard as string })}</TableCell>
-                        <TableCell sx={{ fontSize: '0.75rem' }}>{tr.notes ?? ''}</TableCell>
+        {/* Transfers to Third Countries: processing countries + derived cross-border transfers */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
+              {isAdmin && !countriesEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(provider.processingCountries ?? [])]); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {countriesEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); countriesEdit.save(); }} disabled={countriesEdit.isSaving}>
+                    {countriesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.cancel(); }} disabled={countriesEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+              {t('serviceProvider.countriesLabel')}
+            </Typography>
+            {countriesEdit.isEditing && countriesEdit.editValue !== null ? (
+              <Box sx={{ mb: 2 }}>
+                <Autocomplete
+                  multiple
+                  options={countryOptions}
+                  getOptionLabel={(o) => `${o.code} – ${o.name}`}
+                  value={countryOptions.filter((c) => countriesEdit.editValue!.includes(c.code))}
+                  onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('serviceProvider.countriesLabel')} />}
+                  renderValue={(val, getItemProps) =>
+                    val.map((option, index) => (
+                      <Chip {...getItemProps({ index })} key={option.code} label={option.code} size="small" />
+                    ))
+                  }
+                />
+                {countriesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{countriesEdit.error}</Alert>}
+              </Box>
+            ) : (provider.processingCountries ?? []).length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                {(provider.processingCountries ?? []).map((code) => (
+                  <Chip key={code} label={`${code} – ${getCountryName(code, preferredLocale ?? 'en')}`} size="small" />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>{t('serviceProvider.noCountries')}</Typography>
+            )}
+            {(() => {
+              const transfers = (provider.processDataFlows ?? []).flatMap(
+                (entry: ServiceProviderDataFlowEntry) =>
+                  (entry.crossBorderTransfers ?? []).map(tr => ({ processName: entry.processName, processKey: entry.processKey, ...tr }))
+              );
+              if (transfers.length === 0) return null;
+              return (
+                <>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                    {t('serviceProvider.crossBorderLegalBasisLabel')}
+                  </Typography>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderProcess')}</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderCountry')}</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderSafeguard')}</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{t('serviceProvider.crossBorderNotes')}</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </AccordionDetails>
-            </Accordion>
-          );
-        })()}
+                    </TableHead>
+                    <TableBody>
+                      {transfers.map((tr, idx) => (
+                        <TableRow key={idx} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/processes/${tr.processKey}`)}>
+                          <TableCell sx={{ fontSize: '0.75rem' }}>{tr.processName}</TableCell>
+                          <TableCell sx={{ fontSize: '0.75rem' }}>{`${tr.destinationCountry} – ${getCountryName(tr.destinationCountry, preferredLocale ?? 'en')}`}</TableCell>
+                          <TableCell sx={{ fontSize: '0.75rem' }}>{t(`crossBorderSafeguard.${tr.safeguard}` as any, { defaultValue: tr.safeguard as string })}</TableCell>
+                          <TableCell sx={{ fontSize: '0.75rem' }}>{tr.notes ?? ''}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              );
+            })()}
+          </AccordionDetails>
+        </Accordion>
 
         {/* DPA Compliance Checklist — DATA_PROCESSOR only */}
         {provider.serviceProviderType === ServiceProviderType.DATA_PROCESSOR && (

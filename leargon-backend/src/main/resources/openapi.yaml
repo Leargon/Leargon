@@ -10171,6 +10171,11 @@ components:
           nullable: true
           description: Data protection officer or advisor (Datenschutzbeauftragter/-berater)
           example: Dr. Jane Doe, datenschutz@example.com
+        homeCountry:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 code of the country where the organisation is headquartered. Used to exclude domestic transfers from the processing register.
+          example: CH
     OrganisationSettingsRequest:
       type: object
       properties:
@@ -10182,6 +10187,10 @@ components:
           type: string
           nullable: true
           description: Data protection officer or advisor
+        homeCountry:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 country code of the organisation's home country
     ProcessingRegisterEntryResponse:
       type: object
       required:

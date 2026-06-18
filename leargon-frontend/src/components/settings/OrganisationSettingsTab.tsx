@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetOrganisationSettingsQueryKey,
   useGetOrganisationSettings,
   useUpdateOrganisationSettings,
 } from '../../api/generated/administration/administration';
+import { getCountryOptions } from '../../utils/countries';
+import { useLocale } from '../../context/LocaleContext';
 
 const OrganisationSettingsTab: React.FC = () => {
   const queryClient = useQueryClient();
+  const { preferredLocale } = useLocale();
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
   const { data, isLoading, isError } = useGetOrganisationSettings();
   const updateMutation = useUpdateOrganisationSettings();
 
   const [euRepresentative, setEuRepresentative] = useState('');
   const [dataProtectionOfficer, setDataProtectionOfficer] = useState('');
+  const [homeCountry, setHomeCountry] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -21,6 +26,7 @@ const OrganisationSettingsTab: React.FC = () => {
     if (data?.data) {
       setEuRepresentative(data.data.euRepresentative ?? '');
       setDataProtectionOfficer(data.data.dataProtectionOfficer ?? '');
+      setHomeCountry(data.data.homeCountry ?? null);
     }
   }, [data]);
 
@@ -32,6 +38,7 @@ const OrganisationSettingsTab: React.FC = () => {
         data: {
           euRepresentative: euRepresentative || null,
           dataProtectionOfficer: dataProtectionOfficer || null,
+          homeCountry: homeCountry || null,
         },
       });
       await queryClient.invalidateQueries({ queryKey: getGetOrganisationSettingsQueryKey() });
@@ -63,6 +70,20 @@ const OrganisationSettingsTab: React.FC = () => {
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 600 }}>
+        <Autocomplete
+          options={countryOptions}
+          getOptionLabel={(o) => `${o.code} – ${o.name}`}
+          value={countryOptions.find((c) => c.code === homeCountry) ?? null}
+          onChange={(_, val) => setHomeCountry(val?.code ?? null)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Home Country"
+              helperText="The country where the organisation is headquartered. Transfers to this country are excluded from the processing register."
+            />
+          )}
+        />
+
         <TextField
           label="EU-Vertreter / EU Representative"
           value={euRepresentative}

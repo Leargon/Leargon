@@ -22,6 +22,7 @@ open class OrganisationSettingsService(
         val settings = organisationSettingsRepository.findFirst().orElse(OrganisationSettings())
         settings.euRepresentative = request.euRepresentative
         settings.dataProtectionOfficer = request.dataProtectionOfficer
+        settings.homeCountry = request.homeCountry
         val saved = organisationSettingsRepository.save(settings)
         return toResponse(saved)
     }
@@ -30,4 +31,5 @@ open class OrganisationSettingsService(
         OrganisationSettingsResponse()
             .euRepresentative(settings.euRepresentative)
             .dataProtectionOfficer(settings.dataProtectionOfficer)
+            .homeCountry(settings.homeCountry)
 }

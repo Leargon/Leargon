@@ -28,4 +28,9 @@ export interface OrganisationSettingsRequest {
      * @nullable
      */
   dataProtectionOfficer?: string | null;
+  /**
+     * ISO 3166-1 alpha-2 country code of the organisation's home country
+     * @nullable
+     */
+  homeCountry?: string | null;
 }

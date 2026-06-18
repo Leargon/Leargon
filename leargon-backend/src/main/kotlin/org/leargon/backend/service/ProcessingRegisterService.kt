@@ -97,6 +97,7 @@ open class ProcessingRegisterService(
         val orgSettings = organisationSettingsRepository.findFirst().orElse(null)
         val euRepresentative = orgSettings?.euRepresentative ?: ""
         val dpo = orgSettings?.dataProtectionOfficer ?: ""
+        val homeCountry = orgSettings?.homeCountry
 
         val allProcesses = processRepository.findAll()
         val childKeysByParent =
@@ -105,7 +106,7 @@ open class ProcessingRegisterService(
                 .groupBy { it.parent!!.key }
 
         return allProcesses
-            .map { process -> buildEntry(process, locale, euRepresentative, dpo, currentUser, childKeysByParent) }
+            .map { process -> buildEntry(process, locale, euRepresentative, dpo, homeCountry, currentUser, childKeysByParent) }
     }
 
     private fun buildEntry(
@@ -113,6 +114,7 @@ open class ProcessingRegisterService(
         locale: String,
         euRepresentative: String,
         dpo: String,
+        homeCountry: String?,
         currentUser: User,
         childKeysByParent: Map<String, List<Process>>,
     ): ProcessingRegisterEntryResponse {
@@ -170,7 +172,9 @@ open class ProcessingRegisterService(
             }
 
         val transfers =
-            process.crossBorderTransfers?.joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" } ?: ""
+            process.crossBorderTransfers
+                ?.filter { homeCountry == null || it.destinationCountry != homeCountry }
+                ?.joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" } ?: ""
 
         val processingCountries = derivedProcessingCountries(process).joinToString("; ")
 

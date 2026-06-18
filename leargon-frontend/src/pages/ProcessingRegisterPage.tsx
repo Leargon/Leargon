@@ -233,12 +233,6 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
           </Typography>
         </TableCell>
 
-        {/* 16. Bearbeitungsländer */}
-        <TableCell>
-          <Tooltip title={row.processingCountries || ''}>
-            <Typography {...tdText}>{row.processingCountries || '—'}</Typography>
-          </Tooltip>
-        </TableCell>
       </TableRow>
 
       {/* Purpose edit dialog */}

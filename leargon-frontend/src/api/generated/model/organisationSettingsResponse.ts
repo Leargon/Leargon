@@ -28,4 +28,9 @@ export interface OrganisationSettingsResponse {
      * @nullable
      */
   dataProtectionOfficer?: string | null;
+  /**
+     * ISO 3166-1 alpha-2 code of the country where the organisation is headquartered. Used to exclude domestic transfers from the processing register.
+     * @nullable
+     */
+  homeCountry?: string | null;
 }
