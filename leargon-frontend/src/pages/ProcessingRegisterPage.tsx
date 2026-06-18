@@ -394,7 +394,6 @@ const ProcessingRegisterPage: React.FC = () => {
     t('compliance.colReg13'),
     t('compliance.colReg14'),
     t('compliance.colReg15'),
-    t('compliance.colReg16'),
   ];
 
   return (

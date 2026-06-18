@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
+import org.leargon.backend.domain.CrossBorderTransfer
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.User
 import org.leargon.backend.mapper.ProcessMapper
@@ -23,6 +24,20 @@ open class ProcessingRegisterService(
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
+
+    private fun collectEffectiveTransfers(process: Process): List<CrossBorderTransfer> {
+        val seen = mutableSetOf<String>()
+        val result = mutableListOf<CrossBorderTransfer>()
+
+        fun collect(p: Process) {
+            p.crossBorderTransfers?.forEach { t ->
+                if (seen.add("${t.destinationCountry}:${t.safeguard}")) result.add(t)
+            }
+            p.children.forEach { collect(it) }
+        }
+        collect(process)
+        return result
+    }
 
     private fun localizedName(
         entity: BusinessEntity,
@@ -172,9 +187,9 @@ open class ProcessingRegisterService(
             }
 
         val transfers =
-            process.crossBorderTransfers
-                ?.filter { homeCountry == null || it.destinationCountry != homeCountry }
-                ?.joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" } ?: ""
+            collectEffectiveTransfers(process)
+                .filter { homeCountry == null || it.destinationCountry != homeCountry }
+                .joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" }
 
         val processingCountries = derivedProcessingCountries(process).joinToString("; ")
 

@@ -1175,28 +1175,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {!isHidden('itSystems') && <Divider sx={{ my: 2 }} />}
 
-      {/* Derived Processing Countries */}
-      <Box sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">{t('process.derivedProcessingCountries')}</Typography>
-      </Box>
-      <Box sx={{ mb: 2 }}>
-        {process.derivedProcessingCountries && process.derivedProcessingCountries.length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {process.derivedProcessingCountries.map((code) => (
-              <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('process.noDerivedProcessingCountries')}</Typography>
-        )}
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Cross-border Transfers */}
-      {!isHidden('crossBorderTransfers') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Cross-border Transfers</Typography>
-        {isOwnerOrAdmin && (
+      {/* Transfers to Third Countries: derived countries + documented cross-border transfers */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="subtitle2">{t('process.transfersToThirdCountries')}</Typography>
+        {!isHidden('crossBorderTransfers') && isOwnerOrAdmin && (
           <IconButton
             size="small"
             color="primary"
@@ -1212,28 +1194,45 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <EditIcon fontSize="small" />
           </IconButton>
         )}
-      </Box>}
-      {!isHidden('crossBorderTransfers') && <Box sx={{ mb: 2 }}>
-        {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {process.crossBorderTransfers.map((t, i) => (
-              <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
-                <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                {t.notes && <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>{t.notes}</Typography>}
-              </Box>
+      </Box>
+
+      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+        {t('process.derivedCountriesLabel')}
+      </Typography>
+      <Box sx={{ mb: 1.5 }}>
+        {process.derivedProcessingCountries && process.derivedProcessingCountries.length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {process.derivedProcessingCountries.map((code) => (
+              <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" variant="outlined" />
             ))}
           </Box>
         ) : (
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>No cross-border transfers recorded</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('process.noDerivedProcessingCountries')}</Typography>
         )}
-      </Box>}
+      </Box>
 
-      {!isHidden('crossBorderTransfers') && <Divider sx={{ my: 2 }} />}
+      {!isHidden('crossBorderTransfers') && <>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+          {t('process.documentedTransfersLabel')}
+        </Typography>
+        <Box sx={{ mb: 2 }}>
+          {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {process.crossBorderTransfers.map((t, i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
+                  <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
+                  {t.notes && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t.notes}</Typography>}
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('process.noTransfers')}</Typography>
+          )}
+        </Box>
+      </>}
+
+      <Divider sx={{ my: 2 }} />
 
       {/* Item 4: Legal basis nudge — personal data process with no legal basis */}
       {process.containsPersonalData && !process.legalBasis && isOwnerOrAdmin && (
