@@ -95,51 +95,82 @@ export const getAllCapabilities = async ( options?: RequestInit): Promise<getAll
 
 
 
-export const getGetAllCapabilitiesMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllCapabilities'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllCapabilitiesQueryKey = () => {
+    return [
+    `/capabilities`
+    ] as const;
+    }
 
 
+export const getGetAllCapabilitiesQueryOptions = <TData = Awaited<ReturnType<typeof getAllCapabilities>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllCapabilitiesQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllCapabilities>>, void> = () => {
 
-
-          return  getAllCapabilities(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllCapabilities>>> = ({ signal }) => getAllCapabilities({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllCapabilitiesMutationResult = NonNullable<Awaited<ReturnType<typeof getAllCapabilities>>>
+export type GetAllCapabilitiesQueryResult = NonNullable<Awaited<ReturnType<typeof getAllCapabilities>>>
+export type GetAllCapabilitiesQueryError = void
 
-    export type GetAllCapabilitiesMutationError = void
 
-    /**
+export function useGetAllCapabilities<TData = Awaited<ReturnType<typeof getAllCapabilities>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllCapabilities>>,
+          TError,
+          Awaited<ReturnType<typeof getAllCapabilities>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllCapabilities<TData = Awaited<ReturnType<typeof getAllCapabilities>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllCapabilities>>,
+          TError,
+          Awaited<ReturnType<typeof getAllCapabilities>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllCapabilities<TData = Awaited<ReturnType<typeof getAllCapabilities>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all capabilities
  */
-export const useGetAllCapabilities = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllCapabilities>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllCapabilitiesMutationOptions(options), queryClient);
-    }
-    export type createCapabilityResponse201 = {
+
+export function useGetAllCapabilities<TData = Awaited<ReturnType<typeof getAllCapabilities>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllCapabilities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllCapabilitiesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createCapabilityResponse201 = {
   data: CapabilityResponse
   status: 201
 }
@@ -194,82 +225,51 @@ export const createCapability = async (createCapabilityRequest: CreateCapability
 
 
 
+export const getCreateCapabilityMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCapability>>, TError,{data: CreateCapabilityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCapability>>, TError,{data: CreateCapabilityRequest}, TContext> => {
 
-export const getCreateCapabilityQueryKey = (createCapabilityRequest?: CreateCapabilityRequest,) => {
-    return [
-    'POST', `/capabilities`, createCapabilityRequest
-    ] as const;
-    }
-
-
-export const getCreateCapabilityQueryOptions = <TData = Awaited<ReturnType<typeof createCapability>>, TError = void>(createCapabilityRequest: CreateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateCapabilityQueryKey(createCapabilityRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createCapability>>> = ({ signal }) => createCapability(createCapabilityRequest, { signal, ...requestOptions });
+const mutationKey = ['createCapability'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCapability>>, {data: CreateCapabilityRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateCapabilityQueryResult = NonNullable<Awaited<ReturnType<typeof createCapability>>>
-export type CreateCapabilityQueryError = void
+          return  createCapability(data,requestOptions)
+        }
 
 
-export function useCreateCapability<TData = Awaited<ReturnType<typeof createCapability>>, TError = void>(
- createCapabilityRequest: CreateCapabilityRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createCapability>>,
-          TError,
-          Awaited<ReturnType<typeof createCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateCapability<TData = Awaited<ReturnType<typeof createCapability>>, TError = void>(
- createCapabilityRequest: CreateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createCapability>>,
-          TError,
-          Awaited<ReturnType<typeof createCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateCapability<TData = Awaited<ReturnType<typeof createCapability>>, TError = void>(
- createCapabilityRequest: CreateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCapabilityMutationResult = NonNullable<Awaited<ReturnType<typeof createCapability>>>
+    export type CreateCapabilityMutationBody = CreateCapabilityRequest
+    export type CreateCapabilityMutationError = void
+
+    /**
  * @summary Create a capability
  */
-
-export function useCreateCapability<TData = Awaited<ReturnType<typeof createCapability>>, TError = void>(
- createCapabilityRequest: CreateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateCapabilityQueryOptions(createCapabilityRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getCapabilityByKeyResponse200 = {
+export const useCreateCapability = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCapability>>, TError,{data: CreateCapabilityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCapability>>,
+        TError,
+        {data: CreateCapabilityRequest},
+        TContext
+      > => {
+      return useMutation(getCreateCapabilityMutationOptions(options), queryClient);
+    }
+    export type getCapabilityByKeyResponse200 = {
   data: CapabilityResponse
   status: 200
 }
@@ -318,51 +318,82 @@ export const getCapabilityByKey = async (key: string, options?: RequestInit): Pr
 
 
 
-export const getGetCapabilityByKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getCapabilityByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetCapabilityByKeyQueryKey = (key: string,) => {
+    return [
+    `/capabilities/${key}`
+    ] as const;
+    }
 
 
+export const getGetCapabilityByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getCapabilityByKey>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCapabilityByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getCapabilityByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getCapabilityByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCapabilityByKey>>> = ({ signal }) => getCapabilityByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetCapabilityByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getCapabilityByKey>>>
+export type GetCapabilityByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getCapabilityByKey>>>
+export type GetCapabilityByKeyQueryError = void
 
-    export type GetCapabilityByKeyMutationError = void
 
-    /**
+export function useGetCapabilityByKey<TData = Awaited<ReturnType<typeof getCapabilityByKey>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCapabilityByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getCapabilityByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCapabilityByKey<TData = Awaited<ReturnType<typeof getCapabilityByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCapabilityByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getCapabilityByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCapabilityByKey<TData = Awaited<ReturnType<typeof getCapabilityByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get capability by key
  */
-export const useGetCapabilityByKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getCapabilityByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetCapabilityByKeyMutationOptions(options), queryClient);
-    }
-    export type updateCapabilityResponse200 = {
+
+export function useGetCapabilityByKey<TData = Awaited<ReturnType<typeof getCapabilityByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCapabilityByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCapabilityByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateCapabilityResponse200 = {
   data: CapabilityResponse
   status: 200
 }
@@ -423,88 +454,51 @@ export const updateCapability = async (key: string,
 
 
 
+export const getUpdateCapabilityMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCapability>>, TError,{key: string;data: UpdateCapabilityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCapability>>, TError,{key: string;data: UpdateCapabilityRequest}, TContext> => {
 
-export const getUpdateCapabilityQueryKey = (key: string,
-    updateCapabilityRequest?: UpdateCapabilityRequest,) => {
-    return [
-    'PUT', `/capabilities/${key}`, updateCapabilityRequest
-    ] as const;
-    }
-
-
-export const getUpdateCapabilityQueryOptions = <TData = Awaited<ReturnType<typeof updateCapability>>, TError = void>(key: string,
-    updateCapabilityRequest: UpdateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateCapabilityQueryKey(key,updateCapabilityRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateCapability>>> = ({ signal }) => updateCapability(key,updateCapabilityRequest, { signal, ...requestOptions });
+const mutationKey = ['updateCapability'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCapability>>, {key: string;data: UpdateCapabilityRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateCapabilityQueryResult = NonNullable<Awaited<ReturnType<typeof updateCapability>>>
-export type UpdateCapabilityQueryError = void
+          return  updateCapability(key,data,requestOptions)
+        }
 
 
-export function useUpdateCapability<TData = Awaited<ReturnType<typeof updateCapability>>, TError = void>(
- key: string,
-    updateCapabilityRequest: UpdateCapabilityRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateCapability>>,
-          TError,
-          Awaited<ReturnType<typeof updateCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateCapability<TData = Awaited<ReturnType<typeof updateCapability>>, TError = void>(
- key: string,
-    updateCapabilityRequest: UpdateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateCapability>>,
-          TError,
-          Awaited<ReturnType<typeof updateCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateCapability<TData = Awaited<ReturnType<typeof updateCapability>>, TError = void>(
- key: string,
-    updateCapabilityRequest: UpdateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCapabilityMutationResult = NonNullable<Awaited<ReturnType<typeof updateCapability>>>
+    export type UpdateCapabilityMutationBody = UpdateCapabilityRequest
+    export type UpdateCapabilityMutationError = void
+
+    /**
  * @summary Update a capability
  */
-
-export function useUpdateCapability<TData = Awaited<ReturnType<typeof updateCapability>>, TError = void>(
- key: string,
-    updateCapabilityRequest: UpdateCapabilityRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateCapabilityQueryOptions(key,updateCapabilityRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteCapabilityResponse204 = {
+export const useUpdateCapability = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCapability>>, TError,{key: string;data: UpdateCapabilityRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateCapability>>,
+        TError,
+        {key: string;data: UpdateCapabilityRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateCapabilityMutationOptions(options), queryClient);
+    }
+    export type deleteCapabilityResponse204 = {
   data: void
   status: 204
 }
@@ -559,82 +553,51 @@ export const deleteCapability = async (key: string, options?: RequestInit): Prom
 
 
 
+export const getDeleteCapabilityMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCapability>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCapability>>, TError,{key: string}, TContext> => {
 
-export const getDeleteCapabilityQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/capabilities/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteCapabilityQueryOptions = <TData = Awaited<ReturnType<typeof deleteCapability>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteCapabilityQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteCapability>>> = ({ signal }) => deleteCapability(key, { signal, ...requestOptions });
+const mutationKey = ['deleteCapability'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCapability>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteCapabilityQueryResult = NonNullable<Awaited<ReturnType<typeof deleteCapability>>>
-export type DeleteCapabilityQueryError = void
+          return  deleteCapability(key,requestOptions)
+        }
 
 
-export function useDeleteCapability<TData = Awaited<ReturnType<typeof deleteCapability>>, TError = void>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteCapability>>,
-          TError,
-          Awaited<ReturnType<typeof deleteCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteCapability<TData = Awaited<ReturnType<typeof deleteCapability>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteCapability>>,
-          TError,
-          Awaited<ReturnType<typeof deleteCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteCapability<TData = Awaited<ReturnType<typeof deleteCapability>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCapabilityMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCapability>>>
+
+    export type DeleteCapabilityMutationError = void
+
+    /**
  * @summary Delete a capability
  */
-
-export function useDeleteCapability<TData = Awaited<ReturnType<typeof deleteCapability>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteCapabilityQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type assignClassificationsToCapabilityResponse204 = {
+export const useDeleteCapability = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCapability>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCapability>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCapabilityMutationOptions(options), queryClient);
+    }
+    export type assignClassificationsToCapabilityResponse204 = {
   data: void
   status: 204
 }
@@ -695,88 +658,51 @@ export const assignClassificationsToCapability = async (key: string,
 
 
 
+export const getAssignClassificationsToCapabilityMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
-export const getAssignClassificationsToCapabilityQueryKey = (key: string,
-    classificationAssignmentRequest?: ClassificationAssignmentRequest[],) => {
-    return [
-    'PUT', `/capabilities/${key}/classifications`, classificationAssignmentRequest
-    ] as const;
-    }
-
-
-export const getAssignClassificationsToCapabilityQueryOptions = <TData = Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError = void>(key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAssignClassificationsToCapabilityQueryKey(key,classificationAssignmentRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignClassificationsToCapability>>> = ({ signal }) => assignClassificationsToCapability(key,classificationAssignmentRequest, { signal, ...requestOptions });
+const mutationKey = ['assignClassificationsToCapability'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToCapability>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AssignClassificationsToCapabilityQueryResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToCapability>>>
-export type AssignClassificationsToCapabilityQueryError = void
+          return  assignClassificationsToCapability(key,data,requestOptions)
+        }
 
 
-export function useAssignClassificationsToCapability<TData = Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToCapability>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToCapability<TData = Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToCapability>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToCapability>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToCapability<TData = Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignClassificationsToCapabilityMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToCapability>>>
+    export type AssignClassificationsToCapabilityMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToCapabilityMutationError = void
+
+    /**
  * @summary Assign classifications to a capability
  */
-
-export function useAssignClassificationsToCapability<TData = Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAssignClassificationsToCapabilityQueryOptions(key,classificationAssignmentRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateCapabilityLinkedProcessesResponse204 = {
+export const useAssignClassificationsToCapability = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToCapability>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignClassificationsToCapability>>,
+        TError,
+        {key: string;data: ClassificationAssignmentRequest[]},
+        TContext
+      > => {
+      return useMutation(getAssignClassificationsToCapabilityMutationOptions(options), queryClient);
+    }
+    export type updateCapabilityLinkedProcessesResponse204 = {
   data: void
   status: 204
 }
@@ -832,84 +758,47 @@ export const updateCapabilityLinkedProcesses = async (key: string,
 
 
 
+export const getUpdateCapabilityLinkedProcessesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError,{key: string;data: UpdateCapabilityProcessLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError,{key: string;data: UpdateCapabilityProcessLinksRequest}, TContext> => {
 
-export const getUpdateCapabilityLinkedProcessesQueryKey = (key: string,
-    updateCapabilityProcessLinksRequest?: UpdateCapabilityProcessLinksRequest,) => {
-    return [
-    'PUT', `/capabilities/${key}/linked-processes`, updateCapabilityProcessLinksRequest
-    ] as const;
-    }
-
-
-export const getUpdateCapabilityLinkedProcessesQueryOptions = <TData = Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError = void>(key: string,
-    updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateCapabilityLinkedProcessesQueryKey(key,updateCapabilityProcessLinksRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>> = ({ signal }) => updateCapabilityLinkedProcesses(key,updateCapabilityProcessLinksRequest, { signal, ...requestOptions });
+const mutationKey = ['updateCapabilityLinkedProcesses'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, {key: string;data: UpdateCapabilityProcessLinksRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateCapabilityLinkedProcessesQueryResult = NonNullable<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>>
-export type UpdateCapabilityLinkedProcessesQueryError = void
+          return  updateCapabilityLinkedProcesses(key,data,requestOptions)
+        }
 
 
-export function useUpdateCapabilityLinkedProcesses<TData = Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError = void>(
- key: string,
-    updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>,
-          TError,
-          Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateCapabilityLinkedProcesses<TData = Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError = void>(
- key: string,
-    updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>,
-          TError,
-          Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateCapabilityLinkedProcesses<TData = Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError = void>(
- key: string,
-    updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCapabilityLinkedProcessesMutationResult = NonNullable<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>>
+    export type UpdateCapabilityLinkedProcessesMutationBody = UpdateCapabilityProcessLinksRequest
+    export type UpdateCapabilityLinkedProcessesMutationError = void
+
+    /**
  * @summary Update linked processes
  */
-
-export function useUpdateCapabilityLinkedProcesses<TData = Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError = void>(
- key: string,
-    updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateCapabilityLinkedProcessesQueryOptions(key,updateCapabilityProcessLinksRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateCapabilityLinkedProcesses = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>, TError,{key: string;data: UpdateCapabilityProcessLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateCapabilityLinkedProcesses>>,
+        TError,
+        {key: string;data: UpdateCapabilityProcessLinksRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateCapabilityLinkedProcessesMutationOptions(options), queryClient);
+    }

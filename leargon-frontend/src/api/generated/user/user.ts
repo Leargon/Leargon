@@ -94,51 +94,82 @@ export const getCurrentUser = async ( options?: RequestInit): Promise<getCurrent
 
 
 
-export const getGetCurrentUserMutationOptions = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError,void, TContext> => {
 
-const mutationKey = ['getCurrentUser'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetCurrentUserQueryKey = () => {
+    return [
+    `/users/me`
+    ] as const;
+    }
 
 
+export const getGetCurrentUserQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentUserQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getCurrentUser>>, void> = () => {
 
-
-          return  getCurrentUser(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentUser>>> = ({ signal }) => getCurrentUser({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetCurrentUserMutationResult = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>
+export type GetCurrentUserQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>
+export type GetCurrentUserQueryError = ErrorResponse
 
-    export type GetCurrentUserMutationError = ErrorResponse
 
-    /**
+export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorResponse>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentUser>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentUser>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrentUser>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrentUser>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get current user profile
  */
-export const useGetCurrentUser = <TError = ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getCurrentUser>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetCurrentUserMutationOptions(options), queryClient);
-    }
-    export type updateProfileResponse200 = {
+
+export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUser>>, TError = ErrorResponse>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCurrentUserQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateProfileResponse200 = {
   data: UserResponse
   status: 200
 }
@@ -183,82 +214,51 @@ export const updateProfile = async (updateProfileRequest: UpdateProfileRequest, 
 
 
 
+export const getUpdateProfileMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext> => {
 
-export const getUpdateProfileQueryKey = (updateProfileRequest?: UpdateProfileRequest,) => {
-    return [
-    'PUT', `/users/me`, updateProfileRequest
-    ] as const;
-    }
-
-
-export const getUpdateProfileQueryOptions = <TData = Awaited<ReturnType<typeof updateProfile>>, TError = ErrorResponse>(updateProfileRequest: UpdateProfileRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateProfileQueryKey(updateProfileRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateProfile>>> = ({ signal }) => updateProfile(updateProfileRequest, { signal, ...requestOptions });
+const mutationKey = ['updateProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProfile>>, {data: UpdateProfileRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateProfileQueryResult = NonNullable<Awaited<ReturnType<typeof updateProfile>>>
-export type UpdateProfileQueryError = ErrorResponse
+          return  updateProfile(data,requestOptions)
+        }
 
 
-export function useUpdateProfile<TData = Awaited<ReturnType<typeof updateProfile>>, TError = ErrorResponse>(
- updateProfileRequest: UpdateProfileRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateProfile>>,
-          TError,
-          Awaited<ReturnType<typeof updateProfile>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateProfile<TData = Awaited<ReturnType<typeof updateProfile>>, TError = ErrorResponse>(
- updateProfileRequest: UpdateProfileRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateProfile>>,
-          TError,
-          Awaited<ReturnType<typeof updateProfile>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateProfile<TData = Awaited<ReturnType<typeof updateProfile>>, TError = ErrorResponse>(
- updateProfileRequest: UpdateProfileRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateProfile>>>
+    export type UpdateProfileMutationBody = UpdateProfileRequest
+    export type UpdateProfileMutationError = ErrorResponse
+
+    /**
  * @summary Update own profile
  */
-
-export function useUpdateProfile<TData = Awaited<ReturnType<typeof updateProfile>>, TError = ErrorResponse>(
- updateProfileRequest: UpdateProfileRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateProfile>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateProfileQueryOptions(updateProfileRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type changePasswordResponse200 = {
+export const useUpdateProfile = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProfile>>, TError,{data: UpdateProfileRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProfile>>,
+        TError,
+        {data: UpdateProfileRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProfileMutationOptions(options), queryClient);
+    }
+    export type changePasswordResponse200 = {
   data: void
   status: 200
 }
@@ -308,78 +308,47 @@ export const changePassword = async (changePasswordRequest: ChangePasswordReques
 
 
 
+export const getChangePasswordMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePasswordRequest}, TContext> => {
 
-export const getChangePasswordQueryKey = (changePasswordRequest?: ChangePasswordRequest,) => {
-    return [
-    'POST', `/users/me/password`, changePasswordRequest
-    ] as const;
-    }
-
-
-export const getChangePasswordQueryOptions = <TData = Awaited<ReturnType<typeof changePassword>>, TError = ErrorResponse>(changePasswordRequest: ChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getChangePasswordQueryKey(changePasswordRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof changePassword>>> = ({ signal }) => changePassword(changePasswordRequest, { signal, ...requestOptions });
+const mutationKey = ['changePassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof changePassword>>, {data: ChangePasswordRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ChangePasswordQueryResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>
-export type ChangePasswordQueryError = ErrorResponse
+          return  changePassword(data,requestOptions)
+        }
 
 
-export function useChangePassword<TData = Awaited<ReturnType<typeof changePassword>>, TError = ErrorResponse>(
- changePasswordRequest: ChangePasswordRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof changePassword>>,
-          TError,
-          Awaited<ReturnType<typeof changePassword>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useChangePassword<TData = Awaited<ReturnType<typeof changePassword>>, TError = ErrorResponse>(
- changePasswordRequest: ChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof changePassword>>,
-          TError,
-          Awaited<ReturnType<typeof changePassword>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useChangePassword<TData = Awaited<ReturnType<typeof changePassword>>, TError = ErrorResponse>(
- changePasswordRequest: ChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>
+    export type ChangePasswordMutationBody = ChangePasswordRequest
+    export type ChangePasswordMutationError = ErrorResponse
+
+    /**
  * @summary Change own password
  */
-
-export function useChangePassword<TData = Awaited<ReturnType<typeof changePassword>>, TError = ErrorResponse>(
- changePasswordRequest: ChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof changePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getChangePasswordQueryOptions(changePasswordRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useChangePassword = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof changePassword>>, TError,{data: ChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof changePassword>>,
+        TError,
+        {data: ChangePasswordRequest},
+        TContext
+      > => {
+      return useMutation(getChangePasswordMutationOptions(options), queryClient);
+    }

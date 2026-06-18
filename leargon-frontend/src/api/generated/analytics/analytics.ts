@@ -17,13 +17,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useQuery
 } from '@tanstack/react-query';
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -81,47 +86,78 @@ export const getTeamInsights = async ( options?: RequestInit): Promise<getTeamIn
 
 
 
-export const getGetTeamInsightsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError,void, TContext> => {
 
-const mutationKey = ['getTeamInsights'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetTeamInsightsQueryKey = () => {
+    return [
+    `/analytics/team-insights`
+    ] as const;
+    }
 
 
+export const getGetTeamInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTeamInsightsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getTeamInsights>>, void> = () => {
 
-
-          return  getTeamInsights(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamInsights>>> = ({ signal }) => getTeamInsights({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetTeamInsightsMutationResult = NonNullable<Awaited<ReturnType<typeof getTeamInsights>>>
+export type GetTeamInsightsQueryResult = NonNullable<Awaited<ReturnType<typeof getTeamInsights>>>
+export type GetTeamInsightsQueryError = void
 
-    export type GetTeamInsightsMutationError = void
 
-    /**
+export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTeamInsights>>,
+          TError,
+          Awaited<ReturnType<typeof getTeamInsights>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTeamInsights>>,
+          TError,
+          Awaited<ReturnType<typeof getTeamInsights>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get team and org insights
  */
-export const useGetTeamInsights = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getTeamInsights>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetTeamInsightsMutationOptions(options), queryClient);
-    }
+
+export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTeamInsightsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+

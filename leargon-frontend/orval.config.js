@@ -14,10 +14,6 @@ export default defineConfig({
                     path: './src/api/customAxios.ts',
                     name: 'customAxios',
                 },
-                query: {
-                    useQuery: true,
-                    useMutation: true,
-                },
             },
         },
     },

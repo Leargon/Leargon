@@ -104,51 +104,82 @@ export const getAllUsers = async ( options?: RequestInit): Promise<getAllUsersRe
 
 
 
-export const getGetAllUsersMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllUsers>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllUsers>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllUsers'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllUsersQueryKey = () => {
+    return [
+    `/administration/users`
+    ] as const;
+    }
 
 
+export const getGetAllUsersQueryOptions = <TData = Awaited<ReturnType<typeof getAllUsers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllUsersQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllUsers>>, void> = () => {
 
-
-          return  getAllUsers(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllUsers>>> = ({ signal }) => getAllUsers({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllUsersMutationResult = NonNullable<Awaited<ReturnType<typeof getAllUsers>>>
+export type GetAllUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getAllUsers>>>
+export type GetAllUsersQueryError = void
 
-    export type GetAllUsersMutationError = void
 
-    /**
+export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getAllUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getAllUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all users
  */
-export const useGetAllUsers = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllUsers>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllUsers>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllUsersMutationOptions(options), queryClient);
-    }
-    export type createUserResponse201 = {
+
+export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createUserResponse201 = {
   data: UserResponse
   status: 201
 }
@@ -203,82 +234,51 @@ export const createUser = async (signupRequest: SignupRequest, options?: Request
 
 
 
+export const getCreateUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext> => {
 
-export const getCreateUserQueryKey = (signupRequest?: SignupRequest,) => {
-    return [
-    'POST', `/administration/users`, signupRequest
-    ] as const;
-    }
-
-
-export const getCreateUserQueryOptions = <TData = Awaited<ReturnType<typeof createUser>>, TError = void>(signupRequest: SignupRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateUserQueryKey(signupRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createUser>>> = ({ signal }) => createUser(signupRequest, { signal, ...requestOptions });
+const mutationKey = ['createUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUser>>, {data: SignupRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateUserQueryResult = NonNullable<Awaited<ReturnType<typeof createUser>>>
-export type CreateUserQueryError = void
+          return  createUser(data,requestOptions)
+        }
 
 
-export function useCreateUser<TData = Awaited<ReturnType<typeof createUser>>, TError = void>(
- signupRequest: SignupRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createUser>>,
-          TError,
-          Awaited<ReturnType<typeof createUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateUser<TData = Awaited<ReturnType<typeof createUser>>, TError = void>(
- signupRequest: SignupRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createUser>>,
-          TError,
-          Awaited<ReturnType<typeof createUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateUser<TData = Awaited<ReturnType<typeof createUser>>, TError = void>(
- signupRequest: SignupRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof createUser>>>
+    export type CreateUserMutationBody = SignupRequest
+    export type CreateUserMutationError = void
+
+    /**
  * @summary Create a new user
  */
-
-export function useCreateUser<TData = Awaited<ReturnType<typeof createUser>>, TError = void>(
- signupRequest: SignupRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateUserQueryOptions(signupRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getUserByIdResponse200 = {
+export const useCreateUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUser>>, TError,{data: SignupRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createUser>>,
+        TError,
+        {data: SignupRequest},
+        TContext
+      > => {
+      return useMutation(getCreateUserMutationOptions(options), queryClient);
+    }
+    export type getUserByIdResponse200 = {
   data: UserResponse
   status: 200
 }
@@ -333,51 +333,82 @@ export const getUserById = async (id: number, options?: RequestInit): Promise<ge
 
 
 
-export const getGetUserByIdMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getUserById>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getUserById>>, TError,{id: number}, TContext> => {
 
-const mutationKey = ['getUserById'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetUserByIdQueryKey = (id: number,) => {
+    return [
+    `/administration/users/${id}`
+    ] as const;
+    }
 
 
+export const getGetUserByIdQueryOptions = <TData = Awaited<ReturnType<typeof getUserById>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserByIdQueryKey(id);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getUserById>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
 
-          return  getUserById(id,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserById>>> = ({ signal }) => getUserById(id, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetUserByIdMutationResult = NonNullable<Awaited<ReturnType<typeof getUserById>>>
+export type GetUserByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getUserById>>>
+export type GetUserByIdQueryError = void
 
-    export type GetUserByIdMutationError = void
 
-    /**
+export function useGetUserById<TData = Awaited<ReturnType<typeof getUserById>>, TError = void>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserById>>,
+          TError,
+          Awaited<ReturnType<typeof getUserById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserById<TData = Awaited<ReturnType<typeof getUserById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserById>>,
+          TError,
+          Awaited<ReturnType<typeof getUserById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserById<TData = Awaited<ReturnType<typeof getUserById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get user by ID
  */
-export const useGetUserById = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getUserById>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getUserById>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getGetUserByIdMutationOptions(options), queryClient);
-    }
-    export type updateUserResponse200 = {
+
+export function useGetUserById<TData = Awaited<ReturnType<typeof getUserById>>, TError = void>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserById>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetUserByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateUserResponse200 = {
   data: UserResponse
   status: 200
 }
@@ -438,88 +469,51 @@ export const updateUser = async (id: number,
 
 
 
+export const getUpdateUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{id: number;data: UpdateUserRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{id: number;data: UpdateUserRequest}, TContext> => {
 
-export const getUpdateUserQueryKey = (id: number,
-    updateUserRequest?: UpdateUserRequest,) => {
-    return [
-    'PUT', `/administration/users/${id}`, updateUserRequest
-    ] as const;
-    }
-
-
-export const getUpdateUserQueryOptions = <TData = Awaited<ReturnType<typeof updateUser>>, TError = void>(id: number,
-    updateUserRequest: UpdateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateUserQueryKey(id,updateUserRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateUser>>> = ({ signal }) => updateUser(id,updateUserRequest, { signal, ...requestOptions });
+const mutationKey = ['updateUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUser>>, {id: number;data: UpdateUserRequest}> = (props) => {
+          const {id,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateUserQueryResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
-export type UpdateUserQueryError = void
+          return  updateUser(id,data,requestOptions)
+        }
 
 
-export function useUpdateUser<TData = Awaited<ReturnType<typeof updateUser>>, TError = void>(
- id: number,
-    updateUserRequest: UpdateUserRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateUser>>,
-          TError,
-          Awaited<ReturnType<typeof updateUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateUser<TData = Awaited<ReturnType<typeof updateUser>>, TError = void>(
- id: number,
-    updateUserRequest: UpdateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateUser>>,
-          TError,
-          Awaited<ReturnType<typeof updateUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateUser<TData = Awaited<ReturnType<typeof updateUser>>, TError = void>(
- id: number,
-    updateUserRequest: UpdateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof updateUser>>>
+    export type UpdateUserMutationBody = UpdateUserRequest
+    export type UpdateUserMutationError = void
+
+    /**
  * @summary Update user details
  */
-
-export function useUpdateUser<TData = Awaited<ReturnType<typeof updateUser>>, TError = void>(
- id: number,
-    updateUserRequest: UpdateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateUserQueryOptions(id,updateUserRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteUserResponse204 = {
+export const useUpdateUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUser>>, TError,{id: number;data: UpdateUserRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUser>>,
+        TError,
+        {id: number;data: UpdateUserRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateUserMutationOptions(options), queryClient);
+    }
+    export type deleteUserResponse204 = {
   data: void
   status: 204
 }
@@ -574,82 +568,51 @@ export const deleteUser = async (id: number, options?: RequestInit): Promise<del
 
 
 
+export const getDeleteUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError,{id: number}, TContext> => {
 
-export const getDeleteUserQueryKey = (id: number,) => {
-    return [
-    'DELETE', `/administration/users/${id}`
-    ] as const;
-    }
-
-
-export const getDeleteUserQueryOptions = <TData = Awaited<ReturnType<typeof deleteUser>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteUserQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteUser>>> = ({ signal }) => deleteUser(id, { signal, ...requestOptions });
+const mutationKey = ['deleteUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteUserQueryResult = NonNullable<Awaited<ReturnType<typeof deleteUser>>>
-export type DeleteUserQueryError = void
+          return  deleteUser(id,requestOptions)
+        }
 
 
-export function useDeleteUser<TData = Awaited<ReturnType<typeof deleteUser>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteUser>>,
-          TError,
-          Awaited<ReturnType<typeof deleteUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteUser<TData = Awaited<ReturnType<typeof deleteUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteUser>>,
-          TError,
-          Awaited<ReturnType<typeof deleteUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteUser<TData = Awaited<ReturnType<typeof deleteUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof deleteUser>>>
+
+    export type DeleteUserMutationError = void
+
+    /**
  * @summary Hard-delete user
  */
-
-export function useDeleteUser<TData = Awaited<ReturnType<typeof deleteUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteUserQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type disableUserResponse200 = {
+export const useDeleteUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteUserMutationOptions(options), queryClient);
+    }
+    export type disableUserResponse200 = {
   data: UserResponse
   status: 200
 }
@@ -704,82 +667,51 @@ export const disableUser = async (id: number, options?: RequestInit): Promise<di
 
 
 
+export const getDisableUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext> => {
 
-export const getDisableUserQueryKey = (id: number,) => {
-    return [
-    'POST', `/administration/users/${id}/disable`
-    ] as const;
-    }
-
-
-export const getDisableUserQueryOptions = <TData = Awaited<ReturnType<typeof disableUser>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDisableUserQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof disableUser>>> = ({ signal }) => disableUser(id, { signal, ...requestOptions });
+const mutationKey = ['disableUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disableUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DisableUserQueryResult = NonNullable<Awaited<ReturnType<typeof disableUser>>>
-export type DisableUserQueryError = void
+          return  disableUser(id,requestOptions)
+        }
 
 
-export function useDisableUser<TData = Awaited<ReturnType<typeof disableUser>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof disableUser>>,
-          TError,
-          Awaited<ReturnType<typeof disableUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDisableUser<TData = Awaited<ReturnType<typeof disableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof disableUser>>,
-          TError,
-          Awaited<ReturnType<typeof disableUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDisableUser<TData = Awaited<ReturnType<typeof disableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisableUserMutationResult = NonNullable<Awaited<ReturnType<typeof disableUser>>>
+
+    export type DisableUserMutationError = void
+
+    /**
  * @summary Disable user account
  */
-
-export function useDisableUser<TData = Awaited<ReturnType<typeof disableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof disableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDisableUserQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type enableUserResponse200 = {
+export const useDisableUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof disableUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDisableUserMutationOptions(options), queryClient);
+    }
+    export type enableUserResponse200 = {
   data: UserResponse
   status: 200
 }
@@ -829,82 +761,51 @@ export const enableUser = async (id: number, options?: RequestInit): Promise<ena
 
 
 
+export const getEnableUserMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext> => {
 
-export const getEnableUserQueryKey = (id: number,) => {
-    return [
-    'POST', `/administration/users/${id}/enable`
-    ] as const;
-    }
-
-
-export const getEnableUserQueryOptions = <TData = Awaited<ReturnType<typeof enableUser>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEnableUserQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof enableUser>>> = ({ signal }) => enableUser(id, { signal, ...requestOptions });
+const mutationKey = ['enableUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableUser>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EnableUserQueryResult = NonNullable<Awaited<ReturnType<typeof enableUser>>>
-export type EnableUserQueryError = void
+          return  enableUser(id,requestOptions)
+        }
 
 
-export function useEnableUser<TData = Awaited<ReturnType<typeof enableUser>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof enableUser>>,
-          TError,
-          Awaited<ReturnType<typeof enableUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEnableUser<TData = Awaited<ReturnType<typeof enableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof enableUser>>,
-          TError,
-          Awaited<ReturnType<typeof enableUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEnableUser<TData = Awaited<ReturnType<typeof enableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnableUserMutationResult = NonNullable<Awaited<ReturnType<typeof enableUser>>>
+
+    export type EnableUserMutationError = void
+
+    /**
  * @summary Enable user account
  */
-
-export function useEnableUser<TData = Awaited<ReturnType<typeof enableUser>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof enableUser>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEnableUserQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getMethodologyConfigurationsResponse200 = {
+export const useEnableUser = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableUser>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof enableUser>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getEnableUserMutationOptions(options), queryClient);
+    }
+    export type getMethodologyConfigurationsResponse200 = {
   data: MethodologyConfigEntry[]
   status: 200
 }
@@ -949,51 +850,82 @@ export const getMethodologyConfigurations = async ( options?: RequestInit): Prom
 
 
 
-export const getGetMethodologyConfigurationsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError,void, TContext> => {
 
-const mutationKey = ['getMethodologyConfigurations'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetMethodologyConfigurationsQueryKey = () => {
+    return [
+    `/administration/methodology-configurations`
+    ] as const;
+    }
 
 
+export const getGetMethodologyConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMethodologyConfigurationsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getMethodologyConfigurations>>, void> = () => {
 
-
-          return  getMethodologyConfigurations(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMethodologyConfigurations>>> = ({ signal }) => getMethodologyConfigurations({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetMethodologyConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof getMethodologyConfigurations>>>
+export type GetMethodologyConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof getMethodologyConfigurations>>>
+export type GetMethodologyConfigurationsQueryError = void
 
-    export type GetMethodologyConfigurationsMutationError = void
 
-    /**
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getMethodologyConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all methodology configurations
  */
-export const useGetMethodologyConfigurations = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getMethodologyConfigurations>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetMethodologyConfigurationsMutationOptions(options), queryClient);
-    }
-    export type replaceMethodologyConfigurationsResponse200 = {
+
+export function useGetMethodologyConfigurations<TData = Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMethodologyConfigurationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type replaceMethodologyConfigurationsResponse200 = {
   data: MethodologyConfigEntry[]
   status: 200
 }
@@ -1043,82 +975,51 @@ export const replaceMethodologyConfigurations = async (methodologyConfigEntry: M
 
 
 
+export const getReplaceMethodologyConfigurationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext> => {
 
-export const getReplaceMethodologyConfigurationsQueryKey = (methodologyConfigEntry?: MethodologyConfigEntry[],) => {
-    return [
-    'PUT', `/administration/methodology-configurations`, methodologyConfigEntry
-    ] as const;
-    }
-
-
-export const getReplaceMethodologyConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError = void>(methodologyConfigEntry: MethodologyConfigEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReplaceMethodologyConfigurationsQueryKey(methodologyConfigEntry);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>> = ({ signal }) => replaceMethodologyConfigurations(methodologyConfigEntry, { signal, ...requestOptions });
+const mutationKey = ['replaceMethodologyConfigurations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, {data: MethodologyConfigEntry[]}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReplaceMethodologyConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>>
-export type ReplaceMethodologyConfigurationsQueryError = void
+          return  replaceMethodologyConfigurations(data,requestOptions)
+        }
 
 
-export function useReplaceMethodologyConfigurations<TData = Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError = void>(
- methodologyConfigEntry: MethodologyConfigEntry[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof replaceMethodologyConfigurations>>,
-          TError,
-          Awaited<ReturnType<typeof replaceMethodologyConfigurations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReplaceMethodologyConfigurations<TData = Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError = void>(
- methodologyConfigEntry: MethodologyConfigEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof replaceMethodologyConfigurations>>,
-          TError,
-          Awaited<ReturnType<typeof replaceMethodologyConfigurations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReplaceMethodologyConfigurations<TData = Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError = void>(
- methodologyConfigEntry: MethodologyConfigEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceMethodologyConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>>
+    export type ReplaceMethodologyConfigurationsMutationBody = MethodologyConfigEntry[]
+    export type ReplaceMethodologyConfigurationsMutationError = void
+
+    /**
  * @summary Replace all methodology configurations
  */
-
-export function useReplaceMethodologyConfigurations<TData = Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError = void>(
- methodologyConfigEntry: MethodologyConfigEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReplaceMethodologyConfigurationsQueryOptions(methodologyConfigEntry,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getFieldConfigurationDefinitionsResponse200 = {
+export const useReplaceMethodologyConfigurations = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceMethodologyConfigurations>>, TError,{data: MethodologyConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceMethodologyConfigurations>>,
+        TError,
+        {data: MethodologyConfigEntry[]},
+        TContext
+      > => {
+      return useMutation(getReplaceMethodologyConfigurationsMutationOptions(options), queryClient);
+    }
+    export type getFieldConfigurationDefinitionsResponse200 = {
   data: FieldConfigurationDefinition[]
   status: 200
 }
@@ -1168,51 +1069,82 @@ export const getFieldConfigurationDefinitions = async ( options?: RequestInit): 
 
 
 
-export const getGetFieldConfigurationDefinitionsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError,void, TContext> => {
 
-const mutationKey = ['getFieldConfigurationDefinitions'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetFieldConfigurationDefinitionsQueryKey = () => {
+    return [
+    `/administration/field-configurations/definitions`
+    ] as const;
+    }
 
 
+export const getGetFieldConfigurationDefinitionsQueryOptions = <TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFieldConfigurationDefinitionsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, void> = () => {
 
-
-          return  getFieldConfigurationDefinitions(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>> = ({ signal }) => getFieldConfigurationDefinitions({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetFieldConfigurationDefinitionsMutationResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>>
+export type GetFieldConfigurationDefinitionsQueryResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>>
+export type GetFieldConfigurationDefinitionsQueryError = void
 
-    export type GetFieldConfigurationDefinitionsMutationError = void
 
-    /**
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all configurable field definitions with their defaults
  */
-export const useGetFieldConfigurationDefinitions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetFieldConfigurationDefinitionsMutationOptions(options), queryClient);
-    }
-    export type getFieldConfigurationsResponse200 = {
+
+export function useGetFieldConfigurationDefinitions<TData = Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurationDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFieldConfigurationDefinitionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type getFieldConfigurationsResponse200 = {
   data: FieldConfigurationEntry[]
   status: 200
 }
@@ -1262,51 +1194,82 @@ export const getFieldConfigurations = async ( options?: RequestInit): Promise<ge
 
 
 
-export const getGetFieldConfigurationsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError,void, TContext> => {
 
-const mutationKey = ['getFieldConfigurations'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetFieldConfigurationsQueryKey = () => {
+    return [
+    `/administration/field-configurations`
+    ] as const;
+    }
 
 
+export const getGetFieldConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFieldConfigurationsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getFieldConfigurations>>, void> = () => {
 
-
-          return  getFieldConfigurations(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFieldConfigurations>>> = ({ signal }) => getFieldConfigurations({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetFieldConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurations>>>
+export type GetFieldConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof getFieldConfigurations>>>
+export type GetFieldConfigurationsQueryError = void
 
-    export type GetFieldConfigurationsMutationError = void
 
-    /**
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFieldConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getFieldConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all field configurations
  */
-export const useGetFieldConfigurations = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getFieldConfigurations>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetFieldConfigurationsMutationOptions(options), queryClient);
-    }
-    export type replaceFieldConfigurationsResponse200 = {
+
+export function useGetFieldConfigurations<TData = Awaited<ReturnType<typeof getFieldConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFieldConfigurationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type replaceFieldConfigurationsResponse200 = {
   data: FieldConfigurationEntry[]
   status: 200
 }
@@ -1356,82 +1319,51 @@ export const replaceFieldConfigurations = async (fieldConfigurationEntry: FieldC
 
 
 
+export const getReplaceFieldConfigurationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext> => {
 
-export const getReplaceFieldConfigurationsQueryKey = (fieldConfigurationEntry?: FieldConfigurationEntry[],) => {
-    return [
-    'PUT', `/administration/field-configurations`, fieldConfigurationEntry
-    ] as const;
-    }
-
-
-export const getReplaceFieldConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError = void>(fieldConfigurationEntry: FieldConfigurationEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReplaceFieldConfigurationsQueryKey(fieldConfigurationEntry);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof replaceFieldConfigurations>>> = ({ signal }) => replaceFieldConfigurations(fieldConfigurationEntry, { signal, ...requestOptions });
+const mutationKey = ['replaceFieldConfigurations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceFieldConfigurations>>, {data: FieldConfigurationEntry[]}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReplaceFieldConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof replaceFieldConfigurations>>>
-export type ReplaceFieldConfigurationsQueryError = void
+          return  replaceFieldConfigurations(data,requestOptions)
+        }
 
 
-export function useReplaceFieldConfigurations<TData = Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError = void>(
- fieldConfigurationEntry: FieldConfigurationEntry[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof replaceFieldConfigurations>>,
-          TError,
-          Awaited<ReturnType<typeof replaceFieldConfigurations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReplaceFieldConfigurations<TData = Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError = void>(
- fieldConfigurationEntry: FieldConfigurationEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof replaceFieldConfigurations>>,
-          TError,
-          Awaited<ReturnType<typeof replaceFieldConfigurations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReplaceFieldConfigurations<TData = Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError = void>(
- fieldConfigurationEntry: FieldConfigurationEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceFieldConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceFieldConfigurations>>>
+    export type ReplaceFieldConfigurationsMutationBody = FieldConfigurationEntry[]
+    export type ReplaceFieldConfigurationsMutationError = void
+
+    /**
  * @summary Replace all field configurations
  */
-
-export function useReplaceFieldConfigurations<TData = Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError = void>(
- fieldConfigurationEntry: FieldConfigurationEntry[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReplaceFieldConfigurationsQueryOptions(fieldConfigurationEntry,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type administrationChangePasswordResponse200 = {
+export const useReplaceFieldConfigurations = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceFieldConfigurations>>, TError,{data: FieldConfigurationEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceFieldConfigurations>>,
+        TError,
+        {data: FieldConfigurationEntry[]},
+        TContext
+      > => {
+      return useMutation(getReplaceFieldConfigurationsMutationOptions(options), queryClient);
+    }
+    export type administrationChangePasswordResponse200 = {
   data: void
   status: 200
 }
@@ -1492,88 +1424,51 @@ export const administrationChangePassword = async (id: number,
 
 
 
+export const getAdministrationChangePasswordMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError,{id: number;data: AdministrationChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError,{id: number;data: AdministrationChangePasswordRequest}, TContext> => {
 
-export const getAdministrationChangePasswordQueryKey = (id: number,
-    administrationChangePasswordRequest?: AdministrationChangePasswordRequest,) => {
-    return [
-    'PUT', `/administration/users/${id}/password`, administrationChangePasswordRequest
-    ] as const;
-    }
-
-
-export const getAdministrationChangePasswordQueryOptions = <TData = Awaited<ReturnType<typeof administrationChangePassword>>, TError = void>(id: number,
-    administrationChangePasswordRequest: AdministrationChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdministrationChangePasswordQueryKey(id,administrationChangePasswordRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof administrationChangePassword>>> = ({ signal }) => administrationChangePassword(id,administrationChangePasswordRequest, { signal, ...requestOptions });
+const mutationKey = ['administrationChangePassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof administrationChangePassword>>, {id: number;data: AdministrationChangePasswordRequest}> = (props) => {
+          const {id,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdministrationChangePasswordQueryResult = NonNullable<Awaited<ReturnType<typeof administrationChangePassword>>>
-export type AdministrationChangePasswordQueryError = void
+          return  administrationChangePassword(id,data,requestOptions)
+        }
 
 
-export function useAdministrationChangePassword<TData = Awaited<ReturnType<typeof administrationChangePassword>>, TError = void>(
- id: number,
-    administrationChangePasswordRequest: AdministrationChangePasswordRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof administrationChangePassword>>,
-          TError,
-          Awaited<ReturnType<typeof administrationChangePassword>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdministrationChangePassword<TData = Awaited<ReturnType<typeof administrationChangePassword>>, TError = void>(
- id: number,
-    administrationChangePasswordRequest: AdministrationChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof administrationChangePassword>>,
-          TError,
-          Awaited<ReturnType<typeof administrationChangePassword>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdministrationChangePassword<TData = Awaited<ReturnType<typeof administrationChangePassword>>, TError = void>(
- id: number,
-    administrationChangePasswordRequest: AdministrationChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdministrationChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof administrationChangePassword>>>
+    export type AdministrationChangePasswordMutationBody = AdministrationChangePasswordRequest
+    export type AdministrationChangePasswordMutationError = void
+
+    /**
  * @summary Change user password (admin)
  */
-
-export function useAdministrationChangePassword<TData = Awaited<ReturnType<typeof administrationChangePassword>>, TError = void>(
- id: number,
-    administrationChangePasswordRequest: AdministrationChangePasswordRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdministrationChangePasswordQueryOptions(id,administrationChangePasswordRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getOrganisationSettingsResponse200 = {
+export const useAdministrationChangePassword = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof administrationChangePassword>>, TError,{id: number;data: AdministrationChangePasswordRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof administrationChangePassword>>,
+        TError,
+        {id: number;data: AdministrationChangePasswordRequest},
+        TContext
+      > => {
+      return useMutation(getAdministrationChangePasswordMutationOptions(options), queryClient);
+    }
+    export type getOrganisationSettingsResponse200 = {
   data: OrganisationSettingsResponse
   status: 200
 }
@@ -1618,51 +1513,82 @@ export const getOrganisationSettings = async ( options?: RequestInit): Promise<g
 
 
 
-export const getGetOrganisationSettingsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError,void, TContext> => {
 
-const mutationKey = ['getOrganisationSettings'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetOrganisationSettingsQueryKey = () => {
+    return [
+    `/administration/organisation-settings`
+    ] as const;
+    }
 
 
+export const getGetOrganisationSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getOrganisationSettings>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOrganisationSettingsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getOrganisationSettings>>, void> = () => {
 
-
-          return  getOrganisationSettings(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganisationSettings>>> = ({ signal }) => getOrganisationSettings({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetOrganisationSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof getOrganisationSettings>>>
+export type GetOrganisationSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganisationSettings>>>
+export type GetOrganisationSettingsQueryError = void
 
-    export type GetOrganisationSettingsMutationError = void
 
-    /**
+export function useGetOrganisationSettings<TData = Awaited<ReturnType<typeof getOrganisationSettings>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationSettings<TData = Awaited<ReturnType<typeof getOrganisationSettings>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationSettings<TData = Awaited<ReturnType<typeof getOrganisationSettings>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get organisation settings
  */
-export const useGetOrganisationSettings = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getOrganisationSettings>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetOrganisationSettingsMutationOptions(options), queryClient);
-    }
-    export type updateOrganisationSettingsResponse200 = {
+
+export function useGetOrganisationSettings<TData = Awaited<ReturnType<typeof getOrganisationSettings>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOrganisationSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateOrganisationSettingsResponse200 = {
   data: OrganisationSettingsResponse
   status: 200
 }
@@ -1712,78 +1638,47 @@ export const updateOrganisationSettings = async (organisationSettingsRequest: Or
 
 
 
+export const getUpdateOrganisationSettingsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError,{data: OrganisationSettingsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError,{data: OrganisationSettingsRequest}, TContext> => {
 
-export const getUpdateOrganisationSettingsQueryKey = (organisationSettingsRequest?: OrganisationSettingsRequest,) => {
-    return [
-    'PUT', `/administration/organisation-settings`, organisationSettingsRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationSettingsQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationSettings>>, TError = void>(organisationSettingsRequest: OrganisationSettingsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationSettingsQueryKey(organisationSettingsRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationSettings>>> = ({ signal }) => updateOrganisationSettings(organisationSettingsRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationSettings>>, {data: OrganisationSettingsRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationSettings>>>
-export type UpdateOrganisationSettingsQueryError = void
+          return  updateOrganisationSettings(data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationSettings<TData = Awaited<ReturnType<typeof updateOrganisationSettings>>, TError = void>(
- organisationSettingsRequest: OrganisationSettingsRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationSettings>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationSettings>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationSettings<TData = Awaited<ReturnType<typeof updateOrganisationSettings>>, TError = void>(
- organisationSettingsRequest: OrganisationSettingsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationSettings>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationSettings>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationSettings<TData = Awaited<ReturnType<typeof updateOrganisationSettings>>, TError = void>(
- organisationSettingsRequest: OrganisationSettingsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationSettings>>>
+    export type UpdateOrganisationSettingsMutationBody = OrganisationSettingsRequest
+    export type UpdateOrganisationSettingsMutationError = void
+
+    /**
  * @summary Update organisation settings
  */
-
-export function useUpdateOrganisationSettings<TData = Awaited<ReturnType<typeof updateOrganisationSettings>>, TError = void>(
- organisationSettingsRequest: OrganisationSettingsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationSettingsQueryOptions(organisationSettingsRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateOrganisationSettings = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationSettings>>, TError,{data: OrganisationSettingsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationSettings>>,
+        TError,
+        {data: OrganisationSettingsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationSettingsMutationOptions(options), queryClient);
+    }

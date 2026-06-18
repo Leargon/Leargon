@@ -104,51 +104,82 @@ export const getClassifications = async (params?: GetClassificationsParams, opti
 
 
 
-export const getGetClassificationsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getClassifications>>, TError,{params?: GetClassificationsParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getClassifications>>, TError,{params?: GetClassificationsParams}, TContext> => {
 
-const mutationKey = ['getClassifications'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetClassificationsQueryKey = (params?: GetClassificationsParams,) => {
+    return [
+    `/classifications`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getGetClassificationsQueryOptions = <TData = Awaited<ReturnType<typeof getClassifications>>, TError = void>(params?: GetClassificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClassificationsQueryKey(params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getClassifications>>, {params?: GetClassificationsParams}> = (props) => {
-          const {params} = props ?? {};
 
-          return  getClassifications(params,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClassifications>>> = ({ signal }) => getClassifications(params, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetClassificationsMutationResult = NonNullable<Awaited<ReturnType<typeof getClassifications>>>
+export type GetClassificationsQueryResult = NonNullable<Awaited<ReturnType<typeof getClassifications>>>
+export type GetClassificationsQueryError = void
 
-    export type GetClassificationsMutationError = void
 
-    /**
+export function useGetClassifications<TData = Awaited<ReturnType<typeof getClassifications>>, TError = void>(
+ params: undefined |  GetClassificationsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClassifications>>,
+          TError,
+          Awaited<ReturnType<typeof getClassifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClassifications<TData = Awaited<ReturnType<typeof getClassifications>>, TError = void>(
+ params?: GetClassificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClassifications>>,
+          TError,
+          Awaited<ReturnType<typeof getClassifications>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClassifications<TData = Awaited<ReturnType<typeof getClassifications>>, TError = void>(
+ params?: GetClassificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get classifications with filter by type
  */
-export const useGetClassifications = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getClassifications>>, TError,{params?: GetClassificationsParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getClassifications>>,
-        TError,
-        {params?: GetClassificationsParams},
-        TContext
-      > => {
-      return useMutation(getGetClassificationsMutationOptions(options), queryClient);
-    }
-    export type createClassificationResponse201 = {
+
+export function useGetClassifications<TData = Awaited<ReturnType<typeof getClassifications>>, TError = void>(
+ params?: GetClassificationsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassifications>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetClassificationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createClassificationResponse201 = {
   data: ClassificationResponse
   status: 201
 }
@@ -203,82 +234,51 @@ export const createClassification = async (createClassificationRequest: CreateCl
 
 
 
+export const getCreateClassificationMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClassification>>, TError,{data: CreateClassificationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createClassification>>, TError,{data: CreateClassificationRequest}, TContext> => {
 
-export const getCreateClassificationQueryKey = (createClassificationRequest?: CreateClassificationRequest,) => {
-    return [
-    'POST', `/classifications`, createClassificationRequest
-    ] as const;
-    }
-
-
-export const getCreateClassificationQueryOptions = <TData = Awaited<ReturnType<typeof createClassification>>, TError = ErrorResponse | void>(createClassificationRequest: CreateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateClassificationQueryKey(createClassificationRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createClassification>>> = ({ signal }) => createClassification(createClassificationRequest, { signal, ...requestOptions });
+const mutationKey = ['createClassification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createClassification>>, {data: CreateClassificationRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateClassificationQueryResult = NonNullable<Awaited<ReturnType<typeof createClassification>>>
-export type CreateClassificationQueryError = ErrorResponse | void
+          return  createClassification(data,requestOptions)
+        }
 
 
-export function useCreateClassification<TData = Awaited<ReturnType<typeof createClassification>>, TError = ErrorResponse | void>(
- createClassificationRequest: CreateClassificationRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createClassification>>,
-          TError,
-          Awaited<ReturnType<typeof createClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateClassification<TData = Awaited<ReturnType<typeof createClassification>>, TError = ErrorResponse | void>(
- createClassificationRequest: CreateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createClassification>>,
-          TError,
-          Awaited<ReturnType<typeof createClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateClassification<TData = Awaited<ReturnType<typeof createClassification>>, TError = ErrorResponse | void>(
- createClassificationRequest: CreateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateClassificationMutationResult = NonNullable<Awaited<ReturnType<typeof createClassification>>>
+    export type CreateClassificationMutationBody = CreateClassificationRequest
+    export type CreateClassificationMutationError = ErrorResponse | void
+
+    /**
  * @summary Create a classification
  */
-
-export function useCreateClassification<TData = Awaited<ReturnType<typeof createClassification>>, TError = ErrorResponse | void>(
- createClassificationRequest: CreateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateClassificationQueryOptions(createClassificationRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getClassificationByKeyResponse200 = {
+export const useCreateClassification = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClassification>>, TError,{data: CreateClassificationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createClassification>>,
+        TError,
+        {data: CreateClassificationRequest},
+        TContext
+      > => {
+      return useMutation(getCreateClassificationMutationOptions(options), queryClient);
+    }
+    export type getClassificationByKeyResponse200 = {
   data: ClassificationResponse
   status: 200
 }
@@ -328,51 +328,82 @@ export const getClassificationByKey = async (key: string, options?: RequestInit)
 
 
 
-export const getGetClassificationByKeyMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getClassificationByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetClassificationByKeyQueryKey = (key: string,) => {
+    return [
+    `/classifications/${key}`
+    ] as const;
+    }
 
 
+export const getGetClassificationByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getClassificationByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClassificationByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getClassificationByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getClassificationByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClassificationByKey>>> = ({ signal }) => getClassificationByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetClassificationByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getClassificationByKey>>>
+export type GetClassificationByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getClassificationByKey>>>
+export type GetClassificationByKeyQueryError = void | ErrorResponse
 
-    export type GetClassificationByKeyMutationError = void | ErrorResponse
 
-    /**
+export function useGetClassificationByKey<TData = Awaited<ReturnType<typeof getClassificationByKey>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClassificationByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getClassificationByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClassificationByKey<TData = Awaited<ReturnType<typeof getClassificationByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getClassificationByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getClassificationByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetClassificationByKey<TData = Awaited<ReturnType<typeof getClassificationByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get classification by key
  */
-export const useGetClassificationByKey = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getClassificationByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetClassificationByKeyMutationOptions(options), queryClient);
-    }
-    export type updateClassificationResponse200 = {
+
+export function useGetClassificationByKey<TData = Awaited<ReturnType<typeof getClassificationByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getClassificationByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetClassificationByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateClassificationResponse200 = {
   data: ClassificationResponse
   status: 200
 }
@@ -433,88 +464,51 @@ export const updateClassification = async (key: string,
 
 
 
+export const getUpdateClassificationMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClassification>>, TError,{key: string;data: UpdateClassificationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClassification>>, TError,{key: string;data: UpdateClassificationRequest}, TContext> => {
 
-export const getUpdateClassificationQueryKey = (key: string,
-    updateClassificationRequest?: UpdateClassificationRequest,) => {
-    return [
-    'PUT', `/classifications/${key}`, updateClassificationRequest
-    ] as const;
-    }
-
-
-export const getUpdateClassificationQueryOptions = <TData = Awaited<ReturnType<typeof updateClassification>>, TError = ErrorResponse | void>(key: string,
-    updateClassificationRequest: UpdateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateClassificationQueryKey(key,updateClassificationRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateClassification>>> = ({ signal }) => updateClassification(key,updateClassificationRequest, { signal, ...requestOptions });
+const mutationKey = ['updateClassification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClassification>>, {key: string;data: UpdateClassificationRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateClassificationQueryResult = NonNullable<Awaited<ReturnType<typeof updateClassification>>>
-export type UpdateClassificationQueryError = ErrorResponse | void
+          return  updateClassification(key,data,requestOptions)
+        }
 
 
-export function useUpdateClassification<TData = Awaited<ReturnType<typeof updateClassification>>, TError = ErrorResponse | void>(
- key: string,
-    updateClassificationRequest: UpdateClassificationRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateClassification>>,
-          TError,
-          Awaited<ReturnType<typeof updateClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateClassification<TData = Awaited<ReturnType<typeof updateClassification>>, TError = ErrorResponse | void>(
- key: string,
-    updateClassificationRequest: UpdateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateClassification>>,
-          TError,
-          Awaited<ReturnType<typeof updateClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateClassification<TData = Awaited<ReturnType<typeof updateClassification>>, TError = ErrorResponse | void>(
- key: string,
-    updateClassificationRequest: UpdateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateClassificationMutationResult = NonNullable<Awaited<ReturnType<typeof updateClassification>>>
+    export type UpdateClassificationMutationBody = UpdateClassificationRequest
+    export type UpdateClassificationMutationError = ErrorResponse | void
+
+    /**
  * @summary Update classification
  */
-
-export function useUpdateClassification<TData = Awaited<ReturnType<typeof updateClassification>>, TError = ErrorResponse | void>(
- key: string,
-    updateClassificationRequest: UpdateClassificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateClassificationQueryOptions(key,updateClassificationRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteClassificationResponse204 = {
+export const useUpdateClassification = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClassification>>, TError,{key: string;data: UpdateClassificationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateClassification>>,
+        TError,
+        {key: string;data: UpdateClassificationRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateClassificationMutationOptions(options), queryClient);
+    }
+    export type deleteClassificationResponse204 = {
   data: void
   status: 204
 }
@@ -569,82 +563,51 @@ export const deleteClassification = async (key: string, options?: RequestInit): 
 
 
 
+export const getDeleteClassificationMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClassification>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClassification>>, TError,{key: string}, TContext> => {
 
-export const getDeleteClassificationQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/classifications/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteClassificationQueryOptions = <TData = Awaited<ReturnType<typeof deleteClassification>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteClassificationQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteClassification>>> = ({ signal }) => deleteClassification(key, { signal, ...requestOptions });
+const mutationKey = ['deleteClassification'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClassification>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteClassificationQueryResult = NonNullable<Awaited<ReturnType<typeof deleteClassification>>>
-export type DeleteClassificationQueryError = void | ErrorResponse
+          return  deleteClassification(key,requestOptions)
+        }
 
 
-export function useDeleteClassification<TData = Awaited<ReturnType<typeof deleteClassification>>, TError = void | ErrorResponse>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteClassification>>,
-          TError,
-          Awaited<ReturnType<typeof deleteClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteClassification<TData = Awaited<ReturnType<typeof deleteClassification>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteClassification>>,
-          TError,
-          Awaited<ReturnType<typeof deleteClassification>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteClassification<TData = Awaited<ReturnType<typeof deleteClassification>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClassificationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClassification>>>
+
+    export type DeleteClassificationMutationError = void | ErrorResponse
+
+    /**
  * @summary Delete classification
  */
-
-export function useDeleteClassification<TData = Awaited<ReturnType<typeof deleteClassification>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassification>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteClassificationQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type createClassificationValueResponse201 = {
+export const useDeleteClassification = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClassification>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClassification>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteClassificationMutationOptions(options), queryClient);
+    }
+    export type createClassificationValueResponse201 = {
   data: ClassificationResponse
   status: 201
 }
@@ -705,88 +668,51 @@ export const createClassificationValue = async (key: string,
 
 
 
+export const getCreateClassificationValueMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError,{key: string;data: CreateClassificationValueRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError,{key: string;data: CreateClassificationValueRequest}, TContext> => {
 
-export const getCreateClassificationValueQueryKey = (key: string,
-    createClassificationValueRequest?: CreateClassificationValueRequest,) => {
-    return [
-    'POST', `/classifications/${key}/values`, createClassificationValueRequest
-    ] as const;
-    }
-
-
-export const getCreateClassificationValueQueryOptions = <TData = Awaited<ReturnType<typeof createClassificationValue>>, TError = ErrorResponse | void>(key: string,
-    createClassificationValueRequest: CreateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateClassificationValueQueryKey(key,createClassificationValueRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createClassificationValue>>> = ({ signal }) => createClassificationValue(key,createClassificationValueRequest, { signal, ...requestOptions });
+const mutationKey = ['createClassificationValue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createClassificationValue>>, {key: string;data: CreateClassificationValueRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateClassificationValueQueryResult = NonNullable<Awaited<ReturnType<typeof createClassificationValue>>>
-export type CreateClassificationValueQueryError = ErrorResponse | void
+          return  createClassificationValue(key,data,requestOptions)
+        }
 
 
-export function useCreateClassificationValue<TData = Awaited<ReturnType<typeof createClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    createClassificationValueRequest: CreateClassificationValueRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof createClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateClassificationValue<TData = Awaited<ReturnType<typeof createClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    createClassificationValueRequest: CreateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof createClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateClassificationValue<TData = Awaited<ReturnType<typeof createClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    createClassificationValueRequest: CreateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateClassificationValueMutationResult = NonNullable<Awaited<ReturnType<typeof createClassificationValue>>>
+    export type CreateClassificationValueMutationBody = CreateClassificationValueRequest
+    export type CreateClassificationValueMutationError = ErrorResponse | void
+
+    /**
  * @summary Create a classification value
  */
-
-export function useCreateClassificationValue<TData = Awaited<ReturnType<typeof createClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    createClassificationValueRequest: CreateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateClassificationValueQueryOptions(key,createClassificationValueRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateClassificationValueResponse200 = {
+export const useCreateClassificationValue = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClassificationValue>>, TError,{key: string;data: CreateClassificationValueRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createClassificationValue>>,
+        TError,
+        {key: string;data: CreateClassificationValueRequest},
+        TContext
+      > => {
+      return useMutation(getCreateClassificationValueMutationOptions(options), queryClient);
+    }
+    export type updateClassificationValueResponse200 = {
   data: ClassificationResponse
   status: 200
 }
@@ -849,94 +775,51 @@ export const updateClassificationValue = async (key: string,
 
 
 
+export const getUpdateClassificationValueMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError,{key: string;valueKey: string;data: UpdateClassificationValueRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError,{key: string;valueKey: string;data: UpdateClassificationValueRequest}, TContext> => {
 
-export const getUpdateClassificationValueQueryKey = (key: string,
-    valueKey: string,
-    updateClassificationValueRequest?: UpdateClassificationValueRequest,) => {
-    return [
-    'PUT', `/classifications/${key}/values/${valueKey}`, updateClassificationValueRequest
-    ] as const;
-    }
-
-
-export const getUpdateClassificationValueQueryOptions = <TData = Awaited<ReturnType<typeof updateClassificationValue>>, TError = ErrorResponse | void>(key: string,
-    valueKey: string,
-    updateClassificationValueRequest: UpdateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateClassificationValueQueryKey(key,valueKey,updateClassificationValueRequest);
+const mutationKey = ['updateClassificationValue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateClassificationValue>>> = ({ signal }) => updateClassificationValue(key,valueKey,updateClassificationValueRequest, { signal, ...requestOptions });
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClassificationValue>>, {key: string;valueKey: string;data: UpdateClassificationValueRequest}> = (props) => {
+          const {key,valueKey,data} = props ?? {};
+
+          return  updateClassificationValue(key,valueKey,data,requestOptions)
+        }
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && valueKey !== null && valueKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
 
-export type UpdateClassificationValueQueryResult = NonNullable<Awaited<ReturnType<typeof updateClassificationValue>>>
-export type UpdateClassificationValueQueryError = ErrorResponse | void
+  return  { mutationFn, ...mutationOptions }}
 
+    export type UpdateClassificationValueMutationResult = NonNullable<Awaited<ReturnType<typeof updateClassificationValue>>>
+    export type UpdateClassificationValueMutationBody = UpdateClassificationValueRequest
+    export type UpdateClassificationValueMutationError = ErrorResponse | void
 
-export function useUpdateClassificationValue<TData = Awaited<ReturnType<typeof updateClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    valueKey: string,
-    updateClassificationValueRequest: UpdateClassificationValueRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof updateClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateClassificationValue<TData = Awaited<ReturnType<typeof updateClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    valueKey: string,
-    updateClassificationValueRequest: UpdateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof updateClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateClassificationValue<TData = Awaited<ReturnType<typeof updateClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    valueKey: string,
-    updateClassificationValueRequest: UpdateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+    /**
  * @summary Update a classification value
  */
-
-export function useUpdateClassificationValue<TData = Awaited<ReturnType<typeof updateClassificationValue>>, TError = ErrorResponse | void>(
- key: string,
-    valueKey: string,
-    updateClassificationValueRequest: UpdateClassificationValueRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateClassificationValueQueryOptions(key,valueKey,updateClassificationValueRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteClassificationValueResponse204 = {
+export const useUpdateClassificationValue = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClassificationValue>>, TError,{key: string;valueKey: string;data: UpdateClassificationValueRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateClassificationValue>>,
+        TError,
+        {key: string;valueKey: string;data: UpdateClassificationValueRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateClassificationValueMutationOptions(options), queryClient);
+    }
+    export type deleteClassificationValueResponse204 = {
   data: void
   status: 204
 }
@@ -993,84 +876,47 @@ export const deleteClassificationValue = async (key: string,
 
 
 
+export const getDeleteClassificationValueMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError,{key: string;valueKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError,{key: string;valueKey: string}, TContext> => {
 
-export const getDeleteClassificationValueQueryKey = (key: string,
-    valueKey: string,) => {
-    return [
-    'DELETE', `/classifications/${key}/values/${valueKey}`
-    ] as const;
-    }
-
-
-export const getDeleteClassificationValueQueryOptions = <TData = Awaited<ReturnType<typeof deleteClassificationValue>>, TError = void | ErrorResponse>(key: string,
-    valueKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteClassificationValueQueryKey(key,valueKey);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteClassificationValue>>> = ({ signal }) => deleteClassificationValue(key,valueKey, { signal, ...requestOptions });
+const mutationKey = ['deleteClassificationValue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClassificationValue>>, {key: string;valueKey: string}> = (props) => {
+          const {key,valueKey} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && valueKey !== null && valueKey !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteClassificationValueQueryResult = NonNullable<Awaited<ReturnType<typeof deleteClassificationValue>>>
-export type DeleteClassificationValueQueryError = void | ErrorResponse
+          return  deleteClassificationValue(key,valueKey,requestOptions)
+        }
 
 
-export function useDeleteClassificationValue<TData = Awaited<ReturnType<typeof deleteClassificationValue>>, TError = void | ErrorResponse>(
- key: string,
-    valueKey: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof deleteClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteClassificationValue<TData = Awaited<ReturnType<typeof deleteClassificationValue>>, TError = void | ErrorResponse>(
- key: string,
-    valueKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteClassificationValue>>,
-          TError,
-          Awaited<ReturnType<typeof deleteClassificationValue>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteClassificationValue<TData = Awaited<ReturnType<typeof deleteClassificationValue>>, TError = void | ErrorResponse>(
- key: string,
-    valueKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClassificationValueMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClassificationValue>>>
+
+    export type DeleteClassificationValueMutationError = void | ErrorResponse
+
+    /**
  * @summary Delete a classification value
  */
-
-export function useDeleteClassificationValue<TData = Awaited<ReturnType<typeof deleteClassificationValue>>, TError = void | ErrorResponse>(
- key: string,
-    valueKey: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteClassificationValueQueryOptions(key,valueKey,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useDeleteClassificationValue = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClassificationValue>>, TError,{key: string;valueKey: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClassificationValue>>,
+        TError,
+        {key: string;valueKey: string},
+        TContext
+      > => {
+      return useMutation(getDeleteClassificationValueMutationOptions(options), queryClient);
+    }

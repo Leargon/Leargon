@@ -95,51 +95,82 @@ export const getAllItSystems = async ( options?: RequestInit): Promise<getAllItS
 
 
 
-export const getGetAllItSystemsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllItSystems'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllItSystemsQueryKey = () => {
+    return [
+    `/it-systems`
+    ] as const;
+    }
 
 
+export const getGetAllItSystemsQueryOptions = <TData = Awaited<ReturnType<typeof getAllItSystems>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllItSystemsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllItSystems>>, void> = () => {
 
-
-          return  getAllItSystems(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllItSystems>>> = ({ signal }) => getAllItSystems({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllItSystemsMutationResult = NonNullable<Awaited<ReturnType<typeof getAllItSystems>>>
+export type GetAllItSystemsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllItSystems>>>
+export type GetAllItSystemsQueryError = void
 
-    export type GetAllItSystemsMutationError = void
 
-    /**
+export function useGetAllItSystems<TData = Awaited<ReturnType<typeof getAllItSystems>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllItSystems>>,
+          TError,
+          Awaited<ReturnType<typeof getAllItSystems>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllItSystems<TData = Awaited<ReturnType<typeof getAllItSystems>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllItSystems>>,
+          TError,
+          Awaited<ReturnType<typeof getAllItSystems>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllItSystems<TData = Awaited<ReturnType<typeof getAllItSystems>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all IT systems
  */
-export const useGetAllItSystems = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllItSystems>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllItSystemsMutationOptions(options), queryClient);
-    }
-    export type createItSystemResponse201 = {
+
+export function useGetAllItSystems<TData = Awaited<ReturnType<typeof getAllItSystems>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllItSystems>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllItSystemsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createItSystemResponse201 = {
   data: ItSystemResponse
   status: 201
 }
@@ -189,82 +220,51 @@ export const createItSystem = async (createItSystemRequest: CreateItSystemReques
 
 
 
+export const getCreateItSystemMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createItSystem>>, TError,{data: CreateItSystemRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createItSystem>>, TError,{data: CreateItSystemRequest}, TContext> => {
 
-export const getCreateItSystemQueryKey = (createItSystemRequest?: CreateItSystemRequest,) => {
-    return [
-    'POST', `/it-systems`, createItSystemRequest
-    ] as const;
-    }
-
-
-export const getCreateItSystemQueryOptions = <TData = Awaited<ReturnType<typeof createItSystem>>, TError = void>(createItSystemRequest: CreateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateItSystemQueryKey(createItSystemRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createItSystem>>> = ({ signal }) => createItSystem(createItSystemRequest, { signal, ...requestOptions });
+const mutationKey = ['createItSystem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createItSystem>>, {data: CreateItSystemRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateItSystemQueryResult = NonNullable<Awaited<ReturnType<typeof createItSystem>>>
-export type CreateItSystemQueryError = void
+          return  createItSystem(data,requestOptions)
+        }
 
 
-export function useCreateItSystem<TData = Awaited<ReturnType<typeof createItSystem>>, TError = void>(
- createItSystemRequest: CreateItSystemRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof createItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateItSystem<TData = Awaited<ReturnType<typeof createItSystem>>, TError = void>(
- createItSystemRequest: CreateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof createItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateItSystem<TData = Awaited<ReturnType<typeof createItSystem>>, TError = void>(
- createItSystemRequest: CreateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateItSystemMutationResult = NonNullable<Awaited<ReturnType<typeof createItSystem>>>
+    export type CreateItSystemMutationBody = CreateItSystemRequest
+    export type CreateItSystemMutationError = void
+
+    /**
  * @summary Create IT system
  */
-
-export function useCreateItSystem<TData = Awaited<ReturnType<typeof createItSystem>>, TError = void>(
- createItSystemRequest: CreateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateItSystemQueryOptions(createItSystemRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getItSystemResponse200 = {
+export const useCreateItSystem = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createItSystem>>, TError,{data: CreateItSystemRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createItSystem>>,
+        TError,
+        {data: CreateItSystemRequest},
+        TContext
+      > => {
+      return useMutation(getCreateItSystemMutationOptions(options), queryClient);
+    }
+    export type getItSystemResponse200 = {
   data: ItSystemResponse
   status: 200
 }
@@ -313,51 +313,82 @@ export const getItSystem = async (key: string, options?: RequestInit): Promise<g
 
 
 
-export const getGetItSystemMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getItSystem>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getItSystem>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getItSystem'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetItSystemQueryKey = (key: string,) => {
+    return [
+    `/it-systems/${key}`
+    ] as const;
+    }
 
 
+export const getGetItSystemQueryOptions = <TData = Awaited<ReturnType<typeof getItSystem>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetItSystemQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getItSystem>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getItSystem(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getItSystem>>> = ({ signal }) => getItSystem(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetItSystemMutationResult = NonNullable<Awaited<ReturnType<typeof getItSystem>>>
+export type GetItSystemQueryResult = NonNullable<Awaited<ReturnType<typeof getItSystem>>>
+export type GetItSystemQueryError = void
 
-    export type GetItSystemMutationError = void
 
-    /**
+export function useGetItSystem<TData = Awaited<ReturnType<typeof getItSystem>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItSystem>>,
+          TError,
+          Awaited<ReturnType<typeof getItSystem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetItSystem<TData = Awaited<ReturnType<typeof getItSystem>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getItSystem>>,
+          TError,
+          Awaited<ReturnType<typeof getItSystem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetItSystem<TData = Awaited<ReturnType<typeof getItSystem>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get IT system by key
  */
-export const useGetItSystem = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getItSystem>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getItSystem>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetItSystemMutationOptions(options), queryClient);
-    }
-    export type updateItSystemResponse200 = {
+
+export function useGetItSystem<TData = Awaited<ReturnType<typeof getItSystem>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetItSystemQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateItSystemResponse200 = {
   data: ItSystemResponse
   status: 200
 }
@@ -413,88 +444,51 @@ export const updateItSystem = async (key: string,
 
 
 
+export const getUpdateItSystemMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystem>>, TError,{key: string;data: UpdateItSystemRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItSystem>>, TError,{key: string;data: UpdateItSystemRequest}, TContext> => {
 
-export const getUpdateItSystemQueryKey = (key: string,
-    updateItSystemRequest?: UpdateItSystemRequest,) => {
-    return [
-    'PUT', `/it-systems/${key}`, updateItSystemRequest
-    ] as const;
-    }
-
-
-export const getUpdateItSystemQueryOptions = <TData = Awaited<ReturnType<typeof updateItSystem>>, TError = void>(key: string,
-    updateItSystemRequest: UpdateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateItSystemQueryKey(key,updateItSystemRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateItSystem>>> = ({ signal }) => updateItSystem(key,updateItSystemRequest, { signal, ...requestOptions });
+const mutationKey = ['updateItSystem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItSystem>>, {key: string;data: UpdateItSystemRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateItSystemQueryResult = NonNullable<Awaited<ReturnType<typeof updateItSystem>>>
-export type UpdateItSystemQueryError = void
+          return  updateItSystem(key,data,requestOptions)
+        }
 
 
-export function useUpdateItSystem<TData = Awaited<ReturnType<typeof updateItSystem>>, TError = void>(
- key: string,
-    updateItSystemRequest: UpdateItSystemRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystem<TData = Awaited<ReturnType<typeof updateItSystem>>, TError = void>(
- key: string,
-    updateItSystemRequest: UpdateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystem<TData = Awaited<ReturnType<typeof updateItSystem>>, TError = void>(
- key: string,
-    updateItSystemRequest: UpdateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItSystemMutationResult = NonNullable<Awaited<ReturnType<typeof updateItSystem>>>
+    export type UpdateItSystemMutationBody = UpdateItSystemRequest
+    export type UpdateItSystemMutationError = void
+
+    /**
  * @summary Update IT system
  */
-
-export function useUpdateItSystem<TData = Awaited<ReturnType<typeof updateItSystem>>, TError = void>(
- key: string,
-    updateItSystemRequest: UpdateItSystemRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateItSystemQueryOptions(key,updateItSystemRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteItSystemResponse204 = {
+export const useUpdateItSystem = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystem>>, TError,{key: string;data: UpdateItSystemRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateItSystem>>,
+        TError,
+        {key: string;data: UpdateItSystemRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateItSystemMutationOptions(options), queryClient);
+    }
+    export type deleteItSystemResponse204 = {
   data: void
   status: 204
 }
@@ -549,82 +543,51 @@ export const deleteItSystem = async (key: string, options?: RequestInit): Promis
 
 
 
+export const getDeleteItSystemMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError,{key: string}, TContext> => {
 
-export const getDeleteItSystemQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/it-systems/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteItSystemQueryOptions = <TData = Awaited<ReturnType<typeof deleteItSystem>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteItSystemQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteItSystem>>> = ({ signal }) => deleteItSystem(key, { signal, ...requestOptions });
+const mutationKey = ['deleteItSystem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteItSystem>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteItSystemQueryResult = NonNullable<Awaited<ReturnType<typeof deleteItSystem>>>
-export type DeleteItSystemQueryError = void
+          return  deleteItSystem(key,requestOptions)
+        }
 
 
-export function useDeleteItSystem<TData = Awaited<ReturnType<typeof deleteItSystem>>, TError = void>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof deleteItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteItSystem<TData = Awaited<ReturnType<typeof deleteItSystem>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteItSystem>>,
-          TError,
-          Awaited<ReturnType<typeof deleteItSystem>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteItSystem<TData = Awaited<ReturnType<typeof deleteItSystem>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteItSystemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteItSystem>>>
+
+    export type DeleteItSystemMutationError = void
+
+    /**
  * @summary Delete IT system
  */
-
-export function useDeleteItSystem<TData = Awaited<ReturnType<typeof deleteItSystem>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteItSystemQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateItSystemLinkedProcessesResponse204 = {
+export const useDeleteItSystem = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItSystem>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteItSystem>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteItSystemMutationOptions(options), queryClient);
+    }
+    export type updateItSystemLinkedProcessesResponse204 = {
   data: void
   status: 204
 }
@@ -680,88 +643,51 @@ export const updateItSystemLinkedProcesses = async (key: string,
 
 
 
+export const getUpdateItSystemLinkedProcessesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError,{key: string;data: UpdateItSystemLinkedProcessesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError,{key: string;data: UpdateItSystemLinkedProcessesRequest}, TContext> => {
 
-export const getUpdateItSystemLinkedProcessesQueryKey = (key: string,
-    updateItSystemLinkedProcessesRequest?: UpdateItSystemLinkedProcessesRequest,) => {
-    return [
-    'PUT', `/it-systems/${key}/linked-processes`, updateItSystemLinkedProcessesRequest
-    ] as const;
-    }
-
-
-export const getUpdateItSystemLinkedProcessesQueryOptions = <TData = Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError = void>(key: string,
-    updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateItSystemLinkedProcessesQueryKey(key,updateItSystemLinkedProcessesRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>> = ({ signal }) => updateItSystemLinkedProcesses(key,updateItSystemLinkedProcessesRequest, { signal, ...requestOptions });
+const mutationKey = ['updateItSystemLinkedProcesses'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, {key: string;data: UpdateItSystemLinkedProcessesRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateItSystemLinkedProcessesQueryResult = NonNullable<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>>
-export type UpdateItSystemLinkedProcessesQueryError = void
+          return  updateItSystemLinkedProcesses(key,data,requestOptions)
+        }
 
 
-export function useUpdateItSystemLinkedProcesses<TData = Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError = void>(
- key: string,
-    updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemLinkedProcesses<TData = Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError = void>(
- key: string,
-    updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemLinkedProcesses<TData = Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError = void>(
- key: string,
-    updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItSystemLinkedProcessesMutationResult = NonNullable<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>>
+    export type UpdateItSystemLinkedProcessesMutationBody = UpdateItSystemLinkedProcessesRequest
+    export type UpdateItSystemLinkedProcessesMutationError = void
+
+    /**
  * @summary Update linked processes
  */
-
-export function useUpdateItSystemLinkedProcesses<TData = Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError = void>(
- key: string,
-    updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateItSystemLinkedProcessesQueryOptions(key,updateItSystemLinkedProcessesRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateItSystemServiceProvidersResponse204 = {
+export const useUpdateItSystemLinkedProcesses = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>, TError,{key: string;data: UpdateItSystemLinkedProcessesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateItSystemLinkedProcesses>>,
+        TError,
+        {key: string;data: UpdateItSystemLinkedProcessesRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateItSystemLinkedProcessesMutationOptions(options), queryClient);
+    }
+    export type updateItSystemServiceProvidersResponse204 = {
   data: void
   status: 204
 }
@@ -817,88 +743,51 @@ export const updateItSystemServiceProviders = async (key: string,
 
 
 
+export const getUpdateItSystemServiceProvidersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError,{key: string;data: UpdateItSystemServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError,{key: string;data: UpdateItSystemServiceProvidersRequest}, TContext> => {
 
-export const getUpdateItSystemServiceProvidersQueryKey = (key: string,
-    updateItSystemServiceProvidersRequest?: UpdateItSystemServiceProvidersRequest,) => {
-    return [
-    'PUT', `/it-systems/${key}/service-providers`, updateItSystemServiceProvidersRequest
-    ] as const;
-    }
-
-
-export const getUpdateItSystemServiceProvidersQueryOptions = <TData = Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError = void>(key: string,
-    updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateItSystemServiceProvidersQueryKey(key,updateItSystemServiceProvidersRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateItSystemServiceProviders>>> = ({ signal }) => updateItSystemServiceProviders(key,updateItSystemServiceProvidersRequest, { signal, ...requestOptions });
+const mutationKey = ['updateItSystemServiceProviders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, {key: string;data: UpdateItSystemServiceProvidersRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateItSystemServiceProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof updateItSystemServiceProviders>>>
-export type UpdateItSystemServiceProvidersQueryError = void
+          return  updateItSystemServiceProviders(key,data,requestOptions)
+        }
 
 
-export function useUpdateItSystemServiceProviders<TData = Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError = void>(
- key: string,
-    updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemServiceProviders>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemServiceProviders>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemServiceProviders<TData = Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError = void>(
- key: string,
-    updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemServiceProviders>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemServiceProviders>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemServiceProviders<TData = Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError = void>(
- key: string,
-    updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItSystemServiceProvidersMutationResult = NonNullable<Awaited<ReturnType<typeof updateItSystemServiceProviders>>>
+    export type UpdateItSystemServiceProvidersMutationBody = UpdateItSystemServiceProvidersRequest
+    export type UpdateItSystemServiceProvidersMutationError = void
+
+    /**
  * @summary Update service providers for an IT system
  */
-
-export function useUpdateItSystemServiceProviders<TData = Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError = void>(
- key: string,
-    updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateItSystemServiceProvidersQueryOptions(key,updateItSystemServiceProvidersRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateItSystemProcessingCountriesResponse204 = {
+export const useUpdateItSystemServiceProviders = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemServiceProviders>>, TError,{key: string;data: UpdateItSystemServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateItSystemServiceProviders>>,
+        TError,
+        {key: string;data: UpdateItSystemServiceProvidersRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateItSystemServiceProvidersMutationOptions(options), queryClient);
+    }
+    export type updateItSystemProcessingCountriesResponse204 = {
   data: void
   status: 204
 }
@@ -954,84 +843,47 @@ export const updateItSystemProcessingCountries = async (key: string,
 
 
 
+export const getUpdateItSystemProcessingCountriesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError,{key: string;data: UpdateItSystemProcessingCountriesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError,{key: string;data: UpdateItSystemProcessingCountriesRequest}, TContext> => {
 
-export const getUpdateItSystemProcessingCountriesQueryKey = (key: string,
-    updateItSystemProcessingCountriesRequest?: UpdateItSystemProcessingCountriesRequest,) => {
-    return [
-    'PUT', `/it-systems/${key}/processing-countries`, updateItSystemProcessingCountriesRequest
-    ] as const;
-    }
-
-
-export const getUpdateItSystemProcessingCountriesQueryOptions = <TData = Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError = void>(key: string,
-    updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateItSystemProcessingCountriesQueryKey(key,updateItSystemProcessingCountriesRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>> = ({ signal }) => updateItSystemProcessingCountries(key,updateItSystemProcessingCountriesRequest, { signal, ...requestOptions });
+const mutationKey = ['updateItSystemProcessingCountries'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, {key: string;data: UpdateItSystemProcessingCountriesRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateItSystemProcessingCountriesQueryResult = NonNullable<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>>
-export type UpdateItSystemProcessingCountriesQueryError = void
+          return  updateItSystemProcessingCountries(key,data,requestOptions)
+        }
 
 
-export function useUpdateItSystemProcessingCountries<TData = Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError = void>(
- key: string,
-    updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemProcessingCountries>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemProcessingCountries>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemProcessingCountries<TData = Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError = void>(
- key: string,
-    updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateItSystemProcessingCountries>>,
-          TError,
-          Awaited<ReturnType<typeof updateItSystemProcessingCountries>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateItSystemProcessingCountries<TData = Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError = void>(
- key: string,
-    updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItSystemProcessingCountriesMutationResult = NonNullable<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>>
+    export type UpdateItSystemProcessingCountriesMutationBody = UpdateItSystemProcessingCountriesRequest
+    export type UpdateItSystemProcessingCountriesMutationError = void
+
+    /**
  * @summary Update processing countries for an IT system
  */
-
-export function useUpdateItSystemProcessingCountries<TData = Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError = void>(
- key: string,
-    updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateItSystemProcessingCountriesQueryOptions(key,updateItSystemProcessingCountriesRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateItSystemProcessingCountries = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItSystemProcessingCountries>>, TError,{key: string;data: UpdateItSystemProcessingCountriesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateItSystemProcessingCountries>>,
+        TError,
+        {key: string;data: UpdateItSystemProcessingCountriesRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateItSystemProcessingCountriesMutationOptions(options), queryClient);
+    }

@@ -17,13 +17,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useQuery
 } from '@tanstack/react-query';
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -95,51 +100,82 @@ export const exportProcessingRegister = async (params?: ExportProcessingRegister
 
 
 
-export const getExportProcessingRegisterMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError,{params?: ExportProcessingRegisterParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError,{params?: ExportProcessingRegisterParams}, TContext> => {
 
-const mutationKey = ['exportProcessingRegister'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getExportProcessingRegisterQueryKey = (params?: ExportProcessingRegisterParams,) => {
+    return [
+    `/export/processing-register`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getExportProcessingRegisterQueryOptions = <TData = Awaited<ReturnType<typeof exportProcessingRegister>>, TError = void>(params?: ExportProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportProcessingRegisterQueryKey(params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportProcessingRegister>>, {params?: ExportProcessingRegisterParams}> = (props) => {
-          const {params} = props ?? {};
 
-          return  exportProcessingRegister(params,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportProcessingRegister>>> = ({ signal }) => exportProcessingRegister(params, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type ExportProcessingRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof exportProcessingRegister>>>
+export type ExportProcessingRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof exportProcessingRegister>>>
+export type ExportProcessingRegisterQueryError = void
 
-    export type ExportProcessingRegisterMutationError = void
 
-    /**
+export function useExportProcessingRegister<TData = Awaited<ReturnType<typeof exportProcessingRegister>>, TError = void>(
+ params: undefined |  ExportProcessingRegisterParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportProcessingRegister>>,
+          TError,
+          Awaited<ReturnType<typeof exportProcessingRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportProcessingRegister<TData = Awaited<ReturnType<typeof exportProcessingRegister>>, TError = void>(
+ params?: ExportProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportProcessingRegister>>,
+          TError,
+          Awaited<ReturnType<typeof exportProcessingRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportProcessingRegister<TData = Awaited<ReturnType<typeof exportProcessingRegister>>, TError = void>(
+ params?: ExportProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Export Datenbearbeitungsverzeichnis (Art. 12 revDSG / Art. 30 GDPR)
  */
-export const useExportProcessingRegister = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError,{params?: ExportProcessingRegisterParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof exportProcessingRegister>>,
-        TError,
-        {params?: ExportProcessingRegisterParams},
-        TContext
-      > => {
-      return useMutation(getExportProcessingRegisterMutationOptions(options), queryClient);
-    }
-    export type exportServiceProvidersResponse200 = {
+
+export function useExportProcessingRegister<TData = Awaited<ReturnType<typeof exportProcessingRegister>>, TError = void>(
+ params?: ExportProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportProcessingRegisterQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type exportServiceProvidersResponse200 = {
   data: string
   status: 200
 }
@@ -196,51 +232,82 @@ export const exportServiceProviders = async (params?: ExportServiceProvidersPara
 
 
 
-export const getExportServiceProvidersMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError,{params?: ExportServiceProvidersParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError,{params?: ExportServiceProvidersParams}, TContext> => {
 
-const mutationKey = ['exportServiceProviders'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getExportServiceProvidersQueryKey = (params?: ExportServiceProvidersParams,) => {
+    return [
+    `/export/service-providers`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getExportServiceProvidersQueryOptions = <TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportServiceProvidersQueryKey(params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportServiceProviders>>, {params?: ExportServiceProvidersParams}> = (props) => {
-          const {params} = props ?? {};
 
-          return  exportServiceProviders(params,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportServiceProviders>>> = ({ signal }) => exportServiceProviders(params, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type ExportServiceProvidersMutationResult = NonNullable<Awaited<ReturnType<typeof exportServiceProviders>>>
+export type ExportServiceProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof exportServiceProviders>>>
+export type ExportServiceProvidersQueryError = void
 
-    export type ExportServiceProvidersMutationError = void
 
-    /**
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params: undefined |  ExportServiceProvidersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportServiceProviders>>,
+          TError,
+          Awaited<ReturnType<typeof exportServiceProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportServiceProviders>>,
+          TError,
+          Awaited<ReturnType<typeof exportServiceProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Export service provider register
  */
-export const useExportServiceProviders = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError,{params?: ExportServiceProvidersParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof exportServiceProviders>>,
-        TError,
-        {params?: ExportServiceProvidersParams},
-        TContext
-      > => {
-      return useMutation(getExportServiceProvidersMutationOptions(options), queryClient);
-    }
-    export type exportDpiaRegisterResponse200 = {
+
+export function useExportServiceProviders<TData = Awaited<ReturnType<typeof exportServiceProviders>>, TError = void>(
+ params?: ExportServiceProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportServiceProvidersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type exportDpiaRegisterResponse200 = {
   data: string
   status: 200
 }
@@ -290,51 +357,82 @@ export const exportDpiaRegister = async ( options?: RequestInit): Promise<export
 
 
 
-export const getExportDpiaRegisterMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError,void, TContext> => {
 
-const mutationKey = ['exportDpiaRegister'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getExportDpiaRegisterQueryKey = () => {
+    return [
+    `/export/dpia-register`
+    ] as const;
+    }
 
 
+export const getExportDpiaRegisterQueryOptions = <TData = Awaited<ReturnType<typeof exportDpiaRegister>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportDpiaRegisterQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportDpiaRegister>>, void> = () => {
 
-
-          return  exportDpiaRegister(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportDpiaRegister>>> = ({ signal }) => exportDpiaRegister({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type ExportDpiaRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof exportDpiaRegister>>>
+export type ExportDpiaRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof exportDpiaRegister>>>
+export type ExportDpiaRegisterQueryError = void
 
-    export type ExportDpiaRegisterMutationError = void
 
-    /**
+export function useExportDpiaRegister<TData = Awaited<ReturnType<typeof exportDpiaRegister>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportDpiaRegister>>,
+          TError,
+          Awaited<ReturnType<typeof exportDpiaRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportDpiaRegister<TData = Awaited<ReturnType<typeof exportDpiaRegister>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportDpiaRegister>>,
+          TError,
+          Awaited<ReturnType<typeof exportDpiaRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportDpiaRegister<TData = Awaited<ReturnType<typeof exportDpiaRegister>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Export DPIA register
  */
-export const useExportDpiaRegister = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof exportDpiaRegister>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getExportDpiaRegisterMutationOptions(options), queryClient);
-    }
-    export type exportBusinessDataQualityRulesResponse200 = {
+
+export function useExportDpiaRegister<TData = Awaited<ReturnType<typeof exportDpiaRegister>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportDpiaRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportDpiaRegisterQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type exportBusinessDataQualityRulesResponse200 = {
   data: string
   status: 200
 }
@@ -378,47 +476,78 @@ export const exportBusinessDataQualityRules = async ( options?: RequestInit): Pr
 
 
 
-export const getExportBusinessDataQualityRulesMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError,void, TContext> => {
 
-const mutationKey = ['exportBusinessDataQualityRules'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getExportBusinessDataQualityRulesQueryKey = () => {
+    return [
+    `/export/business-data-quality-rules`
+    ] as const;
+    }
 
 
+export const getExportBusinessDataQualityRulesQueryOptions = <TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportBusinessDataQualityRulesQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, void> = () => {
 
-
-          return  exportBusinessDataQualityRules(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>> = ({ signal }) => exportBusinessDataQualityRules({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type ExportBusinessDataQualityRulesMutationResult = NonNullable<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>>
+export type ExportBusinessDataQualityRulesQueryResult = NonNullable<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>>
+export type ExportBusinessDataQualityRulesQueryError = void
 
-    export type ExportBusinessDataQualityRulesMutationError = void
 
-    /**
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>,
+          TError,
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>,
+          TError,
+          Awaited<ReturnType<typeof exportBusinessDataQualityRules>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Export all business data quality rules as CSV
  */
-export const useExportBusinessDataQualityRules = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof exportBusinessDataQualityRules>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getExportBusinessDataQualityRulesMutationOptions(options), queryClient);
-    }
+
+export function useExportBusinessDataQualityRules<TData = Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportBusinessDataQualityRules>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getExportBusinessDataQualityRulesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+

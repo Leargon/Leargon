@@ -89,51 +89,82 @@ export const getAllDpias = async ( options?: RequestInit): Promise<getAllDpiasRe
 
 
 
-export const getGetAllDpiasMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllDpias>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllDpias>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllDpias'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllDpiasQueryKey = () => {
+    return [
+    `/dpia`
+    ] as const;
+    }
 
 
+export const getGetAllDpiasQueryOptions = <TData = Awaited<ReturnType<typeof getAllDpias>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllDpiasQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllDpias>>, void> = () => {
 
-
-          return  getAllDpias(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllDpias>>> = ({ signal }) => getAllDpias({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllDpiasMutationResult = NonNullable<Awaited<ReturnType<typeof getAllDpias>>>
+export type GetAllDpiasQueryResult = NonNullable<Awaited<ReturnType<typeof getAllDpias>>>
+export type GetAllDpiasQueryError = unknown
 
-    export type GetAllDpiasMutationError = unknown
 
-    /**
+export function useGetAllDpias<TData = Awaited<ReturnType<typeof getAllDpias>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllDpias>>,
+          TError,
+          Awaited<ReturnType<typeof getAllDpias>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllDpias<TData = Awaited<ReturnType<typeof getAllDpias>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllDpias>>,
+          TError,
+          Awaited<ReturnType<typeof getAllDpias>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllDpias<TData = Awaited<ReturnType<typeof getAllDpias>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary List all DPIAs
  */
-export const useGetAllDpias = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllDpias>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllDpias>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllDpiasMutationOptions(options), queryClient);
-    }
-    export type updateDpiaRiskDescriptionResponse200 = {
+
+export function useGetAllDpias<TData = Awaited<ReturnType<typeof getAllDpias>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDpias>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllDpiasQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateDpiaRiskDescriptionResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -183,88 +214,51 @@ export const updateDpiaRiskDescription = async (key: string,
 
 
 
+export const getUpdateDpiaRiskDescriptionMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError,{key: string;data: UpdateDpiaRiskDescriptionRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError,{key: string;data: UpdateDpiaRiskDescriptionRequest}, TContext> => {
 
-export const getUpdateDpiaRiskDescriptionQueryKey = (key: string,
-    updateDpiaRiskDescriptionRequest?: UpdateDpiaRiskDescriptionRequest,) => {
-    return [
-    'PUT', `/dpia/${key}/risk-description`, updateDpiaRiskDescriptionRequest
-    ] as const;
-    }
-
-
-export const getUpdateDpiaRiskDescriptionQueryOptions = <TData = Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError = ErrorResponse>(key: string,
-    updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDpiaRiskDescriptionQueryKey(key,updateDpiaRiskDescriptionRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDpiaRiskDescription>>> = ({ signal }) => updateDpiaRiskDescription(key,updateDpiaRiskDescriptionRequest, { signal, ...requestOptions });
+const mutationKey = ['updateDpiaRiskDescription'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, {key: string;data: UpdateDpiaRiskDescriptionRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDpiaRiskDescriptionQueryResult = NonNullable<Awaited<ReturnType<typeof updateDpiaRiskDescription>>>
-export type UpdateDpiaRiskDescriptionQueryError = ErrorResponse
+          return  updateDpiaRiskDescription(key,data,requestOptions)
+        }
 
 
-export function useUpdateDpiaRiskDescription<TData = Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaRiskDescription>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaRiskDescription>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaRiskDescription<TData = Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaRiskDescription>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaRiskDescription>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaRiskDescription<TData = Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDpiaRiskDescriptionMutationResult = NonNullable<Awaited<ReturnType<typeof updateDpiaRiskDescription>>>
+    export type UpdateDpiaRiskDescriptionMutationBody = UpdateDpiaRiskDescriptionRequest
+    export type UpdateDpiaRiskDescriptionMutationError = ErrorResponse
+
+    /**
  * @summary Update DPIA risk description
  */
-
-export function useUpdateDpiaRiskDescription<TData = Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaRiskDescriptionRequest: UpdateDpiaRiskDescriptionRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDpiaRiskDescriptionQueryOptions(key,updateDpiaRiskDescriptionRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateDpiaMeasuresResponse200 = {
+export const useUpdateDpiaRiskDescription = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaRiskDescription>>, TError,{key: string;data: UpdateDpiaRiskDescriptionRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDpiaRiskDescription>>,
+        TError,
+        {key: string;data: UpdateDpiaRiskDescriptionRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateDpiaRiskDescriptionMutationOptions(options), queryClient);
+    }
+    export type updateDpiaMeasuresResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -314,88 +308,51 @@ export const updateDpiaMeasures = async (key: string,
 
 
 
+export const getUpdateDpiaMeasuresMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError,{key: string;data: UpdateDpiaMeasuresRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError,{key: string;data: UpdateDpiaMeasuresRequest}, TContext> => {
 
-export const getUpdateDpiaMeasuresQueryKey = (key: string,
-    updateDpiaMeasuresRequest?: UpdateDpiaMeasuresRequest,) => {
-    return [
-    'PUT', `/dpia/${key}/measures`, updateDpiaMeasuresRequest
-    ] as const;
-    }
-
-
-export const getUpdateDpiaMeasuresQueryOptions = <TData = Awaited<ReturnType<typeof updateDpiaMeasures>>, TError = ErrorResponse>(key: string,
-    updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDpiaMeasuresQueryKey(key,updateDpiaMeasuresRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDpiaMeasures>>> = ({ signal }) => updateDpiaMeasures(key,updateDpiaMeasuresRequest, { signal, ...requestOptions });
+const mutationKey = ['updateDpiaMeasures'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDpiaMeasures>>, {key: string;data: UpdateDpiaMeasuresRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDpiaMeasuresQueryResult = NonNullable<Awaited<ReturnType<typeof updateDpiaMeasures>>>
-export type UpdateDpiaMeasuresQueryError = ErrorResponse
+          return  updateDpiaMeasures(key,data,requestOptions)
+        }
 
 
-export function useUpdateDpiaMeasures<TData = Awaited<ReturnType<typeof updateDpiaMeasures>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaMeasures>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaMeasures>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaMeasures<TData = Awaited<ReturnType<typeof updateDpiaMeasures>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaMeasures>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaMeasures>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaMeasures<TData = Awaited<ReturnType<typeof updateDpiaMeasures>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDpiaMeasuresMutationResult = NonNullable<Awaited<ReturnType<typeof updateDpiaMeasures>>>
+    export type UpdateDpiaMeasuresMutationBody = UpdateDpiaMeasuresRequest
+    export type UpdateDpiaMeasuresMutationError = ErrorResponse
+
+    /**
  * @summary Update DPIA measures
  */
-
-export function useUpdateDpiaMeasures<TData = Awaited<ReturnType<typeof updateDpiaMeasures>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaMeasuresRequest: UpdateDpiaMeasuresRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDpiaMeasuresQueryOptions(key,updateDpiaMeasuresRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateDpiaResidualRiskResponse200 = {
+export const useUpdateDpiaMeasures = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaMeasures>>, TError,{key: string;data: UpdateDpiaMeasuresRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDpiaMeasures>>,
+        TError,
+        {key: string;data: UpdateDpiaMeasuresRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateDpiaMeasuresMutationOptions(options), queryClient);
+    }
+    export type updateDpiaResidualRiskResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -445,88 +402,51 @@ export const updateDpiaResidualRisk = async (key: string,
 
 
 
+export const getUpdateDpiaResidualRiskMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError,{key: string;data: UpdateDpiaResidualRiskRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError,{key: string;data: UpdateDpiaResidualRiskRequest}, TContext> => {
 
-export const getUpdateDpiaResidualRiskQueryKey = (key: string,
-    updateDpiaResidualRiskRequest?: UpdateDpiaResidualRiskRequest,) => {
-    return [
-    'PUT', `/dpia/${key}/residual-risk`, updateDpiaResidualRiskRequest
-    ] as const;
-    }
-
-
-export const getUpdateDpiaResidualRiskQueryOptions = <TData = Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError = ErrorResponse>(key: string,
-    updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDpiaResidualRiskQueryKey(key,updateDpiaResidualRiskRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDpiaResidualRisk>>> = ({ signal }) => updateDpiaResidualRisk(key,updateDpiaResidualRiskRequest, { signal, ...requestOptions });
+const mutationKey = ['updateDpiaResidualRisk'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, {key: string;data: UpdateDpiaResidualRiskRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDpiaResidualRiskQueryResult = NonNullable<Awaited<ReturnType<typeof updateDpiaResidualRisk>>>
-export type UpdateDpiaResidualRiskQueryError = ErrorResponse
+          return  updateDpiaResidualRisk(key,data,requestOptions)
+        }
 
 
-export function useUpdateDpiaResidualRisk<TData = Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaResidualRisk>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaResidualRisk>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaResidualRisk<TData = Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaResidualRisk>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaResidualRisk>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaResidualRisk<TData = Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDpiaResidualRiskMutationResult = NonNullable<Awaited<ReturnType<typeof updateDpiaResidualRisk>>>
+    export type UpdateDpiaResidualRiskMutationBody = UpdateDpiaResidualRiskRequest
+    export type UpdateDpiaResidualRiskMutationError = ErrorResponse
+
+    /**
  * @summary Update DPIA residual risk and optionally mark as completed
  */
-
-export function useUpdateDpiaResidualRisk<TData = Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaResidualRiskRequest: UpdateDpiaResidualRiskRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDpiaResidualRiskQueryOptions(key,updateDpiaResidualRiskRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type completeDpiaResponse200 = {
+export const useUpdateDpiaResidualRisk = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaResidualRisk>>, TError,{key: string;data: UpdateDpiaResidualRiskRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDpiaResidualRisk>>,
+        TError,
+        {key: string;data: UpdateDpiaResidualRiskRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateDpiaResidualRiskMutationOptions(options), queryClient);
+    }
+    export type completeDpiaResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -575,82 +495,51 @@ export const completeDpia = async (key: string, options?: RequestInit): Promise<
 
 
 
+export const getCompleteDpiaMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeDpia>>, TError,{key: string}, TContext> => {
 
-export const getCompleteDpiaQueryKey = (key: string,) => {
-    return [
-    'PUT', `/dpia/${key}/complete`
-    ] as const;
-    }
-
-
-export const getCompleteDpiaQueryOptions = <TData = Awaited<ReturnType<typeof completeDpia>>, TError = ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCompleteDpiaQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof completeDpia>>> = ({ signal }) => completeDpia(key, { signal, ...requestOptions });
+const mutationKey = ['completeDpia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeDpia>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CompleteDpiaQueryResult = NonNullable<Awaited<ReturnType<typeof completeDpia>>>
-export type CompleteDpiaQueryError = ErrorResponse
+          return  completeDpia(key,requestOptions)
+        }
 
 
-export function useCompleteDpia<TData = Awaited<ReturnType<typeof completeDpia>>, TError = ErrorResponse>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof completeDpia>>,
-          TError,
-          Awaited<ReturnType<typeof completeDpia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCompleteDpia<TData = Awaited<ReturnType<typeof completeDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof completeDpia>>,
-          TError,
-          Awaited<ReturnType<typeof completeDpia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCompleteDpia<TData = Awaited<ReturnType<typeof completeDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteDpiaMutationResult = NonNullable<Awaited<ReturnType<typeof completeDpia>>>
+
+    export type CompleteDpiaMutationError = ErrorResponse
+
+    /**
  * @summary Mark DPIA as completed
  */
-
-export function useCompleteDpia<TData = Awaited<ReturnType<typeof completeDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCompleteDpiaQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type reopenDpiaResponse200 = {
+export const useCompleteDpia = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeDpia>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getCompleteDpiaMutationOptions(options), queryClient);
+    }
+    export type reopenDpiaResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -700,82 +589,51 @@ export const reopenDpia = async (key: string, options?: RequestInit): Promise<re
 
 
 
+export const getReopenDpiaMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof reopenDpia>>, TError,{key: string}, TContext> => {
 
-export const getReopenDpiaQueryKey = (key: string,) => {
-    return [
-    'PUT', `/dpia/${key}/reopen`
-    ] as const;
-    }
-
-
-export const getReopenDpiaQueryOptions = <TData = Awaited<ReturnType<typeof reopenDpia>>, TError = ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReopenDpiaQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reopenDpia>>> = ({ signal }) => reopenDpia(key, { signal, ...requestOptions });
+const mutationKey = ['reopenDpia'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenDpia>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReopenDpiaQueryResult = NonNullable<Awaited<ReturnType<typeof reopenDpia>>>
-export type ReopenDpiaQueryError = ErrorResponse
+          return  reopenDpia(key,requestOptions)
+        }
 
 
-export function useReopenDpia<TData = Awaited<ReturnType<typeof reopenDpia>>, TError = ErrorResponse>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reopenDpia>>,
-          TError,
-          Awaited<ReturnType<typeof reopenDpia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReopenDpia<TData = Awaited<ReturnType<typeof reopenDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reopenDpia>>,
-          TError,
-          Awaited<ReturnType<typeof reopenDpia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReopenDpia<TData = Awaited<ReturnType<typeof reopenDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReopenDpiaMutationResult = NonNullable<Awaited<ReturnType<typeof reopenDpia>>>
+
+    export type ReopenDpiaMutationError = ErrorResponse
+
+    /**
  * @summary Re-open a completed DPIA
  */
-
-export function useReopenDpia<TData = Awaited<ReturnType<typeof reopenDpia>>, TError = ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reopenDpia>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReopenDpiaQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateDpiaFdpicConsultationResponse200 = {
+export const useReopenDpia = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenDpia>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reopenDpia>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getReopenDpiaMutationOptions(options), queryClient);
+    }
+    export type updateDpiaFdpicConsultationResponse200 = {
   data: DpiaResponse
   status: 200
 }
@@ -825,84 +683,47 @@ export const updateDpiaFdpicConsultation = async (key: string,
 
 
 
+export const getUpdateDpiaFdpicConsultationMutationOptions = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError,{key: string;data: UpdateDpiaFdpicConsultationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError,{key: string;data: UpdateDpiaFdpicConsultationRequest}, TContext> => {
 
-export const getUpdateDpiaFdpicConsultationQueryKey = (key: string,
-    updateDpiaFdpicConsultationRequest?: UpdateDpiaFdpicConsultationRequest,) => {
-    return [
-    'PUT', `/dpia/${key}/fdpic-consultation`, updateDpiaFdpicConsultationRequest
-    ] as const;
-    }
-
-
-export const getUpdateDpiaFdpicConsultationQueryOptions = <TData = Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError = ErrorResponse>(key: string,
-    updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDpiaFdpicConsultationQueryKey(key,updateDpiaFdpicConsultationRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>> = ({ signal }) => updateDpiaFdpicConsultation(key,updateDpiaFdpicConsultationRequest, { signal, ...requestOptions });
+const mutationKey = ['updateDpiaFdpicConsultation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, {key: string;data: UpdateDpiaFdpicConsultationRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDpiaFdpicConsultationQueryResult = NonNullable<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>>
-export type UpdateDpiaFdpicConsultationQueryError = ErrorResponse
+          return  updateDpiaFdpicConsultation(key,data,requestOptions)
+        }
 
 
-export function useUpdateDpiaFdpicConsultation<TData = Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaFdpicConsultation<TData = Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>,
-          TError,
-          Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDpiaFdpicConsultation<TData = Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDpiaFdpicConsultationMutationResult = NonNullable<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>>
+    export type UpdateDpiaFdpicConsultationMutationBody = UpdateDpiaFdpicConsultationRequest
+    export type UpdateDpiaFdpicConsultationMutationError = ErrorResponse
+
+    /**
  * @summary Update FDPIC consultation details
  */
-
-export function useUpdateDpiaFdpicConsultation<TData = Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError = ErrorResponse>(
- key: string,
-    updateDpiaFdpicConsultationRequest: UpdateDpiaFdpicConsultationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDpiaFdpicConsultationQueryOptions(key,updateDpiaFdpicConsultationRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateDpiaFdpicConsultation = <TError = ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>, TError,{key: string;data: UpdateDpiaFdpicConsultationRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDpiaFdpicConsultation>>,
+        TError,
+        {key: string;data: UpdateDpiaFdpicConsultationRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateDpiaFdpicConsultationMutationOptions(options), queryClient);
+    }

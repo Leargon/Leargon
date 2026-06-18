@@ -92,51 +92,82 @@ export const getQualityRulesForEntity = async (key: string, options?: RequestIni
 
 
 
-export const getGetQualityRulesForEntityMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getQualityRulesForEntity'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetQualityRulesForEntityQueryKey = (key: string,) => {
+    return [
+    `/business-entities/${key}/quality-rules`
+    ] as const;
+    }
 
 
+export const getGetQualityRulesForEntityQueryOptions = <TData = Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQualityRulesForEntityQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getQualityRulesForEntity>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getQualityRulesForEntity(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQualityRulesForEntity>>> = ({ signal }) => getQualityRulesForEntity(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetQualityRulesForEntityMutationResult = NonNullable<Awaited<ReturnType<typeof getQualityRulesForEntity>>>
+export type GetQualityRulesForEntityQueryResult = NonNullable<Awaited<ReturnType<typeof getQualityRulesForEntity>>>
+export type GetQualityRulesForEntityQueryError = void
 
-    export type GetQualityRulesForEntityMutationError = void
 
-    /**
+export function useGetQualityRulesForEntity<TData = Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getQualityRulesForEntity>>,
+          TError,
+          Awaited<ReturnType<typeof getQualityRulesForEntity>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetQualityRulesForEntity<TData = Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getQualityRulesForEntity>>,
+          TError,
+          Awaited<ReturnType<typeof getQualityRulesForEntity>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetQualityRulesForEntity<TData = Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all quality rules for a business entity
  */
-export const useGetQualityRulesForEntity = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getQualityRulesForEntity>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetQualityRulesForEntityMutationOptions(options), queryClient);
-    }
-    export type createQualityRuleResponse201 = {
+
+export function useGetQualityRulesForEntity<TData = Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityRulesForEntity>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetQualityRulesForEntityQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createQualityRuleResponse201 = {
   data: BusinessDataQualityRuleResponse
   status: 201
 }
@@ -186,88 +217,51 @@ export const createQualityRule = async (key: string,
 
 
 
+export const getCreateQualityRuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQualityRule>>, TError,{key: string;data: CreateBusinessDataQualityRuleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createQualityRule>>, TError,{key: string;data: CreateBusinessDataQualityRuleRequest}, TContext> => {
 
-export const getCreateQualityRuleQueryKey = (key: string,
-    createBusinessDataQualityRuleRequest?: CreateBusinessDataQualityRuleRequest,) => {
-    return [
-    'POST', `/business-entities/${key}/quality-rules`, createBusinessDataQualityRuleRequest
-    ] as const;
-    }
-
-
-export const getCreateQualityRuleQueryOptions = <TData = Awaited<ReturnType<typeof createQualityRule>>, TError = void>(key: string,
-    createBusinessDataQualityRuleRequest: CreateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateQualityRuleQueryKey(key,createBusinessDataQualityRuleRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createQualityRule>>> = ({ signal }) => createQualityRule(key,createBusinessDataQualityRuleRequest, { signal, ...requestOptions });
+const mutationKey = ['createQualityRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createQualityRule>>, {key: string;data: CreateBusinessDataQualityRuleRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateQualityRuleQueryResult = NonNullable<Awaited<ReturnType<typeof createQualityRule>>>
-export type CreateQualityRuleQueryError = void
+          return  createQualityRule(key,data,requestOptions)
+        }
 
 
-export function useCreateQualityRule<TData = Awaited<ReturnType<typeof createQualityRule>>, TError = void>(
- key: string,
-    createBusinessDataQualityRuleRequest: CreateBusinessDataQualityRuleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof createQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateQualityRule<TData = Awaited<ReturnType<typeof createQualityRule>>, TError = void>(
- key: string,
-    createBusinessDataQualityRuleRequest: CreateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof createQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateQualityRule<TData = Awaited<ReturnType<typeof createQualityRule>>, TError = void>(
- key: string,
-    createBusinessDataQualityRuleRequest: CreateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateQualityRuleMutationResult = NonNullable<Awaited<ReturnType<typeof createQualityRule>>>
+    export type CreateQualityRuleMutationBody = CreateBusinessDataQualityRuleRequest
+    export type CreateQualityRuleMutationError = void
+
+    /**
  * @summary Create a quality rule for a business entity
  */
-
-export function useCreateQualityRule<TData = Awaited<ReturnType<typeof createQualityRule>>, TError = void>(
- key: string,
-    createBusinessDataQualityRuleRequest: CreateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateQualityRuleQueryOptions(key,createBusinessDataQualityRuleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateQualityRuleResponse200 = {
+export const useCreateQualityRule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createQualityRule>>, TError,{key: string;data: CreateBusinessDataQualityRuleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createQualityRule>>,
+        TError,
+        {key: string;data: CreateBusinessDataQualityRuleRequest},
+        TContext
+      > => {
+      return useMutation(getCreateQualityRuleMutationOptions(options), queryClient);
+    }
+    export type updateQualityRuleResponse200 = {
   data: BusinessDataQualityRuleResponse
   status: 200
 }
@@ -319,94 +313,51 @@ export const updateQualityRule = async (key: string,
 
 
 
+export const getUpdateQualityRuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError,{key: string;ruleId: number;data: UpdateBusinessDataQualityRuleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError,{key: string;ruleId: number;data: UpdateBusinessDataQualityRuleRequest}, TContext> => {
 
-export const getUpdateQualityRuleQueryKey = (key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest?: UpdateBusinessDataQualityRuleRequest,) => {
-    return [
-    'PUT', `/business-entities/${key}/quality-rules/${ruleId}`, updateBusinessDataQualityRuleRequest
-    ] as const;
-    }
-
-
-export const getUpdateQualityRuleQueryOptions = <TData = Awaited<ReturnType<typeof updateQualityRule>>, TError = void>(key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest: UpdateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateQualityRuleQueryKey(key,ruleId,updateBusinessDataQualityRuleRequest);
+const mutationKey = ['updateQualityRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateQualityRule>>> = ({ signal }) => updateQualityRule(key,ruleId,updateBusinessDataQualityRuleRequest, { signal, ...requestOptions });
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateQualityRule>>, {key: string;ruleId: number;data: UpdateBusinessDataQualityRuleRequest}> = (props) => {
+          const {key,ruleId,data} = props ?? {};
+
+          return  updateQualityRule(key,ruleId,data,requestOptions)
+        }
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && ruleId !== null && ruleId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
 
-export type UpdateQualityRuleQueryResult = NonNullable<Awaited<ReturnType<typeof updateQualityRule>>>
-export type UpdateQualityRuleQueryError = void
+  return  { mutationFn, ...mutationOptions }}
 
+    export type UpdateQualityRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateQualityRule>>>
+    export type UpdateQualityRuleMutationBody = UpdateBusinessDataQualityRuleRequest
+    export type UpdateQualityRuleMutationError = void
 
-export function useUpdateQualityRule<TData = Awaited<ReturnType<typeof updateQualityRule>>, TError = void>(
- key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest: UpdateBusinessDataQualityRuleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof updateQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateQualityRule<TData = Awaited<ReturnType<typeof updateQualityRule>>, TError = void>(
- key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest: UpdateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof updateQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateQualityRule<TData = Awaited<ReturnType<typeof updateQualityRule>>, TError = void>(
- key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest: UpdateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+    /**
  * @summary Update a quality rule
  */
-
-export function useUpdateQualityRule<TData = Awaited<ReturnType<typeof updateQualityRule>>, TError = void>(
- key: string,
-    ruleId: number,
-    updateBusinessDataQualityRuleRequest: UpdateBusinessDataQualityRuleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateQualityRuleQueryOptions(key,ruleId,updateBusinessDataQualityRuleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteQualityRuleResponse204 = {
+export const useUpdateQualityRule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateQualityRule>>, TError,{key: string;ruleId: number;data: UpdateBusinessDataQualityRuleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateQualityRule>>,
+        TError,
+        {key: string;ruleId: number;data: UpdateBusinessDataQualityRuleRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateQualityRuleMutationOptions(options), queryClient);
+    }
+    export type deleteQualityRuleResponse204 = {
   data: void
   status: 204
 }
@@ -457,84 +408,47 @@ export const deleteQualityRule = async (key: string,
 
 
 
+export const getDeleteQualityRuleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError,{key: string;ruleId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError,{key: string;ruleId: number}, TContext> => {
 
-export const getDeleteQualityRuleQueryKey = (key: string,
-    ruleId: number,) => {
-    return [
-    'DELETE', `/business-entities/${key}/quality-rules/${ruleId}`
-    ] as const;
-    }
-
-
-export const getDeleteQualityRuleQueryOptions = <TData = Awaited<ReturnType<typeof deleteQualityRule>>, TError = void>(key: string,
-    ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteQualityRuleQueryKey(key,ruleId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteQualityRule>>> = ({ signal }) => deleteQualityRule(key,ruleId, { signal, ...requestOptions });
+const mutationKey = ['deleteQualityRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteQualityRule>>, {key: string;ruleId: number}> = (props) => {
+          const {key,ruleId} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && ruleId !== null && ruleId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteQualityRuleQueryResult = NonNullable<Awaited<ReturnType<typeof deleteQualityRule>>>
-export type DeleteQualityRuleQueryError = void
+          return  deleteQualityRule(key,ruleId,requestOptions)
+        }
 
 
-export function useDeleteQualityRule<TData = Awaited<ReturnType<typeof deleteQualityRule>>, TError = void>(
- key: string,
-    ruleId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof deleteQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteQualityRule<TData = Awaited<ReturnType<typeof deleteQualityRule>>, TError = void>(
- key: string,
-    ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteQualityRule>>,
-          TError,
-          Awaited<ReturnType<typeof deleteQualityRule>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteQualityRule<TData = Awaited<ReturnType<typeof deleteQualityRule>>, TError = void>(
- key: string,
-    ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteQualityRuleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteQualityRule>>>
+
+    export type DeleteQualityRuleMutationError = void
+
+    /**
  * @summary Delete a quality rule
  */
-
-export function useDeleteQualityRule<TData = Awaited<ReturnType<typeof deleteQualityRule>>, TError = void>(
- key: string,
-    ruleId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteQualityRuleQueryOptions(key,ruleId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useDeleteQualityRule = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQualityRule>>, TError,{key: string;ruleId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteQualityRule>>,
+        TError,
+        {key: string;ruleId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteQualityRuleMutationOptions(options), queryClient);
+    }

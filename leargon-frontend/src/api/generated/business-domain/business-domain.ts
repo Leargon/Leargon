@@ -104,51 +104,82 @@ export const getAllBusinessDomains = async ( options?: RequestInit): Promise<get
 
 
 
-export const getGetAllBusinessDomainsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllBusinessDomains'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllBusinessDomainsQueryKey = () => {
+    return [
+    `/business-domains`
+    ] as const;
+    }
 
 
+export const getGetAllBusinessDomainsQueryOptions = <TData = Awaited<ReturnType<typeof getAllBusinessDomains>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllBusinessDomainsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllBusinessDomains>>, void> = () => {
 
-
-          return  getAllBusinessDomains(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllBusinessDomains>>> = ({ signal }) => getAllBusinessDomains({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllBusinessDomainsMutationResult = NonNullable<Awaited<ReturnType<typeof getAllBusinessDomains>>>
+export type GetAllBusinessDomainsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllBusinessDomains>>>
+export type GetAllBusinessDomainsQueryError = void
 
-    export type GetAllBusinessDomainsMutationError = void
 
-    /**
+export function useGetAllBusinessDomains<TData = Awaited<ReturnType<typeof getAllBusinessDomains>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllBusinessDomains>>,
+          TError,
+          Awaited<ReturnType<typeof getAllBusinessDomains>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllBusinessDomains<TData = Awaited<ReturnType<typeof getAllBusinessDomains>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllBusinessDomains>>,
+          TError,
+          Awaited<ReturnType<typeof getAllBusinessDomains>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllBusinessDomains<TData = Awaited<ReturnType<typeof getAllBusinessDomains>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all business domains
  */
-export const useGetAllBusinessDomains = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllBusinessDomains>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllBusinessDomainsMutationOptions(options), queryClient);
-    }
-    export type createBusinessDomainResponse201 = {
+
+export function useGetAllBusinessDomains<TData = Awaited<ReturnType<typeof getAllBusinessDomains>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllBusinessDomains>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllBusinessDomainsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createBusinessDomainResponse201 = {
   data: BusinessDomainResponse
   status: 201
 }
@@ -203,82 +234,51 @@ export const createBusinessDomain = async (createBusinessDomainRequest: CreateBu
 
 
 
+export const getCreateBusinessDomainMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError,{data: CreateBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError,{data: CreateBusinessDomainRequest}, TContext> => {
 
-export const getCreateBusinessDomainQueryKey = (createBusinessDomainRequest?: CreateBusinessDomainRequest,) => {
-    return [
-    'POST', `/business-domains`, createBusinessDomainRequest
-    ] as const;
-    }
-
-
-export const getCreateBusinessDomainQueryOptions = <TData = Awaited<ReturnType<typeof createBusinessDomain>>, TError = ErrorResponse | void>(createBusinessDomainRequest: CreateBusinessDomainRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateBusinessDomainQueryKey(createBusinessDomainRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createBusinessDomain>>> = ({ signal }) => createBusinessDomain(createBusinessDomainRequest, { signal, ...requestOptions });
+const mutationKey = ['createBusinessDomain'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBusinessDomain>>, {data: CreateBusinessDomainRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateBusinessDomainQueryResult = NonNullable<Awaited<ReturnType<typeof createBusinessDomain>>>
-export type CreateBusinessDomainQueryError = ErrorResponse | void
+          return  createBusinessDomain(data,requestOptions)
+        }
 
 
-export function useCreateBusinessDomain<TData = Awaited<ReturnType<typeof createBusinessDomain>>, TError = ErrorResponse | void>(
- createBusinessDomainRequest: CreateBusinessDomainRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createBusinessDomain>>,
-          TError,
-          Awaited<ReturnType<typeof createBusinessDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateBusinessDomain<TData = Awaited<ReturnType<typeof createBusinessDomain>>, TError = ErrorResponse | void>(
- createBusinessDomainRequest: CreateBusinessDomainRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createBusinessDomain>>,
-          TError,
-          Awaited<ReturnType<typeof createBusinessDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateBusinessDomain<TData = Awaited<ReturnType<typeof createBusinessDomain>>, TError = ErrorResponse | void>(
- createBusinessDomainRequest: CreateBusinessDomainRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBusinessDomainMutationResult = NonNullable<Awaited<ReturnType<typeof createBusinessDomain>>>
+    export type CreateBusinessDomainMutationBody = CreateBusinessDomainRequest
+    export type CreateBusinessDomainMutationError = ErrorResponse | void
+
+    /**
  * @summary Create a business domain
  */
-
-export function useCreateBusinessDomain<TData = Awaited<ReturnType<typeof createBusinessDomain>>, TError = ErrorResponse | void>(
- createBusinessDomainRequest: CreateBusinessDomainRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateBusinessDomainQueryOptions(createBusinessDomainRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getBusinessDomainTreeResponse200 = {
+export const useCreateBusinessDomain = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBusinessDomain>>, TError,{data: CreateBusinessDomainRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBusinessDomain>>,
+        TError,
+        {data: CreateBusinessDomainRequest},
+        TContext
+      > => {
+      return useMutation(getCreateBusinessDomainMutationOptions(options), queryClient);
+    }
+    export type getBusinessDomainTreeResponse200 = {
   data: BusinessDomainTreeResponse[]
   status: 200
 }
@@ -323,51 +323,82 @@ export const getBusinessDomainTree = async ( options?: RequestInit): Promise<get
 
 
 
-export const getGetBusinessDomainTreeMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError,void, TContext> => {
 
-const mutationKey = ['getBusinessDomainTree'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBusinessDomainTreeQueryKey = () => {
+    return [
+    `/business-domains/tree`
+    ] as const;
+    }
 
 
+export const getGetBusinessDomainTreeQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessDomainTree>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBusinessDomainTreeQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBusinessDomainTree>>, void> = () => {
 
-
-          return  getBusinessDomainTree(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessDomainTree>>> = ({ signal }) => getBusinessDomainTree({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetBusinessDomainTreeMutationResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainTree>>>
+export type GetBusinessDomainTreeQueryResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainTree>>>
+export type GetBusinessDomainTreeQueryError = void
 
-    export type GetBusinessDomainTreeMutationError = void
 
-    /**
+export function useGetBusinessDomainTree<TData = Awaited<ReturnType<typeof getBusinessDomainTree>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainTree>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainTree<TData = Awaited<ReturnType<typeof getBusinessDomainTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainTree>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainTree<TData = Awaited<ReturnType<typeof getBusinessDomainTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get business domain hierarchy
  */
-export const useGetBusinessDomainTree = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBusinessDomainTree>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetBusinessDomainTreeMutationOptions(options), queryClient);
-    }
-    export type getBusinessDomainByKeyResponse200 = {
+
+export function useGetBusinessDomainTree<TData = Awaited<ReturnType<typeof getBusinessDomainTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBusinessDomainTreeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type getBusinessDomainByKeyResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -417,51 +448,82 @@ export const getBusinessDomainByKey = async (key: string, options?: RequestInit)
 
 
 
-export const getGetBusinessDomainByKeyMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getBusinessDomainByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBusinessDomainByKeyQueryKey = (key: string,) => {
+    return [
+    `/business-domains/${key}`
+    ] as const;
+    }
 
 
+export const getGetBusinessDomainByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBusinessDomainByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBusinessDomainByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getBusinessDomainByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessDomainByKey>>> = ({ signal }) => getBusinessDomainByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetBusinessDomainByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainByKey>>>
+export type GetBusinessDomainByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainByKey>>>
+export type GetBusinessDomainByKeyQueryError = void | ErrorResponse
 
-    export type GetBusinessDomainByKeyMutationError = void | ErrorResponse
 
-    /**
+export function useGetBusinessDomainByKey<TData = Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainByKey<TData = Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainByKey<TData = Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get business domain by key
  */
-export const useGetBusinessDomainByKey = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBusinessDomainByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetBusinessDomainByKeyMutationOptions(options), queryClient);
-    }
-    export type deleteBusinessDomainResponse204 = {
+
+export function useGetBusinessDomainByKey<TData = Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBusinessDomainByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type deleteBusinessDomainResponse204 = {
   data: void
   status: 204
 }
@@ -516,82 +578,51 @@ export const deleteBusinessDomain = async (key: string, options?: RequestInit): 
 
 
 
+export const getDeleteBusinessDomainMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError,{key: string}, TContext> => {
 
-export const getDeleteBusinessDomainQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/business-domains/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteBusinessDomainQueryOptions = <TData = Awaited<ReturnType<typeof deleteBusinessDomain>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteBusinessDomainQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteBusinessDomain>>> = ({ signal }) => deleteBusinessDomain(key, { signal, ...requestOptions });
+const mutationKey = ['deleteBusinessDomain'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBusinessDomain>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteBusinessDomainQueryResult = NonNullable<Awaited<ReturnType<typeof deleteBusinessDomain>>>
-export type DeleteBusinessDomainQueryError = void | ErrorResponse
+          return  deleteBusinessDomain(key,requestOptions)
+        }
 
 
-export function useDeleteBusinessDomain<TData = Awaited<ReturnType<typeof deleteBusinessDomain>>, TError = void | ErrorResponse>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteBusinessDomain>>,
-          TError,
-          Awaited<ReturnType<typeof deleteBusinessDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteBusinessDomain<TData = Awaited<ReturnType<typeof deleteBusinessDomain>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteBusinessDomain>>,
-          TError,
-          Awaited<ReturnType<typeof deleteBusinessDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteBusinessDomain<TData = Awaited<ReturnType<typeof deleteBusinessDomain>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBusinessDomainMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBusinessDomain>>>
+
+    export type DeleteBusinessDomainMutationError = void | ErrorResponse
+
+    /**
  * @summary Delete business domain
  */
-
-export function useDeleteBusinessDomain<TData = Awaited<ReturnType<typeof deleteBusinessDomain>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteBusinessDomainQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type assignClassificationsToDomainResponse200 = {
+export const useDeleteBusinessDomain = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBusinessDomain>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBusinessDomain>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteBusinessDomainMutationOptions(options), queryClient);
+    }
+    export type assignClassificationsToDomainResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -652,88 +683,51 @@ export const assignClassificationsToDomain = async (key: string,
 
 
 
+export const getAssignClassificationsToDomainMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
-export const getAssignClassificationsToDomainQueryKey = (key: string,
-    classificationAssignmentRequest?: ClassificationAssignmentRequest[],) => {
-    return [
-    'PUT', `/business-domains/${key}/classifications`, classificationAssignmentRequest
-    ] as const;
-    }
-
-
-export const getAssignClassificationsToDomainQueryOptions = <TData = Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError = ErrorResponse | void>(key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAssignClassificationsToDomainQueryKey(key,classificationAssignmentRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignClassificationsToDomain>>> = ({ signal }) => assignClassificationsToDomain(key,classificationAssignmentRequest, { signal, ...requestOptions });
+const mutationKey = ['assignClassificationsToDomain'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToDomain>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AssignClassificationsToDomainQueryResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToDomain>>>
-export type AssignClassificationsToDomainQueryError = ErrorResponse | void
+          return  assignClassificationsToDomain(key,data,requestOptions)
+        }
 
 
-export function useAssignClassificationsToDomain<TData = Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError = ErrorResponse | void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToDomain>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToDomain<TData = Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError = ErrorResponse | void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToDomain>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToDomain>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToDomain<TData = Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError = ErrorResponse | void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignClassificationsToDomainMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToDomain>>>
+    export type AssignClassificationsToDomainMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToDomainMutationError = ErrorResponse | void
+
+    /**
  * @summary Assign classifications to business domain
  */
-
-export function useAssignClassificationsToDomain<TData = Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError = ErrorResponse | void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAssignClassificationsToDomainQueryOptions(key,classificationAssignmentRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBusinessDomainDescriptionsResponse200 = {
+export const useAssignClassificationsToDomain = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToDomain>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignClassificationsToDomain>>,
+        TError,
+        {key: string;data: ClassificationAssignmentRequest[]},
+        TContext
+      > => {
+      return useMutation(getAssignClassificationsToDomainMutationOptions(options), queryClient);
+    }
+    export type updateBusinessDomainDescriptionsResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -794,88 +788,51 @@ export const updateBusinessDomainDescriptions = async (key: string,
 
 
 
+export const getUpdateBusinessDomainDescriptionsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateBusinessDomainDescriptionsQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/business-domains/${key}/descriptions`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainDescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError = ErrorResponse | void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainDescriptionsQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>> = ({ signal }) => updateBusinessDomainDescriptions(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainDescriptions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainDescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>>
-export type UpdateBusinessDomainDescriptionsQueryError = ErrorResponse | void
+          return  updateBusinessDomainDescriptions(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainDescriptions<TData = Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainDescriptions<TData = Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainDescriptions<TData = Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>>
+    export type UpdateBusinessDomainDescriptionsMutationBody = LocalizedText[]
+    export type UpdateBusinessDomainDescriptionsMutationError = ErrorResponse | void
+
+    /**
  * @summary Update business domain descriptions
  */
-
-export function useUpdateBusinessDomainDescriptions<TData = Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainDescriptionsQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getLocalizedBusinessDomainResponse200 = {
+export const useUpdateBusinessDomainDescriptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainDescriptions>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainDescriptionsMutationOptions(options), queryClient);
+    }
+    export type getLocalizedBusinessDomainResponse200 = {
   data: LocalizedBusinessDomainResponse
   status: 200
 }
@@ -934,51 +891,88 @@ export const getLocalizedBusinessDomain = async (key: string,
 
 
 
-export const getGetLocalizedBusinessDomainMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError,{key: string;params?: GetLocalizedBusinessDomainParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError,{key: string;params?: GetLocalizedBusinessDomainParams}, TContext> => {
 
-const mutationKey = ['getLocalizedBusinessDomain'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetLocalizedBusinessDomainQueryKey = (key: string,
+    params?: GetLocalizedBusinessDomainParams,) => {
+    return [
+    `/business-domains/${key}/localized`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getGetLocalizedBusinessDomainQueryOptions = <TData = Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError = void | ErrorResponse>(key: string,
+    params?: GetLocalizedBusinessDomainParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
 
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, {key: string;params?: GetLocalizedBusinessDomainParams}> = (props) => {
-          const {key,params} = props ?? {};
-
-          return  getLocalizedBusinessDomain(key,params,requestOptions)
-        }
+  const queryKey =  queryOptions?.queryKey ?? getGetLocalizedBusinessDomainQueryKey(key,params);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>> = ({ signal }) => getLocalizedBusinessDomain(key,params, { signal, ...requestOptions });
 
 
 
-  return  { mutationFn, ...mutationOptions }}
 
-    export type GetLocalizedBusinessDomainMutationResult = NonNullable<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>>
 
-    export type GetLocalizedBusinessDomainMutationError = void | ErrorResponse
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    /**
+export type GetLocalizedBusinessDomainQueryResult = NonNullable<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>>
+export type GetLocalizedBusinessDomainQueryError = void | ErrorResponse
+
+
+export function useGetLocalizedBusinessDomain<TData = Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError = void | ErrorResponse>(
+ key: string,
+    params: undefined |  GetLocalizedBusinessDomainParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLocalizedBusinessDomain>>,
+          TError,
+          Awaited<ReturnType<typeof getLocalizedBusinessDomain>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLocalizedBusinessDomain<TData = Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError = void | ErrorResponse>(
+ key: string,
+    params?: GetLocalizedBusinessDomainParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLocalizedBusinessDomain>>,
+          TError,
+          Awaited<ReturnType<typeof getLocalizedBusinessDomain>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLocalizedBusinessDomain<TData = Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError = void | ErrorResponse>(
+ key: string,
+    params?: GetLocalizedBusinessDomainParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get localized business domain
  */
-export const useGetLocalizedBusinessDomain = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError,{key: string;params?: GetLocalizedBusinessDomainParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getLocalizedBusinessDomain>>,
-        TError,
-        {key: string;params?: GetLocalizedBusinessDomainParams},
-        TContext
-      > => {
-      return useMutation(getGetLocalizedBusinessDomainMutationOptions(options), queryClient);
-    }
-    export type updateBusinessDomainNamesResponse200 = {
+
+export function useGetLocalizedBusinessDomain<TData = Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError = void | ErrorResponse>(
+ key: string,
+    params?: GetLocalizedBusinessDomainParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLocalizedBusinessDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetLocalizedBusinessDomainQueryOptions(key,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateBusinessDomainNamesResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -1039,88 +1033,51 @@ export const updateBusinessDomainNames = async (key: string,
 
 
 
+export const getUpdateBusinessDomainNamesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateBusinessDomainNamesQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/business-domains/${key}/names`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainNamesQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError = ErrorResponse | void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainNamesQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainNames>>> = ({ signal }) => updateBusinessDomainNames(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainNames'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainNamesQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainNames>>>
-export type UpdateBusinessDomainNamesQueryError = ErrorResponse | void
+          return  updateBusinessDomainNames(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainNames<TData = Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainNames<TData = Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainNames<TData = Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainNames>>>
+    export type UpdateBusinessDomainNamesMutationBody = LocalizedText[]
+    export type UpdateBusinessDomainNamesMutationError = ErrorResponse | void
+
+    /**
  * @summary Update business domain names
  */
-
-export function useUpdateBusinessDomainNames<TData = Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainNamesQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBusinessDomainParentResponse200 = {
+export const useUpdateBusinessDomainNames = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainNamesMutationOptions(options), queryClient);
+    }
+    export type updateBusinessDomainParentResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -1181,88 +1138,51 @@ export const updateBusinessDomainParent = async (key: string,
 
 
 
+export const getUpdateBusinessDomainParentMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext> => {
 
-export const getUpdateBusinessDomainParentQueryKey = (key: string,
-    updateBusinessDomainParentRequest?: UpdateBusinessDomainParentRequest,) => {
-    return [
-    'PUT', `/business-domains/${key}/parent`, updateBusinessDomainParentRequest
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainParentQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError = ErrorResponse | void>(key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainParentQueryKey(key,updateBusinessDomainParentRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainParent>>> = ({ signal }) => updateBusinessDomainParent(key,updateBusinessDomainParentRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainParent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainParent>>, {key: string;data: UpdateBusinessDomainParentRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainParentQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainParent>>>
-export type UpdateBusinessDomainParentQueryError = ErrorResponse | void
+          return  updateBusinessDomainParent(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainParent<TData = Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError = ErrorResponse | void>(
- key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainParent>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainParent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainParent<TData = Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError = ErrorResponse | void>(
- key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainParent>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainParent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainParent<TData = Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError = ErrorResponse | void>(
- key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainParentMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainParent>>>
+    export type UpdateBusinessDomainParentMutationBody = UpdateBusinessDomainParentRequest
+    export type UpdateBusinessDomainParentMutationError = ErrorResponse | void
+
+    /**
  * @summary Update business domain parent
  */
-
-export function useUpdateBusinessDomainParent<TData = Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError = ErrorResponse | void>(
- key: string,
-    updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainParentQueryOptions(key,updateBusinessDomainParentRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBusinessDomainTypeResponse200 = {
+export const useUpdateBusinessDomainParent = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainParent>>, TError,{key: string;data: UpdateBusinessDomainParentRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainParent>>,
+        TError,
+        {key: string;data: UpdateBusinessDomainParentRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainParentMutationOptions(options), queryClient);
+    }
+    export type updateBusinessDomainTypeResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -1318,88 +1238,51 @@ export const updateBusinessDomainType = async (key: string,
 
 
 
+export const getUpdateBusinessDomainTypeMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext> => {
 
-export const getUpdateBusinessDomainTypeQueryKey = (key: string,
-    updateBusinessDomainTypeRequest?: UpdateBusinessDomainTypeRequest,) => {
-    return [
-    'PUT', `/business-domains/${key}/type`, updateBusinessDomainTypeRequest
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainTypeQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainType>>, TError = void | ErrorResponse>(key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainTypeQueryKey(key,updateBusinessDomainTypeRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainType>>> = ({ signal }) => updateBusinessDomainType(key,updateBusinessDomainTypeRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainType'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainType>>, {key: string;data: UpdateBusinessDomainTypeRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainTypeQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainType>>>
-export type UpdateBusinessDomainTypeQueryError = void | ErrorResponse
+          return  updateBusinessDomainType(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainType<TData = Awaited<ReturnType<typeof updateBusinessDomainType>>, TError = void | ErrorResponse>(
- key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainType>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainType>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainType<TData = Awaited<ReturnType<typeof updateBusinessDomainType>>, TError = void | ErrorResponse>(
- key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainType>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainType>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainType<TData = Awaited<ReturnType<typeof updateBusinessDomainType>>, TError = void | ErrorResponse>(
- key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainType>>>
+    export type UpdateBusinessDomainTypeMutationBody = UpdateBusinessDomainTypeRequest
+    export type UpdateBusinessDomainTypeMutationError = void | ErrorResponse
+
+    /**
  * @summary Update business domain type
  */
-
-export function useUpdateBusinessDomainType<TData = Awaited<ReturnType<typeof updateBusinessDomainType>>, TError = void | ErrorResponse>(
- key: string,
-    updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainTypeQueryOptions(key,updateBusinessDomainTypeRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getBusinessDomainVersionsResponse200 = {
+export const useUpdateBusinessDomainType = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainType>>, TError,{key: string;data: UpdateBusinessDomainTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainType>>,
+        TError,
+        {key: string;data: UpdateBusinessDomainTypeRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainTypeMutationOptions(options), queryClient);
+    }
+    export type getBusinessDomainVersionsResponse200 = {
   data: BusinessDomainVersionResponse[]
   status: 200
 }
@@ -1449,51 +1332,82 @@ export const getBusinessDomainVersions = async (key: string, options?: RequestIn
 
 
 
-export const getGetBusinessDomainVersionsMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getBusinessDomainVersions'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBusinessDomainVersionsQueryKey = (key: string,) => {
+    return [
+    `/business-domains/${key}/versions`
+    ] as const;
+    }
 
 
+export const getGetBusinessDomainVersionsQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBusinessDomainVersionsQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBusinessDomainVersions>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getBusinessDomainVersions(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessDomainVersions>>> = ({ signal }) => getBusinessDomainVersions(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetBusinessDomainVersionsMutationResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainVersions>>>
+export type GetBusinessDomainVersionsQueryResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainVersions>>>
+export type GetBusinessDomainVersionsQueryError = void | ErrorResponse
 
-    export type GetBusinessDomainVersionsMutationError = void | ErrorResponse
 
-    /**
+export function useGetBusinessDomainVersions<TData = Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainVersions>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainVersions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainVersions<TData = Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainVersions>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainVersions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainVersions<TData = Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get business domain version history
  */
-export const useGetBusinessDomainVersions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBusinessDomainVersions>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetBusinessDomainVersionsMutationOptions(options), queryClient);
-    }
-    export type getBusinessDomainVersionDiffResponse200 = {
+
+export function useGetBusinessDomainVersions<TData = Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBusinessDomainVersionsQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type getBusinessDomainVersionDiffResponse200 = {
   data: VersionDiffResponse
   status: 200
 }
@@ -1545,51 +1459,88 @@ export const getBusinessDomainVersionDiff = async (key: string,
 
 
 
-export const getGetBusinessDomainVersionDiffMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError,{key: string;versionNumber: number}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError,{key: string;versionNumber: number}, TContext> => {
 
-const mutationKey = ['getBusinessDomainVersionDiff'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBusinessDomainVersionDiffQueryKey = (key: string,
+    versionNumber: number,) => {
+    return [
+    `/business-domains/${key}/versions/${versionNumber}/diff`
+    ] as const;
+    }
 
 
+export const getGetBusinessDomainVersionDiffQueryOptions = <TData = Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError = void | ErrorResponse>(key: string,
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
 
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, {key: string;versionNumber: number}> = (props) => {
-          const {key,versionNumber} = props ?? {};
-
-          return  getBusinessDomainVersionDiff(key,versionNumber,requestOptions)
-        }
+  const queryKey =  queryOptions?.queryKey ?? getGetBusinessDomainVersionDiffQueryKey(key,versionNumber);
 
 
 
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>> = ({ signal }) => getBusinessDomainVersionDiff(key,versionNumber, { signal, ...requestOptions });
 
 
 
-  return  { mutationFn, ...mutationOptions }}
 
-    export type GetBusinessDomainVersionDiffMutationResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>>
 
-    export type GetBusinessDomainVersionDiffMutationError = void | ErrorResponse
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && versionNumber !== null && versionNumber !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    /**
+export type GetBusinessDomainVersionDiffQueryResult = NonNullable<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>>
+export type GetBusinessDomainVersionDiffQueryError = void | ErrorResponse
+
+
+export function useGetBusinessDomainVersionDiff<TData = Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError = void | ErrorResponse>(
+ key: string,
+    versionNumber: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainVersionDiff<TData = Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError = void | ErrorResponse>(
+ key: string,
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>,
+          TError,
+          Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBusinessDomainVersionDiff<TData = Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError = void | ErrorResponse>(
+ key: string,
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get diff between domain versions
  */
-export const useGetBusinessDomainVersionDiff = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError,{key: string;versionNumber: number}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>,
-        TError,
-        {key: string;versionNumber: number},
-        TContext
-      > => {
-      return useMutation(getGetBusinessDomainVersionDiffMutationOptions(options), queryClient);
-    }
-    export type updateBusinessDomainVisionStatementResponse200 = {
+
+export function useGetBusinessDomainVersionDiff<TData = Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError = void | ErrorResponse>(
+ key: string,
+    versionNumber: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBusinessDomainVersionDiff>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBusinessDomainVersionDiffQueryOptions(key,versionNumber,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type updateBusinessDomainVisionStatementResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -1644,88 +1595,51 @@ export const updateBusinessDomainVisionStatement = async (key: string,
 
 
 
+export const getUpdateBusinessDomainVisionStatementMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext> => {
 
-export const getUpdateBusinessDomainVisionStatementQueryKey = (key: string,
-    updateDomainVisionStatementRequest?: UpdateDomainVisionStatementRequest,) => {
-    return [
-    'PUT', `/business-domains/${key}/vision-statement`, updateDomainVisionStatementRequest
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainVisionStatementQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError = void>(key: string,
-    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainVisionStatementQueryKey(key,updateDomainVisionStatementRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>> = ({ signal }) => updateBusinessDomainVisionStatement(key,updateDomainVisionStatementRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainVisionStatement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, {key: string;data: UpdateDomainVisionStatementRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainVisionStatementQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>>
-export type UpdateBusinessDomainVisionStatementQueryError = void
+          return  updateBusinessDomainVisionStatement(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainVisionStatement<TData = Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError = void>(
- key: string,
-    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainVisionStatement<TData = Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError = void>(
- key: string,
-    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainVisionStatement<TData = Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError = void>(
- key: string,
-    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainVisionStatementMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>>
+    export type UpdateBusinessDomainVisionStatementMutationBody = UpdateDomainVisionStatementRequest
+    export type UpdateBusinessDomainVisionStatementMutationError = void
+
+    /**
  * @summary Update domain vision statement
  */
-
-export function useUpdateBusinessDomainVisionStatement<TData = Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError = void>(
- key: string,
-    updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainVisionStatementQueryOptions(key,updateDomainVisionStatementRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBusinessDomainOwningUnitResponse200 = {
+export const useUpdateBusinessDomainVisionStatement = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>, TError,{key: string;data: UpdateDomainVisionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainVisionStatement>>,
+        TError,
+        {key: string;data: UpdateDomainVisionStatementRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainVisionStatementMutationOptions(options), queryClient);
+    }
+    export type updateBusinessDomainOwningUnitResponse200 = {
   data: BusinessDomainResponse
   status: 200
 }
@@ -1780,84 +1694,47 @@ export const updateBusinessDomainOwningUnit = async (key: string,
 
 
 
+export const getUpdateBusinessDomainOwningUnitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext> => {
 
-export const getUpdateBusinessDomainOwningUnitQueryKey = (key: string,
-    updateDomainOwningUnitRequest?: UpdateDomainOwningUnitRequest,) => {
-    return [
-    'PUT', `/business-domains/${key}/owning-unit`, updateDomainOwningUnitRequest
-    ] as const;
-    }
-
-
-export const getUpdateBusinessDomainOwningUnitQueryOptions = <TData = Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError = void>(key: string,
-    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBusinessDomainOwningUnitQueryKey(key,updateDomainOwningUnitRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>> = ({ signal }) => updateBusinessDomainOwningUnit(key,updateDomainOwningUnitRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBusinessDomainOwningUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, {key: string;data: UpdateDomainOwningUnitRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBusinessDomainOwningUnitQueryResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>>
-export type UpdateBusinessDomainOwningUnitQueryError = void
+          return  updateBusinessDomainOwningUnit(key,data,requestOptions)
+        }
 
 
-export function useUpdateBusinessDomainOwningUnit<TData = Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError = void>(
- key: string,
-    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainOwningUnit<TData = Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError = void>(
- key: string,
-    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>,
-          TError,
-          Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBusinessDomainOwningUnit<TData = Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError = void>(
- key: string,
-    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessDomainOwningUnitMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>>
+    export type UpdateBusinessDomainOwningUnitMutationBody = UpdateDomainOwningUnitRequest
+    export type UpdateBusinessDomainOwningUnitMutationError = void
+
+    /**
  * @summary Update domain owning unit
  */
-
-export function useUpdateBusinessDomainOwningUnit<TData = Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError = void>(
- key: string,
-    updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBusinessDomainOwningUnitQueryOptions(key,updateDomainOwningUnitRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateBusinessDomainOwningUnit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>, TError,{key: string;data: UpdateDomainOwningUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessDomainOwningUnit>>,
+        TError,
+        {key: string;data: UpdateDomainOwningUnitRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessDomainOwningUnitMutationOptions(options), queryClient);
+    }

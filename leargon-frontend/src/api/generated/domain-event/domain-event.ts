@@ -95,51 +95,82 @@ export const getAllDomainEvents = async ( options?: RequestInit): Promise<getAll
 
 
 
-export const getGetAllDomainEventsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllDomainEvents'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllDomainEventsQueryKey = () => {
+    return [
+    `/domain-events`
+    ] as const;
+    }
 
 
+export const getGetAllDomainEventsQueryOptions = <TData = Awaited<ReturnType<typeof getAllDomainEvents>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllDomainEventsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllDomainEvents>>, void> = () => {
 
-
-          return  getAllDomainEvents(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllDomainEvents>>> = ({ signal }) => getAllDomainEvents({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllDomainEventsMutationResult = NonNullable<Awaited<ReturnType<typeof getAllDomainEvents>>>
+export type GetAllDomainEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllDomainEvents>>>
+export type GetAllDomainEventsQueryError = void
 
-    export type GetAllDomainEventsMutationError = void
 
-    /**
+export function useGetAllDomainEvents<TData = Awaited<ReturnType<typeof getAllDomainEvents>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllDomainEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getAllDomainEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllDomainEvents<TData = Awaited<ReturnType<typeof getAllDomainEvents>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllDomainEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getAllDomainEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllDomainEvents<TData = Awaited<ReturnType<typeof getAllDomainEvents>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all domain events
  */
-export const useGetAllDomainEvents = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllDomainEvents>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllDomainEventsMutationOptions(options), queryClient);
-    }
-    export type createDomainEventResponse201 = {
+
+export function useGetAllDomainEvents<TData = Awaited<ReturnType<typeof getAllDomainEvents>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllDomainEvents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllDomainEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createDomainEventResponse201 = {
   data: DomainEventResponse
   status: 201
 }
@@ -193,82 +224,51 @@ export const createDomainEvent = async (createDomainEventRequest: CreateDomainEv
 
 
 
+export const getCreateDomainEventMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError,{data: CreateDomainEventRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError,{data: CreateDomainEventRequest}, TContext> => {
 
-export const getCreateDomainEventQueryKey = (createDomainEventRequest?: CreateDomainEventRequest,) => {
-    return [
-    'POST', `/domain-events`, createDomainEventRequest
-    ] as const;
-    }
-
-
-export const getCreateDomainEventQueryOptions = <TData = Awaited<ReturnType<typeof createDomainEvent>>, TError = void>(createDomainEventRequest: CreateDomainEventRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateDomainEventQueryKey(createDomainEventRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createDomainEvent>>> = ({ signal }) => createDomainEvent(createDomainEventRequest, { signal, ...requestOptions });
+const mutationKey = ['createDomainEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDomainEvent>>, {data: CreateDomainEventRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateDomainEventQueryResult = NonNullable<Awaited<ReturnType<typeof createDomainEvent>>>
-export type CreateDomainEventQueryError = void
+          return  createDomainEvent(data,requestOptions)
+        }
 
 
-export function useCreateDomainEvent<TData = Awaited<ReturnType<typeof createDomainEvent>>, TError = void>(
- createDomainEventRequest: CreateDomainEventRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createDomainEvent>>,
-          TError,
-          Awaited<ReturnType<typeof createDomainEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateDomainEvent<TData = Awaited<ReturnType<typeof createDomainEvent>>, TError = void>(
- createDomainEventRequest: CreateDomainEventRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createDomainEvent>>,
-          TError,
-          Awaited<ReturnType<typeof createDomainEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateDomainEvent<TData = Awaited<ReturnType<typeof createDomainEvent>>, TError = void>(
- createDomainEventRequest: CreateDomainEventRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDomainEventMutationResult = NonNullable<Awaited<ReturnType<typeof createDomainEvent>>>
+    export type CreateDomainEventMutationBody = CreateDomainEventRequest
+    export type CreateDomainEventMutationError = void
+
+    /**
  * @summary Create a domain event
  */
-
-export function useCreateDomainEvent<TData = Awaited<ReturnType<typeof createDomainEvent>>, TError = void>(
- createDomainEventRequest: CreateDomainEventRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateDomainEventQueryOptions(createDomainEventRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getDomainEventByKeyResponse200 = {
+export const useCreateDomainEvent = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDomainEvent>>, TError,{data: CreateDomainEventRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createDomainEvent>>,
+        TError,
+        {data: CreateDomainEventRequest},
+        TContext
+      > => {
+      return useMutation(getCreateDomainEventMutationOptions(options), queryClient);
+    }
+    export type getDomainEventByKeyResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -317,51 +317,82 @@ export const getDomainEventByKey = async (key: string, options?: RequestInit): P
 
 
 
-export const getGetDomainEventByKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getDomainEventByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetDomainEventByKeyQueryKey = (key: string,) => {
+    return [
+    `/domain-events/${key}`
+    ] as const;
+    }
 
 
+export const getGetDomainEventByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getDomainEventByKey>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDomainEventByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getDomainEventByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getDomainEventByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDomainEventByKey>>> = ({ signal }) => getDomainEventByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetDomainEventByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getDomainEventByKey>>>
+export type GetDomainEventByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getDomainEventByKey>>>
+export type GetDomainEventByKeyQueryError = void
 
-    export type GetDomainEventByKeyMutationError = void
 
-    /**
+export function useGetDomainEventByKey<TData = Awaited<ReturnType<typeof getDomainEventByKey>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDomainEventByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getDomainEventByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDomainEventByKey<TData = Awaited<ReturnType<typeof getDomainEventByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDomainEventByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getDomainEventByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDomainEventByKey<TData = Awaited<ReturnType<typeof getDomainEventByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get a domain event by key
  */
-export const useGetDomainEventByKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getDomainEventByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetDomainEventByKeyMutationOptions(options), queryClient);
-    }
-    export type deleteDomainEventResponse204 = {
+
+export function useGetDomainEventByKey<TData = Awaited<ReturnType<typeof getDomainEventByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDomainEventByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetDomainEventByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type deleteDomainEventResponse204 = {
   data: void
   status: 204
 }
@@ -415,82 +446,51 @@ export const deleteDomainEvent = async (key: string, options?: RequestInit): Pro
 
 
 
+export const getDeleteDomainEventMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError,{key: string}, TContext> => {
 
-export const getDeleteDomainEventQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/domain-events/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteDomainEventQueryOptions = <TData = Awaited<ReturnType<typeof deleteDomainEvent>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteDomainEventQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteDomainEvent>>> = ({ signal }) => deleteDomainEvent(key, { signal, ...requestOptions });
+const mutationKey = ['deleteDomainEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDomainEvent>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteDomainEventQueryResult = NonNullable<Awaited<ReturnType<typeof deleteDomainEvent>>>
-export type DeleteDomainEventQueryError = void
+          return  deleteDomainEvent(key,requestOptions)
+        }
 
 
-export function useDeleteDomainEvent<TData = Awaited<ReturnType<typeof deleteDomainEvent>>, TError = void>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteDomainEvent>>,
-          TError,
-          Awaited<ReturnType<typeof deleteDomainEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteDomainEvent<TData = Awaited<ReturnType<typeof deleteDomainEvent>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteDomainEvent>>,
-          TError,
-          Awaited<ReturnType<typeof deleteDomainEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteDomainEvent<TData = Awaited<ReturnType<typeof deleteDomainEvent>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDomainEventMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDomainEvent>>>
+
+    export type DeleteDomainEventMutationError = void
+
+    /**
  * @summary Delete a domain event
  */
-
-export function useDeleteDomainEvent<TData = Awaited<ReturnType<typeof deleteDomainEvent>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteDomainEventQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateDomainEventNamesResponse200 = {
+export const useDeleteDomainEvent = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDomainEvent>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDomainEvent>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteDomainEventMutationOptions(options), queryClient);
+    }
+    export type updateDomainEventNamesResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -545,88 +545,51 @@ export const updateDomainEventNames = async (key: string,
 
 
 
+export const getUpdateDomainEventNamesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateDomainEventNamesQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/domain-events/${key}/names`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateDomainEventNamesQueryOptions = <TData = Awaited<ReturnType<typeof updateDomainEventNames>>, TError = void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDomainEventNamesQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDomainEventNames>>> = ({ signal }) => updateDomainEventNames(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateDomainEventNames'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDomainEventNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDomainEventNamesQueryResult = NonNullable<Awaited<ReturnType<typeof updateDomainEventNames>>>
-export type UpdateDomainEventNamesQueryError = void
+          return  updateDomainEventNames(key,data,requestOptions)
+        }
 
 
-export function useUpdateDomainEventNames<TData = Awaited<ReturnType<typeof updateDomainEventNames>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDomainEventNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateDomainEventNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDomainEventNames<TData = Awaited<ReturnType<typeof updateDomainEventNames>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDomainEventNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateDomainEventNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDomainEventNames<TData = Awaited<ReturnType<typeof updateDomainEventNames>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDomainEventNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateDomainEventNames>>>
+    export type UpdateDomainEventNamesMutationBody = LocalizedText[]
+    export type UpdateDomainEventNamesMutationError = void
+
+    /**
  * @summary Update domain event names
  */
-
-export function useUpdateDomainEventNames<TData = Awaited<ReturnType<typeof updateDomainEventNames>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDomainEventNamesQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateDomainEventDescriptionsResponse200 = {
+export const useUpdateDomainEventNames = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDomainEventNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateDomainEventNamesMutationOptions(options), queryClient);
+    }
+    export type updateDomainEventDescriptionsResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -681,88 +644,51 @@ export const updateDomainEventDescriptions = async (key: string,
 
 
 
+export const getUpdateDomainEventDescriptionsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateDomainEventDescriptionsQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/domain-events/${key}/descriptions`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateDomainEventDescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError = void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateDomainEventDescriptionsQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateDomainEventDescriptions>>> = ({ signal }) => updateDomainEventDescriptions(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateDomainEventDescriptions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateDomainEventDescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof updateDomainEventDescriptions>>>
-export type UpdateDomainEventDescriptionsQueryError = void
+          return  updateDomainEventDescriptions(key,data,requestOptions)
+        }
 
 
-export function useUpdateDomainEventDescriptions<TData = Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDomainEventDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateDomainEventDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDomainEventDescriptions<TData = Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateDomainEventDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateDomainEventDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateDomainEventDescriptions<TData = Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDomainEventDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateDomainEventDescriptions>>>
+    export type UpdateDomainEventDescriptionsMutationBody = LocalizedText[]
+    export type UpdateDomainEventDescriptionsMutationError = void
+
+    /**
  * @summary Update domain event descriptions
  */
-
-export function useUpdateDomainEventDescriptions<TData = Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError = void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateDomainEventDescriptionsQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type setDomainEventConsumersResponse200 = {
+export const useUpdateDomainEventDescriptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDomainEventDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateDomainEventDescriptions>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateDomainEventDescriptionsMutationOptions(options), queryClient);
+    }
+    export type setDomainEventConsumersResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -817,88 +743,51 @@ export const setDomainEventConsumers = async (key: string,
 
 
 
+export const getSetDomainEventConsumersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError,{key: string;data: SetDomainEventConsumersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError,{key: string;data: SetDomainEventConsumersRequest}, TContext> => {
 
-export const getSetDomainEventConsumersQueryKey = (key: string,
-    setDomainEventConsumersRequest?: SetDomainEventConsumersRequest,) => {
-    return [
-    'PUT', `/domain-events/${key}/consumers`, setDomainEventConsumersRequest
-    ] as const;
-    }
-
-
-export const getSetDomainEventConsumersQueryOptions = <TData = Awaited<ReturnType<typeof setDomainEventConsumers>>, TError = void>(key: string,
-    setDomainEventConsumersRequest: SetDomainEventConsumersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSetDomainEventConsumersQueryKey(key,setDomainEventConsumersRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof setDomainEventConsumers>>> = ({ signal }) => setDomainEventConsumers(key,setDomainEventConsumersRequest, { signal, ...requestOptions });
+const mutationKey = ['setDomainEventConsumers'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDomainEventConsumers>>, {key: string;data: SetDomainEventConsumersRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SetDomainEventConsumersQueryResult = NonNullable<Awaited<ReturnType<typeof setDomainEventConsumers>>>
-export type SetDomainEventConsumersQueryError = void
+          return  setDomainEventConsumers(key,data,requestOptions)
+        }
 
 
-export function useSetDomainEventConsumers<TData = Awaited<ReturnType<typeof setDomainEventConsumers>>, TError = void>(
- key: string,
-    setDomainEventConsumersRequest: SetDomainEventConsumersRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof setDomainEventConsumers>>,
-          TError,
-          Awaited<ReturnType<typeof setDomainEventConsumers>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSetDomainEventConsumers<TData = Awaited<ReturnType<typeof setDomainEventConsumers>>, TError = void>(
- key: string,
-    setDomainEventConsumersRequest: SetDomainEventConsumersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof setDomainEventConsumers>>,
-          TError,
-          Awaited<ReturnType<typeof setDomainEventConsumers>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSetDomainEventConsumers<TData = Awaited<ReturnType<typeof setDomainEventConsumers>>, TError = void>(
- key: string,
-    setDomainEventConsumersRequest: SetDomainEventConsumersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDomainEventConsumersMutationResult = NonNullable<Awaited<ReturnType<typeof setDomainEventConsumers>>>
+    export type SetDomainEventConsumersMutationBody = SetDomainEventConsumersRequest
+    export type SetDomainEventConsumersMutationError = void
+
+    /**
  * @summary Set consuming domains for a domain event
  */
-
-export function useSetDomainEventConsumers<TData = Awaited<ReturnType<typeof setDomainEventConsumers>>, TError = void>(
- key: string,
-    setDomainEventConsumersRequest: SetDomainEventConsumersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSetDomainEventConsumersQueryOptions(key,setDomainEventConsumersRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type addDomainEventProcessLinkResponse200 = {
+export const useSetDomainEventConsumers = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDomainEventConsumers>>, TError,{key: string;data: SetDomainEventConsumersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setDomainEventConsumers>>,
+        TError,
+        {key: string;data: SetDomainEventConsumersRequest},
+        TContext
+      > => {
+      return useMutation(getSetDomainEventConsumersMutationOptions(options), queryClient);
+    }
+    export type addDomainEventProcessLinkResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -953,88 +842,51 @@ export const addDomainEventProcessLink = async (key: string,
 
 
 
+export const getAddDomainEventProcessLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError,{key: string;data: AddDomainEventProcessLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError,{key: string;data: AddDomainEventProcessLinkRequest}, TContext> => {
 
-export const getAddDomainEventProcessLinkQueryKey = (key: string,
-    addDomainEventProcessLinkRequest?: AddDomainEventProcessLinkRequest,) => {
-    return [
-    'POST', `/domain-events/${key}/process-links`, addDomainEventProcessLinkRequest
-    ] as const;
-    }
-
-
-export const getAddDomainEventProcessLinkQueryOptions = <TData = Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError = void>(key: string,
-    addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAddDomainEventProcessLinkQueryKey(key,addDomainEventProcessLinkRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof addDomainEventProcessLink>>> = ({ signal }) => addDomainEventProcessLink(key,addDomainEventProcessLinkRequest, { signal, ...requestOptions });
+const mutationKey = ['addDomainEventProcessLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addDomainEventProcessLink>>, {key: string;data: AddDomainEventProcessLinkRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AddDomainEventProcessLinkQueryResult = NonNullable<Awaited<ReturnType<typeof addDomainEventProcessLink>>>
-export type AddDomainEventProcessLinkQueryError = void
+          return  addDomainEventProcessLink(key,data,requestOptions)
+        }
 
 
-export function useAddDomainEventProcessLink<TData = Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError = void>(
- key: string,
-    addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addDomainEventProcessLink>>,
-          TError,
-          Awaited<ReturnType<typeof addDomainEventProcessLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddDomainEventProcessLink<TData = Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError = void>(
- key: string,
-    addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addDomainEventProcessLink>>,
-          TError,
-          Awaited<ReturnType<typeof addDomainEventProcessLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddDomainEventProcessLink<TData = Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError = void>(
- key: string,
-    addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddDomainEventProcessLinkMutationResult = NonNullable<Awaited<ReturnType<typeof addDomainEventProcessLink>>>
+    export type AddDomainEventProcessLinkMutationBody = AddDomainEventProcessLinkRequest
+    export type AddDomainEventProcessLinkMutationError = void
+
+    /**
  * @summary Add a process link to a domain event
  */
-
-export function useAddDomainEventProcessLink<TData = Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError = void>(
- key: string,
-    addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAddDomainEventProcessLinkQueryOptions(key,addDomainEventProcessLinkRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type removeDomainEventProcessLinkResponse200 = {
+export const useAddDomainEventProcessLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventProcessLink>>, TError,{key: string;data: AddDomainEventProcessLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addDomainEventProcessLink>>,
+        TError,
+        {key: string;data: AddDomainEventProcessLinkRequest},
+        TContext
+      > => {
+      return useMutation(getAddDomainEventProcessLinkMutationOptions(options), queryClient);
+    }
+    export type removeDomainEventProcessLinkResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -1090,88 +942,51 @@ export const removeDomainEventProcessLink = async (key: string,
 
 
 
+export const getRemoveDomainEventProcessLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError,{key: string;linkId: number}, TContext> => {
 
-export const getRemoveDomainEventProcessLinkQueryKey = (key: string,
-    linkId: number,) => {
-    return [
-    'DELETE', `/domain-events/${key}/process-links/${linkId}`
-    ] as const;
-    }
-
-
-export const getRemoveDomainEventProcessLinkQueryOptions = <TData = Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError = void>(key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRemoveDomainEventProcessLinkQueryKey(key,linkId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof removeDomainEventProcessLink>>> = ({ signal }) => removeDomainEventProcessLink(key,linkId, { signal, ...requestOptions });
+const mutationKey = ['removeDomainEventProcessLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, {key: string;linkId: number}> = (props) => {
+          const {key,linkId} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && linkId !== null && linkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RemoveDomainEventProcessLinkQueryResult = NonNullable<Awaited<ReturnType<typeof removeDomainEventProcessLink>>>
-export type RemoveDomainEventProcessLinkQueryError = void
+          return  removeDomainEventProcessLink(key,linkId,requestOptions)
+        }
 
 
-export function useRemoveDomainEventProcessLink<TData = Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError = void>(
- key: string,
-    linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof removeDomainEventProcessLink>>,
-          TError,
-          Awaited<ReturnType<typeof removeDomainEventProcessLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRemoveDomainEventProcessLink<TData = Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof removeDomainEventProcessLink>>,
-          TError,
-          Awaited<ReturnType<typeof removeDomainEventProcessLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRemoveDomainEventProcessLink<TData = Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveDomainEventProcessLinkMutationResult = NonNullable<Awaited<ReturnType<typeof removeDomainEventProcessLink>>>
+
+    export type RemoveDomainEventProcessLinkMutationError = void
+
+    /**
  * @summary Remove a process link from a domain event
  */
-
-export function useRemoveDomainEventProcessLink<TData = Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRemoveDomainEventProcessLinkQueryOptions(key,linkId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type addDomainEventEntityLinkResponse200 = {
+export const useRemoveDomainEventProcessLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventProcessLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeDomainEventProcessLink>>,
+        TError,
+        {key: string;linkId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveDomainEventProcessLinkMutationOptions(options), queryClient);
+    }
+    export type addDomainEventEntityLinkResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -1226,88 +1041,51 @@ export const addDomainEventEntityLink = async (key: string,
 
 
 
+export const getAddDomainEventEntityLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext> => {
 
-export const getAddDomainEventEntityLinkQueryKey = (key: string,
-    addDomainEventEntityLinkRequest?: AddDomainEventEntityLinkRequest,) => {
-    return [
-    'POST', `/domain-events/${key}/entity-links`, addDomainEventEntityLinkRequest
-    ] as const;
-    }
-
-
-export const getAddDomainEventEntityLinkQueryOptions = <TData = Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError = void>(key: string,
-    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAddDomainEventEntityLinkQueryKey(key,addDomainEventEntityLinkRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof addDomainEventEntityLink>>> = ({ signal }) => addDomainEventEntityLink(key,addDomainEventEntityLinkRequest, { signal, ...requestOptions });
+const mutationKey = ['addDomainEventEntityLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addDomainEventEntityLink>>, {key: string;data: AddDomainEventEntityLinkRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AddDomainEventEntityLinkQueryResult = NonNullable<Awaited<ReturnType<typeof addDomainEventEntityLink>>>
-export type AddDomainEventEntityLinkQueryError = void
+          return  addDomainEventEntityLink(key,data,requestOptions)
+        }
 
 
-export function useAddDomainEventEntityLink<TData = Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError = void>(
- key: string,
-    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addDomainEventEntityLink>>,
-          TError,
-          Awaited<ReturnType<typeof addDomainEventEntityLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddDomainEventEntityLink<TData = Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError = void>(
- key: string,
-    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof addDomainEventEntityLink>>,
-          TError,
-          Awaited<ReturnType<typeof addDomainEventEntityLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAddDomainEventEntityLink<TData = Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError = void>(
- key: string,
-    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddDomainEventEntityLinkMutationResult = NonNullable<Awaited<ReturnType<typeof addDomainEventEntityLink>>>
+    export type AddDomainEventEntityLinkMutationBody = AddDomainEventEntityLinkRequest
+    export type AddDomainEventEntityLinkMutationError = void
+
+    /**
  * @summary Add an entity link to a domain event
  */
-
-export function useAddDomainEventEntityLink<TData = Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError = void>(
- key: string,
-    addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAddDomainEventEntityLinkQueryOptions(key,addDomainEventEntityLinkRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type removeDomainEventEntityLinkResponse200 = {
+export const useAddDomainEventEntityLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addDomainEventEntityLink>>, TError,{key: string;data: AddDomainEventEntityLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof addDomainEventEntityLink>>,
+        TError,
+        {key: string;data: AddDomainEventEntityLinkRequest},
+        TContext
+      > => {
+      return useMutation(getAddDomainEventEntityLinkMutationOptions(options), queryClient);
+    }
+    export type removeDomainEventEntityLinkResponse200 = {
   data: DomainEventResponse
   status: 200
 }
@@ -1363,84 +1141,47 @@ export const removeDomainEventEntityLink = async (key: string,
 
 
 
+export const getRemoveDomainEventEntityLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext> => {
 
-export const getRemoveDomainEventEntityLinkQueryKey = (key: string,
-    linkId: number,) => {
-    return [
-    'DELETE', `/domain-events/${key}/entity-links/${linkId}`
-    ] as const;
-    }
-
-
-export const getRemoveDomainEventEntityLinkQueryOptions = <TData = Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError = void>(key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getRemoveDomainEventEntityLinkQueryKey(key,linkId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof removeDomainEventEntityLink>>> = ({ signal }) => removeDomainEventEntityLink(key,linkId, { signal, ...requestOptions });
+const mutationKey = ['removeDomainEventEntityLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, {key: string;linkId: number}> = (props) => {
+          const {key,linkId} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined && linkId !== null && linkId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type RemoveDomainEventEntityLinkQueryResult = NonNullable<Awaited<ReturnType<typeof removeDomainEventEntityLink>>>
-export type RemoveDomainEventEntityLinkQueryError = void
+          return  removeDomainEventEntityLink(key,linkId,requestOptions)
+        }
 
 
-export function useRemoveDomainEventEntityLink<TData = Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError = void>(
- key: string,
-    linkId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof removeDomainEventEntityLink>>,
-          TError,
-          Awaited<ReturnType<typeof removeDomainEventEntityLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRemoveDomainEventEntityLink<TData = Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof removeDomainEventEntityLink>>,
-          TError,
-          Awaited<ReturnType<typeof removeDomainEventEntityLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useRemoveDomainEventEntityLink<TData = Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveDomainEventEntityLinkMutationResult = NonNullable<Awaited<ReturnType<typeof removeDomainEventEntityLink>>>
+
+    export type RemoveDomainEventEntityLinkMutationError = void
+
+    /**
  * @summary Remove an entity link from a domain event
  */
-
-export function useRemoveDomainEventEntityLink<TData = Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError = void>(
- key: string,
-    linkId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getRemoveDomainEventEntityLinkQueryOptions(key,linkId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useRemoveDomainEventEntityLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeDomainEventEntityLink>>, TError,{key: string;linkId: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeDomainEventEntityLink>>,
+        TError,
+        {key: string;linkId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveDomainEventEntityLinkMutationOptions(options), queryClient);
+    }

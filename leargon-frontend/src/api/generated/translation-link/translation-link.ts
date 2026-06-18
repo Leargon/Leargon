@@ -97,51 +97,82 @@ export const getEntityTranslationLinks = async (key: string, options?: RequestIn
 
 
 
-export const getGetEntityTranslationLinksMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getEntityTranslationLinks'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetEntityTranslationLinksQueryKey = (key: string,) => {
+    return [
+    `/business-entities/${key}/translation-links`
+    ] as const;
+    }
 
 
+export const getGetEntityTranslationLinksQueryOptions = <TData = Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEntityTranslationLinksQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getEntityTranslationLinks>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getEntityTranslationLinks(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntityTranslationLinks>>> = ({ signal }) => getEntityTranslationLinks(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetEntityTranslationLinksMutationResult = NonNullable<Awaited<ReturnType<typeof getEntityTranslationLinks>>>
+export type GetEntityTranslationLinksQueryResult = NonNullable<Awaited<ReturnType<typeof getEntityTranslationLinks>>>
+export type GetEntityTranslationLinksQueryError = void
 
-    export type GetEntityTranslationLinksMutationError = void
 
-    /**
+export function useGetEntityTranslationLinks<TData = Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityTranslationLinks<TData = Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntityTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getEntityTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntityTranslationLinks<TData = Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get translation links for an entity
  */
-export const useGetEntityTranslationLinks = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getEntityTranslationLinks>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetEntityTranslationLinksMutationOptions(options), queryClient);
-    }
-    export type getAllTranslationLinksResponse200 = {
+
+export function useGetEntityTranslationLinks<TData = Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntityTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetEntityTranslationLinksQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type getAllTranslationLinksResponse200 = {
   data: TranslationLinkResponse[]
   status: 200
 }
@@ -185,51 +216,82 @@ export const getAllTranslationLinks = async ( options?: RequestInit): Promise<ge
 
 
 
-export const getGetAllTranslationLinksMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllTranslationLinks'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllTranslationLinksQueryKey = () => {
+    return [
+    `/translation-links`
+    ] as const;
+    }
 
 
+export const getGetAllTranslationLinksQueryOptions = <TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllTranslationLinksQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllTranslationLinks>>, void> = () => {
 
-
-          return  getAllTranslationLinks(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllTranslationLinks>>> = ({ signal }) => getAllTranslationLinks({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllTranslationLinksMutationResult = NonNullable<Awaited<ReturnType<typeof getAllTranslationLinks>>>
+export type GetAllTranslationLinksQueryResult = NonNullable<Awaited<ReturnType<typeof getAllTranslationLinks>>>
+export type GetAllTranslationLinksQueryError = void
 
-    export type GetAllTranslationLinksMutationError = void
 
-    /**
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getAllTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllTranslationLinks>>,
+          TError,
+          Awaited<ReturnType<typeof getAllTranslationLinks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all translation links
  */
-export const useGetAllTranslationLinks = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllTranslationLinks>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllTranslationLinksMutationOptions(options), queryClient);
-    }
-    export type createTranslationLinkResponse201 = {
+
+export function useGetAllTranslationLinks<TData = Awaited<ReturnType<typeof getAllTranslationLinks>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllTranslationLinks>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllTranslationLinksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createTranslationLinkResponse201 = {
   data: TranslationLinkResponse
   status: 201
 }
@@ -288,82 +350,51 @@ export const createTranslationLink = async (createTranslationLinkRequest: Create
 
 
 
+export const getCreateTranslationLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError,{data: CreateTranslationLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError,{data: CreateTranslationLinkRequest}, TContext> => {
 
-export const getCreateTranslationLinkQueryKey = (createTranslationLinkRequest?: CreateTranslationLinkRequest,) => {
-    return [
-    'POST', `/translation-links`, createTranslationLinkRequest
-    ] as const;
-    }
-
-
-export const getCreateTranslationLinkQueryOptions = <TData = Awaited<ReturnType<typeof createTranslationLink>>, TError = void>(createTranslationLinkRequest: CreateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateTranslationLinkQueryKey(createTranslationLinkRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createTranslationLink>>> = ({ signal }) => createTranslationLink(createTranslationLinkRequest, { signal, ...requestOptions });
+const mutationKey = ['createTranslationLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTranslationLink>>, {data: CreateTranslationLinkRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateTranslationLinkQueryResult = NonNullable<Awaited<ReturnType<typeof createTranslationLink>>>
-export type CreateTranslationLinkQueryError = void
+          return  createTranslationLink(data,requestOptions)
+        }
 
 
-export function useCreateTranslationLink<TData = Awaited<ReturnType<typeof createTranslationLink>>, TError = void>(
- createTranslationLinkRequest: CreateTranslationLinkRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof createTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateTranslationLink<TData = Awaited<ReturnType<typeof createTranslationLink>>, TError = void>(
- createTranslationLinkRequest: CreateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof createTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateTranslationLink<TData = Awaited<ReturnType<typeof createTranslationLink>>, TError = void>(
- createTranslationLinkRequest: CreateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTranslationLinkMutationResult = NonNullable<Awaited<ReturnType<typeof createTranslationLink>>>
+    export type CreateTranslationLinkMutationBody = CreateTranslationLinkRequest
+    export type CreateTranslationLinkMutationError = void
+
+    /**
  * @summary Create a translation link between two entities
  */
-
-export function useCreateTranslationLink<TData = Awaited<ReturnType<typeof createTranslationLink>>, TError = void>(
- createTranslationLinkRequest: CreateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateTranslationLinkQueryOptions(createTranslationLinkRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateTranslationLinkResponse200 = {
+export const useCreateTranslationLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTranslationLink>>, TError,{data: CreateTranslationLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createTranslationLink>>,
+        TError,
+        {data: CreateTranslationLinkRequest},
+        TContext
+      > => {
+      return useMutation(getCreateTranslationLinkMutationOptions(options), queryClient);
+    }
+    export type updateTranslationLinkResponse200 = {
   data: TranslationLinkResponse
   status: 200
 }
@@ -418,88 +449,51 @@ export const updateTranslationLink = async (id: number,
 
 
 
+export const getUpdateTranslationLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError,{id: number;data: UpdateTranslationLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError,{id: number;data: UpdateTranslationLinkRequest}, TContext> => {
 
-export const getUpdateTranslationLinkQueryKey = (id: number,
-    updateTranslationLinkRequest?: UpdateTranslationLinkRequest,) => {
-    return [
-    'PUT', `/translation-links/${id}`, updateTranslationLinkRequest
-    ] as const;
-    }
-
-
-export const getUpdateTranslationLinkQueryOptions = <TData = Awaited<ReturnType<typeof updateTranslationLink>>, TError = void>(id: number,
-    updateTranslationLinkRequest: UpdateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateTranslationLinkQueryKey(id,updateTranslationLinkRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateTranslationLink>>> = ({ signal }) => updateTranslationLink(id,updateTranslationLinkRequest, { signal, ...requestOptions });
+const mutationKey = ['updateTranslationLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTranslationLink>>, {id: number;data: UpdateTranslationLinkRequest}> = (props) => {
+          const {id,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateTranslationLinkQueryResult = NonNullable<Awaited<ReturnType<typeof updateTranslationLink>>>
-export type UpdateTranslationLinkQueryError = void
+          return  updateTranslationLink(id,data,requestOptions)
+        }
 
 
-export function useUpdateTranslationLink<TData = Awaited<ReturnType<typeof updateTranslationLink>>, TError = void>(
- id: number,
-    updateTranslationLinkRequest: UpdateTranslationLinkRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof updateTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateTranslationLink<TData = Awaited<ReturnType<typeof updateTranslationLink>>, TError = void>(
- id: number,
-    updateTranslationLinkRequest: UpdateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof updateTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateTranslationLink<TData = Awaited<ReturnType<typeof updateTranslationLink>>, TError = void>(
- id: number,
-    updateTranslationLinkRequest: UpdateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTranslationLinkMutationResult = NonNullable<Awaited<ReturnType<typeof updateTranslationLink>>>
+    export type UpdateTranslationLinkMutationBody = UpdateTranslationLinkRequest
+    export type UpdateTranslationLinkMutationError = void
+
+    /**
  * @summary Update a translation link
  */
-
-export function useUpdateTranslationLink<TData = Awaited<ReturnType<typeof updateTranslationLink>>, TError = void>(
- id: number,
-    updateTranslationLinkRequest: UpdateTranslationLinkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateTranslationLinkQueryOptions(id,updateTranslationLinkRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteTranslationLinkResponse204 = {
+export const useUpdateTranslationLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTranslationLink>>, TError,{id: number;data: UpdateTranslationLinkRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateTranslationLink>>,
+        TError,
+        {id: number;data: UpdateTranslationLinkRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateTranslationLinkMutationOptions(options), queryClient);
+    }
+    export type deleteTranslationLinkResponse204 = {
   data: void
   status: 204
 }
@@ -553,78 +547,47 @@ export const deleteTranslationLink = async (id: number, options?: RequestInit): 
 
 
 
+export const getDeleteTranslationLinkMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError,{id: number}, TContext> => {
 
-export const getDeleteTranslationLinkQueryKey = (id: number,) => {
-    return [
-    'DELETE', `/translation-links/${id}`
-    ] as const;
-    }
-
-
-export const getDeleteTranslationLinkQueryOptions = <TData = Awaited<ReturnType<typeof deleteTranslationLink>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteTranslationLinkQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteTranslationLink>>> = ({ signal }) => deleteTranslationLink(id, { signal, ...requestOptions });
+const mutationKey = ['deleteTranslationLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTranslationLink>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteTranslationLinkQueryResult = NonNullable<Awaited<ReturnType<typeof deleteTranslationLink>>>
-export type DeleteTranslationLinkQueryError = void
+          return  deleteTranslationLink(id,requestOptions)
+        }
 
 
-export function useDeleteTranslationLink<TData = Awaited<ReturnType<typeof deleteTranslationLink>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof deleteTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteTranslationLink<TData = Awaited<ReturnType<typeof deleteTranslationLink>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteTranslationLink>>,
-          TError,
-          Awaited<ReturnType<typeof deleteTranslationLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteTranslationLink<TData = Awaited<ReturnType<typeof deleteTranslationLink>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTranslationLinkMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTranslationLink>>>
+
+    export type DeleteTranslationLinkMutationError = void
+
+    /**
  * @summary Delete a translation link
  */
-
-export function useDeleteTranslationLink<TData = Awaited<ReturnType<typeof deleteTranslationLink>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteTranslationLinkQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useDeleteTranslationLink = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTranslationLink>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTranslationLink>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTranslationLinkMutationOptions(options), queryClient);
+    }

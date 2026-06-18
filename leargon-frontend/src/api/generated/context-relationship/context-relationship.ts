@@ -92,51 +92,82 @@ export const getAllContextRelationships = async ( options?: RequestInit): Promis
 
 
 
-export const getGetAllContextRelationshipsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllContextRelationships'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllContextRelationshipsQueryKey = () => {
+    return [
+    `/context-relationships`
+    ] as const;
+    }
 
 
+export const getGetAllContextRelationshipsQueryOptions = <TData = Awaited<ReturnType<typeof getAllContextRelationships>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllContextRelationshipsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllContextRelationships>>, void> = () => {
 
-
-          return  getAllContextRelationships(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllContextRelationships>>> = ({ signal }) => getAllContextRelationships({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllContextRelationshipsMutationResult = NonNullable<Awaited<ReturnType<typeof getAllContextRelationships>>>
+export type GetAllContextRelationshipsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllContextRelationships>>>
+export type GetAllContextRelationshipsQueryError = void
 
-    export type GetAllContextRelationshipsMutationError = void
 
-    /**
+export function useGetAllContextRelationships<TData = Awaited<ReturnType<typeof getAllContextRelationships>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllContextRelationships>>,
+          TError,
+          Awaited<ReturnType<typeof getAllContextRelationships>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllContextRelationships<TData = Awaited<ReturnType<typeof getAllContextRelationships>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllContextRelationships>>,
+          TError,
+          Awaited<ReturnType<typeof getAllContextRelationships>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllContextRelationships<TData = Awaited<ReturnType<typeof getAllContextRelationships>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all context relationships
  */
-export const useGetAllContextRelationships = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllContextRelationships>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllContextRelationshipsMutationOptions(options), queryClient);
-    }
-    export type createContextRelationshipResponse201 = {
+
+export function useGetAllContextRelationships<TData = Awaited<ReturnType<typeof getAllContextRelationships>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllContextRelationships>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllContextRelationshipsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createContextRelationshipResponse201 = {
   data: ContextRelationshipResponse
   status: 201
 }
@@ -195,82 +226,51 @@ export const createContextRelationship = async (createContextRelationshipRequest
 
 
 
+export const getCreateContextRelationshipMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError,{data: CreateContextRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError,{data: CreateContextRelationshipRequest}, TContext> => {
 
-export const getCreateContextRelationshipQueryKey = (createContextRelationshipRequest?: CreateContextRelationshipRequest,) => {
-    return [
-    'POST', `/context-relationships`, createContextRelationshipRequest
-    ] as const;
-    }
-
-
-export const getCreateContextRelationshipQueryOptions = <TData = Awaited<ReturnType<typeof createContextRelationship>>, TError = void>(createContextRelationshipRequest: CreateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateContextRelationshipQueryKey(createContextRelationshipRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createContextRelationship>>> = ({ signal }) => createContextRelationship(createContextRelationshipRequest, { signal, ...requestOptions });
+const mutationKey = ['createContextRelationship'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createContextRelationship>>, {data: CreateContextRelationshipRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateContextRelationshipQueryResult = NonNullable<Awaited<ReturnType<typeof createContextRelationship>>>
-export type CreateContextRelationshipQueryError = void
+          return  createContextRelationship(data,requestOptions)
+        }
 
 
-export function useCreateContextRelationship<TData = Awaited<ReturnType<typeof createContextRelationship>>, TError = void>(
- createContextRelationshipRequest: CreateContextRelationshipRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof createContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateContextRelationship<TData = Awaited<ReturnType<typeof createContextRelationship>>, TError = void>(
- createContextRelationshipRequest: CreateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof createContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateContextRelationship<TData = Awaited<ReturnType<typeof createContextRelationship>>, TError = void>(
- createContextRelationshipRequest: CreateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateContextRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof createContextRelationship>>>
+    export type CreateContextRelationshipMutationBody = CreateContextRelationshipRequest
+    export type CreateContextRelationshipMutationError = void
+
+    /**
  * @summary Create a context relationship
  */
-
-export function useCreateContextRelationship<TData = Awaited<ReturnType<typeof createContextRelationship>>, TError = void>(
- createContextRelationshipRequest: CreateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateContextRelationshipQueryOptions(createContextRelationshipRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateContextRelationshipResponse200 = {
+export const useCreateContextRelationship = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContextRelationship>>, TError,{data: CreateContextRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createContextRelationship>>,
+        TError,
+        {data: CreateContextRelationshipRequest},
+        TContext
+      > => {
+      return useMutation(getCreateContextRelationshipMutationOptions(options), queryClient);
+    }
+    export type updateContextRelationshipResponse200 = {
   data: ContextRelationshipResponse
   status: 200
 }
@@ -325,88 +325,51 @@ export const updateContextRelationship = async (id: number,
 
 
 
+export const getUpdateContextRelationshipMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError,{id: number;data: UpdateContextRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError,{id: number;data: UpdateContextRelationshipRequest}, TContext> => {
 
-export const getUpdateContextRelationshipQueryKey = (id: number,
-    updateContextRelationshipRequest?: UpdateContextRelationshipRequest,) => {
-    return [
-    'PUT', `/context-relationships/${id}`, updateContextRelationshipRequest
-    ] as const;
-    }
-
-
-export const getUpdateContextRelationshipQueryOptions = <TData = Awaited<ReturnType<typeof updateContextRelationship>>, TError = void>(id: number,
-    updateContextRelationshipRequest: UpdateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateContextRelationshipQueryKey(id,updateContextRelationshipRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateContextRelationship>>> = ({ signal }) => updateContextRelationship(id,updateContextRelationshipRequest, { signal, ...requestOptions });
+const mutationKey = ['updateContextRelationship'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateContextRelationship>>, {id: number;data: UpdateContextRelationshipRequest}> = (props) => {
+          const {id,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateContextRelationshipQueryResult = NonNullable<Awaited<ReturnType<typeof updateContextRelationship>>>
-export type UpdateContextRelationshipQueryError = void
+          return  updateContextRelationship(id,data,requestOptions)
+        }
 
 
-export function useUpdateContextRelationship<TData = Awaited<ReturnType<typeof updateContextRelationship>>, TError = void>(
- id: number,
-    updateContextRelationshipRequest: UpdateContextRelationshipRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof updateContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateContextRelationship<TData = Awaited<ReturnType<typeof updateContextRelationship>>, TError = void>(
- id: number,
-    updateContextRelationshipRequest: UpdateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof updateContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateContextRelationship<TData = Awaited<ReturnType<typeof updateContextRelationship>>, TError = void>(
- id: number,
-    updateContextRelationshipRequest: UpdateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateContextRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof updateContextRelationship>>>
+    export type UpdateContextRelationshipMutationBody = UpdateContextRelationshipRequest
+    export type UpdateContextRelationshipMutationError = void
+
+    /**
  * @summary Update a context relationship
  */
-
-export function useUpdateContextRelationship<TData = Awaited<ReturnType<typeof updateContextRelationship>>, TError = void>(
- id: number,
-    updateContextRelationshipRequest: UpdateContextRelationshipRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateContextRelationshipQueryOptions(id,updateContextRelationshipRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteContextRelationshipResponse204 = {
+export const useUpdateContextRelationship = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContextRelationship>>, TError,{id: number;data: UpdateContextRelationshipRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateContextRelationship>>,
+        TError,
+        {id: number;data: UpdateContextRelationshipRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateContextRelationshipMutationOptions(options), queryClient);
+    }
+    export type deleteContextRelationshipResponse204 = {
   data: void
   status: 204
 }
@@ -460,78 +423,47 @@ export const deleteContextRelationship = async (id: number, options?: RequestIni
 
 
 
+export const getDeleteContextRelationshipMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError,{id: number}, TContext> => {
 
-export const getDeleteContextRelationshipQueryKey = (id: number,) => {
-    return [
-    'DELETE', `/context-relationships/${id}`
-    ] as const;
-    }
-
-
-export const getDeleteContextRelationshipQueryOptions = <TData = Awaited<ReturnType<typeof deleteContextRelationship>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteContextRelationshipQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteContextRelationship>>> = ({ signal }) => deleteContextRelationship(id, { signal, ...requestOptions });
+const mutationKey = ['deleteContextRelationship'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteContextRelationship>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteContextRelationshipQueryResult = NonNullable<Awaited<ReturnType<typeof deleteContextRelationship>>>
-export type DeleteContextRelationshipQueryError = void
+          return  deleteContextRelationship(id,requestOptions)
+        }
 
 
-export function useDeleteContextRelationship<TData = Awaited<ReturnType<typeof deleteContextRelationship>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof deleteContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteContextRelationship<TData = Awaited<ReturnType<typeof deleteContextRelationship>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteContextRelationship>>,
-          TError,
-          Awaited<ReturnType<typeof deleteContextRelationship>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteContextRelationship<TData = Awaited<ReturnType<typeof deleteContextRelationship>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteContextRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof deleteContextRelationship>>>
+
+    export type DeleteContextRelationshipMutationError = void
+
+    /**
  * @summary Delete a context relationship
  */
-
-export function useDeleteContextRelationship<TData = Awaited<ReturnType<typeof deleteContextRelationship>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteContextRelationshipQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useDeleteContextRelationship = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteContextRelationship>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteContextRelationship>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteContextRelationshipMutationOptions(options), queryClient);
+    }

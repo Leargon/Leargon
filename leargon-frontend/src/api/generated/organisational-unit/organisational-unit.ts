@@ -105,51 +105,82 @@ export const getAllOrganisationalUnits = async ( options?: RequestInit): Promise
 
 
 
-export const getGetAllOrganisationalUnitsMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError,void, TContext> => {
 
-const mutationKey = ['getAllOrganisationalUnits'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetAllOrganisationalUnitsQueryKey = () => {
+    return [
+    `/organisational-units`
+    ] as const;
+    }
 
 
+export const getGetAllOrganisationalUnitsQueryOptions = <TData = Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAllOrganisationalUnitsQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, void> = () => {
 
-
-          return  getAllOrganisationalUnits(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOrganisationalUnits>>> = ({ signal }) => getAllOrganisationalUnits({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetAllOrganisationalUnitsMutationResult = NonNullable<Awaited<ReturnType<typeof getAllOrganisationalUnits>>>
+export type GetAllOrganisationalUnitsQueryResult = NonNullable<Awaited<ReturnType<typeof getAllOrganisationalUnits>>>
+export type GetAllOrganisationalUnitsQueryError = void
 
-    export type GetAllOrganisationalUnitsMutationError = void
 
-    /**
+export function useGetAllOrganisationalUnits<TData = Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOrganisationalUnits>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOrganisationalUnits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllOrganisationalUnits<TData = Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAllOrganisationalUnits>>,
+          TError,
+          Awaited<ReturnType<typeof getAllOrganisationalUnits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAllOrganisationalUnits<TData = Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get all organisational units
  */
-export const useGetAllOrganisationalUnits = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getAllOrganisationalUnits>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetAllOrganisationalUnitsMutationOptions(options), queryClient);
-    }
-    export type createOrganisationalUnitResponse201 = {
+
+export function useGetAllOrganisationalUnits<TData = Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAllOrganisationalUnits>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAllOrganisationalUnitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createOrganisationalUnitResponse201 = {
   data: OrganisationalUnitResponse
   status: 201
 }
@@ -199,82 +230,51 @@ export const createOrganisationalUnit = async (createOrganisationalUnitRequest: 
 
 
 
+export const getCreateOrganisationalUnitMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError,{data: CreateOrganisationalUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError,{data: CreateOrganisationalUnitRequest}, TContext> => {
 
-export const getCreateOrganisationalUnitQueryKey = (createOrganisationalUnitRequest?: CreateOrganisationalUnitRequest,) => {
-    return [
-    'POST', `/organisational-units`, createOrganisationalUnitRequest
-    ] as const;
-    }
-
-
-export const getCreateOrganisationalUnitQueryOptions = <TData = Awaited<ReturnType<typeof createOrganisationalUnit>>, TError = ErrorResponse | void>(createOrganisationalUnitRequest: CreateOrganisationalUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateOrganisationalUnitQueryKey(createOrganisationalUnitRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createOrganisationalUnit>>> = ({ signal }) => createOrganisationalUnit(createOrganisationalUnitRequest, { signal, ...requestOptions });
+const mutationKey = ['createOrganisationalUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createOrganisationalUnit>>, {data: CreateOrganisationalUnitRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateOrganisationalUnitQueryResult = NonNullable<Awaited<ReturnType<typeof createOrganisationalUnit>>>
-export type CreateOrganisationalUnitQueryError = ErrorResponse | void
+          return  createOrganisationalUnit(data,requestOptions)
+        }
 
 
-export function useCreateOrganisationalUnit<TData = Awaited<ReturnType<typeof createOrganisationalUnit>>, TError = ErrorResponse | void>(
- createOrganisationalUnitRequest: CreateOrganisationalUnitRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createOrganisationalUnit>>,
-          TError,
-          Awaited<ReturnType<typeof createOrganisationalUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateOrganisationalUnit<TData = Awaited<ReturnType<typeof createOrganisationalUnit>>, TError = ErrorResponse | void>(
- createOrganisationalUnitRequest: CreateOrganisationalUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createOrganisationalUnit>>,
-          TError,
-          Awaited<ReturnType<typeof createOrganisationalUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateOrganisationalUnit<TData = Awaited<ReturnType<typeof createOrganisationalUnit>>, TError = ErrorResponse | void>(
- createOrganisationalUnitRequest: CreateOrganisationalUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateOrganisationalUnitMutationResult = NonNullable<Awaited<ReturnType<typeof createOrganisationalUnit>>>
+    export type CreateOrganisationalUnitMutationBody = CreateOrganisationalUnitRequest
+    export type CreateOrganisationalUnitMutationError = ErrorResponse | void
+
+    /**
  * @summary Create an organisational unit
  */
-
-export function useCreateOrganisationalUnit<TData = Awaited<ReturnType<typeof createOrganisationalUnit>>, TError = ErrorResponse | void>(
- createOrganisationalUnitRequest: CreateOrganisationalUnitRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateOrganisationalUnitQueryOptions(createOrganisationalUnitRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getOrganisationalUnitTreeResponse200 = {
+export const useCreateOrganisationalUnit = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOrganisationalUnit>>, TError,{data: CreateOrganisationalUnitRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createOrganisationalUnit>>,
+        TError,
+        {data: CreateOrganisationalUnitRequest},
+        TContext
+      > => {
+      return useMutation(getCreateOrganisationalUnitMutationOptions(options), queryClient);
+    }
+    export type getOrganisationalUnitTreeResponse200 = {
   data: OrganisationalUnitTreeResponse[]
   status: 200
 }
@@ -319,51 +319,82 @@ export const getOrganisationalUnitTree = async ( options?: RequestInit): Promise
 
 
 
-export const getGetOrganisationalUnitTreeMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError,void, TContext> => {
 
-const mutationKey = ['getOrganisationalUnitTree'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetOrganisationalUnitTreeQueryKey = () => {
+    return [
+    `/organisational-units/tree`
+    ] as const;
+    }
 
 
+export const getGetOrganisationalUnitTreeQueryOptions = <TData = Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOrganisationalUnitTreeQueryKey();
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, void> = () => {
 
-
-          return  getOrganisationalUnitTree(requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganisationalUnitTree>>> = ({ signal }) => getOrganisationalUnitTree({ signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetOrganisationalUnitTreeMutationResult = NonNullable<Awaited<ReturnType<typeof getOrganisationalUnitTree>>>
+export type GetOrganisationalUnitTreeQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganisationalUnitTree>>>
+export type GetOrganisationalUnitTreeQueryError = void
 
-    export type GetOrganisationalUnitTreeMutationError = void
 
-    /**
+export function useGetOrganisationalUnitTree<TData = Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationalUnitTree>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationalUnitTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationalUnitTree<TData = Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationalUnitTree>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationalUnitTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationalUnitTree<TData = Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get organisational unit hierarchy
  */
-export const useGetOrganisationalUnitTree = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getOrganisationalUnitTree>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getGetOrganisationalUnitTreeMutationOptions(options), queryClient);
-    }
-    export type getOrganisationalUnitByKeyResponse200 = {
+
+export function useGetOrganisationalUnitTree<TData = Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitTree>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOrganisationalUnitTreeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type getOrganisationalUnitByKeyResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -413,51 +444,82 @@ export const getOrganisationalUnitByKey = async (key: string, options?: RequestI
 
 
 
-export const getGetOrganisationalUnitByKeyMutationOptions = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getOrganisationalUnitByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetOrganisationalUnitByKeyQueryKey = (key: string,) => {
+    return [
+    `/organisational-units/${key}`
+    ] as const;
+    }
 
 
+export const getGetOrganisationalUnitByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOrganisationalUnitByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getOrganisationalUnitByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>> = ({ signal }) => getOrganisationalUnitByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetOrganisationalUnitByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>>
+export type GetOrganisationalUnitByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>>
+export type GetOrganisationalUnitByKeyQueryError = void | ErrorResponse
 
-    export type GetOrganisationalUnitByKeyMutationError = void | ErrorResponse
 
-    /**
+export function useGetOrganisationalUnitByKey<TData = Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationalUnitByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationalUnitByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationalUnitByKey<TData = Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOrganisationalUnitByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getOrganisationalUnitByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOrganisationalUnitByKey<TData = Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get organisational unit by key
  */
-export const useGetOrganisationalUnitByKey = <TError = void | ErrorResponse,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getOrganisationalUnitByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetOrganisationalUnitByKeyMutationOptions(options), queryClient);
-    }
-    export type deleteOrganisationalUnitResponse204 = {
+
+export function useGetOrganisationalUnitByKey<TData = Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOrganisationalUnitByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOrganisationalUnitByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type deleteOrganisationalUnitResponse204 = {
   data: void
   status: 204
 }
@@ -512,82 +574,51 @@ export const deleteOrganisationalUnit = async (key: string, options?: RequestIni
 
 
 
+export const getDeleteOrganisationalUnitMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError,{key: string}, TContext> => {
 
-export const getDeleteOrganisationalUnitQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/organisational-units/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteOrganisationalUnitQueryOptions = <TData = Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteOrganisationalUnitQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteOrganisationalUnit>>> = ({ signal }) => deleteOrganisationalUnit(key, { signal, ...requestOptions });
+const mutationKey = ['deleteOrganisationalUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteOrganisationalUnitQueryResult = NonNullable<Awaited<ReturnType<typeof deleteOrganisationalUnit>>>
-export type DeleteOrganisationalUnitQueryError = void | ErrorResponse
+          return  deleteOrganisationalUnit(key,requestOptions)
+        }
 
 
-export function useDeleteOrganisationalUnit<TData = Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError = void | ErrorResponse>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteOrganisationalUnit>>,
-          TError,
-          Awaited<ReturnType<typeof deleteOrganisationalUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteOrganisationalUnit<TData = Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteOrganisationalUnit>>,
-          TError,
-          Awaited<ReturnType<typeof deleteOrganisationalUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteOrganisationalUnit<TData = Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteOrganisationalUnitMutationResult = NonNullable<Awaited<ReturnType<typeof deleteOrganisationalUnit>>>
+
+    export type DeleteOrganisationalUnitMutationError = void | ErrorResponse
+
+    /**
  * @summary Delete organisational unit
  */
-
-export function useDeleteOrganisationalUnit<TData = Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError = void | ErrorResponse>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteOrganisationalUnitQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitNamesResponse200 = {
+export const useDeleteOrganisationalUnit = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrganisationalUnit>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteOrganisationalUnit>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteOrganisationalUnitMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitNamesResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -638,88 +669,51 @@ export const updateOrganisationalUnitNames = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitNamesMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateOrganisationalUnitNamesQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/organisational-units/${key}/names`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitNamesQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError = ErrorResponse | void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitNamesQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>> = ({ signal }) => updateOrganisationalUnitNames(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitNames'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitNamesQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>>
-export type UpdateOrganisationalUnitNamesQueryError = ErrorResponse | void
+          return  updateOrganisationalUnitNames(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitNames<TData = Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitNames<TData = Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitNames<TData = Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>>
+    export type UpdateOrganisationalUnitNamesMutationBody = LocalizedText[]
+    export type UpdateOrganisationalUnitNamesMutationError = ErrorResponse | void
+
+    /**
  * @summary Update organisational unit names
  */
-
-export function useUpdateOrganisationalUnitNames<TData = Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitNamesQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitDescriptionsResponse200 = {
+export const useUpdateOrganisationalUnitNames = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitNames>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitNames>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitNamesMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitDescriptionsResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -770,88 +764,51 @@ export const updateOrganisationalUnitDescriptions = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitDescriptionsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext> => {
 
-export const getUpdateOrganisationalUnitDescriptionsQueryKey = (key: string,
-    localizedText?: LocalizedText[],) => {
-    return [
-    'PUT', `/organisational-units/${key}/descriptions`, localizedText
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitDescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError = ErrorResponse | void>(key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitDescriptionsQueryKey(key,localizedText);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>> = ({ signal }) => updateOrganisationalUnitDescriptions(key,localizedText, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitDescriptions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, {key: string;data: LocalizedText[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitDescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>>
-export type UpdateOrganisationalUnitDescriptionsQueryError = ErrorResponse | void
+          return  updateOrganisationalUnitDescriptions(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitDescriptions<TData = Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitDescriptions<TData = Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitDescriptions<TData = Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>>
+    export type UpdateOrganisationalUnitDescriptionsMutationBody = LocalizedText[]
+    export type UpdateOrganisationalUnitDescriptionsMutationError = ErrorResponse | void
+
+    /**
  * @summary Update organisational unit descriptions
  */
-
-export function useUpdateOrganisationalUnitDescriptions<TData = Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError = ErrorResponse | void>(
- key: string,
-    localizedText: LocalizedText[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitDescriptionsQueryOptions(key,localizedText,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitLeadResponse200 = {
+export const useUpdateOrganisationalUnitDescriptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>, TError,{key: string;data: LocalizedText[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitDescriptions>>,
+        TError,
+        {key: string;data: LocalizedText[]},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitDescriptionsMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitLeadResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -902,88 +859,51 @@ export const updateOrganisationalUnitLead = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitLeadMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError,{key: string;data: UpdateOrgUnitLeadRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError,{key: string;data: UpdateOrgUnitLeadRequest}, TContext> => {
 
-export const getUpdateOrganisationalUnitLeadQueryKey = (key: string,
-    updateOrgUnitLeadRequest?: UpdateOrgUnitLeadRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/lead`, updateOrgUnitLeadRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitLeadQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError = ErrorResponse | void>(key: string,
-    updateOrgUnitLeadRequest: UpdateOrgUnitLeadRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitLeadQueryKey(key,updateOrgUnitLeadRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>> = ({ signal }) => updateOrganisationalUnitLead(key,updateOrgUnitLeadRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitLead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, {key: string;data: UpdateOrgUnitLeadRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitLeadQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>>
-export type UpdateOrganisationalUnitLeadQueryError = ErrorResponse | void
+          return  updateOrganisationalUnitLead(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitLead<TData = Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitLeadRequest: UpdateOrgUnitLeadRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitLead>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitLead>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitLead<TData = Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitLeadRequest: UpdateOrgUnitLeadRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitLead>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitLead>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitLead<TData = Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitLeadRequest: UpdateOrgUnitLeadRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitLeadMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>>
+    export type UpdateOrganisationalUnitLeadMutationBody = UpdateOrgUnitLeadRequest
+    export type UpdateOrganisationalUnitLeadMutationError = ErrorResponse | void
+
+    /**
  * @summary Update organisational unit lead
  */
-
-export function useUpdateOrganisationalUnitLead<TData = Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitLeadRequest: UpdateOrgUnitLeadRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitLeadQueryOptions(key,updateOrgUnitLeadRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitStewardResponse200 = {
+export const useUpdateOrganisationalUnitLead = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitLead>>, TError,{key: string;data: UpdateOrgUnitLeadRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitLead>>,
+        TError,
+        {key: string;data: UpdateOrgUnitLeadRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitLeadMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitStewardResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1029,88 +949,51 @@ export const updateOrganisationalUnitSteward = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitStewardMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext> => {
 
-export const getUpdateOrganisationalUnitStewardQueryKey = (key: string,
-    updateOrgUnitStewardRequest?: UpdateOrgUnitStewardRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/steward`, updateOrgUnitStewardRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitStewardQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError = void>(key: string,
-    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitStewardQueryKey(key,updateOrgUnitStewardRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>> = ({ signal }) => updateOrganisationalUnitSteward(key,updateOrgUnitStewardRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitSteward'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, {key: string;data: UpdateOrgUnitStewardRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitStewardQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>>
-export type UpdateOrganisationalUnitStewardQueryError = void
+          return  updateOrganisationalUnitSteward(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitSteward<TData = Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError = void>(
- key: string,
-    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitSteward<TData = Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError = void>(
- key: string,
-    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitSteward<TData = Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError = void>(
- key: string,
-    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitStewardMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>>
+    export type UpdateOrganisationalUnitStewardMutationBody = UpdateOrgUnitStewardRequest
+    export type UpdateOrganisationalUnitStewardMutationError = void
+
+    /**
  * @summary Update organisational unit steward
  */
-
-export function useUpdateOrganisationalUnitSteward<TData = Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError = void>(
- key: string,
-    updateOrgUnitStewardRequest: UpdateOrgUnitStewardRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitStewardQueryOptions(key,updateOrgUnitStewardRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitTechnicalCustodianResponse200 = {
+export const useUpdateOrganisationalUnitSteward = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>, TError,{key: string;data: UpdateOrgUnitStewardRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitSteward>>,
+        TError,
+        {key: string;data: UpdateOrgUnitStewardRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitStewardMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitTechnicalCustodianResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1156,88 +1039,51 @@ export const updateOrganisationalUnitTechnicalCustodian = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitTechnicalCustodianMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext> => {
 
-export const getUpdateOrganisationalUnitTechnicalCustodianQueryKey = (key: string,
-    updateOrgUnitTechnicalCustodianRequest?: UpdateOrgUnitTechnicalCustodianRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/technical-custodian`, updateOrgUnitTechnicalCustodianRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitTechnicalCustodianQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError = void>(key: string,
-    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitTechnicalCustodianQueryKey(key,updateOrgUnitTechnicalCustodianRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>> = ({ signal }) => updateOrganisationalUnitTechnicalCustodian(key,updateOrgUnitTechnicalCustodianRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitTechnicalCustodian'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, {key: string;data: UpdateOrgUnitTechnicalCustodianRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitTechnicalCustodianQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>>
-export type UpdateOrganisationalUnitTechnicalCustodianQueryError = void
+          return  updateOrganisationalUnitTechnicalCustodian(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitTechnicalCustodian<TData = Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError = void>(
- key: string,
-    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitTechnicalCustodian<TData = Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError = void>(
- key: string,
-    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitTechnicalCustodian<TData = Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError = void>(
- key: string,
-    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>>
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationBody = UpdateOrgUnitTechnicalCustodianRequest
+    export type UpdateOrganisationalUnitTechnicalCustodianMutationError = void
+
+    /**
  * @summary Update organisational unit technical custodian
  */
-
-export function useUpdateOrganisationalUnitTechnicalCustodian<TData = Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError = void>(
- key: string,
-    updateOrgUnitTechnicalCustodianRequest: UpdateOrgUnitTechnicalCustodianRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitTechnicalCustodianQueryOptions(key,updateOrgUnitTechnicalCustodianRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitTypeResponse200 = {
+export const useUpdateOrganisationalUnitTechnicalCustodian = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>, TError,{key: string;data: UpdateOrgUnitTechnicalCustodianRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitTechnicalCustodian>>,
+        TError,
+        {key: string;data: UpdateOrgUnitTechnicalCustodianRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitTechnicalCustodianMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitTypeResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1288,88 +1134,51 @@ export const updateOrganisationalUnitType = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitTypeMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError,{key: string;data: UpdateOrgUnitTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError,{key: string;data: UpdateOrgUnitTypeRequest}, TContext> => {
 
-export const getUpdateOrganisationalUnitTypeQueryKey = (key: string,
-    updateOrgUnitTypeRequest?: UpdateOrgUnitTypeRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/type`, updateOrgUnitTypeRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitTypeQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError = ErrorResponse | void>(key: string,
-    updateOrgUnitTypeRequest: UpdateOrgUnitTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitTypeQueryKey(key,updateOrgUnitTypeRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitType>>> = ({ signal }) => updateOrganisationalUnitType(key,updateOrgUnitTypeRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitType'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, {key: string;data: UpdateOrgUnitTypeRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitTypeQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitType>>>
-export type UpdateOrganisationalUnitTypeQueryError = ErrorResponse | void
+          return  updateOrganisationalUnitType(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitType<TData = Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitTypeRequest: UpdateOrgUnitTypeRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitType>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitType>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitType<TData = Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitTypeRequest: UpdateOrgUnitTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitType>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitType>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitType<TData = Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitTypeRequest: UpdateOrgUnitTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitType>>>
+    export type UpdateOrganisationalUnitTypeMutationBody = UpdateOrgUnitTypeRequest
+    export type UpdateOrganisationalUnitTypeMutationError = ErrorResponse | void
+
+    /**
  * @summary Update organisational unit type
  */
-
-export function useUpdateOrganisationalUnitType<TData = Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitTypeRequest: UpdateOrgUnitTypeRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitTypeQueryOptions(key,updateOrgUnitTypeRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrganisationalUnitParentsResponse200 = {
+export const useUpdateOrganisationalUnitType = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitType>>, TError,{key: string;data: UpdateOrgUnitTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitType>>,
+        TError,
+        {key: string;data: UpdateOrgUnitTypeRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitTypeMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitParentsResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1420,88 +1229,51 @@ export const updateOrganisationalUnitParents = async (key: string,
 
 
 
+export const getUpdateOrganisationalUnitParentsMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext> => {
 
-export const getUpdateOrganisationalUnitParentsQueryKey = (key: string,
-    updateOrgUnitParentsRequest?: UpdateOrgUnitParentsRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/parents`, updateOrgUnitParentsRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrganisationalUnitParentsQueryOptions = <TData = Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError = ErrorResponse | void>(key: string,
-    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrganisationalUnitParentsQueryKey(key,updateOrgUnitParentsRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>> = ({ signal }) => updateOrganisationalUnitParents(key,updateOrgUnitParentsRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrganisationalUnitParents'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, {key: string;data: UpdateOrgUnitParentsRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrganisationalUnitParentsQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>>
-export type UpdateOrganisationalUnitParentsQueryError = ErrorResponse | void
+          return  updateOrganisationalUnitParents(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrganisationalUnitParents<TData = Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitParents>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitParents>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitParents<TData = Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrganisationalUnitParents>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrganisationalUnitParents>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrganisationalUnitParents<TData = Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitParentsMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>>
+    export type UpdateOrganisationalUnitParentsMutationBody = UpdateOrgUnitParentsRequest
+    export type UpdateOrganisationalUnitParentsMutationError = ErrorResponse | void
+
+    /**
  * @summary Update organisational unit parents
  */
-
-export function useUpdateOrganisationalUnitParents<TData = Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError = ErrorResponse | void>(
- key: string,
-    updateOrgUnitParentsRequest: UpdateOrgUnitParentsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrganisationalUnitParentsQueryOptions(key,updateOrgUnitParentsRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type assignClassificationsToOrgUnitResponse200 = {
+export const useUpdateOrganisationalUnitParents = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitParents>>, TError,{key: string;data: UpdateOrgUnitParentsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitParents>>,
+        TError,
+        {key: string;data: UpdateOrgUnitParentsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitParentsMutationOptions(options), queryClient);
+    }
+    export type assignClassificationsToOrgUnitResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1562,88 +1334,51 @@ export const assignClassificationsToOrgUnit = async (key: string,
 
 
 
+export const getAssignClassificationsToOrgUnitMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext> => {
 
-export const getAssignClassificationsToOrgUnitQueryKey = (key: string,
-    classificationAssignmentRequest?: ClassificationAssignmentRequest[],) => {
-    return [
-    'PUT', `/organisational-units/${key}/classifications`, classificationAssignmentRequest
-    ] as const;
-    }
-
-
-export const getAssignClassificationsToOrgUnitQueryOptions = <TData = Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError = void>(key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAssignClassificationsToOrgUnitQueryKey(key,classificationAssignmentRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>> = ({ signal }) => assignClassificationsToOrgUnit(key,classificationAssignmentRequest, { signal, ...requestOptions });
+const mutationKey = ['assignClassificationsToOrgUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, {key: string;data: ClassificationAssignmentRequest[]}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AssignClassificationsToOrgUnitQueryResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>>
-export type AssignClassificationsToOrgUnitQueryError = void
+          return  assignClassificationsToOrgUnit(key,data,requestOptions)
+        }
 
 
-export function useAssignClassificationsToOrgUnit<TData = Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToOrgUnit<TData = Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>,
-          TError,
-          Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignClassificationsToOrgUnit<TData = Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignClassificationsToOrgUnitMutationResult = NonNullable<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>>
+    export type AssignClassificationsToOrgUnitMutationBody = ClassificationAssignmentRequest[]
+    export type AssignClassificationsToOrgUnitMutationError = void
+
+    /**
  * @summary Assign classifications to organisational unit
  */
-
-export function useAssignClassificationsToOrgUnit<TData = Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError = void>(
- key: string,
-    classificationAssignmentRequest: ClassificationAssignmentRequest[], options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAssignClassificationsToOrgUnitQueryOptions(key,classificationAssignmentRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrgUnitExternalFieldsResponse200 = {
+export const useAssignClassificationsToOrgUnit = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>, TError,{key: string;data: ClassificationAssignmentRequest[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof assignClassificationsToOrgUnit>>,
+        TError,
+        {key: string;data: ClassificationAssignmentRequest[]},
+        TContext
+      > => {
+      return useMutation(getAssignClassificationsToOrgUnitMutationOptions(options), queryClient);
+    }
+    export type updateOrgUnitExternalFieldsResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1699,88 +1434,51 @@ export const updateOrgUnitExternalFields = async (key: string,
 
 
 
+export const getUpdateOrgUnitExternalFieldsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext> => {
 
-export const getUpdateOrgUnitExternalFieldsQueryKey = (key: string,
-    updateOrgUnitExternalFieldsRequest?: UpdateOrgUnitExternalFieldsRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/external-fields`, updateOrgUnitExternalFieldsRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrgUnitExternalFieldsQueryOptions = <TData = Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError = void>(key: string,
-    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrgUnitExternalFieldsQueryKey(key,updateOrgUnitExternalFieldsRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>> = ({ signal }) => updateOrgUnitExternalFields(key,updateOrgUnitExternalFieldsRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrgUnitExternalFields'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, {key: string;data: UpdateOrgUnitExternalFieldsRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrgUnitExternalFieldsQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>>
-export type UpdateOrgUnitExternalFieldsQueryError = void
+          return  updateOrgUnitExternalFields(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrgUnitExternalFields<TData = Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError = void>(
- key: string,
-    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitExternalFields>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitExternalFields>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitExternalFields<TData = Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError = void>(
- key: string,
-    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitExternalFields>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitExternalFields>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitExternalFields<TData = Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError = void>(
- key: string,
-    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitExternalFieldsMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>>
+    export type UpdateOrgUnitExternalFieldsMutationBody = UpdateOrgUnitExternalFieldsRequest
+    export type UpdateOrgUnitExternalFieldsMutationError = void
+
+    /**
  * @summary Update external/body-leasing fields
  */
-
-export function useUpdateOrgUnitExternalFields<TData = Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError = void>(
- key: string,
-    updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrgUnitExternalFieldsQueryOptions(key,updateOrgUnitExternalFieldsRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrgUnitServiceProvidersResponse204 = {
+export const useUpdateOrgUnitExternalFields = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitExternalFields>>, TError,{key: string;data: UpdateOrgUnitExternalFieldsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitExternalFields>>,
+        TError,
+        {key: string;data: UpdateOrgUnitExternalFieldsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitExternalFieldsMutationOptions(options), queryClient);
+    }
+    export type updateOrgUnitServiceProvidersResponse204 = {
   data: void
   status: 204
 }
@@ -1836,88 +1534,51 @@ export const updateOrgUnitServiceProviders = async (key: string,
 
 
 
+export const getUpdateOrgUnitServiceProvidersMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext> => {
 
-export const getUpdateOrgUnitServiceProvidersQueryKey = (key: string,
-    updateLinkedServiceProvidersRequest?: UpdateLinkedServiceProvidersRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/service-providers`, updateLinkedServiceProvidersRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrgUnitServiceProvidersQueryOptions = <TData = Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError = void>(key: string,
-    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrgUnitServiceProvidersQueryKey(key,updateLinkedServiceProvidersRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>> = ({ signal }) => updateOrgUnitServiceProviders(key,updateLinkedServiceProvidersRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrgUnitServiceProviders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, {key: string;data: UpdateLinkedServiceProvidersRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrgUnitServiceProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>>
-export type UpdateOrgUnitServiceProvidersQueryError = void
+          return  updateOrgUnitServiceProviders(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrgUnitServiceProviders<TData = Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError = void>(
- key: string,
-    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitServiceProviders<TData = Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError = void>(
- key: string,
-    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitServiceProviders<TData = Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError = void>(
- key: string,
-    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitServiceProvidersMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>>
+    export type UpdateOrgUnitServiceProvidersMutationBody = UpdateLinkedServiceProvidersRequest
+    export type UpdateOrgUnitServiceProvidersMutationError = void
+
+    /**
  * @summary Update linked service providers
  */
-
-export function useUpdateOrgUnitServiceProviders<TData = Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError = void>(
- key: string,
-    updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrgUnitServiceProvidersQueryOptions(key,updateLinkedServiceProvidersRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrgUnitDataAccessEntitiesResponse200 = {
+export const useUpdateOrgUnitServiceProviders = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>, TError,{key: string;data: UpdateLinkedServiceProvidersRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitServiceProviders>>,
+        TError,
+        {key: string;data: UpdateLinkedServiceProvidersRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitServiceProvidersMutationOptions(options), queryClient);
+    }
+    export type updateOrgUnitDataAccessEntitiesResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -1973,88 +1634,51 @@ export const updateOrgUnitDataAccessEntities = async (key: string,
 
 
 
+export const getUpdateOrgUnitDataAccessEntitiesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext> => {
 
-export const getUpdateOrgUnitDataAccessEntitiesQueryKey = (key: string,
-    updateOrgUnitEntityLinksRequest?: UpdateOrgUnitEntityLinksRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/data-access-entities`, updateOrgUnitEntityLinksRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrgUnitDataAccessEntitiesQueryOptions = <TData = Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError = void>(key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrgUnitDataAccessEntitiesQueryKey(key,updateOrgUnitEntityLinksRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>> = ({ signal }) => updateOrgUnitDataAccessEntities(key,updateOrgUnitEntityLinksRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrgUnitDataAccessEntities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, {key: string;data: UpdateOrgUnitEntityLinksRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrgUnitDataAccessEntitiesQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>>
-export type UpdateOrgUnitDataAccessEntitiesQueryError = void
+          return  updateOrgUnitDataAccessEntities(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrgUnitDataAccessEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitDataAccessEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitDataAccessEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitDataAccessEntitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>>
+    export type UpdateOrgUnitDataAccessEntitiesMutationBody = UpdateOrgUnitEntityLinksRequest
+    export type UpdateOrgUnitDataAccessEntitiesMutationError = void
+
+    /**
  * @summary Update data access entities
  */
-
-export function useUpdateOrgUnitDataAccessEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrgUnitDataAccessEntitiesQueryOptions(key,updateOrgUnitEntityLinksRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateOrgUnitDataManipulationEntitiesResponse200 = {
+export const useUpdateOrgUnitDataAccessEntities = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitDataAccessEntities>>,
+        TError,
+        {key: string;data: UpdateOrgUnitEntityLinksRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitDataAccessEntitiesMutationOptions(options), queryClient);
+    }
+    export type updateOrgUnitDataManipulationEntitiesResponse200 = {
   data: OrganisationalUnitResponse
   status: 200
 }
@@ -2110,88 +1734,51 @@ export const updateOrgUnitDataManipulationEntities = async (key: string,
 
 
 
+export const getUpdateOrgUnitDataManipulationEntitiesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext> => {
 
-export const getUpdateOrgUnitDataManipulationEntitiesQueryKey = (key: string,
-    updateOrgUnitEntityLinksRequest?: UpdateOrgUnitEntityLinksRequest,) => {
-    return [
-    'PUT', `/organisational-units/${key}/data-manipulation-entities`, updateOrgUnitEntityLinksRequest
-    ] as const;
-    }
-
-
-export const getUpdateOrgUnitDataManipulationEntitiesQueryOptions = <TData = Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError = void>(key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateOrgUnitDataManipulationEntitiesQueryKey(key,updateOrgUnitEntityLinksRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>> = ({ signal }) => updateOrgUnitDataManipulationEntities(key,updateOrgUnitEntityLinksRequest, { signal, ...requestOptions });
+const mutationKey = ['updateOrgUnitDataManipulationEntities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, {key: string;data: UpdateOrgUnitEntityLinksRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateOrgUnitDataManipulationEntitiesQueryResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>>
-export type UpdateOrgUnitDataManipulationEntitiesQueryError = void
+          return  updateOrgUnitDataManipulationEntities(key,data,requestOptions)
+        }
 
 
-export function useUpdateOrgUnitDataManipulationEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitDataManipulationEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>,
-          TError,
-          Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateOrgUnitDataManipulationEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrgUnitDataManipulationEntitiesMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>>
+    export type UpdateOrgUnitDataManipulationEntitiesMutationBody = UpdateOrgUnitEntityLinksRequest
+    export type UpdateOrgUnitDataManipulationEntitiesMutationError = void
+
+    /**
  * @summary Update data manipulation entities
  */
-
-export function useUpdateOrgUnitDataManipulationEntities<TData = Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError = void>(
- key: string,
-    updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateOrgUnitDataManipulationEntitiesQueryOptions(key,updateOrgUnitEntityLinksRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getOwnedBoundedContextsByOrgUnitResponse200 = {
+export const useUpdateOrgUnitDataManipulationEntities = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>, TError,{key: string;data: UpdateOrgUnitEntityLinksRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrgUnitDataManipulationEntities>>,
+        TError,
+        {key: string;data: UpdateOrgUnitEntityLinksRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrgUnitDataManipulationEntitiesMutationOptions(options), queryClient);
+    }
+    export type getOwnedBoundedContextsByOrgUnitResponse200 = {
   data: BoundedContextSummaryResponse[]
   status: 200
 }
@@ -2241,47 +1828,78 @@ export const getOwnedBoundedContextsByOrgUnit = async (key: string, options?: Re
 
 
 
-export const getGetOwnedBoundedContextsByOrgUnitMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getOwnedBoundedContextsByOrgUnit'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetOwnedBoundedContextsByOrgUnitQueryKey = (key: string,) => {
+    return [
+    `/organisational-units/${key}/bounded-contexts`
+    ] as const;
+    }
 
 
+export const getGetOwnedBoundedContextsByOrgUnitQueryOptions = <TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOwnedBoundedContextsByOrgUnitQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getOwnedBoundedContextsByOrgUnit(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>> = ({ signal }) => getOwnedBoundedContextsByOrgUnit(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetOwnedBoundedContextsByOrgUnitMutationResult = NonNullable<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>>
+export type GetOwnedBoundedContextsByOrgUnitQueryResult = NonNullable<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>>
+export type GetOwnedBoundedContextsByOrgUnitQueryError = void
 
-    export type GetOwnedBoundedContextsByOrgUnitMutationError = void
 
-    /**
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>,
+          TError,
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>,
+          TError,
+          Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get bounded contexts owned by this org unit
  */
-export const useGetOwnedBoundedContextsByOrgUnit = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetOwnedBoundedContextsByOrgUnitMutationOptions(options), queryClient);
-    }
+
+export function useGetOwnedBoundedContextsByOrgUnit<TData = Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOwnedBoundedContextsByOrgUnit>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetOwnedBoundedContextsByOrgUnitQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+

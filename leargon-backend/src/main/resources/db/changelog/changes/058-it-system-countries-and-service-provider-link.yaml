@@ -10,8 +10,18 @@ databaseChangeLog:
                   name: processing_countries
                   type: JSON
                   constraints:
-                    nullable: false
-                  defaultValueComputed: "'[]'"
+                    nullable: true
+        - update:
+            tableName: it_systems
+            columns:
+              - column:
+                  name: processing_countries
+                  valueComputed: "JSON_ARRAY()"
+            where: "processing_countries IS NULL"
+        - addNotNullConstraint:
+            tableName: it_systems
+            columnName: processing_countries
+            columnDataType: JSON
         - createTable:
             tableName: it_system_service_providers
             columns:

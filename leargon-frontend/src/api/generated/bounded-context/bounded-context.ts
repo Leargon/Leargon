@@ -99,51 +99,82 @@ export const getBoundedContextsForDomain = async (key: string, options?: Request
 
 
 
-export const getGetBoundedContextsForDomainMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getBoundedContextsForDomain'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBoundedContextsForDomainQueryKey = (key: string,) => {
+    return [
+    `/business-domains/${key}/bounded-contexts`
+    ] as const;
+    }
 
 
+export const getGetBoundedContextsForDomainQueryOptions = <TData = Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBoundedContextsForDomainQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getBoundedContextsForDomain(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBoundedContextsForDomain>>> = ({ signal }) => getBoundedContextsForDomain(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetBoundedContextsForDomainMutationResult = NonNullable<Awaited<ReturnType<typeof getBoundedContextsForDomain>>>
+export type GetBoundedContextsForDomainQueryResult = NonNullable<Awaited<ReturnType<typeof getBoundedContextsForDomain>>>
+export type GetBoundedContextsForDomainQueryError = void
 
-    export type GetBoundedContextsForDomainMutationError = void
 
-    /**
+export function useGetBoundedContextsForDomain<TData = Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoundedContextsForDomain>>,
+          TError,
+          Awaited<ReturnType<typeof getBoundedContextsForDomain>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBoundedContextsForDomain<TData = Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoundedContextsForDomain>>,
+          TError,
+          Awaited<ReturnType<typeof getBoundedContextsForDomain>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBoundedContextsForDomain<TData = Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get bounded contexts for a domain
  */
-export const useGetBoundedContextsForDomain = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBoundedContextsForDomain>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetBoundedContextsForDomainMutationOptions(options), queryClient);
-    }
-    export type createBoundedContextResponse201 = {
+
+export function useGetBoundedContextsForDomain<TData = Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextsForDomain>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBoundedContextsForDomainQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createBoundedContextResponse201 = {
   data: BoundedContextResponse
   status: 201
 }
@@ -198,88 +229,51 @@ export const createBoundedContext = async (key: string,
 
 
 
+export const getCreateBoundedContextMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError,{key: string;data: CreateBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError,{key: string;data: CreateBoundedContextRequest}, TContext> => {
 
-export const getCreateBoundedContextQueryKey = (key: string,
-    createBoundedContextRequest?: CreateBoundedContextRequest,) => {
-    return [
-    'POST', `/business-domains/${key}/bounded-contexts`, createBoundedContextRequest
-    ] as const;
-    }
-
-
-export const getCreateBoundedContextQueryOptions = <TData = Awaited<ReturnType<typeof createBoundedContext>>, TError = void>(key: string,
-    createBoundedContextRequest: CreateBoundedContextRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateBoundedContextQueryKey(key,createBoundedContextRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createBoundedContext>>> = ({ signal }) => createBoundedContext(key,createBoundedContextRequest, { signal, ...requestOptions });
+const mutationKey = ['createBoundedContext'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBoundedContext>>, {key: string;data: CreateBoundedContextRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateBoundedContextQueryResult = NonNullable<Awaited<ReturnType<typeof createBoundedContext>>>
-export type CreateBoundedContextQueryError = void
+          return  createBoundedContext(key,data,requestOptions)
+        }
 
 
-export function useCreateBoundedContext<TData = Awaited<ReturnType<typeof createBoundedContext>>, TError = void>(
- key: string,
-    createBoundedContextRequest: CreateBoundedContextRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createBoundedContext>>,
-          TError,
-          Awaited<ReturnType<typeof createBoundedContext>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateBoundedContext<TData = Awaited<ReturnType<typeof createBoundedContext>>, TError = void>(
- key: string,
-    createBoundedContextRequest: CreateBoundedContextRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createBoundedContext>>,
-          TError,
-          Awaited<ReturnType<typeof createBoundedContext>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateBoundedContext<TData = Awaited<ReturnType<typeof createBoundedContext>>, TError = void>(
- key: string,
-    createBoundedContextRequest: CreateBoundedContextRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBoundedContextMutationResult = NonNullable<Awaited<ReturnType<typeof createBoundedContext>>>
+    export type CreateBoundedContextMutationBody = CreateBoundedContextRequest
+    export type CreateBoundedContextMutationError = void
+
+    /**
  * @summary Create a bounded context for a domain
  */
-
-export function useCreateBoundedContext<TData = Awaited<ReturnType<typeof createBoundedContext>>, TError = void>(
- key: string,
-    createBoundedContextRequest: CreateBoundedContextRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateBoundedContextQueryOptions(key,createBoundedContextRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type getBoundedContextByKeyResponse200 = {
+export const useCreateBoundedContext = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBoundedContext>>, TError,{key: string;data: CreateBoundedContextRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createBoundedContext>>,
+        TError,
+        {key: string;data: CreateBoundedContextRequest},
+        TContext
+      > => {
+      return useMutation(getCreateBoundedContextMutationOptions(options), queryClient);
+    }
+    export type getBoundedContextByKeyResponse200 = {
   data: BoundedContextResponse
   status: 200
 }
@@ -328,51 +322,82 @@ export const getBoundedContextByKey = async (key: string, options?: RequestInit)
 
 
 
-export const getGetBoundedContextByKeyMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError,{key: string}, TContext> => {
 
-const mutationKey = ['getBoundedContextByKey'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetBoundedContextByKeyQueryKey = (key: string,) => {
+    return [
+    `/bounded-contexts/${key}`
+    ] as const;
+    }
 
 
+export const getGetBoundedContextByKeyQueryOptions = <TData = Awaited<ReturnType<typeof getBoundedContextByKey>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBoundedContextByKeyQueryKey(key);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getBoundedContextByKey>>, {key: string}> = (props) => {
-          const {key} = props ?? {};
 
-          return  getBoundedContextByKey(key,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBoundedContextByKey>>> = ({ signal }) => getBoundedContextByKey(key, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetBoundedContextByKeyMutationResult = NonNullable<Awaited<ReturnType<typeof getBoundedContextByKey>>>
+export type GetBoundedContextByKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getBoundedContextByKey>>>
+export type GetBoundedContextByKeyQueryError = void
 
-    export type GetBoundedContextByKeyMutationError = void
 
-    /**
+export function useGetBoundedContextByKey<TData = Awaited<ReturnType<typeof getBoundedContextByKey>>, TError = void>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoundedContextByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getBoundedContextByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBoundedContextByKey<TData = Awaited<ReturnType<typeof getBoundedContextByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBoundedContextByKey>>,
+          TError,
+          Awaited<ReturnType<typeof getBoundedContextByKey>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetBoundedContextByKey<TData = Awaited<ReturnType<typeof getBoundedContextByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get bounded context by key
  */
-export const useGetBoundedContextByKey = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getBoundedContextByKey>>,
-        TError,
-        {key: string},
-        TContext
-      > => {
-      return useMutation(getGetBoundedContextByKeyMutationOptions(options), queryClient);
-    }
-    export type deleteBoundedContextResponse204 = {
+
+export function useGetBoundedContextByKey<TData = Awaited<ReturnType<typeof getBoundedContextByKey>>, TError = void>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getBoundedContextByKey>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetBoundedContextByKeyQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type deleteBoundedContextResponse204 = {
   data: void
   status: 204
 }
@@ -426,82 +451,51 @@ export const deleteBoundedContext = async (key: string, options?: RequestInit): 
 
 
 
+export const getDeleteBoundedContextMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError,{key: string}, TContext> => {
 
-export const getDeleteBoundedContextQueryKey = (key: string,) => {
-    return [
-    'DELETE', `/bounded-contexts/${key}`
-    ] as const;
-    }
-
-
-export const getDeleteBoundedContextQueryOptions = <TData = Awaited<ReturnType<typeof deleteBoundedContext>>, TError = void>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteBoundedContextQueryKey(key);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteBoundedContext>>> = ({ signal }) => deleteBoundedContext(key, { signal, ...requestOptions });
+const mutationKey = ['deleteBoundedContext'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBoundedContext>>, {key: string}> = (props) => {
+          const {key} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteBoundedContextQueryResult = NonNullable<Awaited<ReturnType<typeof deleteBoundedContext>>>
-export type DeleteBoundedContextQueryError = void
+          return  deleteBoundedContext(key,requestOptions)
+        }
 
 
-export function useDeleteBoundedContext<TData = Awaited<ReturnType<typeof deleteBoundedContext>>, TError = void>(
- key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteBoundedContext>>,
-          TError,
-          Awaited<ReturnType<typeof deleteBoundedContext>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteBoundedContext<TData = Awaited<ReturnType<typeof deleteBoundedContext>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteBoundedContext>>,
-          TError,
-          Awaited<ReturnType<typeof deleteBoundedContext>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteBoundedContext<TData = Awaited<ReturnType<typeof deleteBoundedContext>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBoundedContextMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBoundedContext>>>
+
+    export type DeleteBoundedContextMutationError = void
+
+    /**
  * @summary Delete a bounded context
  */
-
-export function useDeleteBoundedContext<TData = Awaited<ReturnType<typeof deleteBoundedContext>>, TError = void>(
- key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteBoundedContextQueryOptions(key,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBoundedContextNamesResponse200 = {
+export const useDeleteBoundedContext = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBoundedContext>>, TError,{key: string}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBoundedContext>>,
+        TError,
+        {key: string},
+        TContext
+      > => {
+      return useMutation(getDeleteBoundedContextMutationOptions(options), queryClient);
+    }
+    export type updateBoundedContextNamesResponse200 = {
   data: BoundedContextResponse
   status: 200
 }
@@ -556,88 +550,51 @@ export const updateBoundedContextNames = async (key: string,
 
 
 
+export const getUpdateBoundedContextNamesMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError,{key: string;data: UpdateBoundedContextNamesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError,{key: string;data: UpdateBoundedContextNamesRequest}, TContext> => {
 
-export const getUpdateBoundedContextNamesQueryKey = (key: string,
-    updateBoundedContextNamesRequest?: UpdateBoundedContextNamesRequest,) => {
-    return [
-    'PUT', `/bounded-contexts/${key}/names`, updateBoundedContextNamesRequest
-    ] as const;
-    }
-
-
-export const getUpdateBoundedContextNamesQueryOptions = <TData = Awaited<ReturnType<typeof updateBoundedContextNames>>, TError = void>(key: string,
-    updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBoundedContextNamesQueryKey(key,updateBoundedContextNamesRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBoundedContextNames>>> = ({ signal }) => updateBoundedContextNames(key,updateBoundedContextNamesRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBoundedContextNames'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBoundedContextNames>>, {key: string;data: UpdateBoundedContextNamesRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBoundedContextNamesQueryResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextNames>>>
-export type UpdateBoundedContextNamesQueryError = void
+          return  updateBoundedContextNames(key,data,requestOptions)
+        }
 
 
-export function useUpdateBoundedContextNames<TData = Awaited<ReturnType<typeof updateBoundedContextNames>>, TError = void>(
- key: string,
-    updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextNames<TData = Awaited<ReturnType<typeof updateBoundedContextNames>>, TError = void>(
- key: string,
-    updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextNames>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextNames>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextNames<TData = Awaited<ReturnType<typeof updateBoundedContextNames>>, TError = void>(
- key: string,
-    updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBoundedContextNamesMutationResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextNames>>>
+    export type UpdateBoundedContextNamesMutationBody = UpdateBoundedContextNamesRequest
+    export type UpdateBoundedContextNamesMutationError = void
+
+    /**
  * @summary Update bounded context names
  */
-
-export function useUpdateBoundedContextNames<TData = Awaited<ReturnType<typeof updateBoundedContextNames>>, TError = void>(
- key: string,
-    updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBoundedContextNamesQueryOptions(key,updateBoundedContextNamesRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBoundedContextDescriptionsResponse200 = {
+export const useUpdateBoundedContextNames = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextNames>>, TError,{key: string;data: UpdateBoundedContextNamesRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBoundedContextNames>>,
+        TError,
+        {key: string;data: UpdateBoundedContextNamesRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBoundedContextNamesMutationOptions(options), queryClient);
+    }
+    export type updateBoundedContextDescriptionsResponse200 = {
   data: BoundedContextResponse
   status: 200
 }
@@ -692,88 +649,51 @@ export const updateBoundedContextDescriptions = async (key: string,
 
 
 
+export const getUpdateBoundedContextDescriptionsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError,{key: string;data: UpdateBoundedContextDescriptionsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError,{key: string;data: UpdateBoundedContextDescriptionsRequest}, TContext> => {
 
-export const getUpdateBoundedContextDescriptionsQueryKey = (key: string,
-    updateBoundedContextDescriptionsRequest?: UpdateBoundedContextDescriptionsRequest,) => {
-    return [
-    'PUT', `/bounded-contexts/${key}/descriptions`, updateBoundedContextDescriptionsRequest
-    ] as const;
-    }
-
-
-export const getUpdateBoundedContextDescriptionsQueryOptions = <TData = Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError = void>(key: string,
-    updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBoundedContextDescriptionsQueryKey(key,updateBoundedContextDescriptionsRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>> = ({ signal }) => updateBoundedContextDescriptions(key,updateBoundedContextDescriptionsRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBoundedContextDescriptions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, {key: string;data: UpdateBoundedContextDescriptionsRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBoundedContextDescriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>>
-export type UpdateBoundedContextDescriptionsQueryError = void
+          return  updateBoundedContextDescriptions(key,data,requestOptions)
+        }
 
 
-export function useUpdateBoundedContextDescriptions<TData = Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError = void>(
- key: string,
-    updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextDescriptions<TData = Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError = void>(
- key: string,
-    updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextDescriptions>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextDescriptions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextDescriptions<TData = Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError = void>(
- key: string,
-    updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBoundedContextDescriptionsMutationResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>>
+    export type UpdateBoundedContextDescriptionsMutationBody = UpdateBoundedContextDescriptionsRequest
+    export type UpdateBoundedContextDescriptionsMutationError = void
+
+    /**
  * @summary Update bounded context descriptions
  */
-
-export function useUpdateBoundedContextDescriptions<TData = Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError = void>(
- key: string,
-    updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBoundedContextDescriptionsQueryOptions(key,updateBoundedContextDescriptionsRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateBoundedContextOwningTeamResponse200 = {
+export const useUpdateBoundedContextDescriptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextDescriptions>>, TError,{key: string;data: UpdateBoundedContextDescriptionsRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBoundedContextDescriptions>>,
+        TError,
+        {key: string;data: UpdateBoundedContextDescriptionsRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBoundedContextDescriptionsMutationOptions(options), queryClient);
+    }
+    export type updateBoundedContextOwningTeamResponse200 = {
   data: BoundedContextResponse
   status: 200
 }
@@ -828,84 +748,47 @@ export const updateBoundedContextOwningTeam = async (key: string,
 
 
 
+export const getUpdateBoundedContextOwningTeamMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext> => {
 
-export const getUpdateBoundedContextOwningTeamQueryKey = (key: string,
-    updateBoundedContextOwningTeamRequest?: UpdateBoundedContextOwningTeamRequest,) => {
-    return [
-    'PUT', `/bounded-contexts/${key}/owning-team`, updateBoundedContextOwningTeamRequest
-    ] as const;
-    }
-
-
-export const getUpdateBoundedContextOwningTeamQueryOptions = <TData = Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError = void>(key: string,
-    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateBoundedContextOwningTeamQueryKey(key,updateBoundedContextOwningTeamRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>> = ({ signal }) => updateBoundedContextOwningTeam(key,updateBoundedContextOwningTeamRequest, { signal, ...requestOptions });
+const mutationKey = ['updateBoundedContextOwningTeam'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, {key: string;data: UpdateBoundedContextOwningTeamRequest}> = (props) => {
+          const {key,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateBoundedContextOwningTeamQueryResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>>
-export type UpdateBoundedContextOwningTeamQueryError = void
+          return  updateBoundedContextOwningTeam(key,data,requestOptions)
+        }
 
 
-export function useUpdateBoundedContextOwningTeam<TData = Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError = void>(
- key: string,
-    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextOwningTeam<TData = Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError = void>(
- key: string,
-    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>,
-          TError,
-          Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateBoundedContextOwningTeam<TData = Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError = void>(
- key: string,
-    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBoundedContextOwningTeamMutationResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>>
+    export type UpdateBoundedContextOwningTeamMutationBody = UpdateBoundedContextOwningTeamRequest
+    export type UpdateBoundedContextOwningTeamMutationError = void
+
+    /**
  * @summary Update bounded context owning team
  */
-
-export function useUpdateBoundedContextOwningTeam<TData = Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError = void>(
- key: string,
-    updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateBoundedContextOwningTeamQueryOptions(key,updateBoundedContextOwningTeamRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useUpdateBoundedContextOwningTeam = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>, TError,{key: string;data: UpdateBoundedContextOwningTeamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBoundedContextOwningTeam>>,
+        TError,
+        {key: string;data: UpdateBoundedContextOwningTeamRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBoundedContextOwningTeamMutationOptions(options), queryClient);
+    }

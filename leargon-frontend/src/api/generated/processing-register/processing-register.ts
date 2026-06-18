@@ -17,13 +17,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useQuery
 } from '@tanstack/react-query';
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -90,47 +95,78 @@ export const getProcessingRegister = async (params?: GetProcessingRegisterParams
 
 
 
-export const getGetProcessingRegisterMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError,{params?: GetProcessingRegisterParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError,{params?: GetProcessingRegisterParams}, TContext> => {
 
-const mutationKey = ['getProcessingRegister'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetProcessingRegisterQueryKey = (params?: GetProcessingRegisterParams,) => {
+    return [
+    `/processing-register`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getGetProcessingRegisterQueryOptions = <TData = Awaited<ReturnType<typeof getProcessingRegister>>, TError = void>(params?: GetProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessingRegisterQueryKey(params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getProcessingRegister>>, {params?: GetProcessingRegisterParams}> = (props) => {
-          const {params} = props ?? {};
 
-          return  getProcessingRegister(params,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessingRegister>>> = ({ signal }) => getProcessingRegister(params, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetProcessingRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof getProcessingRegister>>>
+export type GetProcessingRegisterQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessingRegister>>>
+export type GetProcessingRegisterQueryError = void
 
-    export type GetProcessingRegisterMutationError = void
 
-    /**
+export function useGetProcessingRegister<TData = Awaited<ReturnType<typeof getProcessingRegister>>, TError = void>(
+ params: undefined |  GetProcessingRegisterParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessingRegister>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessingRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessingRegister<TData = Awaited<ReturnType<typeof getProcessingRegister>>, TError = void>(
+ params?: GetProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessingRegister>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessingRegister>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessingRegister<TData = Awaited<ReturnType<typeof getProcessingRegister>>, TError = void>(
+ params?: GetProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get processing register entries
  */
-export const useGetProcessingRegister = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError,{params?: GetProcessingRegisterParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getProcessingRegister>>,
-        TError,
-        {params?: GetProcessingRegisterParams},
-        TContext
-      > => {
-      return useMutation(getGetProcessingRegisterMutationOptions(options), queryClient);
-    }
+
+export function useGetProcessingRegister<TData = Awaited<ReturnType<typeof getProcessingRegister>>, TError = void>(
+ params?: GetProcessingRegisterParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessingRegister>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessingRegisterQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+

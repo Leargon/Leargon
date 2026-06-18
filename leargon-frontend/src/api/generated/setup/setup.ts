@@ -17,18 +17,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useQuery
+  useMutation
 } from '@tanstack/react-query';
 import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult
+  UseMutationOptions,
+  UseMutationResult
 } from '@tanstack/react-query';
 
 import type {
@@ -93,78 +88,47 @@ export const completeSetup = async ( options?: RequestInit): Promise<completeSet
 
 
 
+export const getCompleteSetupMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext> => {
 
-export const getCompleteSetupQueryKey = () => {
-    return [
-    'POST', `/setup/complete`
-    ] as const;
-    }
-
-
-export const getCompleteSetupQueryOptions = <TData = Awaited<ReturnType<typeof completeSetup>>, TError = void | ErrorResponse>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCompleteSetupQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof completeSetup>>> = ({ signal }) => completeSetup({ signal, ...requestOptions });
+const mutationKey = ['completeSetup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CompleteSetupQueryResult = NonNullable<Awaited<ReturnType<typeof completeSetup>>>
-export type CompleteSetupQueryError = void | ErrorResponse
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeSetup>>, void> = () => {
 
 
-export function useCompleteSetup<TData = Awaited<ReturnType<typeof completeSetup>>, TError = void | ErrorResponse>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof completeSetup>>,
-          TError,
-          Awaited<ReturnType<typeof completeSetup>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCompleteSetup<TData = Awaited<ReturnType<typeof completeSetup>>, TError = void | ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof completeSetup>>,
-          TError,
-          Awaited<ReturnType<typeof completeSetup>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCompleteSetup<TData = Awaited<ReturnType<typeof completeSetup>>, TError = void | ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+          return  completeSetup(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompleteSetupMutationResult = NonNullable<Awaited<ReturnType<typeof completeSetup>>>
+
+    export type CompleteSetupMutationError = void | ErrorResponse
+
+    /**
  * @summary Complete first-time setup
  */
-
-export function useCompleteSetup<TData = Awaited<ReturnType<typeof completeSetup>>, TError = void | ErrorResponse>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof completeSetup>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCompleteSetupQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useCompleteSetup = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof completeSetup>>, TError,void, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof completeSetup>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCompleteSetupMutationOptions(options), queryClient);
+    }

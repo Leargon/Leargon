@@ -101,51 +101,82 @@ export const getSupportedLocales = async (params?: GetSupportedLocalesParams, op
 
 
 
-export const getGetSupportedLocalesMutationOptions = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError,{params?: GetSupportedLocalesParams}, TContext>, request?: SecondParameter<typeof customAxios>}
-): UseMutationOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError,{params?: GetSupportedLocalesParams}, TContext> => {
 
-const mutationKey = ['getSupportedLocales'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const getGetSupportedLocalesQueryKey = (params?: GetSupportedLocalesParams,) => {
+    return [
+    `/locales`, ...(params ? [params] : [])
+    ] as const;
+    }
 
 
+export const getGetSupportedLocalesQueryOptions = <TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupportedLocalesQueryKey(params);
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getSupportedLocales>>, {params?: GetSupportedLocalesParams}> = (props) => {
-          const {params} = props ?? {};
 
-          return  getSupportedLocales(params,requestOptions)
-        }
-
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupportedLocales>>> = ({ signal }) => getSupportedLocales(params, { signal, ...requestOptions });
 
 
 
 
 
-  return  { mutationFn, ...mutationOptions }}
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
 
-    export type GetSupportedLocalesMutationResult = NonNullable<Awaited<ReturnType<typeof getSupportedLocales>>>
+export type GetSupportedLocalesQueryResult = NonNullable<Awaited<ReturnType<typeof getSupportedLocales>>>
+export type GetSupportedLocalesQueryError = void
 
-    export type GetSupportedLocalesMutationError = void
 
-    /**
+export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
+ params: undefined |  GetSupportedLocalesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupportedLocales>>,
+          TError,
+          Awaited<ReturnType<typeof getSupportedLocales>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
+ params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSupportedLocales>>,
+          TError,
+          Awaited<ReturnType<typeof getSupportedLocales>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
+ params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
  * @summary Get supported locales
  */
-export const useGetSupportedLocales = <TError = void,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError,{params?: GetSupportedLocalesParams}, TContext>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof getSupportedLocales>>,
-        TError,
-        {params?: GetSupportedLocalesParams},
-        TContext
-      > => {
-      return useMutation(getGetSupportedLocalesMutationOptions(options), queryClient);
-    }
-    export type createSupportedLocaleResponse201 = {
+
+export function useGetSupportedLocales<TData = Awaited<ReturnType<typeof getSupportedLocales>>, TError = void>(
+ params?: GetSupportedLocalesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSupportedLocales>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetSupportedLocalesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type createSupportedLocaleResponse201 = {
   data: SupportedLocaleResponse
   status: 201
 }
@@ -200,82 +231,51 @@ export const createSupportedLocale = async (createSupportedLocaleRequest: Create
 
 
 
+export const getCreateSupportedLocaleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext> => {
 
-export const getCreateSupportedLocaleQueryKey = (createSupportedLocaleRequest?: CreateSupportedLocaleRequest,) => {
-    return [
-    'POST', `/locales`, createSupportedLocaleRequest
-    ] as const;
-    }
-
-
-export const getCreateSupportedLocaleQueryOptions = <TData = Awaited<ReturnType<typeof createSupportedLocale>>, TError = void>(createSupportedLocaleRequest: CreateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getCreateSupportedLocaleQueryKey(createSupportedLocaleRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof createSupportedLocale>>> = ({ signal }) => createSupportedLocale(createSupportedLocaleRequest, { signal, ...requestOptions });
+const mutationKey = ['createSupportedLocale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSupportedLocale>>, {data: CreateSupportedLocaleRequest}> = (props) => {
+          const {data} = props ?? {};
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type CreateSupportedLocaleQueryResult = NonNullable<Awaited<ReturnType<typeof createSupportedLocale>>>
-export type CreateSupportedLocaleQueryError = void
+          return  createSupportedLocale(data,requestOptions)
+        }
 
 
-export function useCreateSupportedLocale<TData = Awaited<ReturnType<typeof createSupportedLocale>>, TError = void>(
- createSupportedLocaleRequest: CreateSupportedLocaleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof createSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateSupportedLocale<TData = Awaited<ReturnType<typeof createSupportedLocale>>, TError = void>(
- createSupportedLocaleRequest: CreateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof createSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof createSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCreateSupportedLocale<TData = Awaited<ReturnType<typeof createSupportedLocale>>, TError = void>(
- createSupportedLocaleRequest: CreateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSupportedLocaleMutationResult = NonNullable<Awaited<ReturnType<typeof createSupportedLocale>>>
+    export type CreateSupportedLocaleMutationBody = CreateSupportedLocaleRequest
+    export type CreateSupportedLocaleMutationError = void
+
+    /**
  * @summary Create a supported locale
  */
-
-export function useCreateSupportedLocale<TData = Awaited<ReturnType<typeof createSupportedLocale>>, TError = void>(
- createSupportedLocaleRequest: CreateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getCreateSupportedLocaleQueryOptions(createSupportedLocaleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type updateSupportedLocaleResponse200 = {
+export const useCreateSupportedLocale = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportedLocale>>, TError,{data: CreateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createSupportedLocale>>,
+        TError,
+        {data: CreateSupportedLocaleRequest},
+        TContext
+      > => {
+      return useMutation(getCreateSupportedLocaleMutationOptions(options), queryClient);
+    }
+    export type updateSupportedLocaleResponse200 = {
   data: SupportedLocaleResponse
   status: 200
 }
@@ -336,88 +336,51 @@ export const updateSupportedLocale = async (id: number,
 
 
 
+export const getUpdateSupportedLocaleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext> => {
 
-export const getUpdateSupportedLocaleQueryKey = (id: number,
-    updateSupportedLocaleRequest?: UpdateSupportedLocaleRequest,) => {
-    return [
-    'PUT', `/locales/${id}`, updateSupportedLocaleRequest
-    ] as const;
-    }
-
-
-export const getUpdateSupportedLocaleQueryOptions = <TData = Awaited<ReturnType<typeof updateSupportedLocale>>, TError = void>(id: number,
-    updateSupportedLocaleRequest: UpdateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUpdateSupportedLocaleQueryKey(id,updateSupportedLocaleRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof updateSupportedLocale>>> = ({ signal }) => updateSupportedLocale(id,updateSupportedLocaleRequest, { signal, ...requestOptions });
+const mutationKey = ['updateSupportedLocale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportedLocale>>, {id: number;data: UpdateSupportedLocaleRequest}> = (props) => {
+          const {id,data} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UpdateSupportedLocaleQueryResult = NonNullable<Awaited<ReturnType<typeof updateSupportedLocale>>>
-export type UpdateSupportedLocaleQueryError = void
+          return  updateSupportedLocale(id,data,requestOptions)
+        }
 
 
-export function useUpdateSupportedLocale<TData = Awaited<ReturnType<typeof updateSupportedLocale>>, TError = void>(
- id: number,
-    updateSupportedLocaleRequest: UpdateSupportedLocaleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof updateSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateSupportedLocale<TData = Awaited<ReturnType<typeof updateSupportedLocale>>, TError = void>(
- id: number,
-    updateSupportedLocaleRequest: UpdateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof updateSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof updateSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUpdateSupportedLocale<TData = Awaited<ReturnType<typeof updateSupportedLocale>>, TError = void>(
- id: number,
-    updateSupportedLocaleRequest: UpdateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSupportedLocaleMutationResult = NonNullable<Awaited<ReturnType<typeof updateSupportedLocale>>>
+    export type UpdateSupportedLocaleMutationBody = UpdateSupportedLocaleRequest
+    export type UpdateSupportedLocaleMutationError = void
+
+    /**
  * @summary Update a supported locale
  */
-
-export function useUpdateSupportedLocale<TData = Awaited<ReturnType<typeof updateSupportedLocale>>, TError = void>(
- id: number,
-    updateSupportedLocaleRequest: UpdateSupportedLocaleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUpdateSupportedLocaleQueryOptions(id,updateSupportedLocaleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
-export type deleteSupportedLocaleResponse204 = {
+export const useUpdateSupportedLocale = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportedLocale>>, TError,{id: number;data: UpdateSupportedLocaleRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateSupportedLocale>>,
+        TError,
+        {id: number;data: UpdateSupportedLocaleRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateSupportedLocaleMutationOptions(options), queryClient);
+    }
+    export type deleteSupportedLocaleResponse204 = {
   data: void
   status: 204
 }
@@ -477,78 +440,47 @@ export const deleteSupportedLocale = async (id: number, options?: RequestInit): 
 
 
 
+export const getDeleteSupportedLocaleMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext> => {
 
-export const getDeleteSupportedLocaleQueryKey = (id: number,) => {
-    return [
-    'DELETE', `/locales/${id}`
-    ] as const;
-    }
-
-
-export const getDeleteSupportedLocaleQueryOptions = <TData = Awaited<ReturnType<typeof deleteSupportedLocale>>, TError = void>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getDeleteSupportedLocaleQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof deleteSupportedLocale>>> = ({ signal }) => deleteSupportedLocale(id, { signal, ...requestOptions });
+const mutationKey = ['deleteSupportedLocale'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
 
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSupportedLocale>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
 
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type DeleteSupportedLocaleQueryResult = NonNullable<Awaited<ReturnType<typeof deleteSupportedLocale>>>
-export type DeleteSupportedLocaleQueryError = void
+          return  deleteSupportedLocale(id,requestOptions)
+        }
 
 
-export function useDeleteSupportedLocale<TData = Awaited<ReturnType<typeof deleteSupportedLocale>>, TError = void>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof deleteSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteSupportedLocale<TData = Awaited<ReturnType<typeof deleteSupportedLocale>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof deleteSupportedLocale>>,
-          TError,
-          Awaited<ReturnType<typeof deleteSupportedLocale>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useDeleteSupportedLocale<TData = Awaited<ReturnType<typeof deleteSupportedLocale>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSupportedLocaleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSupportedLocale>>>
+
+    export type DeleteSupportedLocaleMutationError = void
+
+    /**
  * @summary Delete a supported locale
  */
-
-export function useDeleteSupportedLocale<TData = Awaited<ReturnType<typeof deleteSupportedLocale>>, TError = void>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getDeleteSupportedLocaleQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
+export const useDeleteSupportedLocale = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSupportedLocale>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSupportedLocale>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSupportedLocaleMutationOptions(options), queryClient);
+    }
