@@ -216,6 +216,12 @@ tasks.withType(Jar).configureEach {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+processResources {
+    filesMatching('app-version.properties') {
+        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: [version: project.version as String])
+    }
+}
+
 ktlint {
     version = "1.8.0"
     android = false

@@ -5623,6 +5623,68 @@ paths:
           description: Not authenticated
         '403':
           description: Insufficient permissions (requires ROLE_ADMIN)
+  /it-systems/{key}/service-providers:
+    put:
+      tags:
+      - ItSystem
+      summary: Update service providers for an IT system
+      description: Replaces the list of service providers linked to an IT system. Requires ROLE_ADMIN.
+      operationId: updateItSystemServiceProviders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItSystemServiceProvidersRequest'
+      responses:
+        '204':
+          description: Service providers updated
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /it-systems/{key}/processing-countries:
+    put:
+      tags:
+      - ItSystem
+      summary: Update processing countries for an IT system
+      description: Replaces the list of deployment countries for an IT system. Requires ROLE_ADMIN.
+      operationId: updateItSystemProcessingCountries
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: IT system key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItSystemProcessingCountriesRequest'
+      responses:
+        '204':
+          description: Processing countries updated
+        '404':
+          description: IT system not found
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
   /processes/{key}/it-systems:
     put:
       tags:
@@ -6913,7 +6975,13 @@ components:
           nullable: true
           items:
             type: string
-          description: ISO 3166-1 alpha-2 country codes where this entity's data is stored
+          description: ISO 3166-1 alpha-2 country codes where this entity's data is stored (manually specified)
+        derivedStorageLocations:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Storage countries derived from IT systems and data-processor service providers of linked processes (read-only)
         missingMandatoryFields:
           type: array
           nullable: true
@@ -7955,6 +8023,12 @@ components:
           items:
             $ref: '#/components/schemas/ItSystemSummaryResponse'
           description: IT systems used in this process
+        derivedProcessingCountries:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Processing countries derived from linked IT systems and data-processor service providers, including all child processes (read-only)
         missingMandatoryFields:
           type: array
           nullable: true
@@ -9603,6 +9677,7 @@ components:
       required:
       - key
       - name
+      - processingCountries
       properties:
         key:
           type: string
@@ -9610,6 +9685,11 @@ components:
         name:
           type: string
           description: IT system name in default locale
+        processingCountries:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where this IT system is deployed
     ItSystemResponse:
       type: object
       required:
@@ -9642,6 +9722,18 @@ components:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
           nullable: true
           description: Organisational unit that owns this IT system
+        processingCountries:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where this IT system is deployed
+        serviceProviders:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ServiceProviderSummaryResponse'
+          description: Infrastructure / cloud service providers this system runs on
         linkedProcesses:
           type: array
           nullable: true
@@ -9701,6 +9793,26 @@ components:
         owningUnitKey:
           type: string
           nullable: true
+    UpdateItSystemServiceProvidersRequest:
+      type: object
+      required:
+      - serviceProviderKeys
+      properties:
+        serviceProviderKeys:
+          type: array
+          items:
+            type: string
+          description: Keys of service providers linked to this IT system
+    UpdateItSystemProcessingCountriesRequest:
+      type: object
+      required:
+      - processingCountries
+      properties:
+        processingCountries:
+          type: array
+          items:
+            type: string
+          description: ISO 3166-1 alpha-2 country codes where this IT system is deployed
     UpdateItSystemLinkedProcessesRequest:
       type: object
       required:
@@ -10059,6 +10171,11 @@ components:
           nullable: true
           description: Data protection officer or advisor (Datenschutzbeauftragter/-berater)
           example: Dr. Jane Doe, datenschutz@example.com
+        homeCountry:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 code of the country where the organisation is headquartered. Used to exclude domestic transfers from the processing register.
+          example: CH
     OrganisationSettingsRequest:
       type: object
       properties:
@@ -10070,6 +10187,10 @@ components:
           type: string
           nullable: true
           description: Data protection officer or advisor
+        homeCountry:
+          type: string
+          nullable: true
+          description: ISO 3166-1 alpha-2 country code of the organisation's home country
     ProcessingRegisterEntryResponse:
       type: object
       required:
@@ -10150,6 +10271,10 @@ components:
         securityMeasures:
           type: string
           description: Technical and organisational security measures in the requested locale
+        processingCountries:
+          type: string
+          nullable: true
+          description: Processing countries derived from IT systems and data-processor service providers, semicolon-separated ISO codes
         purposeRaw:
           type: array
           nullable: true

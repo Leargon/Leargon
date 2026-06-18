@@ -15,6 +15,17 @@ import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ServiceProviderRepository
 import org.leargon.backend.util.SlugUtil
 import java.time.Instant
+import java.util.Locale
+
+private val validIsoCountryCodes: Set<String> = Locale.getISOCountries().toSet()
+
+private fun validateServiceProviderIsoCodes(codes: List<String>?) {
+    if (codes.isNullOrEmpty()) return
+    val invalid = codes.filter { it !in validIsoCountryCodes }
+    if (invalid.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid ISO 3166-1 alpha-2 country codes: ${invalid.joinToString()}")
+    }
+}
 
 @Singleton
 open class ServiceProviderService(
@@ -42,6 +53,7 @@ open class ServiceProviderService(
 
     @Transactional
     open fun create(request: CreateServiceProviderRequest): ServiceProviderResponse {
+        validateServiceProviderIsoCodes(request.processingCountries)
         val sp = ServiceProvider()
         sp.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         sp.serviceProviderType = request.serviceProviderType?.value ?: "DATA_PROCESSOR"
@@ -74,6 +86,7 @@ open class ServiceProviderService(
                 .findByKey(key)
                 .orElseThrow { ResourceNotFoundException("ServiceProvider not found: $key") }
 
+        validateServiceProviderIsoCodes(request.processingCountries)
         sp.names = request.names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         sp.serviceProviderType = request.serviceProviderType?.value ?: sp.serviceProviderType
         sp.processingCountries = (request.processingCountries ?: emptyList()).toMutableList()

@@ -3,9 +3,11 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
+import org.leargon.backend.domain.CrossBorderTransfer
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.User
 import org.leargon.backend.mapper.ProcessMapper
+import org.leargon.backend.mapper.ProcessMapper.Companion.derivedProcessingCountries
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessingRegisterEntryResponse
 import org.leargon.backend.repository.OrganisationSettingsRepository
@@ -22,6 +24,20 @@ open class ProcessingRegisterService(
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
+
+    private fun collectEffectiveTransfers(process: Process): List<CrossBorderTransfer> {
+        val seen = mutableSetOf<String>()
+        val result = mutableListOf<CrossBorderTransfer>()
+
+        fun collect(p: Process) {
+            p.crossBorderTransfers?.forEach { t ->
+                if (seen.add("${t.destinationCountry}:${t.safeguard}")) result.add(t)
+            }
+            p.children.forEach { collect(it) }
+        }
+        collect(process)
+        return result
+    }
 
     private fun localizedName(
         entity: BusinessEntity,
@@ -96,6 +112,7 @@ open class ProcessingRegisterService(
         val orgSettings = organisationSettingsRepository.findFirst().orElse(null)
         val euRepresentative = orgSettings?.euRepresentative ?: ""
         val dpo = orgSettings?.dataProtectionOfficer ?: ""
+        val homeCountry = orgSettings?.homeCountry
 
         val allProcesses = processRepository.findAll()
         val childKeysByParent =
@@ -104,7 +121,7 @@ open class ProcessingRegisterService(
                 .groupBy { it.parent!!.key }
 
         return allProcesses
-            .map { process -> buildEntry(process, locale, euRepresentative, dpo, currentUser, childKeysByParent) }
+            .map { process -> buildEntry(process, locale, euRepresentative, dpo, homeCountry, currentUser, childKeysByParent) }
     }
 
     private fun buildEntry(
@@ -112,6 +129,7 @@ open class ProcessingRegisterService(
         locale: String,
         euRepresentative: String,
         dpo: String,
+        homeCountry: String?,
         currentUser: User,
         childKeysByParent: Map<String, List<Process>>,
     ): ProcessingRegisterEntryResponse {
@@ -169,7 +187,11 @@ open class ProcessingRegisterService(
             }
 
         val transfers =
-            process.crossBorderTransfers?.joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" } ?: ""
+            collectEffectiveTransfers(process)
+                .filter { homeCountry == null || it.destinationCountry != homeCountry }
+                .joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" }
+
+        val processingCountries = derivedProcessingCountries(process).joinToString("; ")
 
         val purposeLocalized = process.purpose?.find { it.locale == locale }?.text
         val purposes = purposeLocalized ?: process.purpose?.firstOrNull()?.text ?: ""
@@ -197,7 +219,8 @@ open class ProcessingRegisterService(
             transfers,
             retentionPeriods,
             securityMeasures,
-        ).parentKey(process.parent?.key)
+        ).processingCountries(processingCountries)
+            .parentKey(process.parent?.key)
             .lastModified(lastModified)
             .purposeRaw(process.purpose?.map { LocalizedText(it.locale, it.text) })
             .securityMeasuresRaw(process.securityMeasures?.map { LocalizedText(it.locale, it.text) })

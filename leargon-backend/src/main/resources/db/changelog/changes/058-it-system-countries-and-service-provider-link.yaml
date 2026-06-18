@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 058-it-system-countries-and-service-provider-link
+      author: leargon
+      changes:
+        - addColumn:
+            tableName: it_systems
+            columns:
+              - column:
+                  name: processing_countries
+                  type: JSON
+                  constraints:
+                    nullable: true
+        - update:
+            tableName: it_systems
+            columns:
+              - column:
+                  name: processing_countries
+                  valueComputed: "JSON_ARRAY()"
+            where: "processing_countries IS NULL"
+        - addNotNullConstraint:
+            tableName: it_systems
+            columnName: processing_countries
+            columnDataType: JSON
+        - createTable:
+            tableName: it_system_service_providers
+            columns:
+              - column:
+                  name: it_system_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_provider_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: it_system_service_providers
+            columnNames: it_system_id, service_provider_id
+            constraintName: pk_it_system_service_providers
+        - addForeignKeyConstraint:
+            baseTableName: it_system_service_providers
+            baseColumnNames: it_system_id
+            referencedTableName: it_systems
+            referencedColumnNames: id
+            constraintName: fk_it_system_service_providers_it_system
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: it_system_service_providers
+            baseColumnNames: service_provider_id
+            referencedTableName: service_providers
+            referencedColumnNames: id
+            constraintName: fk_it_system_service_providers_service_provider
+            onDelete: CASCADE

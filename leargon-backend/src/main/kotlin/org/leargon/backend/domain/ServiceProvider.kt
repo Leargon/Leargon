@@ -41,6 +41,9 @@ class ServiceProvider {
     @Column(name = "sub_processors_approved", nullable = false)
     var subProcessorsApproved: Boolean = false
 
+    @ManyToMany(mappedBy = "serviceProviders", fetch = FetchType.LAZY)
+    var itSystems: MutableSet<ItSystem> = mutableSetOf()
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "service_provider_processes",

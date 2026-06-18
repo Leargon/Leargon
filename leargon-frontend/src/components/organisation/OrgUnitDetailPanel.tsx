@@ -86,16 +86,7 @@ import type {
   BoundedContextSummaryResponse,
   BusinessDomainResponse,
 } from '../../api/generated/model';
-
-const COUNTRY_NAMES: Record<string, string> = {
-  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
-  CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
-  FI: 'Finland', FR: 'France', GB: 'United Kingdom', IE: 'Ireland', IN: 'India',
-  IT: 'Italy', JP: 'Japan', LI: 'Liechtenstein', LU: 'Luxembourg', NL: 'Netherlands',
-  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', SE: 'Sweden',
-  SG: 'Singapore', US: 'United States',
-};
-const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 interface OrgUnitDetailPanelProps {
   unitKey: string;
@@ -110,6 +101,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const { perspective } = useNavigation();
   const sections = ORG_UNIT_SECTIONS_BY_PERSPECTIVE[perspective];
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
@@ -827,9 +819,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       sx={{ width: 300 }}
                     />
                     <Autocomplete
-                      options={COUNTRY_OPTIONS}
+                      options={countryOptions}
                       getOptionLabel={(o) => `${o.code} – ${o.name}`}
-                      value={COUNTRY_OPTIONS.find((c) => c.code === externalFieldsEdit.editValue!.countryOfExecution) || null}
+                      value={countryOptions.find((c) => c.code === externalFieldsEdit.editValue!.countryOfExecution) || null}
                       onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, countryOfExecution: val?.code ?? '' })}
                       renderInput={(params) => <TextField {...params} size="small" label="Country of Execution" sx={{ width: 300 }} />}
                     />
@@ -868,7 +860,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                         }}>Country of Execution:</Typography>
                       <Typography variant="body2">
                         {unit.countryOfExecution
-                          ? `${COUNTRY_NAMES[unit.countryOfExecution] ?? unit.countryOfExecution} (${unit.countryOfExecution})`
+                          ? `${getCountryName(unit.countryOfExecution, preferredLocale ?? 'en')} (${unit.countryOfExecution})`
                           : '—'}
                       </Typography>
                     </Box>

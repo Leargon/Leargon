@@ -29,18 +29,8 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
 import { ServiceProviderType } from '../../api/generated/model';
-
-const COUNTRY_OPTIONS = [
-  { code: 'AT', name: 'Austria' }, { code: 'AU', name: 'Australia' }, { code: 'BE', name: 'Belgium' },
-  { code: 'BR', name: 'Brazil' }, { code: 'CA', name: 'Canada' }, { code: 'CH', name: 'Switzerland' },
-  { code: 'CN', name: 'China' }, { code: 'DE', name: 'Germany' }, { code: 'DK', name: 'Denmark' },
-  { code: 'ES', name: 'Spain' }, { code: 'FI', name: 'Finland' }, { code: 'FR', name: 'France' },
-  { code: 'GB', name: 'United Kingdom' }, { code: 'IE', name: 'Ireland' }, { code: 'IN', name: 'India' },
-  { code: 'IT', name: 'Italy' }, { code: 'JP', name: 'Japan' }, { code: 'LI', name: 'Liechtenstein' },
-  { code: 'LU', name: 'Luxembourg' }, { code: 'NL', name: 'Netherlands' }, { code: 'NO', name: 'Norway' },
-  { code: 'NZ', name: 'New Zealand' }, { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' },
-  { code: 'SE', name: 'Sweden' }, { code: 'SG', name: 'Singapore' }, { code: 'US', name: 'United States' },
-];
+import { getCountryOptions } from '../../utils/countries';
+import { useLocale } from '../../context/LocaleContext';
 
 interface CreateServiceProviderDialogProps {
   open: boolean;
@@ -51,6 +41,8 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { preferredLocale } = useLocale();
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const createProvider = useCreateServiceProvider();
@@ -129,9 +121,9 @@ const CreateServiceProviderDialog: React.FC<CreateServiceProviderDialogProps> = 
         </Box>
         <Autocomplete
           multiple
-          options={COUNTRY_OPTIONS}
+          options={countryOptions}
           getOptionLabel={(o) => `${o.code} – ${o.name}`}
-          value={COUNTRY_OPTIONS.filter((c) => countries.includes(c.code))}
+          value={countryOptions.filter((c) => countries.includes(c.code))}
           onChange={(_, val) => setCountries(val.map((v) => v.code))}
           renderInput={(params) => <TextField {...params} label={t('serviceProviderDialog.processingCountriesLabel')} size="small" sx={{ mt: 2 }} />}
           renderValue={(val, getItemProps) =>

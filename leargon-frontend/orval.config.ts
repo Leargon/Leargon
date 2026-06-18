@@ -10,14 +10,10 @@ export default defineConfig({
       schemas: './src/api/generated/model',
       client: 'react-query',
       mode: 'tags-split',
-override: {
+      override: {
         mutator: {
           path: './src/api/customAxios.ts',
           name: 'customAxios',
-        },
-        query: {
-          useQuery: true,
-          useMutation: true,
         },
       },
     },

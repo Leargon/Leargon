@@ -232,6 +232,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
             {row.securityMeasures || (row.canEdit ? t('common.clickToEdit') : '—')}
           </Typography>
         </TableCell>
+
       </TableRow>
 
       {/* Purpose edit dialog */}

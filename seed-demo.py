@@ -2538,6 +2538,34 @@ for (short_name, vendor, url, nms, descs, linked_procs, owning_unit_en) in it_sy
     else:
         it_system_keys[short_name] = short_name.lower().replace(' ', '-').replace('/', '-')
 
+# Set processing countries and service providers for each IT system
+def _sp_keys(*sp_responses):
+    return [r['key'] for r in sp_responses if '_error' not in r]
+
+_it_sp_map = {
+    'Shopify':          (['IE', 'DE'],    _sp_keys(google_analytics, klaviyo, stripe)),
+    'Stripe':           (['US', 'IE'],    []),
+    'Klaviyo':          (['US'],          []),
+    'Manhattan WMS':    (['DE'],          _sp_keys(dhl)),
+    'SAP S/4HANA':      (['DE'],          _sp_keys(stripe)),
+    'Salesforce CRM':   (['US', 'DE'],    _sp_keys(salesforce)),
+    'Workday HCM':      (['US', 'IE'],    []),
+    'Google Analytics 4': (['US'],        []),
+    'Zendesk':          (['US', 'IE'],    []),
+}
+
+for sys_name, (countries, svc_keys) in _it_sp_map.items():
+    isk = it_system_keys.get(sys_name)
+    if not isk:
+        continue
+    ok(f'{sys_name}: processing countries {countries}',
+       api('PUT', f'/it-systems/{isk}/processing-countries',
+           {'processingCountries': countries}, T))
+    if svc_keys:
+        ok(f'{sys_name}: service providers ({len(svc_keys)})',
+           api('PUT', f'/it-systems/{isk}/service-providers',
+               {'serviceProviderKeys': svc_keys}, T))
+
 
 # ── External Org Units ────────────────────────────────────────────────────────────
 print('\n[20] External org units (body leasing)...')

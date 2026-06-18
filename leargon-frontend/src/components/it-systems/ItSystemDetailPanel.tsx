@@ -28,9 +28,12 @@ import {
   useUpdateItSystem,
   useDeleteItSystem,
   useUpdateItSystemLinkedProcesses,
+  useUpdateItSystemServiceProviders,
+  useUpdateItSystemProcessingCountries,
 } from '../../api/generated/it-system/it-system';
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
+import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
@@ -41,10 +44,11 @@ import type {
   LocalizedText,
   OrganisationalUnitResponse,
   ProcessResponse,
+  ServiceProviderResponse,
   SupportedLocaleResponse,
   ItSystemResponse,
 } from '../../api/generated/model';
-
+import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 interface ItSystemDetailPanelProps {
   systemKey: string;
@@ -54,9 +58,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetItSystem(systemKey);
   const system = response?.data as ItSystemResponse | undefined;
@@ -68,9 +73,14 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const { data: orgUnitsResponse } = useGetAllOrganisationalUnits();
   const allOrgUnits = (orgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
 
+  const { data: serviceProvidersResponse } = useGetAllServiceProviders();
+  const allServiceProviders = (serviceProvidersResponse?.data as ServiceProviderResponse[] | undefined) ?? [];
+
   const updateSystem = useUpdateItSystem();
   const deleteSystem = useDeleteItSystem();
   const updateLinkedProcesses = useUpdateItSystemLinkedProcesses();
+  const updateServiceProviders = useUpdateItSystemServiceProviders();
+  const updateProcessingCountries = useUpdateItSystemProcessingCountries();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -112,6 +122,20 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const processesEdit = useInlineEdit<string[]>({
     onSave: async (keys) => {
       await updateLinkedProcesses.mutateAsync({ key: systemKey, data: { processKeys: keys } });
+      invalidate();
+    },
+  });
+
+  const countriesEdit = useInlineEdit<string[]>({
+    onSave: async (countries) => {
+      await updateProcessingCountries.mutateAsync({ key: systemKey, data: { processingCountries: countries } });
+      invalidate();
+    },
+  });
+
+  const serviceProvidersEdit = useInlineEdit<string[]>({
+    onSave: async (keys) => {
+      await updateServiceProviders.mutateAsync({ key: systemKey, data: { serviceProviderKeys: keys } });
       invalidate();
     },
   });
@@ -347,6 +371,135 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>{t('common.notAssigned')}</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Deployment Countries */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">{t('itSystem.sectionDeploymentCountries')}</Typography>
+              {isAdmin && !countriesEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(system.processingCountries ?? [])]); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {countriesEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); countriesEdit.save(); }} disabled={countriesEdit.isSaving}>
+                    {countriesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.cancel(); }} disabled={countriesEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {countriesEdit.isEditing && countriesEdit.editValue !== null ? (
+              <Box>
+                {(system.serviceProviders ?? []).length > 0 && (
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                    {t('itSystem.deploymentCountriesHint')}
+                  </Typography>
+                )}
+                <Autocomplete
+                  multiple
+                  options={
+                    (system.serviceProviders ?? []).length > 0
+                      ? [
+                          ...countryOptions.filter((c) =>
+                            (system.serviceProviders ?? []).some((sp) =>
+                              allServiceProviders.find((s) => s.key === sp.key)?.processingCountries?.includes(c.code)
+                            )
+                          ),
+                          ...countryOptions.filter((c) =>
+                            !(system.serviceProviders ?? []).some((sp) =>
+                              allServiceProviders.find((s) => s.key === sp.key)?.processingCountries?.includes(c.code)
+                            )
+                          ),
+                        ]
+                      : countryOptions
+                  }
+                  getOptionLabel={(o) => `${o.code} – ${o.name}`}
+                  value={countryOptions.filter((c) => countriesEdit.editValue!.includes(c.code))}
+                  onChange={(_, val) => countriesEdit.setEditValue(val.map((v) => v.code))}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('itSystem.deploymentCountriesLabel')} />}
+                  renderValue={(val, getItemProps) =>
+                    val.map((option, index) => (
+                      <Chip {...getItemProps({ index })} key={option.code} label={`${option.code} – ${option.name}`} size="small" />
+                    ))
+                  }
+                />
+                {countriesEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{countriesEdit.error}</Alert>}
+              </Box>
+            ) : (system.processingCountries ?? []).length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {(system.processingCountries ?? []).map((code) => (
+                  <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('itSystem.noDeploymentCountries')}</Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Infrastructure Providers */}
+        <Accordion disableGutters>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle2">{t('itSystem.sectionServiceProviders')}</Typography>
+              {isAdmin && !serviceProvidersEdit.isEditing && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.startEdit((system.serviceProviders ?? []).map((sp) => sp.key)); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+              {serviceProvidersEdit.isEditing && (
+                <>
+                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.save(); }} disabled={serviceProvidersEdit.isSaving}>
+                    {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
+                  </IconButton>
+                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.cancel(); }} disabled={serviceProvidersEdit.isSaving}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
+              <Box>
+                <Autocomplete
+                  multiple
+                  options={allServiceProviders}
+                  getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
+                  value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
+                  onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
+                  renderInput={(params) => <TextField {...params} size="small" label={t('itSystem.sectionServiceProviders')} />}
+                  renderValue={(val, getItemProps) =>
+                    val.map((option, index) => (
+                      <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
+                    ))
+                  }
+                />
+                {serviceProvidersEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{serviceProvidersEdit.error}</Alert>}
+              </Box>
+            ) : (system.serviceProviders ?? []).length > 0 ? (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {(system.serviceProviders ?? []).map((sp) => (
+                  <Chip
+                    key={sp.key}
+                    label={getLocalizedText(allServiceProviders.find((s) => s.key === sp.key)?.names ?? sp.names, sp.key)}
+                    size="small"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('itSystem.noServiceProviders')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>

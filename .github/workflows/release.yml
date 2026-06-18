@@ -88,6 +88,8 @@ jobs:
         with:
           context: ./leargon-backend
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.VERSION }}
           tags: |
             ghcr.io/leargon/leargon-backend:${{ steps.version.outputs.VERSION }}
             ghcr.io/leargon/leargon-backend:latest
