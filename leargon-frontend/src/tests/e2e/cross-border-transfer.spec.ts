@@ -33,7 +33,7 @@ test.describe('Cross-border Transfers — Process Detail (Admin)', () => {
 
     await page.locator('[aria-expanded]').filter({ hasText: 'Compliance' }).click();
 
-    const section = page.locator('text=Cross-border Transfers').first();
+    const section = page.locator('text=Transfers to Third Countries').first();
     await section.locator('..').getByRole('button').click();
 
     const dialog = page.getByRole('dialog');
