@@ -86,16 +86,7 @@ import type {
   BoundedContextSummaryResponse,
   BusinessDomainResponse,
 } from '../../api/generated/model';
-
-const COUNTRY_NAMES: Record<string, string> = {
-  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
-  CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
-  FI: 'Finland', FR: 'France', GB: 'United Kingdom', IE: 'Ireland', IN: 'India',
-  IT: 'Italy', JP: 'Japan', LI: 'Liechtenstein', LU: 'Luxembourg', NL: 'Netherlands',
-  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', SE: 'Sweden',
-  SG: 'Singapore', US: 'United States',
-};
-const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
+import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
 
 interface OrgUnitDetailPanelProps {
   unitKey: string;

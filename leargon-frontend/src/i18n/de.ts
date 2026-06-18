@@ -144,6 +144,8 @@ const de = {
     "noStorageLocations": "Keine Speicherorte erfasst",
     "editStorageLocations": "Speicherorte bearbeiten",
     "countriesWhereDataStored": "Länder, in denen Daten gespeichert werden",
+    "derivedStorageLocations": "Abgeleitet aus IT-Systemen",
+    "noDerivedStorageLocations": "Noch keine abgeleiteten Länder",
     "firstEntity": "Erste Entität",
     "firstMin": "Erstes Minimum",
     "firstMax": "Erstes Maximum",
@@ -178,6 +180,8 @@ const de = {
     "executingUnits": "Ausführende Einheiten",
     "dataProcessors": "Datenverarbeiter",
     "crossBorderTransfers": "Grenzüberschreitende Übermittlungen",
+    "derivedProcessingCountries": "Bearbeitungsländer (abgeleitet)",
+    "noDerivedProcessingCountries": "Noch keine Bearbeitungsländer abgeleitet",
     "parentProcess": "Übergeordneter Prozess",
     "childProcesses": "Untergeordnete Prozesse",
     "processDiagram": "Prozessdiagramm (BPMN)",
@@ -459,7 +463,8 @@ const de = {
     "colReg12": "Kategorien von Empfängern",
     "colReg13": "Übermittlung ins Ausland (Länder und Grundlagen der Übermittlung)",
     "colReg14": "Aufbewahrungsdauer bzw. Kriterien",
-    "colReg15": "Datensicherheitsmassnahmen"
+    "colReg15": "Datensicherheitsmassnahmen",
+    "colReg16": "Bearbeitungsländer"
   },
   "itSystem": {
     "pageTitle": "IT-Systeme",
@@ -478,7 +483,13 @@ const de = {
     "notFound": "IT-System nicht gefunden oder Ladefehler.",
     "deleteTitle": "IT-System löschen",
     "deleteConfirmFull": "Möchten Sie {{name}} wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
-    "systemUrlPlaceholder": "https://..."
+    "systemUrlPlaceholder": "https://...",
+    "sectionDeploymentCountries": "Betriebsländer",
+    "deploymentCountriesLabel": "Länder, in denen dieses System betrieben wird",
+    "noDeploymentCountries": "Keine Betriebsländer konfiguriert",
+    "sectionServiceProviders": "Infrastruktur-Anbieter",
+    "noServiceProviders": "Keine Infrastruktur-Anbieter verknüpft",
+    "deploymentCountriesHint": "Aus den Ländern der verknüpften Anbieter wählen oder beliebiges Land hinzufügen"
   },
   "externalOrgUnit": {
     "isExternal": "Externe Einheit",

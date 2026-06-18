@@ -140,7 +140,8 @@ open class ProcessMapper(
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
-            .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en")) })
+            .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en"), it.processingCountries) })
+            .derivedProcessingCountries(derivedProcessingCountries(process))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
@@ -181,6 +182,22 @@ open class ProcessMapper(
             }.sortedBy { it.key }
 
     companion object {
+        @JvmStatic
+        fun derivedProcessingCountries(process: Process): List<String> {
+            val result = mutableSetOf<String>()
+
+            fun collect(p: Process) {
+                p.itSystems.forEach { result.addAll(it.processingCountries) }
+                p.serviceProviders
+                    .filter { it.serviceProviderType == "DATA_PROCESSOR" }
+                    .forEach { result.addAll(it.processingCountries) }
+                p.children.forEach { collect(it) }
+            }
+
+            collect(process)
+            return result.sorted()
+        }
+
         @JvmStatic
         fun collectEffectiveEntities(
             process: Process,

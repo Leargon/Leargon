@@ -29,18 +29,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
 import { ServiceProviderType } from '../../api/generated/model';
-
-const COUNTRY_OPTIONS = [
-  { code: 'AT', name: 'Austria' }, { code: 'AU', name: 'Australia' }, { code: 'BE', name: 'Belgium' },
-  { code: 'BR', name: 'Brazil' }, { code: 'CA', name: 'Canada' }, { code: 'CH', name: 'Switzerland' },
-  { code: 'CN', name: 'China' }, { code: 'DE', name: 'Germany' }, { code: 'DK', name: 'Denmark' },
-  { code: 'ES', name: 'Spain' }, { code: 'FI', name: 'Finland' }, { code: 'FR', name: 'France' },
-  { code: 'GB', name: 'United Kingdom' }, { code: 'IE', name: 'Ireland' }, { code: 'IN', name: 'India' },
-  { code: 'IT', name: 'Italy' }, { code: 'JP', name: 'Japan' }, { code: 'LI', name: 'Liechtenstein' },
-  { code: 'LU', name: 'Luxembourg' }, { code: 'NL', name: 'Netherlands' }, { code: 'NO', name: 'Norway' },
-  { code: 'NZ', name: 'New Zealand' }, { code: 'PL', name: 'Poland' }, { code: 'PT', name: 'Portugal' },
-  { code: 'SE', name: 'Sweden' }, { code: 'SG', name: 'Singapore' }, { code: 'US', name: 'United States' },
-];
+import { COUNTRY_OPTIONS } from '../../utils/countries';
 
 interface CreateServiceProviderDialogProps {
   open: boolean;

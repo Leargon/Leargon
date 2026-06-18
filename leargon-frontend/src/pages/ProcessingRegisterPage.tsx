@@ -232,6 +232,13 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
             {row.securityMeasures || (row.canEdit ? t('common.clickToEdit') : '—')}
           </Typography>
         </TableCell>
+
+        {/* 16. Bearbeitungsländer */}
+        <TableCell>
+          <Tooltip title={row.processingCountries || ''}>
+            <Typography {...tdText}>{row.processingCountries || '—'}</Typography>
+          </Tooltip>
+        </TableCell>
       </TableRow>
 
       {/* Purpose edit dialog */}
@@ -393,6 +400,7 @@ const ProcessingRegisterPage: React.FC = () => {
     t('compliance.colReg13'),
     t('compliance.colReg14'),
     t('compliance.colReg15'),
+    t('compliance.colReg16'),
   ];
 
   return (

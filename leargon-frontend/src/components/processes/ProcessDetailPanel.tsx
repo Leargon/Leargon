@@ -112,6 +112,7 @@ import type {
   ServiceProviderResponse,
 } from '../../api/generated/model';
 import { CrossBorderTransferSafeguard } from '../../api/generated/model';
+import { COUNTRY_NAMES, COUNTRY_OPTIONS } from '../../utils/countries';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 const PROCESS_TYPE_LABELS: Record<string, string> = {
@@ -131,17 +132,6 @@ const LEGAL_BASIS_LABELS: Record<string, string> = {
   PUBLIC_TASK: 'Public Task',
   LEGITIMATE_INTEREST: 'Legitimate Interests',
 };
-
-const COUNTRY_NAMES: Record<string, string> = {
-  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BR: 'Brazil', CA: 'Canada',
-  CH: 'Switzerland', CN: 'China', DE: 'Germany', DK: 'Denmark', ES: 'Spain',
-  FI: 'Finland', FR: 'France', GB: 'United Kingdom', IE: 'Ireland', IN: 'India',
-  IT: 'Italy', JP: 'Japan', LI: 'Liechtenstein', LU: 'Luxembourg', NL: 'Netherlands',
-  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', SE: 'Sweden',
-  SG: 'Singapore', US: 'United States',
-};
-
-const COUNTRY_OPTIONS = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }));
 
 const SAFEGUARD_LABELS: Record<string, string> = {
   ADEQUACY_DECISION: 'Adequacy Decision',
@@ -1183,6 +1173,24 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       </Box>}
 
       {!isHidden('itSystems') && <Divider sx={{ my: 2 }} />}
+
+      {/* Derived Processing Countries */}
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="subtitle2">{t('process.derivedProcessingCountries')}</Typography>
+      </Box>
+      <Box sx={{ mb: 2 }}>
+        {process.derivedProcessingCountries && process.derivedProcessingCountries.length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {process.derivedProcessingCountries.map((code) => (
+              <Chip key={code} label={COUNTRY_NAMES[code] ? `${COUNTRY_NAMES[code]} (${code})` : code} size="small" variant="outlined" />
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('process.noDerivedProcessingCountries')}</Typography>
+        )}
+      </Box>
+
+      <Divider sx={{ my: 2 }} />
 
       {/* Cross-border Transfers */}
       {!isHidden('crossBorderTransfers') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

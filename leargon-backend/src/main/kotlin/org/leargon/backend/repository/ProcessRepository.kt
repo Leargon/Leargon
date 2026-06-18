@@ -68,6 +68,10 @@ interface ProcessRepository : JpaRepository<Process, Long> {
 
     fun findByExecutingUnitsId(organisationalUnitId: Long): List<Process>
 
+    fun findByInputEntitiesId(entityId: Long): List<Process>
+
+    fun findByOutputEntitiesId(entityId: Long): List<Process>
+
     @Query(
         value =
             "SELECT * FROM processes WHERE LOWER(names) LIKE :query" +

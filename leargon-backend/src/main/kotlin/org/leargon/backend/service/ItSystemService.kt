@@ -10,18 +10,32 @@ import org.leargon.backend.mapper.ItSystemMapper
 import org.leargon.backend.model.CreateItSystemRequest
 import org.leargon.backend.model.ItSystemResponse
 import org.leargon.backend.model.UpdateItSystemLinkedProcessesRequest
+import org.leargon.backend.model.UpdateItSystemProcessingCountriesRequest
 import org.leargon.backend.model.UpdateItSystemRequest
+import org.leargon.backend.model.UpdateItSystemServiceProvidersRequest
 import org.leargon.backend.model.UpdateProcessItSystemsRequest
 import org.leargon.backend.repository.ItSystemRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.ServiceProviderRepository
 import java.time.Instant
+import java.util.Locale
+
+private val validIsoCodes: Set<String> = Locale.getISOCountries().toSet()
+
+private fun validateIsoCodes(codes: List<String>) {
+    val invalid = codes.filter { it !in validIsoCodes }
+    if (invalid.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid ISO 3166-1 alpha-2 country codes: ${invalid.joinToString()}")
+    }
+}
 
 @Singleton
 open class ItSystemService(
     private val itSystemRepository: ItSystemRepository,
     private val processRepository: ProcessRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
+    private val serviceProviderRepository: ServiceProviderRepository,
     private val itSystemMapper: ItSystemMapper
 ) {
     @Transactional
@@ -107,6 +121,37 @@ open class ItSystemService(
                 ?: throw ResourceNotFoundException("IT system not found: $key")
         val processes = request.processKeys.mapNotNull { processRepository.findByKey(it).orElse(null) }.toMutableSet()
         itSystem.linkedProcesses = processes
+        itSystem.updatedAt = Instant.now()
+        itSystemRepository.update(itSystem)
+    }
+
+    @Transactional
+    open fun updateServiceProviders(
+        key: String,
+        request: UpdateItSystemServiceProvidersRequest
+    ) {
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
+        val providers =
+            request.serviceProviderKeys
+                .mapNotNull { serviceProviderRepository.findByKey(it).orElse(null) }
+                .toMutableSet()
+        itSystem.serviceProviders = providers
+        itSystem.updatedAt = Instant.now()
+        itSystemRepository.update(itSystem)
+    }
+
+    @Transactional
+    open fun updateProcessingCountries(
+        key: String,
+        request: UpdateItSystemProcessingCountriesRequest
+    ) {
+        validateIsoCodes(request.processingCountries)
+        val itSystem =
+            itSystemRepository.findByKey(key)
+                ?: throw ResourceNotFoundException("IT system not found: $key")
+        itSystem.processingCountries = request.processingCountries.toMutableList()
         itSystem.updatedAt = Instant.now()
         itSystemRepository.update(itSystem)
     }

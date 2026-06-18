@@ -43,6 +43,18 @@ class ItSystem {
     @JoinColumn(name = "owning_unit_id")
     var owningUnit: OrganisationalUnit? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "processing_countries", columnDefinition = "JSON", nullable = false)
+    var processingCountries: MutableList<String> = mutableListOf()
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "it_system_service_providers",
+        joinColumns = [JoinColumn(name = "it_system_id")],
+        inverseJoinColumns = [JoinColumn(name = "service_provider_id")]
+    )
+    var serviceProviders: MutableSet<ServiceProvider> = mutableSetOf()
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "it_system_processes",

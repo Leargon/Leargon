@@ -115,3 +115,5 @@ databaseChangeLog:
       file: db/changelog/changes/056-add-on-update-cascade-to-flow-nodes.yaml
   - include:
       file: db/changelog/changes/057-extend-description-fields.yaml
+  - include:
+      file: db/changelog/changes/058-it-system-countries-and-service-provider-link.yaml

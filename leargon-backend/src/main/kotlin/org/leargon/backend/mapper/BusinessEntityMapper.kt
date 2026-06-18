@@ -13,6 +13,7 @@ import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.BusinessEntityVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
+import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
@@ -23,7 +24,8 @@ import java.time.ZonedDateTime
 open class BusinessEntityMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
-    private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper
+    private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper,
+    private val processRepository: ProcessRepository
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
@@ -105,10 +107,24 @@ open class BusinessEntityMapper(
             .classificationAssignments(effectiveClassifications)
             .retentionPeriod(businessEntity.retentionPeriod)
             .storageLocations(businessEntity.storageLocations.orEmpty())
+            .derivedStorageLocations(computeDerivedStorageLocations(businessEntity))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
+    }
+
+    private fun computeDerivedStorageLocations(entity: BusinessEntity): List<String> {
+        if (entity.id == null) return emptyList()
+        val processes =
+            (
+                processRepository.findByInputEntitiesId(entity.id!!) +
+                    processRepository.findByOutputEntitiesId(entity.id!!)
+            ).distinctBy { it.key }
+        return processes
+            .flatMap { ProcessMapper.derivedProcessingCountries(it) }
+            .distinct()
+            .sorted()
     }
 
     fun toLocalizedBusinessEntityResponse(

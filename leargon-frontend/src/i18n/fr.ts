@@ -144,6 +144,8 @@ const fr = {
     "noStorageLocations": "Aucun emplacement de stockage enregistré",
     "editStorageLocations": "Modifier les emplacements de stockage",
     "countriesWhereDataStored": "Pays où les données sont stockées",
+    "derivedStorageLocations": "Dérivé des systèmes informatiques",
+    "noDerivedStorageLocations": "Aucun pays dérivé pour l'instant",
     "firstEntity": "Première entité",
     "firstMin": "Premier min",
     "firstMax": "Premier max",
@@ -178,6 +180,8 @@ const fr = {
     "executingUnits": "Unités d'exécution",
     "dataProcessors": "Sous-traitants",
     "crossBorderTransfers": "Transferts transfrontaliers",
+    "derivedProcessingCountries": "Pays de traitement (dérivés)",
+    "noDerivedProcessingCountries": "Aucun pays de traitement dérivé pour l'instant",
     "parentProcess": "Processus parent",
     "childProcesses": "Sous-processus",
     "processDiagram": "Diagramme de processus (BPMN)",
@@ -459,7 +463,8 @@ const fr = {
     "colReg12": "Catégories de destinataires",
     "colReg13": "Transferts vers des pays tiers (pays et bases légales)",
     "colReg14": "Durée de conservation / critères",
-    "colReg15": "Mesures de sécurité"
+    "colReg15": "Mesures de sécurité",
+    "colReg16": "Pays de traitement"
   },
   "itSystem": {
     "pageTitle": "Systèmes informatiques",
@@ -478,7 +483,13 @@ const fr = {
     "notFound": "Système informatique introuvable ou erreur de chargement.",
     "deleteTitle": "Supprimer le système informatique",
     "deleteConfirmFull": "Voulez-vous vraiment supprimer {{name}} ? Cette action est irréversible.",
-    "systemUrlPlaceholder": "https://..."
+    "systemUrlPlaceholder": "https://...",
+    "sectionDeploymentCountries": "Pays de déploiement",
+    "deploymentCountriesLabel": "Pays où ce système est déployé",
+    "noDeploymentCountries": "Aucun pays de déploiement configuré",
+    "sectionServiceProviders": "Fournisseurs d'infrastructure",
+    "noServiceProviders": "Aucun fournisseur d'infrastructure lié",
+    "deploymentCountriesHint": "Sélectionnez parmi les pays des fournisseurs liés ou ajoutez n'importe quel pays"
   },
   "externalOrgUnit": {
     "isExternal": "Unité externe",

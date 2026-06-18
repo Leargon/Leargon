@@ -6,6 +6,7 @@ import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.User
 import org.leargon.backend.mapper.ProcessMapper
+import org.leargon.backend.mapper.ProcessMapper.Companion.derivedProcessingCountries
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessingRegisterEntryResponse
 import org.leargon.backend.repository.OrganisationSettingsRepository
@@ -171,6 +172,8 @@ open class ProcessingRegisterService(
         val transfers =
             process.crossBorderTransfers?.joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" } ?: ""
 
+        val processingCountries = derivedProcessingCountries(process).joinToString("; ")
+
         val purposeLocalized = process.purpose?.find { it.locale == locale }?.text
         val purposes = purposeLocalized ?: process.purpose?.firstOrNull()?.text ?: ""
 
@@ -197,7 +200,8 @@ open class ProcessingRegisterService(
             transfers,
             retentionPeriods,
             securityMeasures,
-        ).parentKey(process.parent?.key)
+        ).processingCountries(processingCountries)
+            .parentKey(process.parent?.key)
             .lastModified(lastModified)
             .purposeRaw(process.purpose?.map { LocalizedText(it.locale, it.text) })
             .securityMeasuresRaw(process.securityMeasures?.map { LocalizedText(it.locale, it.text) })

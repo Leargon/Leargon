@@ -11,10 +11,11 @@ import java.time.ZoneOffset
 @Singleton
 class ItSystemMapper {
     fun toItSystemSummaryResponse(itSystem: ItSystem): ItSystemSummaryResponse =
-        ItSystemSummaryResponse(itSystem.key, itSystem.getName("en"))
+        ItSystemSummaryResponse(itSystem.key, itSystem.getName("en"), itSystem.processingCountries)
 
-    fun toItSystemResponse(itSystem: ItSystem): ItSystemResponse =
-        ItSystemResponse(
+    fun toItSystemResponse(itSystem: ItSystem): ItSystemResponse {
+        val spMapper = ServiceProviderMapper()
+        return ItSystemResponse(
             itSystem.key,
             LocalizedTextMapper.toModel(itSystem.names),
             LocalizedTextMapper.toModel(itSystem.descriptions),
@@ -22,10 +23,13 @@ class ItSystemMapper {
             itSystem.updatedAt?.atZone(ZoneOffset.UTC)
         ).vendor(itSystem.vendor)
             .systemUrl(itSystem.systemUrl)
+            .processingCountries(itSystem.processingCountries)
+            .serviceProviders(itSystem.serviceProviders.map { spMapper.toServiceProviderSummaryResponse(it) })
             .owningUnit(itSystem.owningUnit?.let { u -> OrganisationalUnitSummaryResponse(u.key, u.getName("en")) })
             .linkedProcesses(
                 itSystem.linkedProcesses.map { p ->
                     ProcessSummaryResponse(p.key, p.getName("en"))
                 }
             )
+    }
 }

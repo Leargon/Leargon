@@ -8,7 +8,9 @@ import org.leargon.backend.api.ItSystemApi
 import org.leargon.backend.model.CreateItSystemRequest
 import org.leargon.backend.model.ItSystemResponse
 import org.leargon.backend.model.UpdateItSystemLinkedProcessesRequest
+import org.leargon.backend.model.UpdateItSystemProcessingCountriesRequest
 import org.leargon.backend.model.UpdateItSystemRequest
+import org.leargon.backend.model.UpdateItSystemServiceProvidersRequest
 import org.leargon.backend.service.ItSystemService
 
 @Controller
@@ -42,6 +44,24 @@ open class ItSystemController(
         updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest
     ): HttpResponse<Void> {
         itSystemService.updateLinkedProcesses(key, updateItSystemLinkedProcessesRequest)
+        return HttpResponse.noContent()
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateItSystemServiceProviders(
+        key: String,
+        updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest
+    ): HttpResponse<Void> {
+        itSystemService.updateServiceProviders(key, updateItSystemServiceProvidersRequest)
+        return HttpResponse.noContent()
+    }
+
+    @Secured("ROLE_ADMIN")
+    override fun updateItSystemProcessingCountries(
+        key: String,
+        updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest
+    ): HttpResponse<Void> {
+        itSystemService.updateProcessingCountries(key, updateItSystemProcessingCountriesRequest)
         return HttpResponse.noContent()
     }
 }
