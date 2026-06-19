@@ -67,10 +67,7 @@ class BusinessEntityServiceSpec extends Specification {
     private void cleanupTestData() {
         // Delete versions first to avoid FK constraint violations
         versionRepository.deleteAll()
-        // Delete entities one by one to trigger JPA cascade
-        entityRepository.findAll().each { entity ->
-            entityRepository.delete(entity)
-        }
+        entityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

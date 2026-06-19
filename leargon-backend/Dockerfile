@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:25-jdk-alpine AS build
 
 ARG APP_VERSION=vdev
 
@@ -10,7 +10,7 @@ COPY src src
 
 RUN sed -i 's/\r//' gradlew && chmod +x gradlew && ./gradlew shadowJar --no-daemon -x test -Pversion=${APP_VERSION}
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 RUN apk upgrade --no-cache && apk add --no-cache wget
 

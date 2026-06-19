@@ -58,7 +58,7 @@ class FieldConfigurationControllerSpec extends Specification {
     def cleanup() {
         fieldConfigurationRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

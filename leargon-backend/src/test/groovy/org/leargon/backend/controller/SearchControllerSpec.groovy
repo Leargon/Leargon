@@ -46,9 +46,9 @@ class SearchControllerSpec extends Specification {
 
     def cleanup() {
         processVersionRepository.deleteAll()
-        processRepository.findAll().each { processRepository.delete(it) }
+        processRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.deleteAll()
         organisationalUnitRepository.deleteAll()

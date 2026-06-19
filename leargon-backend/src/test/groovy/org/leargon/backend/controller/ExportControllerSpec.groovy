@@ -45,9 +45,9 @@ class ExportControllerSpec extends Specification {
         dpiaRepository.deleteAll()
         serviceProviderRepository.deleteAll()
         processVersionRepository.deleteAll()
-        processRepository.findAll().each { processRepository.delete(it) }
+        processRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

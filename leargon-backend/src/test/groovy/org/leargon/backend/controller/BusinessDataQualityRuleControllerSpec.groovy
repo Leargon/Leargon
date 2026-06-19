@@ -43,7 +43,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
     def cleanup() {
         ruleRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

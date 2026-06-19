@@ -52,10 +52,10 @@ class AnalyticsControllerSpec extends Specification {
 
     def cleanup() {
         processVersionRepository.deleteAll()
-        processRepository.findAll().each { processRepository.delete(it) }
+        processRepository.deleteAll()
         organisationalUnitRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.deleteAll()

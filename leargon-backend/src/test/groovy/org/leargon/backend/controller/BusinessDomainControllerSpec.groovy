@@ -49,19 +49,7 @@ class BusinessDomainControllerSpec extends Specification {
 
     def cleanup() {
         businessDomainVersionRepository.deleteAll()
-        // Delete domains individually to trigger JPA cascades
-        // First delete children (domains with parents), then parents (top-level)
-        def allDomains = businessDomainRepository.findAll()
-        def childDomains = allDomains.findAll { it.parent != null }
-        def topDomains = allDomains.findAll { it.parent == null }
-
-        childDomains.each { domain ->
-            try { businessDomainRepository.delete(domain) } catch (ignored) {}
-        }
-        topDomains.each { domain ->
-            try { businessDomainRepository.delete(domain) } catch (ignored) {}
-        }
-
+        businessDomainRepository.deleteAll()
         userRepository.deleteAll()
     }
 

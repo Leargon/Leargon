@@ -57,10 +57,10 @@ class DomainEventControllerSpec extends Specification {
         processVersionRepository.deleteAll()
         processRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
-        businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
+        businessDomainRepository.deleteAll()
         userRepository.deleteAll()
     }
 

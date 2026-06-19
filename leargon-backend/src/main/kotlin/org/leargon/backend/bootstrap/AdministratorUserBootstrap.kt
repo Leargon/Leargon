@@ -34,7 +34,7 @@ open class AdministratorUserBootstrap(
     @Value("\${admin.lastName:Administrator}")
     var adminLastName: String = "Administrator"
 
-    override fun onApplicationEvent(event: StartupEvent?) {
+    override fun onApplicationEvent(event: StartupEvent) {
         if (!adminEmail.isPresent || !adminUsername.isPresent || !adminPassword.isPresent) {
             LOG.debug("Admin bootstrap skipped - environment variables not set")
             LOG.debug("Set ADMIN_EMAIL, ADMIN_USERNAME, and ADMIN_PASSWORD to create fallback admin")

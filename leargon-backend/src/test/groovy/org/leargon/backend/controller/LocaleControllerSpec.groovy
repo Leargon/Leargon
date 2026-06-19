@@ -43,7 +43,7 @@ class LocaleControllerSpec extends Specification {
 
     def setup() {
         entityVersionRepository.deleteAll()
-        entityRepository.findAll().each { entityRepository.delete(it) }
+        entityRepository.deleteAll()
         userRepository.deleteAll()
         // Clean up non-default locales added by tests
         localeRepository.findAll().each {
@@ -81,7 +81,7 @@ class LocaleControllerSpec extends Specification {
 
     def cleanup() {
         entityVersionRepository.deleteAll()
-        entityRepository.findAll().each { entityRepository.delete(it) }
+        entityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

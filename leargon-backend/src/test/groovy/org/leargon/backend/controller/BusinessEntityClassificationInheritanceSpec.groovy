@@ -59,7 +59,7 @@ class BusinessEntityClassificationInheritanceSpec extends Specification {
             entity.interfaceEntities.clear()
             businessEntityRepository.update(entity)
         }
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         classificationValueRepository.deleteAll()
         classificationRepository.deleteAll()
         userRepository.deleteAll()

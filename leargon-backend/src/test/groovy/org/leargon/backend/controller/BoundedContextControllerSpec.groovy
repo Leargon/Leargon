@@ -41,7 +41,7 @@ class BoundedContextControllerSpec extends Specification {
     def cleanup() {
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
-        businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
+        businessDomainRepository.deleteAll()
         orgUnitRepository.deleteAll()
         userRepository.deleteAll()
     }

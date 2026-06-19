@@ -1,12 +1,12 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.3.10"
-    id("com.google.devtools.ksp") version "2.3.6"
-    id("org.jetbrains.kotlin.plugin.allopen") version "2.3.10"
-    id("org.jetbrains.kotlin.plugin.jpa") version "2.3.10"
+    id("org.jetbrains.kotlin.jvm") version "2.4.0"
+    id("com.google.devtools.ksp") version "2.3.9"
+    id("org.jetbrains.kotlin.plugin.allopen") version "2.4.0"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.4.0"
     id("groovy")                              // keep — needed for Spock tests
-    id("io.micronaut.application") version "4.6.2"
-    id("com.gradleup.shadow") version "9.4.1"
-    id("io.micronaut.openapi") version "4.6.2"
+    id("io.micronaut.application") version "5.0.0"
+    id("com.gradleup.shadow") version "9.4.2"
+    id("io.micronaut.openapi") version "5.0.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("codenarc")
     id("de.aaschmid.cpd") version "3.5"
@@ -27,6 +27,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
+    // Micronaut 5's serde stack moved to Jackson 3 (tools.jackson.*); declare Jackson 2 explicitly
+    // for the version-snapshot ObjectMapper used directly in BusinessEntityService/ProcessService/BusinessDomainService.
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
     implementation("io.micronaut:micronaut-management")
 
     // Security and JWT
@@ -57,11 +60,12 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-annotations")
 
     // Azure Entra ID token validation
-    implementation('com.nimbusds:nimbus-jose-jwt:10.9')
+    implementation('com.nimbusds:nimbus-jose-jwt:10.9.1')
 
     // Password hashing
-    implementation('org.springframework.security:spring-security-crypto:7.0.4')
-    implementation('org.springframework:spring-jcl:6.2.18')
+    implementation('org.springframework.security:spring-security-crypto:7.1.0')
+    implementation('org.springframework:spring-core:6.2.19')
+    implementation('org.springframework:spring-jcl:6.2.19')
 
     runtimeOnly("ch.qos.logback:logback-classic")
 
@@ -114,13 +118,16 @@ application {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
@@ -204,7 +211,7 @@ tasks.register("compileGeneratedOpenApiSources", JavaCompile) {
     classpath = configurations.runtimeClasspath
         .filter { !it.path.contains("classes${File.separator}kotlin") && !it.path.contains("classes${File.separator}java") }
     destinationDirectory = generatedOpenApiClassesDir
-    options.release = 21
+    options.release = 25
 }
 
 // Add pre-compiled generated classes to the compile classpath so Kotlin tasks see them
@@ -260,7 +267,7 @@ tasks.named('cpdCheck', de.aaschmid.gradle.plugins.cpd.Cpd) {
 }
 
 micronaut {
-    version = "4.10.13"
+    version = "5.0.2"
     runtime("netty")
     testRuntime("spock2")
     processing {
