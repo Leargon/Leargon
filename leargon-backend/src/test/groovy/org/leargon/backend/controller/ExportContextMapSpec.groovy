@@ -51,14 +51,11 @@ class ExportContextMapSpec extends Specification {
 
     def cleanup() {
         contextRelationshipRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
         businessEntityVersionRepository.deleteAll()
+        businessEntityRepository.deleteAll()
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
-        // Delete children before parents to avoid FK violations
-        def domains = businessDomainRepository.findAll()
-        domains.findAll { it.parent != null }.each { businessDomainRepository.delete(it) }
-        domains.findAll { it.parent == null }.each { businessDomainRepository.delete(it) }
+        businessDomainRepository.deleteAll()
         userRepository.deleteAll()
     }
 

@@ -33,6 +33,9 @@ const de = {
   },
   "common": {
     "save": "Speichern",
+    "assign": "Zuweisen",
+    "children": "Untergeordnete",
+    "properties": "Eigenschaften",
     "saving": "Wird gespeichert...",
     "add": "Hinzufügen",
     "cancel": "Abbrechen",
@@ -100,6 +103,7 @@ const de = {
   },
   "entity": {
     "pageTitle": "Daten-Ontologie",
+    "deleteConfirm": "Möchten Sie {{name}} wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
     "dataOwner": "Dateneigentümer",
     "dataSteward": "Daten-Steward",
     "technicalCustodian": "Technischer Verwalter",
@@ -305,8 +309,20 @@ const de = {
     "teamBoundedContext": "Team-Kontext",
     "executingTeam": "Ausführendes Team"
   },
+  "domainDialog": {
+    "createTitle": "Domäne erstellen",
+    "parent": "Übergeordnet",
+    "typeLabel": "Typ",
+    "typeNone": "Keiner"
+  },
+  "domainTree": {
+    "searchPlaceholder": "Domänen suchen...",
+    "noMatches": "Keine Treffer gefunden.",
+    "noDomainsYet": "Noch keine Domänen. Erstellen Sie eine, um zu beginnen."
+  },
   "domain": {
     "visionStatement": "Visionsbeschreibung",
+    "deleteConfirm": "Möchten Sie {{name}} wirklich löschen? Dadurch werden auch alle Unterdomänen gelöscht und alle Entitäten freigegeben.",
     "owningUnit": "Verantwortliche Einheit",
     "visionStatementPlaceholder": "Beschreiben Sie die Vision und den Zweck dieser Domäne...",
     "boundedContexts": "Begrenzte Kontexte",
@@ -522,6 +538,7 @@ const de = {
   },
   "boundedContextUL": {
     "title": "Ubiquitäre Sprache",
+    "direction": "Richtung",
     "nouns": "Substantive (Entitäten)",
     "verbs": "Verben (Prozesse)",
     "events": "Domänenereignisse",
@@ -1631,7 +1648,15 @@ const de = {
   "organisation": {
     "searchPlaceholder": "Einheiten suchen...",
     "noMatches": "Keine Treffer gefunden.",
-    "noUnitsYet": "Noch keine Einheiten. Erstellen Sie eine, um zu beginnen."
+    "noUnitsYet": "Noch keine Einheiten. Erstellen Sie eine, um zu beginnen.",
+    "businessOwner": "Fachlicher Eigentümer",
+    "businessSteward": "Fachlicher Verwalter",
+    "technicalCustodian": "Technischer Verwalter",
+    "stewardship": "Verantwortlichkeit",
+    "assignBoundedContext": "Bounded Context zuweisen",
+    "selectBoundedContext": "Bounded Context auswählen",
+    "deleteOrgUnit": "Organisationseinheit löschen",
+    "deleteConfirm": "Möchten Sie {{name}} wirklich löschen? Dies kann nicht rückgängig gemacht werden."
   },
   "serviceProviderTypeGuide": {
     "show": "Wie wähle ich den richtigen Typ?",
@@ -1750,6 +1775,7 @@ const de = {
   },
   "capability": {
     "realizedByProcesses": "Durch Prozesse realisiert",
+    "subCapabilities": "Teilfähigkeiten ({{count}})",
     "deleteTitle": "Fähigkeit löschen"
   }
 } as const;

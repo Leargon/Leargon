@@ -708,7 +708,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              {isLeadOrAdmin && (
+              {isAdmin && (
                 <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
                   Assign
                 </Button>
@@ -722,7 +722,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     disablePadding
                     sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
                     secondaryAction={
-                      isLeadOrAdmin && (
+                      isAdmin && (
                         <Button
                           size="small"
                           color="warning"

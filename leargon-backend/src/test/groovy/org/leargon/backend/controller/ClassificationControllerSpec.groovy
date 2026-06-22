@@ -22,6 +22,7 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateClassificationRequest
 import org.leargon.backend.model.UpdateClassificationValueRequest
 import org.leargon.backend.repository.BusinessDomainRepository
+import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
 import org.leargon.backend.repository.ClassificationRepository
@@ -56,6 +57,9 @@ class ClassificationControllerSpec extends Specification {
     BusinessDomainRepository businessDomainRepository
 
     @Inject
+    BusinessDomainVersionRepository businessDomainVersionRepository
+
+    @Inject
     SupportedLocaleRepository localeRepository
 
     def setup() {
@@ -80,8 +84,9 @@ class ClassificationControllerSpec extends Specification {
 
     def cleanup() {
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
-        businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
+        businessEntityRepository.deleteAll()
+        businessDomainVersionRepository.deleteAll()
+        businessDomainRepository.deleteAll()
         classificationValueRepository.deleteAll()
         classificationRepository.deleteAll()
         userRepository.deleteAll()

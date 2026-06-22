@@ -47,19 +47,7 @@ class BusinessDomainServiceSpec extends Specification {
 
     private void cleanupTestData() {
         domainVersionRepository.deleteAll()
-        // Delete domains individually to trigger JPA cascades
-        // First delete children (domains with parents), then parents (top-level)
-        def allDomains = domainRepository.findAll()
-        def childDomains = allDomains.findAll { it.parent != null }
-        def topDomains = allDomains.findAll { it.parent == null }
-
-        childDomains.each { domain ->
-            try { domainRepository.delete(domain) } catch (ignored) {}
-        }
-        topDomains.each { domain ->
-            try { domainRepository.delete(domain) } catch (ignored) {}
-        }
-
+        domainRepository.deleteAll()
         userRepository.deleteAll()
     }
 

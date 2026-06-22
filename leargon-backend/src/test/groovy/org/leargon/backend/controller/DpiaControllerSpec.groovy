@@ -49,9 +49,9 @@ class DpiaControllerSpec extends Specification {
     def cleanup() {
         dpiaRepository.deleteAll()
         processVersionRepository.deleteAll()
-        processRepository.findAll().each { processRepository.delete(it) }
+        processRepository.deleteAll()
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         userRepository.deleteAll()
     }
 

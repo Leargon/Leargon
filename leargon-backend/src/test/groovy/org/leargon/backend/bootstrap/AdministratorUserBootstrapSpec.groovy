@@ -1,5 +1,7 @@
 package org.leargon.backend.bootstrap
 
+import io.micronaut.context.ApplicationContext
+import io.micronaut.context.event.StartupEvent
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.leargon.backend.domain.User
@@ -16,6 +18,15 @@ class AdministratorUserBootstrapSpec extends Specification {
     @Inject
     PasswordEncoder passwordEncoder
 
+    @Inject
+    ApplicationContext applicationContext
+
+    StartupEvent startupEvent
+
+    def setup() {
+        startupEvent = new StartupEvent(applicationContext)
+    }
+
     def cleanup() {
         userRepository.deleteAll()
     }
@@ -30,7 +41,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminLastName = "Admin"
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "admin user is created"
         def user = userRepository.findByEmail("admin@test.com")
@@ -54,7 +65,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.empty()
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "no admin user is created"
         userRepository.findAll().size() == 0
@@ -68,7 +79,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("password123")
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "no admin user is created"
         userRepository.findAll().size() == 0
@@ -82,7 +93,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("short")  // Only 5 characters
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "no admin user is created"
         userRepository.findAll().size() == 0
@@ -108,7 +119,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("password123")
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "no additional user is created"
         userRepository.findAll().size() == 1
@@ -142,7 +153,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminLastName = "Administrator"
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "user is promoted to admin"
         def user = userRepository.findByIsFallbackAdministrator(true).get()
@@ -163,7 +174,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("password123")
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "password is hashed"
         def user = userRepository.findByEmail("admin@test.com").get()
@@ -184,7 +195,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminLastName = "Administrator" // Default
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "default names are used"
         def user = userRepository.findByEmail("admin@test.com").get()
@@ -200,7 +211,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("password123")
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "no admin user is created"
         userRepository.findAll().size() == 0
@@ -227,7 +238,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminPassword = Optional.of("password123")
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "user is promoted to admin"
         def user = userRepository.findByIsFallbackAdministrator(true).get()
@@ -257,7 +268,7 @@ class AdministratorUserBootstrapSpec extends Specification {
         bootstrap.adminLastName = "Last"
 
         when: "application starts"
-        bootstrap.onApplicationEvent(null)
+        bootstrap.onApplicationEvent(startupEvent)
 
         then: "user is updated"
         def user = userRepository.findByIsFallbackAdministrator(true).get()

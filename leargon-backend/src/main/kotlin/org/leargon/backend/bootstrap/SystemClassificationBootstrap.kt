@@ -188,7 +188,7 @@ open class SystemClassificationBootstrap(
     }
 
     @Transactional
-    override fun onApplicationEvent(event: StartupEvent?) {
+    override fun onApplicationEvent(event: StartupEvent) {
         val admin: User? = userRepository.findByIsFallbackAdministrator(true).orElse(null)
         if (admin == null) {
             LOG.warn(

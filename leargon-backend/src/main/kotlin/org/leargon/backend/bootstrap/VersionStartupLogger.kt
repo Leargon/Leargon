@@ -12,7 +12,7 @@ open class VersionStartupLogger : ApplicationEventListener<StartupEvent> {
         private val LOG = LoggerFactory.getLogger(VersionStartupLogger::class.java)
     }
 
-    override fun onApplicationEvent(event: StartupEvent?) {
+    override fun onApplicationEvent(event: StartupEvent) {
         val props = Properties()
         javaClass.classLoader.getResourceAsStream("app-version.properties")?.use { props.load(it) }
         val version = props.getProperty("version", "unknown")

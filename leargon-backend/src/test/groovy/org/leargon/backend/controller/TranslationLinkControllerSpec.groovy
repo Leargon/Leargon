@@ -48,7 +48,7 @@ class TranslationLinkControllerSpec extends Specification {
         businessEntityRepository.deleteAll()
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
-        businessDomainRepository.findAll().each { businessDomainRepository.delete(it) }
+        businessDomainRepository.deleteAll()
         userRepository.deleteAll()
     }
 

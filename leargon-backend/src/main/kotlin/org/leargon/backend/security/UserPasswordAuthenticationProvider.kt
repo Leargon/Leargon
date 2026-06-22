@@ -43,7 +43,7 @@ open class UserPasswordAuthenticationProvider(
                     )
                 )
             } catch (e: Exception) {
-                emitter.error(AuthenticationResponse.exception(e.message))
+                emitter.error(AuthenticationResponse.exception(e.message ?: e.javaClass.simpleName))
             }
         }
 }

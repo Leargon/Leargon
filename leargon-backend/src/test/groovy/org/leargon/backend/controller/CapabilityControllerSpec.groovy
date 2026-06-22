@@ -39,7 +39,7 @@ class CapabilityControllerSpec extends Specification {
     def cleanup() {
         capabilityRepository.deleteAll()
         processVersionRepository.deleteAll()
-        processRepository.findAll().each { processRepository.delete(it) }
+        processRepository.deleteAll()
         userRepository.deleteAll()
     }
 

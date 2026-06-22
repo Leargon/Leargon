@@ -67,7 +67,7 @@ class BusinessEntityControllerSpec extends Specification {
 
     def cleanup() {
         businessEntityVersionRepository.deleteAll()
-        businessEntityRepository.findAll().each { businessEntityRepository.delete(it) }
+        businessEntityRepository.deleteAll()
         organisationalUnitRepository.deleteAll()
         userRepository.deleteAll()
     }

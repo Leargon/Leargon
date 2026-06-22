@@ -118,7 +118,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const { user } = useAuth();
   const { perspective } = useNavigation();
   const { isMethodologyEnabled } = useMethodology();
-  const isAdmin = user?.roles?.includes('ADMIN');
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const isDddEnabled = isMethodologyEnabled('DDD');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
