@@ -2,6 +2,10 @@ databaseChangeLog:
   - changeSet:
       id: 038-add-system-classifications
       author: leargon
+      # Liquibase 4.x→5.x (micronaut-liquibase 7) recomputes the checksum for this
+      # changeset's escaped-apostrophe French strings even though the file is unchanged.
+      # ANY lets pre-upgrade databases (incl. prod) validate without manual checksum clearing.
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: classifications

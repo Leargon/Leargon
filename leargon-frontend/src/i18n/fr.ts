@@ -33,6 +33,9 @@ const fr = {
   },
   "common": {
     "save": "Enregistrer",
+    "assign": "Attribuer",
+    "children": "Éléments enfants",
+    "properties": "Propriétés",
     "saving": "Enregistrement…",
     "add": "Ajouter",
     "cancel": "Annuler",
@@ -100,6 +103,7 @@ const fr = {
   },
   "entity": {
     "pageTitle": "Ontologie des données",
+    "deleteConfirm": "Voulez-vous vraiment supprimer {{name}} ? Cette action est irréversible.",
     "dataOwner": "Propriétaire des données",
     "dataSteward": "Gestionnaire des données",
     "technicalCustodian": "Gardien technique",
@@ -305,8 +309,20 @@ const fr = {
     "teamBoundedContext": "Contexte de l'équipe",
     "executingTeam": "Équipe exécutante"
   },
+  "domainDialog": {
+    "createTitle": "Créer un domaine",
+    "parent": "Parent",
+    "typeLabel": "Type",
+    "typeNone": "Aucun"
+  },
+  "domainTree": {
+    "searchPlaceholder": "Rechercher des domaines...",
+    "noMatches": "Aucun résultat trouvé.",
+    "noDomainsYet": "Aucun domaine. Créez-en un pour commencer."
+  },
   "domain": {
     "visionStatement": "Énoncé de vision",
+    "deleteConfirm": "Voulez-vous vraiment supprimer {{name}} ? Cela supprimera également tous les sous-domaines et désassignera toutes les entités.",
     "owningUnit": "Unité responsable",
     "visionStatementPlaceholder": "Décrivez la vision et la finalité de ce domaine…",
     "boundedContexts": "Contextes délimités",
@@ -522,6 +538,7 @@ const fr = {
   },
   "boundedContextUL": {
     "title": "Langage omniprésent",
+    "direction": "Direction",
     "nouns": "Noms (Entités)",
     "verbs": "Verbes (Processus)",
     "events": "Événements de domaine",
@@ -1631,7 +1648,15 @@ const fr = {
   "organisation": {
     "searchPlaceholder": "Rechercher des unités...",
     "noMatches": "Aucun résultat trouvé.",
-    "noUnitsYet": "Aucune unité. Créez-en une pour commencer."
+    "noUnitsYet": "Aucune unité. Créez-en une pour commencer.",
+    "businessOwner": "Propriétaire métier",
+    "businessSteward": "Intendant métier",
+    "technicalCustodian": "Dépositaire technique",
+    "stewardship": "Intendance",
+    "assignBoundedContext": "Attribuer un contexte délimité",
+    "selectBoundedContext": "Sélectionner un contexte délimité",
+    "deleteOrgUnit": "Supprimer l'unité organisationnelle",
+    "deleteConfirm": "Voulez-vous vraiment supprimer {{name}} ? Cette action est irréversible."
   },
   "serviceProviderTypeGuide": {
     "show": "Comment choisir le bon type ?",
@@ -1750,6 +1775,7 @@ const fr = {
   },
   "capability": {
     "realizedByProcesses": "Réalisé par des processus",
+    "subCapabilities": "Sous-capacités ({{count}})",
     "deleteTitle": "Supprimer la capacité"
   }
 } as const;

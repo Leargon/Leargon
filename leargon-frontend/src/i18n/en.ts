@@ -33,6 +33,9 @@ const en = {
   },
   common: {
     save: 'Save',
+    assign: 'Assign',
+    children: 'Children',
+    properties: 'Properties',
     saving: 'Saving...',
     add: 'Add',
     cancel: 'Cancel',
@@ -100,10 +103,12 @@ const en = {
   },
   capability: {
     realizedByProcesses: 'Realized by processes',
+    subCapabilities: 'Sub-capabilities ({{count}})',
     deleteTitle: 'Delete Capability',
   },
   entity: {
     pageTitle: 'Data Ontology',
+    deleteConfirm: 'Are you sure you want to delete {{name}}? This cannot be undone.',
     dataOwner: 'Data Owner',
     dataSteward: 'Data Steward',
     technicalCustodian: 'Technical Custodian',
@@ -309,8 +314,20 @@ const en = {
     teamBoundedContext: "Team's BC",
     executingTeam: 'Executing Team',
   },
+  domainDialog: {
+    createTitle: 'Create Domain',
+    parent: 'Parent',
+    typeLabel: 'Type',
+    typeNone: 'None',
+  },
+  domainTree: {
+    searchPlaceholder: 'Search domains...',
+    noMatches: 'No matches found.',
+    noDomainsYet: 'No domains yet. Create one to get started.',
+  },
   domain: {
     visionStatement: 'Vision Statement',
+    deleteConfirm: 'Are you sure you want to delete {{name}}? This will also delete all subdomains and unassign any entities.',
     owningUnit: 'Owning Unit',
     visionStatementPlaceholder: 'Describe the vision and purpose of this domain...',
     boundedContexts: 'Bounded Contexts',
@@ -526,6 +543,7 @@ const en = {
   },
   boundedContextUL: {
     title: 'Ubiquitous Language',
+    direction: 'Direction',
     nouns: 'Nouns (Entities)',
     verbs: 'Verbs (Processes)',
     events: 'Domain Events',
@@ -1636,6 +1654,14 @@ const en = {
     searchPlaceholder: 'Search units...',
     noMatches: 'No matches found.',
     noUnitsYet: 'No units yet. Create one to get started.',
+    businessOwner: 'Business Owner',
+    businessSteward: 'Business Steward',
+    technicalCustodian: 'Technical Custodian',
+    stewardship: 'Stewardship',
+    assignBoundedContext: 'Assign Bounded Context',
+    selectBoundedContext: 'Select bounded context',
+    deleteOrgUnit: 'Delete Organisational Unit',
+    deleteConfirm: 'Are you sure you want to delete {{name}}? This cannot be undone.',
   },
   serviceProviderTypeGuide: {
     show: 'How to choose a type',

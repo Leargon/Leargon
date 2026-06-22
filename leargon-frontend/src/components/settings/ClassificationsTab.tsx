@@ -196,7 +196,7 @@ const ClassificationsTab: React.FC = () => {
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">{t('classifications')}</Typography>
+        <Typography variant="h6">{t('common.classifications')}</Typography>
         <Button
           variant="contained"
           size="small"
