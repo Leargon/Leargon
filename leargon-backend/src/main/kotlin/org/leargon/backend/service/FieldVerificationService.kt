@@ -126,4 +126,34 @@ open class FieldVerificationService(
         entityType: String,
         entityId: Long
     ) = fieldVerificationRepository.deleteByEntityTypeAndEntityId(entityType, entityId)
+
+    /**
+     * One-time backfill: seeds an UNVERIFIED row (attributed to "system", no user) for each present
+     * field that has no row yet, so existing records surface verification indicators immediately and
+     * the owner can verify them. Only fills gaps — never disturbs existing rows. Idempotent.
+     */
+    @Transactional
+    open fun backfillUnverified(
+        entityType: String,
+        entityId: Long,
+        valueOf: (String) -> String?
+    ) {
+        val repo = this.fieldVerificationRepository
+        val existing = repo.findByEntityTypeAndEntityId(entityType, entityId).map { it.fieldName }.toSet()
+        fieldConfigurationService.concreteFieldNames(entityType).forEach { fieldName ->
+            if (fieldName in existing) return@forEach
+            val value = valueOf(fieldName) ?: return@forEach
+            repo.save(
+                FieldVerification().apply {
+                    this.entityType = entityType
+                    this.entityId = entityId
+                    this.fieldName = fieldName
+                    this.status = UNVERIFIED
+                    this.lastValue = value
+                    this.updatedBy = null
+                    this.updatedByUsername = "system"
+                }
+            )
+        }
+    }
 }

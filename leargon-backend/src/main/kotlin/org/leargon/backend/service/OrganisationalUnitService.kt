@@ -1,6 +1,7 @@
 package org.leargon.backend.service
 
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
@@ -65,11 +66,11 @@ open class OrganisationalUnitService(
         fieldVerificationService.setStatus("ORGANISATIONAL_UNIT", unit.id!!, fieldName, status, currentUser, currentValue)
         return organisationalUnitMapper.toResponse(getByKey(key))
     }
-    @Transactional
+    @ReadOnly
     open fun getAllAsResponses(): List<OrganisationalUnitResponse> =
         organisationalUnitRepository.findAll().map { organisationalUnitMapper.toResponse(it) }
 
-    @Transactional
+    @ReadOnly
     open fun getTreeAsResponses(): List<OrganisationalUnitTreeResponse> {
         val roots = organisationalUnitRepository.findRoots()
         return organisationalUnitMapper.toTreeResponses(roots)
@@ -80,7 +81,7 @@ open class OrganisationalUnitService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getByKeyAsResponse(key: String): OrganisationalUnitResponse {
         val unit = getByKey(key)
         val executingProcesses = processRepository.findByExecutingUnitsId(unit.id!!)
@@ -336,7 +337,7 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
-    @Transactional
+    @ReadOnly
     open fun getOwnedBoundedContexts(unitKey: String): List<BoundedContextSummaryResponse> {
         val repo = boundedContextRepository
         return repo.findByOwningUnitKey(unitKey).mapNotNull { BoundedContextMapper.toSummaryResponse(it) }

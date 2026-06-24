@@ -11,7 +11,7 @@ export interface PropRowProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
-  /** Optional verification-status indicator rendered next to the label. */
+  /** Optional verification-status indicator rendered after the value. */
   statusIndicator?: React.ReactNode;
   children: React.ReactNode;
 }
@@ -67,7 +67,6 @@ const PropRow: React.FC<PropRowProps> = ({
           *
         </Typography>
       )}
-      {statusIndicator}
       {canEdit && !isEditing && (
         <IconButton size="small" onClick={onEdit} sx={{ p: 0.25, ml: 0.25 }}>
           <EditIcon sx={{ fontSize: 14 }} />
@@ -90,7 +89,13 @@ const PropRow: React.FC<PropRowProps> = ({
         </>
       )}
     </Box>
-    <Box sx={{ flex: 1, minWidth: 0 }}>{children}</Box>
+    <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', columnGap: 0.5, rowGap: 0.25 }}>
+      {/* sizes to content (not flex:1) so the indicator hugs the value rather than the row edge */}
+      <Box sx={{ minWidth: 0, maxWidth: '100%' }}>{children}</Box>
+      {!isEditing && statusIndicator && (
+        <Box sx={{ flexShrink: 0, pt: 0.25 }}>{statusIndicator}</Box>
+      )}
+    </Box>
   </Box>
 );
 

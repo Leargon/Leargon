@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessDomain
@@ -41,13 +42,13 @@ open class BusinessDomainService(
 
     open fun getAllBusinessDomains(): List<BusinessDomain> = businessDomainRepository.findAll()
 
-    @Transactional
+    @ReadOnly
     open fun getAllBusinessDomainsAsResponses(): List<BusinessDomainResponse> =
         getAllBusinessDomains().map { businessDomainMapper.toBusinessDomainResponse(it) }
 
     open fun getBusinessDomainTree(): List<BusinessDomain> = businessDomainRepository.findByParentIsNull()
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessDomainTreeAsResponses(): List<BusinessDomainTreeResponse> =
         getBusinessDomainTree().map { businessDomainMapper.toBusinessDomainTreeResponse(it) }
 
@@ -56,11 +57,11 @@ open class BusinessDomainService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BusinessDomain not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessDomainByKeyAsResponse(key: String): BusinessDomainResponse =
         businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(key))
 
-    @Transactional
+    @ReadOnly
     open fun getLocalizedDomain(
         key: String,
         locale: String?,
@@ -291,6 +292,7 @@ open class BusinessDomainService(
 
     // --- Version history ---
 
+    @ReadOnly
     open fun getVersionHistory(domainKey: String): List<BusinessDomainVersionResponse> {
         val domain = getBusinessDomainByKey(domainKey)
         return businessDomainVersionRepository
@@ -298,6 +300,7 @@ open class BusinessDomainService(
             .map { businessDomainMapper.toBusinessDomainVersionResponse(it) }
     }
 
+    @ReadOnly
     open fun getVersionDiff(
         domainKey: String,
         versionNumber: Int

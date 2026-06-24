@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Tooltip, IconButton, Menu, MenuItem, CircularProgress, Box } from '@mui/material';
-import { CheckCircle, HelpOutlined } from '@mui/icons-material';
+import { Tooltip, ButtonBase, Menu, MenuItem, CircularProgress, Box } from '@mui/material';
+import { CheckCircle, HelpOutlined, ArrowDropDown } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import type { FieldVerificationResponse } from '../../api/generated/model';
 import { aggregateFieldStatus } from '../../utils/fieldStatus';
@@ -58,15 +58,25 @@ const FieldStatusIndicator: React.FC<FieldStatusIndicatorProps> = ({
   return (
     <>
       <Tooltip title={`${tooltip} — ${t('fieldStatus.ownerHint')}`} arrow>
-        <IconButton
-          size="small"
+        <ButtonBase
           disabled={busy}
           onClick={(e) => setAnchorEl(e.currentTarget)}
-          sx={{ p: 0.2, ml: 0.25 }}
           aria-label={t('fieldStatus.aria')}
+          sx={{
+            ml: 0.5,
+            px: 0.25,
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            lineHeight: 0,
+            transition: (theme) => theme.transitions.create(['background-color', 'border-color']),
+            '&:hover': { bgcolor: 'action.hover', borderColor: 'text.secondary' },
+            '&:focus-visible': { borderColor: 'primary.main', bgcolor: 'action.hover' },
+          }}
         >
           {icon}
-        </IconButton>
+          <ArrowDropDown sx={{ fontSize: 14, color: 'text.secondary', ml: '-2px' }} />
+        </ButtonBase>
       </Tooltip>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
         <MenuItem

@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -55,7 +56,7 @@ open class BusinessEntityService(
         currentUser: User,
     ): Boolean = entity.effectiveOwner()?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
 
-    @Transactional
+    @ReadOnly
     open fun getAllBusinessEntitiesAsResponses(): List<BusinessEntityResponse> =
         getAllBusinessEntities().map { businessEntityMapper.toBusinessEntityResponse(it) }
 
@@ -64,13 +65,13 @@ open class BusinessEntityService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessEntityByKeyAsResponse(key: String): BusinessEntityResponse =
         businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(key))
 
     open fun getBusinessEntityTree(): List<BusinessEntity> = businessEntityRepository.findByParentIsNull()
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessEntityTreeAsResponses(): List<BusinessEntityTreeResponse> =
         getBusinessEntityTree().map { businessEntityMapper.toBusinessEntityTreeResponse(it) }
 
@@ -444,7 +445,7 @@ open class BusinessEntityService(
         businessEntityRepository.delete(entity)
     }
 
-    @Transactional
+    @ReadOnly
     open fun getLocalizedEntity(
         key: String,
         locale: String?,
@@ -578,6 +579,7 @@ open class BusinessEntityService(
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Deleted relationship #$relationshipId")
     }
 
+    @ReadOnly
     open fun getVersionHistory(entityKey: String): List<BusinessEntityVersionResponse> {
         val entity = getBusinessEntityByKey(entityKey)
         return businessEntityVersionRepository
@@ -585,6 +587,7 @@ open class BusinessEntityService(
             .map { businessEntityMapper.toBusinessEntityVersionResponse(it) }
     }
 
+    @ReadOnly
     open fun getVersionDiff(
         entityKey: String,
         versionNumber: Int

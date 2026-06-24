@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -152,9 +152,18 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
   const { canvasSx, colorMode } = useReactFlowTheme();
 
   const { data: processesResponse, isLoading, isError } = useGetAllProcesses();
-  const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? undefined;
+  // Memoize so identity is stable across renders. Without this, a failed/loading query yields a
+  // fresh array every render, which retriggers the setNodes effect below and loops infinitely
+  // (React error #185 via @xyflow/react's StoreUpdater).
+  const processes = useMemo(
+    () => processesResponse?.data as ProcessResponse[] | undefined,
+    [processesResponse?.data],
+  );
   const { data: entitiesResponse } = useGetAllBusinessEntities();
-  const entities = (entitiesResponse?.data as BusinessEntityResponse[] | undefined) ?? [];
+  const entities = useMemo(
+    () => (entitiesResponse?.data as BusinessEntityResponse[] | undefined) ?? [],
+    [entitiesResponse?.data],
+  );
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);

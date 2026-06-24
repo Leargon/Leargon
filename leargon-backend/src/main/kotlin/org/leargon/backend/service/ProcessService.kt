@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -51,10 +52,10 @@ open class ProcessService(
 ) {
     private val objectMapper = ObjectMapper()
 
-    @Transactional
+    @ReadOnly
     open fun getAllProcessesAsResponses(): List<ProcessResponse> = processRepository.findAll().map { processMapper.toProcessResponse(it) }
 
-    @Transactional
+    @ReadOnly
     open fun getProcessTreeAsResponses(): List<ProcessTreeResponse> {
         val roots = processRepository.findByParentIsNull()
         return processMapper.toProcessTreeResponses(roots)
@@ -65,7 +66,7 @@ open class ProcessService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Process not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getProcessByKeyAsResponse(key: String): ProcessResponse = processMapper.toProcessResponse(getProcessByKey(key))
 
     @Transactional
@@ -718,7 +719,7 @@ open class ProcessService(
         processRepository.delete(process)
     }
 
-    @Transactional
+    @ReadOnly
     open fun getVersionHistory(key: String): List<ProcessVersionResponse> {
         val process = getProcessByKey(key)
         return processVersionRepository
@@ -726,7 +727,7 @@ open class ProcessService(
             .map { processMapper.toProcessVersionResponse(it) }
     }
 
-    @Transactional
+    @ReadOnly
     open fun getVersionDiff(
         key: String,
         versionNumber: Int
