@@ -8,6 +8,7 @@ import org.leargon.backend.domain.BusinessDomain
 import org.leargon.backend.domain.BusinessDomainVersion
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.BusinessDomainMapper
 import org.leargon.backend.model.BusinessDomainResponse
@@ -32,7 +33,9 @@ open class BusinessDomainService(
     private val domainEventRepository: DomainEventRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val localeService: LocaleService,
-    private val businessDomainMapper: BusinessDomainMapper
+    private val businessDomainMapper: BusinessDomainMapper,
+    private val fieldVerificationService: FieldVerificationService,
+    private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -282,6 +285,7 @@ open class BusinessDomainService(
             boundedContextRepository.delete(bc)
         }
 
+        fieldVerificationService.deleteFor("BUSINESS_DOMAIN", domain.id!!)
         businessDomainRepository.delete(domain)
     }
 
@@ -354,6 +358,30 @@ open class BusinessDomainService(
         version.changeSummary = changeSummary
 
         businessDomainVersionRepository.save(version)
+
+        // Reconcile per-field verification status against the new values.
+        val extractor = this.businessDomainFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = domain.owningUnit?.businessOwner
+        val actorIsOwner = owner != null && owner.id == changedBy.id
+        fvs.sync("BUSINESS_DOMAIN", domain.id!!, changedBy, actorIsOwner) { fn -> extractor.value(domain, fn) }
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        domainKey: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): BusinessDomainResponse {
+        val domain = getBusinessDomainByKey(domainKey)
+        val owner = domain.owningUnit?.businessOwner
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the domain owner can set field verification status")
+        }
+        val currentValue = businessDomainFieldValueExtractor.value(domain, fieldName)
+        fieldVerificationService.setStatus("BUSINESS_DOMAIN", domain.id!!, fieldName, status, currentUser, currentValue)
+        return businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(domainKey))
     }
 
     private fun recomputeKeysForSubtree(domain: BusinessDomain) {

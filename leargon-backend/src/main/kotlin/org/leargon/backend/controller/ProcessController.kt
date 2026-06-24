@@ -22,6 +22,7 @@ import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessDiagramResponse
 import org.leargon.backend.model.ProcessFlowResponse
 import org.leargon.backend.model.ProcessResponse
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessFlowRequest
@@ -65,6 +66,17 @@ open class ProcessController(
     override fun getProcessTree(): List<ProcessTreeResponse> = processService.getProcessTreeAsResponses()
 
     override fun getProcessByKey(key: String): ProcessResponse = processService.getProcessByKeyAsResponse(key)
+
+    override fun setProcessFieldVerification(
+        key: String,
+        @Valid @Body setFieldVerificationRequest: SetFieldVerificationRequest
+    ): ProcessResponse =
+        processService.setFieldVerification(
+            key,
+            setFieldVerificationRequest.fieldName,
+            setFieldVerificationRequest.status.name,
+            getCurrentUser()
+        )
 
     override fun createProcess(
         @Valid @Body createProcessRequest: CreateProcessRequest

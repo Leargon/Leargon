@@ -1,4 +1,12 @@
 const fr = {
+  "fieldStatus": {
+    "verifiedBy": "Vérifié par {{user}} le {{date}}",
+    "changedBy": "Modifié par {{user}} le {{date}} — pas encore vérifié",
+    "ownerHint": "cliquer pour définir le statut",
+    "markVerified": "Marquer comme vérifié",
+    "markUnverified": "Marquer comme non vérifié",
+    "aria": "Statut de vérification du champ"
+  },
   "nav": {
     "home": "Accueil",
     "domainModel": "Modèle de domaine",

@@ -57,7 +57,9 @@ import {
   useGetOwnedBoundedContextsByOrgUnit,
   getGetOwnedBoundedContextsByOrgUnitQueryKey,
   useUpdateOrgUnitServiceProviders,
+  useSetOrganisationalUnitFieldVerification,
 } from '../../api/generated/organisational-unit/organisational-unit';
+import FieldStatusIndicator from '../common/FieldStatusIndicator';
 import { useUpdateBoundedContextOwningTeam } from '../../api/generated/bounded-context/bounded-context';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
@@ -106,6 +108,23 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
   const isLeadOrAdmin = isAdmin || (user?.username === unit?.businessOwner?.username);
+  const isOwner = !!user?.username && user.username === unit?.businessOwner?.username;
+  const setFieldVerification = useSetOrganisationalUnitFieldVerification();
+  const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
+    for (const fieldName of fieldNames) {
+      await setFieldVerification.mutateAsync({ key: unitKey, data: { fieldName, status } });
+    }
+    queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitByKeyQueryKey(unitKey) });
+  };
+  const renderStatus = (...fieldNames: string[]) => (
+    <FieldStatusIndicator
+      statuses={unit?.fieldStatuses}
+      fieldNames={fieldNames}
+      canVerify={isOwner}
+      busy={setFieldVerification.isPending}
+      onSetStatus={(status) => onSetFieldStatus(fieldNames, status)}
+    />
+  );
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
@@ -419,7 +438,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   <TableRow>
                     {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                       <TableCell key={l.localeCode}>
-                        {unit.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                          {unit.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                          {renderStatus(`names.${l.localeCode}`)}
+                        </Box>
                       </TableCell>
                     ))}
                   </TableRow>

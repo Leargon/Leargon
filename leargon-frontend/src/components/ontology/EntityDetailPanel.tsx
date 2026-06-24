@@ -60,6 +60,7 @@ import {
   useGetEntityDpia,
   useTriggerEntityDpia,
   getGetEntityDpiaQueryKey,
+  useSetBusinessEntityFieldVerification,
 } from '../../api/generated/business-entity/business-entity';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
@@ -83,6 +84,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
+import FieldStatusIndicator from '../common/FieldStatusIndicator';
 import DpiaSection from '../compliance/DpiaSection';
 import QualityRulesSection from './QualityRulesSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
@@ -231,6 +233,25 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateRelationship = useUpdateBusinessEntityRelationship();
   const updateRetentionPeriod = useUpdateBusinessEntityRetentionPeriod();
   const updateStorageLocations = useUpdateBusinessEntityStorageLocations();
+  const setFieldVerification = useSetBusinessEntityFieldVerification();
+
+  // Field verification: owner-only (admins can edit but not verify).
+  const isOwner = !!user?.username && user.username === entity?.dataOwner?.username;
+  const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
+    for (const fieldName of fieldNames) {
+      await setFieldVerification.mutateAsync({ key: entityKey, data: { fieldName, status } });
+    }
+    queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
+  };
+  const renderStatus = (...fieldNames: string[]) => (
+    <FieldStatusIndicator
+      statuses={entity?.fieldStatuses}
+      fieldNames={fieldNames}
+      canVerify={isOwner}
+      busy={setFieldVerification.isPending}
+      onSetStatus={(status) => onSetFieldStatus(fieldNames, status)}
+    />
+  );
 
   // Storage locations dialog state
   const [locationsDialogOpen, setLocationsDialogOpen] = useState(false);
@@ -554,7 +575,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 <TableRow>
                   {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
-                      {entity.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        {entity.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                        {renderStatus(`names.${l.localeCode}`)}
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -597,7 +621,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} canEdit={isOwnerOrAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} statusIndicator={renderStatus('dataOwner')} canEdit={isOwnerOrAdmin} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(entity.dataOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -635,7 +659,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           )}
         </PropRow>}
         {fields.owningUnit && !isHidden('owningUnit') && (
-          <PropRow label={t('common.owningUnit')} canEdit={isOwnerOrAdmin} isEditing={owningUnitEdit.isEditing}
+          <PropRow label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={isOwnerOrAdmin} isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(entity.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
             onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
             {owningUnitEdit.isEditing ? (
@@ -659,7 +683,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.dataSteward && !isHidden('dataSteward') && (
-          <PropRow label={t('entity.dataSteward')} canEdit={isOwnerOrAdmin} isEditing={dataStewardEdit.isEditing}
+          <PropRow label={t('entity.dataSteward')} statusIndicator={renderStatus('dataSteward')} canEdit={isOwnerOrAdmin} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
             onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
             {dataStewardEdit.isEditing ? (
@@ -698,7 +722,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('entity.technicalCustodian')} canEdit={isOwnerOrAdmin} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow label={t('entity.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={isOwnerOrAdmin} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
@@ -737,7 +761,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.parentEntity && !isHidden('parent') && (
-          <PropRow label={t('entity.parentEntity')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
+          <PropRow label={t('entity.parentEntity')} statusIndicator={renderStatus('parent')} canEdit={isOwnerOrAdmin} isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
             onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
             {parentEdit.isEditing ? (
@@ -765,7 +789,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
-          <PropRow label={t('entity.boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+          <PropRow label={t('entity.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
             {boundedContextEdit.isEditing ? (
@@ -798,7 +822,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.retentionPeriod && !isHidden('retentionPeriod') && (
-          <PropRow label={t('entity.retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
+          <PropRow label={t('entity.retentionPeriod')} statusIndicator={renderStatus('retentionPeriod')} canEdit={isOwnerOrAdmin} isEditing={retentionEdit.isEditing}
             onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
             onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
             isMandatory={isMandatory('retentionPeriod')}>

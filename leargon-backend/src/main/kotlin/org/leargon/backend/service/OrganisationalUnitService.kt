@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.BoundedContextMapper
 import org.leargon.backend.mapper.OrganisationalUnitMapper
@@ -29,8 +30,41 @@ open class OrganisationalUnitService(
     private val localeService: LocaleService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
     private val businessEntityRepository: BusinessEntityRepository,
-    private val boundedContextRepository: BoundedContextRepository
+    private val boundedContextRepository: BoundedContextRepository,
+    private val fieldVerificationService: FieldVerificationService,
+    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor
 ) {
+    /**
+     * Reconciles per-field verification status after a mutation. Organisational units have no version
+     * chokepoint, so each mutator calls this directly. Owner = [OrganisationalUnit.businessOwner].
+     */
+    private fun syncFieldVerifications(
+        unit: OrganisationalUnit,
+        currentUser: User
+    ) {
+        val extractor = this.organisationalUnitFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = unit.businessOwner
+        val actorIsOwner = owner != null && owner.id == currentUser.id
+        fvs.sync("ORGANISATIONAL_UNIT", unit.id!!, currentUser, actorIsOwner) { fn -> extractor.value(unit, fn) }
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        key: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): OrganisationalUnitResponse {
+        val unit = getByKey(key)
+        val owner = unit.businessOwner
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the business owner can set field verification status")
+        }
+        val currentValue = organisationalUnitFieldValueExtractor.value(unit, fieldName)
+        fieldVerificationService.setStatus("ORGANISATIONAL_UNIT", unit.id!!, fieldName, status, currentUser, currentValue)
+        return organisationalUnitMapper.toResponse(getByKey(key))
+    }
     @Transactional
     open fun getAllAsResponses(): List<OrganisationalUnitResponse> =
         organisationalUnitRepository.findAll().map { organisationalUnitMapper.toResponse(it) }
@@ -111,6 +145,7 @@ open class OrganisationalUnitService(
         }
 
         unit = organisationalUnitRepository.save(unit)
+        syncFieldVerifications(unit, currentUser)
         return unit
     }
 
@@ -118,7 +153,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateNames(
         key: String,
-        names: List<org.leargon.backend.model.LocalizedText>
+        names: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
@@ -131,6 +167,7 @@ open class OrganisationalUnitService(
         unit.key = SlugUtil.slugify(defaultName)
 
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -138,7 +175,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateDescriptions(
         key: String,
-        descriptions: List<org.leargon.backend.model.LocalizedText>
+        descriptions: List<org.leargon.backend.model.LocalizedText>,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
@@ -146,6 +184,7 @@ open class OrganisationalUnitService(
 
         unit.descriptions = descriptions.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -153,7 +192,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateBusinessOwner(
         key: String,
-        businessOwnerUsername: String?
+        businessOwnerUsername: String?,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
@@ -167,6 +207,7 @@ open class OrganisationalUnitService(
         }
 
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -174,7 +215,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateBusinessSteward(
         key: String,
-        businessStewardUsername: String?
+        businessStewardUsername: String?,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         unit.businessSteward =
@@ -186,6 +228,7 @@ open class OrganisationalUnitService(
                 null
             }
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -193,7 +236,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateTechnicalCustodian(
         key: String,
-        technicalCustodianUsername: String?
+        technicalCustodianUsername: String?,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         unit.technicalCustodian =
@@ -205,6 +249,7 @@ open class OrganisationalUnitService(
                 null
             }
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -212,11 +257,13 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateType(
         key: String,
-        unitType: String?
+        unitType: String?,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         unit.unitType = unitType
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -251,13 +298,15 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateExternalFields(
         key: String,
-        request: UpdateOrgUnitExternalFieldsRequest
+        request: UpdateOrgUnitExternalFieldsRequest,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         if (request.isExternal != null) unit.isExternal = request.isExternal
         unit.externalCompanyName = request.externalCompanyName
         unit.countryOfExecution = request.countryOfExecution
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -296,6 +345,7 @@ open class OrganisationalUnitService(
     @Transactional
     open fun delete(key: String) {
         val unit = getByKey(key)
+        fieldVerificationService.deleteFor("ORGANISATIONAL_UNIT", unit.id!!)
         organisationalUnitRepository.delete(unit)
     }
 

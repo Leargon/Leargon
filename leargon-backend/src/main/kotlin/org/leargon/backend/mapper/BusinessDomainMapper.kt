@@ -11,6 +11,7 @@ import org.leargon.backend.model.BusinessDomainVersionResponse
 import org.leargon.backend.model.BusinessDomainVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -20,7 +21,8 @@ import java.time.ZonedDateTime
 open class BusinessDomainMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
-    private val organisationalUnitMapper: OrganisationalUnitMapper
+    private val organisationalUnitMapper: OrganisationalUnitMapper,
+    private val fieldVerificationService: FieldVerificationService
 ) {
     fun toBusinessDomainResponse(domain: BusinessDomain): BusinessDomainResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
@@ -59,6 +61,7 @@ open class BusinessDomainMapper(
                     }
                 }
             }
+        val fvSvc = this.fieldVerificationService
         return BusinessDomainResponse(
             domain.key,
             UserMapper.toUserSummary(domain.createdBy),
@@ -77,6 +80,7 @@ open class BusinessDomainMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
+            .fieldStatuses(domain.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_DOMAIN", id)) })
     }
 
     fun toLocalizedBusinessDomainResponse(

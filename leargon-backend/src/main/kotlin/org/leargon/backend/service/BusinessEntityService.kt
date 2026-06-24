@@ -42,7 +42,9 @@ open class BusinessEntityService(
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val translationLinkRepository: TranslationLinkRepository,
     private val localeService: LocaleService,
-    private val businessEntityMapper: BusinessEntityMapper
+    private val businessEntityMapper: BusinessEntityMapper,
+    private val fieldVerificationService: FieldVerificationService,
+    private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -438,6 +440,7 @@ open class BusinessEntityService(
         translationLinkRepository.deleteByFirstEntityId(entity.id!!)
         translationLinkRepository.deleteBySecondEntityId(entity.id!!)
 
+        fieldVerificationService.deleteFor("BUSINESS_ENTITY", entity.id!!)
         businessEntityRepository.delete(entity)
     }
 
@@ -794,6 +797,30 @@ open class BusinessEntityService(
         version.changeSummary = changeSummary
 
         businessEntityVersionRepository.save(version)
+
+        // Reconcile per-field verification status against the new values.
+        val extractor = this.businessEntityFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = entity.effectiveOwner()
+        val actorIsOwner = owner != null && owner.id == changedBy.id
+        fvs.sync("BUSINESS_ENTITY", entity.id!!, changedBy, actorIsOwner) { fn -> extractor.value(entity, fn) }
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        entityKey: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): BusinessEntityResponse {
+        val entity = getBusinessEntityByKey(entityKey)
+        val owner = entity.effectiveOwner()
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the data owner can set field verification status")
+        }
+        val currentValue = businessEntityFieldValueExtractor.value(entity, fieldName)
+        fieldVerificationService.setStatus("BUSINESS_ENTITY", entity.id!!, fieldName, status, currentUser, currentValue)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entityKey))
     }
 
     @Suppress("UNCHECKED_CAST")

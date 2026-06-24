@@ -49,7 +49,9 @@ import {
   useGetBusinessDomainVersions,
   useGetAllBusinessDomains,
   useUpdateBusinessDomainOwningUnit,
+  useSetBusinessDomainFieldVerification,
 } from '../../api/generated/business-domain/business-domain';
+import FieldStatusIndicator from '../common/FieldStatusIndicator';
 import {
   useGetAllContextRelationships,
   getGetAllContextRelationshipsQueryKey,
@@ -174,6 +176,25 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
   const { data: allOrgUnitsData } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitResponse[] | undefined) ?? [];
+  // Domain owner = business owner of the owning unit (verification is owner-only).
+  const domainOwnerUsername = allOrgUnits.find((u) => u.key === domain?.owningUnit?.key)?.businessOwner?.username;
+  const isOwner = !!user?.username && user.username === domainOwnerUsername;
+  const setFieldVerification = useSetBusinessDomainFieldVerification();
+  const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
+    for (const fieldName of fieldNames) {
+      await setFieldVerification.mutateAsync({ key: domainKey, data: { fieldName, status } });
+    }
+    queryClient.invalidateQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+  };
+  const renderStatus = (...fieldNames: string[]) => (
+    <FieldStatusIndicator
+      statuses={domain?.fieldStatuses}
+      fieldNames={fieldNames}
+      canVerify={isOwner}
+      busy={setFieldVerification.isPending}
+      onSetStatus={(status) => onSetFieldStatus(fieldNames, status)}
+    />
+  );
 
   const [owningTeamEditBcKey, setOwningTeamEditBcKey] = useState<string | null>(null);
   const [owningTeamEditValue, setOwningTeamEditValue] = useState<OrganisationalUnitResponse | null>(null);
@@ -568,7 +589,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 <TableRow>
                   {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
-                      {domain.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        {domain.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                        {renderStatus(`names.${l.localeCode}`)}
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>

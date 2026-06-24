@@ -64,7 +64,9 @@ import {
   useGetProcessDpia,
   useTriggerProcessDpia,
   getGetProcessDpiaQueryKey,
+  useSetProcessFieldVerification,
 } from '../../api/generated/process/process';
+import FieldStatusIndicator from '../common/FieldStatusIndicator';
 import { useGetAllUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
@@ -195,6 +197,23 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [subProcessWizardOpen, setSubProcessWizardOpen] = useState(false);
 
   const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
+  const isOwner = !!user?.username && user.username === process?.processOwner?.username;
+  const setFieldVerification = useSetProcessFieldVerification();
+  const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
+    for (const fieldName of fieldNames) {
+      await setFieldVerification.mutateAsync({ key: processKey, data: { fieldName, status } });
+    }
+    queryClient.invalidateQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
+  };
+  const renderStatus = (...fieldNames: string[]) => (
+    <FieldStatusIndicator
+      statuses={process?.fieldStatuses}
+      fieldNames={fieldNames}
+      canVerify={isOwner}
+      busy={setFieldVerification.isPending}
+      onSetStatus={(status) => onSetFieldStatus(fieldNames, status)}
+    />
+  );
   const activeLocales = locales.filter((l) => l.isActive);
   const descriptionLocales = isOwnerOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
@@ -600,7 +619,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 <TableRow>
                   {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
-                      {process.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        {process.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                        {renderStatus(`names.${l.localeCode}`)}
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>

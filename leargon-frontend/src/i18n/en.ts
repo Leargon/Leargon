@@ -1,4 +1,12 @@
 const en = {
+  fieldStatus: {
+    verifiedBy: 'Verified by {{user}} on {{date}}',
+    changedBy: 'Changed by {{user}} on {{date}} — not yet verified',
+    ownerHint: 'click to set status',
+    markVerified: 'Mark as verified',
+    markUnverified: 'Mark as unverified',
+    aria: 'Field verification status',
+  },
   nav: {
     home: 'Home',
     domainModel: 'Domain Model',

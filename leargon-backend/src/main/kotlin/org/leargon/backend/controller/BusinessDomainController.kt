@@ -17,6 +17,7 @@ import org.leargon.backend.model.BusinessDomainResponse
 import org.leargon.backend.model.BusinessDomainTreeResponse
 import org.leargon.backend.model.BusinessDomainVersionResponse
 import org.leargon.backend.model.ClassificationAssignmentRequest
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.CreateBusinessDomainRequest
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.model.LocalizedText
@@ -43,6 +44,17 @@ open class BusinessDomainController(
     override fun getBusinessDomainTree(): List<BusinessDomainTreeResponse> = businessDomainService.getBusinessDomainTreeAsResponses()
 
     override fun getBusinessDomainByKey(key: String): BusinessDomainResponse = businessDomainService.getBusinessDomainByKeyAsResponse(key)
+
+    override fun setBusinessDomainFieldVerification(
+        key: String,
+        @Valid @Body setFieldVerificationRequest: SetFieldVerificationRequest
+    ): BusinessDomainResponse =
+        businessDomainService.setFieldVerification(
+            key,
+            setFieldVerificationRequest.fieldName,
+            setFieldVerificationRequest.status.name,
+            getCurrentUser()
+        )
 
     override fun getLocalizedBusinessDomain(
         key: String,

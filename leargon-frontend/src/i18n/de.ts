@@ -1,4 +1,12 @@
 const de = {
+  "fieldStatus": {
+    "verifiedBy": "Bestätigt von {{user}} am {{date}}",
+    "changedBy": "Geändert von {{user}} am {{date}} — noch nicht bestätigt",
+    "ownerHint": "klicken, um den Status zu setzen",
+    "markVerified": "Als bestätigt markieren",
+    "markUnverified": "Als unbestätigt markieren",
+    "aria": "Feld-Bestätigungsstatus"
+  },
   "nav": {
     "home": "Startseite",
     "domainModel": "Domänenmodell",

@@ -11,6 +11,8 @@ export interface PropRowProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
+  /** Optional verification-status indicator rendered next to the label. */
+  statusIndicator?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -23,6 +25,7 @@ const PropRow: React.FC<PropRowProps> = ({
   onCancel,
   isSaving,
   isMandatory,
+  statusIndicator,
   children,
 }) => (
   <Box
@@ -64,6 +67,7 @@ const PropRow: React.FC<PropRowProps> = ({
           *
         </Typography>
       )}
+      {statusIndicator}
       {canEdit && !isEditing && (
         <IconButton size="small" onClick={onEdit} sx={{ p: 0.25, ml: 0.25 }}>
           <EditIcon sx={{ fontSize: 14 }} />
