@@ -8,6 +8,7 @@ import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.ProcessSummaryResponse
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -17,7 +18,8 @@ import java.time.ZonedDateTime
 open class OrganisationalUnitMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
-    private val serviceProviderMapper: ServiceProviderMapper
+    private val serviceProviderMapper: ServiceProviderMapper,
+    private val fieldVerificationService: FieldVerificationService
 ) {
     fun toResponse(
         unit: OrganisationalUnit,
@@ -63,6 +65,13 @@ open class OrganisationalUnitMapper(
                     }
                 }
             }
+        val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("ORGANISATIONAL_UNIT")) {
+                unit.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("ORGANISATIONAL_UNIT", id)) }
+            } else {
+                null
+            }
         return OrganisationalUnitResponse(
             unit.key,
             UserMapper.toUserSummary(unit.createdBy),
@@ -87,6 +96,7 @@ open class OrganisationalUnitMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
+            .fieldStatuses(fieldStatuses)
     }
 
     fun toTreeResponse(unit: OrganisationalUnit): OrganisationalUnitTreeResponse =

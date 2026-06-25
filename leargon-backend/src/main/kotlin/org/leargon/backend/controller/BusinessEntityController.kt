@@ -22,6 +22,7 @@ import org.leargon.backend.model.CreateBusinessEntityRequest
 import org.leargon.backend.model.DpiaResponse
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.LocalizedText
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
 import org.leargon.backend.model.UpdateBusinessEntityDataStewardRequest
 import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
@@ -212,6 +213,17 @@ open class BusinessEntityController(
         val currentUser = getCurrentUser()
         return businessEntityService.updateRetentionPeriod(key, updateRetentionPeriodRequest.retentionPeriod, currentUser)
     }
+
+    override fun setBusinessEntityFieldVerification(
+        key: String,
+        @Valid @Body setFieldVerificationRequest: SetFieldVerificationRequest
+    ): BusinessEntityResponse =
+        businessEntityService.setFieldVerification(
+            key,
+            setFieldVerificationRequest.fieldName,
+            setFieldVerificationRequest.status.name,
+            getCurrentUser()
+        )
 
     override fun updateBusinessEntityStorageLocations(
         key: String,

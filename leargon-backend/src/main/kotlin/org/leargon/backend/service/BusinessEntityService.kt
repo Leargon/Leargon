@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -42,7 +43,9 @@ open class BusinessEntityService(
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val translationLinkRepository: TranslationLinkRepository,
     private val localeService: LocaleService,
-    private val businessEntityMapper: BusinessEntityMapper
+    private val businessEntityMapper: BusinessEntityMapper,
+    private val fieldVerificationService: FieldVerificationService,
+    private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -53,7 +56,7 @@ open class BusinessEntityService(
         currentUser: User,
     ): Boolean = entity.effectiveOwner()?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
 
-    @Transactional
+    @ReadOnly
     open fun getAllBusinessEntitiesAsResponses(): List<BusinessEntityResponse> =
         getAllBusinessEntities().map { businessEntityMapper.toBusinessEntityResponse(it) }
 
@@ -62,13 +65,13 @@ open class BusinessEntityService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessEntityByKeyAsResponse(key: String): BusinessEntityResponse =
         businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(key))
 
     open fun getBusinessEntityTree(): List<BusinessEntity> = businessEntityRepository.findByParentIsNull()
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessEntityTreeAsResponses(): List<BusinessEntityTreeResponse> =
         getBusinessEntityTree().map { businessEntityMapper.toBusinessEntityTreeResponse(it) }
 
@@ -438,10 +441,11 @@ open class BusinessEntityService(
         translationLinkRepository.deleteByFirstEntityId(entity.id!!)
         translationLinkRepository.deleteBySecondEntityId(entity.id!!)
 
+        fieldVerificationService.deleteFor("BUSINESS_ENTITY", entity.id!!)
         businessEntityRepository.delete(entity)
     }
 
-    @Transactional
+    @ReadOnly
     open fun getLocalizedEntity(
         key: String,
         locale: String?,
@@ -496,6 +500,9 @@ open class BusinessEntityService(
         businessEntityRelationshipRepository.save(relationship)
 
         entity = getBusinessEntityByKey(entityKey)
+        // Keep the in-memory inverse collection consistent so verification sync sees the new item
+        // (the already-initialized lazy collection is not auto-refreshed within this transaction).
+        if (entity.relationshipsFirst.none { it.id == relationship.id }) entity.relationshipsFirst.add(relationship)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Added relationship with ${request.secondEntityKey}")
 
         return businessEntityMapper.toBusinessEntityResponse(entity)
@@ -575,6 +582,7 @@ open class BusinessEntityService(
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Deleted relationship #$relationshipId")
     }
 
+    @ReadOnly
     open fun getVersionHistory(entityKey: String): List<BusinessEntityVersionResponse> {
         val entity = getBusinessEntityByKey(entityKey)
         return businessEntityVersionRepository
@@ -582,6 +590,7 @@ open class BusinessEntityService(
             .map { businessEntityMapper.toBusinessEntityVersionResponse(it) }
     }
 
+    @ReadOnly
     open fun getVersionDiff(
         entityKey: String,
         versionNumber: Int
@@ -794,6 +803,38 @@ open class BusinessEntityService(
         version.changeSummary = changeSummary
 
         businessEntityVersionRepository.save(version)
+
+        // Reconcile per-field verification status against the new values.
+        val extractor = this.businessEntityFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = entity.effectiveOwner()
+        val actorIsOwner = owner != null && owner.id == changedBy.id
+        fvs.sync(
+            "BUSINESS_ENTITY",
+            entity.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(entity, fn) },
+            extractor.collectionItemValues(entity)
+        )
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        entityKey: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): BusinessEntityResponse {
+        val entity = getBusinessEntityByKey(entityKey)
+        val owner = entity.effectiveOwner()
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the data owner can set field verification status")
+        }
+        val ext = this.businessEntityFieldValueExtractor
+        val currentValue = ext.collectionItemValues(entity)[fieldName] ?: runCatching { ext.value(entity, fieldName) }.getOrNull()
+        fieldVerificationService.setStatus("BUSINESS_ENTITY", entity.id!!, fieldName, status, currentUser, currentValue)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entityKey))
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -38,11 +38,11 @@ open class ContextRelationshipController(
     override fun updateContextRelationship(
         id: Long,
         @Body request: UpdateContextRelationshipRequest
-    ): ContextRelationshipResponse = contextRelationshipService.update(id, request)
+    ): ContextRelationshipResponse = contextRelationshipService.update(id, request, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun deleteContextRelationship(id: Long): HttpResponse<Void> {
-        contextRelationshipService.delete(id)
+        contextRelationshipService.delete(id, getCurrentUser())
         return HttpResponse.noContent()
     }
 

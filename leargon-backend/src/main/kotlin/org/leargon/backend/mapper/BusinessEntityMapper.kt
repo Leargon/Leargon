@@ -15,6 +15,7 @@ import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -25,7 +26,8 @@ open class BusinessEntityMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper,
-    private val processRepository: ProcessRepository
+    private val processRepository: ProcessRepository,
+    private val fieldVerificationService: FieldVerificationService
 ) {
     fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
@@ -84,6 +86,13 @@ open class BusinessEntityMapper(
                 ?: businessEntity.boundedContext?.domain?.owningUnit
         val effectiveSteward = businessEntity.dataSteward ?: effectiveOwningUnit?.businessSteward
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
+        val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_ENTITY")) {
+                businessEntity.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_ENTITY", id)) }
+            } else {
+                null
+            }
         return BusinessEntityResponse(
             businessEntity.key,
             businessEntity.dataOwner != null,
@@ -111,6 +120,7 @@ open class BusinessEntityMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
+            .fieldStatuses(fieldStatuses)
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 

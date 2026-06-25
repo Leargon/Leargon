@@ -46,6 +46,7 @@ class MethodologyConfigurationControllerSpec extends Specification {
 
     def cleanup() {
         fieldConfigurationRepository.deleteByEntityType("METHODOLOGY")
+        fieldConfigurationRepository.deleteByEntityType("METHODOLOGY_VERIFICATION")
         userRepository.deleteAll()
     }
 
@@ -200,6 +201,59 @@ class MethodologyConfigurationControllerSpec extends Specification {
         then:
         def e = thrown(HttpClientResponseException)
         e.status == HttpStatus.FORBIDDEN
+    }
+
+    // =====================
+    // VERIFICATION ENABLED FLAG
+    // =====================
+
+    def "GET returns verificationEnabled=false by default for all methodologies"() {
+        given:
+        def token = createAdminToken()
+
+        when:
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/methodology-configurations").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "verification is off out of the box"
+        response.body().every { it.verificationEnabled == false }
+    }
+
+    def "PUT enables verification for a governance area and GET reflects it (others stay off)"() {
+        given:
+        def token = createAdminToken()
+        def entries = [
+                [key: "DATA_GOVERNANCE", enabled: true, verificationEnabled: true],
+                [key: "PROCESS_GOVERNANCE", enabled: true, verificationEnabled: false],
+                [key: "GDPR", enabled: true, verificationEnabled: false],
+                [key: "DDD", enabled: true, verificationEnabled: false],
+                [key: "BCM", enabled: true, verificationEnabled: false],
+                [key: "TEAM_TOPOLOGIES", enabled: true, verificationEnabled: false],
+        ]
+
+        when:
+        def putResponse = client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/methodology-configurations", entries).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "the area is enabled, and methodology enablement is untouched"
+        def dg = putResponse.body().find { it.key == "DATA_GOVERNANCE" }
+        dg.verificationEnabled == true
+        dg.enabled == true
+        putResponse.body().findAll { it.key != "DATA_GOVERNANCE" }.every { it.verificationEnabled == false }
+
+        when: "GET reflects the saved state"
+        def getResponse = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/methodology-configurations").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then:
+        getResponse.body().find { it.key == "DATA_GOVERNANCE" }.verificationEnabled == true
+        getResponse.body().findAll { it.key != "DATA_GOVERNANCE" }.every { it.verificationEnabled == false }
     }
 
     // =====================

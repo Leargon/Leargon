@@ -49,7 +49,9 @@ import {
   useGetBusinessDomainVersions,
   useGetAllBusinessDomains,
   useUpdateBusinessDomainOwningUnit,
+  useSetBusinessDomainFieldVerification,
 } from '../../api/generated/business-domain/business-domain';
+import FieldStatusIndicator from '../common/FieldStatusIndicator';
 import {
   useGetAllContextRelationships,
   getGetAllContextRelationshipsQueryKey,
@@ -174,6 +176,25 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
   const { data: allOrgUnitsData } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitResponse[] | undefined) ?? [];
+  // Domain owner = business owner of the owning unit (verification is owner-only).
+  const domainOwnerUsername = allOrgUnits.find((u) => u.key === domain?.owningUnit?.key)?.businessOwner?.username;
+  const isOwner = !!user?.username && user.username === domainOwnerUsername;
+  const setFieldVerification = useSetBusinessDomainFieldVerification();
+  const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
+    for (const fieldName of fieldNames) {
+      await setFieldVerification.mutateAsync({ key: domainKey, data: { fieldName, status } });
+    }
+    queryClient.invalidateQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+  };
+  const renderStatus = (...fieldNames: string[]) => (
+    <FieldStatusIndicator
+      statuses={domain?.fieldStatuses}
+      fieldNames={fieldNames}
+      canVerify={isOwner}
+      busy={setFieldVerification.isPending}
+      onSetStatus={(status) => onSetFieldStatus(fieldNames, status)}
+    />
+  );
 
   const [owningTeamEditBcKey, setOwningTeamEditBcKey] = useState<string | null>(null);
   const [owningTeamEditValue, setOwningTeamEditValue] = useState<OrganisationalUnitResponse | null>(null);
@@ -367,6 +388,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== domainKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
+        // Evict both keys' cached snapshots: the old key has moved, and the new key may be a
+        // previously-used key whose stale cache (e.g. outdated fieldStatuses) would otherwise show.
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(newKey) });
         navigate(`/domains/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -389,6 +414,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       const newKey = (response.data as BusinessDomainResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
       if (newKey !== domainKey) {
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(newKey) });
         navigate(`/domains/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -568,7 +595,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 <TableRow>
                   {activeLocales.filter((l) => !isLocaleHidden('names', l.localeCode)).map((l) => (
                     <TableCell key={l.localeCode}>
-                      {domain.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        {domain.names.find((n) => n.locale === l.localeCode)?.text || '\u2014'}
+                        {renderStatus(`names.${l.localeCode}`)}
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -596,9 +626,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || t('common.noDescription')}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                      <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic', flex: 1 }}>
+                        {desc || t('common.noDescription')}
+                      </Typography>
+                      {renderStatus(`descriptions.${l.localeCode}`)}
+                    </Box>
                   </AccordionDetails>
                 </Accordion>
               );
@@ -613,6 +646,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Type */}
           <SectionHeader
             title={t('domain.type')}
+            statusIndicator={renderStatus('type')}
             canEdit={isAdmin}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
@@ -666,6 +700,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Parent */}
           <SectionHeader
             title={t('domain.parentDomain')}
+            statusIndicator={renderStatus('parent')}
             canEdit={isAdmin}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
@@ -733,6 +768,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Vision Statement */}
           <SectionHeader
             title={t('domain.visionStatement')}
+            statusIndicator={renderStatus('visionStatement')}
             canEdit={isAdmin}
             isEditing={visionEdit.isEditing}
             onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
@@ -776,6 +812,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Owning Unit */}
           <SectionHeader
             title={t('domain.owningUnit')}
+            statusIndicator={renderStatus('owningUnit')}
             canEdit={isAdmin}
             isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
@@ -834,20 +871,22 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       ) : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
           {boundedContexts.map((bc) => (
-            <Chip
-              key={bc.key}
-              label={getLocalizedText(bc.names, bc.key)}
-              size="small"
-              variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
-              color={selectedBcKey === bc.key ? 'primary' : 'default'}
-              onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
-              onDelete={isAdmin ? async (e: React.MouseEvent) => {
-                e.stopPropagation();
-                await deleteBoundedContext.mutateAsync({ key: bc.key });
-                if (selectedBcKey === bc.key) setSelectedBcKey(null);
-                invalidateBcs();
-              } : undefined}
-            />
+            <Box key={bc.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+              <Chip
+                label={getLocalizedText(bc.names, bc.key)}
+                size="small"
+                variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
+                color={selectedBcKey === bc.key ? 'primary' : 'default'}
+                onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
+                onDelete={isAdmin ? async (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  await deleteBoundedContext.mutateAsync({ key: bc.key });
+                  if (selectedBcKey === bc.key) setSelectedBcKey(null);
+                  invalidateBcs();
+                } : undefined}
+              />
+              {renderStatus(`boundedContext.${bc.key}`)}
+            </Box>
           ))}
         </Box>
       )}
@@ -1004,6 +1043,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     </Typography>
                   )}
                 </Box>
+                {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
                 {isAdmin && (
                   <IconButton
                     size="small"
@@ -1203,6 +1243,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     color: "text.secondary"
                   }}>{t('common.notSet')}</Typography>
                 )}
+                {renderStatus(`classification.${c.key}`)}
               </Box>
             );
           }) : (
@@ -1494,6 +1535,7 @@ interface SectionHeaderProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
+  statusIndicator?: React.ReactNode;
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({
@@ -1505,6 +1547,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   onCancel,
   isSaving,
   isMandatory,
+  statusIndicator,
 }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
@@ -1517,6 +1560,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
           lineHeight: 1
         }}>*</Typography>
     )}
+    {statusIndicator}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}>
         <Edit fontSize="small" />

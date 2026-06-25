@@ -18,7 +18,8 @@ import java.time.Instant
 open class BusinessDataQualityRuleService(
     private val ruleRepository: BusinessDataQualityRuleRepository,
     private val entityRepository: BusinessEntityRepository,
-    private val mapper: BusinessDataQualityRuleMapper
+    private val mapper: BusinessDataQualityRuleMapper,
+    private val businessEntityService: BusinessEntityService
 ) {
     @Transactional
     open fun getRulesForEntity(entityKey: String): List<BusinessDataQualityRuleResponse> {
@@ -54,6 +55,7 @@ open class BusinessDataQualityRuleService(
             }
         val repo = this.ruleRepository
         repo.save(rule)
+        businessEntityService.recordVersion(entityKey, currentUser, "UPDATE", "Added quality rule")
         return m.toResponse(rule)
     }
 
@@ -82,6 +84,7 @@ open class BusinessDataQualityRuleService(
         rule.severity = request.severity?.value
         rule.updatedAt = Instant.now()
         repo.update(rule)
+        businessEntityService.recordVersion(entityKey, currentUser, "UPDATE", "Updated quality rule #$ruleId")
         return m.toResponse(rule)
     }
 
@@ -105,6 +108,7 @@ open class BusinessDataQualityRuleService(
             throw ResourceNotFoundException("Quality rule not found: $ruleId")
         }
         entityRepo.update(entity)
+        businessEntityService.recordVersion(entityKey, currentUser, "UPDATE", "Deleted quality rule #$ruleId")
     }
 
     @Transactional

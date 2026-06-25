@@ -16,6 +16,7 @@ import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
 import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.service.FieldConfigurationService
+import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import java.time.Instant
 import java.time.ZoneOffset
@@ -27,7 +28,8 @@ open class ProcessMapper(
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper,
     private val capabilityMapper: CapabilityMapper,
-    private val processFlowNodeRepository: ProcessFlowNodeRepository
+    private val processFlowNodeRepository: ProcessFlowNodeRepository,
+    private val fieldVerificationService: FieldVerificationService
 ) {
     fun toProcessResponse(process: Process): ProcessResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
@@ -107,6 +109,13 @@ open class ProcessMapper(
                     it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
                 }
             }
+        val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_PROCESS")) {
+                process.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_PROCESS", id)) }
+            } else {
+                null
+            }
         return ProcessResponse(
             process.key,
             process.processOwner != null,
@@ -145,6 +154,7 @@ open class ProcessMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
+            .fieldStatuses(fieldStatuses)
             .calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)

@@ -180,6 +180,16 @@ open class FieldConfigurationService(
     @Transactional
     open fun getAll(): List<FieldConfigurationEntry> = fieldConfigurationRepository.findAll().map { toEntry(it) }
 
+    /**
+     * Concrete (leaf) field names for an entity type — per-locale entries expanded, classification
+     * placeholders resolved, locale group entries excluded. This is the set of fields that carry a
+     * verification status. Inventory-driven, so new fields/locales/classifications are picked up
+     * automatically.
+     */
+    @Transactional
+    open fun concreteFieldNames(entityType: String): List<String> =
+        getDefinitions().filter { it.entityType == entityType && it.localeGroup != true }.map { it.fieldName }
+
     @Transactional
     open fun replace(entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> {
         // Locale group entries: only persist when HIDDEN (SHOWN means "not hidden", so omit)

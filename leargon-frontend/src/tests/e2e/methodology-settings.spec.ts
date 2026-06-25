@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+const GOVERNANCE_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
 
 function backendUrl(): string {
   return process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
@@ -19,21 +20,28 @@ function getAdminToken(): string {
 }
 
 async function setMethodologies(
-  entries: Array<{ key: string; enabled: boolean }>,
+  entries: Array<{ key: string; enabled: boolean; verificationEnabled?: boolean }>,
 ): Promise<void> {
+  // Default verification to the suite baseline (on for governance) unless a test overrides it, so
+  // methodology-enablement tests don't inadvertently turn verification off for concurrent specs.
+  const body = entries.map((e) => ({ verificationEnabled: GOVERNANCE_KEYS.includes(e.key), ...e }));
   const res = await fetch(`${backendUrl()}/administration/methodology-configurations`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getAdminToken()}`,
     },
-    body: JSON.stringify(entries),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PUT methodology-configurations → ${res.status}`);
 }
 
 async function resetMethodologies(): Promise<void> {
-  await setMethodologies(ALL_METHODOLOGY_KEYS.map((key) => ({ key, enabled: true })));
+  // Restore the suite baseline: all methodologies enabled, verification on for governance areas
+  // (matches auth.setup), so concurrent specs that rely on verification being on stay green.
+  await setMethodologies(
+    ALL_METHODOLOGY_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: GOVERNANCE_KEYS.includes(key) })),
+  );
 }
 
 test.use({ storageState: ADMIN });
@@ -138,9 +146,10 @@ test.describe('Methodology Settings', () => {
     await page.goto('/settings/methodologies');
     await page.waitForLoadState('networkidle');
 
-    // Find the DDD card and click its switch to disable
+    // Find the DDD card and click its methodology-enabled switch (the first toggle; governance cards
+    // also have a second "Field verification" switch) to disable.
     const dddCard = page.locator('.MuiCard-root').filter({ hasText: 'Domain-Driven Design' });
-    const dddSwitch = dddCard.locator('input[type="checkbox"]');
+    const dddSwitch = dddCard.locator('input[type="checkbox"]').first();
     await expect(dddSwitch).toBeChecked();
     await dddSwitch.click({ force: true });
 
@@ -150,6 +159,10 @@ test.describe('Methodology Settings', () => {
     // Switch should now be unchecked
     await expect(dddSwitch).not.toBeChecked();
   });
+
+  // NOTE: the verification on/off → entity-indicator behaviour is covered by field-verification.spec
+  // (kept there so it runs serially with the other verification tests and can't race this spec's
+  // concurrent worker over the global methodology config). Integration + backend specs cover it too.
 
   test('methodology settings link appears in settings sidebar', async ({ page }) => {
     await page.goto('/settings/users');

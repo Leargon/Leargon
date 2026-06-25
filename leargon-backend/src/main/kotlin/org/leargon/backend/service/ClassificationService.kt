@@ -36,7 +36,11 @@ open class ClassificationService(
     private val capabilityRepository: CapabilityRepository,
     private val businessEntityService: BusinessEntityService,
     private val localeService: LocaleService,
-    private val classificationMapper: ClassificationMapper
+    private val classificationMapper: ClassificationMapper,
+    private val fieldVerificationService: FieldVerificationService,
+    private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor,
+    private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor,
+    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor
 ) {
     @Transactional
     open fun getClassifications(assignableTo: String?): List<ClassificationResponse> {
@@ -373,6 +377,17 @@ open class ClassificationService(
                     ClassificationAssignment(it.classificationKey, it.valueKey)
                 }.toMutableList()
         businessDomainRepository.update(domain)
+
+        val ext = this.businessDomainFieldValueExtractor
+        val owner = domain.owningUnit?.businessOwner
+        fieldVerificationService.sync(
+            "BUSINESS_DOMAIN",
+            domain.id!!,
+            currentUser,
+            owner != null && owner.id == currentUser.id,
+            { fn -> ext.value(domain, fn) },
+            ext.collectionItemValues(domain)
+        )
     }
 
     @Transactional
@@ -400,6 +415,17 @@ open class ClassificationService(
                     ClassificationAssignment(it.classificationKey, it.valueKey)
                 }.toMutableList()
         processRepository.update(process)
+
+        val ext = this.processFieldValueExtractor
+        val owner = process.effectiveOwner()
+        fieldVerificationService.sync(
+            "BUSINESS_PROCESS",
+            process.id!!,
+            currentUser,
+            owner != null && owner.id == currentUser.id,
+            { fn -> ext.value(process, fn) },
+            ext.collectionItemValues(process)
+        )
     }
 
     @Transactional
@@ -427,6 +453,17 @@ open class ClassificationService(
                     ClassificationAssignment(it.classificationKey, it.valueKey)
                 }.toMutableList()
         organisationalUnitRepository.update(unit)
+
+        val ext = this.organisationalUnitFieldValueExtractor
+        val unitOwner = unit.businessOwner
+        fieldVerificationService.sync(
+            "ORGANISATIONAL_UNIT",
+            unit.id!!,
+            currentUser,
+            unitOwner != null && unitOwner.id == currentUser.id,
+            { fn -> ext.value(unit, fn) },
+            ext.collectionItemValues(unit)
+        )
     }
 
     private fun validateAssignments(

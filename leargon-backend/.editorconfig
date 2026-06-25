@@ -14,6 +14,12 @@ max_line_length = 140
 # ktlint rules
 ktlint_standard_trailing-comma-on-call-site = disabled
 ktlint_standard_trailing-comma-on-declaration-site = disabled
+# Newer opinionated wrapping/spacing rules activated by the ktlint 1.8.0 bump that the codebase
+# predates. blank-line-between-when-conditions is also buggy in 1.8.0 (the formatter inserts the
+# blank lines but the checker keeps demanding them), so auto-format cannot converge. Disabled to
+# keep the existing code style, consistent with the trailing-comma rules above.
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_argument-list-wrapping = disabled
 
 [*.groovy]
 indent_size = 4

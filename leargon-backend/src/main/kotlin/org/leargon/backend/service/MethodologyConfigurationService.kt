@@ -13,6 +13,23 @@ open class MethodologyConfigurationService(
 ) {
     val allKeys = listOf("DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES")
 
+    companion object {
+        /** entityType for the per-area "verification enabled" flags (stored like the METHODOLOGY rows). */
+        const val VERIFICATION_ENTITY_TYPE = "METHODOLOGY_VERIFICATION"
+
+        /** Governance entity type → the methodology card whose verification switch gates it. */
+        val VERIFICATION_METHODOLOGY_BY_ENTITY_TYPE =
+            mapOf(
+                "BUSINESS_ENTITY" to "DATA_GOVERNANCE",
+                "BUSINESS_PROCESS" to "PROCESS_GOVERNANCE",
+                "BUSINESS_DOMAIN" to "DDD",
+                "ORGANISATIONAL_UNIT" to "TEAM_TOPOLOGIES"
+            )
+    }
+
+    /** Methodologies that own a verifiable governance entity type (the only ones with a verification switch). */
+    private val verificationMethodologies: Set<String> = VERIFICATION_METHODOLOGY_BY_ENTITY_TYPE.values.toSet()
+
     // methodology key → entity type → field patterns to exclude.
     // "section:X" excludes all fields whose section == X.
     // bare name excludes fields whose fieldName == name or starts with "$name."
@@ -88,8 +105,10 @@ open class MethodologyConfigurationService(
             fieldConfigurationRepository
                 .findByEntityType("METHODOLOGY")
                 .associateBy { it.fieldName }
+        val verificationEnabled = verificationEnabledMethodologies()
         return allKeys.map { key ->
             MethodologyConfigEntry(MethodologyConfigEntryKey.valueOf(key), saved[key]?.visibility != "HIDDEN")
+                .also { it.verificationEnabled = key in verificationEnabled }
         }
     }
 
@@ -105,7 +124,39 @@ open class MethodologyConfigurationService(
             config.maturityLevel = "BASIC"
             fieldConfigurationRepository.save(config)
         }
+
+        // Persist per-area verification flags. Default is OFF: a row marks verification ENABLED for that
+        // area; absence means disabled. Only the governance methodologies have a verification switch.
+        fieldConfigurationRepository.deleteByEntityType(VERIFICATION_ENTITY_TYPE)
+        entries
+            .filter { it.key.value in verificationMethodologies && it.verificationEnabled == true }
+            .forEach { entry ->
+                val config = FieldConfiguration()
+                config.entityType = VERIFICATION_ENTITY_TYPE
+                config.fieldName = entry.key.value
+                config.visibility = "SHOWN"
+                config.section = "METHODOLOGY"
+                config.maturityLevel = "BASIC"
+                fieldConfigurationRepository.save(config)
+            }
         return getAll()
+    }
+
+    private fun verificationEnabledMethodologies(): Set<String> =
+        fieldConfigurationRepository
+            .findByEntityType(VERIFICATION_ENTITY_TYPE)
+            .map { it.fieldName }
+            .toSet()
+
+    /**
+     * Whether per-field verification is enabled for [entityType]. Default is OFF: enabled only when the
+     * governing methodology's verification switch has been turned on (a marker row exists). Types with no
+     * governing methodology are unaffected by the switch.
+     */
+    @Transactional
+    open fun isVerificationEnabled(entityType: String): Boolean {
+        val methodology = VERIFICATION_METHODOLOGY_BY_ENTITY_TYPE[entityType] ?: return true
+        return methodology in verificationEnabledMethodologies()
     }
 
     fun getDisabledMethodologies(): Set<String> =

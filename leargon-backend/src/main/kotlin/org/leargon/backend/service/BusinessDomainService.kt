@@ -2,12 +2,14 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessDomain
 import org.leargon.backend.domain.BusinessDomainVersion
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.BusinessDomainMapper
 import org.leargon.backend.model.BusinessDomainResponse
@@ -32,19 +34,21 @@ open class BusinessDomainService(
     private val domainEventRepository: DomainEventRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val localeService: LocaleService,
-    private val businessDomainMapper: BusinessDomainMapper
+    private val businessDomainMapper: BusinessDomainMapper,
+    private val fieldVerificationService: FieldVerificationService,
+    private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
 
     open fun getAllBusinessDomains(): List<BusinessDomain> = businessDomainRepository.findAll()
 
-    @Transactional
+    @ReadOnly
     open fun getAllBusinessDomainsAsResponses(): List<BusinessDomainResponse> =
         getAllBusinessDomains().map { businessDomainMapper.toBusinessDomainResponse(it) }
 
     open fun getBusinessDomainTree(): List<BusinessDomain> = businessDomainRepository.findByParentIsNull()
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessDomainTreeAsResponses(): List<BusinessDomainTreeResponse> =
         getBusinessDomainTree().map { businessDomainMapper.toBusinessDomainTreeResponse(it) }
 
@@ -53,11 +57,11 @@ open class BusinessDomainService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("BusinessDomain not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getBusinessDomainByKeyAsResponse(key: String): BusinessDomainResponse =
         businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(key))
 
-    @Transactional
+    @ReadOnly
     open fun getLocalizedDomain(
         key: String,
         locale: String?,
@@ -282,11 +286,13 @@ open class BusinessDomainService(
             boundedContextRepository.delete(bc)
         }
 
+        fieldVerificationService.deleteFor("BUSINESS_DOMAIN", domain.id!!)
         businessDomainRepository.delete(domain)
     }
 
     // --- Version history ---
 
+    @ReadOnly
     open fun getVersionHistory(domainKey: String): List<BusinessDomainVersionResponse> {
         val domain = getBusinessDomainByKey(domainKey)
         return businessDomainVersionRepository
@@ -294,6 +300,7 @@ open class BusinessDomainService(
             .map { businessDomainMapper.toBusinessDomainVersionResponse(it) }
     }
 
+    @ReadOnly
     open fun getVersionDiff(
         domainKey: String,
         versionNumber: Int
@@ -320,6 +327,22 @@ open class BusinessDomainService(
         val changes = calculateDiff(previousSnapshot, currentSnapshot)
 
         return VersionDiffResponse(versionNumber, previousVersion?.versionNumber, changes)
+    }
+
+    /**
+     * Records a new version + reconciles field-verification status for the domain identified by [domainKey].
+     * Used by collaborators that mutate domain-scoped collections living in their own tables (e.g.
+     * context relationships) so the per-item verification rows stay in sync.
+     */
+    @Transactional
+    open fun recordVersion(
+        domainKey: String,
+        currentUser: User,
+        changeType: String,
+        changeSummary: String
+    ) {
+        val domain = getBusinessDomainByKey(domainKey)
+        createBusinessDomainVersion(domain, currentUser, changeType, changeSummary)
     }
 
     // --- Private helpers ---
@@ -354,6 +377,38 @@ open class BusinessDomainService(
         version.changeSummary = changeSummary
 
         businessDomainVersionRepository.save(version)
+
+        // Reconcile per-field verification status against the new values.
+        val extractor = this.businessDomainFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = domain.owningUnit?.businessOwner
+        val actorIsOwner = owner != null && owner.id == changedBy.id
+        fvs.sync(
+            "BUSINESS_DOMAIN",
+            domain.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(domain, fn) },
+            extractor.collectionItemValues(domain)
+        )
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        domainKey: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): BusinessDomainResponse {
+        val domain = getBusinessDomainByKey(domainKey)
+        val owner = domain.owningUnit?.businessOwner
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the domain owner can set field verification status")
+        }
+        val ext = this.businessDomainFieldValueExtractor
+        val currentValue = ext.collectionItemValues(domain)[fieldName] ?: runCatching { ext.value(domain, fieldName) }.getOrNull()
+        fieldVerificationService.setStatus("BUSINESS_DOMAIN", domain.id!!, fieldName, status, currentUser, currentValue)
+        return businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(domainKey))
     }
 
     private fun recomputeKeysForSubtree(domain: BusinessDomain) {

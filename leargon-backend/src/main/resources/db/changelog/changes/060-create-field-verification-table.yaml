@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 060-create-field-verification-table
+      author: leargon
+      changes:
+        - createTable:
+            tableName: field_verifications
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: field_name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_known_value
+                  type: longtext
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by_username
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: datetime
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: field_verifications
+            columnNames: entity_type, entity_id, field_name
+            constraintName: uq_field_verification_entity_field
+        - addForeignKeyConstraint:
+            baseTableName: field_verifications
+            baseColumnNames: updated_by_id
+            constraintName: fk_field_verification_updated_by
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL

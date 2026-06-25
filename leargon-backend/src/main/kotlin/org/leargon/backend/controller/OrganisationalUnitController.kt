@@ -20,6 +20,7 @@ import org.leargon.backend.model.CreateOrganisationalUnitRequest
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitEntityLinksRequest
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
@@ -75,7 +76,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateNames(key, names)
+        return organisationalUnitService.updateNames(key, names, currentUser)
     }
 
     override fun updateOrganisationalUnitDescriptions(
@@ -85,7 +86,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateDescriptions(key, descriptions)
+        return organisationalUnitService.updateDescriptions(key, descriptions, currentUser)
     }
 
     override fun updateOrganisationalUnitLead(
@@ -95,7 +96,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateBusinessOwner(key, request.businessOwnerUsername)
+        return organisationalUnitService.updateBusinessOwner(key, request.businessOwnerUsername, currentUser)
     }
 
     override fun updateOrganisationalUnitSteward(
@@ -105,7 +106,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateBusinessSteward(key, request.businessStewardUsername)
+        return organisationalUnitService.updateBusinessSteward(key, request.businessStewardUsername, currentUser)
     }
 
     override fun updateOrganisationalUnitTechnicalCustodian(
@@ -115,7 +116,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateTechnicalCustodian(key, request.technicalCustodianUsername)
+        return organisationalUnitService.updateTechnicalCustodian(key, request.technicalCustodianUsername, currentUser)
     }
 
     override fun updateOrganisationalUnitType(
@@ -125,7 +126,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateType(key, request.unitType)
+        return organisationalUnitService.updateType(key, request.unitType, currentUser)
     }
 
     override fun updateOrganisationalUnitParents(
@@ -135,7 +136,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateParents(key, request.keys)
+        return organisationalUnitService.updateParents(key, request.keys, currentUser)
     }
 
     override fun assignClassificationsToOrgUnit(
@@ -150,24 +151,37 @@ open class OrganisationalUnitController(
     override fun getOwnedBoundedContextsByOrgUnit(key: String): List<BoundedContextSummaryResponse> =
         organisationalUnitService.getOwnedBoundedContexts(key)
 
+    override fun setOrganisationalUnitFieldVerification(
+        key: String,
+        @Valid @Body setFieldVerificationRequest: SetFieldVerificationRequest
+    ): OrganisationalUnitResponse =
+        organisationalUnitService.setFieldVerification(
+            key,
+            setFieldVerificationRequest.fieldName,
+            setFieldVerificationRequest.status.name,
+            getCurrentUser()
+        )
+
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitExternalFields(
         key: String,
         @Valid @Body updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest
-    ): OrganisationalUnitResponse = organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest)
+    ): OrganisationalUnitResponse =
+        organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitDataAccessEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
-    ): OrganisationalUnitResponse = organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+    ): OrganisationalUnitResponse =
+        organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitDataManipulationEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
     ): OrganisationalUnitResponse =
-        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitServiceProviders(

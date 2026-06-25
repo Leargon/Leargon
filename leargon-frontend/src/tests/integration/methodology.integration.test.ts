@@ -185,6 +185,47 @@ describe('Methodology Configuration', () => {
     await adminClient.put('/administration/field-configurations', []);
   });
 
+  // ── Per-area verification toggle ──────────────────────────────────────────
+
+  it('verification is OFF by default; enabling DATA_GOVERNANCE surfaces entity fieldStatuses, disabling hides them', async () => {
+    // Default off — a fresh entity carries no field statuses.
+    await adminClient.put('/administration/methodology-configurations', allEnabled());
+    const entity = await createEntity(adminClient, 'Meth Verif Entity');
+    const off = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+    expect((off.data.fieldStatuses ?? []).length).toBe(0);
+
+    // Enable verification for Data Governance only.
+    await adminClient.put(
+      '/administration/methodology-configurations',
+      ALL_METHODOLOGY_KEYS.map((k) => ({
+        key: k as MethodologyConfigEntry['key'],
+        enabled: true,
+        verificationEnabled: k === 'DATA_GOVERNANCE',
+      })),
+    );
+    const cfg = await adminClient.get<MethodologyConfigEntry[]>('/administration/methodology-configurations');
+    expect(cfg.data.find((e) => e.key === 'DATA_GOVERNANCE')?.verificationEnabled).toBe(true);
+
+    const on = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+    expect((on.data.fieldStatuses ?? []).length).toBeGreaterThan(0);
+
+    // Disable again → statuses suppressed.
+    await adminClient.put('/administration/methodology-configurations', allEnabled());
+    const offAgain = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+    expect((offAgain.data.fieldStatuses ?? []).length).toBe(0);
+  });
+
+  it('setting a field verification returns 403 while the area is disabled (the default)', async () => {
+    await adminClient.put('/administration/methodology-configurations', allEnabled());
+    const entity = await createEntity(adminClient, 'Meth Verif 403 Entity');
+
+    const res = await adminClient.put(`/business-entities/${entity.key}/field-verifications`, {
+      fieldName: 'names.en',
+      status: 'VERIFIED',
+    });
+    expect(res.status).toBe(403);
+  });
+
   it('with DATA_GOVERNANCE enabled, retentionPeriod appears in missingMandatoryFields when absent', async () => {
     await adminClient.put('/administration/field-configurations', [
       { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },

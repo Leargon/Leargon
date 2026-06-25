@@ -50,6 +50,8 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       DATASOURCES_DEFAULT_USERNAME: 'leargon',
       DATASOURCES_DEFAULT_PASSWORD: 'leargon',
       JWT_SECRET: 'e2etestsecretkeythatisverylong32characters',
+      // Raise token lifetime to 4h so a long e2e run never trips the default 1h expiry (test env only).
+      MICRONAUT_SECURITY_TOKEN_JWT_GENERATOR_ACCESS_TOKEN_EXPIRATION: '14400',
       ADMIN_EMAIL: 'admin@e2e-test.local',
       ADMIN_USERNAME: 'admin',
       ADMIN_PASSWORD: 'AdminPass123!',

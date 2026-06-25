@@ -28,6 +28,18 @@ setup('authenticate as admin', async () => {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
+  // Per-field verification defaults to OFF. Turn it on for the governance areas so the e2e suite
+  // exercises the feature (the dedicated methodology-settings spec toggles it explicitly).
+  const METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+  const GOVERNANCE = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
+  await fetch(`${backendUrl}/administration/methodology-configurations`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(
+      METHODOLOGY_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: GOVERNANCE.includes(key) })),
+    ),
+  });
+
   // Force setupCompleted: true — /setup/complete above updates the DB; no need to re-fetch
   const storedUser = { ...user, setupCompleted: true };
 

@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.micronaut.retry.annotation.Retryable
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
@@ -45,14 +46,16 @@ open class ProcessService(
     private val businessEntityService: BusinessEntityService,
     private val domainEventProcessLinkRepository: DomainEventProcessLinkRepository,
     private val dpiaRepository: DpiaRepository,
-    private val processFlowNodeRepository: ProcessFlowNodeRepository
+    private val processFlowNodeRepository: ProcessFlowNodeRepository,
+    private val fieldVerificationService: FieldVerificationService,
+    private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
 
-    @Transactional
+    @ReadOnly
     open fun getAllProcessesAsResponses(): List<ProcessResponse> = processRepository.findAll().map { processMapper.toProcessResponse(it) }
 
-    @Transactional
+    @ReadOnly
     open fun getProcessTreeAsResponses(): List<ProcessTreeResponse> {
         val roots = processRepository.findByParentIsNull()
         return processMapper.toProcessTreeResponses(roots)
@@ -63,7 +66,7 @@ open class ProcessService(
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("Process not found") }
 
-    @Transactional
+    @ReadOnly
     open fun getProcessByKeyAsResponse(key: String): ProcessResponse = processMapper.toProcessResponse(getProcessByKey(key))
 
     @Transactional
@@ -712,10 +715,11 @@ open class ProcessService(
         // Remove domain event links referencing this process
         domainEventProcessLinkRepository.deleteByProcessId(process.id!!)
 
+        fieldVerificationService.deleteFor("BUSINESS_PROCESS", process.id!!)
         processRepository.delete(process)
     }
 
-    @Transactional
+    @ReadOnly
     open fun getVersionHistory(key: String): List<ProcessVersionResponse> {
         val process = getProcessByKey(key)
         return processVersionRepository
@@ -723,7 +727,7 @@ open class ProcessService(
             .map { processMapper.toProcessVersionResponse(it) }
     }
 
-    @Transactional
+    @ReadOnly
     open fun getVersionDiff(
         key: String,
         versionNumber: Int
@@ -847,6 +851,38 @@ open class ProcessService(
         version.changeSummary = changeSummary
 
         processVersionRepository.save(version)
+
+        // Reconcile per-field verification status against the new values.
+        val extractor = this.processFieldValueExtractor
+        val fvs = this.fieldVerificationService
+        val owner = process.effectiveOwner()
+        val actorIsOwner = owner != null && owner.id == changedBy.id
+        fvs.sync(
+            "BUSINESS_PROCESS",
+            process.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(process, fn) },
+            extractor.collectionItemValues(process)
+        )
+    }
+
+    @Transactional
+    open fun setFieldVerification(
+        key: String,
+        fieldName: String,
+        status: String,
+        currentUser: User
+    ): ProcessResponse {
+        val process = getProcessByKey(key)
+        val owner = process.effectiveOwner()
+        if (owner == null || owner.id != currentUser.id) {
+            throw ForbiddenOperationException("Only the process owner can set field verification status")
+        }
+        val ext = this.processFieldValueExtractor
+        val currentValue = ext.collectionItemValues(process)[fieldName] ?: runCatching { ext.value(process, fieldName) }.getOrNull()
+        fieldVerificationService.setStatus("BUSINESS_PROCESS", process.id!!, fieldName, status, currentUser, currentValue)
+        return processMapper.toProcessResponse(getProcessByKey(key))
     }
 
     @Suppress("UNCHECKED_CAST")

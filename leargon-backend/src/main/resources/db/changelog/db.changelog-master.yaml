@@ -119,3 +119,5 @@ databaseChangeLog:
       file: db/changelog/changes/058-it-system-countries-and-service-provider-link.yaml
   - include:
       file: db/changelog/changes/059-add-organisation-home-country.yaml
+  - include:
+      file: db/changelog/changes/060-create-field-verification-table.yaml

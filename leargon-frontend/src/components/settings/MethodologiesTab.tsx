@@ -39,6 +39,17 @@ import { ENTITY_TYPE_LABELS, MATURITY_LABELS, MATURITY_ORDER } from './FieldConf
 
 const ALL_KEYS = Object.values(MethodologyConfigEntryKey) as string[];
 
+/** Methodologies that own a verifiable governance entity type — the only ones with a verification switch. */
+const VERIFICATION_CAPABLE = new Set<string>(['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES']);
+
+/** Which governance area each verification-capable methodology controls (for the helper text). */
+const VERIFICATION_AREA_LABEL: Record<string, string> = {
+  DATA_GOVERNANCE: 'business entities',
+  PROCESS_GOVERNANCE: 'processes',
+  DDD: 'business domains',
+  TEAM_TOPOLOGIES: 'organisational units',
+};
+
 type VisibilityState = 'MANDATORY' | 'SHOWN' | 'HIDDEN';
 
 function fieldKey(entityType: string, fieldName: string) {
@@ -85,8 +96,10 @@ const METHODOLOGY_FILTER: Record<string, (d: FieldConfigurationDefinition) => bo
 interface MethodologyCardProps {
   methodologyKey: string;
   enabled: boolean;
+  verificationEnabled: boolean;
   expanded: boolean;
   onToggle: (key: string, enabled: boolean) => Promise<void>;
+  onToggleVerification: (key: string, enabled: boolean) => Promise<void>;
   onExpandChange: (key: string, open: boolean) => void;
   allDefinitions: FieldConfigurationDefinition[];
   allConfigurations: FieldConfigurationEntry[];
@@ -96,8 +109,10 @@ interface MethodologyCardProps {
 const MethodologyCard: React.FC<MethodologyCardProps> = ({
   methodologyKey,
   enabled,
+  verificationEnabled,
   expanded,
   onToggle,
+  onToggleVerification,
   onExpandChange,
   allDefinitions,
   allConfigurations,
@@ -218,6 +233,35 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {def.description}
         </Typography>
+
+        {VERIFICATION_CAPABLE.has(methodologyKey) && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1,
+              mb: 2,
+              py: 0.75,
+              px: 1,
+              borderRadius: 1,
+              bgcolor: 'action.hover',
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2">Field verification</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Show verify/unverify indicators on {VERIFICATION_AREA_LABEL[methodologyKey]}
+              </Typography>
+            </Box>
+            <Switch
+              checked={verificationEnabled}
+              onChange={(e) => onToggleVerification(methodologyKey, e.target.checked)}
+              disabled={isMethSaving || isSaving}
+              size="small"
+            />
+          </Box>
+        )}
 
         {sections.length > 0 && (
           <Box sx={{ mb: 1 }}>
@@ -394,13 +438,32 @@ const MethodologiesTab: React.FC = () => {
     return entries.find((e) => (e.key as string) === key)?.enabled ?? true;
   };
 
-  const handleToggle = async (key: string, nowEnabled: boolean) => {
-    const current = ALL_KEYS.map((k) => ({
+  const isVerificationEnabled = (key: string): boolean => {
+    // Default is OFF — verification is enabled only when explicitly turned on.
+    if (entries.length === 0) return false;
+    return entries.find((e) => (e.key as string) === key)?.verificationEnabled ?? false;
+  };
+
+  // Build the full entry list preserving both flags, with a single per-key override.
+  const buildEntries = (override: (k: string) => Partial<MethodologyConfigEntry>): MethodologyConfigEntry[] =>
+    ALL_KEYS.map((k) => ({
       key: k as MethodologyConfigEntryKey,
-      enabled: k === key ? nowEnabled : isEnabled(k),
+      enabled: isEnabled(k),
+      verificationEnabled: isVerificationEnabled(k),
+      ...override(k),
     }));
+
+  const saveEntries = async (current: MethodologyConfigEntry[]) => {
     await replaceMeth.mutateAsync({ data: current });
     await queryClient.invalidateQueries({ queryKey: getGetMethodologyConfigurationsQueryKey() });
+  };
+
+  const handleToggle = async (key: string, nowEnabled: boolean) => {
+    await saveEntries(buildEntries((k) => (k === key ? { enabled: nowEnabled } : {})));
+  };
+
+  const handleToggleVerification = async (key: string, nowEnabled: boolean) => {
+    await saveEntries(buildEntries((k) => (k === key ? { verificationEnabled: nowEnabled } : {})));
   };
 
   if (isLoading) {
@@ -434,8 +497,10 @@ const MethodologiesTab: React.FC = () => {
               <MethodologyCard
                 methodologyKey={key}
                 enabled={isEnabled(key)}
+                verificationEnabled={isVerificationEnabled(key)}
                 expanded={expandedKey === key}
                 onToggle={handleToggle}
+                onToggleVerification={handleToggleVerification}
                 onExpandChange={(k, open) => setExpandedKey(open ? k : null)}
                 allDefinitions={allDefinitions}
                 allConfigurations={allConfigurations}
