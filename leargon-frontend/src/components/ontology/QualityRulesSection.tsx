@@ -36,6 +36,7 @@ import { CreateBusinessDataQualityRuleRequestSeverity } from '../../api/generate
 interface QualityRulesSectionProps {
   entityKey: string;
   isOwnerOrAdmin: boolean;
+  renderItemStatus?: (ruleId: number) => React.ReactNode;
 }
 
 type SeverityValue = typeof CreateBusinessDataQualityRuleRequestSeverity[keyof typeof CreateBusinessDataQualityRuleRequestSeverity];
@@ -62,7 +63,7 @@ const emptyForm = (): RuleFormState => ({
   severity: '',
 });
 
-const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, isOwnerOrAdmin }) => {
+const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, isOwnerOrAdmin, renderItemStatus }) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
@@ -235,6 +236,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
                     {rule.description}
                   </Typography>
                 </Box>
+                {rule.id != null && renderItemStatus?.(rule.id)}
                 {isOwnerOrAdmin && (
                   <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto' }}>
                     <IconButton size="small" onClick={() => handleOpenEdit(rule)}>

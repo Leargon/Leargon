@@ -33,8 +33,26 @@ open class FieldVerificationService(
     ): List<FieldVerification> = fieldVerificationRepository.findByEntityTypeAndEntityId(entityType, entityId)
 
     /**
+     * Builds the full present-field → normalized-value map for an entity: the global
+     * scalar/localized/classification fields (via [valueOf] over [FieldConfigurationService.concreteFieldNames])
+     * unioned with the per-item [collectionItems] (e.g. "relationship.5" → signature).
+     */
+    private fun buildCurrentValues(
+        entityType: String,
+        valueOf: (String) -> String?,
+        collectionItems: Map<String, String>
+    ): Map<String, String> {
+        val result = HashMap<String, String>()
+        fieldConfigurationService.concreteFieldNames(entityType).forEach { fn -> valueOf(fn)?.let { result[fn] = it } }
+        result.putAll(collectionItems)
+        return result
+    }
+
+    /**
      * Reconciles the stored verification rows against the entity's current field values.
-     * [valueOf] returns the normalized value of a concrete field name, or null when absent/not tracked.
+     * [valueOf] returns the normalized value of a global field name (or null if absent); [collectionItems]
+     * carries the per-item collection fields. A row whose field is no longer present is **deleted**, so a
+     * status row exists only while the field/item has a value (covers removed items and cleared scalars).
      */
     @Transactional
     open fun sync(
@@ -42,16 +60,16 @@ open class FieldVerificationService(
         entityId: Long,
         actor: User,
         actorIsOwner: Boolean,
-        valueOf: (String) -> String?
+        valueOf: (String) -> String?,
+        collectionItems: Map<String, String> = emptyMap()
     ) {
         val repo = this.fieldVerificationRepository
         val newStatus = if (actorIsOwner) VERIFIED else UNVERIFIED
 
-        val fieldNames = fieldConfigurationService.concreteFieldNames(entityType)
-        val currentValues = fieldNames.mapNotNull { fn -> valueOf(fn)?.let { fn to it } }.toMap()
+        val currentValues = buildCurrentValues(entityType, valueOf, collectionItems)
         val existing = repo.findByEntityTypeAndEntityId(entityType, entityId).associateBy { it.fieldName }
 
-        // Upsert fields that currently have a value.
+        // Upsert fields/items that currently have a value.
         currentValues.forEach { (fieldName, value) ->
             val row = existing[fieldName]
             when {
@@ -79,16 +97,8 @@ open class FieldVerificationService(
             }
         }
 
-        // Detect cleared fields: a tracked row whose field no longer has a value.
-        existing.values.forEach { row ->
-            if (row.fieldName !in currentValues && row.lastValue != null) {
-                row.status = newStatus
-                row.lastValue = null
-                row.updatedBy = actor
-                row.updatedByUsername = actor.username
-                repo.update(row)
-            }
-        }
+        // Delete rows for fields/items that no longer have a value (removed items, cleared scalars).
+        existing.values.forEach { row -> if (row.fieldName !in currentValues) repo.delete(row) }
     }
 
     /**
@@ -136,13 +146,14 @@ open class FieldVerificationService(
     open fun backfillUnverified(
         entityType: String,
         entityId: Long,
-        valueOf: (String) -> String?
-    ) {
+        valueOf: (String) -> String?,
+        collectionItems: Map<String, String> = emptyMap()
+    ): Int {
         val repo = this.fieldVerificationRepository
         val existing = repo.findByEntityTypeAndEntityId(entityType, entityId).map { it.fieldName }.toSet()
-        fieldConfigurationService.concreteFieldNames(entityType).forEach { fieldName ->
+        var created = 0
+        buildCurrentValues(entityType, valueOf, collectionItems).forEach { (fieldName, value) ->
             if (fieldName in existing) return@forEach
-            val value = valueOf(fieldName) ?: return@forEach
             repo.save(
                 FieldVerification().apply {
                     this.entityType = entityType
@@ -154,6 +165,8 @@ open class FieldVerificationService(
                     this.updatedByUsername = "system"
                 }
             )
+            created++
         }
+        return created
     }
 }

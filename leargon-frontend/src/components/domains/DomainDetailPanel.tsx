@@ -620,9 +620,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || t('common.noDescription')}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                      <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic', flex: 1 }}>
+                        {desc || t('common.noDescription')}
+                      </Typography>
+                      {renderStatus(`descriptions.${l.localeCode}`)}
+                    </Box>
                   </AccordionDetails>
                 </Accordion>
               );
@@ -637,6 +640,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Type */}
           <SectionHeader
             title={t('domain.type')}
+            statusIndicator={renderStatus('type')}
             canEdit={isAdmin}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
@@ -690,6 +694,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Parent */}
           <SectionHeader
             title={t('domain.parentDomain')}
+            statusIndicator={renderStatus('parent')}
             canEdit={isAdmin}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
@@ -757,6 +762,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Vision Statement */}
           <SectionHeader
             title={t('domain.visionStatement')}
+            statusIndicator={renderStatus('visionStatement')}
             canEdit={isAdmin}
             isEditing={visionEdit.isEditing}
             onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
@@ -800,6 +806,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Owning Unit */}
           <SectionHeader
             title={t('domain.owningUnit')}
+            statusIndicator={renderStatus('owningUnit')}
             canEdit={isAdmin}
             isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
@@ -858,20 +865,22 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       ) : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
           {boundedContexts.map((bc) => (
-            <Chip
-              key={bc.key}
-              label={getLocalizedText(bc.names, bc.key)}
-              size="small"
-              variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
-              color={selectedBcKey === bc.key ? 'primary' : 'default'}
-              onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
-              onDelete={isAdmin ? async (e: React.MouseEvent) => {
-                e.stopPropagation();
-                await deleteBoundedContext.mutateAsync({ key: bc.key });
-                if (selectedBcKey === bc.key) setSelectedBcKey(null);
-                invalidateBcs();
-              } : undefined}
-            />
+            <Box key={bc.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+              <Chip
+                label={getLocalizedText(bc.names, bc.key)}
+                size="small"
+                variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
+                color={selectedBcKey === bc.key ? 'primary' : 'default'}
+                onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
+                onDelete={isAdmin ? async (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  await deleteBoundedContext.mutateAsync({ key: bc.key });
+                  if (selectedBcKey === bc.key) setSelectedBcKey(null);
+                  invalidateBcs();
+                } : undefined}
+              />
+              {renderStatus(`boundedContext.${bc.key}`)}
+            </Box>
           ))}
         </Box>
       )}
@@ -1227,6 +1236,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     color: "text.secondary"
                   }}>{t('common.notSet')}</Typography>
                 )}
+                {renderStatus(`classification.${c.key}`)}
               </Box>
             );
           }) : (
@@ -1518,6 +1528,7 @@ interface SectionHeaderProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
+  statusIndicator?: React.ReactNode;
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({
@@ -1529,6 +1540,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   onCancel,
   isSaving,
   isMandatory,
+  statusIndicator,
 }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
@@ -1541,6 +1553,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
           lineHeight: 1
         }}>*</Typography>
     )}
+    {statusIndicator}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}>
         <Edit fontSize="small" />

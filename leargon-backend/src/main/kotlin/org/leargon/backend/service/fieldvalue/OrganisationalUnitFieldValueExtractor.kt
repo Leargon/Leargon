@@ -22,7 +22,7 @@ class OrganisationalUnitFieldValueExtractor : FieldValueExtractor<Organisational
             fieldName == "isExternal" -> entity.isExternal.toString()
             fieldName == "externalCompanyName" -> FieldValueSupport.blankToNull(entity.externalCompanyName)
             fieldName == "countryOfExecution" -> FieldValueSupport.blankToNull(entity.countryOfExecution)
-            // Collection / relationship fields — not status-tracked
+            // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "parents" -> null
             fieldName == "executingProcesses" -> null
             fieldName == "dataAccessEntities" -> null
@@ -31,4 +31,13 @@ class OrganisationalUnitFieldValueExtractor : FieldValueExtractor<Organisational
             fieldName == "boundedContexts" -> null
             else -> error("Unhandled ORGANISATIONAL_UNIT field for verification: $fieldName")
         }
+
+    override fun collectionItemValues(entity: OrganisationalUnit): Map<String, String> {
+        val result = HashMap<String, String>()
+        result.putAll(FieldValueSupport.items("parentUnit", entity.parents, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("serviceProvider", entity.serviceProviders, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("dataAccess", entity.dataAccessEntities, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("dataManipulation", entity.dataManipulationEntities, { it.key }, { it.key }))
+        return result
+    }
 }

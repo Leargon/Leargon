@@ -17,8 +17,19 @@ import org.leargon.backend.repository.TranslationLinkRepository
 open class TranslationLinkService(
     private val translationLinkRepository: TranslationLinkRepository,
     private val businessEntityRepository: BusinessEntityRepository,
-    private val translationLinkMapper: TranslationLinkMapper
+    private val translationLinkMapper: TranslationLinkMapper,
+    private val businessEntityService: BusinessEntityService
 ) {
+    /** Re-version both linked entities so per-item verification status (translationLink.<id>) updates. */
+    private fun syncBothEntities(
+        firstKey: String?,
+        secondKey: String?,
+        currentUser: User,
+        summary: String
+    ) {
+        firstKey?.let { businessEntityService.recordVersion(it, currentUser, "UPDATE", summary) }
+        secondKey?.let { businessEntityService.recordVersion(it, currentUser, "UPDATE", summary) }
+    }
     @Transactional
     open fun getAll(): List<TranslationLinkResponse> {
         val mapper = translationLinkMapper
@@ -71,7 +82,9 @@ open class TranslationLinkService(
         link.secondEntity = second
         link.semanticDifferenceNote = request.semanticDifferenceNote
         link.createdBy = currentUser
-        return translationLinkRepository.save(link)
+        val saved = translationLinkRepository.save(link)
+        syncBothEntities(first.key, second.key, currentUser, "Added translation link")
+        return saved
     }
 
     @Transactional
@@ -88,6 +101,7 @@ open class TranslationLinkService(
         link.semanticDifferenceNote = request.semanticDifferenceNote
         val updated = translationLinkRepository.update(link)
         val entity = updated.firstEntity!!
+        syncBothEntities(updated.firstEntity?.key, updated.secondEntity?.key, currentUser, "Updated translation link #$id")
         val mapper = translationLinkMapper
         return mapper.toResponse(updated, entity)
     }
@@ -102,7 +116,10 @@ open class TranslationLinkService(
                 .findById(id)
                 .orElseThrow { ResourceNotFoundException("TranslationLink not found: $id") }
         checkEditPermission(link, currentUser)
+        val firstKey = link.firstEntity?.key
+        val secondKey = link.secondEntity?.key
         translationLinkRepository.deleteById(id)
+        syncBothEntities(firstKey, secondKey, currentUser, "Deleted translation link #$id")
     }
 
     private fun checkEditPermission(

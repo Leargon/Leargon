@@ -37,6 +37,27 @@ object FieldValueSupport {
     fun blankToNull(value: String?): String? = value?.takeUnless { it.isBlank() }
 
     fun keysOf(keys: Collection<String>?): String? = keys?.sorted()?.joinToString(",")?.ifEmpty { null }
+
+    /** Stable signature of a localized-text list (sorted "locale=text"), for change detection. */
+    fun localizedSignature(list: List<LocalizedText>?): String =
+        list.orEmpty().sortedBy { it.locale }.joinToString(",") { "${it.locale}=${it.text}" }
+
+    /** Pipe-joins parts into a stable item signature (nulls become empty). */
+    fun signature(vararg parts: Any?): String = parts.joinToString("|") { it?.toString() ?: "" }
+
+    /**
+     * Builds a per-item collection map: "<prefix>.<key>" -> signature. The key must be a stable,
+     * URL-safe-ish identifier (entity key, db id, …). Items with a blank key are skipped.
+     */
+    fun <I> items(
+        prefix: String,
+        elements: Collection<I>?,
+        keyOf: (I) -> String?,
+        signatureOf: (I) -> String
+    ): Map<String, String> =
+        elements.orEmpty()
+            .mapNotNull { e -> keyOf(e)?.takeUnless { it.isBlank() }?.let { "$prefix.$it" to signatureOf(e) } }
+            .toMap()
 }
 
 /** Marker for an extractor of a single governance entity type. */
@@ -44,12 +65,18 @@ interface FieldValueExtractor<T> {
     val entityType: String
 
     /**
-     * Normalized value of [fieldName] for [entity], or null when the field is absent/blank or is a
-     * collection field that is deliberately not status-tracked. Throws for unknown field names so the
-     * coverage test fails loudly when a new inventory field is not wired here.
+     * Normalized value of a *global* (scalar/localized/classification) [fieldName] for [entity], or null
+     * when absent/blank or a collection field (those are handled by [collectionItemValues]). Throws for
+     * unknown field names so the coverage test fails loudly when a new inventory field is not wired here.
      */
     fun value(
         entity: T,
         fieldName: String
     ): String?
+
+    /**
+     * Per-item collection fields for [entity]: "<prefix>.<itemKey>" -> signature. Each item gets its own
+     * verification status, so adding/removing/editing one item only affects that item.
+     */
+    fun collectionItemValues(entity: T): Map<String, String> = emptyMap()
 }

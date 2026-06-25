@@ -500,6 +500,9 @@ open class BusinessEntityService(
         businessEntityRelationshipRepository.save(relationship)
 
         entity = getBusinessEntityByKey(entityKey)
+        // Keep the in-memory inverse collection consistent so verification sync sees the new item
+        // (the already-initialized lazy collection is not auto-refreshed within this transaction).
+        if (entity.relationshipsFirst.none { it.id == relationship.id }) entity.relationshipsFirst.add(relationship)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Added relationship with ${request.secondEntityKey}")
 
         return businessEntityMapper.toBusinessEntityResponse(entity)
@@ -806,7 +809,7 @@ open class BusinessEntityService(
         val fvs = this.fieldVerificationService
         val owner = entity.effectiveOwner()
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_ENTITY", entity.id!!, changedBy, actorIsOwner) { fn -> extractor.value(entity, fn) }
+        fvs.sync("BUSINESS_ENTITY", entity.id!!, changedBy, actorIsOwner, { fn -> extractor.value(entity, fn) }, extractor.collectionItemValues(entity))
     }
 
     @Transactional
@@ -821,7 +824,8 @@ open class BusinessEntityService(
         if (owner == null || owner.id != currentUser.id) {
             throw ForbiddenOperationException("Only the data owner can set field verification status")
         }
-        val currentValue = businessEntityFieldValueExtractor.value(entity, fieldName)
+        val ext = this.businessEntityFieldValueExtractor
+        val currentValue = ext.collectionItemValues(entity)[fieldName] ?: runCatching { ext.value(entity, fieldName) }.getOrNull()
         fieldVerificationService.setStatus("BUSINESS_ENTITY", entity.id!!, fieldName, status, currentUser, currentValue)
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entityKey))
     }

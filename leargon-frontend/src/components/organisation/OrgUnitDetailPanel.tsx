@@ -469,9 +469,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                        {desc || t('common.noDescription')}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                        <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic', flex: 1 }}>
+                          {desc || t('common.noDescription')}
+                        </Typography>
+                        {renderStatus(`descriptions.${l.localeCode}`)}
+                      </Box>
                     </AccordionDetails>
                   </Accordion>
                 );
@@ -489,6 +492,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {/* Type */}
             <SectionHeader
               title="Type"
+              statusIndicator={renderStatus('unitType')}
               canEdit={isLeadOrAdmin}
               isEditing={typeEdit.isEditing}
               onEdit={() => typeEdit.startEdit(unit.unitType || null)}
@@ -552,13 +556,15 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   {unit.parents && unit.parents.length > 0 ? (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {unit.parents.map((p) => (
-                        <Chip
-                          key={p.key}
-                          label={p.name}
-                          size="small"
-                          onClick={() => navigate(`/organisation/${p.key}`)}
-                          clickable
-                        />
+                        <Box key={p.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                          <Chip
+                            label={p.name}
+                            size="small"
+                            onClick={() => navigate(`/organisation/${p.key}`)}
+                            clickable
+                          />
+                          {renderStatus(`parentUnit.${p.key}`)}
+                        </Box>
                       ))}
                     </Box>
                   ) : (
@@ -599,6 +605,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {/* Business Owner */}
       <SectionHeader
         title={t('organisation.businessOwner')}
+        statusIndicator={renderStatus('businessOwner')}
         canEdit={isAdmin}
         isEditing={leadEdit.isEditing}
         onEdit={() => leadEdit.startEdit(unit.businessOwner?.username || null)}
@@ -643,6 +650,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       {/* Business Steward */}
       <SectionHeader
         title={t('organisation.businessSteward')}
+        statusIndicator={renderStatus('businessSteward')}
         canEdit={isAdmin}
         isEditing={stewardEdit.isEditing}
         onEdit={() => stewardEdit.startEdit(unit.businessSteward?.username || null)}
@@ -684,6 +692,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       {/* Technical Custodian */}
       <SectionHeader
         title={t('organisation.technicalCustodian')}
+        statusIndicator={renderStatus('technicalCustodian')}
         canEdit={isAdmin}
         isEditing={technicalCustodianEdit.isEditing}
         onEdit={() => technicalCustodianEdit.startEdit(unit.technicalCustodian?.username || null)}
@@ -925,7 +934,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (unit.dataAccessEntities ?? []).length > 0 ? (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(unit.dataAccessEntities ?? []).map((e) => (
-                      <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
+                      <Box key={e.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        <Chip label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
+                        {renderStatus(`dataAccess.${e.key}`)}
+                      </Box>
                     ))}
                   </Box>
                 ) : (
@@ -966,7 +978,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (unit.dataManipulationEntities ?? []).length > 0 ? (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {(unit.dataManipulationEntities ?? []).map((e) => (
-                      <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
+                      <Box key={e.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        <Chip label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" />
+                        {renderStatus(`dataManipulation.${e.key}`)}
+                      </Box>
                     ))}
                   </Box>
                 ) : (
@@ -1025,7 +1040,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           ) : (unit.serviceProviders ?? []).length > 0 ? (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {(unit.serviceProviders ?? []).map((sp) => (
-                <Chip key={sp.key} label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
+                <Box key={sp.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                  <Chip label={getLocalizedText(sp.names, sp.key)} size="small" variant="outlined" />
+                  {renderStatus(`serviceProvider.${sp.key}`)}
+                </Box>
               ))}
             </Box>
           ) : (
@@ -1151,6 +1169,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     color: "text.secondary"
                   }}>—</Typography>
                 )}
+                {renderStatus(`classification.${c.key}`)}
               </Box>
             );
           }) : (
@@ -1250,6 +1269,7 @@ interface SectionHeaderProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
+  statusIndicator?: React.ReactNode;
 }
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({
@@ -1261,6 +1281,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   onCancel,
   isSaving,
   isMandatory,
+  statusIndicator,
 }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
     <Typography variant="subtitle2">{title}</Typography>
@@ -1273,6 +1294,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
           lineHeight: 1
         }}>*</Typography>
     )}
+    {statusIndicator}
     {canEdit && !isEditing && (
       <IconButton size="small" onClick={onEdit}>
         <Edit fontSize="small" />

@@ -367,7 +367,7 @@ open class BusinessDomainService(
         val fvs = this.fieldVerificationService
         val owner = domain.owningUnit?.businessOwner
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_DOMAIN", domain.id!!, changedBy, actorIsOwner) { fn -> extractor.value(domain, fn) }
+        fvs.sync("BUSINESS_DOMAIN", domain.id!!, changedBy, actorIsOwner, { fn -> extractor.value(domain, fn) }, extractor.collectionItemValues(domain))
     }
 
     @Transactional
@@ -382,7 +382,8 @@ open class BusinessDomainService(
         if (owner == null || owner.id != currentUser.id) {
             throw ForbiddenOperationException("Only the domain owner can set field verification status")
         }
-        val currentValue = businessDomainFieldValueExtractor.value(domain, fieldName)
+        val ext = this.businessDomainFieldValueExtractor
+        val currentValue = ext.collectionItemValues(domain)[fieldName] ?: runCatching { ext.value(domain, fieldName) }.getOrNull()
         fieldVerificationService.setStatus("BUSINESS_DOMAIN", domain.id!!, fieldName, status, currentUser, currentValue)
         return businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(domainKey))
     }

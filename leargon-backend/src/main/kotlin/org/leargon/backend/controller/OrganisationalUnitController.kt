@@ -136,7 +136,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
-        return organisationalUnitService.updateParents(key, request.keys)
+        return organisationalUnitService.updateParents(key, request.keys, currentUser)
     }
 
     override fun assignClassificationsToOrgUnit(
@@ -173,14 +173,15 @@ open class OrganisationalUnitController(
     override fun updateOrgUnitDataAccessEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
-    ): OrganisationalUnitResponse = organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+    ): OrganisationalUnitResponse =
+        organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitDataManipulationEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
     ): OrganisationalUnitResponse =
-        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys)
+        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
 
     @Secured("ROLE_ADMIN")
     override fun updateOrgUnitServiceProviders(

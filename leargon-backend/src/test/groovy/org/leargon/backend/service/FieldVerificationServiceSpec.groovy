@@ -52,7 +52,7 @@ class FieldVerificationServiceSpec extends Specification {
         long entityId = 5001L
 
         when:
-        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         then:
         def row = status(entityId, "retentionPeriod")
@@ -68,7 +68,7 @@ class FieldVerificationServiceSpec extends Specification {
         long entityId = 5002L
 
         when:
-        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         then:
         status(entityId, "retentionPeriod").status == "UNVERIFIED"
@@ -82,10 +82,10 @@ class FieldVerificationServiceSpec extends Specification {
         long entityId = 5003L
 
         and: "owner verifies the field"
-        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         when: "a non-owner saves with the SAME value"
-        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         then: "status stays VERIFIED and verifier is unchanged"
         status(entityId, "retentionPeriod").status == "VERIFIED"
@@ -97,10 +97,10 @@ class FieldVerificationServiceSpec extends Specification {
         def owner = saveUser("owner3")
         def admin = saveUser("admin3")
         long entityId = 5004L
-        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         when:
-        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "10 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "10 years" : null }, [:])
 
         then:
         status(entityId, "retentionPeriod").status == "UNVERIFIED"
@@ -108,19 +108,49 @@ class FieldVerificationServiceSpec extends Specification {
         status(entityId, "retentionPeriod").updatedByUsername == "admin3"
     }
 
-    def "clearing a tracked field is detected as a change"() {
+    def "clearing a tracked field deletes its row (no status on an empty field)"() {
         given:
         def owner = saveUser("owner4")
         long entityId = 5005L
-        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         when: "the field is cleared by a non-owner"
         def admin = saveUser("admin4")
-        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> null })
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> null }, [:])
 
         then:
-        status(entityId, "retentionPeriod").status == "UNVERIFIED"
-        status(entityId, "retentionPeriod").lastValue == null
+        status(entityId, "retentionPeriod") == null
+    }
+
+    def "collection items are tracked per item (add → UNVERIFIED, edit → UNVERIFIED, remove → deleted)"() {
+        given:
+        def owner = saveUser("owner7")
+        def admin = saveUser("admin7")
+        long entityId = 5008L
+
+        when: "a non-owner adds two relationship items"
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { null },
+            ["relationship.1": "sigA", "relationship.2": "sigB"])
+
+        then: "each item gets its own UNVERIFIED row"
+        status(entityId, "relationship.1").status == "UNVERIFIED"
+        status(entityId, "relationship.2").status == "UNVERIFIED"
+
+        when: "owner re-syncs with unchanged item values"
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { null },
+            ["relationship.1": "sigA", "relationship.2": "sigB"])
+
+        then: "unchanged values keep prior status (not auto-verified)"
+        status(entityId, "relationship.1").status == "UNVERIFIED"
+
+        when: "item 1 is edited (signature changes) by the owner, item 2 removed"
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { null },
+            ["relationship.1": "sigA-edited"])
+
+        then: "item 1 flips VERIFIED (owner edit), item 2 row is deleted"
+        status(entityId, "relationship.1").status == "VERIFIED"
+        status(entityId, "relationship.1").lastValue == "sigA-edited"
+        status(entityId, "relationship.2") == null
     }
 
     def "setStatus explicitly sets the status and verifier"() {
@@ -146,7 +176,7 @@ class FieldVerificationServiceSpec extends Specification {
         given:
         def owner = saveUser("owner6")
         long entityId = 5007L
-        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null })
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "7 years" : null }, [:])
 
         when:
         fieldVerificationService.deleteFor(TYPE, entityId)

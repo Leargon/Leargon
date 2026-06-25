@@ -606,9 +606,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic' }}>
-                      {desc || t('common.noDescription')}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                      <Typography variant="body2" color={desc ? 'text.primary' : 'text.secondary'} sx={{ fontStyle: desc ? 'normal' : 'italic', flex: 1 }}>
+                        {desc || t('common.noDescription')}
+                      </Typography>
+                      {renderStatus(`descriptions.${l.localeCode}`)}
+                    </Box>
                   </AccordionDetails>
                 </Accordion>
               );
@@ -874,10 +877,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       </Box>}
       {!isHidden('storageLocations') && <Box sx={{ mb: 1 }}>
         {entity.storageLocations && entity.storageLocations.length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}>
             {entity.storageLocations.map((code) => (
               <Chip key={code} label={`${getCountryName(code, preferredLocale ?? 'en')} (${code})`} size="small" />
             ))}
+            {renderStatus('storageLocations')}
           </Box>
         ) : (
           <Typography variant="body2" sx={{
@@ -951,7 +955,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         ) : entity.interfacesEntities && entity.interfacesEntities.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {entity.interfacesEntities.map((e) => (
-              <Chip key={e.key} label={e.name} size="small" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+              <Box key={e.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                <Chip label={e.name} size="small" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+                {renderStatus(`interface.${e.key}`)}
+              </Box>
             ))}
           </Box>
         ) : (
@@ -992,6 +999,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   </TableCell>
                   <TableCell>{getLocalizedText(r.descriptions || []) || '—'}</TableCell>
                   <TableCell align="right">
+                    {r.id != null && renderStatus(`relationship.${r.id}`)}
                     {isOwnerOrAdmin && r.id != null && (
                       <>
                         <IconButton size="small" onClick={() => handleEditRelationship(r)}>
@@ -1052,6 +1060,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   </TableCell>
                   <TableCell>{link.semanticDifferenceNote || '—'}</TableCell>
                   <TableCell align="right">
+                    {link.id != null && renderStatus(`translationLink.${link.id}`)}
                     {isOwnerOrAdmin && (
                       <>
                         <IconButton size="small"
@@ -1109,7 +1118,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('entity.implements')}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
             {entity.implementsEntities.map((e) => (
-              <Chip key={e.key} label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+              <Box key={e.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                <Chip label={getLocalizedText(allEntities.find(en => en.key === e.key)?.names ?? [], e.name)} size="small" variant="outlined" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+                {renderStatus(`implementation.${e.key}`)}
+              </Box>
             ))}
           </Box>
           <Divider sx={{ my: 2 }} />
@@ -1261,6 +1273,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     color: "text.secondary"
                   }}>{t('common.notSet')}</Typography>
                 )}
+                {renderStatus(`classification.${c.key}`)}
               </Box>
             );
           }) : (
@@ -1274,7 +1287,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Quality Rules */}
-      {!isHidden('qualityRules') && <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={isOwnerOrAdmin} />}
+      {!isHidden('qualityRules') && <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={isOwnerOrAdmin} renderItemStatus={(ruleId) => renderStatus(`qualityRule.${ruleId}`)} />}
 
       {!isHidden('qualityRules') && <Divider sx={{ my: 2 }} />}
 

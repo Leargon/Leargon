@@ -47,7 +47,7 @@ open class OrganisationalUnitService(
         val fvs = this.fieldVerificationService
         val owner = unit.businessOwner
         val actorIsOwner = owner != null && owner.id == currentUser.id
-        fvs.sync("ORGANISATIONAL_UNIT", unit.id!!, currentUser, actorIsOwner) { fn -> extractor.value(unit, fn) }
+        fvs.sync("ORGANISATIONAL_UNIT", unit.id!!, currentUser, actorIsOwner, { fn -> extractor.value(unit, fn) }, extractor.collectionItemValues(unit))
     }
 
     @Transactional
@@ -62,7 +62,8 @@ open class OrganisationalUnitService(
         if (owner == null || owner.id != currentUser.id) {
             throw ForbiddenOperationException("Only the business owner can set field verification status")
         }
-        val currentValue = organisationalUnitFieldValueExtractor.value(unit, fieldName)
+        val ext = this.organisationalUnitFieldValueExtractor
+        val currentValue = ext.collectionItemValues(unit)[fieldName] ?: runCatching { ext.value(unit, fieldName) }.getOrNull()
         fieldVerificationService.setStatus("ORGANISATIONAL_UNIT", unit.id!!, fieldName, status, currentUser, currentValue)
         return organisationalUnitMapper.toResponse(getByKey(key))
     }
@@ -272,7 +273,8 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateParents(
         key: String,
-        parentKeys: List<String>?
+        parentKeys: List<String>?,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
 
@@ -292,6 +294,7 @@ open class OrganisationalUnitService(
         }
 
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -315,12 +318,14 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateDataAccessEntities(
         key: String,
-        entityKeys: List<String>
+        entityKeys: List<String>,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         val repo = businessEntityRepository
         unit.dataAccessEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 
@@ -328,12 +333,14 @@ open class OrganisationalUnitService(
     @Transactional
     open fun updateDataManipulationEntities(
         key: String,
-        entityKeys: List<String>
+        entityKeys: List<String>,
+        currentUser: User
     ): OrganisationalUnitResponse {
         var unit = getByKey(key)
         val repo = businessEntityRepository
         unit.dataManipulationEntities = entityKeys.mapNotNull { repo.findByKey(it).orElse(null) }.toMutableSet()
         unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
     }
 

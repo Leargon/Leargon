@@ -40,73 +40,53 @@ open class FieldVerificationBackfillService(
 
     @Transactional
     open fun backfillBusinessEntities() {
-        val total = businessEntityRepository.count()
-        if (total == 0L) return
-        val covered = fieldVerificationRepository.findDistinctEntityIdByEntityType("BUSINESS_ENTITY").toSet()
-        if (covered.size.toLong() >= total) return
+        if (businessEntityRepository.count() == 0L) return
         val ext = this.businessEntityFieldValueExtractor
         val fvs = this.fieldVerificationService
-        var count = 0
+        var seeded = 0
         businessEntityRepository.findAll().forEach { e ->
             val id = e.id ?: return@forEach
-            if (id in covered) return@forEach
-            fvs.backfillUnverified("BUSINESS_ENTITY", id) { fn -> ext.value(e, fn) }
-            count++
+            seeded += fvs.backfillUnverified("BUSINESS_ENTITY", id, { fn -> ext.value(e, fn) }, ext.collectionItemValues(e))
         }
-        if (count > 0) LOG.info("Field-verification backfill: seeded {} business entit(ies)", count)
+        if (seeded > 0) LOG.info("Field-verification backfill: seeded {} business-entity row(s)", seeded)
     }
 
     @Transactional
     open fun backfillBusinessDomains() {
-        val total = businessDomainRepository.count()
-        if (total == 0L) return
-        val covered = fieldVerificationRepository.findDistinctEntityIdByEntityType("BUSINESS_DOMAIN").toSet()
-        if (covered.size.toLong() >= total) return
+        if (businessDomainRepository.count() == 0L) return
         val ext = this.businessDomainFieldValueExtractor
         val fvs = this.fieldVerificationService
-        var count = 0
+        var seeded = 0
         businessDomainRepository.findAll().forEach { e ->
             val id = e.id ?: return@forEach
-            if (id in covered) return@forEach
-            fvs.backfillUnverified("BUSINESS_DOMAIN", id) { fn -> ext.value(e, fn) }
-            count++
+            seeded += fvs.backfillUnverified("BUSINESS_DOMAIN", id, { fn -> ext.value(e, fn) }, ext.collectionItemValues(e))
         }
-        if (count > 0) LOG.info("Field-verification backfill: seeded {} business domain(s)", count)
+        if (seeded > 0) LOG.info("Field-verification backfill: seeded {} business-domain row(s)", seeded)
     }
 
     @Transactional
     open fun backfillProcesses() {
-        val total = processRepository.count()
-        if (total == 0L) return
-        val covered = fieldVerificationRepository.findDistinctEntityIdByEntityType("BUSINESS_PROCESS").toSet()
-        if (covered.size.toLong() >= total) return
+        if (processRepository.count() == 0L) return
         val ext = this.processFieldValueExtractor
         val fvs = this.fieldVerificationService
-        var count = 0
+        var seeded = 0
         processRepository.findAll().forEach { e ->
             val id = e.id ?: return@forEach
-            if (id in covered) return@forEach
-            fvs.backfillUnverified("BUSINESS_PROCESS", id) { fn -> ext.value(e, fn) }
-            count++
+            seeded += fvs.backfillUnverified("BUSINESS_PROCESS", id, { fn -> ext.value(e, fn) }, ext.collectionItemValues(e))
         }
-        if (count > 0) LOG.info("Field-verification backfill: seeded {} process(es)", count)
+        if (seeded > 0) LOG.info("Field-verification backfill: seeded {} process row(s)", seeded)
     }
 
     @Transactional
     open fun backfillOrganisationalUnits() {
-        val total = organisationalUnitRepository.count()
-        if (total == 0L) return
-        val covered = fieldVerificationRepository.findDistinctEntityIdByEntityType("ORGANISATIONAL_UNIT").toSet()
-        if (covered.size.toLong() >= total) return
+        if (organisationalUnitRepository.count() == 0L) return
         val ext = this.organisationalUnitFieldValueExtractor
         val fvs = this.fieldVerificationService
-        var count = 0
+        var seeded = 0
         organisationalUnitRepository.findAll().forEach { e ->
             val id = e.id ?: return@forEach
-            if (id in covered) return@forEach
-            fvs.backfillUnverified("ORGANISATIONAL_UNIT", id) { fn -> ext.value(e, fn) }
-            count++
+            seeded += fvs.backfillUnverified("ORGANISATIONAL_UNIT", id, { fn -> ext.value(e, fn) }, ext.collectionItemValues(e))
         }
-        if (count > 0) LOG.info("Field-verification backfill: seeded {} organisational unit(s)", count)
+        if (seeded > 0) LOG.info("Field-verification backfill: seeded {} organisational-unit row(s)", seeded)
     }
 }

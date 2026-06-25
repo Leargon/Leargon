@@ -26,7 +26,7 @@ class ProcessFieldValueExtractor : FieldValueExtractor<Process> {
             fieldName == "parent" -> entity.parent?.key
             fieldName == "legalBasis" -> FieldValueSupport.blankToNull(entity.legalBasis)
             fieldName == "boundedContext" -> entity.boundedContext?.key
-            // Collection / relationship fields — not status-tracked
+            // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "inputEntities" -> null
             fieldName == "outputEntities" -> null
             fieldName == "executingUnits" -> null
@@ -38,4 +38,19 @@ class ProcessFieldValueExtractor : FieldValueExtractor<Process> {
             fieldName == "calledProcesses" -> null
             else -> error("Unhandled BUSINESS_PROCESS field for verification: $fieldName")
         }
+
+    override fun collectionItemValues(entity: Process): Map<String, String> {
+        val result = HashMap<String, String>()
+        result.putAll(FieldValueSupport.items("inputEntity", entity.inputEntities, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("outputEntity", entity.outputEntities, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("executingUnit", entity.executingUnits, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("capability", entity.capabilities, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("itSystem", entity.itSystems, { it.key }, { it.key }))
+        result.putAll(FieldValueSupport.items("serviceProvider", entity.serviceProviders, { it.key }, { it.key }))
+        entity.crossBorderTransfers?.forEach { t ->
+            val country = t.destinationCountry.takeUnless { it.isBlank() } ?: return@forEach
+            result["crossBorderTransfer.$country"] = FieldValueSupport.signature(country, t.safeguard, t.notes)
+        }
+        return result
+    }
 }

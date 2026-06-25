@@ -857,7 +857,7 @@ open class ProcessService(
         val fvs = this.fieldVerificationService
         val owner = process.effectiveOwner()
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_PROCESS", process.id!!, changedBy, actorIsOwner) { fn -> extractor.value(process, fn) }
+        fvs.sync("BUSINESS_PROCESS", process.id!!, changedBy, actorIsOwner, { fn -> extractor.value(process, fn) }, extractor.collectionItemValues(process))
     }
 
     @Transactional
@@ -872,7 +872,8 @@ open class ProcessService(
         if (owner == null || owner.id != currentUser.id) {
             throw ForbiddenOperationException("Only the process owner can set field verification status")
         }
-        val currentValue = processFieldValueExtractor.value(process, fieldName)
+        val ext = this.processFieldValueExtractor
+        val currentValue = ext.collectionItemValues(process)[fieldName] ?: runCatching { ext.value(process, fieldName) }.getOrNull()
         fieldVerificationService.setStatus("BUSINESS_PROCESS", process.id!!, fieldName, status, currentUser, currentValue)
         return processMapper.toProcessResponse(getProcessByKey(key))
     }

@@ -380,9 +380,10 @@ open class ClassificationService(
 
         val ext = this.businessDomainFieldValueExtractor
         val owner = domain.owningUnit?.businessOwner
-        fieldVerificationService.sync("BUSINESS_DOMAIN", domain.id!!, currentUser, owner != null && owner.id == currentUser.id) { fn ->
-            ext.value(domain, fn)
-        }
+        fieldVerificationService.sync(
+            "BUSINESS_DOMAIN", domain.id!!, currentUser, owner != null && owner.id == currentUser.id,
+            { fn -> ext.value(domain, fn) }, ext.collectionItemValues(domain)
+        )
     }
 
     @Transactional
@@ -413,9 +414,10 @@ open class ClassificationService(
 
         val ext = this.processFieldValueExtractor
         val owner = process.effectiveOwner()
-        fieldVerificationService.sync("BUSINESS_PROCESS", process.id!!, currentUser, owner != null && owner.id == currentUser.id) { fn ->
-            ext.value(process, fn)
-        }
+        fieldVerificationService.sync(
+            "BUSINESS_PROCESS", process.id!!, currentUser, owner != null && owner.id == currentUser.id,
+            { fn -> ext.value(process, fn) }, ext.collectionItemValues(process)
+        )
     }
 
     @Transactional
@@ -446,9 +448,10 @@ open class ClassificationService(
 
         val ext = this.organisationalUnitFieldValueExtractor
         val unitOwner = unit.businessOwner
-        fieldVerificationService.sync("ORGANISATIONAL_UNIT", unit.id!!, currentUser, unitOwner != null && unitOwner.id == currentUser.id) { fn ->
-            ext.value(unit, fn)
-        }
+        fieldVerificationService.sync(
+            "ORGANISATIONAL_UNIT", unit.id!!, currentUser, unitOwner != null && unitOwner.id == currentUser.id,
+            { fn -> ext.value(unit, fn) }, ext.collectionItemValues(unit)
+        )
     }
 
     private fun validateAssignments(
