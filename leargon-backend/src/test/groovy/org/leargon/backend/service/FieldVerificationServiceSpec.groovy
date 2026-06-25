@@ -153,6 +153,44 @@ class FieldVerificationServiceSpec extends Specification {
         status(entityId, "relationship.2") == null
     }
 
+    def "reverting to a historically-VERIFIED value does NOT resurrect the old status (status is not value-keyed)"() {
+        given: "owner verified value A"
+        def owner = saveUser("ownerRev")
+        def admin = saveUser("adminRev")
+        long entityId = 5101L
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "A" : null }, [:])
+        assert status(entityId, "retentionPeriod").status == "VERIFIED"
+
+        and: "a non-owner changed it to B (now UNVERIFIED)"
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "B" : null }, [:])
+        assert status(entityId, "retentionPeriod").status == "UNVERIFIED"
+
+        when: "a non-owner changes it BACK to A — the value that was once VERIFIED"
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "A" : null }, [:])
+
+        then: "it stays UNVERIFIED — the historical A-status is NOT brought back"
+        status(entityId, "retentionPeriod").status == "UNVERIFIED"
+        status(entityId, "retentionPeriod").lastValue == "A"
+        status(entityId, "retentionPeriod").updatedByUsername == "adminRev"
+    }
+
+    def "owner editing to a historically-UNVERIFIED value verifies it (actor wins, not the value's history)"() {
+        given: "value A was left UNVERIFIED by a non-owner"
+        def owner = saveUser("ownerActor")
+        def admin = saveUser("adminActor")
+        long entityId = 5102L
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "A" : null }, [:])
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { String fn -> fn == "retentionPeriod" ? "B" : null }, [:])
+        assert status(entityId, "retentionPeriod").status == "UNVERIFIED"
+
+        when: "the owner edits back to A (which historically was UNVERIFIED)"
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { String fn -> fn == "retentionPeriod" ? "A" : null }, [:])
+
+        then: "the owner's edit verifies it — value history is irrelevant"
+        status(entityId, "retentionPeriod").status == "VERIFIED"
+        status(entityId, "retentionPeriod").updatedByUsername == "ownerActor"
+    }
+
     def "setStatus explicitly sets the status and verifier"() {
         given:
         def owner = saveUser("owner5")

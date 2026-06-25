@@ -271,6 +271,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== entityKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
+        // Evict both keys' cached snapshots: the old key has moved, and the new key may be a
+        // previously-used key whose stale cache (e.g. outdated fieldStatuses) would otherwise show.
+        queryClient.removeQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(newKey) });
         navigate(`/entities/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -313,6 +317,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       const newKey = (response.data as BusinessEntityResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
       if (newKey !== entityKey) {
+        queryClient.removeQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(newKey) });
         navigate(`/entities/${newKey}`, { replace: true });
       } else {
         invalidate();

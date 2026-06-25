@@ -288,6 +288,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
+        // Evict both keys' cached snapshots: the old key has moved, and the new key may be a
+        // previously-used key whose stale cache (e.g. outdated fieldStatuses) would otherwise show.
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(newKey) });
         navigate(`/processes/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -347,6 +351,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       if (newKey !== processKey) {
         queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(newKey) });
         navigate(`/processes/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -399,8 +405,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       const response = await updateParent.mutateAsync({ key: processKey, data: { parentKey: val } });
       const newKey = (response.data as ProcessResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
-      if (newKey !== processKey) navigate(`/processes/${newKey}`);
-      else invalidate();
+      if (newKey !== processKey) {
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(processKey) });
+        queryClient.removeQueries({ queryKey: getGetProcessByKeyQueryKey(newKey) });
+        navigate(`/processes/${newKey}`);
+      } else {
+        invalidate();
+      }
     },
   });
 

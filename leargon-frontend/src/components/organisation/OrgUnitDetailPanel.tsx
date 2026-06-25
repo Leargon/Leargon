@@ -225,6 +225,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== unitKey) {
         queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitTreeQueryKey() });
+        // Evict both keys' cached snapshots: the old key has moved, and the new key may be a
+        // previously-used key whose stale cache (e.g. outdated fieldStatuses) would otherwise show.
+        queryClient.removeQueries({ queryKey: getGetOrganisationalUnitByKeyQueryKey(unitKey) });
+        queryClient.removeQueries({ queryKey: getGetOrganisationalUnitByKeyQueryKey(newKey) });
         navigate(`/organisation/${newKey}`, { replace: true });
       } else {
         invalidate();

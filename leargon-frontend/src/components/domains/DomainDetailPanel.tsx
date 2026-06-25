@@ -388,6 +388,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       await updateDescriptions.mutateAsync({ key: newKey, data: val.descriptions });
       if (newKey !== domainKey) {
         queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
+        // Evict both keys' cached snapshots: the old key has moved, and the new key may be a
+        // previously-used key whose stale cache (e.g. outdated fieldStatuses) would otherwise show.
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(newKey) });
         navigate(`/domains/${newKey}`, { replace: true });
       } else {
         invalidate();
@@ -410,6 +414,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       const newKey = (response.data as BusinessDomainResponse).key;
       queryClient.invalidateQueries({ queryKey: getGetBusinessDomainTreeQueryKey() });
       if (newKey !== domainKey) {
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(domainKey) });
+        queryClient.removeQueries({ queryKey: getGetBusinessDomainByKeyQueryKey(newKey) });
         navigate(`/domains/${newKey}`, { replace: true });
       } else {
         invalidate();
