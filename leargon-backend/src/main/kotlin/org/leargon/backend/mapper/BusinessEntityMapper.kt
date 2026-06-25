@@ -87,6 +87,12 @@ open class BusinessEntityMapper(
         val effectiveSteward = businessEntity.dataSteward ?: effectiveOwningUnit?.businessSteward
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_ENTITY")) {
+                businessEntity.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_ENTITY", id)) }
+            } else {
+                null
+            }
         return BusinessEntityResponse(
             businessEntity.key,
             businessEntity.dataOwner != null,
@@ -114,7 +120,7 @@ open class BusinessEntityMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
-            .fieldStatuses(businessEntity.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_ENTITY", id)) })
+            .fieldStatuses(fieldStatuses)
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 

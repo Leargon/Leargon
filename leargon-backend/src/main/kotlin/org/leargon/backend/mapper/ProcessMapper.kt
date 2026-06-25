@@ -110,6 +110,12 @@ open class ProcessMapper(
                 }
             }
         val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_PROCESS")) {
+                process.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_PROCESS", id)) }
+            } else {
+                null
+            }
         return ProcessResponse(
             process.key,
             process.processOwner != null,
@@ -148,7 +154,7 @@ open class ProcessMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
-            .fieldStatuses(process.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_PROCESS", id)) })
+            .fieldStatuses(fieldStatuses)
             .calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)

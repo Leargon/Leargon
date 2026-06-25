@@ -8,6 +8,7 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.FieldConfiguration
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
@@ -15,6 +16,7 @@ import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
+import org.leargon.backend.repository.FieldConfigurationRepository
 import org.leargon.backend.repository.FieldVerificationRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
@@ -34,12 +36,17 @@ class ContextRelationshipControllerSpec extends Specification {
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
     @Inject FieldVerificationRepository fieldVerificationRepository
+    @Inject FieldConfigurationRepository fieldConfigurationRepository
 
     def setup() {
         if (localeRepository.count() == 0) {
             localeRepository.save(new SupportedLocale(
                 localeCode: "en", displayName: "English", isDefault: true, isActive: true, sortOrder: 1))
         }
+        // Verification defaults to OFF — enable it for domains (DDD) so the status assertions apply.
+        fieldConfigurationRepository.save(new FieldConfiguration(
+            entityType: "METHODOLOGY_VERIFICATION", fieldName: "DDD",
+            visibility: "SHOWN", section: "METHODOLOGY", maturityLevel: "BASIC"))
     }
 
     def cleanup() {
@@ -48,6 +55,7 @@ class ContextRelationshipControllerSpec extends Specification {
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
         businessDomainRepository.deleteAll()
+        fieldConfigurationRepository.deleteByEntityType("METHODOLOGY_VERIFICATION")
         userRepository.deleteAll()
     }
 

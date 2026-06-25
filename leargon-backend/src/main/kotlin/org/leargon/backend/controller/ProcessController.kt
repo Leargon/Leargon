@@ -22,10 +22,10 @@ import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessDiagramResponse
 import org.leargon.backend.model.ProcessFlowResponse
 import org.leargon.backend.model.ProcessResponse
-import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.SaveProcessFlowRequest
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.UpdateCrossBorderTransfersRequest
 import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest

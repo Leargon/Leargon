@@ -17,16 +17,26 @@ class BusinessDomainFieldValueExtractor(
     ): String? =
         when {
             fieldName.startsWith("names.") -> FieldValueSupport.localized(entity.names, "names", fieldName)
+
             fieldName.startsWith("descriptions.") -> FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+
             fieldName.startsWith("classification.") -> FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+
             fieldName == "type" -> FieldValueSupport.blankToNull(entity.type)
+
             fieldName == "parent" -> entity.parent?.key
+
             fieldName == "owningUnit" -> entity.owningUnit?.key
+
             fieldName == "visionStatement" -> FieldValueSupport.blankToNull(entity.visionStatement)
+
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "boundedContexts" -> null
+
             fieldName == "contextRelationships" -> null
+
             fieldName == "domainEvents" -> null
+
             else -> error("Unhandled BUSINESS_DOMAIN field for verification: $fieldName")
         }
 
@@ -42,8 +52,7 @@ class BusinessDomainFieldValueExtractor(
                 .orEmpty()
                 .flatMap { bc ->
                     relRepo.findByUpstreamBoundedContextKey(bc.key) + relRepo.findByDownstreamBoundedContextKey(bc.key)
-                }
-                .distinctBy { it.id }
+                }.distinctBy { it.id }
         val contextRelationships =
             FieldValueSupport.items(
                 "contextRelationship",

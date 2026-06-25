@@ -2,8 +2,10 @@ package org.leargon.backend.service
 
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.FieldConfiguration
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.domain.User
+import org.leargon.backend.repository.FieldConfigurationRepository
 import org.leargon.backend.repository.FieldVerificationRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
@@ -24,16 +26,24 @@ class FieldVerificationServiceSpec extends Specification {
     @Inject
     SupportedLocaleRepository localeRepository
 
+    @Inject
+    FieldConfigurationRepository fieldConfigurationRepository
+
     static final String TYPE = "BUSINESS_ENTITY"
 
     def setup() {
         if (localeRepository.count() == 0) {
             localeRepository.save(new SupportedLocale(localeCode: "en", displayName: "English", isDefault: true, isActive: true, sortOrder: 1))
         }
+        // Verification defaults to OFF — enable it for entities so setStatus is not rejected.
+        fieldConfigurationRepository.save(new FieldConfiguration(
+                entityType: "METHODOLOGY_VERIFICATION", fieldName: "DATA_GOVERNANCE",
+                visibility: "SHOWN", section: "METHODOLOGY", maturityLevel: "BASIC"))
     }
 
     def cleanup() {
         fieldVerificationRepository.deleteAll()
+        fieldConfigurationRepository.deleteByEntityType("METHODOLOGY_VERIFICATION")
         userRepository.deleteAll()
     }
 

@@ -809,7 +809,14 @@ open class BusinessEntityService(
         val fvs = this.fieldVerificationService
         val owner = entity.effectiveOwner()
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_ENTITY", entity.id!!, changedBy, actorIsOwner, { fn -> extractor.value(entity, fn) }, extractor.collectionItemValues(entity))
+        fvs.sync(
+            "BUSINESS_ENTITY",
+            entity.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(entity, fn) },
+            extractor.collectionItemValues(entity)
+        )
     }
 
     @Transactional

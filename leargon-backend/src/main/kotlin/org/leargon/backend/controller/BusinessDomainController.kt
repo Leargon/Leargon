@@ -17,10 +17,10 @@ import org.leargon.backend.model.BusinessDomainResponse
 import org.leargon.backend.model.BusinessDomainTreeResponse
 import org.leargon.backend.model.BusinessDomainVersionResponse
 import org.leargon.backend.model.ClassificationAssignmentRequest
-import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.CreateBusinessDomainRequest
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.model.LocalizedText
+import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.UpdateBusinessDomainParentRequest
 import org.leargon.backend.model.UpdateBusinessDomainTypeRequest
 import org.leargon.backend.model.UpdateDomainOwningUnitRequest

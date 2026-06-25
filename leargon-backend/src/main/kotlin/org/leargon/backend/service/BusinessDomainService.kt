@@ -383,7 +383,14 @@ open class BusinessDomainService(
         val fvs = this.fieldVerificationService
         val owner = domain.owningUnit?.businessOwner
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_DOMAIN", domain.id!!, changedBy, actorIsOwner, { fn -> extractor.value(domain, fn) }, extractor.collectionItemValues(domain))
+        fvs.sync(
+            "BUSINESS_DOMAIN",
+            domain.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(domain, fn) },
+            extractor.collectionItemValues(domain)
+        )
     }
 
     @Transactional

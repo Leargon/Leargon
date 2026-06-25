@@ -62,6 +62,12 @@ open class BusinessDomainMapper(
                 }
             }
         val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_DOMAIN")) {
+                domain.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_DOMAIN", id)) }
+            } else {
+                null
+            }
         return BusinessDomainResponse(
             domain.key,
             UserMapper.toUserSummary(domain.createdBy),
@@ -80,7 +86,7 @@ open class BusinessDomainMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
-            .fieldStatuses(domain.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("BUSINESS_DOMAIN", id)) })
+            .fieldStatuses(fieldStatuses)
     }
 
     fun toLocalizedBusinessDomainResponse(

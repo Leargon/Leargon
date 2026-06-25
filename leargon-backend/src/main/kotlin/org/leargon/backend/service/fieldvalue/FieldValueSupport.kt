@@ -55,7 +55,8 @@ object FieldValueSupport {
         keyOf: (I) -> String?,
         signatureOf: (I) -> String
     ): Map<String, String> =
-        elements.orEmpty()
+        elements
+            .orEmpty()
             .mapNotNull { e -> keyOf(e)?.takeUnless { it.isBlank() }?.let { "$prefix.$it" to signatureOf(e) } }
             .toMap()
 }

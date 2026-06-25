@@ -70,7 +70,7 @@ class FieldVerificationBackfillServiceSpec extends Specification {
 
     def "backfill is idempotent — a second run adds nothing"() {
         given:
-        def e = persistEntity("cust2")
+        persistEntity("cust2")
         backfillService.backfillBusinessEntities()
         def afterFirst = fieldVerificationRepository.count()
 

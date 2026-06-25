@@ -30,6 +30,7 @@ open class TranslationLinkService(
         firstKey?.let { businessEntityService.recordVersion(it, currentUser, "UPDATE", summary) }
         secondKey?.let { businessEntityService.recordVersion(it, currentUser, "UPDATE", summary) }
     }
+
     @Transactional
     open fun getAll(): List<TranslationLinkResponse> {
         val mapper = translationLinkMapper

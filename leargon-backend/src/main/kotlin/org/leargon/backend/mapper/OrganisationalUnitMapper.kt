@@ -66,6 +66,12 @@ open class OrganisationalUnitMapper(
                 }
             }
         val fvSvc = this.fieldVerificationService
+        val fieldStatuses =
+            if (methodologyConfigurationService.isVerificationEnabled("ORGANISATIONAL_UNIT")) {
+                unit.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("ORGANISATIONAL_UNIT", id)) }
+            } else {
+                null
+            }
         return OrganisationalUnitResponse(
             unit.key,
             UserMapper.toUserSummary(unit.createdBy),
@@ -90,7 +96,7 @@ open class OrganisationalUnitMapper(
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
-            .fieldStatuses(unit.id?.let { id -> FieldVerificationMapper.toResponses(fvSvc.getStatuses("ORGANISATIONAL_UNIT", id)) })
+            .fieldStatuses(fieldStatuses)
     }
 
     fun toTreeResponse(unit: OrganisationalUnit): OrganisationalUnitTreeResponse =

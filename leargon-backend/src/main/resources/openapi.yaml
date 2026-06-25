@@ -10368,6 +10368,14 @@ components:
           type: boolean
           description: Whether this methodology is enabled for the organisation
           example: true
+        verificationEnabled:
+          type: boolean
+          description: >-
+            Whether per-field verification is enabled for this methodology's governance area.
+            Only meaningful for the governance methodologies that own a verifiable entity type
+            (DATA_GOVERNANCE, PROCESS_GOVERNANCE, DDD, TEAM_TOPOLOGIES); ignored for others.
+            Defaults to true.
+          example: true
     OrganisationSettingsResponse:
       type: object
       properties:

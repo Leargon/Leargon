@@ -47,7 +47,14 @@ open class OrganisationalUnitService(
         val fvs = this.fieldVerificationService
         val owner = unit.businessOwner
         val actorIsOwner = owner != null && owner.id == currentUser.id
-        fvs.sync("ORGANISATIONAL_UNIT", unit.id!!, currentUser, actorIsOwner, { fn -> extractor.value(unit, fn) }, extractor.collectionItemValues(unit))
+        fvs.sync(
+            "ORGANISATIONAL_UNIT",
+            unit.id!!,
+            currentUser,
+            actorIsOwner,
+            { fn -> extractor.value(unit, fn) },
+            extractor.collectionItemValues(unit)
+        )
     }
 
     @Transactional
@@ -67,6 +74,7 @@ open class OrganisationalUnitService(
         fieldVerificationService.setStatus("ORGANISATIONAL_UNIT", unit.id!!, fieldName, status, currentUser, currentValue)
         return organisationalUnitMapper.toResponse(getByKey(key))
     }
+
     @ReadOnly
     open fun getAllAsResponses(): List<OrganisationalUnitResponse> =
         organisationalUnitRepository.findAll().map { organisationalUnitMapper.toResponse(it) }

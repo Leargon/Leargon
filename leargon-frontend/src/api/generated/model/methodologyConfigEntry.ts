@@ -23,4 +23,6 @@ export interface MethodologyConfigEntry {
   key: MethodologyConfigEntryKey;
   /** Whether this methodology is enabled for the organisation */
   enabled: boolean;
+  /** Whether per-field verification is enabled for this methodology's governance area. Only meaningful for the governance methodologies that own a verifiable entity type (DATA_GOVERNANCE, PROCESS_GOVERNANCE, DDD, TEAM_TOPOLOGIES); ignored for others. Defaults to true. */
+  verificationEnabled?: boolean;
 }

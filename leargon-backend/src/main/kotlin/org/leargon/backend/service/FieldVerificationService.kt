@@ -4,6 +4,7 @@ import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.FieldVerification
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.repository.FieldVerificationRepository
 
 /**
@@ -19,7 +20,8 @@ import org.leargon.backend.repository.FieldVerificationRepository
 @Singleton
 open class FieldVerificationService(
     private val fieldVerificationRepository: FieldVerificationRepository,
-    private val fieldConfigurationService: FieldConfigurationService
+    private val fieldConfigurationService: FieldConfigurationService,
+    private val methodologyConfigurationService: MethodologyConfigurationService
 ) {
     companion object {
         const val VERIFIED = "VERIFIED"
@@ -73,7 +75,7 @@ open class FieldVerificationService(
         currentValues.forEach { (fieldName, value) ->
             val row = existing[fieldName]
             when {
-                row == null ->
+                row == null -> {
                     repo.save(
                         FieldVerification().apply {
                             this.entityType = entityType
@@ -85,6 +87,7 @@ open class FieldVerificationService(
                             this.updatedByUsername = actor.username
                         }
                     )
+                }
 
                 row.lastValue != value -> {
                     row.status = newStatus
@@ -114,6 +117,9 @@ open class FieldVerificationService(
         owner: User,
         currentValue: String?
     ): FieldVerification {
+        if (!methodologyConfigurationService.isVerificationEnabled(entityType)) {
+            throw ForbiddenOperationException("Field verification is disabled for this area")
+        }
         val repo = this.fieldVerificationRepository
         val existing = repo.findByEntityTypeAndEntityIdAndFieldName(entityType, entityId, fieldName)
         val row =

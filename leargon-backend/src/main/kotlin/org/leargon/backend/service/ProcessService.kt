@@ -857,7 +857,14 @@ open class ProcessService(
         val fvs = this.fieldVerificationService
         val owner = process.effectiveOwner()
         val actorIsOwner = owner != null && owner.id == changedBy.id
-        fvs.sync("BUSINESS_PROCESS", process.id!!, changedBy, actorIsOwner, { fn -> extractor.value(process, fn) }, extractor.collectionItemValues(process))
+        fvs.sync(
+            "BUSINESS_PROCESS",
+            process.id!!,
+            changedBy,
+            actorIsOwner,
+            { fn -> extractor.value(process, fn) },
+            extractor.collectionItemValues(process)
+        )
     }
 
     @Transactional

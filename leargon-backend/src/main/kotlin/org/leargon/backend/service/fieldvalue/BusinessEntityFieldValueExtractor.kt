@@ -18,22 +18,38 @@ class BusinessEntityFieldValueExtractor(
     ): String? =
         when {
             fieldName.startsWith("names.") -> FieldValueSupport.localized(entity.names, "names", fieldName)
+
             fieldName.startsWith("descriptions.") -> FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+
             fieldName.startsWith("classification.") -> FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+
             fieldName == "dataOwner" -> entity.dataOwner?.username
+
             fieldName == "owningUnit" -> entity.owningUnit?.key
+
             fieldName == "dataSteward" -> entity.dataSteward?.username
+
             fieldName == "technicalCustodian" -> entity.technicalCustodian?.username
+
             fieldName == "parent" -> entity.parent?.key
+
             fieldName == "boundedContext" -> entity.boundedContext?.key
+
             fieldName == "retentionPeriod" -> FieldValueSupport.blankToNull(entity.retentionPeriod)
+
             fieldName == "storageLocations" -> FieldValueSupport.keysOf(entity.storageLocations)
+
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "qualityRules" -> null
+
             fieldName == "interfaceEntities" -> null
+
             fieldName == "implementationEntities" -> null
+
             fieldName == "relationships" -> null
+
             fieldName == "translationLinks" -> null
+
             else -> error("Unhandled BUSINESS_ENTITY field for verification: $fieldName")
         }
 
@@ -61,7 +77,10 @@ class BusinessEntityFieldValueExtractor(
             result["qualityRule.$id"] = FieldValueSupport.signature(r.description, r.severity)
         }
         // Translation links — not a collection on the entity; query by key (both directions).
-        (translationLinkRepository.findByFirstEntityKey(entity.key) + translationLinkRepository.findBySecondEntityKey(entity.key)).forEach { link ->
+        val translationLinks =
+            translationLinkRepository.findByFirstEntityKey(entity.key) +
+                translationLinkRepository.findBySecondEntityKey(entity.key)
+        translationLinks.forEach { link ->
             val id = link.id ?: return@forEach
             result["translationLink.$id"] =
                 FieldValueSupport.signature(link.firstEntity?.key, link.secondEntity?.key, link.semanticDifferenceNote)

@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, withToken, createEntity } from './testClient';
+import { createClient, signup, signupAdmin, withToken, createEntity } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
+
+const METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
@@ -25,6 +27,17 @@ describe('Field Verification', () => {
       email: 'fv-other@example.com', username: 'fvother', password: 'password123', firstName: 'O', lastName: 'T',
     });
     withToken(other, otherAuth.accessToken);
+
+    // Verification defaults to OFF — enable it for entities (Data Governance) so these tests apply.
+    const admin = createClient(getBackendUrl());
+    const adminAuth = await signupAdmin(admin, {
+      email: 'fv-admin@example.com', username: 'fvadmin', password: 'password123', firstName: 'A', lastName: 'D',
+    });
+    withToken(admin, adminAuth.accessToken);
+    await admin.put(
+      '/administration/methodology-configurations',
+      METHODOLOGY_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: key === 'DATA_GOVERNANCE' })),
+    );
   });
 
   it('marks owner-created fields VERIFIED with who/when', async () => {

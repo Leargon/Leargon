@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { ADMIN } from './api-setup';
+import { ADMIN, createEntity, uid } from './api-setup';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+const GOVERNANCE_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
 
 function backendUrl(): string {
   return process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
@@ -19,21 +20,28 @@ function getAdminToken(): string {
 }
 
 async function setMethodologies(
-  entries: Array<{ key: string; enabled: boolean }>,
+  entries: Array<{ key: string; enabled: boolean; verificationEnabled?: boolean }>,
 ): Promise<void> {
+  // Default verification to the suite baseline (on for governance) unless a test overrides it, so
+  // methodology-enablement tests don't inadvertently turn verification off for concurrent specs.
+  const body = entries.map((e) => ({ verificationEnabled: GOVERNANCE_KEYS.includes(e.key), ...e }));
   const res = await fetch(`${backendUrl()}/administration/methodology-configurations`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getAdminToken()}`,
     },
-    body: JSON.stringify(entries),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`PUT methodology-configurations → ${res.status}`);
 }
 
 async function resetMethodologies(): Promise<void> {
-  await setMethodologies(ALL_METHODOLOGY_KEYS.map((key) => ({ key, enabled: true })));
+  // Restore the suite baseline: all methodologies enabled, verification on for governance areas
+  // (matches auth.setup), so concurrent specs that rely on verification being on stay green.
+  await setMethodologies(
+    ALL_METHODOLOGY_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: GOVERNANCE_KEYS.includes(key) })),
+  );
 }
 
 test.use({ storageState: ADMIN });
@@ -149,6 +157,37 @@ test.describe('Methodology Settings', () => {
 
     // Switch should now be unchecked
     await expect(dddSwitch).not.toBeChecked();
+  });
+
+  test('disabling Data Governance verification hides entity verification indicators', async ({ page }) => {
+    const entity = (await createEntity(uid('FV Toggle Entity'), ADMIN)) as { key: string };
+
+    // Baseline: the owner-created entity shows verification indicators.
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible();
+
+    // Disable verification for Data Governance (entities), keeping every methodology enabled.
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true, verificationEnabled: k !== 'DATA_GOVERNANCE' })),
+    );
+
+    // Re-fetch the entity (navigate away and back) — indicators should be gone.
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' })).toHaveCount(0);
+
+    // Re-enable verification for Data Governance and confirm the indicators return.
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true, verificationEnabled: GOVERNANCE_KEYS.includes(k) })),
+    );
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('methodology settings link appears in settings sidebar', async ({ page }) => {
