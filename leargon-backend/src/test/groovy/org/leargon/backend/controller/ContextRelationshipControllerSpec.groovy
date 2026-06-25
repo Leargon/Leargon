@@ -15,6 +15,7 @@ import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.ContextRelationshipRepository
+import org.leargon.backend.repository.FieldVerificationRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
 import org.leargon.backend.repository.UserRepository
 import spock.lang.Specification
@@ -32,6 +33,7 @@ class ContextRelationshipControllerSpec extends Specification {
     @Inject BoundedContextRepository boundedContextRepository
     @Inject BusinessDomainRepository businessDomainRepository
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
+    @Inject FieldVerificationRepository fieldVerificationRepository
 
     def setup() {
         if (localeRepository.count() == 0) {
@@ -41,6 +43,7 @@ class ContextRelationshipControllerSpec extends Specification {
     }
 
     def cleanup() {
+        fieldVerificationRepository.deleteAll()
         contextRelationshipRepository.deleteAll()
         boundedContextRepository.deleteAll()
         businessDomainVersionRepository.deleteAll()
@@ -271,6 +274,41 @@ class ContextRelationshipControllerSpec extends Specification {
             Argument.listOf(Map)
         )
         listResp.body().any { it.relationshipType == "SEPARATE_WAYS" }
+    }
+
+    def "creating then deleting a relationship adds then removes the domain's contextRelationship status"() {
+        given:
+        def adminToken = createAdminToken()
+        def upDomainKey = createDomain(adminToken, "Domain FV Up")
+        def downDomainKey = createDomain(adminToken, "Domain FV Down")
+        def upKey = createBoundedContext(adminToken, upDomainKey, "Context FV A")
+        def downKey = createBoundedContext(adminToken, downDomainKey, "Context FV B")
+
+        def created = client.toBlocking().exchange(
+            HttpRequest.POST("/context-relationships", [
+                upstreamBoundedContextKey  : upKey,
+                downstreamBoundedContextKey: downKey,
+                relationshipType           : "CUSTOMER_SUPPLIER"
+            ]).bearerAuth(adminToken), Map)
+        def relId = created.body().id
+
+        when: "the upstream domain is fetched"
+        def afterCreate = client.toBlocking().exchange(
+            HttpRequest.GET("/business-domains/${upDomainKey}").bearerAuth(adminToken), Map)
+
+        then: "it carries a per-item status row for the new relationship"
+        def statuses = afterCreate.body().fieldStatuses ?: []
+        statuses.any { it.fieldName == "contextRelationship.${relId}" }
+
+        when: "the relationship is deleted and the domain re-fetched"
+        client.toBlocking().exchange(
+            HttpRequest.DELETE("/context-relationships/${relId}").bearerAuth(adminToken), Void)
+        def afterDelete = client.toBlocking().exchange(
+            HttpRequest.GET("/business-domains/${upDomainKey}").bearerAuth(adminToken), Map)
+
+        then: "the per-item status row is gone"
+        def remaining = afterDelete.body().fieldStatuses ?: []
+        !remaining.any { it.fieldName == "contextRelationship.${relId}" }
     }
 
     def "DELETE /context-relationships/{id} returns 404 for unknown id"() {

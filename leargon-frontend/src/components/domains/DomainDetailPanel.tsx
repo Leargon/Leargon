@@ -1037,6 +1037,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     </Typography>
                   )}
                 </Box>
+                {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
                 {isAdmin && (
                   <IconButton
                     size="small"

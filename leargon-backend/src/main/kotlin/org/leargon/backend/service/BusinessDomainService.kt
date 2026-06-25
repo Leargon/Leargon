@@ -329,6 +329,22 @@ open class BusinessDomainService(
         return VersionDiffResponse(versionNumber, previousVersion?.versionNumber, changes)
     }
 
+    /**
+     * Records a new version + reconciles field-verification status for the domain identified by [domainKey].
+     * Used by collaborators that mutate domain-scoped collections living in their own tables (e.g.
+     * context relationships) so the per-item verification rows stay in sync.
+     */
+    @Transactional
+    open fun recordVersion(
+        domainKey: String,
+        currentUser: User,
+        changeType: String,
+        changeSummary: String
+    ) {
+        val domain = getBusinessDomainByKey(domainKey)
+        createBusinessDomainVersion(domain, currentUser, changeType, changeSummary)
+    }
+
     // --- Private helpers ---
 
     private fun createBusinessDomainVersion(
