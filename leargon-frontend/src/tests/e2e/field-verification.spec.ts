@@ -1,10 +1,54 @@
 import { test, expect } from '@playwright/test';
 import { uid, OWNER, ADMIN, createEntity } from './api-setup';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+const GOVERNANCE_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
+
+function adminToken(): string {
+  const tokenFile = path.join(process.cwd(), ADMIN.replace('.json', '-token.txt'));
+  if (fs.existsSync(tokenFile)) return fs.readFileSync(tokenFile, 'utf8').trim();
+  const state = JSON.parse(fs.readFileSync(path.join(process.cwd(), ADMIN), 'utf8')) as {
+    origins?: Array<{ localStorage?: Array<{ name: string; value: string }> }>;
+  };
+  return state.origins?.[0]?.localStorage?.find((i) => i.name === 'auth_token')?.value ?? '';
+}
+
+/** Enable per-area verification for exactly `enabledKeys` (admin-only, via the backend API directly). */
+async function setVerification(enabledKeys: string[]): Promise<void> {
+  const url = process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
+  const res = await fetch(`${url}/administration/methodology-configurations`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken()}` },
+    body: JSON.stringify(
+      ALL_METHODOLOGY_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: enabledKeys.includes(key) })),
+    ),
+  });
+  if (!res.ok) throw new Error(`PUT methodology-configurations → ${res.status}`);
+}
 
 // Run as the OWNER so the verification action is available (verification is owner-only).
 test.use({ storageState: OWNER });
 
 test.describe('Field Verification', () => {
+  // Serial: the toggle test below mutates the global verification config, so it must not interleave
+  // with the indicator tests in this file (kept here, not in methodology-settings, to avoid racing
+  // that spec's concurrent worker).
+  test.describe.configure({ mode: 'serial' });
+
+  // Deterministically enable verification right before each test rather than relying on the global
+  // suite baseline surviving the whole run (other specs mutate the shared methodology config).
+  test.beforeEach(async () => {
+    await setVerification(GOVERNANCE_KEYS);
+  });
+
+  // Safety net: restore the suite baseline (verification on for governance) even if a test bails out
+  // mid-toggle, so other concurrent specs that rely on verification being on stay green.
+  test.afterAll(async () => {
+    await setVerification(GOVERNANCE_KEYS);
+  });
+
   test('owner sees a verification indicator and can change a field status', async ({ page }) => {
     const name = uid('FV Entity');
     const entity = (await createEntity(name, OWNER)) as { key: string };
@@ -69,5 +113,30 @@ test.describe('Field Verification', () => {
     } finally {
       await adminCtx.close();
     }
+  });
+
+  test('disabling Data Governance verification hides the indicator; re-enabling restores it', async ({ page }) => {
+    const entity = (await createEntity(uid('FV Toggle Entity'), OWNER)) as { key: string };
+
+    // Baseline (verification on): the owner sees the indicator button.
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible();
+
+    // Disable verification for Data Governance → indicators gone after a re-fetch.
+    await setVerification(GOVERNANCE_KEYS.filter((k) => k !== 'DATA_GOVERNANCE'));
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' })).toHaveCount(0);
+
+    // Re-enable → indicators return.
+    await setVerification(GOVERNANCE_KEYS);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { ADMIN, createEntity, uid } from './api-setup';
+import { ADMIN } from './api-setup';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -146,9 +146,10 @@ test.describe('Methodology Settings', () => {
     await page.goto('/settings/methodologies');
     await page.waitForLoadState('networkidle');
 
-    // Find the DDD card and click its switch to disable
+    // Find the DDD card and click its methodology-enabled switch (the first toggle; governance cards
+    // also have a second "Field verification" switch) to disable.
     const dddCard = page.locator('.MuiCard-root').filter({ hasText: 'Domain-Driven Design' });
-    const dddSwitch = dddCard.locator('input[type="checkbox"]');
+    const dddSwitch = dddCard.locator('input[type="checkbox"]').first();
     await expect(dddSwitch).toBeChecked();
     await dddSwitch.click({ force: true });
 
@@ -159,36 +160,9 @@ test.describe('Methodology Settings', () => {
     await expect(dddSwitch).not.toBeChecked();
   });
 
-  test('disabling Data Governance verification hides entity verification indicators', async ({ page }) => {
-    const entity = (await createEntity(uid('FV Toggle Entity'), ADMIN)) as { key: string };
-
-    // Baseline: the owner-created entity shows verification indicators.
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible();
-
-    // Disable verification for Data Governance (entities), keeping every methodology enabled.
-    await setMethodologies(
-      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true, verificationEnabled: k !== 'DATA_GOVERNANCE' })),
-    );
-
-    // Re-fetch the entity (navigate away and back) — indicators should be gone.
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('button', { name: 'Field verification status' })).toHaveCount(0);
-
-    // Re-enable verification for Data Governance and confirm the indicators return.
-    await setMethodologies(
-      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true, verificationEnabled: GOVERNANCE_KEYS.includes(k) })),
-    );
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    await page.goto(`/entities/${entity.key}`);
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('button', { name: 'Field verification status' }).first()).toBeVisible({ timeout: 15_000 });
-  });
+  // NOTE: the verification on/off → entity-indicator behaviour is covered by field-verification.spec
+  // (kept there so it runs serially with the other verification tests and can't race this spec's
+  // concurrent worker over the global methodology config). Integration + backend specs cover it too.
 
   test('methodology settings link appears in settings sidebar', async ({ page }) => {
     await page.goto('/settings/users');
