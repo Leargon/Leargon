@@ -45,7 +45,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
     return entity.children?.some(matchesFilter) ?? false;
   };
 
-  const filteredTree = [...tree].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredTree = [...tree].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -131,7 +131,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   const [open, setOpen] = useState(false);
   const hasChildren = entity.children && entity.children.length > 0;
   const isSelected = entity.key === selectedKey;
-  const filteredChildren = [...(entity.children || [])].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredChildren = [...(entity.children || [])].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <>

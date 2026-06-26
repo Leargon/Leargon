@@ -59,7 +59,7 @@ const ClassificationsTab: React.FC = () => {
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { data: classificationsResponse } = useGetClassifications();
-  const classifications = [...((classificationsResponse?.data as ClassificationResponse[] | undefined) || [])].sort((a, b) => a.key.localeCompare(b.key));
+  const classifications = [...((classificationsResponse?.data as ClassificationResponse[] | undefined) || [])].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key)));
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 

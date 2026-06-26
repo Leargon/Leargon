@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  IconButton,
   Button,
   Chip,
   Autocomplete,
@@ -29,8 +28,9 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete, CheckCircle, Warning, ExpandMore } from '@mui/icons-material';
+import { Delete, CheckCircle, Warning, ExpandMore } from '@mui/icons-material';
 import DetailPanelHeader from '../common/DetailPanelHeader';
+import InlineEditControls from '../common/InlineEditControls';
 import ServiceProviderTypeGuide from './ServiceProviderTypeGuide';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -220,26 +220,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         {/* Names & Descriptions */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionNames')}</Typography>
-              {isAdmin && !namesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit([...provider.names]); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {namesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); namesEdit.save(); }} disabled={namesEdit.isSaving}>
-                    {namesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.cancel(); }} disabled={namesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('serviceProvider.sectionNames')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={namesEdit} onStart={() => namesEdit.startEdit([...provider.names])} />
             {namesEdit.isEditing && namesEdit.editValue ? (
               <Box>
                 <TranslationEditor
@@ -265,26 +249,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         {/* Provider Type */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionProviderType')}</Typography>
-              {isAdmin && !typeEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); typeEdit.startEdit(provider.serviceProviderType as string); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {typeEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); typeEdit.save(); }} disabled={typeEdit.isSaving}>
-                    {typeEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); typeEdit.cancel(); }} disabled={typeEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('serviceProvider.sectionProviderType')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={typeEdit} onStart={() => typeEdit.startEdit(provider.serviceProviderType as string)} />
             {typeEdit.isEditing && typeEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControl size="small" sx={{ width: 240 }}>
@@ -312,26 +280,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         {/* Agreement Status */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionAgreement')}</Typography>
-              {isAdmin && !agreementEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved }); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {agreementEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); agreementEdit.save(); }} disabled={agreementEdit.isSaving}>
-                    {agreementEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); agreementEdit.cancel(); }} disabled={agreementEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('serviceProvider.sectionAgreement')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={agreementEdit} onStart={() => agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved })} />
             {agreementEdit.isEditing && agreementEdit.editValue ? (
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <FormControlLabel
@@ -376,26 +328,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         {/* Linked Processes */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionLinkedProcesses')}</Typography>
-              {isAdmin && !processesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key)); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {processesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); processesEdit.save(); }} disabled={processesEdit.isSaving}>
-                    {processesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.cancel(); }} disabled={processesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('serviceProvider.sectionLinkedProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={processesEdit} onStart={() => processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key))} />
             {processesEdit.isEditing && processesEdit.editValue !== null ? (
               <Box>
                 <Autocomplete
@@ -480,26 +416,10 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
         {/* Transfers to Third Countries: processing countries + derived cross-border transfers */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
-              {isAdmin && !countriesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(provider.processingCountries ?? [])]); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {countriesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); countriesEdit.save(); }} disabled={countriesEdit.isSaving}>
-                    {countriesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.cancel(); }} disabled={countriesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(provider.processingCountries ?? [])])} />
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
               {t('serviceProvider.countriesLabel')}
             </Typography>

@@ -49,7 +49,7 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
     return unit.children?.some(matchesFilter) ?? false;
   };
 
-  const filteredTree = [...tree].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredTree = [...tree].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -138,7 +138,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   const [open, setOpen] = useState(false);
   const hasChildren = unit.children && unit.children.length > 0;
   const isSelected = unit.key === selectedKey;
-  const filteredChildren = [...(unit.children || [])].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredChildren = [...(unit.children || [])].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <>

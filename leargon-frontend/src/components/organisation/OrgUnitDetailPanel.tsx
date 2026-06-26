@@ -77,6 +77,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
+import InlineEditControls from '../common/InlineEditControls';
 import type {
   LocalizedText,
   OrganisationalUnitResponse,
@@ -641,7 +642,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {leadEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{leadEdit.error}</Alert>}
           </Box>
         ) : (
-          <Typography variant="body2">
+          <Typography variant="body2" component="div">
             {unit.businessOwner ? (
               <Chip
                 label={`${unit.businessOwner.firstName} ${unit.businessOwner.lastName}`}
@@ -685,7 +686,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {stewardEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{stewardEdit.error}</Alert>}
           </Box>
         ) : (
-          <Typography variant="body2">
+          <Typography variant="body2" component="div">
             {unit.businessSteward ? (
               <Chip
                 label={`${unit.businessSteward.firstName} ${unit.businessSteward.lastName}`}
@@ -819,26 +820,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {sections.externalFields && !isHidden('isExternal') && (isAdmin || unit.isExternal) && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="subtitle2">External Party</Typography>
-                {isAdmin && !externalFieldsEdit.isEditing && (
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' }); }}>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                )}
-                {externalFieldsEdit.isEditing && (
-                  <>
-                    <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.save(); }} disabled={externalFieldsEdit.isSaving}>
-                      {externalFieldsEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                    </IconButton>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); externalFieldsEdit.cancel(); }} disabled={externalFieldsEdit.isSaving}>
-                      <Close fontSize="small" />
-                    </IconButton>
-                  </>
-                )}
-              </Box>
+              <Typography variant="subtitle2">External Party</Typography>
             </AccordionSummary>
             <AccordionDetails>
+          <InlineEditControls canEdit={isAdmin} edit={externalFieldsEdit} onStart={() => externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' })} />
           <Box sx={{ mb: 2 }}>
             {externalFieldsEdit.isEditing && externalFieldsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1009,26 +994,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Service Providers */}
         {sections.serviceProviders && !isHidden('serviceProviders') && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">Service Providers</Typography>
-              {isAdmin && !serviceProvidersEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key)); }}>
-                  <Edit fontSize="small" />
-                </IconButton>
-              )}
-              {serviceProvidersEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.save(); }} disabled={serviceProvidersEdit.isSaving}>
-                    {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.cancel(); }} disabled={serviceProvidersEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">Service Providers</Typography>
           </AccordionSummary>
           <AccordionDetails>
+        <InlineEditControls canEdit={isAdmin} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))} />
         <Box sx={{ mb: 2 }}>
           {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
             <Box>
@@ -1068,26 +1037,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Classifications */}
         {sections.classifications && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('common.classifications')}</Typography>
-              {isLeadOrAdmin && !classEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || []); }}>
-                  <Edit fontSize="small" />
-                </IconButton>
-              )}
-              {classEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); classEdit.save(); }} disabled={classEdit.isSaving}>
-                    {classEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); classEdit.cancel(); }} disabled={classEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('common.classifications')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+      <InlineEditControls canEdit={isLeadOrAdmin} edit={classEdit} onStart={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || [])} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {

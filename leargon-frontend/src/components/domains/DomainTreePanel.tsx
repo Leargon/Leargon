@@ -49,7 +49,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
     return domain.children?.some(matchesFilter) ?? false;
   };
 
-  const filteredTree = [...tree].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredTree = [...tree].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -138,7 +138,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   const [open, setOpen] = useState(false);
   const hasChildren = domain.children && domain.children.length > 0;
   const isSelected = domain.key === selectedKey;
-  const filteredChildren = [...(domain.children || [])].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredChildren = [...(domain.children || [])].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <>
