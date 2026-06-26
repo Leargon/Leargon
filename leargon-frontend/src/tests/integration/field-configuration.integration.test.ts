@@ -55,9 +55,10 @@ describe('Field Configuration E2E', () => {
     expect(Array.isArray(res.data)).toBe(true);
   });
 
-  it('GET /administration/field-configurations returns 403 for non-admin', async () => {
+  it('GET /administration/field-configurations is readable by any authenticated user', async () => {
+    // Read-only config metadata is allowed for non-admins (owners/leads need it); writes stay restricted.
     const res = await userClient.get('/administration/field-configurations');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 
   // =====================
@@ -346,8 +347,8 @@ describe('Field Configuration E2E', () => {
     expect(res.data[0].visibility).toBe('HIDDEN');
   });
 
-  it('GET /administration/field-configurations/definitions returns 403 for non-admin', async () => {
+  it('GET /administration/field-configurations/definitions is readable by any authenticated user', async () => {
     const res = await userClient.get('/administration/field-configurations/definitions');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 });

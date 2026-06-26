@@ -110,6 +110,10 @@ class OrganisationalUnit {
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
 
+    fun effectiveOwner(): User? = businessOwner
+
+    fun effectiveSteward(): User? = businessSteward
+
     fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
     fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text

@@ -23,15 +23,22 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
+  Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Typography as MuiTypography,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   PersonAdd as PersonAddIcon,
-  PersonRemove as PersonRemoveIcon,
   Refresh as RefreshIcon,
   VpnKey as VpnKeyIcon,
 } from '@mui/icons-material';
+import { METHODOLOGY_DEFINITIONS, ALL_METHODOLOGY_KEYS } from '../../context/MethodologyContext';
+import { ROLE_USER, ROLE_ADMIN, ROLE_LEAD_PREFIX, ROLE_EDITOR_PREFIX, getRoleScopes } from '../../utils/roles';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetAllUsers,
@@ -61,12 +68,15 @@ const UsersTab: React.FC = () => {
   // Edit dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
+  type MethodologyRole = 'NONE' | 'EDITOR' | 'LEAD';
   const [editForm, setEditForm] = useState({
     email: '',
     username: '',
     firstName: '',
     lastName: '',
     enabled: true,
+    admin: false,
+    methodologyRoles: {} as Record<string, MethodologyRole>,
   });
 
   // Delete dialog
@@ -88,18 +98,40 @@ const UsersTab: React.FC = () => {
 
   const handleEditClick = (user: UserResponse) => {
     setEditingUser(user);
+    const scopes = getRoleScopes(user.roles);
+    const methodologyRoles: Record<string, MethodologyRole> = {};
+    for (const key of ALL_METHODOLOGY_KEYS) {
+      methodologyRoles[key] = scopes.leadMethodologies.has(key)
+        ? 'LEAD'
+        : scopes.editorMethodologies.has(key)
+          ? 'EDITOR'
+          : 'NONE';
+    }
     setEditForm({
       email: user.email,
       username: user.username,
       firstName: user.firstName,
       lastName: user.lastName,
       enabled: user.enabled,
+      admin: scopes.isAdmin,
+      methodologyRoles,
     });
     setEditDialogOpen(true);
   };
 
+  const assembleRoles = (): string[] => {
+    const roles = [ROLE_USER];
+    if (editForm.admin) roles.push(ROLE_ADMIN);
+    for (const [key, value] of Object.entries(editForm.methodologyRoles)) {
+      if (value === 'LEAD') roles.push(`${ROLE_LEAD_PREFIX}${key}`);
+      else if (value === 'EDITOR') roles.push(`${ROLE_EDITOR_PREFIX}${key}`);
+    }
+    return roles;
+  };
+
   const handleEditSave = async () => {
     if (!editingUser) return;
+    const editingSelf = editingUser.id === currentUser?.id;
     try {
       setError('');
       const request: UpdateUserRequest = {
@@ -108,6 +140,8 @@ const UsersTab: React.FC = () => {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         enabled: editForm.enabled,
+        // Don't let an admin strip their own roles while editing themselves.
+        ...(editingSelf ? {} : { roles: assembleRoles() as UpdateUserRequest['roles'] }),
       };
       await updateUserMutation.mutateAsync({ id: editingUser.id, data: request });
       setSuccess('User updated successfully');
@@ -128,28 +162,6 @@ const UsersTab: React.FC = () => {
       invalidate();
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to delete user');
-    }
-  };
-
-  const handleRoleToggle = async (user: UserResponse) => {
-    if (currentUser && user.id === currentUser.id) {
-      setError('You cannot modify your own admin role');
-      return;
-    }
-    try {
-      setError('');
-      const isUserAdmin = user.roles.includes('ROLE_ADMIN');
-      const newRoles = isUserAdmin
-        ? user.roles.filter((r) => r !== 'ROLE_ADMIN')
-        : [...user.roles, 'ROLE_ADMIN'];
-      await updateUserMutation.mutateAsync({
-        id: user.id,
-        data: { roles: newRoles as UpdateUserRequest['roles'] },
-      });
-      setSuccess(isUserAdmin ? `Removed admin role from ${user.username}` : `Promoted ${user.username} to admin`);
-      invalidate();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to update roles');
     }
   };
 
@@ -190,8 +202,6 @@ const UsersTab: React.FC = () => {
       setError(err?.response?.data?.message || 'Failed to create user');
     }
   };
-
-  const isAdmin = (user: UserResponse) => user.roles.includes('ROLE_ADMIN');
 
   if (isLoading) {
     return (
@@ -261,13 +271,6 @@ const UsersTab: React.FC = () => {
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title={user.isFallbackAdministrator ? 'Protected' : isAdmin(user) ? 'Remove Admin' : 'Make Admin'}>
-                      <span>
-                        <IconButton size="small" onClick={() => handleRoleToggle(user)} color="secondary" disabled={user.isFallbackAdministrator || user.id === currentUser?.id}>
-                          {isAdmin(user) ? <PersonRemoveIcon fontSize="small" /> : <PersonAddIcon fontSize="small" />}
-                        </IconButton>
-                      </span>
-                    </Tooltip>
                     <Tooltip title={user.isFallbackAdministrator ? 'Protected' : 'Delete'}>
                       <span>
                         <IconButton size="small" onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }} color="error" disabled={user.isFallbackAdministrator || user.id === currentUser?.id}>
@@ -296,6 +299,42 @@ const UsersTab: React.FC = () => {
               control={<Switch checked={editForm.enabled} onChange={(e) => setEditForm({ ...editForm, enabled: e.target.checked })} disabled={editingUser?.id === currentUser?.id} />}
               label="Account Enabled"
             />
+
+            <Divider />
+            {editingUser?.id === currentUser?.id ? (
+              <Alert severity="info">You cannot change your own roles.</Alert>
+            ) : (
+              <>
+                <MuiTypography variant="subtitle2">Roles</MuiTypography>
+                <FormControlLabel
+                  control={<Switch checked={editForm.admin} onChange={(e) => setEditForm({ ...editForm, admin: e.target.checked })} />}
+                  label="Administrator (full access)"
+                />
+                <MuiTypography variant="caption" color="text.secondary">
+                  Methodology roles — Editor can edit that methodology's fields (changes need re-verification); Lead can additionally configure the methodology. Ignored while Administrator is on.
+                </MuiTypography>
+                {ALL_METHODOLOGY_KEYS.map((key) => (
+                  <FormControl key={key} size="small" fullWidth disabled={editForm.admin}>
+                    <InputLabel id={`role-${key}`}>{METHODOLOGY_DEFINITIONS[key]?.label ?? key}</InputLabel>
+                    <Select
+                      labelId={`role-${key}`}
+                      label={METHODOLOGY_DEFINITIONS[key]?.label ?? key}
+                      value={editForm.methodologyRoles[key] ?? 'NONE'}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          methodologyRoles: { ...editForm.methodologyRoles, [key]: e.target.value as MethodologyRole },
+                        })
+                      }
+                    >
+                      <MenuItem value="NONE">None</MenuItem>
+                      <MenuItem value="EDITOR">Editor</MenuItem>
+                      <MenuItem value="LEAD">Lead</MenuItem>
+                    </Select>
+                  </FormControl>
+                ))}
+              </>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>

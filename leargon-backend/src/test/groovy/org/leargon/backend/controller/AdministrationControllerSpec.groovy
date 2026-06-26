@@ -17,7 +17,6 @@ import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
-import org.leargon.backend.model.UpdateUserRequestRolesInner
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
@@ -329,7 +328,7 @@ class AdministrationControllerSpec extends Specification {
 
         and: "an update request with admin role"
         def updateRequest = new UpdateUserRequest()
-        updateRequest.roles = [UpdateUserRequestRolesInner.USER, UpdateUserRequestRolesInner.ADMIN]
+        updateRequest.roles = ["ROLE_USER", "ROLE_ADMIN"]
 
         when: "promoting user to admin"
         def response = client.toBlocking().exchange(
@@ -673,7 +672,7 @@ class AdministrationControllerSpec extends Specification {
 
         and: "an update request to promote to admin"
         def updateRequest = new UpdateUserRequest()
-        updateRequest.roles = [UpdateUserRequestRolesInner.USER, UpdateUserRequestRolesInner.ADMIN]
+        updateRequest.roles = ["ROLE_USER", "ROLE_ADMIN"]
 
         when: "promoting user to admin"
         def response = client.toBlocking().exchange(
@@ -707,7 +706,7 @@ class AdministrationControllerSpec extends Specification {
 
         and: "an update request to demote from admin"
         def updateRequest = new UpdateUserRequest()
-        updateRequest.roles = [UpdateUserRequestRolesInner.USER]
+        updateRequest.roles = ["ROLE_USER"]
 
         when: "demoting user from admin"
         def response = client.toBlocking().exchange(

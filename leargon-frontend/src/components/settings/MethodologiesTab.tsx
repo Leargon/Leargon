@@ -34,6 +34,8 @@ import type {
 } from '../../api/generated/model';
 import { MethodologyConfigEntryKey } from '../../api/generated/model';
 import { METHODOLOGY_DEFINITIONS } from '../../context/MethodologyContext';
+import { useAuth } from '../../context/AuthContext';
+import { getRoleScopes } from '../../utils/roles';
 import { SECTION_LABELS } from '../../utils/missingFieldsGrouping';
 import { ENTITY_TYPE_LABELS, MATURITY_LABELS, MATURITY_ORDER } from './FieldConfigurationTab';
 
@@ -422,7 +424,12 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
 
 const MethodologiesTab: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
+
+  // A non-admin methodology LEAD only sees (and can change) their own methodologies; admins see all.
+  const scopes = getRoleScopes(user?.roles);
+  const visibleKeys = scopes.isAdmin ? ALL_KEYS : ALL_KEYS.filter((k) => scopes.leadMethodologies.has(k));
 
   const { data: methData, isLoading, isError } = useGetMethodologyConfigurations();
   const replaceMeth = useReplaceMethodologyConfigurations();
@@ -489,7 +496,7 @@ const MethodologiesTab: React.FC = () => {
         field visibility.
       </Typography>
       <Grid container spacing={2}>
-        {ALL_KEYS.map((key) => {
+        {visibleKeys.map((key) => {
           const def = METHODOLOGY_DEFINITIONS[key];
           if (!def) return null;
           return (

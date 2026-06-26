@@ -69,6 +69,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -107,7 +108,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
-  const isLeadOrAdmin = isAdmin || (user?.username === unit?.businessOwner?.username);
+  // Edit gate: lead/owner, effective steward (delegated editor — cannot verify), admin, or a methodology-scoped
+  // editor/lead for org units. Coarse on purpose — the backend enforces per-field permission (403).
+  const isLeadOrAdmin = isAdmin ||
+    (user?.username === unit?.businessOwner?.username) ||
+    (!!user?.username && user.username === unit?.businessSteward?.username) ||
+    canEditEntityTypeByRole(user?.roles, 'ORGANISATIONAL_UNIT');
   const isOwner = !!user?.username && user.username === unit?.businessOwner?.username;
   const setFieldVerification = useSetOrganisationalUnitFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {

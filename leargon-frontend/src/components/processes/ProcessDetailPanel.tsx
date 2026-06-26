@@ -82,6 +82,7 @@ import {
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -196,7 +197,12 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const [diagramOpen, setDiagramOpen] = useState(false);
   const [subProcessWizardOpen, setSubProcessWizardOpen] = useState(false);
 
-  const isOwnerOrAdmin = isAdmin || (user?.username === process?.processOwner?.username);
+  // Edit gate: owner, effective steward (delegated editor — cannot verify), admin, or a methodology-scoped
+  // editor/lead for processes. Coarse on purpose — the backend enforces per-field permission (403).
+  const isOwnerOrAdmin = isAdmin ||
+    (user?.username === process?.processOwner?.username) ||
+    (!!user?.username && user.username === process?.processSteward?.username) ||
+    canEditEntityTypeByRole(user?.roles, 'BUSINESS_PROCESS');
   const isOwner = !!user?.username && user.username === process?.processOwner?.username;
   const setFieldVerification = useSetProcessFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {

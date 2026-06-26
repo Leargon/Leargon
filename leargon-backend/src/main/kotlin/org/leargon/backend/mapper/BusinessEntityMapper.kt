@@ -84,7 +84,7 @@ open class BusinessEntityMapper(
             businessEntity.owningUnit
                 ?: businessEntity.boundedContext?.owningUnit
                 ?: businessEntity.boundedContext?.domain?.owningUnit
-        val effectiveSteward = businessEntity.dataSteward ?: effectiveOwningUnit?.businessSteward
+        val effectiveSteward = businessEntity.effectiveSteward()
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val fvSvc = this.fieldVerificationService
         val fieldStatuses =

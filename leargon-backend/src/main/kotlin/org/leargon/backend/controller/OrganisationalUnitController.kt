@@ -231,9 +231,10 @@ open class OrganisationalUnitController(
             currentUser: User
         ) {
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            val isOwner = unit.businessOwner?.id == currentUser.id
-            if (!isAdmin && !isOwner) {
-                throw ForbiddenOperationException("Only the business owner or an admin can edit this unit")
+            val isOwner = unit.effectiveOwner()?.id == currentUser.id
+            val isSteward = unit.effectiveSteward()?.id == currentUser.id
+            if (!isAdmin && !isOwner && !isSteward) {
+                throw ForbiddenOperationException("Only the business owner, steward, or an admin can edit this unit")
             }
         }
     }

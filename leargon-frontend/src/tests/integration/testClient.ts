@@ -104,6 +104,31 @@ export async function signupAdmin(
   return login(client, data.email, data.password);
 }
 
+/**
+ * Signs up a user, then (via the fallback admin) assigns the given roles and re-logs in so the returned
+ * token belongs to the user with those roles. Mirrors {@link signupAdmin} for arbitrary scoped roles.
+ */
+export async function signupWithRoles(
+  client: AxiosInstance,
+  data: SignupRequest,
+  roles: string[],
+): Promise<AuthResponse> {
+  await signup(client, data);
+
+  const adminAuth = await login(client, 'admin@e2e-test.local', 'AdminPass123!');
+  const adminClient = createClient(client.defaults.baseURL!);
+  withToken(adminClient, adminAuth.accessToken);
+
+  const usersRes = await adminClient.get<UserResponse[]>('/administration/users');
+  const user = usersRes.data.find((u) => u.email === data.email);
+  if (!user) throw new Error(`User ${data.email} not found after signup`);
+
+  const putRes = await adminClient.put(`/administration/users/${user.id}`, { roles });
+  if (putRes.status !== 200) throw new ApiError(putRes.status, putRes.data);
+
+  return login(client, data.email, data.password);
+}
+
 export async function createDomain(
   client: AxiosInstance,
   name: string,

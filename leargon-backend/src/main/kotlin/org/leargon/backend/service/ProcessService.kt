@@ -48,9 +48,28 @@ open class ProcessService(
     private val dpiaRepository: DpiaRepository,
     private val processFlowNodeRepository: ProcessFlowNodeRepository,
     private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService,
     private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
+
+    /**
+     * Per-field edit gate. Owner/steward/admin may edit anything; a methodology-scoped EDITOR/LEAD may
+     * edit a field belonging to their methodology. Verification stays owner-only, so scoped edits land
+     * UNVERIFIED automatically (sync uses the effective owner, not this check).
+     */
+    private fun requireFieldEdit(
+        process: Process,
+        currentUser: User,
+        fieldName: String
+    ) {
+        val isOwner = process.effectiveOwner()?.id == currentUser.id
+        val isSteward = process.effectiveSteward()?.id == currentUser.id
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
+        val rs = this.roleService
+        if (isOwner || isSteward || isAdmin || rs.canEditFieldByRole(currentUser, "BUSINESS_PROCESS", fieldName)) return
+        throw ForbiddenOperationException("You do not have permission to edit this field")
+    }
 
     @ReadOnly
     open fun getAllProcessesAsResponses(): List<ProcessResponse> = processRepository.findAll().map { processMapper.toProcessResponse(it) }
@@ -190,7 +209,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "descriptions")
 
         validateTranslations(descriptions, false)
 
@@ -211,7 +230,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "legalBasis")
 
         val oldBasis = process.legalBasis ?: "none"
         process.legalBasis = legalBasis
@@ -237,7 +256,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "purpose")
         val domainPurpose =
             purpose
                 ?.map {
@@ -260,7 +279,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "securityMeasures")
         val domainMeasures =
             securityMeasures
                 ?.map {
@@ -283,7 +302,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "processType")
 
         val oldType = process.processType ?: "none"
         process.processType = processType
@@ -334,7 +353,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "processOwner")
 
         val newOwner =
             userRepository
@@ -362,7 +381,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "processOwner")
 
         val effectiveOwningUnit =
             process.owningUnit
@@ -389,7 +408,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "processSteward")
 
         process.processSteward =
             if (stewardUsername != null) {
@@ -415,7 +434,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "technicalCustodian")
 
         process.technicalCustodian =
             if (custodianUsername != null) {
@@ -441,7 +460,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "code")
 
         if (!code.isNullOrBlank()) {
             process.code = code
@@ -466,7 +485,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(processKey)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "crossBorderTransfers")
         process.crossBorderTransfers =
             transfers
                 .map {
@@ -488,7 +507,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "boundedContext")
 
         val oldName = process.boundedContext?.getName("en") ?: "none"
 
@@ -524,7 +543,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "owningUnit")
 
         val oldName = process.owningUnit?.getName("en") ?: "none"
 
@@ -574,7 +593,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "inputEntities")
 
         val entity = resolveOrCreateEntity(request, currentUser)
         process.inputEntities.add(entity)
@@ -595,7 +614,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "inputEntities")
 
         process.inputEntities.removeIf { it.key == entityKey }
 
@@ -615,7 +634,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "outputEntities")
 
         val entity = resolveOrCreateEntity(request, currentUser)
         process.outputEntities.add(entity)
@@ -636,7 +655,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "outputEntities")
 
         process.outputEntities.removeIf { it.key == entityKey }
 
@@ -656,7 +675,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "executingUnits")
 
         process.executingUnits.clear()
 
@@ -901,9 +920,10 @@ open class ProcessService(
             currentUser: User
         ) {
             val isOwner = process.effectiveOwner()?.id == currentUser.id
+            val isSteward = process.effectiveSteward()?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            if (!isOwner && !isAdmin) {
-                throw ForbiddenOperationException("Only the process owner or an admin can edit this process")
+            if (!isOwner && !isSteward && !isAdmin) {
+                throw ForbiddenOperationException("Only the process owner, steward, or an admin can edit this process")
             }
         }
 

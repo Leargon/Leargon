@@ -225,19 +225,18 @@ class FieldConfigurationControllerSpec extends Specification {
         e.status == HttpStatus.FORBIDDEN
     }
 
-    def "GET /administration/field-configurations should return 403 for non-admin"() {
+    def "GET /administration/field-configurations is readable by any authenticated user"() {
         given: "a non-admin token"
         String token = createUserToken()
 
-        when: "attempting to get configurations"
-        client.toBlocking().exchange(
+        when: "getting configurations (read-only metadata; PUT remains gated)"
+        def response = client.toBlocking().exchange(
                 HttpRequest.GET("/administration/field-configurations").bearerAuth(token),
                 Argument.listOf(Map)
         )
 
-        then: "403 forbidden"
-        def e = thrown(HttpClientResponseException)
-        e.status == HttpStatus.FORBIDDEN
+        then: "200 OK — reading config is allowed (leads/owners need it); writes stay restricted"
+        response.status == HttpStatus.OK
     }
 
     // =====================
@@ -406,19 +405,18 @@ class FieldConfigurationControllerSpec extends Specification {
         retentionDef.mandatoryCapable == true
     }
 
-    def "GET /administration/field-configurations/definitions returns 403 for non-admin"() {
+    def "GET /administration/field-configurations/definitions is readable by any authenticated user"() {
         given: "a non-admin token"
         String token = createUserToken()
 
-        when: "getting definitions"
-        client.toBlocking().exchange(
+        when: "getting definitions (owners and leads need this metadata; writes stay restricted)"
+        def response = client.toBlocking().exchange(
                 HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
                 Argument.listOf(Map)
         )
 
-        then: "403 forbidden"
-        def e = thrown(HttpClientResponseException)
-        e.status == HttpStatus.FORBIDDEN
+        then: "200 OK"
+        response.status == HttpStatus.OK
     }
 
     // =====================

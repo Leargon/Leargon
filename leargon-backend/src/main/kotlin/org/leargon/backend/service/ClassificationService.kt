@@ -334,9 +334,10 @@ open class ClassificationService(
                 .orElseThrow { ResourceNotFoundException("BusinessEntity not found") }
 
         val isOwner = entity.effectiveOwner()?.id == currentUser.id
+        val isSteward = entity.effectiveSteward()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isOwner && !isAdmin) {
-            throw ForbiddenOperationException("Only the data owner or an admin can assign classifications")
+        if (!isOwner && !isSteward && !isAdmin) {
+            throw ForbiddenOperationException("Only the data owner, steward, or an admin can assign classifications")
         }
 
         validateAssignments(assignments, "BUSINESS_ENTITY")
@@ -402,9 +403,10 @@ open class ClassificationService(
                 .orElseThrow { ResourceNotFoundException("Process not found") }
 
         val isOwner = process.effectiveOwner()?.id == currentUser.id
+        val isSteward = process.effectiveSteward()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isOwner && !isAdmin) {
-            throw ForbiddenOperationException("Only the process owner or an admin can assign classifications")
+        if (!isOwner && !isSteward && !isAdmin) {
+            throw ForbiddenOperationException("Only the process owner, steward, or an admin can assign classifications")
         }
 
         validateAssignments(assignments, "BUSINESS_PROCESS")
@@ -439,10 +441,11 @@ open class ClassificationService(
                 .findByKey(orgUnitKey)
                 .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found") }
 
-        val isOwner = unit.businessOwner?.id == currentUser.id
+        val isOwner = unit.effectiveOwner()?.id == currentUser.id
+        val isSteward = unit.effectiveSteward()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isOwner && !isAdmin) {
-            throw ForbiddenOperationException("Only the business owner or an admin can assign classifications")
+        if (!isOwner && !isSteward && !isAdmin) {
+            throw ForbiddenOperationException("Only the business owner, steward, or an admin can assign classifications")
         }
 
         validateAssignments(assignments, "ORGANISATIONAL_UNIT")

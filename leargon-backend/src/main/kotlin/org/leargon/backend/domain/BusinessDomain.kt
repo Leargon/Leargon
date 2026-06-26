@@ -89,6 +89,10 @@ class BusinessDomain {
 
     fun getEffectiveType(): String? = type ?: parent?.type
 
+    fun effectiveOwner(): User? = owningUnit?.businessOwner
+
+    fun effectiveSteward(): User? = owningUnit?.businessSteward
+
     fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 
     fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text

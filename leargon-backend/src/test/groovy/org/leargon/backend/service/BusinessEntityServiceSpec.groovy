@@ -279,7 +279,7 @@ class BusinessEntityServiceSpec extends Specification {
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner or an admin")
+        exception.message.contains("Only the data owner, steward, or an admin")
     }
 
     def "should update data owner and create OWNER_CHANGE version"() {
@@ -330,7 +330,7 @@ class BusinessEntityServiceSpec extends Specification {
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner or an admin")
+        exception.message.contains("Only the data owner, steward, or an admin")
     }
 
     def "should get version diff"() {

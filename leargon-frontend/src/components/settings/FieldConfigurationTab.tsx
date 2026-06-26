@@ -33,6 +33,8 @@ import type {
 } from '../../api/generated/model';
 import { FieldConfigurationEntryVisibility } from '../../api/generated/model';
 import { SECTION_LABELS } from '../../utils/missingFieldsGrouping';
+import { useAuth } from '../../context/AuthContext';
+import { getRoleScopes, methodologyOfSection } from '../../utils/roles';
 
 /** State for a regular (non-locale) field */
 type FieldState = 'MANDATORY' | 'SHOWN' | 'HIDDEN';
@@ -69,6 +71,14 @@ function stateKey(entityType: string, fieldName: string): string {
 
 const FieldConfigurationTab: React.FC = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  // A non-admin methodology LEAD only sees/edits sections belonging to their methodologies; admins see all.
+  const scopes = getRoleScopes(user?.roles);
+  const sectionInScope = (section: string): boolean => {
+    if (scopes.isAdmin) return true;
+    const m = methodologyOfSection(section);
+    return m !== undefined && scopes.leadMethodologies.has(m);
+  };
   const { data: definitionsResponse, isLoading: isLoadingDefs } = useGetFieldConfigurationDefinitions();
   const { data: configurationsResponse, isLoading: isLoadingConfigs } = useGetFieldConfigurations();
   const replaceConfigurations = useReplaceFieldConfigurations();
@@ -164,8 +174,10 @@ const FieldConfigurationTab: React.FC = () => {
   const buildEntries = (): FieldConfigurationEntry[] => {
     const result: FieldConfigurationEntry[] = [];
 
-    // Always include the built-in always-required field for every entity type
-    for (const { value: entityType } of ENTITY_TYPES) {
+    // Always include the built-in always-required field for every entity type. Skipped for a non-admin LEAD:
+    // the names field is CORE (out of their scope) and the backend preserves it via the scoped merge —
+    // re-submitting it would be rejected as an out-of-scope change.
+    for (const { value: entityType } of (scopes.isAdmin ? ENTITY_TYPES : [])) {
       const builtinName = `names.${defaultLocaleCode}`;
       const def = definitions.find((d) => d.entityType === entityType && d.fieldName === builtinName);
       if (def) {
@@ -250,7 +262,7 @@ const FieldConfigurationTab: React.FC = () => {
   const entityDefs = definitions.filter((d) => d.entityType === selectedEntityType);
   // Group locale per-locale entries by their locale group base for rendering
   const localeGroupDefs = entityDefs.filter((d) => d.localeGroup === true);
-  const sections = [...new Set(entityDefs.filter((d) => !d.localeGroup).map((d) => d.section))];
+  const sections = [...new Set(entityDefs.filter((d) => !d.localeGroup).map((d) => d.section))].filter(sectionInScope);
 
   return (
     <>

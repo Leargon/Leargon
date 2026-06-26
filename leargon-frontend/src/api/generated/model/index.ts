@@ -226,7 +226,6 @@ export * from './updateStorageLocationsRequest.ts';
 export * from './updateSupportedLocaleRequest.ts';
 export * from './updateTranslationLinkRequest.ts';
 export * from './updateUserRequest.ts';
-export * from './updateUserRequestRolesItem.ts';
 export * from './userOwnershipWorkloadItem.ts';
 export * from './userResponse.ts';
 export * from './userResponsePreferredRole.ts';
