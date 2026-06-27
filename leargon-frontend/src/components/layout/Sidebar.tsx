@@ -6,7 +6,7 @@ import {
   Handshake, FactCheck, GppGood, Hub,
   FlashOn, Computer,
   People, Language, Label, AutoAwesomeMosaic,
-  Home, Groups, Map, HelpOutlined, Schema, Tune,
+  Home, Groups, Map, HelpOutlined, Schema,
 } from '@mui/icons-material';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useTranslation } from 'react-i18next';
@@ -74,7 +74,6 @@ const SETTINGS_ITEMS: NavItem[] = [
   { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language />, adminOnly: true },
   { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label />, adminOnly: true },
   { labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
-  { labelKey: 'nav.fieldConfig', path: '/settings/field-configurations', icon: <Tune /> },
   { labelKey: 'nav.organisationSettings', path: '/settings/organisation', icon: <CorporateFare />, adminOnly: true },
 ];
 

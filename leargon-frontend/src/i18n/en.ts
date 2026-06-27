@@ -27,7 +27,6 @@ const en = {
     users: 'Users',
     locales: 'Locales',
     classifications: 'Classifications',
-    fieldConfig: 'Field Configuration',
     methodologies: 'Methodologies',
     organisationSettings: 'Organisation',
     teamTopologies: 'Team Topologies',

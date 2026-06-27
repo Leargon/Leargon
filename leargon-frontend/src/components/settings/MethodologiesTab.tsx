@@ -37,7 +37,21 @@ import { METHODOLOGY_DEFINITIONS } from '../../context/MethodologyContext';
 import { useAuth } from '../../context/AuthContext';
 import { getRoleScopes } from '../../utils/roles';
 import { SECTION_LABELS } from '../../utils/missingFieldsGrouping';
-import { ENTITY_TYPE_LABELS, MATURITY_LABELS, MATURITY_ORDER } from './FieldConfigurationTab';
+
+export const MATURITY_LABELS: Record<string, string> = {
+  BASIC: 'Basic',
+  ADVANCED: 'Advanced',
+  EXPERT: 'Expert',
+};
+
+export const MATURITY_ORDER = ['BASIC', 'ADVANCED', 'EXPERT'] as const;
+
+export const ENTITY_TYPE_LABELS: Record<string, string> = {
+  BUSINESS_ENTITY: 'Business Entity',
+  BUSINESS_DOMAIN: 'Business Domain',
+  BUSINESS_PROCESS: 'Business Process',
+  ORGANISATIONAL_UNIT: 'Organisational Unit',
+};
 
 const ALL_KEYS = Object.values(MethodologyConfigEntryKey) as string[];
 
@@ -62,6 +76,11 @@ function isLocaleField(fieldName: string, defs: FieldConfigurationDefinition[]):
   if (!fieldName.includes('.')) return false;
   const base = fieldName.substring(0, fieldName.lastIndexOf('.'));
   return defs.some((d) => d.fieldName === base && d.localeGroup === true);
+}
+
+/** fieldName of the locale group for a per-locale field, e.g. "descriptions.en" → "descriptions" */
+function localeGroupOf(fieldName: string): string {
+  return fieldName.substring(0, fieldName.lastIndexOf('.'));
 }
 
 /** Which definitions belong to each methodology — mirrors backend methodologyPatterns. */
@@ -129,10 +148,8 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
     [allDefinitions, methodologyKey],
   );
 
-  const displayDefs = useMemo(
-    () => methodologyDefs.filter((d) => !isLocaleField(d.fieldName, methodologyDefs) || d.localeGroup),
-    [methodologyDefs],
-  );
+  // Include locale group headers, their per-locale entries, and regular fields.
+  const displayDefs = methodologyDefs;
 
   const hasFields = displayDefs.length > 0;
 
@@ -188,6 +205,18 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
 
   const handleStateChange = async (entityType: string, fieldName: string, newState: VisibilityState) => {
     const next = { ...fieldStates, [fieldKey(entityType, fieldName)]: newState };
+    // Hiding a locale group resets all its per-locale entries to optional (SHOWN).
+    if (newState === 'HIDDEN') {
+      for (const d of displayDefs) {
+        if (
+          d.entityType === entityType &&
+          isLocaleField(d.fieldName, methodologyDefs) &&
+          localeGroupOf(d.fieldName) === fieldName
+        ) {
+          next[fieldKey(entityType, d.fieldName)] = 'SHOWN';
+        }
+      }
+    }
     setFieldStates(next);
     await buildAndSave(next);
   };
@@ -196,6 +225,11 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
     const tierIndex = MATURITY_ORDER.indexOf(upToMaturity);
     const next: Record<string, VisibilityState> = { ...fieldStates };
     for (const d of displayDefs) {
+      // Per-locale entries have no HIDDEN state — presets leave them optional (SHOWN).
+      if (isLocaleField(d.fieldName, methodologyDefs)) {
+        next[fieldKey(d.entityType, d.fieldName)] = 'SHOWN';
+        continue;
+      }
       const fieldTier = MATURITY_ORDER.indexOf(d.maturityLevel as (typeof MATURITY_ORDER)[number]);
       next[fieldKey(d.entityType, d.fieldName)] = fieldTier <= tierIndex ? 'SHOWN' : 'HIDDEN';
     }
@@ -358,56 +392,167 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                       >
                         {ENTITY_TYPE_LABELS[entityType] ?? entityType}
                       </Typography>
-                      {fields.map((field) => {
-                        const state = getState(field.entityType, field.fieldName);
-                        const canBeMandatory = field.mandatoryCapable && !field.localeGroup;
-                        return (
-                          <Box
-                            key={`${field.entityType}::${field.fieldName}`}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              py: 0.5,
-                              opacity: isSaving ? 0.6 : 1,
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
-                              {field.label}
-                            </Typography>
-                            <ToggleButtonGroup
-                              value={state}
-                              exclusive
-                              onChange={(_, newState: VisibilityState | null) => {
-                                if (newState) handleStateChange(field.entityType, field.fieldName, newState);
+                      {/* Locale group blocks: group Shown/Hidden header + per-locale Mandatory/Optional rows */}
+                      {fields
+                        .filter((f) => f.localeGroup)
+                        .map((groupDef) => {
+                          const groupState = getState(groupDef.entityType, groupDef.fieldName);
+                          const localeDefs = fields.filter(
+                            (d) =>
+                              isLocaleField(d.fieldName, methodologyDefs) &&
+                              localeGroupOf(d.fieldName) === groupDef.fieldName,
+                          );
+                          const anyLocaleMandatory = localeDefs.some(
+                            (d) => getState(d.entityType, d.fieldName) === 'MANDATORY',
+                          );
+                          return (
+                            <Box
+                              key={`${groupDef.entityType}::${groupDef.fieldName}`}
+                              sx={{
+                                mb: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 1,
+                                opacity: isSaving ? 0.6 : 1,
                               }}
-                              size="small"
-                              disabled={isSaving || isMethSaving}
                             >
-                              {canBeMandatory && (
+                              {/* Group header */}
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  px: 1,
+                                  py: 0.5,
+                                  bgcolor: 'action.hover',
+                                }}
+                              >
+                                <Typography variant="body2" sx={{ fontWeight: 500, flex: 1, mr: 1 }}>
+                                  {groupDef.label}{' '}
+                                  <Typography component="span" variant="caption" color="text.secondary">
+                                    (all locales)
+                                  </Typography>
+                                </Typography>
+                                <ToggleButtonGroup
+                                  value={groupState}
+                                  exclusive
+                                  onChange={(_, newState: VisibilityState | null) => {
+                                    if (newState) handleStateChange(groupDef.entityType, groupDef.fieldName, newState);
+                                  }}
+                                  size="small"
+                                  disabled={isSaving || isMethSaving}
+                                >
+                                  <ToggleButton value="SHOWN" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
+                                    Shown
+                                  </ToggleButton>
+                                  <ToggleButton
+                                    value="HIDDEN"
+                                    disabled={anyLocaleMandatory}
+                                    sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
+                                  >
+                                    Hidden
+                                  </ToggleButton>
+                                </ToggleButtonGroup>
+                              </Box>
+                              {/* Per-locale rows */}
+                              {localeDefs.map((def) => {
+                                const localeState = getState(def.entityType, def.fieldName);
+                                const localeDisabled = groupState === 'HIDDEN';
+                                return (
+                                  <Box
+                                    key={`${def.entityType}::${def.fieldName}`}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      px: 1.5,
+                                      py: 0.25,
+                                      borderTop: '1px solid',
+                                      borderColor: 'divider',
+                                      opacity: localeDisabled ? 0.4 : 1,
+                                    }}
+                                  >
+                                    <Typography variant="body2" color="text.secondary" sx={{ flex: 1, mr: 1 }}>
+                                      {def.label}
+                                    </Typography>
+                                    <ToggleButtonGroup
+                                      value={localeState}
+                                      exclusive
+                                      onChange={(_, newState: VisibilityState | null) => {
+                                        if (newState && !localeDisabled)
+                                          handleStateChange(def.entityType, def.fieldName, newState);
+                                      }}
+                                      size="small"
+                                      disabled={isSaving || isMethSaving || localeDisabled}
+                                      data-testid={`field-toggle-${def.fieldName}`}
+                                    >
+                                      <ToggleButton value="MANDATORY" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
+                                        Mandatory
+                                      </ToggleButton>
+                                      <ToggleButton value="SHOWN" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
+                                        Optional
+                                      </ToggleButton>
+                                    </ToggleButtonGroup>
+                                  </Box>
+                                );
+                              })}
+                            </Box>
+                          );
+                        })}
+
+                      {/* Regular (non-locale) fields */}
+                      {fields
+                        .filter((f) => !f.localeGroup && !isLocaleField(f.fieldName, methodologyDefs))
+                        .map((field) => {
+                          const state = getState(field.entityType, field.fieldName);
+                          const canBeMandatory = field.mandatoryCapable && !field.localeGroup;
+                          return (
+                            <Box
+                              key={`${field.entityType}::${field.fieldName}`}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                py: 0.5,
+                                opacity: isSaving ? 0.6 : 1,
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
+                                {field.label}
+                              </Typography>
+                              <ToggleButtonGroup
+                                value={state}
+                                exclusive
+                                onChange={(_, newState: VisibilityState | null) => {
+                                  if (newState) handleStateChange(field.entityType, field.fieldName, newState);
+                                }}
+                                size="small"
+                                disabled={isSaving || isMethSaving}
+                              >
+                                {canBeMandatory && (
+                                  <ToggleButton
+                                    value="MANDATORY"
+                                    sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
+                                  >
+                                    Mandatory
+                                  </ToggleButton>
+                                )}
                                 <ToggleButton
-                                  value="MANDATORY"
+                                  value="SHOWN"
                                   sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
                                 >
-                                  Mandatory
+                                  Shown
                                 </ToggleButton>
-                              )}
-                              <ToggleButton
-                                value="SHOWN"
-                                sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
-                              >
-                                Shown
-                              </ToggleButton>
-                              <ToggleButton
-                                value="HIDDEN"
-                                sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
-                              >
-                                Hidden
-                              </ToggleButton>
-                            </ToggleButtonGroup>
-                          </Box>
-                        );
-                      })}
+                                <ToggleButton
+                                  value="HIDDEN"
+                                  sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
+                                >
+                                  Hidden
+                                </ToggleButton>
+                              </ToggleButtonGroup>
+                            </Box>
+                          );
+                        })}
                     </Box>
                   ))}
                 </Box>

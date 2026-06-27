@@ -77,7 +77,6 @@ const router = createBrowserRouter([
       { path: 'settings/users', element: <SettingsPage /> },
       { path: 'settings/locales', element: <SettingsPage /> },
       { path: 'settings/classifications', element: <SettingsPage /> },
-      { path: 'settings/field-configurations', element: <SettingsPage /> },
       { path: 'settings/methodologies', element: <SettingsPage /> },
       { path: 'settings/organisation', element: <SettingsPage /> },
       { path: 'service-providers', element: <ServiceProvidersPage /> },

@@ -4,7 +4,6 @@ import { Box } from '@mui/material';
 import UsersTab from '../components/settings/UsersTab';
 import LocalesTab from '../components/settings/LocalesTab';
 import ClassificationsTab from '../components/settings/ClassificationsTab';
-import FieldConfigurationTab from '../components/settings/FieldConfigurationTab';
 import MethodologiesTab from '../components/settings/MethodologiesTab';
 import OrganisationSettingsTab from '../components/settings/OrganisationSettingsTab';
 
@@ -16,7 +15,6 @@ const SettingsPage: React.FC = () => {
       {location.pathname === '/settings/users' && <UsersTab />}
       {location.pathname === '/settings/locales' && <LocalesTab />}
       {location.pathname === '/settings/classifications' && <ClassificationsTab />}
-      {location.pathname === '/settings/field-configurations' && <FieldConfigurationTab />}
       {location.pathname === '/settings/methodologies' && <MethodologiesTab />}
       {location.pathname === '/settings/organisation' && <OrganisationSettingsTab />}
     </Box>
