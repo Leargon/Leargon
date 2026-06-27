@@ -44,7 +44,7 @@ C4Container
 
   System_Boundary(leargon, "Léargon") {
     Container(frontend, "Web App", "React 19 / TypeScript / Vite", "Single-page application served by nginx. Provides the data catalogue UI, process diagrams, user management, and settings screens.")
-    Container(backend, "REST API", "Kotlin 2.3 / Micronaut 4.10 / JVM 21", "Stateless HTTP API. Enforces business rules, authentication (local JWT + Azure), multilingual data, versioning, and classification logic.")
+    Container(backend, "REST API", "Kotlin 2.4 / Micronaut 5.0 / JVM 25", "Stateless HTTP API. Enforces business rules, authentication (local JWT + Azure), multilingual data, versioning, and classification logic.")
     ContainerDb(db, "Database", "MySQL 8.4", "Stores users, business entities, domains, processes, org units, classifications, version history, and supported locales.")
   }
 
@@ -72,14 +72,14 @@ C4Component
   ContainerDb(db, "MySQL 8.4", "Relational DB")
   System_Ext(azure, "Azure Entra ID", "JWKS endpoint")
 
-  Container_Boundary(api, "REST API — Micronaut 4.10 / Kotlin 2.3") {
+  Container_Boundary(api, "REST API — Micronaut 5.0 / Kotlin 2.4") {
 
     Component(sec, "Security Layer", "Micronaut Security / Kotlin", "UserPasswordAuthenticationProvider (BCrypt), AzureTokenValidator (RS256/JWKS), PasswordEncoder (BCrypt-12)")
-    Component(ctrl, "Controllers (11)", "Micronaut @Controller / Kotlin", "AuthenticationController, BusinessDomainController, BusinessEntityController, ProcessController, ClassificationController, OrganisationalUnitController, UserController, AdministrationController, LocaleController, SetupController, (OpenAPI-generated interfaces)")
-    Component(svc, "Services (11)", "Micronaut @Singleton / Kotlin", "Business logic: AuthenticationService, AzureAuthService, BusinessDomainService, BusinessEntityService, ProcessService, ProcessDiagramService, ClassificationService, OrganisationalUnitService, UserService, LocaleService, SetupService")
-    Component(mapper, "Mappers (8)", "Kotlin @Singleton", "Hand-written Domain ↔ DTO converters: BusinessDomainMapper, BusinessEntityMapper, ProcessMapper, ClassificationMapper, OrganisationalUnitMapper, UserMapper, LocalizedTextMapper, ProcessDiagramMapper")
-    Component(repo, "Repositories (14)", "Micronaut Data JPA", "JpaRepository interfaces: BusinessEntityRepository, BusinessDomainRepository, ProcessRepository, ClassificationRepository, OrganisationalUnitRepository, UserRepository, and version / relationship repositories")
-    Component(domain, "Domain Entities (16)", "JPA @Entity / Kotlin", "BusinessEntity, BusinessDomain, Process, OrganisationalUnit, Classification, ClassificationValue, User, SupportedLocale, plus version and relationship entities")
+    Component(ctrl, "Controllers (24)", "Micronaut @Controller / Kotlin", "AuthenticationController, BusinessDomainController, BusinessEntityController, ProcessController, ClassificationController, OrganisationalUnitController, CapabilityController, DomainEventController, BoundedContextController, ContextRelationshipController, ItSystemController, ServiceProviderController, DpiaController, ProcessingRegisterController, ExportController, AnalyticsController, DashboardController, SearchController, UserController, AdministrationController, LocaleController, SetupController, TranslationLinkController, BusinessDataQualityRuleController (implement OpenAPI-generated interfaces)")
+    Component(svc, "Services (33)", "Micronaut @Singleton / Kotlin", "Business logic: AuthenticationService, AzureAuthService, BusinessDomainService, BusinessEntityService, ProcessService, ProcessDiagramService, ClassificationService, OrganisationalUnitService, CapabilityService, DomainEventService, ItSystemService, ServiceProviderService, DpiaService, ExportService, FieldConfigurationService, MethodologyConfigurationService, UserService, LocaleService, SetupService, …")
+    Component(mapper, "Mappers (19)", "Kotlin @Singleton", "Hand-written Domain ↔ DTO converters: BusinessDomainMapper, BusinessEntityMapper, ProcessMapper, ClassificationMapper, OrganisationalUnitMapper, CapabilityMapper, DomainEventMapper, ItSystemMapper, ServiceProviderMapper, UserMapper, LocalizedTextMapper, ProcessDiagramMapper, …")
+    Component(repo, "Repositories (28)", "Micronaut Data JPA", "JpaRepository interfaces: BusinessEntityRepository, BusinessDomainRepository, ProcessRepository, ClassificationRepository, OrganisationalUnitRepository, CapabilityRepository, DomainEventRepository, ItSystemRepository, ServiceProviderRepository, DpiaRepository, UserRepository, plus version / relationship repositories")
+    Component(domain, "Domain Entities (28)", "JPA @Entity / Kotlin", "BusinessEntity, BusinessDomain, Process, OrganisationalUnit, Classification, ClassificationValue, Capability, DomainEvent, BoundedContext, ContextRelationship, ItSystem, ServiceProvider, Dpia, User, SupportedLocale, plus version and relationship entities")
     Component(bootstrap, "Bootstrap", "Micronaut @EventListener", "AdministratorUserBootstrap — creates / updates fallback admin user at startup from env vars")
   }
 
@@ -213,8 +213,8 @@ C4Deployment
         ContainerDb(mysqlDb, "MySQL 8.4", "MySQL · internal port 3306", "Stores all platform data. Volume-mounted (mysql-data). Reachable inside the network as leargon-mysql:3306.")
       }
 
-      Deployment_Node(backendNode, "leargon-backend", "eclipse-temurin:21-jre-alpine · host 8081 → container 8080") {
-        Container(backendApp, "Léargon REST API", "Kotlin 2.3 / Micronaut 4.10 / JVM 21 · listens :8080", "Shadow JAR. Liquibase runs migrations at startup.")
+      Deployment_Node(backendNode, "leargon-backend", "eclipse-temurin:25-jre-alpine · host 8081 → container 8080") {
+        Container(backendApp, "Léargon REST API", "Kotlin 2.4 / Micronaut 5.0 / JVM 25 · listens :8080", "Shadow JAR. Liquibase runs migrations at startup.")
       }
 
       Deployment_Node(frontendNode, "leargon-frontend", "nginx:alpine · host 3000 → container 80") {

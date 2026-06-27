@@ -412,12 +412,16 @@ Leargon has two layers of access control: **system-level roles** (coarse-grained
 
 ### System-Level Roles
 
-Two roles exist, stored as a comma-separated string in the `User.roles` column:
+System roles are stored as a comma-separated string in the `User.roles` column. There are two **global** roles and a family of **methodology-scoped** roles:
 
-| Role         | Meaning                                                                                                          |
-|--------------|------------------------------------------------------------------------------------------------------------------|
-| `ROLE_USER`  | Every authenticated user. Can read everything and create new objects (becoming their owner).                     |
-| `ROLE_ADMIN` | Full administrative access: can edit any object regardless of ownership, manage users, and configure the system. |
+| Role              | Scope            | Meaning                                                                                                                                                                                            |
+|-------------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ROLE_USER`       | global           | Every authenticated user. Reads everything and creates new objects (becoming their owner).                                                                                                          |
+| `ROLE_ADMIN`      | global           | Full administrative access: edit any object regardless of ownership, manage users, and configure the system.                                                                                        |
+| `ROLE_EDITOR_<M>` | one methodology  | May edit any field that belongs to methodology `<M>`, on any object, regardless of ownership. Treated as a non-owner — edits flip the field to `UNVERIFIED` and verification is not granted (see *Edit vs. Verify*). |
+| `ROLE_LEAD_<M>`   | one methodology  | Everything `ROLE_EDITOR_<M>` can do **plus** managing `<M>`'s configuration — enabling/disabling the methodology and setting field visibility/mandatory for its fields. A lead implies the editor role for the same `<M>`. |
+
+`<M>` is one of the six methodologies — `DATA_GOVERNANCE`, `PROCESS_GOVERNANCE`, `GDPR`, `DDD`, `BCM`, `TEAM_TOPOLOGIES` — so tokens look like `ROLE_LEAD_GDPR` or `ROLE_EDITOR_DDD`. The token grammar is `^ROLE_(USER|ADMIN|(LEAD|EDITOR)_<METHODOLOGY>)$`; scoped tokens are validated server-side against the known methodology keys (`RoleService`).
 
 Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In practice all admins have both, but code checks are explicit (`roles.contains("ROLE_ADMIN")`).
 
@@ -429,7 +433,7 @@ Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In pract
 
 **Azure Entra ID login** (`POST /authentication/azure-login`): on first login the user is auto-created with `ROLE_USER` and `authProvider = "AZURE"`. Subsequent logins update the user's profile fields but never change the role — Azure group membership is **not** synced to roles.
 
-**Admin promotion**: only an existing `ROLE_ADMIN` can promote another user via the administration API. Ordinary users cannot change their own role.
+**Admin promotion & scoped-role assignment**: only an existing `ROLE_ADMIN` can change another user's roles via the administration API (`PUT /administration/users/{id}` with a `roles` array). This is also how methodology-scoped `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` tokens are granted; unknown tokens are rejected (400). Ordinary users cannot change their own role.
 
 **Fallback administrator**: a special bootstrap account created at startup from the `ADMIN_EMAIL` / `ADMIN_USERNAME` / `ADMIN_PASSWORD` environment variables. It has `ROLE_ADMIN` and `isFallbackAdministrator = true`. It cannot be deleted, disabled, or have its password changed via the regular API. It can use password-based login even when Azure authentication is configured for all other users.
 
@@ -445,40 +449,56 @@ Each content object carries named ownership fields that confer edit permission o
 | Process             | `processOwner`                             | `processSteward`, `technicalCustodian`  |
 | Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian` |
 
-The creator of an object is set as its primary owner at creation time. Only `ROLE_ADMIN` can reassign ownership fields.
+The creator of an object is set as its primary owner at creation time.
 
-`dataSteward`, `technicalCustodian`, and `businessSteward` are informational — they appear in analytics and audit views but do not grant edit permission.
+**Stewards grant edit rights.** The *effective steward* of an object (`dataSteward` / `processSteward` / `businessSteward`, falling back to the owning unit's `businessSteward`) can edit it exactly like the owner — with one exception: a steward **cannot verify fields**, and because a steward is not the owner, every field they change flips to `UNVERIFIED` (see *Edit vs. Verify*). `technicalCustodian` remains informational and confers no edit permission.
+
+Business **Domains** are the exception: they have no per-object owner/steward edit gate and remain **admin-only** to edit.
+
+Reassigning the owner/steward fields themselves is an `ROLE_ADMIN` action — except that, since those fields are mapped to the `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE` methodologies, an editor/lead for the relevant methodology can also set them via the single-field endpoints.
 
 ---
 
 ### Computed (Inherited) Ownership
 
-If a Business Entity or Process has no explicit owner set, the system derives one from the object's position in the domain model:
+If a Business Entity or Process has no explicit owner (or steward) set, the system derives one from the object's position in the domain model:
 
 ```
-effective owner = explicit owner
-              ?? boundedContext.owningUnit.businessOwner
+effective owning unit = explicit owningUnit ?? boundedContext.owningUnit ?? boundedContext.domain.owningUnit
+effective owner       = explicit owner   ?? effectiveOwningUnit.businessOwner
+effective steward     = explicit steward ?? effectiveOwningUnit.businessSteward
 ```
 
-This computed owner is treated identically to an explicit owner for permission checks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
+The computed owner/steward are treated identically to explicit ones for permission checks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
 
 ---
 
 ### Permission Matrix
 
-| Operation                                                         | `ROLE_USER` (non-owner) | Object owner / effective owner |    `ROLE_ADMIN`    |
-|-------------------------------------------------------------------|:-----------------------:|:------------------------------:|:------------------:|
-| Read any object                                                   |            ✓            |               ✓                |         ✓          |
-| Create a new object (becomes owner)                               |            ✓            |               —                |         ✓          |
-| Edit object properties (names, fields, classifications)           |            ✗            |               ✓                |         ✓          |
-| Reassign ownership fields (`dataOwner`, `processOwner`, stewards) |            ✗            |               ✗                |         ✓          |
-| Delete an object                                                  |            ✗            |               ✓                |         ✓          |
-| User management (create, enable/disable, delete users)            |            ✗            |               ✗                |         ✓          |
-| Delete fallback admin user                                        |            ✗            |               ✗                | ✗ (blocked always) |
+| Operation                                       | `ROLE_USER` (no role) | Effective steward | `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` | Owner | `ROLE_ADMIN`       |
+|-------------------------------------------------|:---------------------:|:-----------------:|:-----------------------------------:|:-----:|:------------------:|
+| Read any object                                 |           ✓           |         ✓         |                  ✓                  |   ✓   |         ✓          |
+| Create a new object (becomes owner)             |           ✓           |         ✓         |                  ✓                  |   —   |         ✓          |
+| Edit a field                                    |           ✗           |   ✓ (any field)   |        ✓ (only fields of `<M>`)¹    |   ✓   |         ✓          |
+| Verify / unverify a field                       |           ✗           |         ✗         |                  ✗                  |   ✓   |         ✗          |
+| Delete an object                                |           ✗           |         ✓         |                  ✗                  |   ✓   |         ✓          |
+| Reassign owner / steward fields                 |           ✗           |         ✗         |       only `DATA/PROCESS_GOVERNANCE`²|   ✗   |         ✓          |
+| Manage methodology `<M>` configuration          |           ✗           |         ✗         |        `LEAD_<M>` only              |   ✗   |         ✓          |
+| User management (create, enable/disable, delete)|           ✗           |         ✗         |                  ✗                  |   ✗   |         ✓          |
+| Delete fallback admin user                      |           ✗           |         ✗         |                  ✗                  |   ✗   | ✗ (blocked always) |
+
+¹ A field's methodology is resolved from the field-configuration inventory (see `METHODOLOGY-FIELD-MAPPING.md`). Scoped editors work through the **single-field** endpoints; the whole-object update endpoint stays owner/steward/admin-only.
+² Owner/steward fields are themselves mapped to `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE`, so an editor/lead for that methodology can set them.
 
 **Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
 
-**Organisational Unit ownership** has no edit permission check in the current implementation — any authenticated user can edit org unit properties.
+**Organisational Units** are edit-gated like the other content types: the unit lead (`businessOwner`), the effective steward (`businessSteward`), an admin, or a relevant methodology editor/lead may edit them.
+
+---
+
+### Edit vs. Verify
+
+Editing and **field verification** are separate permissions. Any actor who can edit a field (owner, steward, scoped editor/lead, admin) may change its value — but **only the owner may mark a field VERIFIED/UNVERIFIED**. Because verification is value-and-actor-based and owner-only, any edit by a non-owner (steward, `ROLE_EDITOR_<M>`, `ROLE_LEAD_<M>`, or even an admin who is not the owner) automatically flips the affected field to `UNVERIFIED`, and the verify endpoint rejects non-owners with 403. This is unchanged by the role system — the scoped roles deliberately grant *edit* without *verify*. See the per-field verification feature for the mechanism.
 
 ---
 
@@ -496,16 +516,21 @@ No failed-login lockout mechanism exists.
 
 ### Frontend Role Checks
 
-The frontend derives three booleans from the JWT payload and the fetched entity:
+The frontend derives its edit/verify affordances from the JWT roles and the fetched entity. The edit gate is intentionally **coarse** — it decides what controls to show; the backend re-validates every mutation and returns 403:
 
 ```typescript
-const isAdmin      = user?.roles?.includes('ROLE_ADMIN') ?? false;
-const isOwner      = user?.username === entity?.dataOwner?.username;  // explicit only
-const canEdit      = isAdmin || isOwner;
+const isAdmin   = user?.roles?.includes('ROLE_ADMIN') ?? false;
+const isOwner   = user?.username === entity?.dataOwner?.username;
+const isSteward = user?.username === entity?.dataSteward?.username;
+// coarse: owner, steward, admin, or any scoped editor/lead relevant to this entity type
+const canEdit   = isAdmin || isOwner || isSteward
+                || canEditEntityTypeByRole(user?.roles, 'BUSINESS_ENTITY');
+const canVerify = isOwner;   // verification stays owner-only
 ```
 
-These control the visibility of edit buttons, ownership assignment UI, and admin-only sections. They are **UI convenience only** — the server re-validates every mutation independently.
+`src/utils/roles.ts` mirrors the backend `RoleService` (`getRoleScopes`, `isLeadFor`, `isEditorFor`, `canEditEntityTypeByRole`, …). These checks are **UI convenience only**.
 
 Route-level guards:
 - `ProtectedRoute` — redirects unauthenticated users to `/login`.
-- `AdminRoute` — redirects non-admin users; used for the Settings and Administration sections.
+- `AdminRoute` — redirects non-admin users; used for the user-management and other admin-only settings.
+- The methodology and field-configuration settings screens are reachable by a methodology **lead** (not just admins) and are filtered to the lead's methodologies; the backend enforces the per-methodology scope.

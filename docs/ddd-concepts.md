@@ -37,15 +37,13 @@ Ubiquitous Language is the shared vocabulary used by domain experts and engineer
 
 ---
 
-## 3. Domains vs Bounded Contexts — Architectural Gap
+## 3. Domains vs Bounded Contexts
 
 **Theoretical position:** In strict DDD, entity and process ownership belongs to **Bounded Contexts**, not Domains or Subdomains. A Bounded Context is a linguistic boundary — everything inside shares the same Ubiquitous Language; the same term may mean something different outside.
 
-**Current Léargon state:** `BusinessDomain` conflates Subdomain and Bounded Context into a single concept. Entities and processes are assigned to `BusinessDomain`, which acts as both a subdomain classification and a context boundary.
+**Current Léargon state:** `BoundedContext` is a first-class entity (`domain/BoundedContext.kt`, table `bounded_contexts`). Each Bounded Context belongs to a `BusinessDomain` (`boundedContext.domain`) and carries a `contextType` (see §4). `BusinessEntity` and `Process` are assigned to a `BoundedContext` (`businessEntity.boundedContext`, `process.boundedContext`), which gives them their canonical meaning; effective ownership falls back through `boundedContext.owningUnit → boundedContext.domain.owningUnit`. Context relationships (`ContextRelationship`) connect bounded contexts directly via `upstreamBoundedContext` / `downstreamBoundedContext`.
 
-**Why this is acceptable for now:** For a governance tool that models an organisation's data landscape (rather than implementing the bounded contexts as software), this simplification is pragmatic. The domain hierarchy gives enough structure for the processing register, Conway Law analysis, and ContextMapper visualisation.
-
-**Future direction:** If Léargon needs to model the software architecture more precisely — for example, to highlight where a term means different things in two parts of the system — a separate `BoundedContext` entity could be introduced. Entities and processes would then belong to a `BoundedContext`, which in turn belongs to a `BusinessDomain`. The ContextMapper relationships (`ContextRelationship`) already point in this direction. This is a candidate for Batch 20.
+**Why this layering:** Domains (and their `CORE`/`SUPPORT`/`GENERIC` subdomains) describe the *problem space*; Bounded Contexts describe the *linguistic/solution boundary* nested beneath a domain. This separation lets the processing register, Conway's-Law analysis, and the ContextMapper export reason about contexts precisely rather than conflating them with subdomains.
 
 ---
 
@@ -61,7 +59,7 @@ In the [ContextMapper DSL](https://contextmapper.org/docs/language-reference/), 
 
 The `TEAM`, `APPLICATION`, `SYSTEM`, `FEATURE`, `SHARED_KERNEL` types all qualify **`BoundedContext`** — not `Subdomain`. A `TEAM` context means the context corresponds to a team's ownership boundary. A `SUBDOMAIN` in the DSL is explicitly a separate construct for the problem space.
 
-**In Léargon's `.cml` export** (`/export/context-map`): `BusinessDomain` instances are emitted as `BoundedContext` with `type = FEATURE` (a reasonable default given the current conflation). If Léargon later introduces true `BoundedContext` entities, those would map to the `BoundedContext` keyword directly, and `BusinessDomain` would map to `Subdomain`.
+**In Léargon's `.cml` export** (`ExportService`, `/export/context-map`): the real `BoundedContext` entities are emitted as ContextMapper `BoundedContext` blocks (their `contextType` maps to the DSL `type`), grouped under their owning `BusinessDomain`, which is emitted as a `Subdomain`. Context relationships are rendered on the `ContextMap` from the typed `ContextRelationship` upstream/downstream pairs.
 
 ---
 
@@ -71,7 +69,7 @@ The `TEAM`, `APPLICATION`, `SYSTEM`, `FEATURE`, `SHARED_KERNEL` types all qualif
 |---|---|---|
 | `BusinessDomain` (type=BUSINESS) | Domain | Top-level problem area |
 | `BusinessDomain` (type=CORE/SUPPORT/GENERIC) | Subdomain | Slice of the domain |
-| `BusinessDomain` (any) | Bounded Context (approximate) | Current simplification |
+| `BoundedContext` | Bounded Context | First-class entity nested under a `BusinessDomain`; entities & processes are assigned to it |
 | `BusinessEntity` | Domain Object / Aggregate Root candidate | The nouns of Ubiquitous Language |
 | `Process` | Domain Event / Use Case | The verbs of Ubiquitous Language |
 | Mandatory field checks | Invariants | Machine-readable domain rules |
