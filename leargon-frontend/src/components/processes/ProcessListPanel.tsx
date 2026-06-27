@@ -46,7 +46,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
     return process.children?.some(matchesFilter) ?? false;
   };
 
-  const filteredTree = [...tree].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredTree = [...tree].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -132,7 +132,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   const [open, setOpen] = useState(false);
   const hasChildren = process.children && process.children.length > 0;
   const isSelected = process.key === selectedKey;
-  const filteredChildren = [...(process.children || [])].sort((a, b) => a.key.localeCompare(b.key)).filter(matchesFilter);
+  const filteredChildren = [...(process.children || [])].sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key))).filter(matchesFilter);
 
   return (
     <>

@@ -164,6 +164,24 @@ test.describe('Methodology Settings', () => {
   // (kept there so it runs serially with the other verification tests and can't race this spec's
   // concurrent worker over the global methodology config). Integration + backend specs cover it too.
 
+  test('Configure panel exposes per-locale Mandatory/Optional switches for localized fields', async ({ page }) => {
+    await page.goto('/settings/methodologies');
+    await page.waitForLoadState('networkidle');
+
+    // Process Governance owns the Business Process "descriptions" localized field. Its title is unique
+    // (never appears as a section chip), so the card filter is unambiguous.
+    const card = page.locator('.MuiCard-root').filter({ hasText: 'Process Governance' });
+    await card.getByRole('button', { name: 'Configure' }).click();
+
+    // The locale group header is shown…
+    await expect(card.getByText('(all locales)').first()).toBeVisible();
+    // …with at least one per-locale row carrying Mandatory/Optional toggles.
+    const localeRow = card.locator('[data-testid^="field-toggle-descriptions."]').first();
+    await expect(localeRow).toBeVisible();
+    await expect(localeRow.getByRole('button', { name: 'Mandatory' })).toBeVisible();
+    await expect(localeRow.getByRole('button', { name: 'Optional' })).toBeVisible();
+  });
+
   test('methodology settings link appears in settings sidebar', async ({ page }) => {
     await page.goto('/settings/users');
     await page.waitForLoadState('networkidle');

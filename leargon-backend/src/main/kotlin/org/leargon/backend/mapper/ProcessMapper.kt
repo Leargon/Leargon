@@ -98,7 +98,7 @@ open class ProcessMapper(
             process.owningUnit
                 ?: process.boundedContext?.owningUnit
                 ?: process.boundedContext?.domain?.owningUnit
-        val effectiveSteward = process.processSteward ?: effectiveOwningUnit?.businessSteward
+        val effectiveSteward = process.effectiveSteward()
         val effectiveCustodian = process.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
         val effectiveOutputEntities = collectEffectiveEntities(process) { it.outputEntities }

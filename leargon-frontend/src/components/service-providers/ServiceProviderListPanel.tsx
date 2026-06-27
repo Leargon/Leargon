@@ -42,7 +42,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
         p.key.toLowerCase().includes(filter.toLowerCase())
       );
     })
-    .sort((a, b) => a.key.localeCompare(b.key));
+    .sort((a, b) => getLocalizedText(a.names, a.key).localeCompare(getLocalizedText(b.names, b.key)));
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

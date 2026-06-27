@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.FieldConfiguration
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.model.FieldConfigurationDefinition
 import org.leargon.backend.model.FieldConfigurationDefinitionMaturityLevel
 import org.leargon.backend.model.FieldConfigurationEntry
@@ -177,6 +178,27 @@ open class FieldConfigurationService(
             .map { it.fieldName.substringBefore(".{locale}") }
             .toSet()
 
+    /**
+     * Resolves the methodology section of a concrete field name (e.g. "retentionPeriod" → DATA_GOVERNANCE,
+     * "names.en" → CORE, "classification.gdpr" → DATA_GOVERNANCE). Returns null for unknown fields.
+     * Used by role-based field-edit gating.
+     */
+    fun sectionOf(
+        entityType: String,
+        fieldName: String
+    ): String? {
+        fieldInventory.firstOrNull { it.entityType == entityType && it.fieldName == fieldName }?.let { return it.section }
+        val base = fieldName.substringBefore(".")
+        fieldInventory.firstOrNull { it.entityType == entityType && it.fieldName == "$base.{locale}" }?.let { return it.section }
+        if (fieldName.startsWith("classification.")) {
+            fieldInventory
+                .firstOrNull {
+                    it.entityType == entityType && it.fieldName == "classification.{classKey}"
+                }?.let { return it.section }
+        }
+        return null
+    }
+
     @Transactional
     open fun getAll(): List<FieldConfigurationEntry> = fieldConfigurationRepository.findAll().map { toEntry(it) }
 
@@ -233,6 +255,78 @@ open class FieldConfigurationService(
                 fieldConfigurationRepository.save(config)
             }
         return saved.map { toEntry(it) }
+    }
+
+    /**
+     * Scoped variant of [replace] for a methodology LEAD (admin uses [replace] directly). A LEAD may only
+     * change field configurations whose methodology is in [leadMethodologies]; configurations for any other
+     * methodology are preserved unchanged. Attempting to change an out-of-scope field is rejected with 403.
+     */
+    @Transactional
+    open fun replaceScoped(
+        entries: List<FieldConfigurationEntry>,
+        leadMethodologies: Set<String>,
+        isAdmin: Boolean
+    ): List<FieldConfigurationEntry> {
+        if (isAdmin) return replace(entries)
+        if (leadMethodologies.isEmpty()) {
+            throw ForbiddenOperationException("Not permitted to change field configuration")
+        }
+
+        fun inScope(
+            entityType: String,
+            fieldName: String,
+            section: String?
+        ): Boolean {
+            val resolvedSection = section ?: sectionOf(entityType, fieldName) ?: "CORE"
+            return methodologiesOfField(entityType, fieldName.substringBefore("."), resolvedSection)
+                .any { it in leadMethodologies }
+        }
+
+        val current = getAll()
+        // Reject any out-of-scope change instead of silently ignoring it.
+        val currentByField = current.associateBy { it.entityType to it.fieldName }
+        entries.forEach { entry ->
+            if (!inScope(entry.entityType, entry.fieldName, entry.section)) {
+                val cur = currentByField[entry.entityType to entry.fieldName]
+                val changed = cur?.visibility != entry.visibility
+                if (changed) {
+                    throw ForbiddenOperationException(
+                        "Not permitted to change field ${entry.entityType}.${entry.fieldName} (outside methodology scope)"
+                    )
+                }
+            }
+        }
+
+        // Preserve out-of-scope configs; apply the lead's in-scope entries verbatim.
+        val preserved = current.filter { !inScope(it.entityType, it.fieldName, it.section) }
+        val applied = entries.filter { inScope(it.entityType, it.fieldName, it.section) }
+        return replace(preserved + applied)
+    }
+
+    /** Methodologies that claim [fieldBase] on [entityType] (by bare-name or section pattern). */
+    private fun methodologiesOfField(
+        entityType: String,
+        fieldBase: String,
+        section: String
+    ): Set<String> {
+        val result = mutableSetOf<String>()
+        for ((methodology, byType) in methodologyPatterns) {
+            val patterns = byType[entityType] ?: continue
+            for (pattern in patterns) {
+                val matches =
+                    if (pattern.startsWith("section:")) {
+                        section == pattern.removePrefix("section:")
+                    } else {
+                        fieldBase == pattern || fieldBase.startsWith("$pattern.")
+                    }
+                if (matches) {
+                    result.add(methodology)
+                    break
+                }
+            }
+        }
+        return result
     }
 
     /**

@@ -43,7 +43,7 @@ Léargon unifies three analytical frameworks — **Domain-Driven Design (DDD)**,
 | **DPIA tracking** | Risk description, mitigation, residual risk, and completion status per process or entity |
 | **Version history** | Full JSON snapshot of every change to entities, domains, and processes |
 | **Classification taxonomy** | Flexible, multilingual tag system assignable to any object type; system classifications locked for compliance |
-| **Role-based access** | `ROLE_ADMIN` and `ROLE_USER`, plus per-object ownership (data owner, process owner, org unit lead) with computed inheritance |
+| **Role-based access** | Global `ROLE_ADMIN` / `ROLE_USER` and methodology-scoped `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` roles, plus per-object ownership and stewardship (data/process owner, org unit lead, and stewards who can edit but not verify) with computed inheritance |
 | **Azure Entra ID** | Optional enterprise SSO via MSAL; local JWT login always available for the fallback admin |
 | **Multilingual** | All names and descriptions stored as localised text; UI language switchable per user |
 
@@ -53,8 +53,8 @@ Léargon unifies three analytical frameworks — **Domain-Driven Design (DDD)**,
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, TypeScript 6, Vite 8, Material UI 7, TanStack React Query 5 |
-| Backend | Kotlin 2.3, Micronaut 4.10, JVM 21, Hibernate JPA, Micronaut Data |
+| Frontend | React 19, TypeScript 6, Vite 8, Material UI 9, TanStack React Query 5 |
+| Backend | Kotlin 2.4, Micronaut 5.0, JVM 25, Hibernate JPA, Micronaut Data |
 | Database | MySQL 8.4 with Liquibase migrations |
 | Auth | Local JWT (HS256) + Azure Entra ID (RS256 / MSAL) |
 | Diagrams | React Flow, Dagre |

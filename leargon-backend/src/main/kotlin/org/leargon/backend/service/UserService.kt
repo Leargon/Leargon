@@ -29,7 +29,8 @@ open class UserService(
     private val processRepository: ProcessRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val userMapper: UserMapper
+    private val userMapper: UserMapper,
+    private val roleService: RoleService
 ) {
     @Transactional
     open fun createUser(request: SignupRequest): User {
@@ -68,6 +69,11 @@ open class UserService(
         val user = getUserById(userId)
         if (user.isFallbackAdministrator) {
             throw ForbiddenOperationException("Cannot modify fallback admin user")
+        }
+        request.roles?.forEach { token ->
+            if (!roleService.isValidRoleToken(token)) {
+                throw IllegalArgumentException("Unknown role token: $token")
+            }
         }
         if (request.email != null && request.email != user.email) {
             if (userRepository.existsByEmail(request.email!!)) {

@@ -16,7 +16,6 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { UpdateUserRequestRolesItem } from './updateUserRequestRolesItem.ts';
 
 export interface UpdateUserRequest {
   /**
@@ -46,6 +45,9 @@ export interface UpdateUserRequest {
   preferredLanguage?: string;
   /** Account enabled status */
   enabled?: boolean;
-  /** User roles */
-  roles?: UpdateUserRequestRolesItem[];
+  /**
+     * User roles. Supports the global roles ROLE_USER / ROLE_ADMIN and the methodology-scoped roles ROLE_LEAD_<METHODOLOGY> / ROLE_EDITOR_<METHODOLOGY> (e.g. ROLE_LEAD_GDPR, ROLE_EDITOR_DDD). Scoped tokens are validated server-side against the known methodology keys.
+     * @items.pattern ^ROLE_(USER|ADMIN|(LEAD|EDITOR)_[A-Z0-9_]+)$
+     */
+  roles?: string[];
 }

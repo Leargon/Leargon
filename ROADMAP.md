@@ -16,7 +16,6 @@
 | Import & integration                          | 4        | 40%    | 7/10  | **1.8**  |
 | Watch & notifications                         | 4        | 40%    | 6/10  | **1.5**  |
 | Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
-| Stewards                                      | 5        | 50%    | 7/10  | **1.4**  |
 | Extended BPMN event types (Story 2b)          | 3        | 30%    | 6/10  | **2.0**  |
 | Localise all remaining free-text fields       | 3        | 30%    | 7/10  | **2.3**  |
 
@@ -457,66 +456,6 @@ Requires extending the `EventDefinition` enum and `FlowNodeType` enum in `openap
 **IF** review cycles are configured for items I am responsible for\
 **I WANT** to see a list of my upcoming reviews with their due dates in my personal overview or notification panel\
 **SO THAT** I can plan ahead and avoid overdue reviews
-
----
-
-## Stewards
-*Adds a new permission layer across all four entity types — touches every service and detail page. Wide blast radius; ship as one complete feature.*
-*⏱ Sessions: 5 · Weekly effort: ~50% · Value: 7/10 · Score: 1.4*
-
-#### USER STORY 'Add steward to business entity'
-**AS AN** admin or data owner\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business entity\
-**SO THAT** the stewards can edit the entity alongside the data owner without having full admin rights
-
-#### USER STORY 'Remove steward from business entity'
-**AS AN** admin or data owner\
-**IF** the user is currently a steward of the entity\
-**I WANT** to remove a steward from a business entity\
-**SO THAT** the user no longer has edit rights on that entity
-
-#### USER STORY 'Add steward to business domain'
-**AS AN** admin\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business domain\
-**SO THAT** the stewards can edit the domain alongside admins
-
-#### USER STORY 'Remove steward from business domain'
-**AS AN** admin\
-**IF** the user is currently a steward of the domain\
-**I WANT** to remove a steward from a business domain\
-**SO THAT** the user no longer has edit rights on that domain
-
-#### USER STORY 'Add steward to business process'
-**AS AN** admin or process owner\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of a business process\
-**SO THAT** the stewards can edit the process alongside the process owner
-
-#### USER STORY 'Remove steward from business process'
-**AS AN** admin or process owner\
-**IF** the user is currently a steward of the process\
-**I WANT** to remove a steward from a business process\
-**SO THAT** the user no longer has edit rights on that process
-
-#### USER STORY 'Add steward to organisational unit'
-**AS AN** admin\
-**IF** the user is registered and active\
-**I WANT** to assign one or more users as stewards of an organisational unit\
-**SO THAT** the stewards can edit the unit alongside the unit lead
-
-#### USER STORY 'Remove steward from organisational unit'
-**AS AN** admin\
-**IF** the user is currently a steward of the organisational unit\
-**I WANT** to remove a steward from an organisational unit\
-**SO THAT** the user no longer has edit rights on that unit
-
-#### USER STORY 'View stewards on an item'
-**AS A** logged in user\
-**IF** stewards are assigned\
-**I WANT** to see the list of current stewards on the detail page of a business entity, domain, process, or organisational unit\
-**SO THAT** I know who is responsible for maintaining that item alongside the primary owner or lead
 
 ---
 

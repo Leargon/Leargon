@@ -146,13 +146,14 @@ class Process {
         version.process = this
     }
 
-    fun effectiveOwner(): User? {
-        val effectiveOwningUnit =
-            owningUnit
-                ?: boundedContext?.owningUnit
-                ?: boundedContext?.domain?.owningUnit
-        return processOwner ?: effectiveOwningUnit?.businessOwner
-    }
+    private fun effectiveOwningUnit(): OrganisationalUnit? =
+        owningUnit
+            ?: boundedContext?.owningUnit
+            ?: boundedContext?.domain?.owningUnit
+
+    fun effectiveOwner(): User? = processOwner ?: effectiveOwningUnit()?.businessOwner
+
+    fun effectiveSteward(): User? = processSteward ?: effectiveOwningUnit()?.businessSteward
 
     fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
 

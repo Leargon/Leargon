@@ -11,6 +11,8 @@ import {
 import { useRole, type Role } from '../../context/RoleContext';
 import { useTranslation } from 'react-i18next';
 import { useMethodology } from '../../context/MethodologyContext';
+import { useAuth } from '../../context/AuthContext';
+import { isAdmin as isAdminRole } from '../../utils/roles';
 
 export const SIDEBAR_WIDTH = 220;
 
@@ -18,6 +20,8 @@ interface NavItem {
   labelKey: string;
   path: string;
   icon: React.ReactNode;
+  /** Only visible to global administrators. Lead-accessible items omit this. */
+  adminOnly?: boolean;
 }
 
 const ALWAYS_VISIBLE_ITEMS: NavItem[] = [
@@ -66,11 +70,11 @@ const ROLE_SECTION_LABEL: Record<Role, string> = {
 };
 
 const SETTINGS_ITEMS: NavItem[] = [
-  { labelKey: 'nav.users', path: '/settings/users', icon: <People /> },
-  { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language /> },
-  { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label /> },
+  { labelKey: 'nav.users', path: '/settings/users', icon: <People />, adminOnly: true },
+  { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language />, adminOnly: true },
+  { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label />, adminOnly: true },
   { labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
-  { labelKey: 'nav.organisationSettings', path: '/settings/organisation', icon: <CorporateFare /> },
+  { labelKey: 'nav.organisationSettings', path: '/settings/organisation', icon: <CorporateFare />, adminOnly: true },
 ];
 
 const NavItemButton: React.FC<{ item: NavItem }> = ({ item }) => {
@@ -120,6 +124,9 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const { t } = useTranslation();
   const { isNavPathEnabled } = useMethodology();
+  const { user } = useAuth();
+  const isAdmin = isAdminRole(user?.roles);
+  const settingsItems = SETTINGS_ITEMS.filter((item) => isAdmin || !item.adminOnly);
   const isSettingsRoute = location.pathname.startsWith('/settings') || location.pathname === '/profile';
 
   if (isSettingsRoute) {
@@ -143,7 +150,7 @@ const Sidebar: React.FC = () => {
           </Typography>
         </Box>
         <List component="nav" sx={{ px: 1, pt: 1, flexGrow: 1 }}>
-          {SETTINGS_ITEMS.map((item) => (
+          {settingsItems.map((item) => (
             <NavItemButton key={item.path} item={item} />
           ))}
         </List>

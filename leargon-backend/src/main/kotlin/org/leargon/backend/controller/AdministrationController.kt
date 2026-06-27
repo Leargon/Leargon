@@ -6,8 +6,11 @@ import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
+import io.micronaut.security.utils.SecurityService
 import jakarta.validation.Valid
 import org.leargon.backend.api.AdministrationApi
+import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.AdministrationChangePasswordRequest
 import org.leargon.backend.model.FieldConfigurationDefinition
 import org.leargon.backend.model.FieldConfigurationEntry
@@ -20,6 +23,7 @@ import org.leargon.backend.model.UserResponse
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import org.leargon.backend.service.OrganisationSettingsService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -27,7 +31,9 @@ open class AdministrationController(
     private val userService: UserService,
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
-    private val organisationSettingsService: OrganisationSettingsService
+    private val organisationSettingsService: OrganisationSettingsService,
+    private val roleService: RoleService,
+    private val securityService: SecurityService
 ) : AdministrationApi {
     @Secured("ROLE_ADMIN")
     override fun createUser(
@@ -83,27 +89,33 @@ open class AdministrationController(
         userService.adminChangePassword(id, administrationChangePasswordRequest)
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun getFieldConfigurationDefinitions(): List<FieldConfigurationDefinition> {
         val disabled = methodologyConfigurationService.getDisabledMethodologies()
         return fieldConfigurationService.getDefinitions(disabled)
     }
 
-    @Secured("ROLE_ADMIN")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun getFieldConfigurations(): List<FieldConfigurationEntry> = fieldConfigurationService.getAll()
 
-    @Secured("ROLE_ADMIN")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun replaceFieldConfigurations(
         @Body @Valid entries: List<FieldConfigurationEntry>
-    ): List<FieldConfigurationEntry> = fieldConfigurationService.replace(entries)
+    ): List<FieldConfigurationEntry> {
+        val scopes = roleService.scopesOf(getCurrentUser())
+        return fieldConfigurationService.replaceScoped(entries, scopes.leadMethodologies, scopes.isAdmin)
+    }
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun getMethodologyConfigurations(): List<MethodologyConfigEntry> = methodologyConfigurationService.getAll()
 
-    @Secured("ROLE_ADMIN")
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun replaceMethodologyConfigurations(
         @Body @Valid methodologyConfigEntries: List<MethodologyConfigEntry>
-    ): List<MethodologyConfigEntry> = methodologyConfigurationService.replace(methodologyConfigEntries)
+    ): List<MethodologyConfigEntry> {
+        val scopes = roleService.scopesOf(getCurrentUser())
+        return methodologyConfigurationService.replaceScoped(methodologyConfigEntries, scopes.leadMethodologies, scopes.isAdmin)
+    }
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
     override fun getOrganisationSettings(): OrganisationSettingsResponse = organisationSettingsService.get()
@@ -112,4 +124,14 @@ open class AdministrationController(
     override fun updateOrganisationSettings(
         @Body organisationSettingsRequest: OrganisationSettingsRequest
     ): OrganisationSettingsResponse = organisationSettingsService.update(organisationSettingsRequest)
+
+    private fun getCurrentUser(): User {
+        val email =
+            securityService
+                .username()
+                .orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService
+            .findByEmail(email)
+            .orElseThrow { ResourceNotFoundException("User not found") }
+    }
 }

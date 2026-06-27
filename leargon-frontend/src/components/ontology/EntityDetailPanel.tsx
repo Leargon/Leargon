@@ -77,6 +77,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -185,7 +186,13 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [editRelSecondMax, setEditRelSecondMax] = useState('');
   const [editRelError, setEditRelError] = useState('');
 
-  const isOwnerOrAdmin = isAdmin || (user?.username === entity?.dataOwner?.username);
+  // Edit gate: owner, effective steward (delegated editor — cannot verify), admin, or a methodology-scoped
+  // editor/lead for this entity type. The gate is coarse on purpose — the backend enforces per-field
+  // permission and returns 403; this only decides what affordances to show.
+  const isOwnerOrAdmin = isAdmin ||
+    (user?.username === entity?.dataOwner?.username) ||
+    (!!user?.username && user.username === entity?.dataSteward?.username) ||
+    canEditEntityTypeByRole(user?.roles, 'BUSINESS_ENTITY');
   const activeLocales = locales.filter((l) => l.isActive);
 
   // Mandatory field helpers

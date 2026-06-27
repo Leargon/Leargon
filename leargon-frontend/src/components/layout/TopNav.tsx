@@ -22,6 +22,7 @@ import GlobalSearch from './GlobalSearch';
 import { useThemeMode } from '../../context/ThemeContext';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
+import { hasAnyLeadRole } from '../../utils/roles';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 import { useTranslation } from 'react-i18next';
 
@@ -47,6 +48,7 @@ const TopNav: React.FC = () => {
   const [roleMenuAnchor, setRoleMenuAnchor] = useState<null | HTMLElement>(null);
 
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canAccessSettings = isAdmin || hasAnyLeadRole(user?.roles);
 
   const handleRoleChange = async (r: Role) => {
     setRoleMenuAnchor(null);
@@ -155,12 +157,12 @@ const TopNav: React.FC = () => {
           {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
         </IconButton>
       </Tooltip>
-      {/* Settings (admin only) */}
-      {isAdmin && (
+      {/* Settings (admins + methodology leads) */}
+      {canAccessSettings && (
         <Tooltip title="Settings">
           <IconButton
             size="small"
-            onClick={() => navigate('/settings/users')}
+            onClick={() => navigate(isAdmin ? '/settings/users' : '/settings/methodologies')}
             sx={{
               color: isSettingsRoute ? 'white' : 'grey.400',
               bgcolor: isSettingsRoute ? 'rgba(255,255,255,0.12)' : 'transparent',

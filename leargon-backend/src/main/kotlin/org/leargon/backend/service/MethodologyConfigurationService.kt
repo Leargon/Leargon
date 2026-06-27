@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.FieldConfiguration
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.model.MethodologyConfigEntry
 import org.leargon.backend.model.MethodologyConfigEntryKey
 import org.leargon.backend.repository.FieldConfigurationRepository
@@ -142,6 +143,40 @@ open class MethodologyConfigurationService(
         return getAll()
     }
 
+    /**
+     * Scoped variant of [replace] for a methodology LEAD (admin uses [replace] directly). A LEAD may only
+     * toggle the enabled/verification state of methodologies in [leadMethodologies]; other methodologies are
+     * preserved at their current state. Attempting to change an out-of-scope methodology is rejected with 403.
+     */
+    @Transactional
+    open fun replaceScoped(
+        entries: List<MethodologyConfigEntry>,
+        leadMethodologies: Set<String>,
+        isAdmin: Boolean
+    ): List<MethodologyConfigEntry> {
+        if (isAdmin) return replace(entries)
+        if (leadMethodologies.isEmpty()) {
+            throw ForbiddenOperationException("Not permitted to change methodology configuration")
+        }
+        val current = getAll().associateBy { it.key.value }
+        entries.forEach { entry ->
+            val key = entry.key.value
+            if (key !in leadMethodologies) {
+                val cur = current[key]
+                val changed =
+                    cur == null ||
+                        cur.enabled != entry.enabled ||
+                        (cur.verificationEnabled ?: false) != (entry.verificationEnabled ?: false)
+                if (changed) {
+                    throw ForbiddenOperationException("Not permitted to change methodology $key (outside scope)")
+                }
+            }
+        }
+        val submitted = entries.associateBy { it.key.value }
+        val effective = allKeys.map { key -> if (key in leadMethodologies) submitted[key] ?: current[key]!! else current[key]!! }
+        return replace(effective)
+    }
+
     private fun verificationEnabledMethodologies(): Set<String> =
         fieldConfigurationRepository
             .findByEntityType(VERIFICATION_ENTITY_TYPE)
@@ -165,6 +200,36 @@ open class MethodologyConfigurationService(
             .filter { it.visibility == "HIDDEN" }
             .map { it.fieldName }
             .toSet()
+
+    /**
+     * All methodologies that claim the given field (by bare-name or section pattern). A field can belong
+     * to several methodologies (e.g. `descriptions`, `owningUnit`, or anything in `section:DATA_GOVERNANCE`).
+     * Used for role-based field-edit gating: a scoped EDITOR/LEAD may edit a field if their methodology is
+     * in this set. Empty means no methodology owns the field (CORE-only — owner/steward/admin only).
+     */
+    fun methodologiesOf(
+        entityType: String,
+        fieldName: String,
+        section: String?
+    ): Set<String> {
+        val result = mutableSetOf<String>()
+        for ((methodology, byType) in methodologyFields) {
+            val patterns = byType[entityType] ?: continue
+            for (pattern in patterns) {
+                val matches =
+                    if (pattern.startsWith("section:")) {
+                        section != null && section == pattern.removePrefix("section:")
+                    } else {
+                        fieldName == pattern || fieldName.startsWith("$pattern.")
+                    }
+                if (matches) {
+                    result.add(methodology)
+                    break
+                }
+            }
+        }
+        return result
+    }
 
     fun isFieldExcluded(
         entityType: String,

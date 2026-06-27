@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  IconButton,
   Button,
   Chip,
   Autocomplete,
@@ -18,8 +17,9 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import { Edit as EditIcon, Check, Close, Delete, ExpandMore } from '@mui/icons-material';
+import { Delete, ExpandMore } from '@mui/icons-material';
 import DetailPanelHeader from '../common/DetailPanelHeader';
+import InlineEditControls from '../common/InlineEditControls';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetItSystem,
@@ -206,26 +206,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Names & Descriptions */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('common.namesAndDescriptions')}</Typography>
-              {isAdmin && !namesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] }); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {namesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); namesEdit.save(); }} disabled={namesEdit.isSaving}>
-                    {namesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); namesEdit.cancel(); }} disabled={namesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('common.namesAndDescriptions')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={namesEdit} onStart={() => namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] })} />
             {namesEdit.isEditing && namesEdit.editValue ? (
               <Box>
                 <TranslationEditor
@@ -250,26 +234,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Details */}
         <Accordion defaultExpanded={false} disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('common.details')}</Typography>
-              {isAdmin && !detailsEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' }); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {detailsEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); detailsEdit.save(); }} disabled={detailsEdit.isSaving}>
-                    {detailsEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); detailsEdit.cancel(); }} disabled={detailsEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('common.details')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={detailsEdit} onStart={() => detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' })} />
             {detailsEdit.isEditing && detailsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <TextField
@@ -327,26 +295,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Owning Unit */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('common.owningUnit')}</Typography>
-              {isAdmin && !owningUnitEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); owningUnitEdit.startEdit(system.owningUnit?.key ?? null); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {owningUnitEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); owningUnitEdit.save(); }} disabled={owningUnitEdit.isSaving}>
-                    {owningUnitEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); owningUnitEdit.cancel(); }} disabled={owningUnitEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('common.owningUnit')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={owningUnitEdit} onStart={() => owningUnitEdit.startEdit(system.owningUnit?.key ?? null)} />
             {owningUnitEdit.isEditing ? (
               <Box>
                 <Autocomplete
@@ -378,26 +330,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Deployment Countries */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('itSystem.sectionDeploymentCountries')}</Typography>
-              {isAdmin && !countriesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.startEdit([...(system.processingCountries ?? [])]); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {countriesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); countriesEdit.save(); }} disabled={countriesEdit.isSaving}>
-                    {countriesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); countriesEdit.cancel(); }} disabled={countriesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('itSystem.sectionDeploymentCountries')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(system.processingCountries ?? [])])} />
             {countriesEdit.isEditing && countriesEdit.editValue !== null ? (
               <Box>
                 {(system.serviceProviders ?? []).length > 0 && (
@@ -450,26 +386,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Infrastructure Providers */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('itSystem.sectionServiceProviders')}</Typography>
-              {isAdmin && !serviceProvidersEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.startEdit((system.serviceProviders ?? []).map((sp) => sp.key)); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {serviceProvidersEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.save(); }} disabled={serviceProvidersEdit.isSaving}>
-                    {serviceProvidersEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); serviceProvidersEdit.cancel(); }} disabled={serviceProvidersEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('itSystem.sectionServiceProviders')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((system.serviceProviders ?? []).map((sp) => sp.key))} />
             {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
               <Box>
                 <Autocomplete
@@ -507,26 +427,10 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         {/* Linked Processes */}
         <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="subtitle2">{t('common.linkedProcesses')}</Typography>
-              {isAdmin && !processesEdit.isEditing && (
-                <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key)); }}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              )}
-              {processesEdit.isEditing && (
-                <>
-                  <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); processesEdit.save(); }} disabled={processesEdit.isSaving}>
-                    {processesEdit.isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
-                  </IconButton>
-                  <IconButton size="small" onClick={(e) => { e.stopPropagation(); processesEdit.cancel(); }} disabled={processesEdit.isSaving}>
-                    <Close fontSize="small" />
-                  </IconButton>
-                </>
-              )}
-            </Box>
+            <Typography variant="subtitle2">{t('common.linkedProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <InlineEditControls canEdit={isAdmin} edit={processesEdit} onStart={() => processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key))} />
             {processesEdit.isEditing && processesEdit.editValue !== null ? (
               <Box>
                 <Autocomplete

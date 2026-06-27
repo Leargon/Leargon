@@ -45,16 +45,38 @@ open class BusinessEntityService(
     private val localeService: LocaleService,
     private val businessEntityMapper: BusinessEntityMapper,
     private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService,
     private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor
 ) {
     private val objectMapper = ObjectMapper()
+
+    /**
+     * Per-field edit gate. Owner/steward/admin may edit anything; a methodology-scoped EDITOR/LEAD may
+     * edit a field belonging to their methodology. Verification stays owner-only, so scoped edits land
+     * UNVERIFIED automatically (sync uses the effective owner, not this check).
+     */
+    private fun requireFieldEdit(
+        entity: BusinessEntity,
+        currentUser: User,
+        fieldName: String
+    ) {
+        val isOwner = entity.effectiveOwner()?.id == currentUser.id
+        val isSteward = entity.effectiveSteward()?.id == currentUser.id
+        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
+        val rs = this.roleService
+        if (isOwner || isSteward || isAdmin || rs.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", fieldName)) return
+        throw ForbiddenOperationException("You do not have permission to edit this field")
+    }
 
     open fun getAllBusinessEntities(): List<BusinessEntity> = businessEntityRepository.findAll()
 
     fun canEdit(
         entity: BusinessEntity,
         currentUser: User,
-    ): Boolean = entity.effectiveOwner()?.id == currentUser.id || currentUser.roles.contains("ROLE_ADMIN")
+    ): Boolean =
+        entity.effectiveOwner()?.id == currentUser.id ||
+            entity.effectiveSteward()?.id == currentUser.id ||
+            currentUser.roles.contains("ROLE_ADMIN")
 
     @ReadOnly
     open fun getAllBusinessEntitiesAsResponses(): List<BusinessEntityResponse> =
@@ -188,7 +210,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "dataOwner")
 
         val newOwner =
             userRepository
@@ -218,7 +240,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "dataOwner")
 
         val effectiveOwningUnit =
             entity.owningUnit
@@ -243,7 +265,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "dataSteward")
 
         entity.dataSteward =
             if (stewardUsername != null) {
@@ -267,7 +289,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "technicalCustodian")
 
         entity.technicalCustodian =
             if (custodianUsername != null) {
@@ -329,7 +351,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "descriptions")
 
         validateTranslations(descriptions, false)
 
@@ -357,7 +379,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "retentionPeriod")
         entity.retentionPeriod = retentionPeriod
         entity = businessEntityRepository.update(entity)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated retention period")
@@ -372,7 +394,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "storageLocations")
         entity.storageLocations = locations.toMutableList()
         entity = businessEntityRepository.update(entity)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated storage locations")
@@ -387,7 +409,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "interfaceEntities")
 
         val newInterfaces = mutableSetOf<BusinessEntity>()
         interfaceKeys.forEach { ifKey ->
@@ -475,7 +497,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "relationships")
 
         val secondEntity =
             businessEntityRepository
@@ -517,7 +539,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "relationships")
 
         val relationship =
             businessEntityRelationshipRepository
@@ -555,7 +577,7 @@ open class BusinessEntityService(
         currentUser: User
     ) {
         val entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "relationships")
 
         val relationship =
             businessEntityRelationshipRepository
@@ -627,7 +649,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "boundedContext")
 
         val oldName = entity.boundedContext?.getName("en") ?: "none"
 
@@ -662,7 +684,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "owningUnit")
 
         val oldName = entity.owningUnit?.getName("en") ?: "none"
 
@@ -853,9 +875,10 @@ open class BusinessEntityService(
             currentUser: User
         ) {
             val isOwner = entity.effectiveOwner()?.id == currentUser.id
+            val isSteward = entity.effectiveSteward()?.id == currentUser.id
             val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            if (!isOwner && !isAdmin) {
-                throw ForbiddenOperationException("Only the data owner or an admin can edit this entity")
+            if (!isOwner && !isSteward && !isAdmin) {
+                throw ForbiddenOperationException("Only the data owner, steward, or an admin can edit this entity")
             }
         }
 

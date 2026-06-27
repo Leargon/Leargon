@@ -27,7 +27,6 @@ const de = {
     "users": "Benutzer",
     "locales": "Sprachen",
     "classifications": "Klassifikationen",
-    "fieldConfig": "Feldkonfiguration",
     "methodologies": "Methodologien",
     "organisationSettings": "Organisation",
     "teamTopologies": "Team Topologien",

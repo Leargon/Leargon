@@ -78,7 +78,7 @@ open class UserMapper {
     ): String {
         val roles = request.roles
         if (roles.isNullOrEmpty()) return user.roles
-        return roles.map { it.value }.joinToString(",")
+        return roles.joinToString(",")
     }
 
     companion object {

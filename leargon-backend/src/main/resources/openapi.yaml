@@ -8775,15 +8775,17 @@ components:
           description: Account enabled status
         roles:
           type: array
-          description: User roles
+          description: >-
+            User roles. Supports the global roles ROLE_USER / ROLE_ADMIN and the
+            methodology-scoped roles ROLE_LEAD_<METHODOLOGY> / ROLE_EDITOR_<METHODOLOGY>
+            (e.g. ROLE_LEAD_GDPR, ROLE_EDITOR_DDD). Scoped tokens are validated
+            server-side against the known methodology keys.
           items:
             type: string
-            enum:
-            - ROLE_USER
-            - ROLE_ADMIN
+            pattern: '^ROLE_(USER|ADMIN|(LEAD|EDITOR)_[A-Z0-9_]+)$'
           example:
           - ROLE_USER
-          - ROLE_ADMIN
+          - ROLE_LEAD_GDPR
     UpdateProfileRequest:
       type: object
       properties:

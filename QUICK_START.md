@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Docker and Docker Compose — **recommended path**
-- OR: Java 21+, Gradle 8+, Node.js 24+, MySQL 8.4 — for local development
+- OR: Java 25+, Gradle 8+, Node.js 24+, MySQL 8.4 — for local development
 
 ---
 

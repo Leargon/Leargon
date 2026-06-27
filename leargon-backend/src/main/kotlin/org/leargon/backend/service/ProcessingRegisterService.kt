@@ -49,8 +49,9 @@ open class ProcessingRegisterService(
         currentUser: User
     ): Boolean {
         val isOwner = process.effectiveOwner()?.id == currentUser.id
+        val isSteward = process.effectiveSteward()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        return isOwner || isAdmin
+        return isOwner || isSteward || isAdmin
     }
 
     private fun missingFields(process: Process): List<String>? {
