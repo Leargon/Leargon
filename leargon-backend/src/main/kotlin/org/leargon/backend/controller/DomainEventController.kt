@@ -19,6 +19,7 @@ import org.leargon.backend.model.DomainEventResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.SetDomainEventConsumersRequest
 import org.leargon.backend.service.DomainEventService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -27,7 +28,8 @@ open class DomainEventController(
     private val domainEventService: DomainEventService,
     private val domainEventMapper: DomainEventMapper,
     private val userService: UserService,
-    private val securityService: SecurityService
+    private val securityService: SecurityService,
+    private val roleService: RoleService
 ) : DomainEventApi {
     override fun getAllDomainEvents(): List<DomainEventResponse> = domainEventService.getAll()
 
@@ -37,6 +39,7 @@ open class DomainEventController(
         @Valid @Body createDomainEventRequest: CreateDomainEventRequest
     ): HttpResponse<DomainEventResponse> {
         val currentUser = getCurrentUser()
+        roleService.requireCreateRoot(currentUser, "DDD")
         val event = domainEventService.create(createDomainEventRequest, currentUser)
         val response = domainEventService.getByKey(event.key)
         return HttpResponse.status<DomainEventResponse>(HttpStatus.CREATED).body(response)

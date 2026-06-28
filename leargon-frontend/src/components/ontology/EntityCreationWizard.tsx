@@ -27,7 +27,7 @@ import {
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetClassifications } from '../../api/generated/classification/classification';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useAuth } from '../../context/AuthContext';
 import type {
   LocalizedText,
@@ -77,7 +77,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const allDomains = (domainsResponse?.data as any[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications();
   const allClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
-  const { data: usersResponse } = useGetAllUsers();
+  const { data: usersResponse } = useGetAssignableUsers();
   const allUsers = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const entityClassifications = allClassifications.filter(
     (c) => c.assignableTo === ClassificationAssignableTo.BUSINESS_ENTITY,

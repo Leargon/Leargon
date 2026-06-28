@@ -62,7 +62,7 @@ import {
   getGetEntityDpiaQueryKey,
   useSetBusinessEntityFieldVerification,
 } from '../../api/generated/business-entity/business-entity';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import {
@@ -103,7 +103,7 @@ import type {
   ClassificationResponse,
   BusinessDomainResponse,
   ProcessResponse,
-  UserResponse,
+  UserSummaryResponse,
   TranslationLinkResponse,
   OrganisationalUnitResponse,
 } from '../../api/generated/model';
@@ -146,8 +146,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
   const { data: allProcessesResponse } = useGetAllProcesses();
   const allProcesses = (allProcessesResponse?.data as ProcessResponse[] | undefined) || [];
-  const { data: allUsersResponse } = useGetAllUsers();
-  const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: allUsersResponse } = useGetAssignableUsers();
+  const allUsers = (allUsersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
   const allUnits = (allUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: dpiaResponse, isLoading: isDpiaLoading } = useGetEntityDpia(entityKey, {
@@ -649,7 +649,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           {ownerEdit.isEditing ? (
             <Box>
               <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
+                options={allUsers}
                 getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
@@ -711,7 +711,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             {dataStewardEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === dataStewardEdit.editValue) || null}
                   onChange={(_, newVal) => dataStewardEdit.setEditValue(newVal?.username || null)}
@@ -750,7 +750,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
             {technicalCustodianEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
                   onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}

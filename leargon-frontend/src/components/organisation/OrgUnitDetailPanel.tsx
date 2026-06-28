@@ -64,7 +64,7 @@ import { useUpdateBoundedContextOwningTeam } from '../../api/generated/bounded-c
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
@@ -81,7 +81,7 @@ import type {
   LocalizedText,
   OrganisationalUnitResponse,
   SupportedLocaleResponse,
-  UserResponse,
+  UserSummaryResponse,
   ClassificationAssignmentRequest,
   ClassificationResponse,
   ServiceProviderResponse,
@@ -134,8 +134,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: allUnitsResponse } = useGetAllOrganisationalUnits();
   const allUnits = (allUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
-  const { data: usersResponse } = useGetAllUsers();
-  const users = (usersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: usersResponse } = useGetAssignableUsers();
+  const users = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const { data: classificationsResponse } = useGetClassifications({ 'assignable-to': 'ORGANISATIONAL_UNIT' });
   const availableClassifications = (classificationsResponse?.data as ClassificationResponse[] | undefined) || [];
   const { data: serviceProvidersResponse } = useGetAllServiceProviders();

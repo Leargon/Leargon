@@ -44,7 +44,8 @@ import type {
   OrganisationSettingsResponse,
   SignupRequest,
   UpdateUserRequest,
-  UserResponse
+  UserResponse,
+  UserSummaryResponse
 } from '../model';
 
 import { customAxios } from '../../customAxios.ts';
@@ -293,7 +294,127 @@ export const useCreateUser = <TError = void,
       > => {
       return useMutation(getCreateUserMutationOptions(options), queryClient);
     }
-    export type getUserByIdResponse200 = {
+    export type getAssignableUsersResponse200 = {
+  data: UserSummaryResponse[]
+  status: 200
+}
+
+export type getAssignableUsersResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getAssignableUsersResponseSuccess = (getAssignableUsersResponse200) & {
+  headers: Headers;
+};
+export type getAssignableUsersResponseError = (getAssignableUsersResponse401) & {
+  headers: Headers;
+};
+
+export type getAssignableUsersResponse = (getAssignableUsersResponseSuccess | getAssignableUsersResponseError)
+
+export const getGetAssignableUsersUrl = () => {
+
+
+
+
+  return `/administration/users/assignable`
+}
+
+/**
+ * Returns a minimal list of enabled users (username and display name) for populating owner / steward / technical-custodian pickers. Available to any authenticated user, unlike the full user list (getAllUsers) which requires ROLE_ADMIN and exposes roles and emails.
+ * @summary Get assignable users
+ */
+export const getAssignableUsers = async ( options?: RequestInit): Promise<getAssignableUsersResponse> => {
+
+  return customAxios<getAssignableUsersResponse>(getGetAssignableUsersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssignableUsersQueryKey = () => {
+    return [
+    `/administration/users/assignable`
+    ] as const;
+    }
+
+
+export const getGetAssignableUsersQueryOptions = <TData = Awaited<ReturnType<typeof getAssignableUsers>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssignableUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssignableUsers>>> = ({ signal }) => getAssignableUsers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAssignableUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getAssignableUsers>>>
+export type GetAssignableUsersQueryError = void
+
+
+export function useGetAssignableUsers<TData = Awaited<ReturnType<typeof getAssignableUsers>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssignableUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getAssignableUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssignableUsers<TData = Awaited<ReturnType<typeof getAssignableUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAssignableUsers>>,
+          TError,
+          Awaited<ReturnType<typeof getAssignableUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAssignableUsers<TData = Awaited<ReturnType<typeof getAssignableUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get assignable users
+ */
+
+export function useGetAssignableUsers<TData = Awaited<ReturnType<typeof getAssignableUsers>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssignableUsers>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAssignableUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getUserByIdResponse200 = {
   data: UserResponse
   status: 200
 }

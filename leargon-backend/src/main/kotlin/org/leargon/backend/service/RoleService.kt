@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 
 /**
  * Parses and interprets the comma-separated [User.roles] string into the role model:
@@ -58,6 +59,40 @@ class RoleService(
         user: User,
         methodology: String
     ): Boolean = scopesOf(user).let { it.isAdmin || methodology in it.leadMethodologies }
+
+    /**
+     * Throws unless [user] may create a *root* (top-level) catalogue item governed by [methodology]:
+     * an administrator, or an EDITOR/LEAD of that methodology.
+     */
+    fun requireCreateRoot(
+        user: User,
+        methodology: String
+    ) {
+        if (!isEditorFor(user, methodology)) {
+            throw ForbiddenOperationException(
+                "Creating this item requires an administrator or a $methodology editor/lead role"
+            )
+        }
+    }
+
+    /**
+     * Throws unless [user] may create a *child* of a parent item governed by [methodology]: an
+     * administrator or EDITOR/LEAD of that methodology, or the owner or steward of the parent item.
+     */
+    fun requireCreateChild(
+        user: User,
+        methodology: String,
+        parentOwnerId: Long?,
+        parentStewardId: Long?
+    ) {
+        if (isEditorFor(user, methodology)) return
+        val uid = user.id
+        if (uid != null && (uid == parentOwnerId || uid == parentStewardId)) return
+        throw ForbiddenOperationException(
+            "Creating this item requires an administrator, a $methodology editor/lead, " +
+                "or ownership/stewardship of the parent item"
+        )
+    }
 
     /**
      * Whether the user may edit [fieldName] on [entityType] purely by virtue of a scoped EDITOR/LEAD role

@@ -130,6 +130,29 @@ paths:
           description: Insufficient permissions (requires ROLE_ADMIN)
         '409':
           description: Email or username already exists
+  /administration/users/assignable:
+    get:
+      tags:
+      - Administration
+      summary: Get assignable users
+      description: >-
+        Returns a minimal list of enabled users (username and display name) for populating owner / steward /
+        technical-custodian pickers. Available to any authenticated user, unlike the full user list
+        (getAllUsers) which requires ROLE_ADMIN and exposes roles and emails.
+      operationId: getAssignableUsers
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of assignable users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSummaryResponse'
+        '401':
+          description: Not authenticated
   /administration/users/{id}:
     get:
       tags:

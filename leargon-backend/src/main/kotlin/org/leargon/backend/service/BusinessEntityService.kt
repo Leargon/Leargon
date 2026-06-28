@@ -104,6 +104,20 @@ open class BusinessEntityService(
     ): BusinessEntity {
         validateTranslations(request.names)
 
+        // Create gating: root entities need admin / DATA_GOVERNANCE editor-lead; a child may also be created
+        // by the parent entity's data owner or steward.
+        val parent =
+            request.parentKey?.let {
+                businessEntityRepository
+                    .findByKey(it)
+                    .orElseThrow { ResourceNotFoundException("Parent BusinessEntity not found") }
+            }
+        if (parent != null) {
+            roleService.requireCreateChild(currentUser, "DATA_GOVERNANCE", parent.dataOwner?.id, parent.dataSteward?.id)
+        } else {
+            roleService.requireCreateRoot(currentUser, "DATA_GOVERNANCE")
+        }
+
         var entity = BusinessEntity()
         entity.createdBy = currentUser
 
@@ -116,11 +130,8 @@ open class BusinessEntityService(
                 currentUser
             }
 
-        if (request.parentKey != null) {
-            entity.parent =
-                businessEntityRepository
-                    .findByKey(request.parentKey)
-                    .orElseThrow { ResourceNotFoundException("Parent BusinessEntity not found") }
+        if (parent != null) {
+            entity.parent = parent
         }
 
         entity.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()

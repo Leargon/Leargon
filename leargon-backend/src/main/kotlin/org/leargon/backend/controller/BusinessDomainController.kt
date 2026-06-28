@@ -28,6 +28,7 @@ import org.leargon.backend.model.UpdateDomainVisionStatementRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessDomainService
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -37,7 +38,8 @@ open class BusinessDomainController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val businessDomainMapper: BusinessDomainMapper
+    private val businessDomainMapper: BusinessDomainMapper,
+    private val roleService: RoleService
 ) : BusinessDomainApi {
     override fun getAllBusinessDomains(): List<BusinessDomainResponse> = businessDomainService.getAllBusinessDomainsAsResponses()
 
@@ -64,12 +66,11 @@ open class BusinessDomainController(
         return businessDomainService.getLocalizedDomain(key, locale, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun createBusinessDomain(
         @Valid @Body createDomainRequest: CreateBusinessDomainRequest
     ): HttpResponse<BusinessDomainResponse> {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireCreateRoot(currentUser, "DDD")
         val domain = businessDomainService.createBusinessDomain(createDomainRequest, currentUser)
         val response = businessDomainMapper.toBusinessDomainResponse(domain)
         return HttpResponse.status<BusinessDomainResponse>(HttpStatus.CREATED).body(response)

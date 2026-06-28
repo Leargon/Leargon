@@ -67,7 +67,7 @@ import {
   useSetProcessFieldVerification,
 } from '../../api/generated/process/process';
 import FieldStatusIndicator from '../common/FieldStatusIndicator';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
@@ -109,7 +109,7 @@ import type {
   ClassificationResponse,
   BusinessDomainResponse,
   BusinessEntityResponse,
-  UserResponse,
+  UserSummaryResponse,
   OrganisationalUnitResponse,
   CrossBorderTransferEntry,
   ItSystemResponse,
@@ -176,8 +176,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
-  const { data: allUsersResponse } = useGetAllUsers();
-  const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: allUsersResponse } = useGetAssignableUsers();
+  const allUsers = (allUsersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const { data: allOrgUnitsResponse } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: allItSystemsResponse } = useGetAllItSystems();
@@ -697,7 +697,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           {ownerEdit.isEditing ? (
             <Box>
               <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
+                options={allUsers}
                 getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
@@ -759,7 +759,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             {stewardEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
                   onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
@@ -798,7 +798,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             {technicalCustodianEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
                   onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}

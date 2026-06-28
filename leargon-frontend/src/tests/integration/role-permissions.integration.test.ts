@@ -164,4 +164,31 @@ describe('Methodology-scoped roles (EDITOR / LEAD)', () => {
     const res = await adminClient.put(`/administration/users/${id}`, { roles: ['ROLE_LEAD_NONSENSE'] });
     expect(res.status).toBe(400);
   });
+
+  // ── assignable users (non-admin picker source) ─────────────────────────────
+
+  it('a non-admin can read the assignable-users list (owner/steward picker source)', async () => {
+    const res = await editorClient.get<Array<{ username: string; firstName: string; lastName: string }>>(
+      '/administration/users/assignable',
+    );
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data)).toBe(true);
+    expect(res.data.some((u) => u.username === 'roleowner')).toBe(true);
+    expect(res.data.some((u) => u.username === 'roleadmin')).toBe(true);
+  });
+
+  it('assignable-users exposes only minimal fields (no roles or email)', async () => {
+    const res = await leadClient.get<Array<Record<string, unknown>>>('/administration/users/assignable');
+    expect(res.status).toBe(200);
+    const entry = res.data.find((u) => u.username === 'roleadmin');
+    expect(entry).toBeDefined();
+    expect(entry).toHaveProperty('firstName');
+    expect(entry).not.toHaveProperty('roles');
+    expect(entry).not.toHaveProperty('email');
+  });
+
+  it('the full user list stays admin-only (non-admin gets 403)', async () => {
+    const res = await editorClient.get('/administration/users');
+    expect(res.status).toBe(403);
+  });
 });

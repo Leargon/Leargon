@@ -17,14 +17,14 @@ import {
   useCreateOrganisationalUnit,
   getGetOrganisationalUnitTreeQueryKey,
 } from '../../api/generated/organisational-unit/organisational-unit';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
   LocalizedText,
   OrganisationalUnitResponse,
   SupportedLocaleResponse,
-  UserResponse,
+  UserSummaryResponse,
 } from '../../api/generated/model';
 
 interface CreateOrgUnitDialogProps {
@@ -40,8 +40,8 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
   const createUnit = useCreateOrganisationalUnit();
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
-  const { data: usersResponse } = useGetAllUsers();
-  const users = (usersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: usersResponse } = useGetAssignableUsers();
+  const users = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
 
   const [names, setNames] = useState<LocalizedText[]>([]);
   const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);

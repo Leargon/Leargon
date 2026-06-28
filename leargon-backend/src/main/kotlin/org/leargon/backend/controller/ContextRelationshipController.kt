@@ -14,6 +14,7 @@ import org.leargon.backend.model.ContextRelationshipResponse
 import org.leargon.backend.model.CreateContextRelationshipRequest
 import org.leargon.backend.model.UpdateContextRelationshipRequest
 import org.leargon.backend.service.ContextRelationshipService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -21,15 +22,16 @@ import org.leargon.backend.service.UserService
 open class ContextRelationshipController(
     private val contextRelationshipService: ContextRelationshipService,
     private val userService: UserService,
-    private val securityService: SecurityService
+    private val securityService: SecurityService,
+    private val roleService: RoleService
 ) : ContextRelationshipApi {
     override fun getAllContextRelationships(): List<ContextRelationshipResponse> = contextRelationshipService.getAll()
 
-    @Secured("ROLE_ADMIN")
     override fun createContextRelationship(
         @Body request: CreateContextRelationshipRequest
     ): HttpResponse<ContextRelationshipResponse> {
         val currentUser = getCurrentUser()
+        roleService.requireCreateRoot(currentUser, "DDD")
         val response = contextRelationshipService.create(request, currentUser)
         return HttpResponse.status<ContextRelationshipResponse>(HttpStatus.CREATED).body(response)
     }
