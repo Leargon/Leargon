@@ -5,7 +5,7 @@ Phase 1 (WIPE): Deletes all business data + non-admin users in safe FK order:
   IT systems → data processors → classifications → processes → entities → domains → org units → users
 
 Phase 2 (SEED): Creates fresh e-commerce demo data:
-  locales · users · classifications · org units (+ hierarchy + leads) · domains
+  locales · users (+ methodology LEAD/EDITOR roles) · classifications · org units (+ hierarchy + leads) · domains
   (+ types + vision statements) · entities (+ bounded-contexts + data owners + interfaces) ·
   processes (+ hierarchy + bounded-contexts + owners + executing units) ·
   relationships · classification assignments · field configurations (mandatory fields) ·
@@ -264,6 +264,38 @@ for (username, first, last, email, role) in user_defs:
         ok(f'{username} ({role})', result)
     else:
         user_keys[username] = username   # assume exists
+
+
+# ── 2b. Methodology-scoped roles (L2) ───────────────────────────────────────────
+# Promote demo users to LEAD/EDITOR roles so the demo exercises methodology-scoped access
+# (per-methodology Configure panels, scoped field-edit rights), not just plain ROLE_USER.
+# Lead ⇒ editor for the same methodology; lisa.chen additionally shows an editor-only,
+# multi-methodology assignment. L1 steward edit rights are granted separately via the
+# stewardship assignments further below.
+print('\n[2b/9] Methodology roles...')
+
+role_assignments = {
+    'petra.vogel':    ['ROLE_USER', 'ROLE_LEAD_GDPR'],               # DPO → privacy / GDPR lead
+    'tom.wagner':     ['ROLE_USER', 'ROLE_LEAD_DATA_GOVERNANCE'],    # Finance → data governance lead
+    'marco.rossi':    ['ROLE_USER', 'ROLE_LEAD_PROCESS_GOVERNANCE'], # Logistics → process governance lead
+    'felix.kramer':   ['ROLE_USER', 'ROLE_LEAD_DDD'],                # Engineering → DDD / architecture lead
+    'sarah.mitchell': ['ROLE_USER', 'ROLE_LEAD_BCM'],                # Sales & Marketing → capability model lead
+    'anna.schneider': ['ROLE_USER', 'ROLE_LEAD_TEAM_TOPOLOGIES'],    # HR → team topologies lead
+    'lisa.chen':      ['ROLE_USER', 'ROLE_EDITOR_GDPR', 'ROLE_EDITOR_PROCESS_GOVERNANCE'],  # Customer Care → editor only
+}
+
+all_users_now = api('GET', '/administration/users', token=T)
+id_by_username = (
+    {u['username']: u['id'] for u in all_users_now}
+    if isinstance(all_users_now, list) else {}
+)
+for username, roles in role_assignments.items():
+    uid = id_by_username.get(username)
+    if uid is None:
+        print(f'  ! skip roles for {username} (user not found)')
+        continue
+    scoped = ', '.join(r for r in roles if r != 'ROLE_USER')
+    ok(f'{username} -> {scoped}', api('PUT', f'/administration/users/{uid}', {'roles': roles}, T))
 
 
 # ── 3. Classifications ──────────────────────────────────────────────────────────

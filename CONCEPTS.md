@@ -414,12 +414,12 @@ Leargon has two layers of access control: **system-level roles** (coarse-grained
 
 System roles are stored as a comma-separated string in the `User.roles` column. There are two **global** roles and a family of **methodology-scoped** roles:
 
-| Role              | Scope            | Meaning                                                                                                                                                                                            |
-|-------------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ROLE_USER`       | global           | Every authenticated user. Reads everything and creates new objects (becoming their owner).                                                                                                          |
-| `ROLE_ADMIN`      | global           | Full administrative access: edit any object regardless of ownership, manage users, and configure the system.                                                                                        |
-| `ROLE_EDITOR_<M>` | one methodology  | May edit any field that belongs to methodology `<M>`, on any object, regardless of ownership. Treated as a non-owner — edits flip the field to `UNVERIFIED` and verification is not granted (see *Edit vs. Verify*). |
-| `ROLE_LEAD_<M>`   | one methodology  | Everything `ROLE_EDITOR_<M>` can do **plus** managing `<M>`'s configuration — enabling/disabling the methodology and setting field visibility/mandatory for its fields. A lead implies the editor role for the same `<M>`. |
+| Role              | Scope           | Meaning                                                                                                                                                                                                                    |
+|-------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ROLE_USER`       | global          | Every authenticated user. Reads everything and creates new objects (becoming their owner).                                                                                                                                 |
+| `ROLE_ADMIN`      | global          | Full administrative access: edit any object regardless of ownership, manage users, and configure the system.                                                                                                               |
+| `ROLE_EDITOR_<M>` | one methodology | May edit any field that belongs to methodology `<M>`, on any object, regardless of ownership. Treated as a non-owner — edits flip the field to `UNVERIFIED` and verification is not granted (see *Edit vs. Verify*).       |
+| `ROLE_LEAD_<M>`   | one methodology | Everything `ROLE_EDITOR_<M>` can do **plus** managing `<M>`'s configuration — enabling/disabling the methodology and setting field visibility/mandatory for its fields. A lead implies the editor role for the same `<M>`. |
 
 `<M>` is one of the six methodologies — `DATA_GOVERNANCE`, `PROCESS_GOVERNANCE`, `GDPR`, `DDD`, `BCM`, `TEAM_TOPOLOGIES` — so tokens look like `ROLE_LEAD_GDPR` or `ROLE_EDITOR_DDD`. The token grammar is `^ROLE_(USER|ADMIN|(LEAD|EDITOR)_<METHODOLOGY>)$`; scoped tokens are validated server-side against the known methodology keys (`RoleService`).
 

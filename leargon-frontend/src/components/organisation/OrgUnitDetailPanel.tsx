@@ -69,7 +69,6 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -109,13 +108,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
   const { data: unitResponse, isLoading, error } = useGetOrganisationalUnitByKey(unitKey);
   const unit = unitResponse?.data as OrganisationalUnitResponse | undefined;
-  // Edit gate: lead/owner, effective steward (delegated editor — cannot verify), admin, or a methodology-scoped
-  // editor/lead for org units. Coarse on purpose — the backend enforces per-field permission (403).
-  const isLeadOrAdmin = isAdmin ||
-    (user?.username === unit?.businessOwner?.username) ||
-    (!!user?.username && user.username === unit?.businessSteward?.username) ||
-    canEditEntityTypeByRole(user?.roles, 'ORGANISATIONAL_UNIT');
+  // Org-unit content is editable only by the business owner, effective steward, or an admin — the backend
+  // has no methodology-scoped edit path for org units (see OrganisationalUnitController.checkEditPermission),
+  // so the edit gate must not include scoped editor/lead roles (they would 403 on save).
   const isOwner = !!user?.username && user.username === unit?.businessOwner?.username;
+  const isSteward = !!user?.username && user.username === unit?.businessSteward?.username;
+  const hasBroadEdit = isAdmin || isOwner || isSteward;
   const setFieldVerification = useSetOrganisationalUnitFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -161,7 +159,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   });
 
   const activeLocales = locales.filter((l) => l.isActive);
-  const descriptionLocales = isLeadOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
+  const descriptionLocales = hasBroadEdit ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   // Mandatory field helpers
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -393,12 +391,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </>}
         actions={<>
-          {isLeadOrAdmin && (
+          {hasBroadEdit && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               Add Child
             </Button>
           )}
-          {isLeadOrAdmin && (
+          {hasBroadEdit && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               Delete
             </Button>
@@ -409,12 +407,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Item 1: Missing fields banner */}
         <MissingFieldsBanner
           missingFields={unit.missingMandatoryFields ?? []}
-          ownerOrAdmin={isLeadOrAdmin}
+          ownerOrAdmin={hasBroadEdit}
           entityType="ORGANISATIONAL_UNIT"
         />
 
         {/* Names & Descriptions */}
-        <SectionHeader title="Names & Descriptions" canEdit={isLeadOrAdmin} isEditing={namesEdit.isEditing}
+        <SectionHeader title="Names & Descriptions" canEdit={hasBroadEdit} isEditing={namesEdit.isEditing}
           onEdit={() => namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] })}
           onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
         {namesEdit.isEditing && namesEdit.editValue ? (
@@ -504,7 +502,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <SectionHeader
               title="Type"
               statusIndicator={renderStatus('unitType')}
-              canEdit={isLeadOrAdmin}
+              canEdit={hasBroadEdit}
               isEditing={typeEdit.isEditing}
               onEdit={() => typeEdit.startEdit(unit.unitType || null)}
               onSave={typeEdit.save}
@@ -538,7 +536,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {/* Parents */}
             <SectionHeader
               title="Parents"
-              canEdit={isLeadOrAdmin}
+              canEdit={hasBroadEdit}
               isEditing={parentsEdit.isEditing}
               onEdit={() => parentsEdit.startEdit(unit.parents?.map((p) => p.key) || [])}
               onSave={parentsEdit.save}
@@ -1040,7 +1038,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <Typography variant="subtitle2">{t('common.classifications')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-      <InlineEditControls canEdit={isLeadOrAdmin} edit={classEdit} onStart={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || [])} />
+      <InlineEditControls canEdit={hasBroadEdit} edit={classEdit} onStart={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || [])} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
