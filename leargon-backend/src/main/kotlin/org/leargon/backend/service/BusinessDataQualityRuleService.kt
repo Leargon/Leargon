@@ -45,7 +45,8 @@ open class BusinessDataQualityRuleService(
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id && entity.effectiveSteward()?.id != currentUser.id &&
-            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")) {
+            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")
+        ) {
             throw ForbiddenOperationException("Only the data owner or an admin can add quality rules")
         }
         val m = this.mapper
@@ -74,7 +75,8 @@ open class BusinessDataQualityRuleService(
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id && entity.effectiveSteward()?.id != currentUser.id &&
-            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")) {
+            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")
+        ) {
             throw ForbiddenOperationException("Only the data owner or an admin can edit quality rules")
         }
         val repo = this.ruleRepository
@@ -104,7 +106,8 @@ open class BusinessDataQualityRuleService(
             }
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         if (!isAdmin && entity.effectiveOwner()?.id != currentUser.id && entity.effectiveSteward()?.id != currentUser.id &&
-            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")) {
+            !roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "qualityRules")
+        ) {
             throw ForbiddenOperationException("Only the data owner or an admin can delete quality rules")
         }
         val removed = entity.qualityRules.removeIf { it.id == ruleId }

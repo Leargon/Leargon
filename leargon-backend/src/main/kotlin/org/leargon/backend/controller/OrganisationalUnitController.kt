@@ -31,8 +31,8 @@ import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
-import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.RoleService
+import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
 
 @Controller
