@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, signupCreator, signupAdmin, withToken, createProcess, createEntity, createOrgUnit, createDomain } from './testClient';
+import { createClient, signupCreator, signupAdmin, withToken, createProcess, createEntity, createOrgUnit, createDomain } from './testClient';
 import type { AxiosInstance } from 'axios';
 
 function getBackendUrl(): string {
