@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, signupCreator, signupAdmin, withToken, createEntity, ApiError } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, withToken, createEntity } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 
