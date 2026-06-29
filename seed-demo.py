@@ -2794,24 +2794,61 @@ def _check(label, status, want):
 
 petra_t = _login('petra.vogel@leargon.local')      # ROLE_LEAD_GDPR
 sarah_t = _login('sarah.mitchell@leargon.local')   # ROLE_LEAD_BCM
-if petra_t and sarah_t:
-    st, body = _try('POST', '/service-providers', {
+felix_t = _login('felix.kramer@leargon.local')     # ROLE_LEAD_DDD
+if petra_t and sarah_t and felix_t:
+    # ── GDPR lead: full lifecycle on a service provider ──
+    st, sp = _try('POST', '/service-providers', {
         'names': n4('SMOKE Provider'),
         'processingCountries': [], 'processorAgreementInPlace': False, 'subProcessorsApproved': False,
     }, petra_t)
     _check('GDPR lead can create a service provider', st, 201)
-    if body and body.get('key'):
-        api('DELETE', f'/service-providers/{body["key"]}', token=T)
+    if sp and sp.get('key'):
+        st, _ = _try('PUT', f'/service-providers/{sp["key"]}', {
+            'names': n4('SMOKE Provider edited'),
+            'processingCountries': [], 'processorAgreementInPlace': True, 'subProcessorsApproved': False,
+        }, petra_t)
+        _check('GDPR lead can edit a service provider', st, 200)
+        st, _ = _try('DELETE', f'/service-providers/{sp["key"]}', None, petra_t)
+        _check('GDPR lead can delete a service provider', st, 204)
 
     st, body = _try('POST', '/capabilities', {'names': n4('SMOKE Denied')}, petra_t)
     _check('GDPR lead is denied creating a capability (out of scope)', st, 403)
     if body and body.get('key'):
         api('DELETE', f'/capabilities/{body["key"]}', token=T)
 
-    st, body = _try('POST', '/capabilities', {'names': n4('SMOKE Capability')}, sarah_t)
+    # ── BCM lead: full lifecycle on a capability ──
+    st, cap = _try('POST', '/capabilities', {'names': n4('SMOKE Capability')}, sarah_t)
     _check('BCM lead can create a capability', st, 201)
-    if body and body.get('key'):
-        api('DELETE', f'/capabilities/{body["key"]}', token=T)
+    if cap and cap.get('key'):
+        st, _ = _try('PUT', f'/capabilities/{cap["key"]}', {'names': n4('SMOKE Capability edited')}, sarah_t)
+        _check('BCM lead can edit a capability', st, 200)
+        st, _ = _try('DELETE', f'/capabilities/{cap["key"]}', None, sarah_t)
+        _check('BCM lead can delete a capability', st, 204)
+
+    # ── DDD lead: edit & delete a business domain (admin creates the throwaway domain) ──
+    st, dom = _try('POST', '/business-domains', {'names': n4('SMOKE Domain'), 'descriptions': []}, T)
+    _check('admin can create a business domain (setup)', st, 201)
+    if dom and dom.get('key'):
+        st, _ = _try('PUT', f'/business-domains/{dom["key"]}/type', {'type': 'CORE'}, felix_t)
+        _check('DDD lead can edit a business domain', st, 200)
+        # cross-methodology denial: a GDPR lead may not edit a DDD-governed domain
+        st, _ = _try('PUT', f'/business-domains/{dom["key"]}/type', {'type': 'GENERIC'}, petra_t)
+        _check('GDPR lead is denied editing a business domain (out of scope)', st, 403)
+        st, _ = _try('DELETE', f'/business-domains/{dom["key"]}', None, felix_t)
+        _check('DDD lead can delete a business domain', st, 204)
+
+    # ── cross-methodology denial: a DDD lead may not edit a GDPR-governed service provider ──
+    st, sp2 = _try('POST', '/service-providers', {
+        'names': n4('SMOKE Provider 2'),
+        'processingCountries': [], 'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+    }, T)
+    if sp2 and sp2.get('key'):
+        st, _ = _try('PUT', f'/service-providers/{sp2["key"]}', {
+            'names': n4('hijacked'), 'processingCountries': [],
+            'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+        }, felix_t)
+        _check('DDD lead is denied editing a service provider (out of scope)', st, 403)
+        api('DELETE', f'/service-providers/{sp2["key"]}', token=T)
 else:
     print('  SKIP — could not log in as the seeded lead users')
 

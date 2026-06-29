@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { uid, OWNER, ADMIN, createEntity } from './api-setup';
+import { uid, OWNER, ADMIN, createEntityOwnedBy } from './api-setup';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -51,7 +51,9 @@ test.describe('Field Verification', () => {
 
   test('owner sees a verification indicator and can change a field status', async ({ page }) => {
     const name = uid('FV Entity');
-    const entity = (await createEntity(name, OWNER)) as { key: string };
+    // Created by admin (so the name field is VERIFIED) then handed to the owner persona, since a
+    // plain ROLE_USER can no longer create root items. Owner change does not re-sync verification.
+    const entity = (await createEntityOwnedBy(name)) as { key: string };
 
     await page.goto(`/entities/${entity.key}`);
     await page.waitForLoadState('networkidle');
@@ -79,7 +81,7 @@ test.describe('Field Verification', () => {
   test('reverting a rename shows the fresh status, not a stale cached one', async ({ browser }) => {
     const nameA = uid('FV Rename A');
     const nameB = uid('FV Rename B');
-    const entity = (await createEntity(nameA, OWNER)) as { key: string };
+    const entity = (await createEntityOwnedBy(nameA)) as { key: string };
 
     // Drive the renames as a NON-OWNER admin so each edit drops the field to UNVERIFIED (an owner
     // edit would auto-verify and mask the bug). The owner-created name starts out VERIFIED.
@@ -116,7 +118,7 @@ test.describe('Field Verification', () => {
   });
 
   test('disabling Data Governance verification hides the indicator; re-enabling restores it', async ({ page }) => {
-    const entity = (await createEntity(uid('FV Toggle Entity'), OWNER)) as { key: string };
+    const entity = (await createEntityOwnedBy(uid('FV Toggle Entity'))) as { key: string };
 
     // Baseline (verification on): the owner sees the indicator button.
     await page.goto(`/entities/${entity.key}`);

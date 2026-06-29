@@ -954,9 +954,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </AccordionSummary>
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
-      {/* Input Entities */}
+      {/* Read Entities */}
       {!isHidden('inputEntities') && <EntityListSection
-        title="Input Entities"
+        title={t('inputEntities')}
         entities={process.inputEntities || []}
         inheritedEntities={inheritedInputEntities}
         candidates={inputCandidates}
@@ -971,9 +971,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {!isHidden('inputEntities') && <Divider sx={{ my: 2 }} />}
 
-      {/* Output Entities */}
+      {/* Written Entities */}
       {!isHidden('outputEntities') && <EntityListSection
-        title="Output Entities"
+        title={t('outputEntities')}
         entities={process.outputEntities || []}
         inheritedEntities={inheritedOutputEntities}
         candidates={outputCandidates}

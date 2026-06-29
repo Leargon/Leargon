@@ -45,6 +45,9 @@ async function apiFetch(
 export const ADMIN = '.auth/admin.json';
 export const OWNER = '.auth/owner.json';
 
+/** Username of the e2e owner persona (see auth-roles.setup.ts) — a plain ROLE_USER. */
+export const OWNER_USERNAME = 'e2eowner';
+
 /** Generate a unique name for test isolation */
 export const uid = (base: string): string => `${base} ${Date.now()}`;
 
@@ -221,3 +224,42 @@ export const assignOwningUnitToProcess = (
   as = ADMIN,
 ): Promise<Record<string, unknown>> =>
   apiFetch(`/processes/${processKey}/owning-unit`, 'PUT', { owningUnitKey }, as);
+
+/** Set an entity's data owner by username (admin operation). */
+export const setEntityDataOwner = (
+  entityKey: string,
+  dataOwnerUsername: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/business-entities/${entityKey}/data-owner`, 'PUT', { dataOwnerUsername }, as);
+
+/** Set a process's owner by username (admin operation). */
+export const setProcessOwner = (
+  processKey: string,
+  processOwnerUsername: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/processes/${processKey}/owner`, 'PUT', { processOwnerUsername }, as);
+
+/**
+ * Create an entity as admin, then hand ownership to a (non-privileged) user.
+ * Mirrors the real-world flow now that a plain user can no longer create root items.
+ */
+export const createEntityOwnedBy = async (
+  name: string,
+  ownerUsername = OWNER_USERNAME,
+): Promise<Record<string, unknown>> => {
+  const entity = await createEntity(name);
+  await setEntityDataOwner(entity.key as string, ownerUsername);
+  return entity;
+};
+
+/** Create a process as admin, then hand ownership to a (non-privileged) user. */
+export const createProcessOwnedBy = async (
+  name: string,
+  ownerUsername = OWNER_USERNAME,
+): Promise<Record<string, unknown>> => {
+  const proc = await createProcess(name);
+  await setProcessOwner(proc.key as string, ownerUsername);
+  return proc;
+};
