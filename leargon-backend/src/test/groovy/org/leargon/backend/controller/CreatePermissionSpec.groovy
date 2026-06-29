@@ -71,6 +71,21 @@ class CreatePermissionSpec extends Specification {
         }
     }
 
+    private HttpStatus deleteStatus(String path, String token) {
+        try {
+            return client.toBlocking().exchange(HttpRequest.DELETE(path).bearerAuth(token)).status()
+        } catch (HttpClientResponseException e) {
+            return e.status
+        }
+    }
+
+    private String createEntityAsAdmin(String name) {
+        def admin = token("cp-admin@test.com", "cpadmin", "ROLE_USER,ROLE_ADMIN")
+        return client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", name)])).bearerAuth(admin),
+                Map).body().key
+    }
+
     def "a DATA_GOVERNANCE editor can create a root business entity"() {
         given:
         def t = token("dg@test.com", "dgeditor", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
@@ -151,5 +166,23 @@ class CreatePermissionSpec extends Specification {
 
         then:
         status == HttpStatus.FORBIDDEN
+    }
+
+    def "a DATA_GOVERNANCE editor can delete an entity owned by someone else"() {
+        given: "an admin-owned entity and a separate DATA_GOVERNANCE editor"
+        def key = createEntityAsAdmin("Deletable Entity")
+        def editor = token("del-editor@test.com", "deleditor", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
+
+        expect: "the editor (non-owner) may delete it"
+        deleteStatus("/business-entities/$key", editor) == HttpStatus.NO_CONTENT
+    }
+
+    def "a plain non-owner cannot delete an entity (403)"() {
+        given:
+        def key = createEntityAsAdmin("Protected Entity")
+        def plain = token("del-plain@test.com", "delplain", "ROLE_USER")
+
+        expect:
+        deleteStatus("/business-entities/$key", plain) == HttpStatus.FORBIDDEN
     }
 }

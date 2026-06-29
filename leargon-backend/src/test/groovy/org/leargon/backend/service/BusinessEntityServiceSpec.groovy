@@ -322,20 +322,20 @@ class BusinessEntityServiceSpec extends Specification {
         thrown(ResourceNotFoundException)
     }
 
-    def "should throw ForbiddenOperationException when non-owner deletes entity"() {
-        given: "an entity owned by a different user"
+    def "should throw ForbiddenOperationException when a non-owner non-editor deletes entity"() {
+        given: "an entity owned by a different user, and an unprivileged actor"
         def owner = createTestUser("owner@example.com", "owner")
-        def otherUser = createTestUser("other@example.com", "other")
+        def otherUser = createTestUser("other@example.com", "other", "ROLE_USER")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def entity = entityService.createBusinessEntity(createRequest, owner)
 
-        when: "non-owner attempts to delete"
+        when: "a user who is neither owner, steward, a DATA_GOVERNANCE editor, nor admin attempts to delete"
         entityService.deleteBusinessEntity(entity.key, otherUser)
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner, steward, or an admin")
+        exception.message.contains("Deleting this item requires")
     }
 
     def "should get version diff"() {

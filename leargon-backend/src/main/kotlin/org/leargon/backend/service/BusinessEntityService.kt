@@ -452,7 +452,7 @@ open class BusinessEntityService(
         currentUser: User
     ) {
         val entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        roleService.requireDelete(currentUser, "BUSINESS_ENTITY", entity.effectiveOwner()?.id, entity.effectiveSteward()?.id)
 
         val children = entity.children.toList()
         for (child in children) {

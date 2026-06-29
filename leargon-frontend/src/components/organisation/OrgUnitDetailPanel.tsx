@@ -69,6 +69,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateChild } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -114,6 +115,9 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const isOwner = !!user?.username && user.username === unit?.businessOwner?.username;
   const isSteward = !!user?.username && user.username === unit?.businessSteward?.username;
   const hasBroadEdit = isAdmin || isOwner || isSteward;
+  // Lifecycle management of this unit (create a child under it, or delete it): an admin /
+  // TEAM_TOPOLOGIES editor-lead, or this unit's owner/steward.
+  const canManage = canCreateChild(user?.roles, 'ORGANISATIONAL_UNIT', user?.username, unit?.businessOwner?.username, unit?.businessSteward?.username);
   const setFieldVerification = useSetOrganisationalUnitFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -391,12 +395,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </>}
         actions={<>
-          {hasBroadEdit && (
+          {canManage && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               Add Child
             </Button>
           )}
-          {hasBroadEdit && (
+          {canManage && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               Delete
             </Button>

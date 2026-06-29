@@ -82,7 +82,7 @@ import {
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole } from '../../utils/roles';
+import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
 import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
@@ -210,6 +210,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   // per-field by canEditField, which mirrors the backend per-field gate (avoids edit pencils that 403).
   const hasBroadEdit = isAdmin || isOwner || isSteward;
   const canEditField = useCanEditField('BUSINESS_PROCESS', user?.roles, hasBroadEdit);
+  // Lifecycle management of this process (create a sub-process, or delete it): an admin /
+  // PROCESS_GOVERNANCE editor-lead, or this process's owner/steward.
+  const canManage = canCreateChild(user?.roles, 'BUSINESS_PROCESS', user?.username, process?.processOwner?.username, process?.processSteward?.username);
   const setFieldVerification = useSetProcessFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -555,7 +558,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
           )}
         </>}
-        actions={hasBroadEdit ? (<>
+        actions={canManage ? (<>
           <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
             {t('process.addSubProcess')}
           </Button>

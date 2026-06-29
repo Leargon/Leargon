@@ -66,7 +66,7 @@ open class OrganisationalUnitController(
     override fun deleteOrganisationalUnit(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
-        checkEditPermission(unit, currentUser)
+        roleService.requireDelete(currentUser, "ORGANISATIONAL_UNIT", unit.effectiveOwner()?.id, unit.effectiveSteward()?.id)
         organisationalUnitService.delete(key)
         return HttpResponse.noContent()
     }

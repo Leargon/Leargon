@@ -715,7 +715,7 @@ open class ProcessService(
         currentUser: User
     ) {
         val process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        roleService.requireDelete(currentUser, "BUSINESS_PROCESS", process.effectiveOwner()?.id, process.effectiveSteward()?.id)
 
         if (process.children.isNotEmpty()) {
             throw IllegalArgumentException(

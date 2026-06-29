@@ -77,7 +77,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole } from '../../utils/roles';
+import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
 import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
@@ -250,6 +250,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   // canEditField, mirroring the backend per-field gate (avoids edit pencils that 403 on save).
   const hasBroadEdit = isAdmin || isOwner || isSteward;
   const canEditField = useCanEditField('BUSINESS_ENTITY', user?.roles, hasBroadEdit);
+  // Lifecycle management of this entity (create a child under it, or delete it): an admin /
+  // DATA_GOVERNANCE editor-lead, or this entity's owner/steward.
+  const canManage = canCreateChild(user?.roles, 'BUSINESS_ENTITY', user?.username, entity?.dataOwner?.username, entity?.dataSteward?.username);
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
       await setFieldVerification.mutateAsync({ key: entityKey, data: { fieldName, status } });
@@ -514,12 +517,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           {dpia && <Chip label={t('entity.dpiaActive')} size="small" color="secondary" />}
         </>}
         actions={<>
-          {hasBroadEdit && (
+          {canManage && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               {t('common.addChildEntity')}
             </Button>
           )}
-          {hasBroadEdit && (
+          {canManage && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               {t('common.delete')}
             </Button>

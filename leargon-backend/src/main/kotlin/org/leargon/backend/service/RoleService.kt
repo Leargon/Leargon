@@ -95,6 +95,26 @@ class RoleService(
     }
 
     /**
+     * Throws unless [user] may delete an object of [entityType]: an administrator or EDITOR/LEAD of the
+     * type's governing methodology, or the object's owner or steward. Symmetric with create.
+     */
+    fun requireDelete(
+        user: User,
+        entityType: String,
+        ownerId: Long?,
+        stewardId: Long?
+    ) {
+        val governing = GOVERNING_METHODOLOGY[entityType]
+        if (governing != null && isEditorFor(user, governing)) return
+        if (user.roles.contains(ROLE_ADMIN)) return
+        val uid = user.id
+        if (uid != null && (uid == ownerId || uid == stewardId)) return
+        throw ForbiddenOperationException(
+            "Deleting this item requires an administrator, a $governing editor/lead, or ownership/stewardship"
+        )
+    }
+
+    /**
      * Whether the user may edit [fieldName] on [entityType] purely by virtue of a scoped EDITOR/LEAD role
      * (owner/steward/admin are checked separately by the caller). True when the field belongs to a
      * methodology the user is an editor (or lead) for. CORE-only fields belong to no methodology and so
