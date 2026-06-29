@@ -501,7 +501,7 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 | Read any object                                 |           ✓           |         ✓         |                  ✓                  |   ✓   |         ✓          |
 | Create a *root* item (becomes owner)            |           ✗           |         ✗         |           ✓ (item's `<M>`)³         |   —   |         ✓          |
 | Create a *child* of a parent item (becomes owner)|          ✗           |  ✓ (of parent)    |           ✓ (item's `<M>`)³         | ✓ (of parent) |    ✓       |
-| Edit a field                                    |           ✗           |   ✓ (any field)   |        ✓ (only fields of `<M>`)¹    |   ✓   |         ✓          |
+| Edit a field                                    |           ✗           |   ✓ (any field)   |   ✓ (fields of `<M>`; CORE via governing)¹ |   ✓   |     ✓          |
 | Verify / unverify a field                       |           ✗           |         ✗         |                  ✗                  |   ✓   |         ✗          |
 | Delete an object                                |           ✗           |         ✓         |                  ✗                  |   ✓   |         ✓          |
 | Reassign owner / steward fields                 |           ✗           |         ✗         |       only `DATA/PROCESS_GOVERNANCE`²|   ✗   |         ✓          |
@@ -509,7 +509,7 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 | User management (create, enable/disable, delete)|           ✗           |         ✗         |                  ✗                  |   ✗   |         ✓          |
 | Delete fallback admin user                      |           ✗           |         ✗         |                  ✗                  |   ✗   | ✗ (blocked always) |
 
-¹ A field's methodology is resolved from the field-configuration inventory (see `METHODOLOGY-FIELD-MAPPING.md`). Scoped editors work through the **single-field** endpoints; the whole-object update endpoint stays owner/steward/admin-only.
+¹ A field's methodology is resolved from the field-configuration inventory (see `METHODOLOGY-FIELD-MAPPING.md`). **CORE fields** belong to no methodology (e.g. the name); they are editable by an editor/lead of the entity type's *governing* methodology (³) — so a `DATA_GOVERNANCE` editor may rename a business entity. **Classifications** and **data-quality rules** are `DATA_GOVERNANCE` fields and follow the same rule via their own endpoints. As a non-owner, every such edit lands the affected field `UNVERIFIED` (see *Edit vs. Verify*). The bulk whole-object update endpoint stays owner/steward/admin-only.
 ² Owner/steward fields are themselves mapped to `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE`, so an editor/lead for that methodology can set them.
 ³ The item's governing methodology — see *Creating Objects* above (Entity → `DATA_GOVERNANCE`, Process → `PROCESS_GOVERNANCE`, Service Provider/IT System → `GDPR`, Capability → `BCM`, Domain/Bounded Context/Context Relationship/Domain Event → `DDD`, Org Unit → `TEAM_TOPOLOGIES`).
 
