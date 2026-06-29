@@ -69,7 +69,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateChild } from '../../utils/roles';
+import { canCreateChild, canCreateRoot } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -118,6 +118,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   // Lifecycle management of this unit (create a child under it, or delete it): an admin /
   // TEAM_TOPOLOGIES editor-lead, or this unit's owner/steward.
   const canManage = canCreateChild(user?.roles, 'ORGANISATIONAL_UNIT', user?.username, unit?.businessOwner?.username, unit?.businessSteward?.username);
+  // Org-unit fields: owner/steward/admin or a TEAM_TOPOLOGIES editor/lead (the unit's governing methodology).
+  const canEditOrgUnit = hasBroadEdit || canCreateRoot(user?.roles, 'ORGANISATIONAL_UNIT');
+  // Assigning/unassigning a bounded context edits the bounded context (DDD), not the org unit.
+  const canAssignBc = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
   const setFieldVerification = useSetOrganisationalUnitFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -163,7 +167,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   });
 
   const activeLocales = locales.filter((l) => l.isActive);
-  const descriptionLocales = hasBroadEdit ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
+  const descriptionLocales = canEditOrgUnit ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   // Mandatory field helpers
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -411,12 +415,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Item 1: Missing fields banner */}
         <MissingFieldsBanner
           missingFields={unit.missingMandatoryFields ?? []}
-          ownerOrAdmin={hasBroadEdit}
+          ownerOrAdmin={canEditOrgUnit}
           entityType="ORGANISATIONAL_UNIT"
         />
 
         {/* Names & Descriptions */}
-        <SectionHeader title="Names & Descriptions" canEdit={hasBroadEdit} isEditing={namesEdit.isEditing}
+        <SectionHeader title="Names & Descriptions" canEdit={canEditOrgUnit} isEditing={namesEdit.isEditing}
           onEdit={() => namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] })}
           onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
         {namesEdit.isEditing && namesEdit.editValue ? (
@@ -506,7 +510,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <SectionHeader
               title="Type"
               statusIndicator={renderStatus('unitType')}
-              canEdit={hasBroadEdit}
+              canEdit={canEditOrgUnit}
               isEditing={typeEdit.isEditing}
               onEdit={() => typeEdit.startEdit(unit.unitType || null)}
               onSave={typeEdit.save}
@@ -540,7 +544,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {/* Parents */}
             <SectionHeader
               title="Parents"
-              canEdit={hasBroadEdit}
+              canEdit={canEditOrgUnit}
               isEditing={parentsEdit.isEditing}
               onEdit={() => parentsEdit.startEdit(unit.parents?.map((p) => p.key) || [])}
               onSave={parentsEdit.save}
@@ -619,7 +623,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       <SectionHeader
         title={t('organisation.businessOwner')}
         statusIndicator={renderStatus('businessOwner')}
-        canEdit={isAdmin}
+        canEdit={canEditOrgUnit}
         isEditing={leadEdit.isEditing}
         onEdit={() => leadEdit.startEdit(unit.businessOwner?.username || null)}
         onSave={leadEdit.save}
@@ -664,7 +668,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       <SectionHeader
         title={t('organisation.businessSteward')}
         statusIndicator={renderStatus('businessSteward')}
-        canEdit={isAdmin}
+        canEdit={canEditOrgUnit}
         isEditing={stewardEdit.isEditing}
         onEdit={() => stewardEdit.startEdit(unit.businessSteward?.username || null)}
         onSave={stewardEdit.save}
@@ -706,7 +710,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       <SectionHeader
         title={t('organisation.technicalCustodian')}
         statusIndicator={renderStatus('technicalCustodian')}
-        canEdit={isAdmin}
+        canEdit={canEditOrgUnit}
         isEditing={technicalCustodianEdit.isEditing}
         onEdit={() => technicalCustodianEdit.startEdit(unit.technicalCustodian?.username || null)}
         onSave={technicalCustodianEdit.save}
@@ -752,7 +756,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              {isAdmin && (
+              {canAssignBc && (
                 <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
                   Assign
                 </Button>
@@ -766,7 +770,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     disablePadding
                     sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}
                     secondaryAction={
-                      isAdmin && (
+                      canAssignBc && (
                         <Button
                           size="small"
                           color="warning"
@@ -819,13 +823,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         )}
 
         {/* External Party Details */}
-        {sections.externalFields && !isHidden('isExternal') && (isAdmin || unit.isExternal) && (
+        {sections.externalFields && !isHidden('isExternal') && (canEditOrgUnit || unit.isExternal) && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography variant="subtitle2">External Party</Typography>
             </AccordionSummary>
             <AccordionDetails>
-          <InlineEditControls canEdit={isAdmin} edit={externalFieldsEdit} onStart={() => externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' })} />
+          <InlineEditControls canEdit={canEditOrgUnit} edit={externalFieldsEdit} onStart={() => externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' })} />
           <Box sx={{ mb: 2 }}>
             {externalFieldsEdit.isEditing && externalFieldsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -903,7 +907,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               {/* Data Access Entities (Read) */}
               <SectionHeader
                 title="Data Access Entities (Read)"
-                canEdit={isAdmin}
+                canEdit={canEditOrgUnit}
                 isEditing={dataAccessEdit.isEditing}
                 onEdit={() => dataAccessEdit.startEdit((unit.dataAccessEntities ?? []).map((e) => e.key))}
                 onSave={dataAccessEdit.save}
@@ -947,7 +951,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               {/* Data Manipulation Entities (Write) */}
               <SectionHeader
                 title="Data Manipulation Entities (Write)"
-                canEdit={isAdmin}
+                canEdit={canEditOrgUnit}
                 isEditing={dataManipulationEdit.isEditing}
                 onEdit={() => dataManipulationEdit.startEdit((unit.dataManipulationEntities ?? []).map((e) => e.key))}
                 onSave={dataManipulationEdit.save}
@@ -999,7 +1003,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <Typography variant="subtitle2">Service Providers</Typography>
           </AccordionSummary>
           <AccordionDetails>
-        <InlineEditControls canEdit={isAdmin} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))} />
+        <InlineEditControls canEdit={canEditOrgUnit} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))} />
         <Box sx={{ mb: 2 }}>
           {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
             <Box>
@@ -1042,7 +1046,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <Typography variant="subtitle2">{t('common.classifications')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-      <InlineEditControls canEdit={hasBroadEdit} edit={classEdit} onStart={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || [])} />
+      <InlineEditControls canEdit={canEditOrgUnit} edit={classEdit} onStart={() => classEdit.startEdit(unit.classificationAssignments?.map((a) => ({ classificationKey: a.classificationKey, valueKey: a.valueKey })) || [])} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
           {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {

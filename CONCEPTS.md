@@ -503,7 +503,7 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 | Create a *child* of a parent item (becomes owner)|          ✗           |  ✓ (of parent)    |           ✓ (item's `<M>`)³         | ✓ (of parent) |    ✓       |
 | Edit a field                                    |           ✗           |   ✓ (any field)   |   ✓ (fields of `<M>`; CORE via governing)¹ |   ✓   |     ✓          |
 | Verify / unverify a field                       |           ✗           |         ✗         |                  ✗                  |   ✓   |         ✗          |
-| Delete an object                                |           ✗           |         ✓         |                  ✗                  |   ✓   |         ✓          |
+| Delete an object                                |           ✗           |         ✓         |          ✓ (governing `<M>`)³        |   ✓   |         ✓          |
 | Reassign owner / steward fields                 |           ✗           |         ✗         |       only `DATA/PROCESS_GOVERNANCE`²|   ✗   |         ✓          |
 | Manage methodology `<M>` configuration          |           ✗           |         ✗         |        `LEAD_<M>` only              |   ✗   |         ✓          |
 | User management (create, enable/disable, delete)|           ✗           |         ✗         |                  ✗                  |   ✗   |         ✓          |
@@ -513,9 +513,11 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 ² Owner/steward fields are themselves mapped to `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE`, so an editor/lead for that methodology can set them.
 ³ The item's governing methodology — see *Creating Objects* above (Entity → `DATA_GOVERNANCE`, Process → `PROCESS_GOVERNANCE`, Service Provider/IT System → `GDPR`, Capability → `BCM`, Domain/Bounded Context/Context Relationship/Domain Event → `DDD`, Org Unit → `TEAM_TOPOLOGIES`).
 
+**Edit & Delete apply to every item type**, gated identically to create: an admin, the object's owner/effective steward (where the type has them), or an editor/lead of the type's governing methodology (³). This includes the **methodology-owned items that have no per-user owner/steward** — Business Domains, Bounded Contexts, Context Relationships, Domain Events (all `DDD`), Capabilities (`BCM`), Service Providers and IT Systems (`GDPR`) — which are managed by an admin **or** a `<M>` editor/lead. Delete is still subject to dependency checks (e.g. a process with sub-processes can't be deleted).
+
 **Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
 
-**Organisational Units** are edit-gated like the other content types: the unit lead (`businessOwner`), the effective steward (`businessSteward`), an admin, or a relevant methodology editor/lead may edit them.
+**Organisational Units** (governed by `TEAM_TOPOLOGIES`) are edit-gated like the other owned types: the unit lead (`businessOwner`), the effective steward (`businessSteward`), an admin, or a `TEAM_TOPOLOGIES` editor/lead may edit & delete them (including external-party and data-access fields). Assigning/unassigning a bounded context to a unit edits the bounded context, so it follows the `DDD` rule.
 
 ---
 

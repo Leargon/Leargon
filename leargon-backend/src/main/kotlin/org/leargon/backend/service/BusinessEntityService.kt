@@ -174,7 +174,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "parent")
 
         if (parentKey != null) {
             if (parentKey == entityKey) {

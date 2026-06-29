@@ -45,6 +45,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -67,7 +68,8 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
   const { t } = useTranslation();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  // Service providers are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
+  const canManage = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetServiceProvider(providerKey);
@@ -209,7 +211,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
           </Box>
         }
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               {t('common.delete')}
             </Button>
@@ -223,7 +225,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             <Typography variant="subtitle2">{t('serviceProvider.sectionNames')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={namesEdit} onStart={() => namesEdit.startEdit([...provider.names])} />
+            <InlineEditControls canEdit={canManage} edit={namesEdit} onStart={() => namesEdit.startEdit([...provider.names])} />
             {namesEdit.isEditing && namesEdit.editValue ? (
               <Box>
                 <TranslationEditor
@@ -252,7 +254,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             <Typography variant="subtitle2">{t('serviceProvider.sectionProviderType')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={typeEdit} onStart={() => typeEdit.startEdit(provider.serviceProviderType as string)} />
+            <InlineEditControls canEdit={canManage} edit={typeEdit} onStart={() => typeEdit.startEdit(provider.serviceProviderType as string)} />
             {typeEdit.isEditing && typeEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControl size="small" sx={{ width: 240 }}>
@@ -283,7 +285,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             <Typography variant="subtitle2">{t('serviceProvider.sectionAgreement')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={agreementEdit} onStart={() => agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved })} />
+            <InlineEditControls canEdit={canManage} edit={agreementEdit} onStart={() => agreementEdit.startEdit({ agreement: provider.processorAgreementInPlace, subProcessors: provider.subProcessorsApproved })} />
             {agreementEdit.isEditing && agreementEdit.editValue ? (
               <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                 <FormControlLabel
@@ -331,7 +333,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             <Typography variant="subtitle2">{t('serviceProvider.sectionLinkedProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={processesEdit} onStart={() => processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key))} />
+            <InlineEditControls canEdit={canManage} edit={processesEdit} onStart={() => processesEdit.startEdit((provider.linkedProcesses ?? []).map((p) => p.key))} />
             {processesEdit.isEditing && processesEdit.editValue !== null ? (
               <Box>
                 <Autocomplete
@@ -419,7 +421,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
             <Typography variant="subtitle2">{t('serviceProvider.sectionCrossBorderTransfers')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(provider.processingCountries ?? [])])} />
+            <InlineEditControls canEdit={canManage} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(provider.processingCountries ?? [])])} />
             <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
               {t('serviceProvider.countriesLabel')}
             </Typography>

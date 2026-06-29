@@ -95,6 +95,23 @@ class RoleService(
     }
 
     /**
+     * Throws unless [user] is an administrator or an EDITOR/LEAD of [methodology]. Used to gate edit/delete
+     * (and create) of items that have no per-user owner/steward and are wholly governed by one methodology
+     * (e.g. service providers, IT systems, capabilities, domains, bounded contexts, context relationships,
+     * domain events).
+     */
+    fun requireEditorFor(
+        user: User,
+        methodology: String
+    ) {
+        if (!isEditorFor(user, methodology)) {
+            throw ForbiddenOperationException(
+                "This action requires an administrator or a $methodology editor/lead role"
+            )
+        }
+    }
+
+    /**
      * Throws unless [user] may delete an object of [entityType]: an administrator or EDITOR/LEAD of the
      * type's governing methodology, or the object's owner or steward. Symmetric with create.
      */

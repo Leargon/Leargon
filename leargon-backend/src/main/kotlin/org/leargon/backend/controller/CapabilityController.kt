@@ -40,23 +40,25 @@ open class CapabilityController(
         return HttpResponse.status<CapabilityResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateCapability(
         key: String,
         @Valid @Body updateCapabilityRequest: UpdateCapabilityRequest
-    ): CapabilityResponse = capabilityService.update(key, updateCapabilityRequest)
+    ): CapabilityResponse {
+        roleService.requireEditorFor(getCurrentUser(), "BCM")
+        return capabilityService.update(key, updateCapabilityRequest)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteCapability(key: String): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "BCM")
         capabilityService.delete(key)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateCapabilityLinkedProcesses(
         key: String,
         @Valid @Body updateCapabilityProcessLinksRequest: UpdateCapabilityProcessLinksRequest
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "BCM")
         capabilityService.updateLinkedProcesses(
             key,
             updateCapabilityProcessLinksRequest.processKeys ?: emptyList()
@@ -64,11 +66,11 @@ open class CapabilityController(
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun assignClassificationsToCapability(
         key: String,
         @Body classificationAssignmentRequests: List<@Valid ClassificationAssignmentRequest>
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "BCM")
         capabilityService.assignClassifications(key, classificationAssignmentRequests)
         return HttpResponse.noContent()
     }

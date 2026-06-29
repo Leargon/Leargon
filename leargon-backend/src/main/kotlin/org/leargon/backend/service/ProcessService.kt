@@ -340,7 +340,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "parent")
 
         if (parentKey != null) {
             if (parentKey == key) throw IllegalArgumentException("A process cannot be its own parent")

@@ -35,41 +35,43 @@ open class ItSystemController(
         return HttpResponse.created(itSystemService.create(createItSystemRequest))
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateItSystem(
         key: String,
         updateItSystemRequest: UpdateItSystemRequest
-    ): ItSystemResponse = itSystemService.update(key, updateItSystemRequest)
+    ): ItSystemResponse {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
+        return itSystemService.update(key, updateItSystemRequest)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteItSystem(key: String): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         itSystemService.delete(key)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateItSystemLinkedProcesses(
         key: String,
         updateItSystemLinkedProcessesRequest: UpdateItSystemLinkedProcessesRequest
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         itSystemService.updateLinkedProcesses(key, updateItSystemLinkedProcessesRequest)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateItSystemServiceProviders(
         key: String,
         updateItSystemServiceProvidersRequest: UpdateItSystemServiceProvidersRequest
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         itSystemService.updateServiceProviders(key, updateItSystemServiceProvidersRequest)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateItSystemProcessingCountries(
         key: String,
         updateItSystemProcessingCountriesRequest: UpdateItSystemProcessingCountriesRequest
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         itSystemService.updateProcessingCountries(key, updateItSystemProcessingCountriesRequest)
         return HttpResponse.noContent()
     }

@@ -39,23 +39,25 @@ open class ServiceProviderController(
         return HttpResponse.status<ServiceProviderResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateServiceProvider(
         key: String,
         @Valid @Body updateServiceProviderRequest: UpdateServiceProviderRequest
-    ): ServiceProviderResponse = serviceProviderService.update(key, updateServiceProviderRequest)
+    ): ServiceProviderResponse {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
+        return serviceProviderService.update(key, updateServiceProviderRequest)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteServiceProvider(key: String): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         serviceProviderService.delete(key)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateServiceProviderLinkedProcesses(
         key: String,
         @Valid @Body updateServiceProviderProcessLinksRequest: UpdateServiceProviderProcessLinksRequest
     ): HttpResponse<Void> {
+        roleService.requireEditorFor(getCurrentUser(), "GDPR")
         serviceProviderService.updateLinkedProcesses(
             key,
             updateServiceProviderProcessLinksRequest.processKeys ?: emptyList()

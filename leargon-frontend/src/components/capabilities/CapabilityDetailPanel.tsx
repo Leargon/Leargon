@@ -36,6 +36,7 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
@@ -56,7 +57,8 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
   const queryClient = useQueryClient();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  // Capabilities are governed by BCM (no per-user owner/steward) — admin or a BCM editor/lead manages them.
+  const canManage = canCreateRoot(user?.roles, 'CAPABILITY');
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: response, isLoading, error } = useGetCapabilityByKey(capabilityKey, {
@@ -173,7 +175,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           ) : undefined
         }
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button size="small" color="error" startIcon={<Delete />} onClick={() => setDeleteOpen(true)}>
               Delete
             </Button>
@@ -188,7 +190,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
-              {isAdmin && !namesEdit.isEditing && (
+              {canManage && !namesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => namesEdit.startEdit(capability.names)}>
                   {t('common.edit')}
                 </Button>
@@ -249,7 +251,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                     }}>
                       {capability.parent ? getLocalizedText(capability.parent ? (allCapabilities.find((c) => c.key === capability.parent!.key)?.names ?? []) : [], capability.parent.key) : '—'}
                     </Typography>
-                    {isAdmin && (
+                    {canManage && (
                       <Button size="small" onClick={() => parentEdit.startEdit(capability.parent?.key ?? null)}>
                         <Edit fontSize="small" />
                       </Button>
@@ -283,7 +285,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                     }}>
                       {capability.owningUnit ? getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name) : '—'}
                     </Typography>
-                    {isAdmin && (
+                    {canManage && (
                       <Button size="small" onClick={() => owningUnitEdit.startEdit(capability.owningUnit?.key ?? null)}>
                         <Edit fontSize="small" />
                       </Button>
@@ -324,7 +326,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
-              {isAdmin && !processesEdit.isEditing && (
+              {canManage && !processesEdit.isEditing && (
                 <Button size="small" startIcon={<Edit />} onClick={() => processesEdit.startEdit(linkedProcessKeys)}>
                   {t('common.edit')}
                 </Button>

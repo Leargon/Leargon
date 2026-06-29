@@ -86,6 +86,13 @@ class CreatePermissionSpec extends Specification {
                 Map).body().key
     }
 
+    private String createServiceProvider(String adminToken, String name) {
+        return client.toBlocking().exchange(
+                HttpRequest.POST("/service-providers",
+                        [names: [[locale: "en", text: name]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false])
+                        .bearerAuth(adminToken), Map).body().key
+    }
+
     def "a DATA_GOVERNANCE editor can create a root business entity"() {
         given:
         def t = token("dg@test.com", "dgeditor", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
@@ -184,5 +191,18 @@ class CreatePermissionSpec extends Specification {
 
         expect:
         deleteStatus("/business-entities/$key", plain) == HttpStatus.FORBIDDEN
+    }
+
+    def "a governing-methodology editor can delete a secondary item; a wrong-methodology editor cannot"() {
+        given: "two admin-created service providers (governed by GDPR)"
+        def admin = token("cp-spadmin@test.com", "cpspadmin", "ROLE_USER,ROLE_ADMIN")
+        def gdprKey = createServiceProvider(admin, "SP GDPR")
+        def wrongKey = createServiceProvider(admin, "SP Wrong")
+        def gdprEditor = token("sp-gdpr@test.com", "spgdpred", "ROLE_USER,ROLE_EDITOR_GDPR")
+        def dgEditor = token("sp-dg@test.com", "spdged", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
+
+        expect: "the GDPR editor may delete; a DATA_GOVERNANCE editor (wrong methodology) may not"
+        deleteStatus("/service-providers/$gdprKey", gdprEditor) == HttpStatus.NO_CONTENT
+        deleteStatus("/service-providers/$wrongKey", dgEditor) == HttpStatus.FORBIDDEN
     }
 }

@@ -275,11 +275,11 @@ class ServiceProviderControllerSpec extends Specification {
         resp.body().subProcessorsApproved
     }
 
-    def "PUT /service-providers/{key} should return 403 for non-admin"() {
+    def "PUT /service-providers/{key} should return 403 for a non-editor non-admin"() {
         given:
         def adminToken = createAdminToken()
         def created = createProvider(adminToken, "Protected Provider")
-        def userData = createUserWithToken("nonAdmin@sp.com", "spNonAdmin")
+        def userData = createUserWithToken("nonAdmin@sp.com", "spNonAdmin", "ROLE_USER")
         def updateReq = [names: [[locale: "en", text: "Hacked"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
@@ -310,11 +310,11 @@ class ServiceProviderControllerSpec extends Specification {
         !serviceProviderRepository.existsByKey(created.key)
     }
 
-    def "DELETE /service-providers/{key} should return 403 for non-admin"() {
+    def "DELETE /service-providers/{key} should return 403 for a non-editor non-admin"() {
         given:
         def adminToken = createAdminToken()
         def created = createProvider(adminToken, "Safe Provider")
-        def userData = createUserWithToken("user2@sp.com", "spUser2")
+        def userData = createUserWithToken("user2@sp.com", "spUser2", "ROLE_USER")
 
         when:
         client.toBlocking().exchange(

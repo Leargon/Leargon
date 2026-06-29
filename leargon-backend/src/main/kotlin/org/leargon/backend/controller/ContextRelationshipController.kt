@@ -36,15 +36,19 @@ open class ContextRelationshipController(
         return HttpResponse.status<ContextRelationshipResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateContextRelationship(
         id: Long,
         @Body request: UpdateContextRelationshipRequest
-    ): ContextRelationshipResponse = contextRelationshipService.update(id, request, getCurrentUser())
+    ): ContextRelationshipResponse {
+        val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
+        return contextRelationshipService.update(id, request, currentUser)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteContextRelationship(id: Long): HttpResponse<Void> {
-        contextRelationshipService.delete(id, getCurrentUser())
+        val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
+        contextRelationshipService.delete(id, currentUser)
         return HttpResponse.noContent()
     }
 

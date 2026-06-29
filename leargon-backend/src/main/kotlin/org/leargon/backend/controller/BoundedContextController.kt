@@ -45,36 +45,36 @@ open class BoundedContextController(
         return HttpResponse.status<BoundedContextResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextNames(
         key: String,
         @Valid @Body updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateNames(key, updateBoundedContextNamesRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextDescriptions(
         key: String,
         @Valid @Body updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateDescriptions(key, updateBoundedContextDescriptionsRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextOwningTeam(
         key: String,
         @Valid @Body updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateOwningTeam(key, updateBoundedContextOwningTeamRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteBoundedContext(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         boundedContextService.delete(key, currentUser)
         return HttpResponse.noContent()
     }
