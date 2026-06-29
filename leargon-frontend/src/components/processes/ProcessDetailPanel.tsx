@@ -956,7 +956,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Read Entities */}
       {!isHidden('inputEntities') && <EntityListSection
-        title={t('inputEntities')}
+        title={t('process.inputEntities')}
         entities={process.inputEntities || []}
         inheritedEntities={inheritedInputEntities}
         candidates={inputCandidates}
@@ -973,7 +973,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Written Entities */}
       {!isHidden('outputEntities') && <EntityListSection
-        title={t('outputEntities')}
+        title={t('process.outputEntities')}
         entities={process.outputEntities || []}
         inheritedEntities={inheritedOutputEntities}
         candidates={outputCandidates}
@@ -989,7 +989,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {!isHidden('executingUnits') && <Divider sx={{ my: 2 }} />}
 
       {/* Executing Units */}
-      {!isHidden('executingUnits') && <SectionHeader title="Executing Units" canEdit={canEditField('executingUnits')} isEditing={execUnitsEdit.isEditing}
+      {!isHidden('executingUnits') && <SectionHeader title={t('process.executingUnits')} canEdit={canEditField('executingUnits')} isEditing={execUnitsEdit.isEditing}
         onEdit={() => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || [])}
         onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving}
         isMandatory={isMandatory('executingUnits')} />}

@@ -92,7 +92,7 @@ function buildLineage(
       target: procNodeId,
       type: 'default',
       style: { stroke: '#0097a7', strokeWidth: 2 },
-      label: t('lineageReadBy'),
+      label: t('diagrams.lineageReadBy'),
       labelStyle: { fontSize: 9, fill: '#0097a7' },
       markerEnd: { type: 'arrowclosed' as const, color: '#0097a7' },
     });
@@ -122,7 +122,7 @@ function buildLineage(
       target: entityKey,
       type: 'default',
       style: { stroke: '#f57c00', strokeWidth: 2 },
-      label: t('lineageWrittenBy'),
+      label: t('diagrams.lineageWrittenBy'),
       labelStyle: { fontSize: 9, fill: '#f57c00' },
       markerEnd: { type: 'arrowclosed' as const, color: '#f57c00' },
     });
