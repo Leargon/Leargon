@@ -167,7 +167,7 @@ C4Dynamic
 C4Dynamic
   title "Create Business Entity — representing logged in user interacting with the system"
 
-  Person(owner, "Data Owner, or admin")
+  Person(owner, "DATA_GOVERNANCE editor/lead or admin (becomes data owner)")
   Container(fe, "Web App", "React 19 SPA")
   Container(api, "REST API", "Micronaut / Kotlin")
   Component(ctrl, "BusinessEntityController", "Micronaut @Controller")

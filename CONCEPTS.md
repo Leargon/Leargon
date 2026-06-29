@@ -416,7 +416,7 @@ System roles are stored as a comma-separated string in the `User.roles` column. 
 
 | Role              | Scope           | Meaning                                                                                                                                                                                                                    |
 |-------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ROLE_USER`       | global          | Every authenticated user. Reads everything and creates new objects (becoming their owner).                                                                                                                                 |
+| `ROLE_USER`       | global          | Every authenticated user. Reads everything. Cannot create *root* catalogue items by role alone (see *Creating Objects*), but may create children of items it owns/stewards, and becomes the owner of whatever it creates.   |
 | `ROLE_ADMIN`      | global          | Full administrative access: edit any object regardless of ownership, manage users, and configure the system.                                                                                                               |
 | `ROLE_EDITOR_<M>` | one methodology | May edit any field that belongs to methodology `<M>`, on any object, regardless of ownership. Treated as a non-owner — edits flip the field to `UNVERIFIED` and verification is not granted (see *Edit vs. Verify*).       |
 | `ROLE_LEAD_<M>`   | one methodology | Everything `ROLE_EDITOR_<M>` can do **plus** managing `<M>`'s configuration — enabling/disabling the methodology and setting field visibility/mandatory for its fields. A lead implies the editor role for the same `<M>`. |
@@ -449,7 +449,7 @@ Each content object carries named ownership fields that confer edit permission o
 | Process             | `processOwner`                             | `processSteward`, `technicalCustodian`  |
 | Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian` |
 
-The creator of an object is set as its primary owner at creation time.
+The creator of an object is set as its primary owner at creation time (see *Creating Objects* for who may create what).
 
 **Stewards grant edit rights.** The *effective steward* of an object (`dataSteward` / `processSteward` / `businessSteward`, falling back to the owning unit's `businessSteward`) can edit it exactly like the owner — with one exception: a steward **cannot verify fields**, and because a steward is not the owner, every field they change flips to `UNVERIFIED` (see *Edit vs. Verify*). `technicalCustodian` remains informational and confers no edit permission.
 
@@ -473,12 +473,34 @@ The computed owner/steward are treated identically to explicit ones for permissi
 
 ---
 
+### Creating Objects
+
+Creating a top-level ("root") catalogue item requires an **admin** or an **`ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>`** for the methodology that governs that item type:
+
+| Item type                                                              | Governing methodology `<M>` |
+|------------------------------------------------------------------------|-----------------------------|
+| Business Entity                                                        | `DATA_GOVERNANCE`           |
+| Business Process                                                       | `PROCESS_GOVERNANCE`        |
+| Service Provider, IT System                                            | `GDPR`                      |
+| Capability                                                             | `BCM`                       |
+| Business Domain, Bounded Context, Context Relationship, Domain Event   | `DDD`                       |
+| Organisational Unit                                                    | `TEAM_TOPOLOGIES`           |
+
+A plain `ROLE_USER` with no scoped role therefore cannot create root items. For the **hierarchical** types (entity, process, org unit) a **child** may additionally be created by the **owner or steward of the parent** — so an owner can build out their own sub-tree without holding a methodology role. The creator becomes the new object's owner.
+
+Configuration items — classifications, supported locales, users — remain **admin-only** to create.
+
+Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; the frontend mirrors it with `canCreateRoot` / `canCreateChild` (the "New" button is hidden when not permitted).
+
+---
+
 ### Permission Matrix
 
 | Operation                                       | `ROLE_USER` (no role) | Effective steward | `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` | Owner | `ROLE_ADMIN`       |
 |-------------------------------------------------|:---------------------:|:-----------------:|:-----------------------------------:|:-----:|:------------------:|
 | Read any object                                 |           ✓           |         ✓         |                  ✓                  |   ✓   |         ✓          |
-| Create a new object (becomes owner)             |           ✓           |         ✓         |                  ✓                  |   —   |         ✓          |
+| Create a *root* item (becomes owner)            |           ✗           |         ✗         |           ✓ (item's `<M>`)³         |   —   |         ✓          |
+| Create a *child* of a parent item (becomes owner)|          ✗           |  ✓ (of parent)    |           ✓ (item's `<M>`)³         | ✓ (of parent) |    ✓       |
 | Edit a field                                    |           ✗           |   ✓ (any field)   |        ✓ (only fields of `<M>`)¹    |   ✓   |         ✓          |
 | Verify / unverify a field                       |           ✗           |         ✗         |                  ✗                  |   ✓   |         ✗          |
 | Delete an object                                |           ✗           |         ✓         |                  ✗                  |   ✓   |         ✓          |
@@ -489,6 +511,7 @@ The computed owner/steward are treated identically to explicit ones for permissi
 
 ¹ A field's methodology is resolved from the field-configuration inventory (see `METHODOLOGY-FIELD-MAPPING.md`). Scoped editors work through the **single-field** endpoints; the whole-object update endpoint stays owner/steward/admin-only.
 ² Owner/steward fields are themselves mapped to `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE`, so an editor/lead for that methodology can set them.
+³ The item's governing methodology — see *Creating Objects* above (Entity → `DATA_GOVERNANCE`, Process → `PROCESS_GOVERNANCE`, Service Provider/IT System → `GDPR`, Capability → `BCM`, Domain/Bounded Context/Context Relationship/Domain Event → `DDD`, Org Unit → `TEAM_TOPOLOGIES`).
 
 **Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
 
