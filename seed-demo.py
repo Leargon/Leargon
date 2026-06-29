@@ -2755,6 +2755,67 @@ for pkey in computed_processes:
     if '_error' not in r:
         print(f'  ok  computed owner: {pkey}')
 
+# ── Create-permission smoke check (exercises the seeded LEAD roles) ──────────────
+# Verifies the role-based create gating end-to-end using demo users seeded above:
+#   - a GDPR lead (petra) may create a GDPR-governed item (service provider) but NOT a BCM item;
+#   - a BCM lead (sarah) may create a capability.
+# Uses a raw request (not api()) for the gated calls so an expected 403 isn't logged as a seed error;
+# created items are cleaned up as admin. Failures are recorded but non-fatal.
+print('\n[smoke] Create-permission gating (uses seeded roles)...')
+
+
+def _login(email):
+    r = api('POST', '/authentication/login', {'email': email, 'password': DEMO_PASSWORD})
+    return r.get('accessToken') if isinstance(r, dict) and '_error' not in r else None
+
+
+def _try(method, path, data, token):
+    req = urllib.request.Request(
+        f'{BASE}{path}',
+        data=json.dumps(data).encode() if data is not None else None,
+        method=method)
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('Authorization', f'Bearer {token}')
+    try:
+        with urllib.request.urlopen(req) as r:
+            raw = r.read()
+            return r.status, (json.loads(raw) if raw else {})
+    except urllib.error.HTTPError as e:
+        return e.code, None
+
+
+def _check(label, status, want):
+    if status == want:
+        print(f'  ok  {label} ({status})')
+    else:
+        errors.append(f'SMOKE create-permission: {label} — expected {want}, got {status}')
+        print(f'  !   {label} — expected {want}, got {status}')
+
+
+petra_t = _login('petra.vogel@leargon.local')      # ROLE_LEAD_GDPR
+sarah_t = _login('sarah.mitchell@leargon.local')   # ROLE_LEAD_BCM
+if petra_t and sarah_t:
+    st, body = _try('POST', '/service-providers', {
+        'names': n4('SMOKE Provider'),
+        'processingCountries': [], 'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+    }, petra_t)
+    _check('GDPR lead can create a service provider', st, 201)
+    if body and body.get('key'):
+        api('DELETE', f'/service-providers/{body["key"]}', token=T)
+
+    st, body = _try('POST', '/capabilities', {'names': n4('SMOKE Denied')}, petra_t)
+    _check('GDPR lead is denied creating a capability (out of scope)', st, 403)
+    if body and body.get('key'):
+        api('DELETE', f'/capabilities/{body["key"]}', token=T)
+
+    st, body = _try('POST', '/capabilities', {'names': n4('SMOKE Capability')}, sarah_t)
+    _check('BCM lead can create a capability', st, 201)
+    if body and body.get('key'):
+        api('DELETE', f'/capabilities/{body["key"]}', token=T)
+else:
+    print('  SKIP — could not log in as the seeded lead users')
+
+
 # ── Summary ─────────────────────────────────────────────────────────────────────
 print('\n' + '=' * 60)
 if errors:

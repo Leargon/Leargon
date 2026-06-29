@@ -193,7 +193,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "names")
 
         validateTranslations(names)
 

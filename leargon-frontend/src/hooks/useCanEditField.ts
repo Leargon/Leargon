@@ -66,6 +66,14 @@ const METHODOLOGY_FIELD_PATTERNS: Record<string, Record<string, string[]>> = {
   },
 };
 
+/** The methodology that governs each entity type's CORE fields (and creation). Mirrors backend GOVERNING_METHODOLOGY. */
+const GOVERNING_METHODOLOGY: Record<string, string> = {
+  BUSINESS_ENTITY: 'DATA_GOVERNANCE',
+  BUSINESS_PROCESS: 'PROCESS_GOVERNANCE',
+  BUSINESS_DOMAIN: 'DDD',
+  ORGANISATIONAL_UNIT: 'TEAM_TOPOLOGIES',
+};
+
 /** All methodologies that claim a field (by bare-name or section pattern). Mirrors backend `methodologiesOf`. */
 function methodologiesOfField(entityType: string, fieldName: string, section: string | undefined): Set<string> {
   const result = new Set<string>();
@@ -119,8 +127,14 @@ export function useCanEditField(
       if (hasBroadEdit || scopes.isAdmin) return true;
       if (scopes.editorMethodologies.size === 0) return false;
       const section = sectionByField.get(fieldName) ?? sectionByField.get(fieldName.split('.')[0]);
-      for (const m of methodologiesOfField(entityType, fieldName, section)) {
+      const meths = methodologiesOfField(entityType, fieldName, section);
+      for (const m of meths) {
         if (scopes.editorMethodologies.has(m)) return true;
+      }
+      // CORE fields (no owning methodology) — editable by the entity type's governing-methodology editor/lead.
+      if (meths.size === 0) {
+        const governing = GOVERNING_METHODOLOGY[entityType];
+        return governing !== undefined && scopes.editorMethodologies.has(governing);
       }
       return false;
     };

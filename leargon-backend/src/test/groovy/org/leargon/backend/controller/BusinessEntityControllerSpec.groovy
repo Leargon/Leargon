@@ -355,7 +355,7 @@ class BusinessEntityControllerSpec extends Specification {
         def entityKey = createResponse.body().key
 
         and: "a different non-admin user"
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         when: "non-owner attempts to update"
         client.toBlocking().exchange(
@@ -467,7 +467,7 @@ class BusinessEntityControllerSpec extends Specification {
         def entityKey = createResponse.body().key
 
         and: "a different non-admin user"
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         when: "non-owner attempts to delete"
         client.toBlocking().exchange(

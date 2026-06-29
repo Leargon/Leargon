@@ -109,9 +109,16 @@ class RoleService(
         if (scopes.isAdmin) return true
         if (scopes.editorMethodologies.isEmpty()) return false
         val section = fieldConfigurationService.sectionOf(entityType, fieldName)
-        return methodologyConfigurationService
-            .methodologiesOf(entityType, fieldName, section)
-            .any { it in scopes.editorMethodologies }
+        val methodologies = methodologyConfigurationService.methodologiesOf(entityType, fieldName, section)
+        if (methodologies.any { it in scopes.editorMethodologies }) return true
+        // CORE fields belong to no methodology. Allow an editor/lead of the entity type's *governing*
+        // methodology (the one that also governs creating that type) to edit them — e.g. a DATA_GOVERNANCE
+        // editor/lead may rename a business entity or reparent it.
+        if (methodologies.isEmpty()) {
+            val governing = GOVERNING_METHODOLOGY[entityType]
+            return governing != null && governing in scopes.editorMethodologies
+        }
+        return false
     }
 
     /** Every assignable methodology-scoped role token, for admin pickers and request validation. */
@@ -127,5 +134,15 @@ class RoleService(
         const val ROLE_ADMIN = "ROLE_ADMIN"
         const val ROLE_LEAD_PREFIX = "ROLE_LEAD_"
         const val ROLE_EDITOR_PREFIX = "ROLE_EDITOR_"
+
+        /** The methodology that governs each entity type's CORE fields and creation. */
+        @JvmStatic
+        val GOVERNING_METHODOLOGY =
+            mapOf(
+                "BUSINESS_ENTITY" to "DATA_GOVERNANCE",
+                "BUSINESS_PROCESS" to "PROCESS_GOVERNANCE",
+                "BUSINESS_DOMAIN" to "DDD",
+                "ORGANISATIONAL_UNIT" to "TEAM_TOPOLOGIES",
+            )
     }
 }

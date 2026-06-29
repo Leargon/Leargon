@@ -324,7 +324,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "names")
 
         validateTranslations(names)
 

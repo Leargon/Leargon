@@ -149,12 +149,12 @@ describe('Business Entity E2E', () => {
     );
     expect(editRes.status).toBe(200);
 
-    // Verify the former owner lost owner privileges: editing a CORE field (names) is denied. (The former
-    // owner is a methodology editor, so it could still edit methodology fields as a non-owner — but CORE
-    // fields are owner/steward/admin-only, so this proves ownership was actually transferred away.)
+    // Verify the former owner lost OWNER-exclusive rights. The former owner is still a methodology editor,
+    // so it can edit fields (incl. CORE name via the governing methodology) as a non-owner — but
+    // verification is owner-only, so it can no longer verify a field. That proves ownership was transferred.
     const forbiddenRes = await client.put(
-      `/business-entities/${res.data.key}/names`,
-      [{ locale: 'en', text: 'Should fail' }],
+      `/business-entities/${res.data.key}/field-verifications`,
+      { fieldName: 'names.en', status: 'VERIFIED' },
     );
     expect(forbiddenRes.status).toBe(403);
   });

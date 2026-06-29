@@ -71,13 +71,13 @@ class BusinessEntityServiceSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private User createTestUser(String email, String username) {
+    // Creating a business entity (and editing its CORE fields like names) now requires admin or a
+    // DATA_GOVERNANCE editor/lead, so the default test user gets that role. Negative tests that need a
+    // genuinely unprivileged actor pass roles = "ROLE_USER".
+    private User createTestUser(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE") {
         def request = new SignupRequest(email, username, "password123", "Test", "User")
         def user = userService.createUser(request)
-        // Creating a business entity now requires admin or a DATA_GOVERNANCE editor/lead. The creator
-        // becomes the owner; granting the editor role doesn't affect owner/steward/admin-based gates
-        // (canEdit, name edits) nor CORE-field edits, so negative non-owner tests still hold.
-        user.roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE"
+        user.roles = roles
         return userRepository.update(user)
     }
 
@@ -274,17 +274,17 @@ class BusinessEntityServiceSpec extends Specification {
     def "should throw ForbiddenOperationException when non-owner edits entity"() {
         given: "an entity owned by a different user"
         def owner = createTestUser("owner@example.com", "owner")
-        def otherUser = createTestUser("other@example.com", "other")
+        def otherUser = createTestUser("other@example.com", "other", "ROLE_USER")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def entity = entityService.createBusinessEntity(createRequest, owner)
 
-        when: "non-owner attempts to update names"
+        when: "a user who is neither owner, steward, a DATA_GOVERNANCE editor, nor admin updates names"
         entityService.updateBusinessEntityNames(entity.key, [new LocalizedText("en", "Unauthorized Update")], otherUser)
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner, steward, or an admin")
+        exception.message.contains("do not have permission to edit this field")
     }
 
     def "should update data owner and create OWNER_CHANGE version"() {

@@ -40,7 +40,8 @@ open class ClassificationService(
     private val fieldVerificationService: FieldVerificationService,
     private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor,
     private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor,
-    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor
+    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor,
+    private val roleService: RoleService
 ) {
     @Transactional
     open fun getClassifications(assignableTo: String?): List<ClassificationResponse> {
@@ -336,8 +337,13 @@ open class ClassificationService(
         val isOwner = entity.effectiveOwner()?.id == currentUser.id
         val isSteward = entity.effectiveSteward()?.id == currentUser.id
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (!isOwner && !isSteward && !isAdmin) {
-            throw ForbiddenOperationException("Only the data owner, steward, or an admin can assign classifications")
+        // Classifications are a DATA_GOVERNANCE field, so a scoped editor/lead for that methodology may also
+        // assign them (as a non-owner; the value-based verification flips the affected classification to UNVERIFIED).
+        val isScopedEditor = roleService.canEditFieldByRole(currentUser, "BUSINESS_ENTITY", "classification.value")
+        if (!isOwner && !isSteward && !isAdmin && !isScopedEditor) {
+            throw ForbiddenOperationException(
+                "Only the data owner, steward, a DATA_GOVERNANCE editor/lead, or an admin can assign classifications"
+            )
         }
 
         validateAssignments(assignments, "BUSINESS_ENTITY")
