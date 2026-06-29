@@ -16,6 +16,7 @@ import { Add, Search, CheckCircle, Warning } from '@mui/icons-material';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import type { ServiceProviderResponse } from '../../api/generated/model';
 
@@ -29,7 +30,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
   const { data: response, isLoading } = useGetAllServiceProviders();
   const providers = (response?.data as ServiceProviderResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
@@ -63,7 +64,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             {t('common.new')}
           </Button>

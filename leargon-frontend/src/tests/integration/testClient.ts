@@ -11,6 +11,22 @@ import type { UserResponse } from '@/api/generated/model/userResponse';
 import type { ServiceProviderResponse } from '@/api/generated/model/serviceProviderResponse';
 import type { CapabilityResponse } from '@/api/generated/model/capabilityResponse';
 
+/**
+ * All methodology EDITOR roles — granted to a content-creating test client so it can create any catalogue
+ * item (creation now requires admin or an editor/lead of the item's methodology). The client still becomes
+ * the owner of what it creates, so owner/steward/admin-based tests are unaffected; negative-actor clients
+ * must stay on plain {@link signup}.
+ */
+export const ALL_EDITOR_ROLES = [
+  'ROLE_USER',
+  'ROLE_EDITOR_DATA_GOVERNANCE',
+  'ROLE_EDITOR_PROCESS_GOVERNANCE',
+  'ROLE_EDITOR_GDPR',
+  'ROLE_EDITOR_DDD',
+  'ROLE_EDITOR_BCM',
+  'ROLE_EDITOR_TEAM_TOPOLOGIES',
+];
+
 export function createClient(baseURL: string): AxiosInstance {
   return axios.create({
     baseURL,
@@ -127,6 +143,17 @@ export async function signupWithRoles(
   if (putRes.status !== 200) throw new ApiError(putRes.status, putRes.data);
 
   return login(client, data.email, data.password);
+}
+
+/**
+ * Signs up a content-creating test user with all methodology editor roles (so it can create catalogue
+ * items it then owns). Use for the "owner"/"user" client in a spec; keep negative actors on {@link signup}.
+ */
+export async function signupCreator(
+  client: AxiosInstance,
+  data: SignupRequest,
+): Promise<AuthResponse> {
+  return signupWithRoles(client, data, ALL_EDITOR_ROLES);
 }
 
 export async function createDomain(

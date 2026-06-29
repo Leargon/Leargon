@@ -73,7 +73,12 @@ class BusinessEntityServiceSpec extends Specification {
 
     private User createTestUser(String email, String username) {
         def request = new SignupRequest(email, username, "password123", "Test", "User")
-        return userService.createUser(request)
+        def user = userService.createUser(request)
+        // Creating a business entity now requires admin or a DATA_GOVERNANCE editor/lead. The creator
+        // becomes the owner; granting the editor role doesn't affect owner/steward/admin-based gates
+        // (canEdit, name edits) nor CORE-field edits, so negative non-owner tests still hold.
+        user.roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE"
+        return userRepository.update(user)
     }
 
     private User createAdminUser(String email, String username) {

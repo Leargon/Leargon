@@ -32,6 +32,7 @@ import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
 import org.leargon.backend.service.ServiceProviderService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -42,7 +43,8 @@ open class OrganisationalUnitController(
     private val userService: UserService,
     private val securityService: SecurityService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
-    private val serviceProviderService: ServiceProviderService
+    private val serviceProviderService: ServiceProviderService,
+    private val roleService: RoleService
 ) : OrganisationalUnitApi {
     override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> = organisationalUnitService.getAllAsResponses()
 
@@ -206,21 +208,27 @@ open class OrganisationalUnitController(
         currentUser: User,
         parentKeys: List<String>?
     ) {
-        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (isAdmin) return
+        // Admin or a TEAM_TOPOLOGIES editor/lead may create any org unit (root or child).
+        if (roleService.isEditorFor(currentUser, "TEAM_TOPOLOGIES")) return
 
         if (parentKeys.isNullOrEmpty()) {
-            throw ForbiddenOperationException("Only admins can create root organisational units")
+            throw ForbiddenOperationException(
+                "Creating a root organisational unit requires an administrator or a TEAM_TOPOLOGIES editor/lead role"
+            )
         }
 
-        val isOwnerOfAnyParent =
+        // Otherwise the business owner or steward of a parent unit may create a child under it.
+        val ownsOrStewardsAnyParent =
             parentKeys.any { parentKey ->
                 val parent = organisationalUnitService.getByKey(parentKey)
-                parent.businessOwner?.id == currentUser.id
+                parent.businessOwner?.id == currentUser.id || parent.businessSteward?.id == currentUser.id
             }
 
-        if (!isOwnerOfAnyParent) {
-            throw ForbiddenOperationException("Only the business owner of a parent unit or an admin can create child units")
+        if (!ownsOrStewardsAnyParent) {
+            throw ForbiddenOperationException(
+                "Creating a child unit requires an administrator, a TEAM_TOPOLOGIES editor/lead, " +
+                    "or ownership/stewardship of a parent unit"
+            )
         }
     }
 

@@ -77,10 +77,13 @@ class FieldVerificationControllerSpec extends Specification {
                 Argument.listOf(Map))
     }
 
-    private String signupToken(String email, String username) {
+    private String signupToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def resp = client.toBlocking().exchange(
                 HttpRequest.POST("/authentication/signup", new SignupRequest(email, username, "password123", "Test", "User")),
                 Map)
+        def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        userRepository.update(user)
         return resp.body().accessToken
     }
 

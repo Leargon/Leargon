@@ -53,10 +53,13 @@ class ExportControllerSpec extends Specification {
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private Map createUserWithToken(String email, String username) {
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/authentication/signup",
                 new SignupRequest(email, username, "password123", "Test", "User")), Map)
+        def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        userRepository.update(user)
         [token: resp.body().accessToken]
     }
 

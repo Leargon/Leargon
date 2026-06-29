@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createProcess,
@@ -41,7 +41,7 @@ describe('Process E2E', () => {
   beforeAll(async () => {
     client = createClient(getBackendUrl());
 
-    const auth = await signup(client, {
+    const auth = await signupCreator(client, {
       email: 'fe-proc-user@example.com',
       username: 'feprocuser',
       password: 'password123',
@@ -333,9 +333,11 @@ describe('Process E2E', () => {
     );
     expect(editRes.status).toBe(200);
 
-    // Verify old owner gets 403
+    // Verify the former owner lost owner privileges: editing a CORE field (names) is denied. (The former
+    // owner is a methodology editor, so it could still edit methodology fields as a non-owner — but CORE
+    // fields are owner/steward/admin-only, so this proves ownership was actually transferred away.)
     const forbiddenRes = await client.put(
-      `/processes/${res.data.key}/descriptions`,
+      `/processes/${res.data.key}/names`,
       [{ locale: 'en', text: 'Should fail' }],
     );
     expect(forbiddenRes.status).toBe(403);

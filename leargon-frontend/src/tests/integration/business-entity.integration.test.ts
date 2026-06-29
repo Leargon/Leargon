@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createEntity,
@@ -26,7 +26,7 @@ describe('Business Entity E2E', () => {
   beforeAll(async () => {
     client = createClient(getBackendUrl());
 
-    const auth = await signup(client, {
+    const auth = await signupCreator(client, {
       email: 'fe-ent-user@example.com',
       username: 'feentuser',
       password: 'password123',
@@ -124,7 +124,7 @@ describe('Business Entity E2E', () => {
   it('should change data owner', async () => {
     // Create a second user
     const secondClient = createClient(getBackendUrl());
-    const secondAuth = await signup(secondClient, {
+    const secondAuth = await signupCreator(secondClient, {
       email: 'fe-ent-newowner@example.com',
       username: 'feentnewowner',
       password: 'password123',
@@ -149,9 +149,11 @@ describe('Business Entity E2E', () => {
     );
     expect(editRes.status).toBe(200);
 
-    // Verify old owner gets 403
+    // Verify the former owner lost owner privileges: editing a CORE field (names) is denied. (The former
+    // owner is a methodology editor, so it could still edit methodology fields as a non-owner — but CORE
+    // fields are owner/steward/admin-only, so this proves ownership was actually transferred away.)
     const forbiddenRes = await client.put(
-      `/business-entities/${res.data.key}/descriptions`,
+      `/business-entities/${res.data.key}/names`,
       [{ locale: 'en', text: 'Should fail' }],
     );
     expect(forbiddenRes.status).toBe(403);

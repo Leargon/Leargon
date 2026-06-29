@@ -22,6 +22,7 @@ import {
 import { useGetBusinessEntityTree } from '../../api/generated/business-entity/business-entity';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import type { BusinessEntityTreeResponse } from '../../api/generated/model';
 
 interface EntityTreePanelProps {
@@ -33,7 +34,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_ENTITY');
   const { data: treeResponse, isLoading } = useGetBusinessEntityTree();
   const tree = (treeResponse?.data as BusinessEntityTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
@@ -66,7 +67,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             New
           </Button>

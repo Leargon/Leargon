@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, withToken, createProcess } from './testClient';
+import { createClient, signup, signupCreator, withToken, createProcess } from './testClient';
 import type { AxiosInstance } from 'axios';
 
 function getBackendUrl(): string {
@@ -25,7 +25,7 @@ describe('Process Flow API', () => {
 
   beforeAll(async () => {
     client = createClient(getBackendUrl());
-    const auth = await signup(client, {
+    const auth = await signupCreator(client, {
       email: 'flow-tester@example.com',
       username: 'flowtester',
       password: 'password123',

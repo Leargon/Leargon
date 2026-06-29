@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, signupAdmin, withToken, createProcess, createEntity, createOrgUnit, createDomain } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, withToken, createProcess, createEntity, createOrgUnit, createDomain } from './testClient';
 import type { AxiosInstance } from 'axios';
 
 function getBackendUrl(): string {
@@ -17,7 +17,7 @@ describe('Analytics API', () => {
     userClient = createClient(baseUrl);
     adminClient = createClient(baseUrl);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'analytics-user@example.com',
       username: 'analyticsuser',
       password: 'password123',

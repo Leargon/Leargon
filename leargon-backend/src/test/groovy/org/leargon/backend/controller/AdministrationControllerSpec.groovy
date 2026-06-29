@@ -403,6 +403,8 @@ class AdministrationControllerSpec extends Specification {
                 Map)
         String ownerToken = ownerResp.body().accessToken
         def owner = userRepository.findByEmail("owner@example.com").get()
+        owner.roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE"
+        userRepository.update(owner)
 
         client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities",
@@ -427,6 +429,8 @@ class AdministrationControllerSpec extends Specification {
                 Map)
         String ownerToken = ownerResp.body().accessToken
         def owner = userRepository.findByEmail("procowner@example.com").get()
+        owner.roles = "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE"
+        userRepository.update(owner)
 
         client.toBlocking().exchange(
                 HttpRequest.POST("/processes",

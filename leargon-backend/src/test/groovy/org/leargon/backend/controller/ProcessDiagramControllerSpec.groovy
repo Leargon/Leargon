@@ -58,13 +58,15 @@ class ProcessDiagramControllerSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private Map createUserWithToken(String email, String username) {
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def signupRequest = new SignupRequest(email, username, "password123", "Test", "User")
         def signupResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/authentication/signup", signupRequest),
                 Map
         )
         def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        user = userRepository.update(user)
         return [token: signupResponse.body().accessToken, user: user]
     }
 

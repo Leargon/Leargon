@@ -72,13 +72,18 @@ class BusinessEntityControllerSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private Map createUserWithToken(String email, String username) {
+    // Creating an entity requires admin or a DATA_GOVERNANCE editor/lead, so the default creating user is
+    // granted that role (they become the owner; owner/steward/admin and CORE-field gates are unaffected).
+    // Negative non-owner tests that edit a DATA_GOVERNANCE field pass roles="ROLE_USER" for a plain actor.
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE") {
         def signupRequest = new SignupRequest(email, username, "password123", "Test", "User")
         def signupResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/authentication/signup", signupRequest),
                 Map
         )
         def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        user = userRepository.update(user)
         return [token: signupResponse.body().accessToken, user: user]
     }
 
@@ -688,7 +693,7 @@ class BusinessEntityControllerSpec extends Specification {
     def "PUT /business-entities/{key}/retention-period should reject non-owner"() {
         given: "two users and an entity owned by the first"
         def ownerData = createUserWithToken("owner@example.com", "owner")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
         def createResponse = client.toBlocking().exchange(
@@ -913,7 +918,7 @@ class BusinessEntityControllerSpec extends Specification {
     def "PUT /business-entities/{key}/owning-unit should return 403 for non-owner"() {
         given: "an entity owned by creator and another user"
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
         String adminToken = createAdminToken()
 
         def entity = client.toBlocking().exchange(

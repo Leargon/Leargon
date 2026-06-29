@@ -23,6 +23,7 @@ import {
 import { useGetProcessTree } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import type { ProcessTreeResponse } from '../../api/generated/model';
 
 interface ProcessListPanelProps {
@@ -34,7 +35,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_PROCESS');
   const { data: treeResponse, isLoading } = useGetProcessTree();
   const tree = (treeResponse?.data as ProcessTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
@@ -67,7 +68,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             New
           </Button>

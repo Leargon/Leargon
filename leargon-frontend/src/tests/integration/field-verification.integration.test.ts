@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, signupAdmin, withToken, createEntity } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, withToken, createEntity } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 
@@ -17,7 +17,7 @@ describe('Field Verification', () => {
 
   beforeAll(async () => {
     owner = createClient(getBackendUrl());
-    const ownerAuth = await signup(owner, {
+    const ownerAuth = await signupCreator(owner, {
       email: 'fv-owner@example.com', username: 'fvowner', password: 'password123', firstName: 'F', lastName: 'V',
     });
     withToken(owner, ownerAuth.accessToken);

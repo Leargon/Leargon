@@ -18,6 +18,7 @@ import { useGetAllCapabilities } from '../../api/generated/capability/capability
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import type { CapabilityResponse, CapabilitySummaryResponse, OrganisationalUnitResponse } from '../../api/generated/model';
 
 interface CapabilityListPanelProps {
@@ -29,7 +30,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'CAPABILITY');
   const { data: response, isLoading } = useGetAllCapabilities();
   const { data: unitsResponse } = useGetAllOrganisationalUnits();
   const capabilities = (response?.data as CapabilityResponse[] | undefined) ?? [];
@@ -76,7 +77,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button
             variant="contained"
             size="small"

@@ -89,6 +89,48 @@ export const canEditEntityTypeByRole = (
   return relevant.some((m) => s.editorMethodologies.has(m));
 };
 
+/** Methodology that governs creation of each root catalogue item type (mirrors backend create gating). */
+export const CREATE_METHODOLOGY: Record<string, string> = {
+  BUSINESS_ENTITY: 'DATA_GOVERNANCE',
+  BUSINESS_PROCESS: 'PROCESS_GOVERNANCE',
+  SERVICE_PROVIDER: 'GDPR',
+  IT_SYSTEM: 'GDPR',
+  CAPABILITY: 'BCM',
+  BUSINESS_DOMAIN: 'DDD',
+  BOUNDED_CONTEXT: 'DDD',
+  CONTEXT_RELATIONSHIP: 'DDD',
+  DOMAIN_EVENT: 'DDD',
+  ORGANISATIONAL_UNIT: 'TEAM_TOPOLOGIES',
+};
+
+/**
+ * Whether the user may create a *root* item of [itemType]: an admin, or an editor/lead of the item's
+ * methodology. Mirrors the backend `RoleService.requireCreateRoot`. The backend still enforces (403);
+ * this only decides whether to show the create affordance / wizard entry.
+ */
+export const canCreateRoot = (roles: string[] | undefined | null, itemType: keyof typeof CREATE_METHODOLOGY | string): boolean => {
+  const methodology = CREATE_METHODOLOGY[itemType];
+  return methodology !== undefined && isEditorFor(roles, methodology);
+};
+
+/**
+ * Whether the user may create a *child* of a parent item: an admin / editor / lead of the item's
+ * methodology, or the owner or steward of the parent. Mirrors `RoleService.requireCreateChild`.
+ */
+export const canCreateChild = (
+  roles: string[] | undefined | null,
+  itemType: keyof typeof CREATE_METHODOLOGY | string,
+  currentUsername: string | undefined | null,
+  parentOwnerUsername: string | undefined | null,
+  parentStewardUsername?: string | undefined | null,
+): boolean => {
+  if (canCreateRoot(roles, itemType)) return true;
+  return (
+    !!currentUsername &&
+    (currentUsername === parentOwnerUsername || currentUsername === parentStewardUsername)
+  );
+};
+
 /** Methodology that owns a section (for filtering config screens to a lead's scope). */
 export const methodologyOfSection = (section: string): string | undefined => SECTION_TO_METHODOLOGY[section];
 

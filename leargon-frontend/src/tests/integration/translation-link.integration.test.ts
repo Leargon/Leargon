@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createEntity,
@@ -36,7 +36,7 @@ describe('TranslationLink API', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'tl-user@example.com',
       username: 'tluser',
       password: 'password123',

@@ -53,10 +53,13 @@ class ServiceProviderControllerSpec extends Specification {
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private Map createUserWithToken(String email, String username) {
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/authentication/signup",
                 new SignupRequest(email, username, "password123", "Test", "User")), Map)
+        def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        userRepository.update(user)
         [token: resp.body().accessToken]
     }
 
@@ -154,9 +157,9 @@ class ServiceProviderControllerSpec extends Specification {
         resp.body().serviceProviderType.toString() == "BODYLEASE"
     }
 
-    def "POST /service-providers should return 403 when called by non-admin"() {
+    def "POST /service-providers should return 403 when called by a non-editor non-admin"() {
         given:
-        def userData = createUserWithToken("user@sp.com", "spUser")
+        def userData = createUserWithToken("user@sp.com", "spUser", "ROLE_USER")
         def req = [names: [[locale: "en", text: "Provider"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
@@ -369,7 +372,7 @@ class ServiceProviderControllerSpec extends Specification {
         given:
         def ownerData = createUserWithToken("owner2@sp.com", "spOwner2")
         def entity = createEntity(ownerData.token, "Protected Entity")
-        def otherData = createUserWithToken("other@sp.com", "spOther")
+        def otherData = createUserWithToken("other@sp.com", "spOther", "ROLE_USER")
 
         when:
         client.toBlocking().exchange(

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, signup, signupAdmin, signupWithRoles, withToken, createProcess } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, signupWithRoles, withToken, createProcess } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { MethodologyConfigEntry } from '@/api/generated/model/methodologyConfigEntry';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
@@ -42,7 +42,7 @@ describe('Methodology-scoped roles (EDITOR / LEAD)', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const ownerAuth = await signup(ownerClient, {
+    const ownerAuth = await signupCreator(ownerClient, {
       email: 'role-owner@example.com', username: 'roleowner', password: 'password123', firstName: 'Role', lastName: 'Owner',
     });
     withToken(ownerClient, ownerAuth.accessToken);

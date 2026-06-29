@@ -12,21 +12,29 @@ import org.leargon.backend.model.CreateServiceProviderRequest
 import org.leargon.backend.model.ServiceProviderResponse
 import org.leargon.backend.model.UpdateServiceProviderProcessLinksRequest
 import org.leargon.backend.model.UpdateServiceProviderRequest
+import io.micronaut.security.utils.SecurityService
+import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ResourceNotFoundException
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.ServiceProviderService
+import org.leargon.backend.service.UserService
 
 @Controller
 @Secured(SecurityRule.IS_AUTHENTICATED)
 open class ServiceProviderController(
-    private val serviceProviderService: ServiceProviderService
+    private val serviceProviderService: ServiceProviderService,
+    private val userService: UserService,
+    private val securityService: SecurityService,
+    private val roleService: RoleService
 ) : ServiceProviderApi {
     override fun getAllServiceProviders(): List<ServiceProviderResponse> = serviceProviderService.getAll()
 
     override fun getServiceProvider(key: String): ServiceProviderResponse = serviceProviderService.getByKey(key)
 
-    @Secured("ROLE_ADMIN")
     override fun createServiceProvider(
         @Valid @Body createServiceProviderRequest: CreateServiceProviderRequest
     ): HttpResponse<ServiceProviderResponse> {
+        roleService.requireCreateRoot(getCurrentUser(), "GDPR")
         val response = serviceProviderService.create(createServiceProviderRequest)
         return HttpResponse.status<ServiceProviderResponse>(HttpStatus.CREATED).body(response)
     }
@@ -53,5 +61,10 @@ open class ServiceProviderController(
             updateServiceProviderProcessLinksRequest.processKeys ?: emptyList()
         )
         return HttpResponse.noContent()
+    }
+
+    private fun getCurrentUser(): User {
+        val email = securityService.username().orElseThrow { ResourceNotFoundException("User not authenticated") }
+        return userService.findByEmail(email).orElseThrow { ResourceNotFoundException("User not found") }
     }
 }

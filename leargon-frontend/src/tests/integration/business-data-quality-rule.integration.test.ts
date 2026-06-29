@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createEntity,
@@ -37,7 +37,7 @@ describe('Business Data Quality Rule API', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const ownerAuth = await signup(ownerClient, {
+    const ownerAuth = await signupCreator(ownerClient, {
       email: 'qr-owner@example.com',
       username: 'qrowner',
       password: 'password123',
