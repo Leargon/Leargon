@@ -18,6 +18,7 @@ import org.leargon.backend.model.UpdateBoundedContextDescriptionsRequest
 import org.leargon.backend.model.UpdateBoundedContextNamesRequest
 import org.leargon.backend.model.UpdateBoundedContextOwningTeamRequest
 import org.leargon.backend.service.BoundedContextService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -26,53 +27,54 @@ open class BoundedContextController(
     private val boundedContextService: BoundedContextService,
     private val boundedContextMapper: BoundedContextMapper,
     private val userService: UserService,
-    private val securityService: SecurityService
+    private val securityService: SecurityService,
+    private val roleService: RoleService
 ) : BoundedContextApi {
     override fun getBoundedContextsForDomain(key: String): List<BoundedContextResponse> = boundedContextService.getForDomain(key)
 
     override fun getBoundedContextByKey(key: String): BoundedContextResponse = boundedContextService.getByKeyAsResponse(key)
 
-    @Secured("ROLE_ADMIN")
     override fun createBoundedContext(
         key: String,
         @Valid @Body createBoundedContextRequest: CreateBoundedContextRequest
     ): HttpResponse<BoundedContextResponse> {
         val currentUser = getCurrentUser()
+        roleService.requireCreateRoot(currentUser, "DDD")
         val bc = boundedContextService.create(key, createBoundedContextRequest, currentUser)
         val response = boundedContextMapper.toResponse(bc)
         return HttpResponse.status<BoundedContextResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextNames(
         key: String,
         @Valid @Body updateBoundedContextNamesRequest: UpdateBoundedContextNamesRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateNames(key, updateBoundedContextNamesRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextDescriptions(
         key: String,
         @Valid @Body updateBoundedContextDescriptionsRequest: UpdateBoundedContextDescriptionsRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateDescriptions(key, updateBoundedContextDescriptionsRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBoundedContextOwningTeam(
         key: String,
         @Valid @Body updateBoundedContextOwningTeamRequest: UpdateBoundedContextOwningTeamRequest
     ): BoundedContextResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return boundedContextService.updateOwningTeam(key, updateBoundedContextOwningTeamRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteBoundedContext(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         boundedContextService.delete(key, currentUser)
         return HttpResponse.noContent()
     }

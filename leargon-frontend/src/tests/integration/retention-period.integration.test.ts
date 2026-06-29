@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createClient, signup, signupAdmin, withToken, createEntity, ApiError } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, withToken, createEntity } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 
@@ -19,7 +19,7 @@ describe('Retention Period E2E', () => {
     otherClient = createClient(getBackendUrl());
     adminClient = createClient(getBackendUrl());
 
-    const ownerAuth = await signup(ownerClient, {
+    const ownerAuth = await signupCreator(ownerClient, {
       email: 'fe-rp-owner@example.com',
       username: 'ferpowner',
       password: 'password123',

@@ -18,6 +18,7 @@ import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
+import org.leargon.backend.model.UserSummaryResponse
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
@@ -402,6 +403,8 @@ class AdministrationControllerSpec extends Specification {
                 Map)
         String ownerToken = ownerResp.body().accessToken
         def owner = userRepository.findByEmail("owner@example.com").get()
+        owner.roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE"
+        userRepository.update(owner)
 
         client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities",
@@ -426,6 +429,8 @@ class AdministrationControllerSpec extends Specification {
                 Map)
         String ownerToken = ownerResp.body().accessToken
         def owner = userRepository.findByEmail("procowner@example.com").get()
+        owner.roles = "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE"
+        userRepository.update(owner)
 
         client.toBlocking().exchange(
                 HttpRequest.POST("/processes",
@@ -662,6 +667,81 @@ class AdministrationControllerSpec extends Specification {
         then: "forbidden exception is thrown"
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "GET /administration/users/assignable returns enabled users for a regular (non-admin) user"() {
+        given: "a regular user token and another enabled user"
+        String regularToken = createRegularUserToken()
+        client.toBlocking().exchange(HttpRequest.POST("/authentication/signup",
+                new SignupRequest("pickme@example.com", "pickme", "password123", "Pick", "Me")))
+
+        when: "requesting assignable users as a non-admin (the full list is admin-only)"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/users/assignable").bearerAuth(regularToken),
+                Argument.listOf(UserSummaryResponse)
+        )
+
+        then: "the request succeeds"
+        response.status == HttpStatus.OK
+
+        and: "both enabled users are returned with their display names"
+        def users = response.body()
+        users.any { it.username == "regular" && it.firstName == "Regular" && it.lastName == "User" }
+        users.any { it.username == "pickme" }
+    }
+
+    def "GET /administration/users/assignable does not expose roles or emails"() {
+        given: "an admin user (carrying ROLE_ADMIN) and a regular caller"
+        createAdminToken()
+        String regularToken = createRegularUserToken()
+
+        when: "requesting assignable users as raw maps to inspect the serialized fields"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/users/assignable").bearerAuth(regularToken),
+                Argument.listOf(Map)
+        )
+
+        then: "only minimal fields are present — neither roles nor email leak to non-admins"
+        response.status == HttpStatus.OK
+        def adminEntry = response.body().find { it.username == "admin" }
+        adminEntry != null
+        adminEntry.containsKey("username")
+        adminEntry.containsKey("firstName")
+        adminEntry.containsKey("lastName")
+        !adminEntry.containsKey("roles")
+        !adminEntry.containsKey("email")
+    }
+
+    def "GET /administration/users/assignable excludes disabled users"() {
+        given: "a regular caller and a disabled user"
+        String regularToken = createRegularUserToken()
+        client.toBlocking().exchange(HttpRequest.POST("/authentication/signup",
+                new SignupRequest("disabled@example.com", "disabledguy", "password123", "Dis", "Abled")))
+        def disabled = userRepository.findByEmail("disabled@example.com").get()
+        disabled.enabled = false
+        userRepository.update(disabled)
+
+        when: "requesting assignable users"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/users/assignable").bearerAuth(regularToken),
+                Argument.listOf(UserSummaryResponse)
+        )
+
+        then: "the disabled user is not listed"
+        response.status == HttpStatus.OK
+        !response.body().any { it.username == "disabledguy" }
+    }
+
+    def "GET /administration/users/assignable returns 401 without token"() {
+        when: "requesting assignable users without a token"
+        client.toBlocking().exchange(
+                HttpRequest.GET("/administration/users/assignable"),
+                Argument.listOf(UserSummaryResponse)
+        )
+
+        then: "unauthorized exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.UNAUTHORIZED
     }
 
     def "POST /administration/users/{id}/promote-admin should work via updateUser endpoint"() {

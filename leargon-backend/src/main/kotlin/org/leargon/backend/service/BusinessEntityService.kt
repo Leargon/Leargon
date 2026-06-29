@@ -104,6 +104,20 @@ open class BusinessEntityService(
     ): BusinessEntity {
         validateTranslations(request.names)
 
+        // Create gating: root entities need admin / DATA_GOVERNANCE editor-lead; a child may also be created
+        // by the parent entity's data owner or steward.
+        val parent =
+            request.parentKey?.let {
+                businessEntityRepository
+                    .findByKey(it)
+                    .orElseThrow { ResourceNotFoundException("Parent BusinessEntity not found") }
+            }
+        if (parent != null) {
+            roleService.requireCreateChild(currentUser, "DATA_GOVERNANCE", parent.dataOwner?.id, parent.dataSteward?.id)
+        } else {
+            roleService.requireCreateRoot(currentUser, "DATA_GOVERNANCE")
+        }
+
         var entity = BusinessEntity()
         entity.createdBy = currentUser
 
@@ -116,11 +130,8 @@ open class BusinessEntityService(
                 currentUser
             }
 
-        if (request.parentKey != null) {
-            entity.parent =
-                businessEntityRepository
-                    .findByKey(request.parentKey)
-                    .orElseThrow { ResourceNotFoundException("Parent BusinessEntity not found") }
+        if (parent != null) {
+            entity.parent = parent
         }
 
         entity.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -163,7 +174,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "parent")
 
         if (parentKey != null) {
             if (parentKey == entityKey) {
@@ -313,7 +324,7 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        requireFieldEdit(entity, currentUser, "names")
 
         validateTranslations(names)
 
@@ -441,7 +452,7 @@ open class BusinessEntityService(
         currentUser: User
     ) {
         val entity = getBusinessEntityByKey(entityKey)
-        checkEditPermission(entity, currentUser)
+        roleService.requireDelete(currentUser, "BUSINESS_ENTITY", entity.effectiveOwner()?.id, entity.effectiveSteward()?.id)
 
         val children = entity.children.toList()
         for (child in children) {

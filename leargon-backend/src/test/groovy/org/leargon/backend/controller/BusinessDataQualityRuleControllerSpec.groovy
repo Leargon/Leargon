@@ -49,10 +49,13 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private Map createUserWithToken(String email, String username) {
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/authentication/signup",
                 new SignupRequest(email, username, "password123", "Test", "User")), Map)
+        def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        userRepository.update(user)
         [token: resp.body().accessToken, email: email]
     }
 
@@ -219,7 +222,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
     def "POST quality rule returns 403 for non-owner non-admin"() {
         given:
         def owner = createUserWithToken("owner2@qr.com", "qrOwner2")
-        def other = createUserWithToken("other1@qr.com", "qrOther1")
+        def other = createUserWithToken("other1@qr.com", "qrOther1", "ROLE_USER")
         String entityKey = createEntity(owner.token)
         def body = [description: "Name must not be blank"]
 
@@ -347,7 +350,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
     def "PUT quality rule returns 403 for non-owner non-admin"() {
         given:
         def owner = createUserWithToken("owner3@qr.com", "qrOwner3")
-        def other = createUserWithToken("other2@qr.com", "qrOther2")
+        def other = createUserWithToken("other2@qr.com", "qrOther2", "ROLE_USER")
         String entityKey = createEntity(owner.token)
         def created = createRule(owner.token, entityKey, [description: "Age must be set"])
         long ruleId = created.id as long
@@ -405,7 +408,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
     def "DELETE quality rule returns 403 for non-owner non-admin"() {
         given:
         def owner = createUserWithToken("owner4@qr.com", "qrOwner4")
-        def other = createUserWithToken("other3@qr.com", "qrOther3")
+        def other = createUserWithToken("other3@qr.com", "qrOther3", "ROLE_USER")
         String entityKey = createEntity(owner.token)
         def created = createRule(owner.token, entityKey, [description: "Age must be set"])
         long ruleId = created.id as long

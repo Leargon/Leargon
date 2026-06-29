@@ -5,7 +5,7 @@ Phase 1 (WIPE): Deletes all business data + non-admin users in safe FK order:
   IT systems → data processors → classifications → processes → entities → domains → org units → users
 
 Phase 2 (SEED): Creates fresh e-commerce demo data:
-  locales · users · classifications · org units (+ hierarchy + leads) · domains
+  locales · users (+ methodology LEAD/EDITOR roles) · classifications · org units (+ hierarchy + leads) · domains
   (+ types + vision statements) · entities (+ bounded-contexts + data owners + interfaces) ·
   processes (+ hierarchy + bounded-contexts + owners + executing units) ·
   relationships · classification assignments · field configurations (mandatory fields) ·
@@ -264,6 +264,38 @@ for (username, first, last, email, role) in user_defs:
         ok(f'{username} ({role})', result)
     else:
         user_keys[username] = username   # assume exists
+
+
+# ── 2b. Methodology-scoped roles (L2) ───────────────────────────────────────────
+# Promote demo users to LEAD/EDITOR roles so the demo exercises methodology-scoped access
+# (per-methodology Configure panels, scoped field-edit rights), not just plain ROLE_USER.
+# Lead ⇒ editor for the same methodology; lisa.chen additionally shows an editor-only,
+# multi-methodology assignment. L1 steward edit rights are granted separately via the
+# stewardship assignments further below.
+print('\n[2b/9] Methodology roles...')
+
+role_assignments = {
+    'petra.vogel':    ['ROLE_USER', 'ROLE_LEAD_GDPR'],               # DPO → privacy / GDPR lead
+    'tom.wagner':     ['ROLE_USER', 'ROLE_LEAD_DATA_GOVERNANCE'],    # Finance → data governance lead
+    'marco.rossi':    ['ROLE_USER', 'ROLE_LEAD_PROCESS_GOVERNANCE'], # Logistics → process governance lead
+    'felix.kramer':   ['ROLE_USER', 'ROLE_LEAD_DDD'],                # Engineering → DDD / architecture lead
+    'sarah.mitchell': ['ROLE_USER', 'ROLE_LEAD_BCM'],                # Sales & Marketing → capability model lead
+    'anna.schneider': ['ROLE_USER', 'ROLE_LEAD_TEAM_TOPOLOGIES'],    # HR → team topologies lead
+    'lisa.chen':      ['ROLE_USER', 'ROLE_EDITOR_GDPR', 'ROLE_EDITOR_PROCESS_GOVERNANCE'],  # Customer Care → editor only
+}
+
+all_users_now = api('GET', '/administration/users', token=T)
+id_by_username = (
+    {u['username']: u['id'] for u in all_users_now}
+    if isinstance(all_users_now, list) else {}
+)
+for username, roles in role_assignments.items():
+    uid = id_by_username.get(username)
+    if uid is None:
+        print(f'  ! skip roles for {username} (user not found)')
+        continue
+    scoped = ', '.join(r for r in roles if r != 'ROLE_USER')
+    ok(f'{username} -> {scoped}', api('PUT', f'/administration/users/{uid}', {'roles': roles}, T))
 
 
 # ── 3. Classifications ──────────────────────────────────────────────────────────
@@ -2722,6 +2754,104 @@ for pkey in computed_processes:
     r = api('DELETE', f'/processes/{pkey}/owner', token=T)
     if '_error' not in r:
         print(f'  ok  computed owner: {pkey}')
+
+# ── Create-permission smoke check (exercises the seeded LEAD roles) ──────────────
+# Verifies the role-based create gating end-to-end using demo users seeded above:
+#   - a GDPR lead (petra) may create a GDPR-governed item (service provider) but NOT a BCM item;
+#   - a BCM lead (sarah) may create a capability.
+# Uses a raw request (not api()) for the gated calls so an expected 403 isn't logged as a seed error;
+# created items are cleaned up as admin. Failures are recorded but non-fatal.
+print('\n[smoke] Create-permission gating (uses seeded roles)...')
+
+
+def _login(email):
+    r = api('POST', '/authentication/login', {'email': email, 'password': DEMO_PASSWORD})
+    return r.get('accessToken') if isinstance(r, dict) and '_error' not in r else None
+
+
+def _try(method, path, data, token):
+    req = urllib.request.Request(
+        f'{BASE}{path}',
+        data=json.dumps(data).encode() if data is not None else None,
+        method=method)
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('Authorization', f'Bearer {token}')
+    try:
+        with urllib.request.urlopen(req) as r:
+            raw = r.read()
+            return r.status, (json.loads(raw) if raw else {})
+    except urllib.error.HTTPError as e:
+        return e.code, None
+
+
+def _check(label, status, want):
+    if status == want:
+        print(f'  ok  {label} ({status})')
+    else:
+        errors.append(f'SMOKE create-permission: {label} — expected {want}, got {status}')
+        print(f'  !   {label} — expected {want}, got {status}')
+
+
+petra_t = _login('petra.vogel@leargon.local')      # ROLE_LEAD_GDPR
+sarah_t = _login('sarah.mitchell@leargon.local')   # ROLE_LEAD_BCM
+felix_t = _login('felix.kramer@leargon.local')     # ROLE_LEAD_DDD
+if petra_t and sarah_t and felix_t:
+    # ── GDPR lead: full lifecycle on a service provider ──
+    st, sp = _try('POST', '/service-providers', {
+        'names': n4('SMOKE Provider'),
+        'processingCountries': [], 'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+    }, petra_t)
+    _check('GDPR lead can create a service provider', st, 201)
+    if sp and sp.get('key'):
+        st, _ = _try('PUT', f'/service-providers/{sp["key"]}', {
+            'names': n4('SMOKE Provider edited'),
+            'processingCountries': [], 'processorAgreementInPlace': True, 'subProcessorsApproved': False,
+        }, petra_t)
+        _check('GDPR lead can edit a service provider', st, 200)
+        st, _ = _try('DELETE', f'/service-providers/{sp["key"]}', None, petra_t)
+        _check('GDPR lead can delete a service provider', st, 204)
+
+    st, body = _try('POST', '/capabilities', {'names': n4('SMOKE Denied')}, petra_t)
+    _check('GDPR lead is denied creating a capability (out of scope)', st, 403)
+    if body and body.get('key'):
+        api('DELETE', f'/capabilities/{body["key"]}', token=T)
+
+    # ── BCM lead: full lifecycle on a capability ──
+    st, cap = _try('POST', '/capabilities', {'names': n4('SMOKE Capability')}, sarah_t)
+    _check('BCM lead can create a capability', st, 201)
+    if cap and cap.get('key'):
+        st, _ = _try('PUT', f'/capabilities/{cap["key"]}', {'names': n4('SMOKE Capability edited')}, sarah_t)
+        _check('BCM lead can edit a capability', st, 200)
+        st, _ = _try('DELETE', f'/capabilities/{cap["key"]}', None, sarah_t)
+        _check('BCM lead can delete a capability', st, 204)
+
+    # ── DDD lead: edit & delete a business domain (admin creates the throwaway domain) ──
+    st, dom = _try('POST', '/business-domains', {'names': n4('SMOKE Domain'), 'descriptions': []}, T)
+    _check('admin can create a business domain (setup)', st, 201)
+    if dom and dom.get('key'):
+        st, _ = _try('PUT', f'/business-domains/{dom["key"]}/type', {'type': 'CORE'}, felix_t)
+        _check('DDD lead can edit a business domain', st, 200)
+        # cross-methodology denial: a GDPR lead may not edit a DDD-governed domain
+        st, _ = _try('PUT', f'/business-domains/{dom["key"]}/type', {'type': 'GENERIC'}, petra_t)
+        _check('GDPR lead is denied editing a business domain (out of scope)', st, 403)
+        st, _ = _try('DELETE', f'/business-domains/{dom["key"]}', None, felix_t)
+        _check('DDD lead can delete a business domain', st, 204)
+
+    # ── cross-methodology denial: a DDD lead may not edit a GDPR-governed service provider ──
+    st, sp2 = _try('POST', '/service-providers', {
+        'names': n4('SMOKE Provider 2'),
+        'processingCountries': [], 'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+    }, T)
+    if sp2 and sp2.get('key'):
+        st, _ = _try('PUT', f'/service-providers/{sp2["key"]}', {
+            'names': n4('hijacked'), 'processingCountries': [],
+            'processorAgreementInPlace': False, 'subProcessorsApproved': False,
+        }, felix_t)
+        _check('DDD lead is denied editing a service provider (out of scope)', st, 403)
+        api('DELETE', f'/service-providers/{sp2["key"]}', token=T)
+else:
+    print('  SKIP — could not log in as the seeded lead users')
+
 
 # ── Summary ─────────────────────────────────────────────────────────────────────
 print('\n' + '=' * 60)

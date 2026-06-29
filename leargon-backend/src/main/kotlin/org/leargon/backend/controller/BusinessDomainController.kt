@@ -28,6 +28,7 @@ import org.leargon.backend.model.UpdateDomainVisionStatementRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessDomainService
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -37,7 +38,8 @@ open class BusinessDomainController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val businessDomainMapper: BusinessDomainMapper
+    private val businessDomainMapper: BusinessDomainMapper,
+    private val roleService: RoleService
 ) : BusinessDomainApi {
     override fun getAllBusinessDomains(): List<BusinessDomainResponse> = businessDomainService.getAllBusinessDomainsAsResponses()
 
@@ -64,43 +66,39 @@ open class BusinessDomainController(
         return businessDomainService.getLocalizedDomain(key, locale, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun createBusinessDomain(
         @Valid @Body createDomainRequest: CreateBusinessDomainRequest
     ): HttpResponse<BusinessDomainResponse> {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireCreateRoot(currentUser, "DDD")
         val domain = businessDomainService.createBusinessDomain(createDomainRequest, currentUser)
         val response = businessDomainMapper.toBusinessDomainResponse(domain)
         return HttpResponse.status<BusinessDomainResponse>(HttpStatus.CREATED).body(response)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteBusinessDomain(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         businessDomainService.deleteBusinessDomain(key)
         return HttpResponse.noContent()
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainParent(
         key: String,
         @Valid @Body updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain = businessDomainService.updateBusinessDomainParent(key, updateBusinessDomainParentRequest.parentKey, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainVisionStatement(
         key: String,
         @Valid @Body updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain =
             businessDomainService.updateBusinessDomainVisionStatement(
                 key,
@@ -110,46 +108,42 @@ open class BusinessDomainController(
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainType(
         key: String,
         @Valid @Body updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain = businessDomainService.updateBusinessDomainType(key, updateBusinessDomainTypeRequest.type?.value, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainNames(
         key: String,
         @Valid @Body names: List<LocalizedText>
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain = businessDomainService.updateBusinessDomainNames(key, names, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainDescriptions(
         key: String,
         @Valid @Body descriptions: List<LocalizedText>
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain = businessDomainService.updateBusinessDomainDescriptions(key, descriptions, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun updateBusinessDomainOwningUnit(
         key: String,
         @Valid @Body updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        checkAdministratorRole(currentUser)
+        roleService.requireEditorFor(currentUser, "DDD")
         val domain = businessDomainService.updateOwningUnit(key, updateDomainOwningUnitRequest.owningUnitKey, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }

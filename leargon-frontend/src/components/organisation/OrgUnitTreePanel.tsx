@@ -24,6 +24,7 @@ import {
 import { useGetOrganisationalUnitTree } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import type { OrganisationalUnitTreeResponse } from '../../api/generated/model';
 
@@ -37,7 +38,7 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'ORGANISATIONAL_UNIT');
   const { data: treeResponse, isLoading } = useGetOrganisationalUnitTree();
   const tree = (treeResponse?.data as OrganisationalUnitTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
@@ -70,7 +71,7 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             {t('common.new')}
           </Button>

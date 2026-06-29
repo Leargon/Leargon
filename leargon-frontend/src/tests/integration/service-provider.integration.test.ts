@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createProcess,
@@ -37,7 +37,7 @@ describe('Service Provider API', () => {
     adminToken = adminAuth.accessToken;
     withToken(adminClient, adminToken);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'sp-user@example.com',
       username: 'spuser',
       password: 'password123',

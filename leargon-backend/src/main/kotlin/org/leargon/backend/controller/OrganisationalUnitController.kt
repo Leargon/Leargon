@@ -31,6 +31,7 @@ import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.OrganisationalUnitService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
 
@@ -42,7 +43,8 @@ open class OrganisationalUnitController(
     private val userService: UserService,
     private val securityService: SecurityService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
-    private val serviceProviderService: ServiceProviderService
+    private val serviceProviderService: ServiceProviderService,
+    private val roleService: RoleService
 ) : OrganisationalUnitApi {
     override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> = organisationalUnitService.getAllAsResponses()
 
@@ -64,7 +66,7 @@ open class OrganisationalUnitController(
     override fun deleteOrganisationalUnit(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
-        checkEditPermission(unit, currentUser)
+        roleService.requireDelete(currentUser, "ORGANISATIONAL_UNIT", unit.effectiveOwner()?.id, unit.effectiveSteward()?.id)
         organisationalUnitService.delete(key)
         return HttpResponse.noContent()
     }
@@ -162,32 +164,38 @@ open class OrganisationalUnitController(
             getCurrentUser()
         )
 
-    @Secured("ROLE_ADMIN")
     override fun updateOrgUnitExternalFields(
         key: String,
         @Valid @Body updateOrgUnitExternalFieldsRequest: UpdateOrgUnitExternalFieldsRequest
-    ): OrganisationalUnitResponse =
-        organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest, getCurrentUser())
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        checkEditPermission(organisationalUnitService.getByKey(key), currentUser)
+        return organisationalUnitService.updateExternalFields(key, updateOrgUnitExternalFieldsRequest, currentUser)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun updateOrgUnitDataAccessEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
-    ): OrganisationalUnitResponse =
-        organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        checkEditPermission(organisationalUnitService.getByKey(key), currentUser)
+        return organisationalUnitService.updateDataAccessEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, currentUser)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun updateOrgUnitDataManipulationEntities(
         key: String,
         @Valid @Body updateOrgUnitEntityLinksRequest: UpdateOrgUnitEntityLinksRequest
-    ): OrganisationalUnitResponse =
-        organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, getCurrentUser())
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        checkEditPermission(organisationalUnitService.getByKey(key), currentUser)
+        return organisationalUnitService.updateDataManipulationEntities(key, updateOrgUnitEntityLinksRequest.entityKeys, currentUser)
+    }
 
-    @Secured("ROLE_ADMIN")
     override fun updateOrgUnitServiceProviders(
         key: String,
         @Valid @Body updateLinkedServiceProvidersRequest: UpdateLinkedServiceProvidersRequest
     ): HttpResponse<Void> {
+        checkEditPermission(organisationalUnitService.getByKey(key), getCurrentUser())
         serviceProviderService.updateOrgUnitServiceProviders(key, updateLinkedServiceProvidersRequest.serviceProviderKeys)
         return HttpResponse.noContent()
     }
@@ -206,36 +214,43 @@ open class OrganisationalUnitController(
         currentUser: User,
         parentKeys: List<String>?
     ) {
-        val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-        if (isAdmin) return
+        // Admin or a TEAM_TOPOLOGIES editor/lead may create any org unit (root or child).
+        if (roleService.isEditorFor(currentUser, "TEAM_TOPOLOGIES")) return
 
         if (parentKeys.isNullOrEmpty()) {
-            throw ForbiddenOperationException("Only admins can create root organisational units")
+            throw ForbiddenOperationException(
+                "Creating a root organisational unit requires an administrator or a TEAM_TOPOLOGIES editor/lead role"
+            )
         }
 
-        val isOwnerOfAnyParent =
+        // Otherwise the business owner or steward of a parent unit may create a child under it.
+        val ownsOrStewardsAnyParent =
             parentKeys.any { parentKey ->
                 val parent = organisationalUnitService.getByKey(parentKey)
-                parent.businessOwner?.id == currentUser.id
+                parent.businessOwner?.id == currentUser.id || parent.businessSteward?.id == currentUser.id
             }
 
-        if (!isOwnerOfAnyParent) {
-            throw ForbiddenOperationException("Only the business owner of a parent unit or an admin can create child units")
+        if (!ownsOrStewardsAnyParent) {
+            throw ForbiddenOperationException(
+                "Creating a child unit requires an administrator, a TEAM_TOPOLOGIES editor/lead, " +
+                    "or ownership/stewardship of a parent unit"
+            )
         }
     }
 
-    companion object {
-        @JvmStatic
-        private fun checkEditPermission(
-            unit: OrganisationalUnit,
-            currentUser: User
-        ) {
-            val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
-            val isOwner = unit.effectiveOwner()?.id == currentUser.id
-            val isSteward = unit.effectiveSteward()?.id == currentUser.id
-            if (!isAdmin && !isOwner && !isSteward) {
-                throw ForbiddenOperationException("Only the business owner, steward, or an admin can edit this unit")
-            }
+    // Org units are governed by TEAM_TOPOLOGIES: editable by the business owner, effective steward, an admin,
+    // or a TEAM_TOPOLOGIES editor/lead (non-owner edits land UNVERIFIED via the service's verification sync).
+    private fun checkEditPermission(
+        unit: OrganisationalUnit,
+        currentUser: User
+    ) {
+        if (roleService.isEditorFor(currentUser, "TEAM_TOPOLOGIES")) return
+        val isOwner = unit.effectiveOwner()?.id == currentUser.id
+        val isSteward = unit.effectiveSteward()?.id == currentUser.id
+        if (!isOwner && !isSteward) {
+            throw ForbiddenOperationException(
+                "Only the business owner, steward, a TEAM_TOPOLOGIES editor/lead, or an admin can edit this unit"
+            )
         }
     }
 }

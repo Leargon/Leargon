@@ -33,6 +33,7 @@ function buildLineage(
   processes: ProcessResponse[] | undefined,
   allEntities: BusinessEntityResponse[],
   getLocalizedText: (texts: { locale: string; text: string }[]) => string,
+  t: (key: string) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   if (!processes) return { nodes: [], edges: [] };
 
@@ -91,7 +92,7 @@ function buildLineage(
       target: procNodeId,
       type: 'default',
       style: { stroke: '#0097a7', strokeWidth: 2 },
-      label: 'input to',
+      label: t('diagrams.lineageReadBy'),
       labelStyle: { fontSize: 9, fill: '#0097a7' },
       markerEnd: { type: 'arrowclosed' as const, color: '#0097a7' },
     });
@@ -121,7 +122,7 @@ function buildLineage(
       target: entityKey,
       type: 'default',
       style: { stroke: '#f57c00', strokeWidth: 2 },
-      label: 'output of',
+      label: t('diagrams.lineageWrittenBy'),
       labelStyle: { fontSize: 9, fill: '#f57c00' },
       markerEnd: { type: 'arrowclosed' as const, color: '#f57c00' },
     });
@@ -169,10 +170,10 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    const { nodes: n, edges: e } = buildLineage(entityKey, entityName, processes, entities, getLocalizedText);
+    const { nodes: n, edges: e } = buildLineage(entityKey, entityName, processes, entities, getLocalizedText, t);
     setNodes(n);
     setEdges(e);
-  }, [entityKey, entityName, processes, entities, getLocalizedText, setNodes, setEdges]);
+  }, [entityKey, entityName, processes, entities, getLocalizedText, t, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {

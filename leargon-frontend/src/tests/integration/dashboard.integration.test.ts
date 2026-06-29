@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createEntity,
@@ -24,7 +24,7 @@ describe('Dashboard API', () => {
     userClient = createClient(baseUrl);
     adminClient = createClient(baseUrl);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'dashboard-user@example.com',
       username: 'dashboarduser',
       password: 'password123',

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
   signupAdmin,
-  signup,
+  signup, signupCreator,
   withToken,
   createProcess,
   createEntity,
@@ -33,7 +33,7 @@ describe('Export API', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'export-user@example.com',
       username: 'exportuser',
       password: 'password123',

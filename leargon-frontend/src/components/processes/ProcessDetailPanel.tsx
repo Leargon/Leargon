@@ -67,7 +67,7 @@ import {
   useSetProcessFieldVerification,
 } from '../../api/generated/process/process';
 import FieldStatusIndicator from '../common/FieldStatusIndicator';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
@@ -82,7 +82,8 @@ import {
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole } from '../../utils/roles';
+import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
+import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -108,7 +109,7 @@ import type {
   ClassificationResponse,
   BusinessDomainResponse,
   BusinessEntityResponse,
-  UserResponse,
+  UserSummaryResponse,
   OrganisationalUnitResponse,
   CrossBorderTransferEntry,
   ItSystemResponse,
@@ -175,8 +176,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
   const { data: allEntitiesResponse } = useGetAllBusinessEntities();
   const allEntities = (allEntitiesResponse?.data as BusinessEntityResponse[] | undefined) || [];
-  const { data: allUsersResponse } = useGetAllUsers();
-  const allUsers = (allUsersResponse?.data as UserResponse[] | undefined) || [];
+  const { data: allUsersResponse } = useGetAssignableUsers();
+  const allUsers = (allUsersResponse?.data as UserSummaryResponse[] | undefined) || [];
   const { data: allOrgUnitsResponse } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
   const { data: allItSystemsResponse } = useGetAllItSystems();
@@ -204,6 +205,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     (!!user?.username && user.username === process?.processSteward?.username) ||
     canEditEntityTypeByRole(user?.roles, 'BUSINESS_PROCESS');
   const isOwner = !!user?.username && user.username === process?.processOwner?.username;
+  const isSteward = !!user?.username && user.username === process?.processSteward?.username;
+  // Broad edit (may change any field) = owner / effective steward / admin. Scoped editors are limited
+  // per-field by canEditField, which mirrors the backend per-field gate (avoids edit pencils that 403).
+  const hasBroadEdit = isAdmin || isOwner || isSteward;
+  const canEditField = useCanEditField('BUSINESS_PROCESS', user?.roles, hasBroadEdit);
+  // Lifecycle management of this process (create a sub-process, or delete it): an admin /
+  // PROCESS_GOVERNANCE editor-lead, or this process's owner/steward.
+  const canManage = canCreateChild(user?.roles, 'BUSINESS_PROCESS', user?.username, process?.processOwner?.username, process?.processSteward?.username);
   const setFieldVerification = useSetProcessFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -549,7 +558,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
           )}
         </>}
-        actions={isOwnerOrAdmin ? (<>
+        actions={canManage ? (<>
           <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
             {t('process.addSubProcess')}
           </Button>
@@ -568,7 +577,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       />
 
       {/* Item 3: Owner resolution warning */}
-      {isOwnerOrAdmin && !process.processOwner && (
+      {canEditField('processOwner') && !process.processOwner && (
         <NudgeBanner
           title={t('nudge.process.noOwnerTitle')}
           message={t('nudge.process.noOwnerMessage')}
@@ -603,7 +612,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {/* Names & Descriptions */}
-      <SectionHeader title={t('process.namesAndDescriptions')} canEdit={isOwnerOrAdmin} isEditing={namesEdit.isEditing}
+      <SectionHeader title={t('process.namesAndDescriptions')} canEdit={canEditField('names')} isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...process.names], descriptions: [...(process.descriptions || [])] })}
         onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving}
         isMandatory={isMandatory('names')} />
@@ -685,13 +694,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} statusIndicator={renderStatus('processOwner')} canEdit={isOwnerOrAdmin} isEditing={ownerEdit.isEditing}
+        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} statusIndicator={renderStatus('processOwner')} canEdit={canEditField('processOwner')} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
             <Box>
               <Autocomplete
-                options={allUsers.filter((u) => u.enabled)}
+                options={allUsers}
                 getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                 value={allUsers.find((u) => u.username === ownerEdit.editValue) || null}
                 onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username || '')}
@@ -714,7 +723,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {!process.ownerIsExplicit && process.processOwner && (
                 <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
               )}
-              {process.ownerIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+              {process.ownerIsExplicit && canEditField('processOwner') && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                 <Button size="small" variant="text" color="warning" onClick={clearOwnerOverride} sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
                   {t('common.clearOverride')}
                 </Button>
@@ -723,7 +732,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           )}
         </PropRow>}
         {fields.owningUnit && !isHidden('owningUnit') && (
-          <PropRow label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={isOwnerOrAdmin} isEditing={owningUnitEdit.isEditing}
+          <PropRow label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={canEditField('owningUnit')} isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(process.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
             onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
             {owningUnitEdit.isEditing ? (
@@ -747,13 +756,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.processSteward && !isHidden('processSteward') && (
-          <PropRow label={t('process.processSteward')} statusIndicator={renderStatus('processSteward')} canEdit={isOwnerOrAdmin} isEditing={stewardEdit.isEditing}
+          <PropRow label={t('process.processSteward')} statusIndicator={renderStatus('processSteward')} canEdit={canEditField('processSteward')} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
             onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
             {stewardEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === stewardEdit.editValue) || null}
                   onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
@@ -774,7 +783,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {!process.stewardIsExplicit && process.processSteward && (
                   <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {process.stewardIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                {process.stewardIsExplicit && canEditField('processSteward') && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateSteward.mutateAsync({ key: processKey, data: { processStewardUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -786,13 +795,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('process.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={isOwnerOrAdmin} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow label={t('process.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={canEditField('technicalCustodian')} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
               <Box>
                 <Autocomplete
-                  options={allUsers.filter((u) => u.enabled)}
+                  options={allUsers}
                   getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
                   value={allUsers.find((u) => u.username === technicalCustodianEdit.editValue) || null}
                   onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
@@ -813,7 +822,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {!process.custodianIsExplicit && process.technicalCustodian && (
                   <Chip label={process.owningUnit ? t('common.viaOwningUnit') : (isDddEnabled && process.boundedContext?.owningUnitName) ? t('common.viaBoundedContext') : t('common.viaSubdomain')} size="small" variant="outlined" color="info" />
                 )}
-                {process.custodianIsExplicit && isOwnerOrAdmin && (process.owningUnit || process.boundedContext?.owningUnitName) && (
+                {process.custodianIsExplicit && canEditField('technicalCustodian') && (process.owningUnit || process.boundedContext?.owningUnitName) && (
                   <Button size="small" variant="text" color="warning"
                     onClick={async () => { await updateTechnicalCustodian.mutateAsync({ key: processKey, data: { technicalCustodianUsername: null } }); invalidate(); }}
                     sx={{ minWidth: 0, p: '2px 6px', fontSize: '0.7rem' }}>
@@ -825,7 +834,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.code && !isHidden('code') && (
-          <PropRow label={t('process.code')} statusIndicator={renderStatus('code')} canEdit={isOwnerOrAdmin} isEditing={codeEdit.isEditing}
+          <PropRow label={t('process.code')} statusIndicator={renderStatus('code')} canEdit={canEditField('code')} isEditing={codeEdit.isEditing}
             onEdit={() => codeEdit.startEdit(process.code || '')} onSave={codeEdit.save}
             onCancel={codeEdit.cancel} isSaving={codeEdit.isSaving}>
             {codeEdit.isEditing ? (
@@ -842,7 +851,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.processType && !isHidden('processType') && (
-          <PropRow label={t('process.processType')} statusIndicator={renderStatus('processType')} canEdit={isOwnerOrAdmin} isEditing={typeEdit.isEditing}
+          <PropRow label={t('process.processType')} statusIndicator={renderStatus('processType')} canEdit={canEditField('processType')} isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(process.processType || '')} onSave={typeEdit.save}
             onCancel={typeEdit.cancel} isSaving={typeEdit.isSaving}>
             {typeEdit.isEditing ? (
@@ -873,7 +882,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.legalBasis && !isHidden('legalBasis') && (
-          <PropRow label={t('process.legalBasis')} statusIndicator={renderStatus('legalBasis')} canEdit={isOwnerOrAdmin} isEditing={legalBasisEdit.isEditing}
+          <PropRow label={t('process.legalBasis')} statusIndicator={renderStatus('legalBasis')} canEdit={canEditField('legalBasis')} isEditing={legalBasisEdit.isEditing}
             onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
             onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving}>
             {legalBasisEdit.isEditing ? (
@@ -904,7 +913,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
-          <PropRow label={t('process.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={isOwnerOrAdmin} isEditing={boundedContextEdit.isEditing}
+          <PropRow label={t('process.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={canEditField('boundedContext')} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
             {boundedContextEdit.isEditing ? (
@@ -945,13 +954,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </AccordionSummary>
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
-      {/* Input Entities */}
+      {/* Read Entities */}
       {!isHidden('inputEntities') && <EntityListSection
-        title="Input Entities"
+        title={t('process.inputEntities')}
         entities={process.inputEntities || []}
         inheritedEntities={inheritedInputEntities}
         candidates={inputCandidates}
-        canEdit={isOwnerOrAdmin}
+        canEdit={canEditField('inputEntities')}
         onAdd={handleAddInput}
         onRemove={handleRemoveInput}
         getLocalizedText={getLocalizedText}
@@ -962,13 +971,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {!isHidden('inputEntities') && <Divider sx={{ my: 2 }} />}
 
-      {/* Output Entities */}
+      {/* Written Entities */}
       {!isHidden('outputEntities') && <EntityListSection
-        title="Output Entities"
+        title={t('process.outputEntities')}
         entities={process.outputEntities || []}
         inheritedEntities={inheritedOutputEntities}
         candidates={outputCandidates}
-        canEdit={isOwnerOrAdmin}
+        canEdit={canEditField('outputEntities')}
         onAdd={handleAddOutput}
         onRemove={handleRemoveOutput}
         getLocalizedText={getLocalizedText}
@@ -980,7 +989,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {!isHidden('executingUnits') && <Divider sx={{ my: 2 }} />}
 
       {/* Executing Units */}
-      {!isHidden('executingUnits') && <SectionHeader title="Executing Units" canEdit={isOwnerOrAdmin} isEditing={execUnitsEdit.isEditing}
+      {!isHidden('executingUnits') && <SectionHeader title={t('process.executingUnits')} canEdit={canEditField('executingUnits')} isEditing={execUnitsEdit.isEditing}
         onEdit={() => execUnitsEdit.startEdit(process.executingUnits?.map((u) => u.key) || [])}
         onSave={execUnitsEdit.save} onCancel={execUnitsEdit.cancel} isSaving={execUnitsEdit.isSaving}
         isMandatory={isMandatory('executingUnits')} />}
@@ -1023,7 +1032,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   color: "text.secondary"
                 }}>None</Typography>
                 {/* Item 9: No executing unit nudge */}
-                {isOwnerOrAdmin && (
+                {canEditField('executingUnits') && (
                   <NudgeBanner
                     severity="info"
                     title={t('nudge.process.noUnitTitle')}
@@ -1052,7 +1061,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('purpose') && <PropRow label={t('process.purpose')} statusIndicator={renderStatus(...activeLocales.map((l) => `purpose.${l.localeCode}`))} canEdit={isOwnerOrAdmin} isEditing={purposeEdit.isEditing}
+        {!isHidden('purpose') && <PropRow label={t('process.purpose')} statusIndicator={renderStatus(...activeLocales.map((l) => `purpose.${l.localeCode}`))} canEdit={canEditField('purpose')} isEditing={purposeEdit.isEditing}
           onEdit={() => purposeEdit.startEdit([...(process.purpose ?? [])])} onSave={purposeEdit.save}
           onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
           {purposeEdit.isEditing ? (
@@ -1076,7 +1085,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             </Typography>
           )}
         </PropRow>}
-        {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={isOwnerOrAdmin} isEditing={securityMeasuresEdit.isEditing}
+        {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={canEditField('securityMeasures')} isEditing={securityMeasuresEdit.isEditing}
           onEdit={() => securityMeasuresEdit.startEdit([...(process.securityMeasures ?? [])])} onSave={securityMeasuresEdit.save}
           onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
           {securityMeasuresEdit.isEditing ? (
@@ -1107,7 +1116,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Service Providers */}
       {!isHidden('serviceProviders') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">Service Providers</Typography>
-        {isOwnerOrAdmin && !serviceProvidersEdit.isEditing && (
+        {canEditField('serviceProviders') && !serviceProvidersEdit.isEditing && (
           <IconButton size="small" onClick={() => serviceProvidersEdit.startEdit((process.serviceProviders ?? []).map((s) => s.key))}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -1167,7 +1176,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* IT Systems */}
       {!isHidden('itSystems') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('itSystem.pageTitle')}</Typography>
-        {isOwnerOrAdmin && !itSystemsEdit.isEditing && (
+        {canEditField('itSystems') && !itSystemsEdit.isEditing && (
           <IconButton size="small" onClick={() => itSystemsEdit.startEdit((process.itSystems ?? []).map((s) => s.key))}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -1228,7 +1237,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Transfers to Third Countries: derived countries + documented cross-border transfers */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('process.transfersToThirdCountries')}</Typography>
-        {!isHidden('crossBorderTransfers') && isOwnerOrAdmin && (
+        {!isHidden('crossBorderTransfers') && canEditField('crossBorderTransfers') && (
           <IconButton
             size="small"
             color="primary"
@@ -1286,7 +1295,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <Divider sx={{ my: 2 }} />
 
       {/* Item 4: Legal basis nudge — personal data process with no legal basis */}
-      {process.containsPersonalData && !process.legalBasis && isOwnerOrAdmin && (
+      {process.containsPersonalData && !process.legalBasis && canEditField('legalBasis') && (
         <NudgeBanner
           title={t('nudge.process.legalBasisTitle')}
           message={t('nudge.process.legalBasisMessage')}
@@ -1296,7 +1305,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {/* Item 2: DPIA suggestion nudge — personal data process without DPIA */}
-      {process.containsPersonalData && !dpia && !isDpiaLoading && isOwnerOrAdmin && (
+      {process.containsPersonalData && !dpia && !isDpiaLoading && hasBroadEdit && (
         <NudgeBanner
           severity="info"
           title={t('nudge.process.dpiaTitle')}
@@ -1312,7 +1321,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         resourceType="process"
         dpia={dpia}
         isLoading={isDpiaLoading}
-        canEdit={isOwnerOrAdmin}
+        canEdit={hasBroadEdit}
         onTrigger={async () => { await triggerDpia({ key: processKey }); await queryClient.invalidateQueries({ queryKey: getGetProcessDpiaQueryKey(processKey) }); }}
         isTriggeringDpia={isTriggeringDpia}
         invalidateKey={getGetProcessDpiaQueryKey(processKey) as readonly unknown[]}
@@ -1330,7 +1339,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Classifications */}
-      <SectionHeader title="Classifications" canEdit={isOwnerOrAdmin} isEditing={classEdit.isEditing}
+      <SectionHeader title="Classifications" canEdit={canEditField('classification')} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(process.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
         })) || [])}
@@ -1437,7 +1446,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       {/* Parent Process */}
       {!isHidden('parent') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">Parent Process</Typography>
-        {isOwnerOrAdmin && !parentEdit.isEditing && (
+        {canEditField('parent') && !parentEdit.isEditing && (
           <IconButton size="small" onClick={() => parentEdit.startEdit(process.parentProcess?.key ?? null)}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -1524,7 +1533,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <AccordionDetails sx={{ p: 1 }}>
           {diagramOpen && (
             <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>}>
-              <BpmnEditor processKey={processKey} canEdit={isOwnerOrAdmin} />
+              <BpmnEditor processKey={processKey} canEdit={canEditField('processDiagram')} />
             </Suspense>
           )}
         </AccordionDetails>
@@ -1584,7 +1593,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       )}
 
       {/* Item 6: What's next suggestion */}
-      {isOwnerOrAdmin && (() => {
+      {hasBroadEdit && (() => {
         const steps = [];
         if (!process.processOwner) steps.push({ description: t('nudge.process.nextAssignOwnerDesc'), actionLabel: t('nudge.process.assignOwner'), onClick: () => ownerEdit.startEdit('') });
         else if (process.containsPersonalData && !process.legalBasis) steps.push({ description: t('nudge.process.nextSetLegalBasisDesc'), actionLabel: t('nudge.process.setLegalBasis'), onClick: () => legalBasisEdit.startEdit('') });

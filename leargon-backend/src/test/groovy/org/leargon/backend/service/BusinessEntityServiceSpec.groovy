@@ -71,9 +71,14 @@ class BusinessEntityServiceSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private User createTestUser(String email, String username) {
+    // Creating a business entity (and editing its CORE fields like names) now requires admin or a
+    // DATA_GOVERNANCE editor/lead, so the default test user gets that role. Negative tests that need a
+    // genuinely unprivileged actor pass roles = "ROLE_USER".
+    private User createTestUser(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE") {
         def request = new SignupRequest(email, username, "password123", "Test", "User")
-        return userService.createUser(request)
+        def user = userService.createUser(request)
+        user.roles = roles
+        return userRepository.update(user)
     }
 
     private User createAdminUser(String email, String username) {
@@ -269,17 +274,17 @@ class BusinessEntityServiceSpec extends Specification {
     def "should throw ForbiddenOperationException when non-owner edits entity"() {
         given: "an entity owned by a different user"
         def owner = createTestUser("owner@example.com", "owner")
-        def otherUser = createTestUser("other@example.com", "other")
+        def otherUser = createTestUser("other@example.com", "other", "ROLE_USER")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def entity = entityService.createBusinessEntity(createRequest, owner)
 
-        when: "non-owner attempts to update names"
+        when: "a user who is neither owner, steward, a DATA_GOVERNANCE editor, nor admin updates names"
         entityService.updateBusinessEntityNames(entity.key, [new LocalizedText("en", "Unauthorized Update")], otherUser)
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner, steward, or an admin")
+        exception.message.contains("do not have permission to edit this field")
     }
 
     def "should update data owner and create OWNER_CHANGE version"() {
@@ -317,20 +322,20 @@ class BusinessEntityServiceSpec extends Specification {
         thrown(ResourceNotFoundException)
     }
 
-    def "should throw ForbiddenOperationException when non-owner deletes entity"() {
-        given: "an entity owned by a different user"
+    def "should throw ForbiddenOperationException when a non-owner non-editor deletes entity"() {
+        given: "an entity owned by a different user, and an unprivileged actor"
         def owner = createTestUser("owner@example.com", "owner")
-        def otherUser = createTestUser("other@example.com", "other")
+        def otherUser = createTestUser("other@example.com", "other", "ROLE_USER")
 
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "BusinessEntity")])
         def entity = entityService.createBusinessEntity(createRequest, owner)
 
-        when: "non-owner attempts to delete"
+        when: "a user who is neither owner, steward, a DATA_GOVERNANCE editor, nor admin attempts to delete"
         entityService.deleteBusinessEntity(entity.key, otherUser)
 
         then: "ForbiddenOperationException is thrown"
         def exception = thrown(ForbiddenOperationException)
-        exception.message.contains("Only the data owner, steward, or an admin")
+        exception.message.contains("Deleting this item requires")
     }
 
     def "should get version diff"() {

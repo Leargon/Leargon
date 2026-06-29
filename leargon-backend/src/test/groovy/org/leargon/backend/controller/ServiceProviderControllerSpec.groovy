@@ -53,10 +53,13 @@ class ServiceProviderControllerSpec extends Specification {
 
     // ─── helpers ──────────────────────────────────────────────────────────────
 
-    private Map createUserWithToken(String email, String username) {
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_GDPR,ROLE_EDITOR_DDD,ROLE_EDITOR_BCM,ROLE_EDITOR_TEAM_TOPOLOGIES") {
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/authentication/signup",
                 new SignupRequest(email, username, "password123", "Test", "User")), Map)
+        def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        userRepository.update(user)
         [token: resp.body().accessToken]
     }
 
@@ -154,9 +157,9 @@ class ServiceProviderControllerSpec extends Specification {
         resp.body().serviceProviderType.toString() == "BODYLEASE"
     }
 
-    def "POST /service-providers should return 403 when called by non-admin"() {
+    def "POST /service-providers should return 403 when called by a non-editor non-admin"() {
         given:
-        def userData = createUserWithToken("user@sp.com", "spUser")
+        def userData = createUserWithToken("user@sp.com", "spUser", "ROLE_USER")
         def req = [names: [[locale: "en", text: "Provider"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
@@ -272,11 +275,11 @@ class ServiceProviderControllerSpec extends Specification {
         resp.body().subProcessorsApproved
     }
 
-    def "PUT /service-providers/{key} should return 403 for non-admin"() {
+    def "PUT /service-providers/{key} should return 403 for a non-editor non-admin"() {
         given:
         def adminToken = createAdminToken()
         def created = createProvider(adminToken, "Protected Provider")
-        def userData = createUserWithToken("nonAdmin@sp.com", "spNonAdmin")
+        def userData = createUserWithToken("nonAdmin@sp.com", "spNonAdmin", "ROLE_USER")
         def updateReq = [names: [[locale: "en", text: "Hacked"]], processingCountries: [], processorAgreementInPlace: false, subProcessorsApproved: false]
 
         when:
@@ -307,11 +310,11 @@ class ServiceProviderControllerSpec extends Specification {
         !serviceProviderRepository.existsByKey(created.key)
     }
 
-    def "DELETE /service-providers/{key} should return 403 for non-admin"() {
+    def "DELETE /service-providers/{key} should return 403 for a non-editor non-admin"() {
         given:
         def adminToken = createAdminToken()
         def created = createProvider(adminToken, "Safe Provider")
-        def userData = createUserWithToken("user2@sp.com", "spUser2")
+        def userData = createUserWithToken("user2@sp.com", "spUser2", "ROLE_USER")
 
         when:
         client.toBlocking().exchange(
@@ -369,7 +372,7 @@ class ServiceProviderControllerSpec extends Specification {
         given:
         def ownerData = createUserWithToken("owner2@sp.com", "spOwner2")
         def entity = createEntity(ownerData.token, "Protected Entity")
-        def otherData = createUserWithToken("other@sp.com", "spOther")
+        def otherData = createUserWithToken("other@sp.com", "spOther", "ROLE_USER")
 
         when:
         client.toBlocking().exchange(

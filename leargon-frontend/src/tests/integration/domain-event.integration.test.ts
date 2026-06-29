@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createDomain,
@@ -66,7 +66,7 @@ describe('DomainEvent API', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'de-user@example.com',
       username: 'deuser',
       password: 'password123',

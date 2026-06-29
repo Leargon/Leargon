@@ -116,7 +116,7 @@ class RoleBasedEditSpec extends Specification {
 
     def "EDITOR_GDPR can edit a GDPR field and the change lands UNVERIFIED"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = tokenWithRoles("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE")
         def editorToken = tokenWithRoles("editor@test.com", "editor", "ROLE_USER,ROLE_EDITOR_GDPR")
         def process = createProcess(ownerToken)
 
@@ -133,7 +133,7 @@ class RoleBasedEditSpec extends Specification {
 
     def "EDITOR_GDPR cannot edit a non-GDPR field (403)"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = tokenWithRoles("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE")
         def editorToken = tokenWithRoles("editor@test.com", "editor", "ROLE_USER,ROLE_EDITOR_GDPR")
         def process = createProcess(ownerToken)
 
@@ -149,7 +149,7 @@ class RoleBasedEditSpec extends Specification {
 
     def "EDITOR_GDPR cannot verify a field (403)"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = tokenWithRoles("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE")
         def editorToken = tokenWithRoles("editor@test.com", "editor", "ROLE_USER,ROLE_EDITOR_GDPR")
         def process = createProcess(ownerToken)
 
@@ -168,7 +168,7 @@ class RoleBasedEditSpec extends Specification {
 
     def "LEAD_GDPR can edit a GDPR field (UNVERIFIED) but cannot verify (403)"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = tokenWithRoles("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE")
         def leadToken = tokenWithRoles("lead@test.com", "lead", "ROLE_USER,ROLE_LEAD_GDPR")
         def process = createProcess(ownerToken)
 

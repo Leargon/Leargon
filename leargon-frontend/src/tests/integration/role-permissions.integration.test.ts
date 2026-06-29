@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createClient, signup, signupAdmin, signupWithRoles, withToken, createProcess } from './testClient';
+import { createClient, signup, signupCreator, signupAdmin, signupWithRoles, withToken, createProcess } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { MethodologyConfigEntry } from '@/api/generated/model/methodologyConfigEntry';
 import type { ProcessResponse } from '@/api/generated/model/processResponse';
@@ -42,7 +42,7 @@ describe('Methodology-scoped roles (EDITOR / LEAD)', () => {
     });
     withToken(adminClient, adminAuth.accessToken);
 
-    const ownerAuth = await signup(ownerClient, {
+    const ownerAuth = await signupCreator(ownerClient, {
       email: 'role-owner@example.com', username: 'roleowner', password: 'password123', firstName: 'Role', lastName: 'Owner',
     });
     withToken(ownerClient, ownerAuth.accessToken);
@@ -163,5 +163,32 @@ describe('Methodology-scoped roles (EDITOR / LEAD)', () => {
     const id = users.find((u) => u.email === 'role-bad@example.com')!.id;
     const res = await adminClient.put(`/administration/users/${id}`, { roles: ['ROLE_LEAD_NONSENSE'] });
     expect(res.status).toBe(400);
+  });
+
+  // ── assignable users (non-admin picker source) ─────────────────────────────
+
+  it('a non-admin can read the assignable-users list (owner/steward picker source)', async () => {
+    const res = await editorClient.get<Array<{ username: string; firstName: string; lastName: string }>>(
+      '/administration/users/assignable',
+    );
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data)).toBe(true);
+    expect(res.data.some((u) => u.username === 'roleowner')).toBe(true);
+    expect(res.data.some((u) => u.username === 'roleadmin')).toBe(true);
+  });
+
+  it('assignable-users exposes only minimal fields (no roles or email)', async () => {
+    const res = await leadClient.get<Array<Record<string, unknown>>>('/administration/users/assignable');
+    expect(res.status).toBe(200);
+    const entry = res.data.find((u) => u.username === 'roleadmin');
+    expect(entry).toBeDefined();
+    expect(entry).toHaveProperty('firstName');
+    expect(entry).not.toHaveProperty('roles');
+    expect(entry).not.toHaveProperty('email');
+  });
+
+  it('the full user list stays admin-only (non-admin gets 403)', async () => {
+    const res = await editorClient.get('/administration/users');
+    expect(res.status).toBe(403);
   });
 });

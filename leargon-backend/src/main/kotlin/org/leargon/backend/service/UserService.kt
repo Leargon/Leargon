@@ -14,6 +14,7 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateProfileRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
+import org.leargon.backend.model.UserSummaryResponse
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
@@ -60,6 +61,13 @@ open class UserService(
     open fun toUserResponse(user: User): UserResponse = userMapper.toUserResponse(user)
 
     open fun getAllUsersAsResponses(): List<UserResponse> = userRepository.findAll().map { toUserResponse(it) }
+
+    /** Minimal list of enabled users for owner/steward/custodian pickers — no roles or emails exposed. */
+    open fun getAssignableUsers(): List<UserSummaryResponse> =
+        userRepository
+            .findAll()
+            .filter { it.enabled }
+            .map { UserSummaryResponse(it.username, it.firstName, it.lastName, it.preferredLanguage) }
 
     @Transactional
     open fun updateUser(

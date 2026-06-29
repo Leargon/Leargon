@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createEntity, createOrgUnit, assignOwningUnitToEntity, uid, OWNER } from './api-setup';
+import { createEntity, createEntityOwnedBy, createOrgUnit, assignOwningUnitToEntity, uid } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -63,8 +63,9 @@ test.describe('Business Entity CRUD — Owner', () => {
   let entityKey: string;
 
   test.beforeEach(async () => {
-    // Create entity as OWNER — creator automatically becomes dataOwner
-    const entity = await createEntity(uid('PW Owner Entity'), OWNER);
+    // Created by admin, then ownership handed to the owner persona (a plain ROLE_USER can no
+    // longer create root items, but still owns/edits/deletes what they are made owner of).
+    const entity = await createEntityOwnedBy(uid('PW Owner Entity'));
     entityKey = entity.key as string;
   });
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   createClient,
-  signup,
+  signup, signupCreator,
   signupAdmin,
   withToken,
   createEntity,
@@ -39,7 +39,7 @@ describe('DPIA API', () => {
     adminToken = adminAuth.accessToken;
     withToken(adminClient, adminToken);
 
-    const userAuth = await signup(userClient, {
+    const userAuth = await signupCreator(userClient, {
       email: 'dpia-user@example.com',
       username: 'dpiauser',
       password: 'password123',

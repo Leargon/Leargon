@@ -7,7 +7,7 @@ import {
   setProcessLegalBasis,
   setProcessPurpose,
   uid,
-  OWNER,
+  createProcessOwnedBy,
   createEntity,
   assignClassificationsToEntity,
   addProcessInput,
@@ -195,8 +195,9 @@ test.describe('Business Process CRUD — Owner', () => {
   let processKey: string;
 
   test.beforeEach(async () => {
-    // Create process as OWNER — creator automatically becomes processOwner
-    const process = await createProcess(uid('PW Owner Process'), OWNER);
+    // Created by admin, then ownership handed to the owner persona (a plain ROLE_USER can no
+    // longer create root items, but still owns/edits/deletes what they are made owner of).
+    const process = await createProcessOwnedBy(uid('PW Owner Process'));
     processKey = process.key as string;
   });
 

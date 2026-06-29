@@ -15,6 +15,7 @@ import { Add, Search } from '@mui/icons-material';
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import type { ItSystemResponse } from '../../api/generated/model';
 
@@ -28,7 +29,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'IT_SYSTEM');
   const { data: response, isLoading } = useGetAllItSystems();
   const systems = (response?.data as ItSystemResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
@@ -63,7 +64,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             {t('common.new')}
           </Button>

@@ -81,13 +81,18 @@ class ProcessControllerSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private Map createUserWithToken(String email, String username) {
+    // Creating a process requires admin or a PROCESS_GOVERNANCE editor/lead, so the default creating user is
+    // granted that role (they become the owner; owner/admin gates and other-methodology fields are unaffected).
+    // Negative non-owner tests editing a PROCESS_GOVERNANCE field pass roles="ROLE_USER" for a plain actor.
+    private Map createUserWithToken(String email, String username, String roles = "ROLE_USER,ROLE_EDITOR_PROCESS_GOVERNANCE,ROLE_EDITOR_DATA_GOVERNANCE") {
         def signupRequest = new SignupRequest(email, username, "password123", "Test", "User")
         def signupResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/authentication/signup", signupRequest),
                 Map
         )
         def user = userRepository.findByEmail(email).get()
+        user.roles = roles
+        user = userRepository.update(user)
         return [token: signupResponse.body().accessToken, user: user]
     }
 
@@ -353,7 +358,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/legal-basis should return 403 for non-owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         and:
         def created = client.toBlocking().exchange(
@@ -589,7 +594,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/descriptions should return 403 for non-owner non-admin"() {
         given:
         def ownerData = createUserWithToken("desc-owner@example.com", "descowner")
-        def otherData = createUserWithToken("desc-other@example.com", "descother")
+        def otherData = createUserWithToken("desc-other@example.com", "descother", "ROLE_USER")
 
         and:
         def created = client.toBlocking().exchange(
@@ -812,7 +817,7 @@ class ProcessControllerSpec extends Specification {
     def "DELETE /processes/{key} should return 403 for non-owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         and:
         def created = client.toBlocking().exchange(
@@ -896,7 +901,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/executing-units should return 403 for non-owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         and:
         def proc = client.toBlocking().exchange(
@@ -975,7 +980,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/purpose should return 403 for non-owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         and:
         def proc = client.toBlocking().exchange(
@@ -1023,7 +1028,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/security-measures should return 403 for non-owner"() {
         given:
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
 
         and:
         def proc = client.toBlocking().exchange(
@@ -1104,7 +1109,7 @@ class ProcessControllerSpec extends Specification {
     def "PUT /processes/{key}/owning-unit should return 403 for non-owner"() {
         given: "a process and two users"
         def creatorData = createUserWithToken("creator@example.com", "creator")
-        def otherData = createUserWithToken("other@example.com", "other")
+        def otherData = createUserWithToken("other@example.com", "other", "ROLE_USER")
         String adminToken = createAdminToken()
 
         def proc = client.toBlocking().exchange(

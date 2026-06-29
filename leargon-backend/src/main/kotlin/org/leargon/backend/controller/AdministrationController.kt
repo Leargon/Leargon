@@ -20,6 +20,7 @@ import org.leargon.backend.model.OrganisationSettingsResponse
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
+import org.leargon.backend.model.UserSummaryResponse
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import org.leargon.backend.service.OrganisationSettingsService
@@ -45,6 +46,9 @@ open class AdministrationController(
 
     @Secured("ROLE_ADMIN")
     override fun getAllUsers(): List<UserResponse> = userService.getAllUsersAsResponses()
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    override fun getAssignableUsers(): List<UserSummaryResponse> = userService.getAssignableUsers()
 
     @Secured("ROLE_ADMIN")
     override fun getUserById(id: Long): UserResponse {

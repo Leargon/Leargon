@@ -28,7 +28,7 @@ import {
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
-import { useGetAllUsers } from '../../api/generated/administration/administration';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useAuth } from '../../context/AuthContext';
 import { LegalBasis } from '../../api/generated/model/legalBasis';
 import type {
@@ -78,7 +78,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
   const allEntities = (entitiesResponse?.data as BusinessEntitySummaryResponse[] | undefined) || [];
   const { data: unitsResponse } = useGetAllOrganisationalUnits();
   const allUnits = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) || [];
-  const { data: usersResponse } = useGetAllUsers();
+  const { data: usersResponse } = useGetAssignableUsers();
   const allUsers = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
 
   const { data: parentProcessResponse } = useGetProcessByKey(parentProcessKey!, {

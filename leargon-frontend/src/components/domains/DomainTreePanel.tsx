@@ -25,6 +25,7 @@ import {
 import { useGetBusinessDomainTree } from '../../api/generated/business-domain/business-domain';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import type { BusinessDomainTreeResponse } from '../../api/generated/model';
 
 interface DomainTreePanelProps {
@@ -37,7 +38,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
   const { data: treeResponse, isLoading } = useGetBusinessDomainTree();
   const tree = (treeResponse?.data as BusinessDomainTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
@@ -70,7 +71,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
             },
           }}
         />
-        {isAdmin && (
+        {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
             {t('common.new')}
           </Button>

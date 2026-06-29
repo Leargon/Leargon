@@ -37,6 +37,7 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -60,7 +61,8 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const { t } = useTranslation();
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  // IT systems are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
+  const canManage = canCreateRoot(user?.roles, 'IT_SYSTEM');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetItSystem(systemKey);
@@ -195,7 +197,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
           ) : undefined
         }
         actions={
-          isAdmin ? (
+          canManage ? (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               {t('common.delete')}
             </Button>
@@ -209,7 +211,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('common.namesAndDescriptions')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={namesEdit} onStart={() => namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] })} />
+            <InlineEditControls canEdit={canManage} edit={namesEdit} onStart={() => namesEdit.startEdit({ names: [...system.names], descriptions: [...system.descriptions] })} />
             {namesEdit.isEditing && namesEdit.editValue ? (
               <Box>
                 <TranslationEditor
@@ -237,7 +239,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('common.details')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={detailsEdit} onStart={() => detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' })} />
+            <InlineEditControls canEdit={canManage} edit={detailsEdit} onStart={() => detailsEdit.startEdit({ vendor: system.vendor ?? '', systemUrl: system.systemUrl ?? '' })} />
             {detailsEdit.isEditing && detailsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <TextField
@@ -298,7 +300,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('common.owningUnit')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={owningUnitEdit} onStart={() => owningUnitEdit.startEdit(system.owningUnit?.key ?? null)} />
+            <InlineEditControls canEdit={canManage} edit={owningUnitEdit} onStart={() => owningUnitEdit.startEdit(system.owningUnit?.key ?? null)} />
             {owningUnitEdit.isEditing ? (
               <Box>
                 <Autocomplete
@@ -333,7 +335,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('itSystem.sectionDeploymentCountries')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(system.processingCountries ?? [])])} />
+            <InlineEditControls canEdit={canManage} edit={countriesEdit} onStart={() => countriesEdit.startEdit([...(system.processingCountries ?? [])])} />
             {countriesEdit.isEditing && countriesEdit.editValue !== null ? (
               <Box>
                 {(system.serviceProviders ?? []).length > 0 && (
@@ -389,7 +391,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('itSystem.sectionServiceProviders')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((system.serviceProviders ?? []).map((sp) => sp.key))} />
+            <InlineEditControls canEdit={canManage} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((system.serviceProviders ?? []).map((sp) => sp.key))} />
             {serviceProvidersEdit.isEditing && serviceProvidersEdit.editValue !== null ? (
               <Box>
                 <Autocomplete
@@ -430,7 +432,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
             <Typography variant="subtitle2">{t('common.linkedProcesses')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <InlineEditControls canEdit={isAdmin} edit={processesEdit} onStart={() => processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key))} />
+            <InlineEditControls canEdit={canManage} edit={processesEdit} onStart={() => processesEdit.startEdit((system.linkedProcesses ?? []).map((p) => p.key))} />
             {processesEdit.isEditing && processesEdit.editValue !== null ? (
               <Box>
                 <Autocomplete

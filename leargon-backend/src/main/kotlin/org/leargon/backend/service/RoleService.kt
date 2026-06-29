@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 
 /**
  * Parses and interprets the comma-separated [User.roles] string into the role model:
@@ -60,6 +61,77 @@ class RoleService(
     ): Boolean = scopesOf(user).let { it.isAdmin || methodology in it.leadMethodologies }
 
     /**
+     * Throws unless [user] may create a *root* (top-level) catalogue item governed by [methodology]:
+     * an administrator, or an EDITOR/LEAD of that methodology.
+     */
+    fun requireCreateRoot(
+        user: User,
+        methodology: String
+    ) {
+        if (!isEditorFor(user, methodology)) {
+            throw ForbiddenOperationException(
+                "Creating this item requires an administrator or a $methodology editor/lead role"
+            )
+        }
+    }
+
+    /**
+     * Throws unless [user] may create a *child* of a parent item governed by [methodology]: an
+     * administrator or EDITOR/LEAD of that methodology, or the owner or steward of the parent item.
+     */
+    fun requireCreateChild(
+        user: User,
+        methodology: String,
+        parentOwnerId: Long?,
+        parentStewardId: Long?
+    ) {
+        if (isEditorFor(user, methodology)) return
+        val uid = user.id
+        if (uid != null && (uid == parentOwnerId || uid == parentStewardId)) return
+        throw ForbiddenOperationException(
+            "Creating this item requires an administrator, a $methodology editor/lead, " +
+                "or ownership/stewardship of the parent item"
+        )
+    }
+
+    /**
+     * Throws unless [user] is an administrator or an EDITOR/LEAD of [methodology]. Used to gate edit/delete
+     * (and create) of items that have no per-user owner/steward and are wholly governed by one methodology
+     * (e.g. service providers, IT systems, capabilities, domains, bounded contexts, context relationships,
+     * domain events).
+     */
+    fun requireEditorFor(
+        user: User,
+        methodology: String
+    ) {
+        if (!isEditorFor(user, methodology)) {
+            throw ForbiddenOperationException(
+                "This action requires an administrator or a $methodology editor/lead role"
+            )
+        }
+    }
+
+    /**
+     * Throws unless [user] may delete an object of [entityType]: an administrator or EDITOR/LEAD of the
+     * type's governing methodology, or the object's owner or steward. Symmetric with create.
+     */
+    fun requireDelete(
+        user: User,
+        entityType: String,
+        ownerId: Long?,
+        stewardId: Long?
+    ) {
+        val governing = GOVERNING_METHODOLOGY[entityType]
+        if (governing != null && isEditorFor(user, governing)) return
+        if (user.roles.contains(ROLE_ADMIN)) return
+        val uid = user.id
+        if (uid != null && (uid == ownerId || uid == stewardId)) return
+        throw ForbiddenOperationException(
+            "Deleting this item requires an administrator, a $governing editor/lead, or ownership/stewardship"
+        )
+    }
+
+    /**
      * Whether the user may edit [fieldName] on [entityType] purely by virtue of a scoped EDITOR/LEAD role
      * (owner/steward/admin are checked separately by the caller). True when the field belongs to a
      * methodology the user is an editor (or lead) for. CORE-only fields belong to no methodology and so
@@ -74,9 +146,16 @@ class RoleService(
         if (scopes.isAdmin) return true
         if (scopes.editorMethodologies.isEmpty()) return false
         val section = fieldConfigurationService.sectionOf(entityType, fieldName)
-        return methodologyConfigurationService
-            .methodologiesOf(entityType, fieldName, section)
-            .any { it in scopes.editorMethodologies }
+        val methodologies = methodologyConfigurationService.methodologiesOf(entityType, fieldName, section)
+        if (methodologies.any { it in scopes.editorMethodologies }) return true
+        // CORE fields belong to no methodology. Allow an editor/lead of the entity type's *governing*
+        // methodology (the one that also governs creating that type) to edit them — e.g. a DATA_GOVERNANCE
+        // editor/lead may rename a business entity or reparent it.
+        if (methodologies.isEmpty()) {
+            val governing = GOVERNING_METHODOLOGY[entityType]
+            return governing != null && governing in scopes.editorMethodologies
+        }
+        return false
     }
 
     /** Every assignable methodology-scoped role token, for admin pickers and request validation. */
@@ -92,5 +171,15 @@ class RoleService(
         const val ROLE_ADMIN = "ROLE_ADMIN"
         const val ROLE_LEAD_PREFIX = "ROLE_LEAD_"
         const val ROLE_EDITOR_PREFIX = "ROLE_EDITOR_"
+
+        /** The methodology that governs each entity type's CORE fields and creation. */
+        @JvmStatic
+        val GOVERNING_METHODOLOGY =
+            mapOf(
+                "BUSINESS_ENTITY" to "DATA_GOVERNANCE",
+                "BUSINESS_PROCESS" to "PROCESS_GOVERNANCE",
+                "BUSINESS_DOMAIN" to "DDD",
+                "ORGANISATIONAL_UNIT" to "TEAM_TOPOLOGIES",
+            )
     }
 }

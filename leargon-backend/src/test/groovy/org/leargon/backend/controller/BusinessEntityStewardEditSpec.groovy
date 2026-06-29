@@ -66,10 +66,13 @@ class BusinessEntityStewardEditSpec extends Specification {
         userRepository.deleteAll()
     }
 
-    private String signupToken(String email, String username) {
+    private String signupToken(String email, String username, String roles = "ROLE_USER") {
         def resp = client.toBlocking().exchange(
                 HttpRequest.POST("/authentication/signup", new SignupRequest(email, username, "password123", "Test", "User")),
                 Map)
+        def u = userRepository.findByEmail(email).get()
+        u.roles = roles
+        userRepository.update(u)
         return resp.body().accessToken
     }
 
@@ -93,7 +96,7 @@ class BusinessEntityStewardEditSpec extends Specification {
 
     def "steward can edit a field but the change lands UNVERIFIED (steward is not the owner)"() {
         given: "an entity owned by 'owner' with 'steward' assigned as data steward"
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = signupToken("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
         def stewardToken = signupToken("steward@test.com", "steward")
         def entity = createEntity(ownerToken)
         assignSteward(entity.key, ownerToken, "steward")
@@ -117,7 +120,7 @@ class BusinessEntityStewardEditSpec extends Specification {
 
     def "steward cannot set a field verification status (403)"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = signupToken("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
         def stewardToken = signupToken("steward@test.com", "steward")
         def entity = createEntity(ownerToken)
         assignSteward(entity.key, ownerToken, "steward")
@@ -136,7 +139,7 @@ class BusinessEntityStewardEditSpec extends Specification {
 
     def "a user who is neither owner, steward, nor admin cannot edit (403)"() {
         given:
-        def ownerToken = signupToken("owner@test.com", "owner")
+        def ownerToken = signupToken("owner@test.com", "owner", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
         def otherToken = signupToken("other@test.com", "other")
         def entity = createEntity(ownerToken)
 

@@ -19,6 +19,7 @@ import org.leargon.backend.model.DomainEventResponse
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.SetDomainEventConsumersRequest
 import org.leargon.backend.service.DomainEventService
+import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -27,7 +28,8 @@ open class DomainEventController(
     private val domainEventService: DomainEventService,
     private val domainEventMapper: DomainEventMapper,
     private val userService: UserService,
-    private val securityService: SecurityService
+    private val securityService: SecurityService,
+    private val roleService: RoleService
 ) : DomainEventApi {
     override fun getAllDomainEvents(): List<DomainEventResponse> = domainEventService.getAll()
 
@@ -37,6 +39,7 @@ open class DomainEventController(
         @Valid @Body createDomainEventRequest: CreateDomainEventRequest
     ): HttpResponse<DomainEventResponse> {
         val currentUser = getCurrentUser()
+        roleService.requireCreateRoot(currentUser, "DDD")
         val event = domainEventService.create(createDomainEventRequest, currentUser)
         val response = domainEventService.getByKey(event.key)
         return HttpResponse.status<DomainEventResponse>(HttpStatus.CREATED).body(response)
@@ -47,6 +50,7 @@ open class DomainEventController(
         @Body localizedTexts: List<@Valid LocalizedText>
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.updateNames(key, localizedTexts, currentUser)
     }
 
@@ -55,15 +59,16 @@ open class DomainEventController(
         @Body localizedTexts: List<@Valid LocalizedText>
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.updateDescriptions(key, localizedTexts, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun setDomainEventConsumers(
         key: String,
         @Valid @Body setDomainEventConsumersRequest: SetDomainEventConsumersRequest
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.setConsumers(key, setDomainEventConsumersRequest.consumerBoundedContextKeys, currentUser)
     }
 
@@ -72,6 +77,7 @@ open class DomainEventController(
         @Valid @Body addDomainEventProcessLinkRequest: AddDomainEventProcessLinkRequest
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.addProcessLink(key, addDomainEventProcessLinkRequest, currentUser)
     }
 
@@ -80,30 +86,31 @@ open class DomainEventController(
         linkId: Long
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.removeProcessLink(key, linkId, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun addDomainEventEntityLink(
         key: String,
         @Valid @Body addDomainEventEntityLinkRequest: AddDomainEventEntityLinkRequest
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.addEntityLink(key, addDomainEventEntityLinkRequest, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun removeDomainEventEntityLink(
         key: String,
         linkId: Long
     ): DomainEventResponse {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         return domainEventService.removeEntityLink(key, linkId, currentUser)
     }
 
-    @Secured("ROLE_ADMIN")
     override fun deleteDomainEvent(key: String): HttpResponse<Void> {
         val currentUser = getCurrentUser()
+        roleService.requireEditorFor(currentUser, "DDD")
         domainEventService.delete(key, currentUser)
         return HttpResponse.noContent()
     }

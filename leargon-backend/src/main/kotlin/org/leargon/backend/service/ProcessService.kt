@@ -98,6 +98,22 @@ open class ProcessService(
             validateTranslations(request.descriptions, false)
         }
 
+        // Create gating: root processes need admin / PROCESS_GOVERNANCE editor-lead; a child (sub-process)
+        // may also be created by the parent process's owner or steward.
+        val parentProcess =
+            request.parentProcessKey?.let {
+                processRepository
+                    .findByKey(it)
+                    .orElseThrow { ResourceNotFoundException("Parent process not found: $it") }
+            }
+        if (parentProcess != null) {
+            roleService.requireCreateChild(
+                currentUser, "PROCESS_GOVERNANCE", parentProcess.processOwner?.id, parentProcess.processSteward?.id
+            )
+        } else {
+            roleService.requireCreateRoot(currentUser, "PROCESS_GOVERNANCE")
+        }
+
         var process = Process()
         process.createdBy = currentUser
         process.updatedBy = currentUser
@@ -133,11 +149,7 @@ open class ProcessService(
                 SlugUtil.slugify(defaultName)
             }
 
-        if (request.parentProcessKey != null) {
-            val parentProcess =
-                processRepository
-                    .findByKey(request.parentProcessKey)
-                    .orElseThrow { ResourceNotFoundException("Parent process not found: ${request.parentProcessKey}") }
+        if (parentProcess != null) {
             process.parent = parentProcess
         }
 
@@ -181,7 +193,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "names")
 
         validateTranslations(names)
 
@@ -328,7 +340,7 @@ open class ProcessService(
         currentUser: User
     ): ProcessResponse {
         var process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        requireFieldEdit(process, currentUser, "parent")
 
         if (parentKey != null) {
             if (parentKey == key) throw IllegalArgumentException("A process cannot be its own parent")
@@ -703,7 +715,7 @@ open class ProcessService(
         currentUser: User
     ) {
         val process = getProcessByKey(key)
-        checkEditPermission(process, currentUser)
+        roleService.requireDelete(currentUser, "BUSINESS_PROCESS", process.effectiveOwner()?.id, process.effectiveSteward()?.id)
 
         if (process.children.isNotEmpty()) {
             throw IllegalArgumentException(

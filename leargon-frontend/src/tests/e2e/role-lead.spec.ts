@@ -49,4 +49,15 @@ test.describe('LEAD_GDPR scoped configuration access', () => {
     await expect(page).toHaveURL(new RegExp(`/processes/${process.key}`));
     await expect(page.getByText(/PW Lead Process/).first()).toBeVisible({ timeout: 10_000 });
   });
+
+  test('a GDPR lead does not see structural actions (Delete) on a process they do not own', async ({ page }) => {
+    const process = (await createProcess(uid('PW Lead NoDelete'))) as { key: string };
+    await page.goto(`/processes/${process.key}`);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/PW Lead NoDelete/).first()).toBeVisible({ timeout: 10_000 });
+
+    // Delete is gated to owner / steward / admin (broad edit); a methodology-scoped lead must not see it,
+    // since the backend rejects deletion by non-owners (avoids an action that would 403).
+    await expect(page.getByTestId('delete-process-btn')).not.toBeVisible();
+  });
 });

@@ -78,6 +78,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
+import { canCreateRoot } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -141,7 +142,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const { perspective } = useNavigation();
   const sections = DOMAIN_SECTIONS_BY_PERSPECTIVE[perspective];
   const { t } = useTranslation();
-  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  // Domains (and their bounded contexts) are governed by DDD with no per-user owner/steward, so an admin
+  // or a DDD editor/lead manages them.
+  const canManage = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
 
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
   const domain = domainResponse?.data as BusinessDomainResponse | undefined;
@@ -337,7 +340,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   };
 
   const activeLocales = locales.filter((l) => l.isActive);
-  const descriptionLocales = isAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
+  const descriptionLocales = canManage ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   // Mandatory field helpers
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -505,11 +508,11 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {domain.owningUnit?.name && (
             <Chip label={getLocalizedText(allOrgUnits.find(u => u.key === domain.owningUnit!.key)?.names ?? [], domain.owningUnit.name)} size="small" variant="outlined" />
           )}
-          {isAdmin && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
+          {canManage && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
             <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: domain.missingMandatoryFields!.length })} size="small" color="warning" />
           )}
         </>}
-        actions={isAdmin ? (
+        actions={canManage ? (
           <>
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateSubdomainOpen(true)}>
               {t('domain.addSubdomain')}
@@ -525,12 +528,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Item 1: Missing fields banner */}
       <MissingFieldsBanner
         missingFields={domain.missingMandatoryFields ?? []}
-        ownerOrAdmin={isAdmin}
+        ownerOrAdmin={canManage}
         entityType="BUSINESS_DOMAIN"
       />
 
       {/* Item 10: Domain without owning unit */}
-      {isAdmin && !domain.owningUnit && (
+      {canManage && !domain.owningUnit && (
         <NudgeBanner
           severity="info"
           title={t('nudge.domain.noOwningUnitTitle')}
@@ -541,7 +544,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       )}
 
       {/* Item 8: Empty bounded context — domain has no bounded contexts */}
-      {isAdmin && boundedContexts.length === 0 && (
+      {canManage && boundedContexts.length === 0 && (
         <NudgeBanner
           severity="info"
           title={t('nudge.domain.noBcTitle')}
@@ -554,7 +557,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Names & Descriptions */}
       <SectionHeader
         title={t('domain.namesAndDescriptions')}
-        canEdit={isAdmin}
+        canEdit={canManage}
         isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...domain.names], descriptions: [...(domain.descriptions || [])] })}
         onSave={namesEdit.save}
@@ -647,7 +650,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.type')}
             statusIndicator={renderStatus('type')}
-            canEdit={isAdmin}
+            canEdit={canManage}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
             onSave={typeEdit.save}
@@ -701,7 +704,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.parentDomain')}
             statusIndicator={renderStatus('parent')}
-            canEdit={isAdmin}
+            canEdit={canManage}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
             onSave={parentEdit.save}
@@ -769,7 +772,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.visionStatement')}
             statusIndicator={renderStatus('visionStatement')}
-            canEdit={isAdmin}
+            canEdit={canManage}
             isEditing={visionEdit.isEditing}
             onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
             onSave={visionEdit.save}
@@ -813,7 +816,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.owningUnit')}
             statusIndicator={renderStatus('owningUnit')}
-            canEdit={isAdmin}
+            canEdit={canManage}
             isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
             onSave={owningUnitEdit.save}
@@ -855,7 +858,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Bounded Contexts */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.boundedContexts')}</Typography>
-        {isAdmin && (
+        {canManage && (
           <Button size="small" startIcon={<Add />} onClick={() => { setAddBcName(''); setAddBcError(''); setAddBcOpen(true); }}>
             {t('domain.addBoundedContext')}
           </Button>
@@ -878,7 +881,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
                 color={selectedBcKey === bc.key ? 'primary' : 'default'}
                 onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
-                onDelete={isAdmin ? async (e: React.MouseEvent) => {
+                onDelete={canManage ? async (e: React.MouseEvent) => {
                   e.stopPropagation();
                   await deleteBoundedContext.mutateAsync({ key: bc.key });
                   if (selectedBcKey === bc.key) setSelectedBcKey(null);
@@ -963,7 +966,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                       {t('boundedContext.noOwningTeam')}
                     </Typography>
                   )}
-                  {isAdmin && (
+                  {canManage && (
                     <IconButton
                       size="small"
                       onClick={() => {
@@ -989,7 +992,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Context Relationships (between bounded contexts in this domain) */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.contextRelationships')}</Typography>
-        {isAdmin && boundedContexts.length >= 2 && (
+        {canManage && boundedContexts.length >= 2 && (
           <Button size="small" startIcon={<Add />} onClick={() => setAddRelOpen(true)}>
             {t('domain.addRelationship')}
           </Button>
@@ -1044,7 +1047,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   )}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
-                {isAdmin && (
+                {canManage && (
                   <IconButton
                     size="small"
                     onClick={() => handleOpenEditRel(rel)}
@@ -1053,7 +1056,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     <Edit fontSize="small" />
                   </IconButton>
                 )}
-                {isAdmin && (
+                {canManage && (
                   <IconButton
                     size="small"
                     color="error"
@@ -1074,7 +1077,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Domain Events */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('boundedContext.domainEvents')}</Typography>
-        {isAdmin && boundedContexts.length > 0 && (
+        {canManage && boundedContexts.length > 0 && (
           <Button
             size="small"
             startIcon={<Add />}
@@ -1108,7 +1111,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   color: "text.secondary"
                 }}>{ev.publishingBoundedContext?.name}</Typography>
               </Box>
-              {isAdmin && (
+              {canManage && (
                 <IconButton
                   size="small"
                   color="error"
@@ -1129,7 +1132,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Classifications */}
       <SectionHeader
         title={t('common.classifications')}
-        canEdit={isAdmin}
+        canEdit={canManage}
         isEditing={classEdit.isEditing}
         onEdit={() =>
           classEdit.startEdit(
@@ -1315,7 +1318,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       )}
 
       {/* Item 6: What's next suggestion */}
-      {isAdmin && (() => {
+      {canManage && (() => {
         const steps = [];
         if (boundedContexts.length === 0) steps.push({ description: t('nudge.domain.nextCreateBcDesc'), actionLabel: t('nudge.domain.createBc'), onClick: () => setAddBcOpen(true) });
         else if (!domain.owningUnit) steps.push({ description: t('nudge.domain.nextSetOwningUnitDesc'), actionLabel: t('nudge.domain.setOwningUnit'), onClick: () => owningUnitEdit.startEdit(null) });
