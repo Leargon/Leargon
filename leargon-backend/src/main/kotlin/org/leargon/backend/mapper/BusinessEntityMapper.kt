@@ -57,7 +57,12 @@ open class BusinessEntityMapper(
                     }
 
                     fieldName == "retentionPeriod" -> {
-                        !businessEntity.retentionPeriod.isNullOrBlank()
+                        businessEntity.retentionPeriod.isNotEmpty()
+                    }
+
+                    fieldName.startsWith("retentionPeriod.") -> {
+                        val locale = fieldName.removePrefix("retentionPeriod.")
+                        businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }
                     }
 
                     fieldName.startsWith("names.") -> {
@@ -114,7 +119,7 @@ open class BusinessEntityMapper(
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(effectiveClassifications)
-            .retentionPeriod(businessEntity.retentionPeriod)
+            .retentionPeriod(LocalizedTextMapper.toModel(businessEntity.retentionPeriod))
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .derivedStorageLocations(computeDerivedStorageLocations(businessEntity))
             .missingMandatoryFields(fc.missing)
@@ -224,7 +229,7 @@ open class BusinessEntityMapper(
                 .rootName(root?.getName("en"))
                 .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
                 .description(entity.descriptions.firstOrNull()?.text)
-                .retentionPeriod(entity.retentionPeriod)
+                .retentionPeriod(LocalizedTextMapper.toModel(entity.retentionPeriod))
         }
 
         @JvmStatic

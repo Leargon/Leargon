@@ -35,7 +35,9 @@ class BusinessEntityFieldValueExtractor(
 
             fieldName == "boundedContext" -> entity.boundedContext?.key
 
-            fieldName == "retentionPeriod" -> FieldValueSupport.blankToNull(entity.retentionPeriod)
+            fieldName == "retentionPeriod" -> FieldValueSupport.localizedSignature(entity.retentionPeriod).ifEmpty { null }
+
+            fieldName.startsWith("retentionPeriod.") -> FieldValueSupport.localized(entity.retentionPeriod, "retentionPeriod", fieldName)
 
             fieldName == "storageLocations" -> FieldValueSupport.keysOf(entity.storageLocations)
 
@@ -74,7 +76,7 @@ class BusinessEntityFieldValueExtractor(
         // Quality rules — queried fresh (avoids stale lazy collection on live edits / backfill).
         qualityRuleRepository.findAllByBusinessEntityKey(entity.key).forEach { r ->
             val id = r.id ?: return@forEach
-            result["qualityRule.$id"] = FieldValueSupport.signature(r.description, r.severity)
+            result["qualityRule.$id"] = FieldValueSupport.signature(FieldValueSupport.localizedSignature(r.descriptions), r.severity)
         }
         // Translation links — not a collection on the entity; query by key (both directions).
         val translationLinks =
@@ -83,7 +85,11 @@ class BusinessEntityFieldValueExtractor(
         translationLinks.forEach { link ->
             val id = link.id ?: return@forEach
             result["translationLink.$id"] =
-                FieldValueSupport.signature(link.firstEntity?.key, link.secondEntity?.key, link.semanticDifferenceNote)
+                FieldValueSupport.signature(
+                    link.firstEntity?.key, link.secondEntity?.key,
+                    FieldValueSupport
+                        .localizedSignature(link.semanticDifferenceNote)
+                )
         }
         return result
     }

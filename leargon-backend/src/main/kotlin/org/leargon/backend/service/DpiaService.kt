@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.Dpia
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.DuplicateResourceException
 import org.leargon.backend.exception.ForbiddenOperationException
@@ -106,12 +107,12 @@ open class DpiaService(
     @Transactional
     open fun updateRiskDescription(
         dpiaKey: String,
-        riskDescription: String?,
+        riskDescription: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): DpiaResponse {
         val dpia = getDpiaByKey(dpiaKey)
         checkEditPermission(dpia, currentUser)
-        dpia.riskDescription = riskDescription
+        dpia.riskDescription = riskDescription?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         dpiaRepository.update(dpia)
         val mapper = dpiaMapper
         return mapper.toDpiaResponse(dpiaRepository.findByKey(dpia.key).get())
@@ -120,12 +121,12 @@ open class DpiaService(
     @Transactional
     open fun updateMeasures(
         dpiaKey: String,
-        measures: String?,
+        measures: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): DpiaResponse {
         val dpia = getDpiaByKey(dpiaKey)
         checkEditPermission(dpia, currentUser)
-        dpia.measures = measures
+        dpia.measures = measures?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         dpiaRepository.update(dpia)
         val mapper = dpiaMapper
         return mapper.toDpiaResponse(dpiaRepository.findByKey(dpia.key).get())
@@ -182,14 +183,14 @@ open class DpiaService(
         dpiaKey: String,
         completed: Boolean?,
         date: LocalDate?,
-        outcome: String?,
+        outcome: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): DpiaResponse {
         val dpia = getDpiaByKey(dpiaKey)
         checkEditPermission(dpia, currentUser)
         if (completed != null) dpia.fdpicConsultationCompleted = completed
         if (date != null) dpia.fdpicConsultationDate = date
-        if (outcome != null) dpia.fdpicConsultationOutcome = outcome
+        if (outcome != null) dpia.fdpicConsultationOutcome = outcome.map { LocalizedText(it.locale, it.text) }.toMutableList()
         dpiaRepository.update(dpia)
         val mapper = dpiaMapper
         return mapper.toDpiaResponse(dpiaRepository.findByKey(dpia.key).get())

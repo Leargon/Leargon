@@ -62,8 +62,8 @@ open class DpiaMapper {
             .linkedResourceType(resourceType)
             .linkedResourceKey(resourceKey)
             .linkedResourceName(resourceName)
-            .riskDescription(dpia.riskDescription)
-            .measures(dpia.measures)
+            .riskDescription(LocalizedTextMapper.toModel(dpia.riskDescription))
+            .measures(LocalizedTextMapper.toModel(dpia.measures))
             .fdpicConsultationRequired(dpia.fdpicConsultationRequired)
             .updatedAt(dpia.updatedAt?.atZone(ZoneOffset.UTC))
     }
@@ -77,14 +77,14 @@ open class DpiaMapper {
             DpiaStatus.fromValue(dpia.status),
             triggeredBy,
             dpia.createdAt!!.atZone(ZoneOffset.UTC)
-        ).riskDescription(dpia.riskDescription)
-            .measures(dpia.measures)
+        ).riskDescription(LocalizedTextMapper.toModel(dpia.riskDescription))
+            .measures(LocalizedTextMapper.toModel(dpia.measures))
             .initialRisk(dpia.initialRisk?.let { ResidualRisk.fromValue(it) })
             .residualRisk(dpia.residualRisk?.let { ResidualRisk.fromValue(it) })
             .fdpicConsultationRequired(dpia.fdpicConsultationRequired)
             .fdpicConsultationCompleted(dpia.fdpicConsultationCompleted)
             .fdpicConsultationDate(dpia.fdpicConsultationDate)
-            .fdpicConsultationOutcome(dpia.fdpicConsultationOutcome)
+            .fdpicConsultationOutcome(LocalizedTextMapper.toModel(dpia.fdpicConsultationOutcome))
             .updatedAt(dpia.updatedAt?.atZone(ZoneOffset.UTC))
     }
 }

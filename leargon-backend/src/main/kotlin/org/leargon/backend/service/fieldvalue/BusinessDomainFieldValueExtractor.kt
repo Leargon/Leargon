@@ -28,7 +28,9 @@ class BusinessDomainFieldValueExtractor(
 
             fieldName == "owningUnit" -> entity.owningUnit?.key
 
-            fieldName == "visionStatement" -> FieldValueSupport.blankToNull(entity.visionStatement)
+            fieldName == "visionStatement" -> FieldValueSupport.localizedSignature(entity.visionStatement).ifEmpty { null }
+
+            fieldName.startsWith("visionStatement.") -> FieldValueSupport.localized(entity.visionStatement, "visionStatement", fieldName)
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "boundedContexts" -> null
@@ -69,8 +71,8 @@ class BusinessDomainFieldValueExtractor(
             rel.upstreamBoundedContext?.key,
             rel.downstreamBoundedContext?.key,
             rel.relationshipType,
-            rel.upstreamRole,
-            rel.downstreamRole,
-            rel.description
+            FieldValueSupport.localizedSignature(rel.upstreamRole),
+            FieldValueSupport.localizedSignature(rel.downstreamRole),
+            FieldValueSupport.localizedSignature(rel.description)
         )
 }

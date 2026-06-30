@@ -21,7 +21,7 @@ open class ProcessFlowMapper {
     ): FlowNodeResponse {
         val response = FlowNodeResponse(node.id, node.position, toApiNodeType(node.nodeType))
         response.trackId(node.trackId)
-        response.label(node.label)
+        response.label(LocalizedTextMapper.toModel(node.label))
         response.linkedProcessKey(node.linkedProcessKey)
         response.isSubProcess(isSubProcess)
         response.eventDefinition(node.eventDefinition?.let { toApiEventDef(it) })
@@ -40,7 +40,7 @@ open class ProcessFlowMapper {
                 .sortedBy { it.position }
                 .map { toFlowNodeResponse(it, it.linkedProcessKey != null && it.linkedProcessKey in subProcessKeys) }
         val response = FlowTrackResponse(track.id, track.gatewayNodeId, track.trackIndex, nodeResponses)
-        response.label(track.label)
+        response.label(LocalizedTextMapper.toModel(track.label))
         return response
     }
 

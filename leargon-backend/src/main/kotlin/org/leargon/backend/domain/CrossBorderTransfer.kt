@@ -6,5 +6,5 @@ package org.leargon.backend.domain
 data class CrossBorderTransfer(
     var destinationCountry: String = "",
     var safeguard: String = "",
-    var notes: String? = null
+    var notes: List<LocalizedText> = emptyList()
 )

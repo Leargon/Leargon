@@ -497,7 +497,7 @@ class FieldConfigurationControllerSpec extends Specification {
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities",
                         new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
-                                .retentionPeriod("7 years")
+                                .retentionPeriod([new LocalizedText("en", "7 years")])
                 ).bearerAuth(token),
                 BusinessEntityResponse
         )

@@ -72,7 +72,12 @@ class ProcessFieldValueExtractor : FieldValueExtractor<Process> {
         result.putAll(FieldValueSupport.items("serviceProvider", entity.serviceProviders, { it.key }, { it.key }))
         entity.crossBorderTransfers?.forEach { t ->
             val country = t.destinationCountry.takeUnless { it.isBlank() } ?: return@forEach
-            result["crossBorderTransfer.$country"] = FieldValueSupport.signature(country, t.safeguard, t.notes)
+            result["crossBorderTransfer.$country"] =
+                FieldValueSupport.signature(
+                    country,
+                    t.safeguard,
+                    FieldValueSupport.localizedSignature(t.notes)
+                )
         }
         return result
     }

@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.ContextRelationship
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ContextRelationshipMapper
@@ -55,9 +56,9 @@ open class ContextRelationshipService(
                 this.upstreamBoundedContext = upstream
                 this.downstreamBoundedContext = downstream
                 this.relationshipType = request.relationshipType.value
-                this.upstreamRole = request.upstreamRole
-                this.downstreamRole = request.downstreamRole
-                this.description = request.description
+                this.upstreamRole = request.upstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+                this.downstreamRole = request.downstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+                this.description = request.description?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
                 this.createdBy = currentUser
             }
         val saved = contextRelationshipRepository.save(rel)
@@ -77,9 +78,9 @@ open class ContextRelationshipService(
                 .findById(id)
                 .orElseThrow { ResourceNotFoundException("Context relationship not found: $id") }
         rel.relationshipType = request.relationshipType.value
-        rel.upstreamRole = request.upstreamRole
-        rel.downstreamRole = request.downstreamRole
-        rel.description = request.description
+        rel.upstreamRole = request.upstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+        rel.downstreamRole = request.downstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+        rel.description = request.description?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         val updated = contextRelationshipRepository.update(rel)
         reVersionDomains(domainKeysOf(updated), currentUser, "Updated context relationship #$id")
         val mapper = contextRelationshipMapper

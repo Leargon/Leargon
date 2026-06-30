@@ -167,11 +167,12 @@ open class BusinessDomainService(
     @Transactional
     open fun updateBusinessDomainVisionStatement(
         domainKey: String,
-        visionStatement: String?,
+        visionStatement: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): BusinessDomain {
         var domain = getBusinessDomainByKey(domainKey)
-        domain.visionStatement = visionStatement
+        domain.visionStatement =
+            visionStatement?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         domain = businessDomainRepository.update(domain)
         createBusinessDomainVersion(
             domain,

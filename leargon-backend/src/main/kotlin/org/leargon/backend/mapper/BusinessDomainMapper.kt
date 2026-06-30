@@ -41,6 +41,15 @@ open class BusinessDomainMapper(
                         domain.type != null
                     }
 
+                    fieldName == "visionStatement" -> {
+                        domain.visionStatement.isNotEmpty()
+                    }
+
+                    fieldName.startsWith("visionStatement.") -> {
+                        val locale = fieldName.removePrefix("visionStatement.")
+                        domain.visionStatement.any { it.locale == locale && it.text.isNotBlank() }
+                    }
+
                     fieldName.startsWith("names.") -> {
                         val locale = fieldName.removePrefix("names.")
                         domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
@@ -78,7 +87,7 @@ open class BusinessDomainMapper(
             .descriptions(LocalizedTextMapper.toModel(domain.descriptions))
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
-            .visionStatement(domain.visionStatement)
+            .visionStatement(LocalizedTextMapper.toModel(domain.visionStatement))
             .owningUnit(organisationalUnitMapper.toSummaryResponse(domain.owningUnit))
             .subdomains(toBusinessDomainSummaryResponseArray(domain.children))
             .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts))
