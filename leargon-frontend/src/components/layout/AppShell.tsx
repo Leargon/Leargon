@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { RoleProvider } from '../../context/RoleContext';
 import { NavigationProvider } from '../../context/NavigationContext';
 import { WizardModeProvider } from '../../context/WizardModeContext';
+import { PerspectiveProvider } from '../../context/PerspectiveContext';
 import { useAuth } from '../../context/AuthContext';
 import TopNav from './TopNav';
 import Sidebar from './Sidebar';
@@ -36,7 +37,9 @@ const AppShell: React.FC = () => {
     <RoleProvider>
     <WizardModeProvider>
     <NavigationProvider>
+    <PerspectiveProvider>
       <AppShellInner />
+    </PerspectiveProvider>
     </NavigationProvider>
     </WizardModeProvider>
     </RoleProvider>

@@ -16,16 +16,87 @@ async function putJson(path: string, body: unknown, stateFile: string): Promise<
   });
 }
 
-test.describe('Team Insights page', () => {
-  test('page loads and shows section headers', async ({ page }) => {
+test.describe('Insights page — nav and layout', () => {
+  test('Insights nav link is always visible above Help', async ({ page }) => {
+    await page.goto('/home');
+    await page.waitForLoadState('networkidle');
+
+    const insightsLink = page.getByRole('link', { name: 'Insights' });
+    const helpLink = page.getByRole('link', { name: 'Help' });
+
+    await expect(insightsLink).toBeVisible({ timeout: 10_000 });
+    await expect(helpLink).toBeVisible({ timeout: 10_000 });
+
+    // Insights should appear above Help in the DOM
+    const insightsBox = await insightsLink.boundingBox();
+    const helpBox = await helpLink.boundingBox();
+    expect(insightsBox!.y).toBeLessThan(helpBox!.y);
+  });
+
+  test('page loads with methodology groups and cards collapsed by default', async ({ page }) => {
     await page.goto('/team-insights');
     await page.waitForLoadState('networkidle');
 
+    // Group headers for the enabled methodologies should be present
+    await expect(page.getByText('Team Topologies')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Domain-Driven Design')).toBeVisible({ timeout: 10_000 });
+
+    // Cards should exist (title text visible in collapsed accordion summary)
     await expect(page.getByText('Ownership Workload per User')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Process Load per Org Unit')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText('Bottleneck Teams').first()).toBeVisible({ timeout: 10_000 });
   });
 
+  test('expanding a card reveals the detail table', async ({ page }) => {
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    // Click the "Ownership Workload per User" card to expand it
+    await page.getByText('Ownership Workload per User').click();
+    // The table header "User" should now be visible
+    await expect(page.getByRole('columnheader', { name: 'User' })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('perspective switcher is visible on the Insights page', async ({ page }) => {
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    // The perspective selector should be in the top bar
+    await expect(page.getByRole('combobox').filter({ hasText: /All|Architecture|Compliance|Governance/ }).first()).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('selecting Compliance perspective hides TEAM_TOPOLOGIES and DDD groups', async ({ page }) => {
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to Compliance perspective
+    const perspectivePicker = page.getByRole('combobox').filter({ hasText: /All|Architecture|Compliance|Governance/ }).first();
+    await perspectivePicker.click();
+    await page.getByRole('option', { name: 'Compliance' }).click();
+    await page.waitForLoadState('networkidle');
+
+    // TEAM_TOPOLOGIES and DDD groups should not be visible
+    await expect(page.getByText('Team Topologies')).not.toBeVisible();
+    await expect(page.getByText('Domain-Driven Design')).not.toBeVisible();
+
+    // An info message about the empty perspective should appear
+    await expect(page.getByText(/No insights.*perspective/i)).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('selecting Architecture perspective shows only TEAM_TOPOLOGIES and DDD groups', async ({ page }) => {
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    const perspectivePicker = page.getByRole('combobox').filter({ hasText: /All|Architecture|Compliance|Governance/ }).first();
+    await perspectivePicker.click();
+    await page.getByRole('option', { name: 'Architecture' }).click();
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Team Topologies')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Domain-Driven Design')).toBeVisible({ timeout: 10_000 });
+  });
+});
+
+test.describe('Insights page — data', () => {
   test('shows org unit in process load section after assigning a process', async ({ page }) => {
     const orgUnitName = uid('PW Load Team');
     const orgUnit = await createOrgUnit(orgUnitName, ADMIN);
@@ -35,10 +106,12 @@ test.describe('Team Insights page', () => {
     await page.goto('/team-insights');
     await page.waitForLoadState('networkidle');
 
+    // Expand the Process Load card
+    await page.getByText('Process Load per Org Unit').click();
     await expect(page.getByText(orgUnitName)).toBeVisible({ timeout: 15_000 });
   });
 
-  test('shows bottleneck team in bottleneck section with 3+ domains', async ({ page }) => {
+  test('shows bottleneck team in TEAM_TOPOLOGIES group with 3+ domains', async ({ page }) => {
     const orgUnitName = uid('PW BN Team');
     const orgUnit = await createOrgUnit(orgUnitName, ADMIN);
     const domain1 = await createDomain(uid('PW BN Dom A'));
@@ -58,7 +131,8 @@ test.describe('Team Insights page', () => {
     await page.goto('/team-insights');
     await page.waitForLoadState('networkidle');
 
-    // The bottleneck team name should appear on the page (in Bottleneck Teams section)
+    // Bottleneck card should be in the TEAM_TOPOLOGIES group; expand it
+    await page.getByText('Bottleneck Teams').click();
     await expect(page.getByText(orgUnitName)).toBeVisible({ timeout: 15_000 });
   });
 });
