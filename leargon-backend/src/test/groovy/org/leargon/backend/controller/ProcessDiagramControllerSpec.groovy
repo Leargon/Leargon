@@ -180,7 +180,7 @@ class ProcessDiagramControllerSpec extends Specification {
         def updatedFlow = [
             nodes: [
                 [id: "start-2", position: 0, nodeType: "START_EVENT"],
-                [id: "task-1", position: 1, nodeType: "TASK", label: "Do something"],
+                [id: "task-1", position: 1, nodeType: "TASK", label: [[locale: "en", text: "Do something"]]],
                 [id: "end-2", position: 2, nodeType: "END_EVENT"]
             ],
             tracks: []
@@ -195,7 +195,7 @@ class ProcessDiagramControllerSpec extends Specification {
         then:
         response.status == HttpStatus.OK
         response.body().nodes.size() == 3
-        response.body().nodes.any { it.nodeType == "TASK" && it.label == "Do something" }
+        response.body().nodes.any { it.nodeType == "TASK" && it.label[0].text == "Do something" }
     }
 
     // ===========================
@@ -306,7 +306,7 @@ class ProcessDiagramControllerSpec extends Specification {
         def childFlow = [
             nodes: [
                 [id: "cs", position: 0, nodeType: "START_EVENT"],
-                [id: "ct", position: 1, nodeType: "TASK", label: "Do work"],
+                [id: "ct", position: 1, nodeType: "TASK", label: [[locale: "en", text: "Do work"]]],
                 [id: "ce", position: 2, nodeType: "END_EVENT"]
             ],
             tracks: []
@@ -320,7 +320,7 @@ class ProcessDiagramControllerSpec extends Specification {
         def parentFlow = [
             nodes: [
                 [id: "ps", position: 0, nodeType: "START_EVENT"],
-                [id: "pt", position: 1, nodeType: "TASK", label: "Child step", linkedProcessKey: child.key],
+                [id: "pt", position: 1, nodeType: "TASK", label: [[locale: "en", text: "Child step"]], linkedProcessKey: child.key],
                 [id: "pe", position: 2, nodeType: "END_EVENT"]
             ],
             tracks: []
@@ -359,7 +359,7 @@ class ProcessDiagramControllerSpec extends Specification {
         def parentFlow = [
             nodes: [
                 [id: "ps", position: 0, nodeType: "START_EVENT"],
-                [id: "pt", position: 1, nodeType: "TASK", label: "Child step", linkedProcessKey: child.key],
+                [id: "pt", position: 1, nodeType: "TASK", label: [[locale: "en", text: "Child step"]], linkedProcessKey: child.key],
                 [id: "pe", position: 2, nodeType: "END_EVENT"]
             ],
             tracks: []
@@ -392,7 +392,7 @@ class ProcessDiagramControllerSpec extends Specification {
         def flow = [
             nodes: [
                 [id: "s1", position: 0, nodeType: "START_EVENT"],
-                [id: "ev", position: 1, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "TIMER", label: "Wait"],
+                [id: "ev", position: 1, nodeType: "INTERMEDIATE_EVENT", eventDefinition: "TIMER", label: [[locale: "en", text: "Wait"]]],
                 [id: "e1", position: 2, nodeType: "END_EVENT"]
             ],
             tracks: []
@@ -463,8 +463,8 @@ class ProcessDiagramControllerSpec extends Specification {
                 [id: "jn1", position: 2, nodeType: "GATEWAY_JOIN",  gatewayPairId: pairId, gatewayType: "PARALLEL"],
                 [id: "e1",  position: 3, nodeType: "END_EVENT"],
                 // Track nodes — have trackId set
-                [id: "tn1", position: 0, nodeType: "TASK", label: "Track A task", trackId: "track-a"],
-                [id: "tn2", position: 0, nodeType: "TASK", label: "Track B task", trackId: "track-b"]
+                [id: "tn1", position: 0, nodeType: "TASK", label: [[locale: "en", text: "Track A task"]], trackId: "track-a"],
+                [id: "tn2", position: 0, nodeType: "TASK", label: [[locale: "en", text: "Track B task"]], trackId: "track-b"]
             ],
             tracks: [
                 [id: "track-a", gatewayNodeId: "sp1", trackIndex: 0],
@@ -486,8 +486,8 @@ class ProcessDiagramControllerSpec extends Specification {
         // Track nodes should be under tracks
         def trackA = response.body().tracks.find { it.trackIndex == 0 }
         def trackB = response.body().tracks.find { it.trackIndex == 1 }
-        trackA.nodes.any { it.label == "Track A task" }
-        trackB.nodes.any { it.label == "Track B task" }
+        trackA.nodes.any { it.label[0].text == "Track A task" }
+        trackB.nodes.any { it.label[0].text == "Track B task" }
     }
 
     // ===========================
