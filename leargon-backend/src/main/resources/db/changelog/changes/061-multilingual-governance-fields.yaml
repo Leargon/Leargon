@@ -225,7 +225,6 @@ databaseChangeLog:
                       ELSE t.notes
                     END
                   )
-                  ORDER BY t.ord
                 ), JSON_ARRAY())
                 FROM JSON_TABLE(
                   p.cross_border_transfers,
