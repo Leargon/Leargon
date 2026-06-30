@@ -377,7 +377,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   // Retention period inline edit
   const retentionEdit = useInlineEdit<string>({
     onSave: async (val) => {
-      await updateRetentionPeriod.mutateAsync({ key: entityKey, data: { retentionPeriod: val || null } });
+      await updateRetentionPeriod.mutateAsync({ key: entityKey, data: { retentionPeriod: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
       invalidate();
     },
   });
@@ -848,7 +848,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         )}
         {fields.retentionPeriod && !isHidden('retentionPeriod') && (
           <PropRow label={t('entity.retentionPeriod')} statusIndicator={renderStatus('retentionPeriod')} canEdit={canEditField('retentionPeriod')} isEditing={retentionEdit.isEditing}
-            onEdit={() => retentionEdit.startEdit(entity.retentionPeriod || '')}
+            onEdit={() => retentionEdit.startEdit(getLocalizedText(entity.retentionPeriod ?? undefined))}
             onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
             isMandatory={isMandatory('retentionPeriod')}>
             {retentionEdit.isEditing ? (
@@ -862,8 +862,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 />
                 {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
               </Box>
-            ) : entity.retentionPeriod ? (
-              <Typography variant="body2">{entity.retentionPeriod}</Typography>
+            ) : entity.retentionPeriod && entity.retentionPeriod.length > 0 ? (
+              <Typography variant="body2">{getLocalizedText(entity.retentionPeriod)}</Typography>
             ) : (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
@@ -1080,7 +1080,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                       <Chip label={getLocalizedText(allEntities.find(e => e.key === link.linkedEntity!.key)?.names ?? [], link.linkedEntity.name)} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
                     )}
                   </TableCell>
-                  <TableCell>{link.semanticDifferenceNote || '—'}</TableCell>
+                  <TableCell>{getLocalizedText(link.semanticDifferenceNote ?? undefined) || '—'}</TableCell>
                   <TableCell align="right">
                     {link.id != null && renderStatus(`translationLink.${link.id}`)}
                     {canEditField('translationLinks') && (
@@ -1089,7 +1089,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                           onClick={() => {
                             setTlEditingId(link.id!);
                             setTlTargetEntityKey(link.linkedEntity?.key ?? null);
-                            setTlSemanticNote(link.semanticDifferenceNote ?? '');
+                            setTlSemanticNote(getLocalizedText(link.semanticDifferenceNote ?? undefined));
                             setTlError('');
                             setTlDialogOpen(true);
                           }}>
@@ -1560,7 +1560,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 if (tlEditingId) {
                   await updateTranslationLink.mutateAsync({
                     id: tlEditingId,
-                    data: { semanticDifferenceNote: tlSemanticNote || null },
+                    data: { semanticDifferenceNote: tlSemanticNote ? [{ locale: preferredLocale ?? 'en', text: tlSemanticNote }] : null },
                   });
                 } else {
                   if (!tlTargetEntityKey) return;
@@ -1568,7 +1568,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     data: {
                       firstEntityKey: entityKey,
                       secondEntityKey: tlTargetEntityKey,
-                      semanticDifferenceNote: tlSemanticNote || undefined,
+                      semanticDifferenceNote: tlSemanticNote ? [{ locale: preferredLocale ?? 'en', text: tlSemanticNote }] : undefined,
                     },
                   });
                 }

@@ -1281,7 +1281,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                   <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
                   <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                  {t.notes && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t.notes}</Typography>}
+                  {t.notes && t.notes.length > 0 && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{getLocalizedText(t.notes)}</Typography>}
                   {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
                 </Box>
               ))}
@@ -1630,7 +1630,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Typography variant="body2" sx={{ flex: 1 }}>
                       {getCountryName(t.destinationCountry, preferredLocale ?? 'en')} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
-                      {t.notes && ` (${t.notes})`}
+                      {t.notes && t.notes.length > 0 && ` (${getLocalizedText(t.notes)})`}
                     </Typography>
                     <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
                       <Delete fontSize="small" />
@@ -1682,7 +1682,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     setEditTransfers((prev) => [...prev, {
                       destinationCountry: newTransferCountry.code,
                       safeguard: newTransferSafeguard as CrossBorderTransferSafeguard,
-                      notes: newTransferNotes || undefined,
+                      notes: newTransferNotes ? [{ locale: preferredLocale ?? 'en', text: newTransferNotes }] : undefined,
                     }]);
                     setNewTransferCountry(null);
                     setNewTransferSafeguard('');

@@ -46,10 +46,11 @@ interface DpiaRowProps {
 const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSaved }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const [expanded, setExpanded] = useState(false);
   const [editingRisk, setEditingRisk] = useState(false);
-  const [riskDescription, setRiskDescription] = useState(dpia.riskDescription ?? '');
-  const [measures, setMeasures] = useState(dpia.measures ?? '');
+  const [riskDescription, setRiskDescription] = useState(() => getLocalizedText(dpia.riskDescription ?? undefined));
+  const [measures, setMeasures] = useState(() => getLocalizedText(dpia.measures ?? undefined));
   const [saving, setSaving] = useState<string | null>(null);
 
   const canEdit = isAdmin || dpia.triggeredBy?.username === currentUsername;
@@ -104,7 +105,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
   const handleSaveRiskDescription = useCallback(async () => {
     setSaving('riskDescription');
     try {
-      await updateRiskDescription.mutateAsync({ key: dpia.key, data: { riskDescription: riskDescription || null } });
+      await updateRiskDescription.mutateAsync({ key: dpia.key, data: { riskDescription: riskDescription ? [{ locale: preferredLocale ?? 'en', text: riskDescription }] : null } });
       onSaved();
     } finally {
       setSaving(null);
@@ -114,7 +115,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
   const handleSaveMeasures = useCallback(async () => {
     setSaving('measures');
     try {
-      await updateMeasures.mutateAsync({ key: dpia.key, data: { measures: measures || null } });
+      await updateMeasures.mutateAsync({ key: dpia.key, data: { measures: measures ? [{ locale: preferredLocale ?? 'en', text: measures }] : null } });
       onSaved();
     } finally {
       setSaving(null);
@@ -307,8 +308,8 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                     </Button>
                   </Box>
                 ) : (
-                  <Typography variant="body2" color={dpia.riskDescription ? 'text.primary' : 'text.secondary'}>
-                    {dpia.riskDescription || '—'}
+                  <Typography variant="body2" color={dpia.riskDescription?.length ? 'text.primary' : 'text.secondary'}>
+                    {getLocalizedText(dpia.riskDescription ?? undefined) || '—'}
                   </Typography>
                 )}
               </Box>
@@ -346,8 +347,8 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                     </Button>
                   </Box>
                 ) : (
-                  <Typography variant="body2" color={dpia.measures ? 'text.primary' : 'text.secondary'}>
-                    {dpia.measures || '—'}
+                  <Typography variant="body2" color={dpia.measures?.length ? 'text.primary' : 'text.secondary'}>
+                    {getLocalizedText(dpia.measures ?? undefined) || '—'}
                   </Typography>
                 )}
               </Box>

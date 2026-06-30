@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Add, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocale } from '../../context/LocaleContext';
 import {
   useGetQualityRulesForEntity,
   useCreateQualityRule,
@@ -65,6 +66,7 @@ const emptyForm = (): RuleFormState => ({
 
 const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, isOwnerOrAdmin, renderItemStatus }) => {
   const { t } = useTranslation();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const queryClient = useQueryClient();
 
   const { data: rulesResponse, isLoading } = useGetQualityRulesForEntity(entityKey);
@@ -95,7 +97,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
   const handleOpenEdit = (rule: BusinessDataQualityRuleResponse) => {
     setEditingRule(rule);
     setForm({
-      description: rule.description,
+      description: getLocalizedText(rule.descriptions ?? undefined),
       severity: (rule.severity as SeverityValue) ?? '',
     });
     setFormError('');
@@ -116,7 +118,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
       await createRule({
         key: entityKey,
         data: {
-          description: form.description.trim(),
+          descriptions: [{ locale: preferredLocale ?? 'en', text: form.description.trim() }],
           severity: form.severity || undefined,
         },
       });
@@ -137,7 +139,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
         key: entityKey,
         ruleId: editingRule.id,
         data: {
-          description: form.description.trim(),
+          descriptions: [{ locale: preferredLocale ?? 'en', text: form.description.trim() }],
           severity: form.severity || undefined,
         },
       });
@@ -233,7 +235,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
                     </Box>
                   )}
                   <Typography variant="body2">
-                    {rule.description}
+                    {getLocalizedText(rule.descriptions ?? undefined)}
                   </Typography>
                 </Box>
                 {rule.id != null && renderItemStatus?.(rule.id)}

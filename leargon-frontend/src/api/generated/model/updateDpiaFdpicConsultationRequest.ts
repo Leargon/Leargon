@@ -16,6 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface UpdateDpiaFdpicConsultationRequest {
   /** @nullable */
@@ -23,5 +24,5 @@ export interface UpdateDpiaFdpicConsultationRequest {
   /** @nullable */
   fdpicConsultationDate?: string | null;
   /** @nullable */
-  fdpicConsultationOutcome?: string | null;
+  fdpicConsultationOutcome?: LocalizedText[] | null;
 }

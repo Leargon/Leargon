@@ -43,8 +43,8 @@ export interface CreateBusinessEntityRequest {
   parentKey?: string | null;
   interfaces?: string[];
   /**
-     * Retention period description for the entity
+     * Retention period description for the entity (localised)
      * @nullable
      */
-  retentionPeriod?: string | null;
+  retentionPeriod?: LocalizedText[] | null;
 }

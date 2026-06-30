@@ -26,6 +26,7 @@ import type { FlowNodeResponse } from '../../../api/generated/model/flowNodeResp
 import type { FlowTrackResponse } from '../../../api/generated/model/flowTrackResponse';
 import type { ProcessFlowResponse } from '../../../api/generated/model/processFlowResponse';
 import type { ProcessResponse } from '../../../api/generated/model/processResponse';
+import type { LocalizedText } from '../../../api/generated/model/localizedText';
 import type { LocalNode, LocalTrack } from './custom/types';
 import { EventDefinition } from '../../../api/generated/model/eventDefinition';
 import { GatewayType } from '../../../api/generated/model/gatewayType';
@@ -41,12 +42,14 @@ interface Props {
   canEdit: boolean;
 }
 
-function toLocalNode(n: FlowNodeResponse): LocalNode {
+type GetLocalizedText = (v: LocalizedText[] | undefined) => string;
+
+function toLocalNode(n: FlowNodeResponse, getText: GetLocalizedText): LocalNode {
   return {
     id: n.id,
     position: n.position,
     nodeType: n.nodeType as LocalNode['nodeType'],
-    label: n.label,
+    label: getText(n.label ?? undefined) || null,
     linkedProcessKey: n.linkedProcessKey,
     isSubProcess: n.isSubProcess,
     trackId: n.trackId,
@@ -56,13 +59,13 @@ function toLocalNode(n: FlowNodeResponse): LocalNode {
   };
 }
 
-function toLocalTrack(t: FlowTrackResponse): LocalTrack {
+function toLocalTrack(t: FlowTrackResponse, getText: GetLocalizedText): LocalTrack {
   return {
     id: t.id,
     gatewayNodeId: t.gatewayNodeId,
     trackIndex: t.trackIndex,
-    label: t.label,
-    nodes: (t.nodes ?? []).map(toLocalNode),
+    label: getText(t.label ?? undefined) || null,
+    nodes: (t.nodes ?? []).map((n) => toLocalNode(n, getText)),
   };
 }
 
@@ -95,7 +98,7 @@ interface GatewayTypeDialogState {
 
 const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -105,11 +108,11 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   const serverNodes: LocalNode[] = (
     (flowResponse?.data as ProcessFlowResponse | undefined)?.nodes ?? []
-  ).map(toLocalNode);
+  ).map((n) => toLocalNode(n, getLocalizedText));
 
   const serverTracks: LocalTrack[] = (
     (flowResponse?.data as ProcessFlowResponse | undefined)?.tracks ?? []
-  ).map(toLocalTrack);
+  ).map((t) => toLocalTrack(t, getLocalizedText));
 
   const allProcesses: ProcessResponse[] = (processesResponse?.data ?? []) as ProcessResponse[];
   const currentProcess = allProcesses.find((p) => p.key === processKey) ?? null;
@@ -180,11 +183,15 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
 
   const handleSave = async () => {
     try {
+      const locale = preferredLocale ?? 'en';
+      const toLabel = (s: string | null | undefined): LocalizedText[] | null =>
+        s ? [{ locale, text: s }] : null;
+
       const rootNodeRequests = withResolvedLabels(localNodes).map((n, i) => ({
         id: n.id,
         position: i,
         nodeType: n.nodeType,
-        label: n.label ?? null,
+        label: toLabel(n.label),
         linkedProcessKey: n.linkedProcessKey ?? null,
         trackId: null as string | null,
         gatewayPairId: n.gatewayPairId ?? null,
@@ -197,7 +204,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           id: n.id,
           position: i,
           nodeType: n.nodeType,
-          label: n.label ?? null,
+          label: toLabel(n.label),
           linkedProcessKey: n.linkedProcessKey ?? null,
           trackId: track.id,
           gatewayPairId: n.gatewayPairId ?? null,
@@ -210,7 +217,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         id: track.id,
         gatewayNodeId: track.gatewayNodeId,
         trackIndex: i,
-        label: track.label ?? null,
+        label: toLabel(track.label),
       }));
 
       await saveFlow.mutateAsync({

@@ -54,10 +54,10 @@ export interface BusinessEntityResponse {
   relationships?: BusinessEntityRelationshipResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
   /**
-     * Retention period description for the entity
+     * Retention period description for the entity (localised)
      * @nullable
      */
-  retentionPeriod?: string | null;
+  retentionPeriod?: LocalizedText[] | null;
   /**
      * ISO 3166-1 alpha-2 country codes where this entity's data is stored (manually specified)
      * @nullable

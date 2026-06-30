@@ -16,10 +16,11 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface CreateTranslationLinkRequest {
   firstEntityKey: string;
   secondEntityKey: string;
   /** @nullable */
-  semanticDifferenceNote?: string | null;
+  semanticDifferenceNote?: LocalizedText[] | null;
 }

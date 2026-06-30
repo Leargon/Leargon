@@ -16,6 +16,7 @@ import {
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { DpiaResponse } from '../../api/generated/model';
+import { useLocale } from '../../context/LocaleContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import PropRow from '../common/PropRow';
 import {
@@ -53,6 +54,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   invalidateKey,
 }) => {
   const { t } = useTranslation();
+  const { getLocalizedText, preferredLocale } = useLocale();
   const queryClient = useQueryClient();
 
   const { mutateAsync: updateRiskDescription } = useUpdateDpiaRiskDescription();
@@ -64,7 +66,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   const riskEdit = useInlineEdit<string>({
     onSave: async (val) => {
       if (!dpia) return;
-      await updateRiskDescription({ key: dpia.key, data: { riskDescription: val || null } });
+      await updateRiskDescription({ key: dpia.key, data: { riskDescription: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
       await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
     },
   });
@@ -72,7 +74,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   const measuresEdit = useInlineEdit<string>({
     onSave: async (val) => {
       if (!dpia) return;
-      await updateMeasures({ key: dpia.key, data: { measures: val || null } });
+      await updateMeasures({ key: dpia.key, data: { measures: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
       await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
     },
   });
@@ -149,7 +151,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
             label={t('dpia.riskDescription')}
             canEdit={canEdit && dpia.status !== 'COMPLETED'}
             isEditing={riskEdit.isEditing}
-            onEdit={() => riskEdit.startEdit(dpia.riskDescription ?? '')}
+            onEdit={() => riskEdit.startEdit(getLocalizedText(dpia.riskDescription ?? undefined))}
             onSave={riskEdit.save}
             onCancel={riskEdit.cancel}
             isSaving={riskEdit.isSaving}
@@ -167,8 +169,8 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 {riskEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{riskEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={dpia.riskDescription ? 'text.primary' : 'text.secondary'}>
-                {dpia.riskDescription || t('common.notSet')}
+              <Typography variant="body2" color={dpia.riskDescription?.length ? 'text.primary' : 'text.secondary'}>
+                {getLocalizedText(dpia.riskDescription ?? undefined) || t('common.notSet')}
               </Typography>
             )}
           </PropRow>
@@ -177,7 +179,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
             label={t('dpia.measures')}
             canEdit={canEdit && dpia.status !== 'COMPLETED'}
             isEditing={measuresEdit.isEditing}
-            onEdit={() => measuresEdit.startEdit(dpia.measures ?? '')}
+            onEdit={() => measuresEdit.startEdit(getLocalizedText(dpia.measures ?? undefined))}
             onSave={measuresEdit.save}
             onCancel={measuresEdit.cancel}
             isSaving={measuresEdit.isSaving}
@@ -195,8 +197,8 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 {measuresEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{measuresEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={dpia.measures ? 'text.primary' : 'text.secondary'}>
-                {dpia.measures || t('common.notSet')}
+              <Typography variant="body2" color={dpia.measures?.length ? 'text.primary' : 'text.secondary'}>
+                {getLocalizedText(dpia.measures ?? undefined) || t('common.notSet')}
               </Typography>
             )}
           </PropRow>

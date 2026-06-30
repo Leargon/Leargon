@@ -17,6 +17,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface BusinessEntitySummaryResponse {
   /** BusinessEntity key */
@@ -50,8 +51,8 @@ export interface BusinessEntitySummaryResponse {
      */
   description?: string | null;
   /**
-     * Retention period or criteria for this entity
+     * Retention period or criteria for this entity (localised)
      * @nullable
      */
-  retentionPeriod?: string | null;
+  retentionPeriod?: LocalizedText[] | null;
 }

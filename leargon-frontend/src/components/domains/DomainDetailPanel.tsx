@@ -238,9 +238,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const handleOpenEditRel = (rel: ContextRelationshipResponse) => {
     setEditRelId(rel.id as number);
     setEditRelType(rel.relationshipType as ContextMapperRelationshipType);
-    setEditRelUpstreamRole(rel.upstreamRole || '');
-    setEditRelDownstreamRole(rel.downstreamRole || '');
-    setEditRelDescription(rel.description || '');
+    setEditRelUpstreamRole(getLocalizedText(rel.upstreamRole ?? undefined));
+    setEditRelDownstreamRole(getLocalizedText(rel.downstreamRole ?? undefined));
+    setEditRelDescription(getLocalizedText(rel.description ?? undefined));
     setEditRelError(null);
     setEditRelOpen(true);
   };
@@ -253,9 +253,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         id: editRelId,
         data: {
           relationshipType: editRelType,
-          upstreamRole: editRelUpstreamRole || undefined,
-          downstreamRole: editRelDownstreamRole || undefined,
-          description: editRelDescription || undefined,
+          upstreamRole: editRelUpstreamRole ? [{ locale: preferredLocale ?? 'en', text: editRelUpstreamRole }] : undefined,
+          downstreamRole: editRelDownstreamRole ? [{ locale: preferredLocale ?? 'en', text: editRelDownstreamRole }] : undefined,
+          description: editRelDescription ? [{ locale: preferredLocale ?? 'en', text: editRelDescription }] : undefined,
         },
       });
       invalidateRels();
@@ -317,9 +317,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           upstreamBoundedContextKey: addRelUpstreamBcKey,
           downstreamBoundedContextKey: addRelDownstreamBcKey,
           relationshipType: addRelType,
-          upstreamRole: addRelUpstreamRole || undefined,
-          downstreamRole: addRelDownstreamRole || undefined,
-          description: addRelDescription || undefined,
+          upstreamRole: addRelUpstreamRole ? [{ locale: preferredLocale ?? 'en', text: addRelUpstreamRole }] : undefined,
+          downstreamRole: addRelDownstreamRole ? [{ locale: preferredLocale ?? 'en', text: addRelDownstreamRole }] : undefined,
+          description: addRelDescription ? [{ locale: preferredLocale ?? 'en', text: addRelDescription }] : undefined,
         },
       });
       invalidateRels();
@@ -437,7 +437,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   // Inline edit for vision statement
   const visionEdit = useInlineEdit<string>({
     onSave: async (val) => {
-      await updateVisionStatement.mutateAsync({ key: domainKey, data: { visionStatement: val || undefined } });
+      await updateVisionStatement.mutateAsync({ key: domainKey, data: { visionStatement: val ? [{ locale: preferredLocale ?? 'en', text: val }] : undefined } });
       invalidate();
     },
   });
@@ -774,7 +774,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             statusIndicator={renderStatus('visionStatement')}
             canEdit={canManage}
             isEditing={visionEdit.isEditing}
-            onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
+            onEdit={() => visionEdit.startEdit(getLocalizedText(domain.visionStatement ?? undefined))}
             onSave={visionEdit.save}
             onCancel={visionEdit.cancel}
             isSaving={visionEdit.isSaving}
@@ -794,8 +794,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             </Box>
           ) : (
             <Box sx={{ mb: 2 }}>
-              {domain.visionStatement ? (
-                <Typography variant="body2">{domain.visionStatement}</Typography>
+              {domain.visionStatement && domain.visionStatement.length > 0 ? (
+                <Typography variant="body2">{getLocalizedText(domain.visionStatement)}</Typography>
               ) : (
                 <Typography
                   variant="body2"
@@ -1042,7 +1042,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                         display: "block",
                         mt: 0.25
                       }}>
-                      {rel.description}
+                      {getLocalizedText(rel.description ?? undefined)}
                     </Typography>
                   )}
                 </Box>

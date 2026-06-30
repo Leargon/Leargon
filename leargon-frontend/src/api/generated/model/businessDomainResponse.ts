@@ -58,10 +58,10 @@ export interface BusinessDomainResponse {
      */
   fieldStatuses?: FieldVerificationResponse[] | null;
   /**
-     * Vision statement for the bounded context
+     * Vision statement for the domain (localised)
      * @nullable
      */
-  visionStatement?: string | null;
+  visionStatement?: LocalizedText[] | null;
   /** Organisational unit responsible for this domain */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Creation timestamp */

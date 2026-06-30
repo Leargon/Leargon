@@ -477,7 +477,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                           <TableCell sx={{ fontSize: '0.75rem' }}>{tr.processName}</TableCell>
                           <TableCell sx={{ fontSize: '0.75rem' }}>{`${tr.destinationCountry} – ${getCountryName(tr.destinationCountry, preferredLocale ?? 'en')}`}</TableCell>
                           <TableCell sx={{ fontSize: '0.75rem' }}>{t(`crossBorderSafeguard.${tr.safeguard}` as any, { defaultValue: tr.safeguard as string })}</TableCell>
-                          <TableCell sx={{ fontSize: '0.75rem' }}>{tr.notes ?? ''}</TableCell>
+                          <TableCell sx={{ fontSize: '0.75rem' }}>{getLocalizedText(tr.notes ?? undefined)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

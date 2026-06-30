@@ -16,11 +16,12 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 import type { UpdateBusinessDataQualityRuleRequestSeverity } from './updateBusinessDataQualityRuleRequestSeverity.ts';
 
 export interface UpdateBusinessDataQualityRuleRequest {
-  /** @minLength 1 */
-  description: string;
+  /** @minItems 1 */
+  descriptions: LocalizedText[];
   /** @nullable */
   severity?: UpdateBusinessDataQualityRuleRequestSeverity;
 }

@@ -18,6 +18,7 @@
  */
 import type { DpiaListItemResponseLinkedResourceType } from './dpiaListItemResponseLinkedResourceType.ts';
 import type { DpiaStatus } from './dpiaStatus.ts';
+import type { LocalizedText } from './localizedText.ts';
 import type { ResidualRisk } from './residualRisk.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
 
@@ -31,10 +32,16 @@ export interface DpiaListItemResponse {
   linkedResourceKey?: string | null;
   /** @nullable */
   linkedResourceName?: string | null;
-  /** @nullable */
-  riskDescription?: string | null;
-  /** @nullable */
-  measures?: string | null;
+  /**
+     * Risk description (localised)
+     * @nullable
+     */
+  riskDescription?: LocalizedText[] | null;
+  /**
+     * Measures to mitigate risks (localised)
+     * @nullable
+     */
+  measures?: LocalizedText[] | null;
   /** @nullable */
   fdpicConsultationRequired?: boolean | null;
   triggeredBy: UserSummaryResponse;
