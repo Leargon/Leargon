@@ -130,7 +130,7 @@ test.describe('Methodology Settings', () => {
     await expect(page.getByRole('button', { name: 'Service Providers' })).not.toBeVisible();
   });
 
-  test('disabling BCM hides Capabilities and Team Insights nav items', async ({ page }) => {
+  test('disabling BCM hides Capabilities nav item but Insights link stays visible', async ({ page }) => {
     await setMethodologies(
       ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'BCM' })),
     );
@@ -138,8 +138,55 @@ test.describe('Methodology Settings', () => {
     await page.goto('/domains');
     await page.waitForLoadState('networkidle');
 
+    // Capabilities is BCM-gated and should disappear
     await expect(page.getByRole('button', { name: 'Capabilities' })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Team Insights' })).not.toBeVisible();
+
+    // The Insights nav link is now a permanent top-level item — must always be present
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+  });
+
+  test('Insights nav link survives all methodology toggles', async ({ page }) => {
+    // Disable every methodology
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: false })),
+    );
+
+    await page.goto('/domains');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+
+    // Re-enable all
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true })),
+    );
+    await page.goto('/domains');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+  });
+
+  test('disabling TEAM_TOPOLOGIES hides its group on the Insights page', async ({ page }) => {
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'TEAM_TOPOLOGIES' })),
+    );
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Team Topologies')).not.toBeVisible();
+    await expect(page.getByText('Domain-Driven Design')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('disabling DDD hides its group on the Insights page', async ({ page }) => {
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'DDD' })),
+    );
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText('Domain-Driven Design')).not.toBeVisible();
   });
 
   test('toggling a methodology off via UI disables it', async ({ page }) => {
