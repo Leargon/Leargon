@@ -134,8 +134,7 @@ open class BusinessEntityMapper(
                     val isSteward = uid != null && effectiveSteward?.id == uid
                     roleService.editableFields(u, "BUSINESS_ENTITY", isOwner, isSteward)
                 },
-            )
-            .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
+            ).qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 
     private fun computeDerivedStorageLocations(entity: BusinessEntity): List<String> {

@@ -167,8 +167,7 @@ open class ProcessMapper(
                     val isSteward = uid != null && effectiveSteward?.id == uid
                     roleService.editableFields(u, "BUSINESS_PROCESS", isOwner, isSteward)
                 },
-            )
-            .calledProcessKeys(
+            ).calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)
                     .mapNotNull { it.linkedProcessKey }

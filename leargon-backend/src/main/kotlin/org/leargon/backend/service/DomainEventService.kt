@@ -50,6 +50,7 @@ open class DomainEventService(
             "Managing a domain event requires an admin, a DDD editor/lead, or the owner/steward of its domain"
         )
     }
+
     @Transactional
     open fun getAll(): List<DomainEventResponse> {
         val mapper = domainEventMapper

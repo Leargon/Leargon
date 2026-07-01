@@ -48,16 +48,12 @@ open class DomainEventController(
     override fun updateDomainEventNames(
         key: String,
         @Body localizedTexts: List<@Valid LocalizedText>
-    ): DomainEventResponse {
-        return domainEventService.updateNames(key, localizedTexts, getCurrentUser())
-    }
+    ): DomainEventResponse = domainEventService.updateNames(key, localizedTexts, getCurrentUser())
 
     override fun updateDomainEventDescriptions(
         key: String,
         @Body localizedTexts: List<@Valid LocalizedText>
-    ): DomainEventResponse {
-        return domainEventService.updateDescriptions(key, localizedTexts, getCurrentUser())
-    }
+    ): DomainEventResponse = domainEventService.updateDescriptions(key, localizedTexts, getCurrentUser())
 
     override fun setDomainEventConsumers(
         key: String,
