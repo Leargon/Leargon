@@ -10,12 +10,16 @@ import {
 import type { AxiosInstance } from 'axios';
 import type { BusinessDataQualityRuleResponse } from '@/api/generated/model/businessDataQualityRuleResponse';
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
+import type { LocalizedText } from '@/api/generated/model/localizedText';
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
   if (!url) throw new Error('E2E_BACKEND_URL not set — is globalSetup running?');
   return url;
 }
+
+const descText = (d?: LocalizedText[] | null, locale = 'en'): string | undefined =>
+  d?.find((x) => x.locale === locale)?.text;
 
 describe('Business Data Quality Rule API', () => {
   let adminClient: AxiosInstance;
@@ -86,12 +90,12 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Desc Only Entity');
     const res = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Name must not be blank or null' },
+      { descriptions: [{ locale: 'en', text: 'Name must not be blank or null' }] },
     );
 
     expect(res.status).toBe(201);
     expect(res.data.id).toBeTruthy();
-    expect(res.data.description).toBe('Name must not be blank or null');
+    expect(descText(res.data.descriptions)).toBe('Name must not be blank or null');
     expect(res.data.severity ?? null).toBeNull();
     expect(res.data.createdAt).toBeTruthy();
   });
@@ -100,11 +104,11 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR MUST Entity');
     const res = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Customer must have a valid email address', severity: 'MUST' },
+      { descriptions: [{ locale: 'en', text: 'Customer must have a valid email address' }], severity: 'MUST' },
     );
 
     expect(res.status).toBe(201);
-    expect(res.data.description).toBe('Customer must have a valid email address');
+    expect(descText(res.data.descriptions)).toBe('Customer must have a valid email address');
     expect(res.data.severity).toBe('MUST');
   });
 
@@ -112,7 +116,7 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR SHOULD Entity');
     const res = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Phone number should follow E.164 format', severity: 'SHOULD' },
+      { descriptions: [{ locale: 'en', text: 'Phone number should follow E.164 format' }], severity: 'SHOULD' },
     );
 
     expect(res.status).toBe(201);
@@ -123,7 +127,7 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR MAY Entity');
     const res = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Middle name may be provided for legal purposes', severity: 'MAY' },
+      { descriptions: [{ locale: 'en', text: 'Middle name may be provided for legal purposes' }], severity: 'MAY' },
     );
 
     expect(res.status).toBe(201);
@@ -134,18 +138,18 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Admin Create Entity');
     const res = await adminClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Code must be unique across the system', severity: 'MUST' },
+      { descriptions: [{ locale: 'en', text: 'Code must be unique across the system' }], severity: 'MUST' },
     );
 
     expect(res.status).toBe(201);
-    expect(res.data.description).toBe('Code must be unique across the system');
+    expect(descText(res.data.descriptions)).toBe('Code must be unique across the system');
   });
 
   it('returns 403 when non-owner tries to create a rule', async () => {
     const entity = await createEntity(ownerClient, 'QR Forbidden Create Entity');
     const res = await otherClient.post(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Unauthorized rule attempt' },
+      { descriptions: [{ locale: 'en', text: 'Unauthorized rule attempt' }] },
     );
 
     expect(res.status).toBe(403);
@@ -154,7 +158,7 @@ describe('Business Data Quality Rule API', () => {
   it('returns 404 when creating rule for unknown entity', async () => {
     const res = await ownerClient.post(
       '/business-entities/non-existent/quality-rules',
-      { description: 'Rule for missing entity' },
+      { descriptions: [{ locale: 'en', text: 'Rule for missing entity' }] },
     );
 
     expect(res.status).toBe(404);
@@ -165,10 +169,10 @@ describe('Business Data Quality Rule API', () => {
   it('returns all rules created for an entity', async () => {
     const entity = await createEntity(ownerClient, 'QR Multi Rule Entity');
     await ownerClient.post(`/business-entities/${entity.key}/quality-rules`, {
-      description: 'Age must be at least 18', severity: 'MUST',
+      descriptions: [{ locale: 'en', text: 'Age must be at least 18' }], severity: 'MUST',
     });
     await ownerClient.post(`/business-entities/${entity.key}/quality-rules`, {
-      description: 'Email should follow RFC 5322',
+      descriptions: [{ locale: 'en', text: 'Email should follow RFC 5322' }],
     });
 
     const res = await ownerClient.get<BusinessDataQualityRuleResponse[]>(
@@ -177,14 +181,14 @@ describe('Business Data Quality Rule API', () => {
 
     expect(res.status).toBe(200);
     expect(res.data).toHaveLength(2);
-    expect(res.data.some((r) => r.description === 'Age must be at least 18')).toBe(true);
-    expect(res.data.some((r) => r.description === 'Email should follow RFC 5322')).toBe(true);
+    expect(res.data.some((r) => descText(r.descriptions) === 'Age must be at least 18')).toBe(true);
+    expect(res.data.some((r) => descText(r.descriptions) === 'Email should follow RFC 5322')).toBe(true);
   });
 
   it('entity response includes qualityRules array', async () => {
     const entity = await createEntity(ownerClient, 'QR Embedded Rules Entity');
     await ownerClient.post(`/business-entities/${entity.key}/quality-rules`, {
-      description: 'Status must be one of: ACTIVE, INACTIVE', severity: 'MUST',
+      descriptions: [{ locale: 'en', text: 'Status must be one of: ACTIVE, INACTIVE' }], severity: 'MUST',
     });
 
     const res = await ownerClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
@@ -192,7 +196,7 @@ describe('Business Data Quality Rule API', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.data.qualityRules)).toBe(true);
     expect(res.data.qualityRules).toHaveLength(1);
-    expect(res.data.qualityRules![0].description).toBe('Status must be one of: ACTIVE, INACTIVE');
+    expect(descText(res.data.qualityRules![0].descriptions)).toBe('Status must be one of: ACTIVE, INACTIVE');
     expect(res.data.qualityRules![0].severity).toBe('MUST');
   });
 
@@ -202,17 +206,17 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Update Entity');
     const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Age must be set' },
+      { descriptions: [{ locale: 'en', text: 'Age must be set' }] },
     );
     const ruleId = created.data.id;
 
     const res = await ownerClient.put<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules/${ruleId}`,
-      { description: 'Customer age must be at least 21', severity: 'MUST' },
+      { descriptions: [{ locale: 'en', text: 'Customer age must be at least 21' }], severity: 'MUST' },
     );
 
     expect(res.status).toBe(200);
-    expect(res.data.description).toBe('Customer age must be at least 21');
+    expect(descText(res.data.descriptions)).toBe('Customer age must be at least 21');
     expect(res.data.severity).toBe('MUST');
     expect(res.data.updatedAt).toBeTruthy();
   });
@@ -221,17 +225,17 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Clear Severity Entity');
     const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Age must be set', severity: 'MUST' },
+      { descriptions: [{ locale: 'en', text: 'Age must be set' }], severity: 'MUST' },
     );
     const ruleId = created.data.id;
 
     const res = await ownerClient.put<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules/${ruleId}`,
-      { description: 'Updated age rule' },
+      { descriptions: [{ locale: 'en', text: 'Updated age rule' }] },
     );
 
     expect(res.status).toBe(200);
-    expect(res.data.description).toBe('Updated age rule');
+    expect(descText(res.data.descriptions)).toBe('Updated age rule');
     expect(res.data.severity ?? null).toBeNull();
   });
 
@@ -239,13 +243,13 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Forbidden Update Entity');
     const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Age must be set' },
+      { descriptions: [{ locale: 'en', text: 'Age must be set' }] },
     );
     const ruleId = created.data.id;
 
     const res = await otherClient.put(
       `/business-entities/${entity.key}/quality-rules/${ruleId}`,
-      { description: 'Unauthorized update' },
+      { descriptions: [{ locale: 'en', text: 'Unauthorized update' }] },
     );
 
     expect(res.status).toBe(403);
@@ -255,7 +259,7 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR 404 Update Entity');
     const res = await ownerClient.put(
       `/business-entities/${entity.key}/quality-rules/99999`,
-      { description: 'Some rule' },
+      { descriptions: [{ locale: 'en', text: 'Some rule' }] },
     );
 
     expect(res.status).toBe(404);
@@ -267,7 +271,7 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Delete Entity');
     const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Age must be set' },
+      { descriptions: [{ locale: 'en', text: 'Age must be set' }] },
     );
     const ruleId = created.data.id;
 
@@ -286,7 +290,7 @@ describe('Business Data Quality Rule API', () => {
     const entity = await createEntity(ownerClient, 'QR Forbidden Delete Entity');
     const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
       `/business-entities/${entity.key}/quality-rules`,
-      { description: 'Age must be set' },
+      { descriptions: [{ locale: 'en', text: 'Age must be set' }] },
     );
     const ruleId = created.data.id;
 
@@ -309,7 +313,7 @@ describe('Business Data Quality Rule API', () => {
   it('admin can export quality rules as CSV with description and severity', async () => {
     const entity = await createEntity(ownerClient, 'QR Export Entity');
     await ownerClient.post(`/business-entities/${entity.key}/quality-rules`, {
-      description: 'Customer must be at least 18 years old', severity: 'MUST',
+      descriptions: [{ locale: 'en', text: 'Customer must be at least 18 years old' }], severity: 'MUST',
     });
 
     const res = await adminClient.get<string>('/export/business-data-quality-rules', {
@@ -327,7 +331,7 @@ describe('Business Data Quality Rule API', () => {
   it('export CSV does not contain legacy constraint type fields', async () => {
     const entity = await createEntity(ownerClient, 'QR Export No Constraint Entity');
     await ownerClient.post(`/business-entities/${entity.key}/quality-rules`, {
-      description: 'Phone should follow E.164 format', severity: 'SHOULD',
+      descriptions: [{ locale: 'en', text: 'Phone should follow E.164 format' }], severity: 'SHOULD',
     });
 
     const res = await adminClient.get<string>('/export/business-data-quality-rules', {
@@ -343,5 +347,39 @@ describe('Business Data Quality Rule API', () => {
   it('non-admin cannot export quality rules', async () => {
     const res = await ownerClient.get('/export/business-data-quality-rules');
     expect(res.status).toBe(403);
+  });
+
+  // ─── Multilingual round-trip ────────────────────────────────────────────────
+
+  it('stores rule descriptions in multiple locales, reads both back, and replaces on update', async () => {
+    const entity = await createEntity(ownerClient, 'QR Multilingual Entity');
+
+    const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
+      `/business-entities/${entity.key}/quality-rules`,
+      {
+        descriptions: [
+          { locale: 'en', text: 'Email must be valid' },
+          { locale: 'de', text: 'E-Mail muss gültig sein' },
+        ],
+        severity: 'MUST',
+      },
+    );
+    expect(created.status).toBe(201);
+    expect(descText(created.data.descriptions, 'en')).toBe('Email must be valid');
+    expect(descText(created.data.descriptions, 'de')).toBe('E-Mail muss gültig sein');
+
+    // Read back via the entity's embedded rules
+    const get = await ownerClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+    const embedded = get.data.qualityRules?.find((r) => r.id === created.data.id);
+    expect(descText(embedded?.descriptions, 'en')).toBe('Email must be valid');
+    expect(descText(embedded?.descriptions, 'de')).toBe('E-Mail muss gültig sein');
+
+    // Update replaces the set (en-only) — de must be gone
+    const updated = await ownerClient.put<BusinessDataQualityRuleResponse>(
+      `/business-entities/${entity.key}/quality-rules/${created.data.id}`,
+      { descriptions: [{ locale: 'en', text: 'Email must be RFC 5322 valid' }], severity: 'MUST' },
+    );
+    expect(descText(updated.data.descriptions, 'en')).toBe('Email must be RFC 5322 valid');
+    expect(descText(updated.data.descriptions, 'de')).toBeUndefined();
   });
 });

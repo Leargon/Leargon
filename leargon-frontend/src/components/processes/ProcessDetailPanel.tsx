@@ -91,6 +91,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
+import LocalizedTextView from '../common/LocalizedTextView';
 import DpiaSection from '../compliance/DpiaSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import ProcessCreationWizard from './ProcessCreationWizard';
@@ -1081,10 +1082,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {purposeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{purposeEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.purpose?.length ? 'text.primary' : 'text.secondary'}
-              sx={{ whiteSpace: 'pre-wrap' }}>
-              {getLocalizedText(process.purpose ?? [], t('common.notSet'))}
-            </Typography>
+            <LocalizedTextView value={process.purpose} showAll={canEditField('purpose')} emptyText={t('common.notSet')} />
           )}
         </PropRow>}
         {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={canEditField('securityMeasures')} isEditing={securityMeasuresEdit.isEditing}
@@ -1105,10 +1103,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {securityMeasuresEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{securityMeasuresEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.securityMeasures?.length ? 'text.primary' : 'text.secondary'}
-              sx={{ whiteSpace: 'pre-wrap' }}>
-              {getLocalizedText(process.securityMeasures ?? [], t('common.notSet'))}
-            </Typography>
+            <LocalizedTextView value={process.securityMeasures} showAll={canEditField('securityMeasures')} emptyText={t('common.notSet')} />
           )}
         </PropRow>}
       </Paper>

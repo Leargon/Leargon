@@ -137,7 +137,13 @@ export const updateCrossBorderTransfers = (
   apiFetch(
     `/${resourceType}/${entityKey}/cross-border-transfers`,
     'PUT',
-    { transfers },
+    {
+      transfers: transfers.map((tr) => ({
+        destinationCountry: tr.destinationCountry,
+        safeguard: tr.safeguard,
+        notes: tr.notes != null ? [{ locale: 'en', text: tr.notes }] : [],
+      })),
+    },
     as,
   );
 

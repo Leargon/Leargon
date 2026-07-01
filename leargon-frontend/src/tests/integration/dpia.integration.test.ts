@@ -100,11 +100,11 @@ describe('DPIA API', () => {
     const dpiaKey = dpiaRes.data.key;
 
     const res = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/risk-description`, {
-      riskDescription: 'Sensitive PII is at risk',
+      riskDescription: [{ locale: 'en', text: 'Sensitive PII is at risk' }],
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.riskDescription).toBe('Sensitive PII is at risk');
+    expect(res.data.riskDescription?.find((x) => x.locale === 'en')?.text).toBe('Sensitive PII is at risk');
   });
 
   it('can update measures', async () => {
@@ -113,11 +113,11 @@ describe('DPIA API', () => {
     const dpiaKey = dpiaRes.data.key;
 
     const res = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/measures`, {
-      measures: 'Encrypt all personal data',
+      measures: [{ locale: 'en', text: 'Encrypt all personal data' }],
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.measures).toBe('Encrypt all personal data');
+    expect(res.data.measures?.find((x) => x.locale === 'en')?.text).toBe('Encrypt all personal data');
   });
 
   it('can update residual risk', async () => {
@@ -152,7 +152,7 @@ describe('DPIA API', () => {
     const dpiaKey = dpiaRes.data.key;
 
     const res = await otherClient.put(`/dpia/${dpiaKey}/risk-description`, {
-      riskDescription: 'Should not be allowed',
+      riskDescription: [{ locale: 'en', text: 'Should not be allowed' }],
     });
 
     expect(res.status).toBe(403);
@@ -192,5 +192,44 @@ describe('DPIA API', () => {
   it('non-admin can also list all DPIAs', async () => {
     const res = await userClient.get('/dpia');
     expect(res.status).toBe(200);
+  });
+
+  // ─── Multilingual round-trip ────────────────────────────────────────────────
+
+  it('stores DPIA risk/measures/fdpic outcome in multiple locales and replaces on update', async () => {
+    const process = await createProcess(userClient, 'DPIA Multilingual Process');
+    const dpiaRes = await userClient.post<DpiaResponse>(`/processes/${process.key}/dpia`, null);
+    const dpiaKey = dpiaRes.data.key;
+
+    // Risk description in two locales
+    const risk = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/risk-description`, {
+      riskDescription: [
+        { locale: 'en', text: 'High risk to data subjects' },
+        { locale: 'de', text: 'Hohes Risiko für betroffene Personen' },
+      ],
+    });
+    expect(risk.data.riskDescription?.find((x) => x.locale === 'en')?.text).toBe('High risk to data subjects');
+    expect(risk.data.riskDescription?.find((x) => x.locale === 'de')?.text).toBe('Hohes Risiko für betroffene Personen');
+
+    // FDPIC consultation outcome in two locales
+    const fdpic = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/fdpic-consultation`, {
+      fdpicConsultationOutcome: [
+        { locale: 'en', text: 'Approved with conditions' },
+        { locale: 'de', text: 'Mit Auflagen genehmigt' },
+      ],
+    });
+    expect(fdpic.data.fdpicConsultationOutcome?.find((x) => x.locale === 'de')?.text).toBe('Mit Auflagen genehmigt');
+
+    // Read back both locales
+    const get = await userClient.get<DpiaResponse>(`/dpia/${dpiaKey}`);
+    expect(get.data.riskDescription?.find((x) => x.locale === 'de')?.text).toBe('Hohes Risiko für betroffene Personen');
+    expect(get.data.fdpicConsultationOutcome?.find((x) => x.locale === 'en')?.text).toBe('Approved with conditions');
+
+    // Update replaces the risk set (en-only) — de must be gone
+    const replaced = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/risk-description`, {
+      riskDescription: [{ locale: 'en', text: 'Reassessed as medium risk' }],
+    });
+    expect(replaced.data.riskDescription?.find((x) => x.locale === 'en')?.text).toBe('Reassessed as medium risk');
+    expect(replaced.data.riskDescription?.find((x) => x.locale === 'de')).toBeUndefined();
   });
 });

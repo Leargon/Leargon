@@ -50,6 +50,7 @@ function toLocalNode(n: FlowNodeResponse, getText: GetLocalizedText): LocalNode 
     position: n.position,
     nodeType: n.nodeType as LocalNode['nodeType'],
     label: getText(n.label ?? undefined) || null,
+    labelI18n: n.label ?? null,
     linkedProcessKey: n.linkedProcessKey,
     isSubProcess: n.isSubProcess,
     trackId: n.trackId,
@@ -65,6 +66,7 @@ function toLocalTrack(t: FlowTrackResponse, getText: GetLocalizedText): LocalTra
     gatewayNodeId: t.gatewayNodeId,
     trackIndex: t.trackIndex,
     label: getText(t.label ?? undefined) || null,
+    labelI18n: t.label ?? null,
     nodes: (t.nodes ?? []).map((n) => toLocalNode(n, getText)),
   };
 }
@@ -184,14 +186,23 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
   const handleSave = async () => {
     try {
       const locale = preferredLocale ?? 'en';
-      const toLabel = (s: string | null | undefined): LocalizedText[] | null =>
-        s ? [{ locale, text: s }] : null;
+      // Merge the edited display-locale text back into the original multilingual label so that
+      // labels entered in other locales are preserved on save (no data loss).
+      const toLabel = (
+        original: LocalizedText[] | null | undefined,
+        s: string | null | undefined,
+      ): LocalizedText[] | null => {
+        const others = (original ?? []).filter((e) => e.locale !== locale);
+        const text = s ?? '';
+        const merged = text ? [...others, { locale, text }] : others;
+        return merged.length > 0 ? merged : null;
+      };
 
       const rootNodeRequests = withResolvedLabels(localNodes).map((n, i) => ({
         id: n.id,
         position: i,
         nodeType: n.nodeType,
-        label: toLabel(n.label),
+        label: toLabel(n.labelI18n, n.label),
         linkedProcessKey: n.linkedProcessKey ?? null,
         trackId: null as string | null,
         gatewayPairId: n.gatewayPairId ?? null,
@@ -204,7 +215,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
           id: n.id,
           position: i,
           nodeType: n.nodeType,
-          label: toLabel(n.label),
+          label: toLabel(n.labelI18n, n.label),
           linkedProcessKey: n.linkedProcessKey ?? null,
           trackId: track.id,
           gatewayPairId: n.gatewayPairId ?? null,
@@ -217,7 +228,7 @@ const BpmnEditor: React.FC<Props> = ({ processKey, canEdit }) => {
         id: track.id,
         gatewayNodeId: track.gatewayNodeId,
         trackIndex: i,
-        label: toLabel(track.label),
+        label: toLabel(track.labelI18n, track.label),
       }));
 
       await saveFlow.mutateAsync({

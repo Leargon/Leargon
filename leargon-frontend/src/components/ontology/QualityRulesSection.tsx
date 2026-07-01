@@ -22,9 +22,9 @@ import {
 } from '@mui/material';
 import { Add, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocale } from '../../context/LocaleContext';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
 import {
   useGetQualityRulesForEntity,
   useCreateQualityRule,
@@ -64,7 +64,6 @@ const emptyForm = (): RuleFormState => ({ descriptions: [], severity: '' });
 
 const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, isOwnerOrAdmin, renderItemStatus }) => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
 
   const { data: localesResponse } = useGetSupportedLocales();
@@ -199,7 +198,7 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
                       <Chip label={t(`qualityRule.${rule.severity}`)} size="small" color={SEVERITY_COLORS[rule.severity] ?? 'default'} sx={{ fontSize: '0.7rem', height: 20 }} />
                     </Box>
                   )}
-                  <Typography variant="body2">{getLocalizedText(rule.descriptions ?? undefined)}</Typography>
+                  <LocalizedTextView value={rule.descriptions} showAll={isOwnerOrAdmin} />
                 </Box>
                 {rule.id != null && renderItemStatus?.(rule.id)}
                 {isOwnerOrAdmin && (

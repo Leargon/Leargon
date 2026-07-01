@@ -85,6 +85,7 @@ import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import FieldStatusIndicator from '../common/FieldStatusIndicator';
@@ -864,21 +865,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 />
                 {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
               </Box>
-            ) : entity.retentionPeriod && entity.retentionPeriod.length > 0 ? (
-              <Box>
-                {activeLocales.map((l) => {
-                  const text = entity.retentionPeriod!.find((v) => v.locale === l.localeCode)?.text;
-                  if (!text) return null;
-                  return (
-                    <Box key={l.localeCode} sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 32 }}>{l.localeCode}</Typography>
-                      <Typography variant="body2">{text}</Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
             ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notSet')}</Typography>
+              <LocalizedTextView value={entity.retentionPeriod} showAll={canEditField('retentionPeriod')} emptyText={t('common.notSet')} />
             )}
           </PropRow>
         )}
@@ -1091,7 +1079,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                       <Chip label={getLocalizedText(allEntities.find(e => e.key === link.linkedEntity!.key)?.names ?? [], link.linkedEntity.name)} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
                     )}
                   </TableCell>
-                  <TableCell>{getLocalizedText(link.semanticDifferenceNote ?? undefined) || '—'}</TableCell>
+                  <TableCell><LocalizedTextView value={link.semanticDifferenceNote} showAll={canEditField('translationLinks')} emptyText="—" /></TableCell>
                   <TableCell align="right">
                     {link.id != null && renderStatus(`translationLink.${link.id}`)}
                     {canEditField('translationLinks') && (

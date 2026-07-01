@@ -270,6 +270,7 @@ const en = {
     colType: 'Type',
     colResidualRisk: 'Residual Risk',
     colFdpic: 'FDPIC Consultation',
+    fdpicOutcome: 'FDPIC Consultation Outcome',
     colTriggeredBy: 'Triggered By',
     colCreated: 'Created',
     noRecorded: 'No DPIAs recorded yet',

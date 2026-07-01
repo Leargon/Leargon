@@ -265,6 +265,7 @@ const fr = {
     "colType": "Type",
     "colResidualRisk": "Risque résiduel",
     "colFdpic": "Consultation PFPDT",
+    "fdpicOutcome": "Résultat de la consultation PFPDT",
     "colTriggeredBy": "Déclenchée par",
     "colCreated": "Créée le",
     "noRecorded": "Aucune AIPD enregistrée",

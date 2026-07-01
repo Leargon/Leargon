@@ -1,0 +1,118 @@
+databaseChangeLog:
+  # ── Corrective migration for 061 ─────────────────────────────────────────────
+  #
+  # 061 wrapped legacy scalar values into a single-entry LocalizedText JSON array
+  # hardcoded to locale "en". Where the deployment's configured default locale is
+  # NOT "en", relabel those freshly-migrated single-entry "en" arrays to the real
+  # default locale. This runs immediately after 061 in the same startup pass, so
+  # the only "en"-tagged entries present are the ones 061 just created (these
+  # columns had no locale concept before 061). Guarded to be a no-op when the
+  # default locale is "en", and idempotent (only touches single-entry "en" arrays).
+
+  - changeSet:
+      id: 062-relabel-top-level-multilingual-default-locale
+      author: leargon
+      comment: Relabel 061-migrated 'en' single-entry arrays to the actual default locale
+      changes:
+        - sql:
+            dbms: mysql
+            splitStatements: false
+            sql: |
+              SET @def := (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1);
+              SET @def := IFNULL(@def, 'en');
+
+              UPDATE business_entities
+              SET retention_period = JSON_SET(retention_period, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND retention_period IS NOT NULL
+                AND JSON_VALID(retention_period)
+                AND JSON_LENGTH(retention_period) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(retention_period, '$[0].locale')) = 'en';
+
+              UPDATE business_domains
+              SET vision_statement = JSON_SET(vision_statement, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND vision_statement IS NOT NULL
+                AND JSON_VALID(vision_statement)
+                AND JSON_LENGTH(vision_statement) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(vision_statement, '$[0].locale')) = 'en';
+
+              UPDATE context_relationships
+              SET upstream_role = JSON_SET(upstream_role, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND upstream_role IS NOT NULL
+                AND JSON_VALID(upstream_role)
+                AND JSON_LENGTH(upstream_role) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(upstream_role, '$[0].locale')) = 'en';
+
+              UPDATE context_relationships
+              SET downstream_role = JSON_SET(downstream_role, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND downstream_role IS NOT NULL
+                AND JSON_VALID(downstream_role)
+                AND JSON_LENGTH(downstream_role) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(downstream_role, '$[0].locale')) = 'en';
+
+              UPDATE context_relationships
+              SET description = JSON_SET(description, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND description IS NOT NULL
+                AND JSON_VALID(description)
+                AND JSON_LENGTH(description) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en';
+
+              UPDATE translation_links
+              SET semantic_difference_note = JSON_SET(semantic_difference_note, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND semantic_difference_note IS NOT NULL
+                AND JSON_VALID(semantic_difference_note)
+                AND JSON_LENGTH(semantic_difference_note) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(semantic_difference_note, '$[0].locale')) = 'en';
+
+              UPDATE dpia
+              SET risk_description = JSON_SET(risk_description, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND risk_description IS NOT NULL
+                AND JSON_VALID(risk_description)
+                AND JSON_LENGTH(risk_description) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(risk_description, '$[0].locale')) = 'en';
+
+              UPDATE dpia
+              SET measures = JSON_SET(measures, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND measures IS NOT NULL
+                AND JSON_VALID(measures)
+                AND JSON_LENGTH(measures) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(measures, '$[0].locale')) = 'en';
+
+              UPDATE dpia
+              SET fdpic_consultation_outcome = JSON_SET(fdpic_consultation_outcome, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND fdpic_consultation_outcome IS NOT NULL
+                AND JSON_VALID(fdpic_consultation_outcome)
+                AND JSON_LENGTH(fdpic_consultation_outcome) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(fdpic_consultation_outcome, '$[0].locale')) = 'en';
+
+              UPDATE business_data_quality_rules
+              SET description = JSON_SET(description, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND description IS NOT NULL
+                AND JSON_VALID(description)
+                AND JSON_LENGTH(description) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en';
+
+              UPDATE process_flow_node
+              SET label = JSON_SET(label, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND label IS NOT NULL
+                AND JSON_VALID(label)
+                AND JSON_LENGTH(label) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en';
+
+              UPDATE process_flow_track
+              SET label = JSON_SET(label, '$[0].locale', @def)
+              WHERE @def <> 'en'
+                AND label IS NOT NULL
+                AND JSON_VALID(label)
+                AND JSON_LENGTH(label) = 1
+                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en';

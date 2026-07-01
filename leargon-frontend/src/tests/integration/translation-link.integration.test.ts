@@ -9,12 +9,16 @@ import {
 } from './testClient';
 import type { AxiosInstance } from 'axios';
 import type { TranslationLinkResponse } from '@/api/generated/model/translationLinkResponse';
+import type { LocalizedText } from '@/api/generated/model/localizedText';
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
   if (!url) throw new Error('E2E_BACKEND_URL not set — is globalSetup running?');
   return url;
 }
+
+const noteText = (d?: LocalizedText[] | null, locale = 'en'): string | undefined =>
+  d?.find((x) => x.locale === locale)?.text;
 
 describe('TranslationLink API', () => {
   let adminClient: AxiosInstance;
@@ -90,12 +94,12 @@ describe('TranslationLink API', () => {
     const res = await userClient.post<TranslationLinkResponse>('/translation-links', {
       firstEntityKey: entity1.key,
       secondEntityKey: entity2.key,
-      semanticDifferenceNote: 'Customer in Sales BC includes billing; Kunde in Warehouse BC does not',
+      semanticDifferenceNote: [{ locale: 'en', text: 'Customer in Sales BC includes billing; Kunde in Warehouse BC does not' }],
     });
 
     expect(res.status).toBe(201);
     expect(res.data.id).toBeDefined();
-    expect(res.data.semanticDifferenceNote).toBe(
+    expect(noteText(res.data.semanticDifferenceNote)).toBe(
       'Customer in Sales BC includes billing; Kunde in Warehouse BC does not',
     );
     expect((res.data as any).linkedEntity).toBeDefined();
@@ -111,7 +115,7 @@ describe('TranslationLink API', () => {
     });
 
     expect(res.status).toBe(201);
-    expect(res.data.semanticDifferenceNote ?? null).toBeNull();
+    expect(noteText(res.data.semanticDifferenceNote) ?? null).toBeNull();
   });
 
   it('returns 404 for unknown first entity', async () => {
@@ -161,16 +165,16 @@ describe('TranslationLink API', () => {
     const created = await userClient.post<TranslationLinkResponse>('/translation-links', {
       firstEntityKey: entity1.key,
       secondEntityKey: entity2.key,
-      semanticDifferenceNote: 'Old note',
+      semanticDifferenceNote: [{ locale: 'en', text: 'Old note' }],
     });
     const linkId = created.data.id;
 
     const res = await userClient.put<TranslationLinkResponse>(`/translation-links/${linkId}`, {
-      semanticDifferenceNote: 'New updated note',
+      semanticDifferenceNote: [{ locale: 'en', text: 'New updated note' }],
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.semanticDifferenceNote).toBe('New updated note');
+    expect(noteText(res.data.semanticDifferenceNote)).toBe('New updated note');
   });
 
   it('returns 403 when non-creator non-admin tries to update', async () => {
@@ -183,7 +187,7 @@ describe('TranslationLink API', () => {
     const linkId = created.data.id;
 
     const res = await otherClient.put(`/translation-links/${linkId}`, {
-      semanticDifferenceNote: 'Hostile update',
+      semanticDifferenceNote: [{ locale: 'en', text: 'Hostile update' }],
     });
 
     expect(res.status).toBe(403);
@@ -195,21 +199,21 @@ describe('TranslationLink API', () => {
     const created = await userClient.post<TranslationLinkResponse>('/translation-links', {
       firstEntityKey: entity1.key,
       secondEntityKey: entity2.key,
-      semanticDifferenceNote: 'User note',
+      semanticDifferenceNote: [{ locale: 'en', text: 'User note' }],
     });
     const linkId = created.data.id;
 
     const res = await adminClient.put<TranslationLinkResponse>(`/translation-links/${linkId}`, {
-      semanticDifferenceNote: 'Admin updated note',
+      semanticDifferenceNote: [{ locale: 'en', text: 'Admin updated note' }],
     });
 
     expect(res.status).toBe(200);
-    expect(res.data.semanticDifferenceNote).toBe('Admin updated note');
+    expect(noteText(res.data.semanticDifferenceNote)).toBe('Admin updated note');
   });
 
   it('returns 404 for unknown translation link id', async () => {
     const res = await userClient.put('/translation-links/999999', {
-      semanticDifferenceNote: 'No such link',
+      semanticDifferenceNote: [{ locale: 'en', text: 'No such link' }],
     });
     expect(res.status).toBe(404);
   });
@@ -261,7 +265,7 @@ describe('TranslationLink API', () => {
     await userClient.post('/translation-links', {
       firstEntityKey: entity1.key,
       secondEntityKey: entity2.key,
-      semanticDifferenceNote: 'Bilateral check',
+      semanticDifferenceNote: [{ locale: 'en', text: 'Bilateral check' }],
     });
 
     const fromFirst = await userClient.get(
@@ -276,5 +280,35 @@ describe('TranslationLink API', () => {
 
     expect(fromSecond.data).toHaveLength(1);
     expect((fromSecond.data[0] as any).linkedEntity.key).toBe(entity1.key);
+  });
+
+  // ─── Multilingual round-trip ────────────────────────────────────────────────
+
+  it('stores the semantic note in multiple locales, reads both back, and replaces on update', async () => {
+    const entity1 = await createEntity(userClient, 'TL ML A');
+    const entity2 = await createEntity(userClient, 'TL ML B');
+
+    const created = await userClient.post<TranslationLinkResponse>('/translation-links', {
+      firstEntityKey: entity1.key,
+      secondEntityKey: entity2.key,
+      semanticDifferenceNote: [
+        { locale: 'en', text: 'Different billing semantics' },
+        { locale: 'de', text: 'Unterschiedliche Abrechnungssemantik' },
+      ],
+    });
+    expect(noteText(created.data.semanticDifferenceNote, 'en')).toBe('Different billing semantics');
+    expect(noteText(created.data.semanticDifferenceNote, 'de')).toBe('Unterschiedliche Abrechnungssemantik');
+
+    // Read back both locales from the entity perspective
+    const fromFirst = await userClient.get(`/business-entities/${entity1.key}/translation-links`);
+    const link = (fromFirst.data as TranslationLinkResponse[])[0];
+    expect(noteText(link.semanticDifferenceNote, 'de')).toBe('Unterschiedliche Abrechnungssemantik');
+
+    // Update replaces the set (en-only) — de must be gone
+    const updated = await userClient.put<TranslationLinkResponse>(`/translation-links/${created.data.id}`, {
+      semanticDifferenceNote: [{ locale: 'en', text: 'Clarified billing note' }],
+    });
+    expect(noteText(updated.data.semanticDifferenceNote, 'en')).toBe('Clarified billing note');
+    expect(noteText(updated.data.semanticDifferenceNote, 'de')).toBeUndefined();
   });
 });

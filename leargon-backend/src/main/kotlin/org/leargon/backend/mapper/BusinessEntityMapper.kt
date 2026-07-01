@@ -56,10 +56,6 @@ open class BusinessEntityMapper(
                         businessEntity.effectiveOwner() != null
                     }
 
-                    fieldName == "retentionPeriod" -> {
-                        businessEntity.retentionPeriod.isNotEmpty()
-                    }
-
                     fieldName.startsWith("retentionPeriod.") -> {
                         val locale = fieldName.removePrefix("retentionPeriod.")
                         businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }

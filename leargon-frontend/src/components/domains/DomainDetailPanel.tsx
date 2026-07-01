@@ -84,6 +84,7 @@ import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import NudgeBanner from '../common/NudgeBanner';
@@ -797,27 +798,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             </Box>
           ) : (
             <Box sx={{ mb: 2 }}>
-              {domain.visionStatement && domain.visionStatement.length > 0 ? (
-                descriptionLocales.map((l) => {
-                  const text = domain.visionStatement!.find((v) => v.locale === l.localeCode)?.text;
-                  if (!text) return null;
-                  return (
-                    <Accordion key={l.localeCode} disableGutters variant="outlined"
-                      sx={{ '&:before': { display: 'none' }, '&:not(:last-child)': { borderBottom: 0 } }}>
-                      <AccordionSummary expandIcon={<ExpandMore />}>
-                        <Typography variant="body2">{l.displayName}</Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Typography variant="body2">{text}</Typography>
-                      </AccordionDetails>
-                    </Accordion>
-                  );
-                })
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                  {t('common.notSet')}
-                </Typography>
-              )}
+              <LocalizedTextView value={domain.visionStatement} showAll={canManage} emptyText={t('common.notSet')} />
             </Box>
           )}
         </>
@@ -1048,16 +1029,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     }}>→ {t('domain.downstream')}:</Typography>
                     {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
                   </Box>
-                  {rel.description && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "text.secondary",
-                        display: "block",
-                        mt: 0.25
-                      }}>
-                      {getLocalizedText(rel.description ?? undefined)}
-                    </Typography>
+                  {rel.description && rel.description.length > 0 && (
+                    <LocalizedTextView
+                      value={rel.description}
+                      showAll={canManage}
+                      sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}
+                    />
                   )}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}

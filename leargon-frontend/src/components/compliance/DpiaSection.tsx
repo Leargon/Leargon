@@ -15,15 +15,16 @@ import {
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
 import type { DpiaResponse, LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
-import { useLocale } from '../../context/LocaleContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import PropRow from '../common/PropRow';
 import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import {
   useUpdateDpiaRiskDescription,
   useUpdateDpiaMeasures,
   useUpdateDpiaResidualRisk,
+  useUpdateDpiaFdpicConsultation,
   useCompleteDpia,
   useReopenDpia,
 } from '../../api/generated/dpia/dpia';
@@ -55,7 +56,6 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   invalidateKey,
 }) => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
 
   const { data: localesResponse } = useGetSupportedLocales();
@@ -64,6 +64,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   const { mutateAsync: updateRiskDescription } = useUpdateDpiaRiskDescription();
   const { mutateAsync: updateMeasures } = useUpdateDpiaMeasures();
   const { mutateAsync: updateResidualRisk } = useUpdateDpiaResidualRisk();
+  const { mutateAsync: updateFdpicConsultation } = useUpdateDpiaFdpicConsultation();
   const { mutateAsync: completeDpia } = useCompleteDpia();
   const { mutateAsync: reopenDpia } = useReopenDpia();
 
@@ -79,6 +80,14 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
     onSave: async (val) => {
       if (!dpia) return;
       await updateMeasures({ key: dpia.key, data: { measures: val.length > 0 ? val : null } });
+      await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
+    },
+  });
+
+  const fdpicOutcomeEdit = useInlineEdit<LocalizedText[]>({
+    onSave: async (val) => {
+      if (!dpia) return;
+      await updateFdpicConsultation({ key: dpia.key, data: { fdpicConsultationOutcome: val } });
       await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
     },
   });
@@ -170,9 +179,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 {riskEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{riskEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={dpia.riskDescription?.length ? 'text.primary' : 'text.secondary'}>
-                {getLocalizedText(dpia.riskDescription ?? undefined) || t('common.notSet')}
-              </Typography>
+              <LocalizedTextView value={dpia.riskDescription} showAll={canEdit} emptyText={t('common.notSet')} />
             )}
           </PropRow>
 
@@ -197,11 +204,36 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 {measuresEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{measuresEdit.error}</Alert>}
               </Box>
             ) : (
-              <Typography variant="body2" color={dpia.measures?.length ? 'text.primary' : 'text.secondary'}>
-                {getLocalizedText(dpia.measures ?? undefined) || t('common.notSet')}
-              </Typography>
+              <LocalizedTextView value={dpia.measures} showAll={canEdit} emptyText={t('common.notSet')} />
             )}
           </PropRow>
+
+          {dpia.fdpicConsultationRequired && (
+            <PropRow
+              label={t('dpia.fdpicOutcome')}
+              canEdit={canEdit && dpia.status !== 'COMPLETED'}
+              isEditing={fdpicOutcomeEdit.isEditing}
+              onEdit={() => fdpicOutcomeEdit.startEdit([...(dpia.fdpicConsultationOutcome ?? [])])}
+              onSave={fdpicOutcomeEdit.save}
+              onCancel={fdpicOutcomeEdit.cancel}
+              isSaving={fdpicOutcomeEdit.isSaving}
+            >
+              {fdpicOutcomeEdit.isEditing ? (
+                <Box>
+                  <LocalizedTextEditor
+                    locales={locales}
+                    value={fdpicOutcomeEdit.editValue ?? []}
+                    onChange={(v) => fdpicOutcomeEdit.setEditValue(v)}
+                    multiline
+                    rows={3}
+                  />
+                  {fdpicOutcomeEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{fdpicOutcomeEdit.error}</Alert>}
+                </Box>
+              ) : (
+                <LocalizedTextView value={dpia.fdpicConsultationOutcome} showAll={canEdit} emptyText={t('common.notSet')} />
+              )}
+            </PropRow>
+          )}
 
           <PropRow
             label={t('dpia.initialRisk')}

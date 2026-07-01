@@ -265,6 +265,7 @@ const de = {
     "colType": "Typ",
     "colResidualRisk": "Restrisiko",
     "colFdpic": "EDÖB-Konsultation",
+    "fdpicOutcome": "Ergebnis der EDÖB-Konsultation",
     "colTriggeredBy": "Ausgelöst von",
     "colCreated": "Erstellt",
     "noRecorded": "Noch keine DSFAs erfasst",

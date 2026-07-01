@@ -123,3 +123,5 @@ databaseChangeLog:
       file: db/changelog/changes/060-create-field-verification-table.yaml
   - include:
       file: db/changelog/changes/061-multilingual-governance-fields.yaml
+  - include:
+      file: db/changelog/changes/062-fix-multilingual-default-locale.yaml
