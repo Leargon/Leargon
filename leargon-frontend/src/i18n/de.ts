@@ -23,6 +23,7 @@ const de = {
     "contextMap": "Kontextkarte",
     "capabilities": "Fähigkeiten",
     "teamInsights": "Team-Einblicke",
+    "insights": "Einblicke",
     "settings": "Einstellungen",
     "users": "Benutzer",
     "locales": "Sprachen",
@@ -276,6 +277,20 @@ const de = {
     "clickToSet": "Zum Festlegen klicken",
     "riskPlaceholder": "Identifizierte Risiken beschreiben...",
     "measuresPlaceholder": "Minderungsmassnahmen beschreiben..."
+  },
+  "insights": {
+    "pageTitle": "Einblicke",
+    "pageSubtitle": "Methodologie-gruppierte Analyse von Team- und Domänengesundheit",
+    "groupTeamTopologies": "Team Topologien",
+    "groupDdd": "Domain-Driven Design",
+    "noInsightsForPerspective": "Für die gewählte Perspektive sind keine Einblicke verfügbar. Wechseln Sie die Perspektive in der oberen Leiste.",
+    "healthy": "Gesund ({{count}})",
+    "perspective": {
+      "all": "Alle",
+      "architecture": "Architektur",
+      "compliance": "Compliance",
+      "governance": "Governance"
+    }
   },
   "analytics": {
     "pageTitle": "Team- & Org-Insights",

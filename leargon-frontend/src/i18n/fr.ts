@@ -23,6 +23,7 @@ const fr = {
     "contextMap": "Carte de contexte",
     "capabilities": "Capacités",
     "teamInsights": "Aperçu de l'équipe",
+    "insights": "Aperçus",
     "settings": "Paramètres",
     "users": "Utilisateurs",
     "locales": "Langues",
@@ -276,6 +277,20 @@ const fr = {
     "clickToSet": "Cliquer pour définir",
     "riskPlaceholder": "Décrire les risques identifiés...",
     "measuresPlaceholder": "Décrire les mesures de réduction..."
+  },
+  "insights": {
+    "pageTitle": "Aperçus",
+    "pageSubtitle": "Analyse groupée par méthodologie de la santé des équipes et des domaines",
+    "groupTeamTopologies": "Topologies d'équipe",
+    "groupDdd": "Domain-Driven Design",
+    "noInsightsForPerspective": "Aucun aperçu disponible pour la perspective sélectionnée. Changez la perspective dans la barre supérieure.",
+    "healthy": "Sain ({{count}})",
+    "perspective": {
+      "all": "Tous",
+      "architecture": "Architecture",
+      "compliance": "Conformité",
+      "governance": "Gouvernance"
+    }
   },
   "analytics": {
     "pageTitle": "Analyse des équipes et de l'org.",

@@ -23,6 +23,7 @@ const en = {
     contextMap: 'Context Map',
     capabilities: 'Capabilities',
     teamInsights: 'Team Insights',
+    insights: 'Insights',
     settings: 'Settings',
     users: 'Users',
     locales: 'Locales',
@@ -281,6 +282,20 @@ const en = {
     clickToSet: 'Click to set',
     riskPlaceholder: 'Describe the identified risks...',
     measuresPlaceholder: 'Describe the mitigation measures...',
+  },
+  insights: {
+    pageTitle: 'Insights',
+    pageSubtitle: 'Methodology-grouped analysis of team and domain health',
+    groupTeamTopologies: 'Team Topologies',
+    groupDdd: 'Domain-Driven Design',
+    noInsightsForPerspective: 'No insights are available for the selected perspective. Switch the perspective in the top bar to see other methodology groups.',
+    healthy: 'Healthy ({{count}})',
+    perspective: {
+      all: 'All',
+      architecture: 'Architecture',
+      compliance: 'Compliance',
+      governance: 'Governance',
+    },
   },
   analytics: {
     pageTitle: 'Team & Org Insights',
