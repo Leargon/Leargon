@@ -150,6 +150,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
   const domain = domainResponse?.data as BusinessDomainResponse | undefined;
+  // Per-field edit affordances come from the backend-computed editableFields (owner/steward/admin/DDD
+  // editor), so the edit buttons match enforcement — the domain owner can now edit, not just verify.
+  const canEditField = (fieldName: string): boolean => domain?.editableFields?.includes(fieldName) ?? false;
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetBusinessDomainVersions(domainKey);
@@ -342,7 +345,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   };
 
   const activeLocales = locales.filter((l) => l.isActive);
-  const descriptionLocales = canManage ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
+  const descriptionLocales = canEditField('names') ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   // Mandatory field helpers
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -561,7 +564,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Names & Descriptions */}
       <SectionHeader
         title={t('domain.namesAndDescriptions')}
-        canEdit={canManage}
+        canEdit={canEditField('names')}
         isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...domain.names], descriptions: [...(domain.descriptions || [])] })}
         onSave={namesEdit.save}
@@ -654,7 +657,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.type')}
             statusIndicator={renderStatus('type')}
-            canEdit={canManage}
+            canEdit={canEditField('type')}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
             onSave={typeEdit.save}
@@ -708,7 +711,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.parentDomain')}
             statusIndicator={renderStatus('parent')}
-            canEdit={canManage}
+            canEdit={canEditField('parent')}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
             onSave={parentEdit.save}
@@ -777,7 +780,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             title={t('domain.visionStatement')}
             statusIndicator={renderStatus(...activeLocales.map((l) => `visionStatement.${l.localeCode}`))}
 
-            canEdit={canManage}
+            canEdit={canEditField('visionStatement')}
             isEditing={visionEdit.isEditing}
             onEdit={() => visionEdit.startEdit([...(domain.visionStatement ?? [])])}
             onSave={visionEdit.save}
@@ -798,7 +801,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             </Box>
           ) : (
             <Box sx={{ mb: 2 }}>
-              <LocalizedTextView value={domain.visionStatement} showAll={canManage} emptyText={t('common.notSet')} />
+              <LocalizedTextView value={domain.visionStatement} showAll={canEditField('visionStatement')} emptyText={t('common.notSet')} />
             </Box>
           )}
         </>
@@ -811,7 +814,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.owningUnit')}
             statusIndicator={renderStatus('owningUnit')}
-            canEdit={canManage}
+            canEdit={canEditField('owningUnit')}
             isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
             onSave={owningUnitEdit.save}

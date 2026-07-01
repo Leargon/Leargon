@@ -212,8 +212,16 @@ open class DpiaService(
     ) {
         val isAdmin = currentUser.roles.contains("ROLE_ADMIN")
         val isTriggeredBy = dpia.triggeredBy?.id == currentUser.id
-        if (!isAdmin && !isTriggeredBy) {
-            throw ForbiddenOperationException("Only the user who triggered the DPIA or an admin can edit it")
+        // A DPIA belongs to its process/entity — that resource's owner and steward may edit it too,
+        // consistent with per-field edit rights on the resource itself.
+        val ownerId = dpia.process?.effectiveOwner()?.id ?: dpia.entity?.effectiveOwner()?.id
+        val stewardId = dpia.process?.effectiveSteward()?.id ?: dpia.entity?.effectiveSteward()?.id
+        val isOwner = ownerId != null && ownerId == currentUser.id
+        val isSteward = stewardId != null && stewardId == currentUser.id
+        if (!isAdmin && !isTriggeredBy && !isOwner && !isSteward) {
+            throw ForbiddenOperationException(
+                "Only an admin, the user who triggered the DPIA, or the linked process/entity owner or steward can edit it"
+            )
         }
     }
 }

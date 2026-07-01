@@ -158,6 +158,26 @@ describe('DPIA API', () => {
     expect(res.status).toBe(403);
   });
 
+  it('the process owner can edit a DPIA triggered by someone else', async () => {
+    // Owner creates the process; an ADMIN triggers the DPIA (so triggeredBy != owner).
+    const process = await createProcess(userClient, 'Owner Edits DPIA Process');
+    const dpiaRes = await adminClient.post<DpiaResponse>(`/processes/${process.key}/dpia`, null);
+    const dpiaKey = dpiaRes.data.key;
+
+    // The process owner (not the triggering user) may now edit it.
+    const res = await userClient.put<DpiaResponse>(`/dpia/${dpiaKey}/risk-description`, {
+      riskDescription: [{ locale: 'en', text: 'Owner-authored risk note' }],
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.riskDescription?.find((x) => x.locale === 'en')?.text).toBe('Owner-authored risk note');
+
+    // A plain non-owner still cannot.
+    const denied = await otherClient.put(`/dpia/${dpiaKey}/measures`, {
+      measures: [{ locale: 'en', text: 'nope' }],
+    });
+    expect(denied.status).toBe(403);
+  });
+
   // ─── Entity DPIA ───────────────────────────────────────────────────────────
 
   it('can trigger a DPIA for a business entity', async () => {

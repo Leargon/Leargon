@@ -61,6 +61,28 @@ open class BusinessDomainService(
     open fun getBusinessDomainByKeyAsResponse(key: String): BusinessDomainResponse =
         businessDomainMapper.toBusinessDomainResponse(getBusinessDomainByKey(key))
 
+    /** Detail response including the current user's per-record [editableFields]. */
+    @ReadOnly
+    open fun getBusinessDomainByKeyAsResponse(
+        key: String,
+        currentUser: User
+    ): BusinessDomainResponse {
+        val m = businessDomainMapper
+        return m.toBusinessDomainResponse(getBusinessDomainByKey(key), currentUser)
+    }
+
+    /** Owner (owning-unit business owner), steward, or admin may edit domain content. */
+    @ReadOnly
+    open fun canEditDomain(
+        key: String,
+        currentUser: User
+    ): Boolean {
+        if (currentUser.roles.contains("ROLE_ADMIN")) return true
+        val domain = getBusinessDomainByKey(key)
+        val uid = currentUser.id
+        return uid != null && (domain.effectiveOwner()?.id == uid || domain.effectiveSteward()?.id == uid)
+    }
+
     @ReadOnly
     open fun getLocalizedDomain(
         key: String,

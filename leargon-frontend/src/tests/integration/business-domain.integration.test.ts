@@ -5,6 +5,7 @@ import {
   signupAdmin,
   withToken,
   createDomain,
+  createOrgUnit,
   createClassification,
 } from './testClient';
 import type { AxiosInstance } from 'axios';
@@ -299,5 +300,50 @@ describe('Business Domain E2E', () => {
     const entityRes = await adminClient.get(`/business-entities/${entity.key}`);
     expect(entityRes.status).toBe(200);
     expect(entityRes.data.businessDomain).toBeFalsy();
+  });
+
+  // =====================
+  // OWNER EDIT RIGHTS
+  // =====================
+
+  it('the domain owner (owning-unit business owner) can edit the domain, a plain non-owner cannot', async () => {
+    // A plain user who will become the domain's owner via the owning unit's business owner.
+    const ownerClient = createClient(getBackendUrl());
+    const ownerAuth = await signup(ownerClient, {
+      email: 'fe-dom-owner@example.com', username: 'fedomowner', password: 'password123', firstName: 'Dom', lastName: 'Owner',
+    });
+    withToken(ownerClient, ownerAuth.accessToken);
+
+    const otherClient = createClient(getBackendUrl());
+    const otherAuth = await signup(otherClient, {
+      email: 'fe-dom-other@example.com', username: 'fedomother', password: 'password123', firstName: 'Dom', lastName: 'Other',
+    });
+    withToken(otherClient, otherAuth.accessToken);
+
+    // Admin sets up: an org unit owned by fedomowner, and a domain owned by that unit.
+    const unit = await createOrgUnit(adminClient, 'FE Domain Owner Unit', { businessOwnerUsername: 'fedomowner' });
+    const domain = await createDomain(adminClient, 'FE Owner-Editable Domain');
+    const assign = await adminClient.put(`/business-domains/${domain.key}/owning-unit`, { owningUnitKey: unit.key });
+    expect(assign.status).toBe(200);
+
+    // editableFields on the GET reflects the owner's edit rights (so the UI shows the edit buttons).
+    const get = await ownerClient.get<BusinessDomainResponse>(`/business-domains/${domain.key}`);
+    expect(get.data.editableFields).toContain('names');
+    expect(get.data.editableFields).toContain('visionStatement');
+
+    // A plain non-owner cannot edit, and sees no editable fields.
+    const denied = await otherClient.put(`/business-domains/${domain.key}/names`, [
+      { locale: 'en', text: 'Should fail' },
+    ]);
+    expect(denied.status).toBe(403);
+    const otherGet = await otherClient.get<BusinessDomainResponse>(`/business-domains/${domain.key}`);
+    expect(otherGet.data.editableFields ?? []).toHaveLength(0);
+
+    // The owner (not a DDD editor, not admin) can edit — done last since renaming regenerates the key.
+    const edit = await ownerClient.put<BusinessDomainResponse>(`/business-domains/${domain.key}/names`, [
+      { locale: 'en', text: 'Renamed By Owner' },
+    ]);
+    expect(edit.status).toBe(200);
+    expect(edit.data.names?.find((n) => n.locale === 'en')?.text).toBe('Renamed By Owner');
   });
 });
