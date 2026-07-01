@@ -35,8 +35,6 @@ class BusinessEntityFieldValueExtractor(
 
             fieldName == "boundedContext" -> entity.boundedContext?.key
 
-            fieldName == "retentionPeriod" -> FieldValueSupport.localizedSignature(entity.retentionPeriod).ifEmpty { null }
-
             fieldName.startsWith("retentionPeriod.") -> FieldValueSupport.localized(entity.retentionPeriod, "retentionPeriod", fieldName)
 
             fieldName == "storageLocations" -> FieldValueSupport.keysOf(entity.storageLocations)

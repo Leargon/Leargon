@@ -84,6 +84,7 @@ import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import LocalizedTextEditor from '../common/LocalizedTextEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import FieldStatusIndicator from '../common/FieldStatusIndicator';
@@ -164,7 +165,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const [tlDialogOpen, setTlDialogOpen] = useState(false);
   const [tlEditingId, setTlEditingId] = useState<number | null>(null);
   const [tlTargetEntityKey, setTlTargetEntityKey] = useState<string | null>(null);
-  const [tlSemanticNote, setTlSemanticNote] = useState('');
+  const [tlSemanticNote, setTlSemanticNote] = useState<LocalizedText[]>([]);
   const [tlError, setTlError] = useState('');
 
   // Relationship create dialog
@@ -204,9 +205,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   ];
   const isMandatory = (...fieldNames: string[]) =>
     fieldNames.some((f) =>
-      mandatoryList.includes(f) ||
-      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
-      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+      mandatoryList.includes(f) || mandatoryList.some((m) => m.startsWith(`${f}.`))
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
@@ -215,7 +214,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const hiddenList = entity?.hiddenFields ?? [];
   const isHidden = (...fieldNames: string[]) =>
     hiddenList.length > 0 &&
-    fieldNames.some((f) => hiddenList.includes(f));
+    fieldNames.some(
+      (f) =>
+        hiddenList.includes(f) ||
+        (activeLocales.length > 0 && activeLocales.every((l) => hiddenList.includes(`${f}.${l.localeCode}`))),
+    );
   const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
   const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
 
@@ -375,9 +378,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   });
 
   // Retention period inline edit
-  const retentionEdit = useInlineEdit<string>({
+  const retentionEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updateRetentionPeriod.mutateAsync({ key: entityKey, data: { retentionPeriod: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
+      await updateRetentionPeriod.mutateAsync({ key: entityKey, data: { retentionPeriod: val.length > 0 ? val : null } });
       invalidate();
     },
   });
@@ -847,27 +850,35 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.retentionPeriod && !isHidden('retentionPeriod') && (
-          <PropRow label={t('entity.retentionPeriod')} statusIndicator={renderStatus('retentionPeriod')} canEdit={canEditField('retentionPeriod')} isEditing={retentionEdit.isEditing}
-            onEdit={() => retentionEdit.startEdit(getLocalizedText(entity.retentionPeriod ?? undefined))}
+          <PropRow label={t('entity.retentionPeriod')} statusIndicator={renderStatus(...activeLocales.map((l) => `retentionPeriod.${l.localeCode}`))} canEdit={canEditField('retentionPeriod')} isEditing={retentionEdit.isEditing}
+            onEdit={() => retentionEdit.startEdit([...(entity.retentionPeriod ?? [])])}
             onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
             isMandatory={isMandatory('retentionPeriod')}>
             {retentionEdit.isEditing ? (
               <Box>
-                <TextField
-                  value={retentionEdit.editValue ?? ''}
-                  onChange={(e) => retentionEdit.setEditValue(e.target.value)}
-                  size="small"
+                <LocalizedTextEditor
+                  locales={locales}
+                  value={retentionEdit.editValue ?? []}
+                  onChange={(v) => retentionEdit.setEditValue(v)}
                   placeholder={t('entity.retentionPlaceholder')}
-                  sx={{ width: 300 }}
                 />
                 {retentionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{retentionEdit.error}</Alert>}
               </Box>
             ) : entity.retentionPeriod && entity.retentionPeriod.length > 0 ? (
-              <Typography variant="body2">{getLocalizedText(entity.retentionPeriod)}</Typography>
+              <Box>
+                {activeLocales.map((l) => {
+                  const text = entity.retentionPeriod!.find((v) => v.locale === l.localeCode)?.text;
+                  if (!text) return null;
+                  return (
+                    <Box key={l.localeCode} sx={{ display: 'flex', gap: 1, alignItems: 'baseline' }}>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 32 }}>{l.localeCode}</Typography>
+                      <Typography variant="body2">{text}</Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
             ) : (
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
         )}
@@ -1057,7 +1068,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       {!isHidden('translationLinks') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Typography variant="subtitle2">{t('entity.translationLinks')}</Typography>
         {canEditField('translationLinks') && (
-          <IconButton size="small" onClick={() => { setTlEditingId(null); setTlTargetEntityKey(null); setTlSemanticNote(''); setTlError(''); setTlDialogOpen(true); }} color="primary">
+          <IconButton size="small" onClick={() => { setTlEditingId(null); setTlTargetEntityKey(null); setTlSemanticNote([]); setTlError(''); setTlDialogOpen(true); }} color="primary">
             <Add fontSize="small" />
           </IconButton>
         )}
@@ -1089,7 +1100,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                           onClick={() => {
                             setTlEditingId(link.id!);
                             setTlTargetEntityKey(link.linkedEntity?.key ?? null);
-                            setTlSemanticNote(getLocalizedText(link.semanticDifferenceNote ?? undefined));
+                            setTlSemanticNote([...(link.semanticDifferenceNote ?? [])]);
                             setTlError('');
                             setTlDialogOpen(true);
                           }}>
@@ -1538,14 +1549,12 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               size="small"
               disabled={!!tlEditingId}
             />
-            <TextField
-              label={t('entity.semanticDifferenceNote')}
+            <LocalizedTextEditor
+              locales={locales}
               value={tlSemanticNote}
-              onChange={(e) => setTlSemanticNote(e.target.value)}
-              size="small"
+              onChange={setTlSemanticNote}
               multiline
               rows={2}
-              fullWidth
               placeholder={t('entity.semanticNotePlaceholder')}
             />
             {tlError && <Alert severity="error">{tlError}</Alert>}
@@ -1560,7 +1569,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 if (tlEditingId) {
                   await updateTranslationLink.mutateAsync({
                     id: tlEditingId,
-                    data: { semanticDifferenceNote: tlSemanticNote ? [{ locale: preferredLocale ?? 'en', text: tlSemanticNote }] : null },
+                    data: { semanticDifferenceNote: tlSemanticNote.length > 0 ? tlSemanticNote : null },
                   });
                 } else {
                   if (!tlTargetEntityKey) return;
@@ -1568,7 +1577,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                     data: {
                       firstEntityKey: entityKey,
                       secondEntityKey: tlTargetEntityKey,
-                      semanticDifferenceNote: tlSemanticNote ? [{ locale: preferredLocale ?? 'en', text: tlSemanticNote }] : undefined,
+                      semanticDifferenceNote: tlSemanticNote.length > 0 ? tlSemanticNote : undefined,
                     },
                   });
                 }

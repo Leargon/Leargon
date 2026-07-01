@@ -240,9 +240,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   ];
   const isMandatory = (...fieldNames: string[]) =>
     fieldNames.some((f) =>
-      mandatoryList.includes(f) ||
-      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
-      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+      mandatoryList.includes(f) || mandatoryList.some((m) => m.startsWith(`${f}.`))
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
@@ -251,7 +249,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const hiddenList = process?.hiddenFields ?? [];
   const isHidden = (...fieldNames: string[]) =>
     hiddenList.length > 0 &&
-    fieldNames.some((f) => hiddenList.includes(f));
+    fieldNames.some(
+      (f) =>
+        hiddenList.includes(f) ||
+        (activeLocales.length > 0 && activeLocales.every((l) => hiddenList.includes(`${f}.${l.localeCode}`))),
+    );
   const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
   const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
 

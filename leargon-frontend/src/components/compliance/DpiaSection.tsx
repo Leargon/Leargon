@@ -7,7 +7,6 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  TextField,
   Select,
   MenuItem,
   Divider,
@@ -15,10 +14,12 @@ import {
 } from '@mui/material';
 import { Assessment as AssessmentIcon } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
-import type { DpiaResponse } from '../../api/generated/model';
+import type { DpiaResponse, LocalizedText, SupportedLocaleResponse } from '../../api/generated/model';
 import { useLocale } from '../../context/LocaleContext';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import PropRow from '../common/PropRow';
+import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import {
   useUpdateDpiaRiskDescription,
   useUpdateDpiaMeasures,
@@ -54,8 +55,11 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   invalidateKey,
 }) => {
   const { t } = useTranslation();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
+
+  const { data: localesResponse } = useGetSupportedLocales();
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
 
   const { mutateAsync: updateRiskDescription } = useUpdateDpiaRiskDescription();
   const { mutateAsync: updateMeasures } = useUpdateDpiaMeasures();
@@ -63,18 +67,18 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
   const { mutateAsync: completeDpia } = useCompleteDpia();
   const { mutateAsync: reopenDpia } = useReopenDpia();
 
-  const riskEdit = useInlineEdit<string>({
+  const riskEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
       if (!dpia) return;
-      await updateRiskDescription({ key: dpia.key, data: { riskDescription: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
+      await updateRiskDescription({ key: dpia.key, data: { riskDescription: val.length > 0 ? val : null } });
       await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
     },
   });
 
-  const measuresEdit = useInlineEdit<string>({
+  const measuresEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
       if (!dpia) return;
-      await updateMeasures({ key: dpia.key, data: { measures: val ? [{ locale: preferredLocale ?? 'en', text: val }] : null } });
+      await updateMeasures({ key: dpia.key, data: { measures: val.length > 0 ? val : null } });
       await queryClient.invalidateQueries({ queryKey: [...invalidateKey] });
     },
   });
@@ -130,9 +134,7 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
       </Box>
       {!dpia ? (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>{t('dpia.noDpia')}</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('dpia.noDpia')}</Typography>
           {canEdit && (
             <Button
               size="small"
@@ -151,20 +153,19 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
             label={t('dpia.riskDescription')}
             canEdit={canEdit && dpia.status !== 'COMPLETED'}
             isEditing={riskEdit.isEditing}
-            onEdit={() => riskEdit.startEdit(getLocalizedText(dpia.riskDescription ?? undefined))}
+            onEdit={() => riskEdit.startEdit([...(dpia.riskDescription ?? [])])}
             onSave={riskEdit.save}
             onCancel={riskEdit.cancel}
             isSaving={riskEdit.isSaving}
           >
             {riskEdit.isEditing ? (
               <Box>
-                <TextField
+                <LocalizedTextEditor
+                  locales={locales}
+                  value={riskEdit.editValue ?? []}
+                  onChange={(v) => riskEdit.setEditValue(v)}
                   multiline
                   rows={3}
-                  size="small"
-                  fullWidth
-                  value={riskEdit.editValue ?? ''}
-                  onChange={(e) => riskEdit.setEditValue(e.target.value)}
                 />
                 {riskEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{riskEdit.error}</Alert>}
               </Box>
@@ -179,20 +180,19 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
             label={t('dpia.measures')}
             canEdit={canEdit && dpia.status !== 'COMPLETED'}
             isEditing={measuresEdit.isEditing}
-            onEdit={() => measuresEdit.startEdit(getLocalizedText(dpia.measures ?? undefined))}
+            onEdit={() => measuresEdit.startEdit([...(dpia.measures ?? [])])}
             onSave={measuresEdit.save}
             onCancel={measuresEdit.cancel}
             isSaving={measuresEdit.isSaving}
           >
             {measuresEdit.isEditing ? (
               <Box>
-                <TextField
+                <LocalizedTextEditor
+                  locales={locales}
+                  value={measuresEdit.editValue ?? []}
+                  onChange={(v) => measuresEdit.setEditValue(v)}
                   multiline
                   rows={3}
-                  size="small"
-                  fullWidth
-                  value={measuresEdit.editValue ?? ''}
-                  onChange={(e) => measuresEdit.setEditValue(e.target.value)}
                 />
                 {measuresEdit.error && <Alert severity="error" sx={{ mt: 0.5 }}>{measuresEdit.error}</Alert>}
               </Box>
@@ -226,15 +226,9 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 ))}
               </Select>
             ) : dpia.initialRisk ? (
-              <Chip
-                label={t(`dpia.risk_${dpia.initialRisk}`)}
-                color={RESIDUAL_RISK_COLORS[dpia.initialRisk]}
-                size="small"
-              />
+              <Chip label={t(`dpia.risk_${dpia.initialRisk}`)} color={RESIDUAL_RISK_COLORS[dpia.initialRisk]} size="small" />
             ) : (
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
 
@@ -261,15 +255,9 @@ const DpiaSection: React.FC<DpiaSectionProps> = ({
                 ))}
               </Select>
             ) : dpia.residualRisk ? (
-              <Chip
-                label={t(`dpia.risk_${dpia.residualRisk}`)}
-                color={RESIDUAL_RISK_COLORS[dpia.residualRisk]}
-                size="small"
-              />
+              <Chip label={t(`dpia.risk_${dpia.residualRisk}`)} color={RESIDUAL_RISK_COLORS[dpia.residualRisk]} size="small" />
             ) : (
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>{t('common.notSet')}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notSet')}</Typography>
             )}
           </PropRow>
 

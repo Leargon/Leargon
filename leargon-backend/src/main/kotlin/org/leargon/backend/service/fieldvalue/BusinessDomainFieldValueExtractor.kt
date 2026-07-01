@@ -28,8 +28,6 @@ class BusinessDomainFieldValueExtractor(
 
             fieldName == "owningUnit" -> entity.owningUnit?.key
 
-            fieldName == "visionStatement" -> FieldValueSupport.localizedSignature(entity.visionStatement).ifEmpty { null }
-
             fieldName.startsWith("visionStatement.") -> FieldValueSupport.localized(entity.visionStatement, "visionStatement", fieldName)
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here

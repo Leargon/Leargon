@@ -112,7 +112,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         and: "initial configurations"
         def configs = [
-                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
+                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"],
                 [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"],
                 [entityType: "BUSINESS_DOMAIN", fieldName: "type"]
         ]
@@ -128,7 +128,7 @@ class FieldConfigurationControllerSpec extends Specification {
         response.body().size() == 3
 
         and: "all entries are present"
-        response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod" }
+        response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod.en" }
         response.body().any { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "boundedContext" }
         response.body().any { it.entityType == "BUSINESS_DOMAIN" && it.fieldName == "type" }
     }
@@ -139,7 +139,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         and: "a configuration with explicit new fields"
         def configs = [
-                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en",
                  visibility: "SHOWN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"],
                 [entityType: "BUSINESS_ENTITY", fieldName: "qualityRules",
                  visibility: "HIDDEN", section: "DATA_QUALITY", maturityLevel: "ADVANCED"]
@@ -153,7 +153,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         then: "new fields are persisted"
         response.status == HttpStatus.OK
-        def retention = response.body().find { it.fieldName == "retentionPeriod" }
+        def retention = response.body().find { it.fieldName == "retentionPeriod.en" }
         retention.visibility == "SHOWN"
         retention.section == "DATA_GOVERNANCE"
         retention.maturityLevel == "BASIC"
@@ -171,7 +171,7 @@ class FieldConfigurationControllerSpec extends Specification {
         when: "replacing with a config that omits the new optional fields"
         def response = client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
-                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"]]
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"]]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
         )
@@ -189,7 +189,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
-                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"]]
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"]]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
         )
@@ -215,7 +215,7 @@ class FieldConfigurationControllerSpec extends Specification {
         when: "attempting to replace configurations"
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
-                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"]]
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"]]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
         )
@@ -399,8 +399,8 @@ class FieldConfigurationControllerSpec extends Specification {
         parentDef != null
         parentDef.mandatoryCapable == false
 
-        and: "retentionPeriod has mandatoryCapable=true"
-        def retentionDef = response.body().find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod" }
+        and: "retentionPeriod.en has mandatoryCapable=true"
+        def retentionDef = response.body().find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "retentionPeriod.en" }
         retentionDef != null
         retentionDef.mandatoryCapable == true
     }
@@ -424,13 +424,13 @@ class FieldConfigurationControllerSpec extends Specification {
     // =====================
 
     def "BusinessEntity response should include missingMandatoryFields when fields are configured"() {
-        given: "admin configures retentionPeriod and boundedContext as mandatory for BUSINESS_ENTITY"
+        given: "admin configures retentionPeriod.en and boundedContext as mandatory for BUSINESS_ENTITY"
         String token = createAdminToken()
 
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
                         [
-                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
+                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"],
                                 [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"]
                         ]
                 ).bearerAuth(token),
@@ -455,7 +455,7 @@ class FieldConfigurationControllerSpec extends Specification {
         then: "missingMandatoryFields contains both missing fields"
         def missing = response.body().missingMandatoryFields
         missing != null
-        missing.contains("retentionPeriod")
+        missing.contains("retentionPeriod.en")
         missing.contains("boundedContext")
     }
 
@@ -483,12 +483,12 @@ class FieldConfigurationControllerSpec extends Specification {
     }
 
     def "BusinessEntity response should have empty/null missingMandatoryFields when all mandatory fields are present"() {
-        given: "retentionPeriod configured as mandatory"
+        given: "retentionPeriod.en configured as mandatory"
         String token = createAdminToken()
 
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
-                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"]]
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"]]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
         )
@@ -524,7 +524,7 @@ class FieldConfigurationControllerSpec extends Specification {
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
                         [
-                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod"],
+                                [entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en"],
                                 [entityType: "BUSINESS_ENTITY", fieldName: "boundedContext"]
                         ]
                 ).bearerAuth(token),
@@ -549,7 +549,7 @@ class FieldConfigurationControllerSpec extends Specification {
         then: "mandatoryFields contains both configured field names"
         def mandatory = response.body().mandatoryFields
         mandatory != null
-        mandatory.contains("retentionPeriod")
+        mandatory.contains("retentionPeriod.en")
         mandatory.contains("boundedContext")
     }
 
@@ -679,7 +679,7 @@ class FieldConfigurationControllerSpec extends Specification {
         then: "hiddenFields contains both hidden field names"
         def hidden = response.body().hiddenFields
         hidden != null
-        hidden.contains("retentionPeriod")
+        hidden.contains("retentionPeriod.en")
         hidden.contains("qualityRules")
     }
 
@@ -689,7 +689,7 @@ class FieldConfigurationControllerSpec extends Specification {
 
         client.toBlocking().exchange(
                 HttpRequest.PUT("/administration/field-configurations",
-                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod",
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "retentionPeriod.en",
                           visibility: "SHOWN", section: "DATA_GOVERNANCE", maturityLevel: "BASIC"]]
                 ).bearerAuth(token),
                 Argument.listOf(Map)
@@ -818,7 +818,7 @@ class FieldConfigurationControllerSpec extends Specification {
         then: "hiddenFields contains only BUSINESS_ENTITY hidden fields"
         def hidden = response.body().hiddenFields
         hidden != null
-        hidden.contains("retentionPeriod")
+        hidden.contains("retentionPeriod.en")
         !hidden.contains("type")
     }
 }

@@ -27,6 +27,9 @@ import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../context/LocaleContext';
 import { useTranslation } from 'react-i18next';
 import { downloadExport } from '../api/exportApi';
+import { useGetSupportedLocales } from '../api/generated/locale/locale';
+import LocalizedTextEditor from '../components/common/LocalizedTextEditor';
+import type { LocalizedText, SupportedLocaleResponse } from '../api/generated/model';
 
 const RISK_COLORS: Record<string, 'success' | 'warning' | 'error'> = {
   LOW: 'success',
@@ -46,11 +49,13 @@ interface DpiaRowProps {
 const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSaved }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText } = useLocale();
+  const { data: localesResponse } = useGetSupportedLocales();
+  const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];
   const [expanded, setExpanded] = useState(false);
   const [editingRisk, setEditingRisk] = useState(false);
-  const [riskDescription, setRiskDescription] = useState(() => getLocalizedText(dpia.riskDescription ?? undefined));
-  const [measures, setMeasures] = useState(() => getLocalizedText(dpia.measures ?? undefined));
+  const [riskDescription, setRiskDescription] = useState<LocalizedText[]>(() => [...(dpia.riskDescription ?? [])]);
+  const [measures, setMeasures] = useState<LocalizedText[]>(() => [...(dpia.measures ?? [])]);
   const [saving, setSaving] = useState<string | null>(null);
 
   const canEdit = isAdmin || dpia.triggeredBy?.username === currentUsername;
@@ -105,7 +110,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
   const handleSaveRiskDescription = useCallback(async () => {
     setSaving('riskDescription');
     try {
-      await updateRiskDescription.mutateAsync({ key: dpia.key, data: { riskDescription: riskDescription ? [{ locale: preferredLocale ?? 'en', text: riskDescription }] : null } });
+      await updateRiskDescription.mutateAsync({ key: dpia.key, data: { riskDescription: riskDescription.length > 0 ? riskDescription : null } });
       onSaved();
     } finally {
       setSaving(null);
@@ -115,7 +120,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
   const handleSaveMeasures = useCallback(async () => {
     setSaving('measures');
     try {
-      await updateMeasures.mutateAsync({ key: dpia.key, data: { measures: measures ? [{ locale: preferredLocale ?? 'en', text: measures }] : null } });
+      await updateMeasures.mutateAsync({ key: dpia.key, data: { measures: measures.length > 0 ? measures : null } });
       onSaved();
     } finally {
       setSaving(null);
@@ -288,24 +293,13 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                   {t('dpia.riskDescription')}
                 </Typography>
                 {canEdit ? (
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                    <TextField
-                      size="small"
-                      multiline
-                      rows={3}
-                      fullWidth
-                      placeholder={t('dpia.riskPlaceholder')}
-                      value={riskDescription}
-                      onChange={(e) => setRiskDescription(e.target.value)}
-                    />
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={handleSaveRiskDescription}
-                      disabled={saving === 'riskDescription'}
-                    >
-                      {saving === 'riskDescription' ? <CircularProgress size={14} /> : t('common.save')}
-                    </Button>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <LocalizedTextEditor locales={locales} value={riskDescription} onChange={setRiskDescription} multiline rows={3} placeholder={t('dpia.riskPlaceholder')} />
+                    <Box>
+                      <Button size="small" variant="outlined" onClick={handleSaveRiskDescription} disabled={saving === 'riskDescription'}>
+                        {saving === 'riskDescription' ? <CircularProgress size={14} /> : t('common.save')}
+                      </Button>
+                    </Box>
                   </Box>
                 ) : (
                   <Typography variant="body2" color={dpia.riskDescription?.length ? 'text.primary' : 'text.secondary'}>
@@ -327,24 +321,13 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
                   {t('dpia.measures')}
                 </Typography>
                 {canEdit ? (
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                    <TextField
-                      size="small"
-                      multiline
-                      rows={3}
-                      fullWidth
-                      placeholder={t('dpia.measuresPlaceholder')}
-                      value={measures}
-                      onChange={(e) => setMeasures(e.target.value)}
-                    />
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={handleSaveMeasures}
-                      disabled={saving === 'measures'}
-                    >
-                      {saving === 'measures' ? <CircularProgress size={14} /> : t('common.save')}
-                    </Button>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <LocalizedTextEditor locales={locales} value={measures} onChange={setMeasures} multiline rows={3} placeholder={t('dpia.measuresPlaceholder')} />
+                    <Box>
+                      <Button size="small" variant="outlined" onClick={handleSaveMeasures} disabled={saving === 'measures'}>
+                        {saving === 'measures' ? <CircularProgress size={14} /> : t('common.save')}
+                      </Button>
+                    </Box>
                   </Box>
                 ) : (
                   <Typography variant="body2" color={dpia.measures?.length ? 'text.primary' : 'text.secondary'}>
