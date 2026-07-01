@@ -78,7 +78,6 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
-import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -250,10 +249,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   // Field verification: owner-only (admins can edit but not verify).
   const isOwner = !!user?.username && user.username === entity?.dataOwner?.username;
   const isSteward = !!user?.username && user.username === entity?.dataSteward?.username;
-  // Broad edit (any field) = owner / effective steward / admin. Scoped editors are limited per-field by
-  // canEditField, mirroring the backend per-field gate (avoids edit pencils that 403 on save).
+  // Broad edit (any field) = owner / effective steward / admin.
   const hasBroadEdit = isAdmin || isOwner || isSteward;
-  const canEditField = useCanEditField('BUSINESS_ENTITY', user?.roles, hasBroadEdit);
+  // Per-field edit affordances come straight from the backend-computed editableFields on the detail
+  // response — the single source of truth that cannot drift from server-side enforcement.
+  const canEditField = (fieldName: string): boolean => entity?.editableFields?.includes(fieldName) ?? false;
   // Lifecycle management of this entity (create a child under it, or delete it): an admin /
   // DATA_GOVERNANCE editor-lead, or this entity's owner/steward.
   const canManage = canCreateChild(user?.roles, 'BUSINESS_ENTITY', user?.username, entity?.dataOwner?.username, entity?.dataSteward?.username);

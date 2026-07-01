@@ -67,21 +67,21 @@ describe('Field Configuration E2E', () => {
 
   it('PUT /administration/field-configurations replaces all configurations', async () => {
     const entries: FieldConfigurationEntry[] = [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
       { entityType: 'BUSINESS_ENTITY', fieldName: 'businessDomain' },
       { entityType: 'BUSINESS_DOMAIN', fieldName: 'type' },
     ];
     const res = await adminClient.put<FieldConfigurationEntry[]>('/administration/field-configurations', entries);
     expect(res.status).toBe(200);
     expect(res.data.length).toBe(3);
-    expect(res.data.some((e: FieldConfigurationEntry) => e.entityType === 'BUSINESS_ENTITY' && e.fieldName === 'retentionPeriod')).toBe(true);
+    expect(res.data.some((e: FieldConfigurationEntry) => e.entityType === 'BUSINESS_ENTITY' && e.fieldName === 'retentionPeriod.en')).toBe(true);
     expect(res.data.some((e: FieldConfigurationEntry) => e.entityType === 'BUSINESS_ENTITY' && e.fieldName === 'businessDomain')).toBe(true);
     expect(res.data.some((e: FieldConfigurationEntry) => e.entityType === 'BUSINESS_DOMAIN' && e.fieldName === 'type')).toBe(true);
   });
 
   it('PUT /administration/field-configurations replaces (not appends) existing configurations', async () => {
     await adminClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
     ]);
 
     const res = await adminClient.put<FieldConfigurationEntry[]>('/administration/field-configurations', [
@@ -95,7 +95,7 @@ describe('Field Configuration E2E', () => {
 
   it('PUT /administration/field-configurations returns 403 for non-admin', async () => {
     const res = await userClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
     ]);
     expect(res.status).toBe(403);
   });
@@ -107,7 +107,7 @@ describe('Field Configuration E2E', () => {
   it('entity shows missingMandatoryFields when mandatory fields are configured but absent', async () => {
     // Configure retentionPeriod as mandatory
     await adminClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
     ]);
 
     // Create an entity without retentionPeriod
@@ -116,7 +116,7 @@ describe('Field Configuration E2E', () => {
     const res = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
     expect(res.status).toBe(200);
     expect(res.data.missingMandatoryFields).toBeTruthy();
-    expect(res.data.missingMandatoryFields).toContain('retentionPeriod');
+    expect(res.data.missingMandatoryFields).toContain('retentionPeriod.en');
   });
 
   it('entity shows null missingMandatoryFields when no fields are configured', async () => {
@@ -133,14 +133,14 @@ describe('Field Configuration E2E', () => {
   it('entity shows null missingMandatoryFields when all mandatory fields are present', async () => {
     // Configure retentionPeriod as mandatory
     await adminClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
     ]);
 
     // Create entity then set retentionPeriod
     const entity = await createEntity(adminClient, 'FC Complete Entity');
     const updateRes = await adminClient.put<BusinessEntityResponse>(
       `/business-entities/${entity.key}/retention-period`,
-      { retentionPeriod: '7 years' },
+      { retentionPeriod: [{ locale: 'en', text: '7 years' }] },
     );
     expect(updateRes.status).toBe(200);
 
@@ -155,7 +155,7 @@ describe('Field Configuration E2E', () => {
 
   it('entity response includes mandatoryFields list when fields are configured', async () => {
     await adminClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
       { entityType: 'BUSINESS_ENTITY', fieldName: 'businessDomain' },
     ]);
 
@@ -164,7 +164,7 @@ describe('Field Configuration E2E', () => {
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.data.mandatoryFields)).toBe(true);
-    expect(res.data.mandatoryFields).toContain('retentionPeriod');
+    expect(res.data.mandatoryFields).toContain('retentionPeriod.en');
     expect(res.data.mandatoryFields).toContain('businessDomain');
   });
 
@@ -200,7 +200,7 @@ describe('Field Configuration E2E', () => {
     const entries: FieldConfigurationEntry[] = [
       {
         entityType: 'BUSINESS_ENTITY',
-        fieldName: 'retentionPeriod',
+        fieldName: 'retentionPeriod.en',
         visibility: 'SHOWN',
         section: 'DATA_GOVERNANCE',
         maturityLevel: 'BASIC',
@@ -217,7 +217,7 @@ describe('Field Configuration E2E', () => {
     const res = await adminClient.put<FieldConfigurationEntry[]>('/administration/field-configurations', entries);
     expect(res.status).toBe(200);
 
-    const retention = res.data.find((e) => e.fieldName === 'retentionPeriod');
+    const retention = res.data.find((e) => e.fieldName === 'retentionPeriod.en');
     expect(retention?.visibility).toBe('SHOWN');
     expect(retention?.section).toBe('DATA_GOVERNANCE');
     expect(retention?.maturityLevel).toBe('BASIC');
@@ -230,7 +230,7 @@ describe('Field Configuration E2E', () => {
 
   it('PUT /administration/field-configurations applies defaults when new fields are omitted', async () => {
     const res = await adminClient.put<FieldConfigurationEntry[]>('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en' },
     ]);
     expect(res.status).toBe(200);
 
@@ -317,7 +317,7 @@ describe('Field Configuration E2E', () => {
     expect(parent).toBeDefined();
     expect(parent?.mandatoryCapable).toBe(false);
 
-    const retention = res.data.find((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'retentionPeriod');
+    const retention = res.data.find((d) => d.entityType === 'BUSINESS_ENTITY' && d.fieldName === 'retentionPeriod.en');
     expect(retention).toBeDefined();
     expect(retention?.mandatoryCapable).toBe(true);
   });

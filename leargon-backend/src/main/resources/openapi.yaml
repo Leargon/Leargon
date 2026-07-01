@@ -6793,6 +6793,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -7172,6 +7178,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -7947,6 +7959,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -8240,6 +8258,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true

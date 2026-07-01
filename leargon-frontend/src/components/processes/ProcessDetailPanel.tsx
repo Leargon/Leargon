@@ -83,7 +83,6 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
-import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -207,10 +206,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     canEditEntityTypeByRole(user?.roles, 'BUSINESS_PROCESS');
   const isOwner = !!user?.username && user.username === process?.processOwner?.username;
   const isSteward = !!user?.username && user.username === process?.processSteward?.username;
-  // Broad edit (may change any field) = owner / effective steward / admin. Scoped editors are limited
-  // per-field by canEditField, which mirrors the backend per-field gate (avoids edit pencils that 403).
+  // Broad edit (may change any field) = owner / effective steward / admin.
   const hasBroadEdit = isAdmin || isOwner || isSteward;
-  const canEditField = useCanEditField('BUSINESS_PROCESS', user?.roles, hasBroadEdit);
+  // Per-field edit affordances come straight from the backend-computed editableFields on the detail
+  // response — the single source of truth that cannot drift from server-side enforcement.
+  const canEditField = (fieldName: string): boolean => process?.editableFields?.includes(fieldName) ?? false;
   // Lifecycle management of this process (create a sub-process, or delete it): an admin /
   // PROCESS_GOVERNANCE editor-lead, or this process's owner/steward.
   const canManage = canCreateChild(user?.roles, 'BUSINESS_PROCESS', user?.username, process?.processOwner?.username, process?.processSteward?.username);

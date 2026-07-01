@@ -65,7 +65,7 @@ open class ProcessController(
 
     override fun getProcessTree(): List<ProcessTreeResponse> = processService.getProcessTreeAsResponses()
 
-    override fun getProcessByKey(key: String): ProcessResponse = processService.getProcessByKeyAsResponse(key)
+    override fun getProcessByKey(key: String): ProcessResponse = processService.getProcessByKeyAsResponse(key, getCurrentUser())
 
     override fun setProcessFieldVerification(
         key: String,

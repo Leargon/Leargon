@@ -220,8 +220,8 @@ describe('DPIA API', () => {
     });
     expect(fdpic.data.fdpicConsultationOutcome?.find((x) => x.locale === 'de')?.text).toBe('Mit Auflagen genehmigt');
 
-    // Read back both locales
-    const get = await userClient.get<DpiaResponse>(`/dpia/${dpiaKey}`);
+    // Read back both locales via the process DPIA endpoint
+    const get = await userClient.get<DpiaResponse>(`/processes/${process.key}/dpia`);
     expect(get.data.riskDescription?.find((x) => x.locale === 'de')?.text).toBe('Hohes Risiko für betroffene Personen');
     expect(get.data.fdpicConsultationOutcome?.find((x) => x.locale === 'en')?.text).toBe('Approved with conditions');
 

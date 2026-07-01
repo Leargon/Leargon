@@ -162,7 +162,7 @@ describe('Methodology Configuration', () => {
   it('disabling DATA_GOVERNANCE suppresses DATA_GOVERNANCE fields from entity missingMandatoryFields', async () => {
     // Make retentionPeriod mandatory
     const fc: FieldConfigurationEntry[] = [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
     ];
     await adminClient.put('/administration/field-configurations', fc);
 
@@ -178,7 +178,7 @@ describe('Methodology Configuration', () => {
     // retentionPeriod is in DATA_GOVERNANCE section — should not appear in missingMandatoryFields
     expect(
       res.data.missingMandatoryFields == null ||
-      !res.data.missingMandatoryFields.includes('retentionPeriod'),
+      !res.data.missingMandatoryFields.includes('retentionPeriod.en'),
     ).toBe(true);
 
     await adminClient.put('/administration/methodology-configurations', allEnabled());
@@ -228,14 +228,14 @@ describe('Methodology Configuration', () => {
 
   it('with DATA_GOVERNANCE enabled, retentionPeriod appears in missingMandatoryFields when absent', async () => {
     await adminClient.put('/administration/field-configurations', [
-      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
+      { entityType: 'BUSINESS_ENTITY', fieldName: 'retentionPeriod.en', visibility: 'SHOWN', section: 'DATA_GOVERNANCE', maturityLevel: 'BASIC' },
     ]);
     await adminClient.put('/administration/methodology-configurations', allEnabled());
 
     const entity = await createEntity(adminClient, 'Meth DG Active Entity');
     const res = await adminClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
     expect(res.status).toBe(200);
-    expect(res.data.missingMandatoryFields).toContain('retentionPeriod');
+    expect(res.data.missingMandatoryFields).toContain('retentionPeriod.en');
 
     await adminClient.put('/administration/field-configurations', []);
   });

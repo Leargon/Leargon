@@ -4,115 +4,190 @@ databaseChangeLog:
   # 061 wrapped legacy scalar values into a single-entry LocalizedText JSON array
   # hardcoded to locale "en". Where the deployment's configured default locale is
   # NOT "en", relabel those freshly-migrated single-entry "en" arrays to the real
-  # default locale. This runs immediately after 061 in the same startup pass, so
-  # the only "en"-tagged entries present are the ones 061 just created (these
-  # columns had no locale concept before 061). Guarded to be a no-op when the
-  # default locale is "en", and idempotent (only touches single-entry "en" arrays).
+  # default locale. Runs right after 061 in the same startup pass, so the only
+  # "en"-tagged entries present are the ones 061 just created (these columns had no
+  # locale concept before 061). Each statement is self-guarding (no-op when the
+  # default locale is "en") and idempotent (only single-entry "en" arrays).
+  #
+  # NOTE: one single statement per changeSet — Liquibase sends each `sql` block to
+  # JDBC as one statement, and MySQL rejects multi-statement blocks (no allowMultiQueries).
 
   - changeSet:
-      id: 062-relabel-top-level-multilingual-default-locale
+      id: 062-relabel-retention-period-default-locale
       author: leargon
-      comment: Relabel 061-migrated 'en' single-entry arrays to the actual default locale
       changes:
         - sql:
             dbms: mysql
-            splitStatements: false
-            sql: |
-              SET @def := (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1);
-              SET @def := IFNULL(@def, 'en');
-
+            sql: >
               UPDATE business_entities
-              SET retention_period = JSON_SET(retention_period, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND retention_period IS NOT NULL
-                AND JSON_VALID(retention_period)
+              SET retention_period = JSON_SET(retention_period, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND retention_period IS NOT NULL AND JSON_VALID(retention_period)
                 AND JSON_LENGTH(retention_period) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(retention_period, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(retention_period, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-vision-statement-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE business_domains
-              SET vision_statement = JSON_SET(vision_statement, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND vision_statement IS NOT NULL
-                AND JSON_VALID(vision_statement)
+              SET vision_statement = JSON_SET(vision_statement, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND vision_statement IS NOT NULL AND JSON_VALID(vision_statement)
                 AND JSON_LENGTH(vision_statement) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(vision_statement, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(vision_statement, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-context-upstream-role-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE context_relationships
-              SET upstream_role = JSON_SET(upstream_role, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND upstream_role IS NOT NULL
-                AND JSON_VALID(upstream_role)
+              SET upstream_role = JSON_SET(upstream_role, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND upstream_role IS NOT NULL AND JSON_VALID(upstream_role)
                 AND JSON_LENGTH(upstream_role) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(upstream_role, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(upstream_role, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-context-downstream-role-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE context_relationships
-              SET downstream_role = JSON_SET(downstream_role, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND downstream_role IS NOT NULL
-                AND JSON_VALID(downstream_role)
+              SET downstream_role = JSON_SET(downstream_role, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND downstream_role IS NOT NULL AND JSON_VALID(downstream_role)
                 AND JSON_LENGTH(downstream_role) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(downstream_role, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(downstream_role, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-context-description-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE context_relationships
-              SET description = JSON_SET(description, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND description IS NOT NULL
-                AND JSON_VALID(description)
+              SET description = JSON_SET(description, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND description IS NOT NULL AND JSON_VALID(description)
                 AND JSON_LENGTH(description) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-translation-link-note-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE translation_links
-              SET semantic_difference_note = JSON_SET(semantic_difference_note, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND semantic_difference_note IS NOT NULL
-                AND JSON_VALID(semantic_difference_note)
+              SET semantic_difference_note = JSON_SET(semantic_difference_note, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND semantic_difference_note IS NOT NULL AND JSON_VALID(semantic_difference_note)
                 AND JSON_LENGTH(semantic_difference_note) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(semantic_difference_note, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(semantic_difference_note, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-dpia-risk-description-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE dpia
-              SET risk_description = JSON_SET(risk_description, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND risk_description IS NOT NULL
-                AND JSON_VALID(risk_description)
+              SET risk_description = JSON_SET(risk_description, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND risk_description IS NOT NULL AND JSON_VALID(risk_description)
                 AND JSON_LENGTH(risk_description) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(risk_description, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(risk_description, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-dpia-measures-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE dpia
-              SET measures = JSON_SET(measures, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND measures IS NOT NULL
-                AND JSON_VALID(measures)
+              SET measures = JSON_SET(measures, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND measures IS NOT NULL AND JSON_VALID(measures)
                 AND JSON_LENGTH(measures) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(measures, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(measures, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-dpia-fdpic-outcome-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE dpia
-              SET fdpic_consultation_outcome = JSON_SET(fdpic_consultation_outcome, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND fdpic_consultation_outcome IS NOT NULL
-                AND JSON_VALID(fdpic_consultation_outcome)
+              SET fdpic_consultation_outcome = JSON_SET(fdpic_consultation_outcome, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND fdpic_consultation_outcome IS NOT NULL AND JSON_VALID(fdpic_consultation_outcome)
                 AND JSON_LENGTH(fdpic_consultation_outcome) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(fdpic_consultation_outcome, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(fdpic_consultation_outcome, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-quality-rule-description-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE business_data_quality_rules
-              SET description = JSON_SET(description, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND description IS NOT NULL
-                AND JSON_VALID(description)
+              SET description = JSON_SET(description, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND description IS NOT NULL AND JSON_VALID(description)
                 AND JSON_LENGTH(description) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(description, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-flow-node-label-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE process_flow_node
-              SET label = JSON_SET(label, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND label IS NOT NULL
-                AND JSON_VALID(label)
+              SET label = JSON_SET(label, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND label IS NOT NULL AND JSON_VALID(label)
                 AND JSON_LENGTH(label) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en'
 
+  - changeSet:
+      id: 062-relabel-flow-track-label-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
               UPDATE process_flow_track
-              SET label = JSON_SET(label, '$[0].locale', @def)
-              WHERE @def <> 'en'
-                AND label IS NOT NULL
-                AND JSON_VALID(label)
+              SET label = JSON_SET(label, '$[0].locale',
+                (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND label IS NOT NULL AND JSON_VALID(label)
                 AND JSON_LENGTH(label) = 1
-                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en';
+                AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en'

@@ -212,6 +212,18 @@ open class FieldConfigurationService(
     open fun concreteFieldNames(entityType: String): List<String> =
         getDefinitions().filter { it.entityType == entityType && it.localeGroup != true }.map { it.fieldName }
 
+    /**
+     * Base (locale/classification placeholder stripped) inventory field names for an entity type —
+     * e.g. `names.{locale}` → `names`, `classification.{classKey}` → `classification`, `dataOwner` →
+     * `dataOwner`. These match the field keys the frontend gates edit affordances on and are the domain
+     * of [RoleService.editableFields].
+     */
+    fun baseFieldNames(entityType: String): List<String> =
+        fieldInventory
+            .filter { it.entityType == entityType }
+            .map { it.fieldName.substringBefore(".{") }
+            .distinct()
+
     @Transactional
     open fun replace(entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> {
         // Locale group entries: only persist when HIDDEN (SHOWN means "not hidden", so omit)

@@ -158,6 +158,45 @@ class RoleService(
         return false
     }
 
+    /**
+     * Whether [user] may edit [fieldName] on a specific record, combining per-record ownership/stewardship
+     * (passed by the caller) with admin and scoped-role rights. This is the single predicate every per-field
+     * edit gate enforces (`requireFieldEdit`, quality-rule/classification checks) — reused here so a
+     * backend-computed [editableFields] cannot drift from enforcement.
+     */
+    fun canEditField(
+        user: User,
+        entityType: String,
+        fieldName: String,
+        isOwner: Boolean,
+        isSteward: Boolean
+    ): Boolean =
+        user.roles.contains(ROLE_ADMIN) ||
+            isOwner ||
+            isSteward ||
+            canEditFieldByRole(user, entityType, roleCheckFieldName(fieldName))
+
+    /**
+     * Base field names of [entityType] that [user] may edit on a record they own/steward as indicated.
+     * The keys match what the frontend gates edit affordances on (see [FieldConfigurationService.baseFieldNames]).
+     */
+    fun editableFields(
+        user: User,
+        entityType: String,
+        isOwner: Boolean,
+        isSteward: Boolean
+    ): List<String> =
+        fieldConfigurationService
+            .baseFieldNames(entityType)
+            .filter { canEditField(user, entityType, it, isOwner, isSteward) }
+
+    /**
+     * Maps a base field name to the field name its enforcement uses for the scoped-role check. Only
+     * `classification` differs: the backend gates classification assignment via `classification.value`.
+     */
+    private fun roleCheckFieldName(baseFieldName: String): String =
+        if (baseFieldName == "classification") "classification.value" else baseFieldName
+
     /** Every assignable methodology-scoped role token, for admin pickers and request validation. */
     fun allScopedRoleTokens(): List<String> =
         methodologyConfigurationService.allKeys.flatMap {

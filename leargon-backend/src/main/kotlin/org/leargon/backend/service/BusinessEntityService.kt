@@ -91,6 +91,16 @@ open class BusinessEntityService(
     open fun getBusinessEntityByKeyAsResponse(key: String): BusinessEntityResponse =
         businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(key))
 
+    /** Detail response including the current user's per-record [editableFields]. */
+    @ReadOnly
+    open fun getBusinessEntityByKeyAsResponse(
+        key: String,
+        currentUser: User
+    ): BusinessEntityResponse {
+        val m = businessEntityMapper
+        return m.toBusinessEntityResponse(getBusinessEntityByKey(key), currentUser)
+    }
+
     open fun getBusinessEntityTree(): List<BusinessEntity> = businessEntityRepository.findByParentIsNull()
 
     @ReadOnly

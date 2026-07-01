@@ -53,6 +53,11 @@ export interface BusinessDomainResponse {
      */
   hiddenFields?: string[] | null;
   /**
+     * Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
+     * @nullable
+     */
+  editableFields?: string[] | null;
+  /**
      * Per-field verification status (VERIFIED/UNVERIFIED) with who/when; null if no field has a status yet
      * @nullable
      */

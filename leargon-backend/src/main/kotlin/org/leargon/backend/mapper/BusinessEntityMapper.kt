@@ -17,6 +17,7 @@ import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
+import org.leargon.backend.service.RoleService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -27,9 +28,13 @@ open class BusinessEntityMapper(
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper,
     private val processRepository: ProcessRepository,
-    private val fieldVerificationService: FieldVerificationService
+    private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService
 ) {
-    fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
+    fun toBusinessEntityResponse(
+        businessEntity: BusinessEntity,
+        currentUser: org.leargon.backend.domain.User? = null
+    ): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val effectiveClassifications =
             ClassificationMapper.computeEffectiveAssignments(
@@ -122,6 +127,14 @@ open class BusinessEntityMapper(
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
             .fieldStatuses(fieldStatuses)
+            .editableFields(
+                currentUser?.let { u ->
+                    val uid = u.id
+                    val isOwner = uid != null && businessEntity.effectiveOwner()?.id == uid
+                    val isSteward = uid != null && effectiveSteward?.id == uid
+                    roleService.editableFields(u, "BUSINESS_ENTITY", isOwner, isSteward)
+                },
+            )
             .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 
