@@ -15,6 +15,12 @@ interface LocalizedTextViewProps {
   showAll: boolean;
   /** Rendered when no locale has any text. When omitted, nothing is rendered for an empty value. */
   emptyText?: string;
+  /**
+   * Optional per-locale verification indicator. When provided (and `showAll`), each rendered locale line
+   * gets `statusFor(localeCode)` appended — used to show a per-locale verification symbol on multilingual
+   * fields inside collection items (quality rules, relationships, …).
+   */
+  statusFor?: (localeCode: string) => React.ReactNode;
   sx?: SxProps<Theme>;
 }
 
@@ -22,7 +28,7 @@ interface LocalizedTextViewProps {
  * Read-only renderer for a multilingual freetext field. Editors see all languages at a glance;
  * viewers see only the selected display locale. Mirrors the editing surface of `LocalizedTextEditor`.
  */
-const LocalizedTextView: React.FC<LocalizedTextViewProps> = ({ value, showAll, emptyText, sx }) => {
+const LocalizedTextView: React.FC<LocalizedTextViewProps> = ({ value, showAll, emptyText, statusFor, sx }) => {
   const { getLocalizedText } = useLocale();
   const { data: localesResponse } = useGetSupportedLocales();
   const activeLocales = ((localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? []).filter(
@@ -58,9 +64,10 @@ const LocalizedTextView: React.FC<LocalizedTextViewProps> = ({ value, showAll, e
             <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 32 }}>
               {l.localeCode}
             </Typography>
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', flex: 1 }}>
               {text}
             </Typography>
+            {statusFor?.(l.localeCode)}
           </Box>
         );
       })}

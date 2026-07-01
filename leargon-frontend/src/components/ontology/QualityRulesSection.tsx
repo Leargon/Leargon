@@ -38,7 +38,8 @@ import { CreateBusinessDataQualityRuleRequestSeverity } from '../../api/generate
 interface QualityRulesSectionProps {
   entityKey: string;
   isOwnerOrAdmin: boolean;
-  renderItemStatus?: (ruleId: number) => React.ReactNode;
+  /** Renders the verification indicator for a concrete field name (e.g. `qualityRule.3.descriptions.en`). */
+  renderItemStatus?: (fieldName: string) => React.ReactNode;
 }
 
 type SeverityValue = typeof CreateBusinessDataQualityRuleRequestSeverity[keyof typeof CreateBusinessDataQualityRuleRequestSeverity];
@@ -194,13 +195,17 @@ const QualityRulesSection: React.FC<QualityRulesSectionProps> = ({ entityKey, is
               <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                 <Box sx={{ flex: 1 }}>
                   {rule.severity && (
-                    <Box sx={{ mb: 0.5 }}>
+                    <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <Chip label={t(`qualityRule.${rule.severity}`)} size="small" color={SEVERITY_COLORS[rule.severity] ?? 'default'} sx={{ fontSize: '0.7rem', height: 20 }} />
+                      {rule.id != null && renderItemStatus?.(`qualityRule.${rule.id}`)}
                     </Box>
                   )}
-                  <LocalizedTextView value={rule.descriptions} showAll={isOwnerOrAdmin} />
+                  <LocalizedTextView
+                    value={rule.descriptions}
+                    showAll={isOwnerOrAdmin}
+                    statusFor={rule.id != null ? (loc) => renderItemStatus?.(`qualityRule.${rule.id}.descriptions.${loc}`) : undefined}
+                  />
                 </Box>
-                {rule.id != null && renderItemStatus?.(rule.id)}
                 {isOwnerOrAdmin && (
                   <Box sx={{ display: 'flex', gap: 0.5, ml: 'auto' }}>
                     <IconButton size="small" onClick={() => handleOpenEdit(rule)}><EditIcon fontSize="small" /></IconButton>

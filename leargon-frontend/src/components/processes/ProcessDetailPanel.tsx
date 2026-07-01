@@ -1275,11 +1275,18 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {process.crossBorderTransfers.map((t, i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
-                  <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                  {t.notes && t.notes.length > 0 && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{getLocalizedText(t.notes)}</Typography>}
-                  {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
+                <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
+                    <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
+                    {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
+                  </Box>
+                  <LocalizedTextView
+                    value={t.notes}
+                    showAll={canEditField('crossBorderTransfers')}
+                    statusFor={(loc) => renderStatus(`crossBorderTransfer.${t.destinationCountry}.notes.${loc}`)}
+                    sx={{ pl: 1 }}
+                  />
                 </Box>
               ))}
             </Box>

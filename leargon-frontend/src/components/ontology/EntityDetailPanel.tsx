@@ -1018,7 +1018,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                       <span key={i}>{i > 0 ? ' — ' : ''}{c.businessEntity.name} [{c.minimum}..{c.maximum ?? '*'}]</span>
                     ))}
                   </TableCell>
-                  <TableCell>{getLocalizedText(r.descriptions || []) || '—'}</TableCell>
+                  <TableCell>
+                    <LocalizedTextView
+                      value={r.descriptions}
+                      showAll={canEditField('relationships')}
+                      emptyText="—"
+                      statusFor={r.id != null ? (loc) => renderStatus(`relationship.${r.id}.descriptions.${loc}`) : undefined}
+                    />
+                  </TableCell>
                   <TableCell align="right">
                     {r.id != null && renderStatus(`relationship.${r.id}`)}
                     {canEditField('relationships') && r.id != null && (
@@ -1079,7 +1086,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                       <Chip label={getLocalizedText(allEntities.find(e => e.key === link.linkedEntity!.key)?.names ?? [], link.linkedEntity.name)} size="small" onClick={() => navigate(`/entities/${link.linkedEntity!.key}`)} clickable />
                     )}
                   </TableCell>
-                  <TableCell><LocalizedTextView value={link.semanticDifferenceNote} showAll={canEditField('translationLinks')} emptyText="—" /></TableCell>
+                  <TableCell>
+                    <LocalizedTextView
+                      value={link.semanticDifferenceNote}
+                      showAll={canEditField('translationLinks')}
+                      emptyText="—"
+                      statusFor={link.id != null ? (loc) => renderStatus(`translationLink.${link.id}.semanticDifferenceNote.${loc}`) : undefined}
+                    />
+                  </TableCell>
                   <TableCell align="right">
                     {link.id != null && renderStatus(`translationLink.${link.id}`)}
                     {canEditField('translationLinks') && (
@@ -1308,7 +1322,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       <Divider sx={{ my: 2 }} />
 
       {/* Quality Rules */}
-      {!isHidden('qualityRules') && <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={canEditField('qualityRules')} renderItemStatus={(ruleId) => renderStatus(`qualityRule.${ruleId}`)} />}
+      {!isHidden('qualityRules') && <QualityRulesSection entityKey={entityKey} isOwnerOrAdmin={canEditField('qualityRules')} renderItemStatus={(fieldName) => renderStatus(fieldName)} />}
 
       {!isHidden('qualityRules') && <Divider sx={{ my: 2 }} />}
 

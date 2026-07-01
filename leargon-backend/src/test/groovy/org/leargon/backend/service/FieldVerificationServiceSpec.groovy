@@ -163,6 +163,49 @@ class FieldVerificationServiceSpec extends Specification {
         status(entityId, "relationship.2") == null
     }
 
+    def "a multilingual collection field is tracked per-locale: editing one locale flips only that locale"() {
+        given: "an owner verifies a quality rule's en + de descriptions and its base (severity) row"
+        def owner = saveUser("mlOwner")
+        def admin = saveUser("mlAdmin")
+        long entityId = 5201L
+        def items = { Map m -> m as Map<String, String> }
+
+        fieldVerificationService.sync(TYPE, entityId, owner, true, { null }, items([
+            "qualityRule.1"             : "MUST",
+            "qualityRule.1.descriptions.en": "Email must be valid",
+            "qualityRule.1.descriptions.de": "E-Mail muss gültig sein",
+        ]))
+
+        expect: "all three rows are owner-VERIFIED"
+        status(entityId, "qualityRule.1").status == "VERIFIED"
+        status(entityId, "qualityRule.1.descriptions.en").status == "VERIFIED"
+        status(entityId, "qualityRule.1.descriptions.de").status == "VERIFIED"
+
+        when: "a non-owner edits ONLY the German description"
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { null }, items([
+            "qualityRule.1"             : "MUST",
+            "qualityRule.1.descriptions.en": "Email must be valid",
+            "qualityRule.1.descriptions.de": "E-Mail muss RFC-konform sein",
+        ]))
+
+        then: "only the German row flips UNVERIFIED; English + base stay VERIFIED"
+        status(entityId, "qualityRule.1.descriptions.de").status == "UNVERIFIED"
+        status(entityId, "qualityRule.1.descriptions.de").updatedByUsername == "mlAdmin"
+        status(entityId, "qualityRule.1.descriptions.en").status == "VERIFIED"
+        status(entityId, "qualityRule.1").status == "VERIFIED"
+
+        when: "the German description is cleared (locale removed from the map)"
+        fieldVerificationService.sync(TYPE, entityId, admin, false, { null }, items([
+            "qualityRule.1"             : "MUST",
+            "qualityRule.1.descriptions.en": "Email must be valid",
+        ]))
+
+        then: "its per-locale row is deleted (delete-on-missing), English + base untouched"
+        status(entityId, "qualityRule.1.descriptions.de") == null
+        status(entityId, "qualityRule.1.descriptions.en").status == "VERIFIED"
+        status(entityId, "qualityRule.1").status == "VERIFIED"
+    }
+
     def "reverting to a historically-VERIFIED value does NOT resurrect the old status (status is not value-keyed)"() {
         given: "owner verified value A"
         def owner = saveUser("ownerRev")

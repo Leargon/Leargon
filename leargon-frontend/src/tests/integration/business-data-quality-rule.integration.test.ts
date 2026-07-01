@@ -382,4 +382,39 @@ describe('Business Data Quality Rule API', () => {
     expect(descText(updated.data.descriptions, 'en')).toBe('Email must be RFC 5322 valid');
     expect(descText(updated.data.descriptions, 'de')).toBeUndefined();
   });
+
+  it('verifies the rule description per-locale (separate status row per language)', async () => {
+    // Field verification is gated per methodology (off by default); DATA_QUALITY sits under DATA_GOVERNANCE.
+    const ALL_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+    await adminClient.put('/administration/methodology-configurations',
+      ALL_KEYS.map((key) => ({ key, enabled: true, verificationEnabled: key === 'DATA_GOVERNANCE' })));
+
+    try {
+      const entity = await createEntity(ownerClient, 'QR Per-Locale Verify Entity');
+      const created = await ownerClient.post<BusinessDataQualityRuleResponse>(
+        `/business-entities/${entity.key}/quality-rules`,
+        {
+          descriptions: [
+            { locale: 'en', text: 'Name must be present' },
+            { locale: 'de', text: 'Name muss vorhanden sein' },
+          ],
+          severity: 'MUST',
+        },
+      );
+      const ruleId = created.data.id;
+
+      const get = await ownerClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+      const statusFields = (get.data.fieldStatuses ?? []).map((s) => s.fieldName);
+
+      // One verification row per locale of the description, plus a base row for the non-localized severity.
+      expect(statusFields).toContain(`qualityRule.${ruleId}.descriptions.en`);
+      expect(statusFields).toContain(`qualityRule.${ruleId}.descriptions.de`);
+      expect(statusFields).toContain(`qualityRule.${ruleId}`);
+      // The old folded-single-row scheme produced exactly one qualityRule.<id> key — no per-locale keys.
+      expect(statusFields.filter((f) => f === `qualityRule.${ruleId}`)).toHaveLength(1);
+    } finally {
+      await adminClient.put('/administration/methodology-configurations',
+        ALL_KEYS.map((key) => ({ key, enabled: true })));
+    }
+  });
 });

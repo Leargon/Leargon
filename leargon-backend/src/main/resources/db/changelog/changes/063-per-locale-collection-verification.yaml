@@ -1,0 +1,27 @@
+databaseChangeLog:
+  # Per-locale verification for multilingual fields inside collection items.
+  #
+  # The verification unit for these five collection-item types changed from ONE folded row per item
+  # (which mixed all locales + non-localized attributes) to a base row (non-localized attributes) plus
+  # one row per locale of each localized sub-field. Delete the old rows so the startup
+  # FieldVerificationBackfillService reseeds the new keys (base + per-locale) as UNVERIFIED. Affected
+  # items reset to UNVERIFIED once; owners re-verify at the new per-locale granularity.
+  #
+  # Only the localized collection items are affected. Key-only collection items (interface.*,
+  # implementation.*, inputEntity.*, capability.*, itSystem.*, serviceProvider.*, boundedContext.*,
+  # dataAccess.*) are unchanged and intentionally not touched.
+
+  - changeSet:
+      id: 063-reset-localized-collection-verification-rows
+      author: leargon
+      comment: Drop folded per-item verification rows so backfill reseeds base + per-locale keys
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              DELETE FROM field_verifications
+              WHERE field_name LIKE 'qualityRule.%'
+                 OR field_name LIKE 'relationship.%'
+                 OR field_name LIKE 'translationLink.%'
+                 OR field_name LIKE 'contextRelationship.%'
+                 OR field_name LIKE 'crossBorderTransfer.%'

@@ -1029,12 +1029,22 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     }}>→ {t('domain.downstream')}:</Typography>
                     {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
                   </Box>
-                  {rel.description && rel.description.length > 0 && (
-                    <LocalizedTextView
-                      value={rel.description}
-                      showAll={canManage}
-                      sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}
-                    />
+                  {([
+                    ['upstreamRole', rel.upstreamRole, t('domain.upstreamRole')],
+                    ['downstreamRole', rel.downstreamRole, t('domain.downstreamRole')],
+                    ['description', rel.description, t('domain.description')],
+                  ] as const).map(([sub, val, label]) =>
+                    val && val.length > 0 ? (
+                      <Box key={sub} sx={{ mt: 0.25 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>{label}:</Typography>
+                        <LocalizedTextView
+                          value={val}
+                          showAll={canManage}
+                          statusFor={rel.id != null ? (loc) => renderStatus(`contextRelationship.${rel.id}.${sub}.${loc}`) : undefined}
+                          sx={{ color: 'text.secondary', display: 'inline-block' }}
+                        />
+                      </Box>
+                    ) : null,
                   )}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}

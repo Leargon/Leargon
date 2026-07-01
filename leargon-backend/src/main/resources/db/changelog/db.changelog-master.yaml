@@ -125,3 +125,5 @@ databaseChangeLog:
       file: db/changelog/changes/061-multilingual-governance-fields.yaml
   - include:
       file: db/changelog/changes/062-fix-multilingual-default-locale.yaml
+  - include:
+      file: db/changelog/changes/063-per-locale-collection-verification.yaml
