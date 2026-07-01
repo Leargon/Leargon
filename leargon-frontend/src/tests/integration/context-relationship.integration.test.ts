@@ -19,8 +19,8 @@ type LocalizedText = { locale: string; text: string };
 interface ContextRelationshipResponse {
   id: number;
   relationshipType: string;
-  upstreamBoundedContext: { key: string; name: string };
-  downstreamBoundedContext: { key: string; name: string };
+  upstreamBoundedContext: { key: string; name: string; domainKey?: string };
+  downstreamBoundedContext: { key: string; name: string; domainKey?: string };
   upstreamRole?: LocalizedText[] | null;
   downstreamRole?: LocalizedText[] | null;
   description?: LocalizedText[] | null;
@@ -98,6 +98,28 @@ describe('Context Relationship API', () => {
     expect(res.data.upstreamBoundedContext.key).toBe(upstreamBoundedContext.key);
     expect(res.data.downstreamBoundedContext.key).toBe(downstreamBoundedContext.key);
     expect(res.data.description?.find((x) => x.locale === 'en')?.text).toBe('Integration test relationship');
+  });
+
+  it('supports a cross-domain relationship (bounded contexts in two different domains)', async () => {
+    // The two bounded contexts live in separate domains — the essence of a context map (DDD).
+    const res = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
+      relationshipType: 'CONFORMIST',
+    });
+    expect(res.status).toBe(201);
+
+    const upDomain = res.data.upstreamBoundedContext.domainKey;
+    const downDomain = res.data.downstreamBoundedContext.domainKey;
+    expect(upDomain).toBeTruthy();
+    expect(downDomain).toBeTruthy();
+    // Cross-domain: the two endpoints belong to different domains, and the relationship is visible from both.
+    expect(upDomain).not.toBe(downDomain);
+
+    const list = await adminClient.get<ContextRelationshipResponse[]>('/context-relationships');
+    const found = list.data.find((r) => r.id === res.data.id);
+    expect(found?.upstreamBoundedContext.domainKey).toBe(upDomain);
+    expect(found?.downstreamBoundedContext.domainKey).toBe(downDomain);
   });
 
   it('non-admin cannot create a context relationship', async () => {

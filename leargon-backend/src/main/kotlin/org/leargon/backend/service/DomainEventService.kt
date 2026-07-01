@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
+import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.domain.DomainEvent
 import org.leargon.backend.domain.DomainEventEntityLink
 import org.leargon.backend.domain.DomainEventProcessLink
@@ -30,8 +31,25 @@ open class DomainEventService(
     private val boundedContextRepository: BoundedContextRepository,
     private val processRepository: ProcessRepository,
     private val businessEntityRepository: BusinessEntityRepository,
-    private val domainEventMapper: DomainEventMapper
+    private val domainEventMapper: DomainEventMapper,
+    private val roleService: RoleService
 ) {
+    /**
+     * Managing a domain event requires an admin, a DDD editor/lead, or the owner/steward of the domain
+     * that owns the event's publishing bounded context.
+     */
+    private fun requireManage(
+        publishingBc: BoundedContext?,
+        currentUser: User
+    ) {
+        if (roleService.isEditorFor(currentUser, "DDD")) return
+        val domain = publishingBc?.domain
+        val uid = currentUser.id
+        if (uid != null && (domain?.effectiveOwner()?.id == uid || domain?.effectiveSteward()?.id == uid)) return
+        throw ForbiddenOperationException(
+            "Managing a domain event requires an admin, a DDD editor/lead, or the owner/steward of its domain"
+        )
+    }
     @Transactional
     open fun getAll(): List<DomainEventResponse> {
         val mapper = domainEventMapper
@@ -60,6 +78,7 @@ open class DomainEventService(
             boundedContextRepository
                 .findByKey(request.publishingBoundedContextKey)
                 .orElseThrow { ResourceNotFoundException("BoundedContext not found: ${request.publishingBoundedContextKey}") }
+        requireManage(publishingBc, currentUser)
 
         val event = DomainEvent()
         event.publishingBoundedContext = publishingBc
@@ -82,7 +101,7 @@ open class DomainEventService(
         currentUser: User
     ): DomainEventResponse {
         val event = findByKey(key)
-        checkEditPermission(event, currentUser)
+        requireManage(event.publishingBoundedContext, currentUser)
         event.names = names.map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = domainEventRepository.update(event)
         val processLinks = domainEventProcessLinkRepository.findByEventId(updated.id!!)
@@ -98,7 +117,7 @@ open class DomainEventService(
         currentUser: User
     ): DomainEventResponse {
         val event = findByKey(key)
-        checkEditPermission(event, currentUser)
+        requireManage(event.publishingBoundedContext, currentUser)
         event.descriptions = descriptions.map { LocalizedText(it.locale, it.text) }.toMutableList()
         val updated = domainEventRepository.update(event)
         val processLinks = domainEventProcessLinkRepository.findByEventId(updated.id!!)
@@ -229,9 +248,7 @@ open class DomainEventService(
         currentUser: User
     ) {
         val event = findByKey(key)
-        if (!currentUser.roles.contains("ROLE_ADMIN")) {
-            throw ForbiddenOperationException("Only admins can delete domain events")
-        }
+        requireManage(event.publishingBoundedContext, currentUser)
         domainEventEntityLinkRepository.deleteByEventId(event.id!!)
         domainEventProcessLinkRepository.deleteByEventId(event.id!!)
         domainEventRepository.delete(event)
@@ -241,12 +258,4 @@ open class DomainEventService(
         domainEventRepository
             .findByKey(key)
             .orElseThrow { ResourceNotFoundException("DomainEvent not found: $key") }
-
-    @Suppress("UNUSED_PARAMETER")
-    private fun checkEditPermission(
-        event: DomainEvent,
-        currentUser: User
-    ) {
-        // Allow any authenticated user to update names/descriptions
-    }
 }

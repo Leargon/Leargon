@@ -14,7 +14,6 @@ import org.leargon.backend.model.ContextRelationshipResponse
 import org.leargon.backend.model.CreateContextRelationshipRequest
 import org.leargon.backend.model.UpdateContextRelationshipRequest
 import org.leargon.backend.service.ContextRelationshipService
-import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -22,33 +21,25 @@ import org.leargon.backend.service.UserService
 open class ContextRelationshipController(
     private val contextRelationshipService: ContextRelationshipService,
     private val userService: UserService,
-    private val securityService: SecurityService,
-    private val roleService: RoleService
+    private val securityService: SecurityService
 ) : ContextRelationshipApi {
     override fun getAllContextRelationships(): List<ContextRelationshipResponse> = contextRelationshipService.getAll()
 
     override fun createContextRelationship(
         @Body request: CreateContextRelationshipRequest
     ): HttpResponse<ContextRelationshipResponse> {
-        val currentUser = getCurrentUser()
-        roleService.requireCreateRoot(currentUser, "DDD")
-        val response = contextRelationshipService.create(request, currentUser)
+        // Permission (admin / DDD editor-lead / linked-domain owner-steward) is enforced in the service.
+        val response = contextRelationshipService.create(request, getCurrentUser())
         return HttpResponse.status<ContextRelationshipResponse>(HttpStatus.CREATED).body(response)
     }
 
     override fun updateContextRelationship(
         id: Long,
         @Body request: UpdateContextRelationshipRequest
-    ): ContextRelationshipResponse {
-        val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
-        return contextRelationshipService.update(id, request, currentUser)
-    }
+    ): ContextRelationshipResponse = contextRelationshipService.update(id, request, getCurrentUser())
 
     override fun deleteContextRelationship(id: Long): HttpResponse<Void> {
-        val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
-        contextRelationshipService.delete(id, currentUser)
+        contextRelationshipService.delete(id, getCurrentUser())
         return HttpResponse.noContent()
     }
 

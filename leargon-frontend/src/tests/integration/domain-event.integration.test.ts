@@ -5,6 +5,7 @@ import {
   signupAdmin,
   withToken,
   createDomain,
+  createOrgUnit,
   createProcess,
   ApiError,
 } from './testClient';
@@ -277,12 +278,18 @@ describe('DomainEvent API', () => {
     expect(res.status).toBe(204);
   });
 
-  it('returns 403 when non-admin tries to delete', async () => {
+  it('returns 403 when a user with no DDD role and no ownership tries to delete', async () => {
     const created = await createDomainEvent(userClient, bcKey, 'Protected Event');
     const encodedKey = encodeURIComponent(created.key);
 
-    const res = await userClient.delete(`/domain-events/${encodedKey}`);
+    // A plain user: not admin, not a DDD editor, and not the owner/steward of the event's domain.
+    const plainClient = createClient(getBackendUrl());
+    const plainAuth = await signup(plainClient, {
+      email: 'de-del-plain@example.com', username: 'dedelplain', password: 'password123', firstName: 'DE', lastName: 'Plain',
+    });
+    withToken(plainClient, plainAuth.accessToken);
 
+    const res = await plainClient.delete(`/domain-events/${encodedKey}`);
     expect(res.status).toBe(403);
   });
 
@@ -302,5 +309,49 @@ describe('DomainEvent API', () => {
     const eventsWithBc = res.data.filter((e) => e.publishingBoundedContext?.key === bcKey);
     expect(eventsWithBc.length).toBeGreaterThanOrEqual(1);
     expect(eventsWithBc[0].publishingBoundedContext.domainKey).toBe(domainKey);
+  });
+
+  // ─── Owner management (broadened DDD gate) ──────────────────────────────────
+
+  it('the domain owner can create, edit and delete a domain event; a plain non-owner cannot', async () => {
+    // A plain user who owns the domain via its owning unit's business owner (no DDD role).
+    const ownerClient = createClient(getBackendUrl());
+    const ownerAuth = await signup(ownerClient, {
+      email: 'de-owner@example.com', username: 'deowner', password: 'password123', firstName: 'DE', lastName: 'Owner',
+    });
+    withToken(ownerClient, ownerAuth.accessToken);
+
+    const otherClient = createClient(getBackendUrl());
+    const otherAuth = await signup(otherClient, {
+      email: 'de-nonowner@example.com', username: 'denonowner', password: 'password123', firstName: 'DE', lastName: 'Other',
+    });
+    withToken(otherClient, otherAuth.accessToken);
+
+    // Admin sets up an owned domain + a bounded context (BC creation stays admin/DDD-editor).
+    const unit = await createOrgUnit(adminClient, 'DE Owner Unit', { businessOwnerUsername: 'deowner' });
+    const ownedDomain = await createDomain(adminClient, 'DE Owner Domain');
+    await adminClient.put(`/business-domains/${ownedDomain.key}/owning-unit`, { owningUnitKey: unit.key });
+    const ownedBc = await createBoundedContext(adminClient, ownedDomain.key as string, 'DE Owner BC');
+
+    // The owner (no DDD role) can create a domain event on their domain's BC…
+    const created = await createDomainEvent(ownerClient, ownedBc.key, 'Owner Authored Event');
+    expect(created.key).toBeTruthy();
+
+    // …edit its names…
+    const edited = await ownerClient.put<DomainEventResponse>(`/domain-events/${encodeURIComponent(created.key)}/names`, [
+      { locale: 'en', text: 'Owner Renamed Event' },
+    ]);
+    expect(edited.status).toBe(200);
+    expect(edited.data.names?.find((n) => n.locale === 'en')?.text).toBe('Owner Renamed Event');
+
+    // A plain non-owner cannot edit it.
+    const denied = await otherClient.put(`/domain-events/${encodeURIComponent(created.key)}/names`, [
+      { locale: 'en', text: 'nope' },
+    ]);
+    expect(denied.status).toBe(403);
+
+    // …and the owner can delete it.
+    const del = await ownerClient.delete(`/domain-events/${encodeURIComponent(created.key)}`);
+    expect(del.status).toBe(204);
   });
 });

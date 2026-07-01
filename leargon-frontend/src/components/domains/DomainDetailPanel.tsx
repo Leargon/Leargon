@@ -63,6 +63,8 @@ import {
   useGetAllDomainEvents,
   getGetAllDomainEventsQueryKey,
   useCreateDomainEvent,
+  useUpdateDomainEventNames,
+  useUpdateDomainEventDescriptions,
   useDeleteDomainEvent,
 } from '../../api/generated/domain-event/domain-event';
 import {
@@ -172,6 +174,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     (r) => r.upstreamBoundedContext?.domainKey === domainKey || r.downstreamBoundedContext?.domainKey === domainKey,
   );
 
+  // A context relationship links two bounded contexts that may live in DIFFERENT domains — cross-domain
+  // integration is the whole point of a context map (DDD). Offer every domain's BCs (grouped by domain).
+  const allBoundedContexts = allDomains.flatMap((d) =>
+    (d.boundedContexts ?? []).map((bc) => ({
+      key: bc.key,
+      name: bc.name,
+      domainName: getLocalizedText(d.names, d.key),
+    })),
+  );
+
   // Bounded context management state
   const [addBcOpen, setAddBcOpen] = useState(false);
   const [addBcName, setAddBcName] = useState('');
@@ -279,12 +291,20 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   );
 
   const createDomainEvent = useCreateDomainEvent();
+  const updateEventNames = useUpdateDomainEventNames();
+  const updateEventDescriptions = useUpdateDomainEventDescriptions();
   const deleteDomainEvent = useDeleteDomainEvent();
 
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventBcKey, setAddEventBcKey] = useState<string | null>(null);
   const [addEventName, setAddEventName] = useState('');
   const [addEventError, setAddEventError] = useState('');
+
+  const [editEventOpen, setEditEventOpen] = useState(false);
+  const [editEventKey, setEditEventKey] = useState<string | null>(null);
+  const [editEventNames, setEditEventNames] = useState<LocalizedText[]>([]);
+  const [editEventDescriptions, setEditEventDescriptions] = useState<LocalizedText[]>([]);
+  const [editEventError, setEditEventError] = useState('');
 
   const invalidateEvents = () => {
     queryClient.invalidateQueries({ queryKey: getGetAllDomainEventsQueryKey() });
@@ -313,9 +333,41 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     invalidateEvents();
   };
 
+  const handleOpenEditEvent = (ev: DomainEventResponse) => {
+    setEditEventKey(ev.key);
+    setEditEventNames([...(ev.names ?? [])]);
+    setEditEventDescriptions([...(ev.descriptions ?? [])]);
+    setEditEventError('');
+    setEditEventOpen(true);
+  };
+
+  const handleSaveEvent = async () => {
+    if (!editEventKey || editEventNames.length === 0) {
+      setEditEventError(t('domainEvent.nameRequired'));
+      return;
+    }
+    try {
+      await updateEventNames.mutateAsync({ key: editEventKey, data: editEventNames });
+      await updateEventDescriptions.mutateAsync({ key: editEventKey, data: editEventDescriptions });
+      invalidateEvents();
+      setEditEventOpen(false);
+    } catch (e) {
+      setEditEventError((e as Error).message);
+    }
+  };
+
   const handleAddRel = async () => {
     if (!addRelUpstreamBcKey || !addRelDownstreamBcKey) return;
     setAddRelError(null);
+    if (addRelUpstreamBcKey === addRelDownstreamBcKey) {
+      setAddRelError(t('domain.relSameBc'));
+      return;
+    }
+    // A relationship shown on this domain's context map must have at least one endpoint in this domain.
+    if (!bcKeys.has(addRelUpstreamBcKey) && !bcKeys.has(addRelDownstreamBcKey)) {
+      setAddRelError(t('domain.relNeedsCurrentDomain'));
+      return;
+    }
     try {
       await createRel.mutateAsync({
         data: {
@@ -987,11 +1039,20 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {sections.contextRelationships && !isHidden('contextRelationships') && (<>
       <Divider sx={{ my: 2 }} />
 
-      {/* Context Relationships (between bounded contexts in this domain) */}
+      {/* Context Relationships — this domain's BCs may relate to BCs in other domains (cross-domain). */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.contextRelationships')}</Typography>
-        {canManage && boundedContexts.length >= 2 && (
-          <Button size="small" startIcon={<Add />} onClick={() => setAddRelOpen(true)}>
+        {canEditField('contextRelationships') && boundedContexts.length >= 1 && allBoundedContexts.length >= 2 && (
+          <Button
+            size="small"
+            startIcon={<Add />}
+            onClick={() => {
+              // Anchor one end in this domain by default (its context map should reference it).
+              setAddRelUpstreamBcKey(boundedContexts[0]?.key ?? null);
+              setAddRelDownstreamBcKey(null);
+              setAddRelOpen(true);
+            }}
+          >
             {t('domain.addRelationship')}
           </Button>
         )}
@@ -1042,7 +1103,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>{label}:</Typography>
                         <LocalizedTextView
                           value={val}
-                          showAll={canManage}
+                          showAll={canEditField('contextRelationships')}
                           statusFor={rel.id != null ? (loc) => renderStatus(`contextRelationship.${rel.id}.${sub}.${loc}`) : undefined}
                           sx={{ color: 'text.secondary', display: 'inline-block' }}
                         />
@@ -1051,7 +1112,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   )}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
-                {canManage && (
+                {canEditField('contextRelationships') && (
                   <IconButton
                     size="small"
                     onClick={() => handleOpenEditRel(rel)}
@@ -1060,7 +1121,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     <Edit fontSize="small" />
                   </IconButton>
                 )}
-                {canManage && (
+                {canEditField('contextRelationships') && (
                   <IconButton
                     size="small"
                     color="error"
@@ -1081,7 +1142,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Domain Events */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('boundedContext.domainEvents')}</Typography>
-        {canManage && boundedContexts.length > 0 && (
+        {canEditField('domainEvents') && boundedContexts.length > 0 && (
           <Button
             size="small"
             startIcon={<Add />}
@@ -1115,7 +1176,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   color: "text.secondary"
                 }}>{ev.publishingBoundedContext?.name}</Typography>
               </Box>
-              {canManage && (
+              {canEditField('domainEvents') && (
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenEditEvent(ev)}
+                  title={t('domainEvent.editEvent')}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              )}
+              {canEditField('domainEvents') && (
                 <IconButton
                   size="small"
                   color="error"
@@ -1381,9 +1451,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         <DialogTitle>{t('domain.addRelationship')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           <Autocomplete
-            options={boundedContexts}
-            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
-            value={boundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
+            options={allBoundedContexts}
+            groupBy={(option) => option.domainName}
+            getOptionLabel={(option) => option.name}
+            value={allBoundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelUpstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
               <TextField {...params} size="small" label={`${t('domain.upstream')} ${t('domain.provides')}`} />
@@ -1392,9 +1463,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             size="small"
           />
           <Autocomplete
-            options={boundedContexts}
-            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
-            value={boundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
+            options={allBoundedContexts}
+            groupBy={(option) => option.domainName}
+            getOptionLabel={(option) => option.name}
+            value={allBoundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelDownstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
               <TextField {...params} size="small" label={`${t('domain.downstream')} ${t('domain.consumes')}`} />
@@ -1499,6 +1571,28 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             disabled={!addEventBcKey || !addEventName.trim() || createDomainEvent.isPending}
           >
             {createDomainEvent.isPending ? t('common.saving') : t('common.create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Domain Event Dialog (name + description, multilingual) */}
+      <Dialog open={editEventOpen} onClose={() => setEditEventOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domainEvent.editEvent')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('common.names')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editEventNames} onChange={setEditEventNames} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('common.descriptions')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editEventDescriptions} onChange={setEditEventDescriptions} multiline rows={3} />
+          {editEventError && <Alert severity="error">{editEventError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditEventOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={handleSaveEvent}
+            variant="contained"
+            disabled={editEventNames.length === 0 || updateEventNames.isPending || updateEventDescriptions.isPending}
+          >
+            {updateEventNames.isPending || updateEventDescriptions.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
