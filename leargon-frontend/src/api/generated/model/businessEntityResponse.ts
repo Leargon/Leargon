@@ -54,10 +54,10 @@ export interface BusinessEntityResponse {
   relationships?: BusinessEntityRelationshipResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
   /**
-     * Retention period description for the entity
+     * Retention period description for the entity (localised)
      * @nullable
      */
-  retentionPeriod?: string | null;
+  retentionPeriod?: LocalizedText[] | null;
   /**
      * ISO 3166-1 alpha-2 country codes where this entity's data is stored (manually specified)
      * @nullable
@@ -83,6 +83,11 @@ export interface BusinessEntityResponse {
      * @nullable
      */
   hiddenFields?: string[] | null;
+  /**
+     * Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
+     * @nullable
+     */
+  editableFields?: string[] | null;
   /**
      * Per-field verification status (VERIFIED/UNVERIFIED) with who/when; null if no field has a status yet
      * @nullable

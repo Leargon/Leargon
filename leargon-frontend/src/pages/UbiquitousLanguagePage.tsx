@@ -182,7 +182,8 @@ const UbiquitousLanguagePage: React.FC = () => {
                         ) : (
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             {qualityRules.map((rule) => {
-                              const label = rule.description.length > 40 ? `${rule.description.slice(0, 40)}…` : rule.description;
+                              const desc = getLocalizedText(rule.descriptions ?? undefined);
+                              const label = desc.length > 40 ? `${desc.slice(0, 40)}…` : desc;
                               const severityColor: 'error' | 'warning' | 'info' | 'default' =
                                 rule.severity === 'MUST' ? 'error' :
                                 rule.severity === 'SHOULD' ? 'warning' :

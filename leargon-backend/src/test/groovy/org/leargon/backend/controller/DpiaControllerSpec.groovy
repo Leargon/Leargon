@@ -240,13 +240,13 @@ class DpiaControllerSpec extends Specification {
         when:
         def response = client.toBlocking().exchange(
             HttpRequest.PUT("/dpia/${dpiaKey}/risk-description",
-                [riskDescription: "High risk due to sensitive PII"]).bearerAuth(token),
+                [riskDescription: [[locale: "en", text: "High risk due to sensitive PII"]]]).bearerAuth(token),
             DpiaResponse
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().riskDescription == "High risk due to sensitive PII"
+        response.body().riskDescription[0].text == "High risk due to sensitive PII"
     }
 
     // ─── PUT /dpia/{key}/measures ─────────────────────────────────────────────
@@ -263,13 +263,13 @@ class DpiaControllerSpec extends Specification {
         when:
         def response = client.toBlocking().exchange(
             HttpRequest.PUT("/dpia/${dpiaKey}/measures",
-                [measures: "Implement data minimization and encryption"]).bearerAuth(token),
+                [measures: [[locale: "en", text: "Implement data minimization and encryption"]]]).bearerAuth(token),
             DpiaResponse
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().measures == "Implement data minimization and encryption"
+        response.body().measures[0].text == "Implement data minimization and encryption"
     }
 
     // ─── PUT /dpia/{key}/residual-risk ────────────────────────────────────────
@@ -334,7 +334,7 @@ class DpiaControllerSpec extends Specification {
         when:
         client.toBlocking().exchange(
             HttpRequest.PUT("/dpia/${dpiaKey}/risk-description",
-                [riskDescription: "Should be forbidden"]).bearerAuth(otherToken),
+                [riskDescription: [[locale: "en", text: "Should be forbidden"]]]).bearerAuth(otherToken),
             Map
         )
 

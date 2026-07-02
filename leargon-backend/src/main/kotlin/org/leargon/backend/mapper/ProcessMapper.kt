@@ -18,6 +18,7 @@ import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
+import org.leargon.backend.service.RoleService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -29,9 +30,13 @@ open class ProcessMapper(
     private val serviceProviderMapper: ServiceProviderMapper,
     private val capabilityMapper: CapabilityMapper,
     private val processFlowNodeRepository: ProcessFlowNodeRepository,
-    private val fieldVerificationService: FieldVerificationService
+    private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService
 ) {
-    fun toProcessResponse(process: Process): ProcessResponse {
+    fun toProcessResponse(
+        process: Process,
+        currentUser: org.leargon.backend.domain.User? = null
+    ): ProcessResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
             fieldConfigurationService.compute("BUSINESS_PROCESS", disabledMethodologies) { fieldName ->
@@ -155,7 +160,14 @@ open class ProcessMapper(
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
             .fieldStatuses(fieldStatuses)
-            .calledProcessKeys(
+            .editableFields(
+                currentUser?.let { u ->
+                    val uid = u.id
+                    val isOwner = uid != null && process.effectiveOwner()?.id == uid
+                    val isSteward = uid != null && effectiveSteward?.id == uid
+                    roleService.editableFields(u, "BUSINESS_PROCESS", isOwner, isSteward)
+                },
+            ).calledProcessKeys(
                 processFlowNodeRepository
                     .findByProcessKeyOrderByPosition(process.key)
                     .mapNotNull { it.linkedProcessKey }

@@ -115,7 +115,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       if (visionText.trim()) {
         await updateVision.mutateAsync({
           key: newDomain.key,
-          data: { visionStatement: visionText.trim() },
+          data: { visionStatement: [{ locale: defaultLocale, text: visionText.trim() }] },
         });
       }
 

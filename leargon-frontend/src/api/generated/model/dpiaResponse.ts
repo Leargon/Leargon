@@ -17,16 +17,23 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { DpiaStatus } from './dpiaStatus.ts';
+import type { LocalizedText } from './localizedText.ts';
 import type { ResidualRisk } from './residualRisk.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
 
 export interface DpiaResponse {
   key: string;
   status: DpiaStatus;
-  /** @nullable */
-  riskDescription?: string | null;
-  /** @nullable */
-  measures?: string | null;
+  /**
+     * Risk description (localised)
+     * @nullable
+     */
+  riskDescription?: LocalizedText[] | null;
+  /**
+     * Measures to mitigate risks (localised)
+     * @nullable
+     */
+  measures?: LocalizedText[] | null;
   initialRisk?: ResidualRisk | null;
   residualRisk?: ResidualRisk | null;
   /** @nullable */
@@ -35,8 +42,11 @@ export interface DpiaResponse {
   fdpicConsultationCompleted?: boolean | null;
   /** @nullable */
   fdpicConsultationDate?: string | null;
-  /** @nullable */
-  fdpicConsultationOutcome?: string | null;
+  /**
+     * FDPIC consultation outcome (localised)
+     * @nullable
+     */
+  fdpicConsultationOutcome?: LocalizedText[] | null;
   triggeredBy: UserSummaryResponse;
   createdAt: string;
   /** @nullable */

@@ -497,8 +497,11 @@ open class ExportService(
 
             val domainId = toCmlIdentifier(rootDomain.getName(locale))
             sb.appendLine("Domain $domainId {")
-            if (!rootDomain.visionStatement.isNullOrBlank()) {
-                sb.appendLine("  domainVisionStatement = \"${rootDomain.visionStatement!!.replace("\"", "\\\"")}\"")
+            val visionText =
+                rootDomain.visionStatement.find { it.locale == locale }?.text
+                    ?: rootDomain.visionStatement.firstOrNull()?.text
+            if (!visionText.isNullOrBlank()) {
+                sb.appendLine("  domainVisionStatement = \"${visionText.replace("\"", "\\\"")}\"")
             }
 
             if (children.isNotEmpty()) {
@@ -637,7 +640,7 @@ open class ExportService(
                 csvRow(
                     entityKey,
                     entityName,
-                    rule.description,
+                    rule.descriptions.find { it.locale == "en" }?.text ?: rule.descriptions.firstOrNull()?.text ?: "",
                     rule.severity
                 )
             )
@@ -670,12 +673,13 @@ open class ExportService(
                     statusLabel,
                     initialRiskLabel,
                     riskLabel,
-                    dpia.measures,
-                    dpia.riskDescription,
+                    dpia.measures.find { it.locale == locale }?.text ?: dpia.measures.firstOrNull()?.text ?: "",
+                    dpia.riskDescription.find { it.locale == locale }?.text ?: dpia.riskDescription.firstOrNull()?.text ?: "",
                     dpia.fdpicConsultationRequired?.let { if (it) "Yes" else "No" },
                     dpia.fdpicConsultationCompleted?.let { if (it) "Yes" else "No" },
                     fdpicDate,
-                    dpia.fdpicConsultationOutcome,
+                    dpia.fdpicConsultationOutcome.find { it.locale == locale }?.text ?: dpia.fdpicConsultationOutcome.firstOrNull()?.text
+                        ?: "",
                     triggeredBy,
                     createdAt
                 )

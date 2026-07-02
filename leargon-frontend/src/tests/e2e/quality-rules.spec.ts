@@ -26,7 +26,7 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     await page.getByRole('button', { name: 'Add Rule' }).click();
 
-    await page.getByLabel('Rule description').fill('Customer email must be a valid RFC 5322 address');
+    await page.getByRole('dialog').getByRole('textbox').fill('Customer email must be a valid RFC 5322 address');
     await page.getByRole('dialog').locator('[role="combobox"]').click();
     await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5_000 });
     await page.getByRole('option', { name: 'Mandatory' }).click();
@@ -52,15 +52,15 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     // Create a rule first
     await page.getByRole('button', { name: 'Add Rule' }).click();
-    await page.getByLabel('Rule description').fill('Score must be between 0 and 100');
+    await page.getByRole('dialog').getByRole('textbox').fill('Score must be between 0 and 100');
     await page.getByRole('button', { name: 'Create' }).click();
     await page.waitForLoadState('networkidle');
 
     // Click edit on the rule — scope to quality rules section to avoid clicking SectionHeader edit buttons
     await page.getByText('Quality Rules').first().locator('..').locator('..').locator('button:has([data-testid="EditIcon"])').click();
 
-    await page.getByLabel('Rule description').clear();
-    await page.getByLabel('Rule description').fill('Score must be between 0 and 1000');
+    await page.getByRole('dialog').getByRole('textbox').clear();
+    await page.getByRole('dialog').getByRole('textbox').fill('Score must be between 0 and 1000');
     await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click();
     await page.waitForLoadState('networkidle');
 
@@ -79,7 +79,7 @@ test.describe('Quality Rules — Entity Detail (Admin)', () => {
 
     // Create a rule first
     await page.getByRole('button', { name: 'Add Rule' }).click();
-    await page.getByLabel('Rule description').fill('This rule will be deleted');
+    await page.getByRole('dialog').getByRole('textbox').fill('This rule will be deleted');
     await page.getByRole('button', { name: 'Create' }).click();
     await page.waitForLoadState('networkidle');
 
@@ -107,7 +107,7 @@ test.describe('Quality Rules — Ubiquitous Language Page (Admin)', () => {
     await fetch(`${process.env.E2E_BACKEND_URL ?? 'http://localhost:8080'}/business-entities/${entity.key}/quality-rules`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ description: 'Customer age must be at least 18', severity: 'MUST' }),
+      body: JSON.stringify({ descriptions: [{ locale: 'en', text: 'Customer age must be at least 18' }], severity: 'MUST' }),
     });
 
     await page.goto('/ubiquitous-language');

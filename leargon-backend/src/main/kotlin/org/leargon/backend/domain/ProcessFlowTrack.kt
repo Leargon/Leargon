@@ -4,6 +4,8 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "process_flow_track")
@@ -17,6 +19,7 @@ class ProcessFlowTrack {
     @Column(name = "track_index", nullable = false)
     var trackIndex: Int = 0
 
-    @Column(name = "label", nullable = true, length = 512)
-    var label: String? = null
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "label", columnDefinition = "LONGTEXT")
+    var label: MutableList<LocalizedText> = mutableListOf()
 }

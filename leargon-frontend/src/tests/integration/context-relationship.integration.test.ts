@@ -14,12 +14,16 @@ interface BoundedContextResponse {
   names: Array<{ locale: string; text: string }>;
 }
 
+type LocalizedText = { locale: string; text: string };
+
 interface ContextRelationshipResponse {
   id: number;
   relationshipType: string;
-  upstreamBoundedContext: { key: string; name: string };
-  downstreamBoundedContext: { key: string; name: string };
-  description?: string;
+  upstreamBoundedContext: { key: string; name: string; domainKey?: string };
+  downstreamBoundedContext: { key: string; name: string; domainKey?: string };
+  upstreamRole?: LocalizedText[] | null;
+  downstreamRole?: LocalizedText[] | null;
+  description?: LocalizedText[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,7 +89,7 @@ describe('Context Relationship API', () => {
       upstreamBoundedContextKey: upstreamBoundedContext.key,
       downstreamBoundedContextKey: downstreamBoundedContext.key,
       relationshipType: 'CUSTOMER_SUPPLIER',
-      description: 'Integration test relationship',
+      description: [{ locale: 'en', text: 'Integration test relationship' }],
     });
 
     expect(res.status).toBe(201);
@@ -93,7 +97,29 @@ describe('Context Relationship API', () => {
     expect(res.data.relationshipType).toBe('CUSTOMER_SUPPLIER');
     expect(res.data.upstreamBoundedContext.key).toBe(upstreamBoundedContext.key);
     expect(res.data.downstreamBoundedContext.key).toBe(downstreamBoundedContext.key);
-    expect(res.data.description).toBe('Integration test relationship');
+    expect(res.data.description?.find((x) => x.locale === 'en')?.text).toBe('Integration test relationship');
+  });
+
+  it('supports a cross-domain relationship (bounded contexts in two different domains)', async () => {
+    // The two bounded contexts live in separate domains — the essence of a context map (DDD).
+    const res = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
+      relationshipType: 'CONFORMIST',
+    });
+    expect(res.status).toBe(201);
+
+    const upDomain = res.data.upstreamBoundedContext.domainKey;
+    const downDomain = res.data.downstreamBoundedContext.domainKey;
+    expect(upDomain).toBeTruthy();
+    expect(downDomain).toBeTruthy();
+    // Cross-domain: the two endpoints belong to different domains, and the relationship is visible from both.
+    expect(upDomain).not.toBe(downDomain);
+
+    const list = await adminClient.get<ContextRelationshipResponse[]>('/context-relationships');
+    const found = list.data.find((r) => r.id === res.data.id);
+    expect(found?.upstreamBoundedContext.domainKey).toBe(upDomain);
+    expect(found?.downstreamBoundedContext.domainKey).toBe(downDomain);
   });
 
   it('non-admin cannot create a context relationship', async () => {
@@ -162,5 +188,42 @@ describe('Context Relationship API', () => {
     const anonClient = createClient(getBackendUrl());
     const res = await anonClient.get('/context-relationships');
     expect(res.status).toBe(401);
+  });
+
+  // ─── Multilingual round-trip ────────────────────────────────────────────────
+
+  it('stores roles/description in multiple locales, reads both back, and replaces on update', async () => {
+    const textOf = (d: { locale: string; text: string }[] | null | undefined, locale: string) =>
+      d?.find((x) => x.locale === locale)?.text;
+
+    const created = await adminClient.post<ContextRelationshipResponse>('/context-relationships', {
+      upstreamBoundedContextKey: upstreamBoundedContext.key,
+      downstreamBoundedContextKey: downstreamBoundedContext.key,
+      relationshipType: 'CUSTOMER_SUPPLIER',
+      upstreamRole: [{ locale: 'en', text: 'Supplier' }, { locale: 'de', text: 'Lieferant' }],
+      downstreamRole: [{ locale: 'en', text: 'Customer' }, { locale: 'de', text: 'Kunde' }],
+      description: [{ locale: 'en', text: 'Supply relationship' }, { locale: 'de', text: 'Lieferbeziehung' }],
+    });
+    expect(created.status).toBe(201);
+    expect(textOf(created.data.upstreamRole, 'de')).toBe('Lieferant');
+    expect(textOf(created.data.downstreamRole, 'en')).toBe('Customer');
+    expect(textOf(created.data.description, 'de')).toBe('Lieferbeziehung');
+
+    // Read back both locales
+    const list = await adminClient.get<ContextRelationshipResponse[]>('/context-relationships');
+    const found = list.data.find((r) => r.id === created.data.id);
+    expect(textOf(found?.upstreamRole, 'en')).toBe('Supplier');
+    expect(textOf(found?.description, 'de')).toBe('Lieferbeziehung');
+
+    // Update replaces the upstreamRole set (en-only) — de must be gone
+    const updated = await adminClient.put<ContextRelationshipResponse>(
+      `/context-relationships/${created.data.id}`,
+      {
+        relationshipType: 'CUSTOMER_SUPPLIER',
+        upstreamRole: [{ locale: 'en', text: 'Vendor' }],
+      },
+    );
+    expect(textOf(updated.data.upstreamRole, 'en')).toBe('Vendor');
+    expect(textOf(updated.data.upstreamRole, 'de')).toBeUndefined();
   });
 });

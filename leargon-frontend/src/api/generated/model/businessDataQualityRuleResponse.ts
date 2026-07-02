@@ -17,11 +17,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BusinessDataQualityRuleResponseSeverity } from './businessDataQualityRuleResponseSeverity.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface BusinessDataQualityRuleResponse {
   id: number;
-  /** Freetext description of the data quality rule */
-  description: string;
+  /** Freetext description of the data quality rule (localised) */
+  descriptions: LocalizedText[];
   /**
      * Optional severity level of the rule
      * @nullable

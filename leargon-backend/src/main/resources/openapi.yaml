@@ -6793,6 +6793,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -6800,9 +6806,11 @@ components:
             $ref: '#/components/schemas/FieldVerificationResponse'
           description: Per-field verification status (VERIFIED/UNVERIFIED) with who/when; null if no field has a status yet
         visionStatement:
-          type: string
+          type: array
           nullable: true
-          description: Vision statement for the bounded context
+          description: Vision statement for the domain (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         owningUnit:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
           nullable: true
@@ -7135,10 +7143,11 @@ components:
           items:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
         retentionPeriod:
-          type: string
+          type: array
           nullable: true
-          description: Retention period description for the entity
-          example: 7 years
+          description: Retention period description for the entity (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         storageLocations:
           type: array
           nullable: true
@@ -7169,6 +7178,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -7195,16 +7210,17 @@ components:
       type: object
       required:
       - id
-      - description
+      - descriptions
       - createdAt
       properties:
         id:
           type: integer
           format: int64
-        description:
-          type: string
-          description: Freetext description of the data quality rule
-          example: An active customer must have had at least one transaction in the last 6 months
+        descriptions:
+          type: array
+          description: Freetext description of the data quality rule (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         severity:
           type: string
           nullable: true
@@ -7220,11 +7236,13 @@ components:
     CreateBusinessDataQualityRuleRequest:
       type: object
       required:
-      - description
+      - descriptions
       properties:
-        description:
-          type: string
-          minLength: 1
+        descriptions:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         severity:
           type: string
           nullable: true
@@ -7232,11 +7250,13 @@ components:
     UpdateBusinessDataQualityRuleRequest:
       type: object
       required:
-      - description
+      - descriptions
       properties:
-        description:
-          type: string
-          minLength: 1
+        descriptions:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         severity:
           type: string
           nullable: true
@@ -7283,9 +7303,11 @@ components:
           nullable: true
           description: Description in the default locale
         retentionPeriod:
-          type: string
+          type: array
           nullable: true
-          description: Retention period or criteria for this entity
+          description: Retention period or criteria for this entity (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BusinessEntityTreeResponse:
       type: object
       required:
@@ -7572,9 +7594,11 @@ components:
             nullable: false
             description: Interface entity key
         retentionPeriod:
-          type: string
+          type: array
           nullable: true
-          description: Retention period description for the entity
+          description: Retention period description for the entity (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     CreateClassificationRequest:
       type: object
       required:
@@ -7935,6 +7959,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -8228,6 +8258,12 @@ components:
           items:
             type: string
           description: List of fields configured as hidden for this entity type
+        editableFields:
+          type: array
+          nullable: true
+          items:
+            type: string
+          description: Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
         fieldStatuses:
           type: array
           nullable: true
@@ -8371,8 +8407,11 @@ components:
         nodeType:
           $ref: '#/components/schemas/FlowNodeType'
         label:
-          type: string
+          type: array
           nullable: true
+          description: Node label (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         linkedProcessKey:
           type: string
           nullable: true
@@ -8399,8 +8438,11 @@ components:
         trackIndex:
           type: integer
         label:
-          type: string
+          type: array
           nullable: true
+          description: Track label (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         nodes:
           type: array
           items:
@@ -8434,8 +8476,11 @@ components:
         nodeType:
           $ref: '#/components/schemas/FlowNodeType'
         label:
-          type: string
+          type: array
           nullable: true
+          description: Node label (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         linkedProcessKey:
           type: string
           nullable: true
@@ -8459,8 +8504,11 @@ components:
         trackIndex:
           type: integer
         label:
-          type: string
+          type: array
           nullable: true
+          description: Track label (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     SaveProcessFlowRequest:
       type: object
       required: [nodes, tracks]
@@ -9062,10 +9110,11 @@ components:
       type: object
       properties:
         retentionPeriod:
-          type: string
+          type: array
           nullable: true
-          description: Retention period description (null to clear)
-          example: 7 years
+          description: Retention period (null or empty to clear) — localised
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     VersionDiffResponse:
       type: object
       required:
@@ -9106,9 +9155,11 @@ components:
         safeguard:
           $ref: '#/components/schemas/CrossBorderTransferSafeguard'
         notes:
-          type: string
+          type: array
           nullable: true
-          description: Additional notes (required for EXCEPTION safeguard)
+          description: Additional notes — required for EXCEPTION safeguard (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateCrossBorderTransfersRequest:
       type: object
       required:
@@ -9351,11 +9402,17 @@ components:
           type: string
           nullable: true
         riskDescription:
-          type: string
+          type: array
           nullable: true
+          description: Risk description (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         measures:
-          type: string
+          type: array
           nullable: true
+          description: Measures to mitigate risks (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         fdpicConsultationRequired:
           type: boolean
           nullable: true
@@ -9381,11 +9438,17 @@ components:
         status:
           $ref: '#/components/schemas/DpiaStatus'
         riskDescription:
-          type: string
+          type: array
           nullable: true
+          description: Risk description (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         measures:
-          type: string
+          type: array
           nullable: true
+          description: Measures to mitigate risks (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         initialRisk:
           $ref: '#/components/schemas/ResidualRisk'
         residualRisk:
@@ -9401,8 +9464,11 @@ components:
           format: date
           nullable: true
         fdpicConsultationOutcome:
-          type: string
+          type: array
           nullable: true
+          description: FDPIC consultation outcome (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         triggeredBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         createdAt:
@@ -9416,14 +9482,18 @@ components:
       type: object
       properties:
         riskDescription:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateDpiaMeasuresRequest:
       type: object
       properties:
         measures:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateDpiaResidualRiskRequest:
       type: object
       properties:
@@ -9445,8 +9515,10 @@ components:
           format: date
           nullable: true
         fdpicConsultationOutcome:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     TeamInsightsResponse:
       type: object
       required: [userOwnershipWorkload, orgUnitProcessLoad, bottleneckTeams, wronglyPlacedTeams, splitDomains, conwaysLawAlignment]
@@ -9643,14 +9715,23 @@ components:
           $ref: '#/components/schemas/BoundedContextSummaryResponse'
           nullable: true
         upstreamRole:
-          type: string
+          type: array
           nullable: true
+          description: Role of the upstream context (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         downstreamRole:
-          type: string
+          type: array
           nullable: true
+          description: Role of the downstream context (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         description:
-          type: string
+          type: array
           nullable: true
+          description: Description of the relationship (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
         createdAt:
@@ -9673,14 +9754,20 @@ components:
         relationshipType:
           $ref: '#/components/schemas/ContextMapperRelationshipType'
         upstreamRole:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         downstreamRole:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         description:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateContextRelationshipRequest:
       type: object
       required:
@@ -9689,20 +9776,28 @@ components:
         relationshipType:
           $ref: '#/components/schemas/ContextMapperRelationshipType'
         upstreamRole:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         downstreamRole:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         description:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateDomainVisionStatementRequest:
       type: object
       properties:
         visionStatement:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateDomainOwningUnitRequest:
       type: object
       properties:
@@ -9724,8 +9819,11 @@ components:
         linkedEntity:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         semanticDifferenceNote:
-          type: string
+          type: array
           nullable: true
+          description: Semantic difference note (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         createdBy:
           $ref: '#/components/schemas/UserSummaryResponse'
           nullable: true
@@ -9746,14 +9844,18 @@ components:
         secondEntityKey:
           type: string
         semanticDifferenceNote:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateTranslationLinkRequest:
       type: object
       properties:
         semanticDifferenceNote:
-          type: string
+          type: array
           nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     DomainEventLinkType:
       type: string
       enum:

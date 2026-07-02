@@ -92,8 +92,9 @@ class BusinessEntity {
     @Column(name = "classification_assignments", columnDefinition = "LONGTEXT")
     var classificationAssignments: MutableList<ClassificationAssignment> = mutableListOf()
 
-    @Column(name = "retention_period", length = 500)
-    var retentionPeriod: String? = null
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "retention_period", columnDefinition = "LONGTEXT")
+    var retentionPeriod: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "storage_locations", columnDefinition = "JSON")

@@ -53,15 +53,20 @@ export interface BusinessDomainResponse {
      */
   hiddenFields?: string[] | null;
   /**
+     * Base field names the current user may edit on this record (backend-computed per user; null when not evaluated)
+     * @nullable
+     */
+  editableFields?: string[] | null;
+  /**
      * Per-field verification status (VERIFIED/UNVERIFIED) with who/when; null if no field has a status yet
      * @nullable
      */
   fieldStatuses?: FieldVerificationResponse[] | null;
   /**
-     * Vision statement for the bounded context
+     * Vision statement for the domain (localised)
      * @nullable
      */
-  visionStatement?: string | null;
+  visionStatement?: LocalizedText[] | null;
   /** Organisational unit responsible for this domain */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Creation timestamp */

@@ -17,6 +17,7 @@ import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
+import org.leargon.backend.service.RoleService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -27,9 +28,13 @@ open class BusinessEntityMapper(
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper,
     private val processRepository: ProcessRepository,
-    private val fieldVerificationService: FieldVerificationService
+    private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService
 ) {
-    fun toBusinessEntityResponse(businessEntity: BusinessEntity): BusinessEntityResponse {
+    fun toBusinessEntityResponse(
+        businessEntity: BusinessEntity,
+        currentUser: org.leargon.backend.domain.User? = null
+    ): BusinessEntityResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val effectiveClassifications =
             ClassificationMapper.computeEffectiveAssignments(
@@ -56,8 +61,9 @@ open class BusinessEntityMapper(
                         businessEntity.effectiveOwner() != null
                     }
 
-                    fieldName == "retentionPeriod" -> {
-                        !businessEntity.retentionPeriod.isNullOrBlank()
+                    fieldName.startsWith("retentionPeriod.") -> {
+                        val locale = fieldName.removePrefix("retentionPeriod.")
+                        businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }
                     }
 
                     fieldName.startsWith("names.") -> {
@@ -114,14 +120,21 @@ open class BusinessEntityMapper(
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(effectiveClassifications)
-            .retentionPeriod(businessEntity.retentionPeriod)
+            .retentionPeriod(LocalizedTextMapper.toModel(businessEntity.retentionPeriod))
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .derivedStorageLocations(computeDerivedStorageLocations(businessEntity))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
             .fieldStatuses(fieldStatuses)
-            .qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
+            .editableFields(
+                currentUser?.let { u ->
+                    val uid = u.id
+                    val isOwner = uid != null && businessEntity.effectiveOwner()?.id == uid
+                    val isSteward = uid != null && effectiveSteward?.id == uid
+                    roleService.editableFields(u, "BUSINESS_ENTITY", isOwner, isSteward)
+                },
+            ).qualityRules(businessDataQualityRuleMapper.let { m -> businessEntity.qualityRules.map { m.toResponse(it) } })
     }
 
     private fun computeDerivedStorageLocations(entity: BusinessEntity): List<String> {
@@ -224,7 +237,7 @@ open class BusinessEntityMapper(
                 .rootName(root?.getName("en"))
                 .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
                 .description(entity.descriptions.firstOrNull()?.text)
-                .retentionPeriod(entity.retentionPeriod)
+                .retentionPeriod(LocalizedTextMapper.toModel(entity.retentionPeriod))
         }
 
         @JvmStatic

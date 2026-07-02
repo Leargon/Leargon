@@ -34,6 +34,9 @@ function getBackendUrl(): string {
   return url;
 }
 
+const lbl = (a?: Array<{ locale: string; text: string }> | null): string | undefined =>
+  a?.find((x) => x.locale === 'en')?.text;
+
 describe('Process E2E', () => {
   let client: AxiosInstance;
   let token: string;
@@ -243,7 +246,7 @@ describe('Process E2E', () => {
     const flow = {
       nodes: [
         { id: `proc-n1-${ts}`, position: 0, nodeType: 'START_EVENT' },
-        { id: `proc-n2-${ts}`, position: 1, nodeType: 'TASK', label: 'Do work', linkedProcessKey: linked.key },
+        { id: `proc-n2-${ts}`, position: 1, nodeType: 'TASK', label: [{ locale: 'en', text: 'Do work' }], linkedProcessKey: linked.key },
         { id: `proc-n3-${ts}`, position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],
@@ -251,7 +254,7 @@ describe('Process E2E', () => {
 
     const res = await client.put(`/processes/${proc.key}/flow`, flow);
     expect(res.status).toBe(200);
-    expect(res.data.nodes.some((n: { nodeType: string; label: string }) => n.nodeType === 'TASK' && n.label === 'Do work')).toBe(true);
+    expect(res.data.nodes.some((n: { nodeType: string; label?: Array<{ locale: string; text: string }> }) => n.nodeType === 'TASK' && lbl(n.label) === 'Do work')).toBe(true);
   });
 
   // =====================

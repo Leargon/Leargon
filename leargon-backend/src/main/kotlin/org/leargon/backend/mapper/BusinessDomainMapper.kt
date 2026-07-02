@@ -13,6 +13,7 @@ import org.leargon.backend.model.LocalizedBusinessDomainResponse
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
+import org.leargon.backend.service.RoleService
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -22,9 +23,13 @@ open class BusinessDomainMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
-    private val fieldVerificationService: FieldVerificationService
+    private val fieldVerificationService: FieldVerificationService,
+    private val roleService: RoleService
 ) {
-    fun toBusinessDomainResponse(domain: BusinessDomain): BusinessDomainResponse {
+    fun toBusinessDomainResponse(
+        domain: BusinessDomain,
+        currentUser: org.leargon.backend.domain.User? = null
+    ): BusinessDomainResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc =
             fieldConfigurationService.compute("BUSINESS_DOMAIN", disabledMethodologies) { fieldName ->
@@ -39,6 +44,11 @@ open class BusinessDomainMapper(
 
                     fieldName == "type" -> {
                         domain.type != null
+                    }
+
+                    fieldName.startsWith("visionStatement.") -> {
+                        val locale = fieldName.removePrefix("visionStatement.")
+                        domain.visionStatement.any { it.locale == locale && it.text.isNotBlank() }
                     }
 
                     fieldName.startsWith("names.") -> {
@@ -78,7 +88,7 @@ open class BusinessDomainMapper(
             .descriptions(LocalizedTextMapper.toModel(domain.descriptions))
             .type(toBusinessDomainType(domain.type))
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
-            .visionStatement(domain.visionStatement)
+            .visionStatement(LocalizedTextMapper.toModel(domain.visionStatement))
             .owningUnit(organisationalUnitMapper.toSummaryResponse(domain.owningUnit))
             .subdomains(toBusinessDomainSummaryResponseArray(domain.children))
             .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts))
@@ -87,6 +97,14 @@ open class BusinessDomainMapper(
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
             .fieldStatuses(fieldStatuses)
+            .editableFields(
+                currentUser?.let { u ->
+                    val uid = u.id
+                    val isOwner = uid != null && domain.effectiveOwner()?.id == uid
+                    val isSteward = uid != null && domain.effectiveSteward()?.id == uid
+                    roleService.editableFields(u, "BUSINESS_DOMAIN", isOwner, isSteward)
+                },
+            )
     }
 
     fun toLocalizedBusinessDomainResponse(

@@ -16,9 +16,9 @@ open class ContextRelationshipMapper {
             )
         response.upstreamBoundedContext = BoundedContextMapper.toSummaryResponse(rel.upstreamBoundedContext)
         response.downstreamBoundedContext = BoundedContextMapper.toSummaryResponse(rel.downstreamBoundedContext)
-        response.upstreamRole = rel.upstreamRole
-        response.downstreamRole = rel.downstreamRole
-        response.description = rel.description
+        response.upstreamRole = LocalizedTextMapper.toModel(rel.upstreamRole)
+        response.downstreamRole = LocalizedTextMapper.toModel(rel.downstreamRole)
+        response.description = LocalizedTextMapper.toModel(rel.description)
         response.createdBy = UserMapper.toUserSummary(rel.createdBy)
         response.createdAt = rel.createdAt?.atZone(ZoneOffset.UTC)
         response.updatedAt = rel.updatedAt?.atZone(ZoneOffset.UTC)

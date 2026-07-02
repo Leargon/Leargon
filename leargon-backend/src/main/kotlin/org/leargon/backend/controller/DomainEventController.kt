@@ -38,8 +38,8 @@ open class DomainEventController(
     override fun createDomainEvent(
         @Valid @Body createDomainEventRequest: CreateDomainEventRequest
     ): HttpResponse<DomainEventResponse> {
+        // Permission (admin / DDD editor-lead / publishing-domain owner-steward) is enforced in the service.
         val currentUser = getCurrentUser()
-        roleService.requireCreateRoot(currentUser, "DDD")
         val event = domainEventService.create(createDomainEventRequest, currentUser)
         val response = domainEventService.getByKey(event.key)
         return HttpResponse.status<DomainEventResponse>(HttpStatus.CREATED).body(response)
@@ -48,20 +48,12 @@ open class DomainEventController(
     override fun updateDomainEventNames(
         key: String,
         @Body localizedTexts: List<@Valid LocalizedText>
-    ): DomainEventResponse {
-        val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
-        return domainEventService.updateNames(key, localizedTexts, currentUser)
-    }
+    ): DomainEventResponse = domainEventService.updateNames(key, localizedTexts, getCurrentUser())
 
     override fun updateDomainEventDescriptions(
         key: String,
         @Body localizedTexts: List<@Valid LocalizedText>
-    ): DomainEventResponse {
-        val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
-        return domainEventService.updateDescriptions(key, localizedTexts, currentUser)
-    }
+    ): DomainEventResponse = domainEventService.updateDescriptions(key, localizedTexts, getCurrentUser())
 
     override fun setDomainEventConsumers(
         key: String,
@@ -109,9 +101,7 @@ open class DomainEventController(
     }
 
     override fun deleteDomainEvent(key: String): HttpResponse<Void> {
-        val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
-        domainEventService.delete(key, currentUser)
+        domainEventService.delete(key, getCurrentUser())
         return HttpResponse.noContent()
     }
 

@@ -17,13 +17,17 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
+import type { LocalizedText } from './localizedText.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
 
 export interface TranslationLinkResponse {
   id: number;
   linkedEntity: BusinessEntitySummaryResponse;
-  /** @nullable */
-  semanticDifferenceNote?: string | null;
+  /**
+     * Semantic difference note (localised)
+     * @nullable
+     */
+  semanticDifferenceNote?: LocalizedText[] | null;
   createdBy?: UserSummaryResponse | null;
   createdAt: string;
   updatedAt: string;

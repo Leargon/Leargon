@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.TranslationLink
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ForbiddenOperationException
@@ -81,7 +82,8 @@ open class TranslationLinkService(
         val link = TranslationLink()
         link.firstEntity = first
         link.secondEntity = second
-        link.semanticDifferenceNote = request.semanticDifferenceNote
+        link.semanticDifferenceNote =
+            request.semanticDifferenceNote?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         link.createdBy = currentUser
         val saved = translationLinkRepository.save(link)
         syncBothEntities(first.key, second.key, currentUser, "Added translation link")
@@ -99,7 +101,8 @@ open class TranslationLinkService(
                 .findById(id)
                 .orElseThrow { ResourceNotFoundException("TranslationLink not found: $id") }
         checkEditPermission(link, currentUser)
-        link.semanticDifferenceNote = request.semanticDifferenceNote
+        link.semanticDifferenceNote =
+            request.semanticDifferenceNote?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         val updated = translationLinkRepository.update(link)
         val entity = updated.firstEntity!!
         syncBothEntities(updated.firstEntity?.key, updated.secondEntity?.key, currentUser, "Updated translation link #$id")

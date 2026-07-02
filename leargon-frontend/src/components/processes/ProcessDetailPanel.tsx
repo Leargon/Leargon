@@ -83,7 +83,6 @@ import { useGetAllServiceProviders } from '../../api/generated/service-provider/
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
-import { useCanEditField } from '../../hooks/useCanEditField';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -91,6 +90,7 @@ import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
+import LocalizedTextView from '../common/LocalizedTextView';
 import DpiaSection from '../compliance/DpiaSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import ProcessCreationWizard from './ProcessCreationWizard';
@@ -206,10 +206,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     canEditEntityTypeByRole(user?.roles, 'BUSINESS_PROCESS');
   const isOwner = !!user?.username && user.username === process?.processOwner?.username;
   const isSteward = !!user?.username && user.username === process?.processSteward?.username;
-  // Broad edit (may change any field) = owner / effective steward / admin. Scoped editors are limited
-  // per-field by canEditField, which mirrors the backend per-field gate (avoids edit pencils that 403).
+  // Broad edit (may change any field) = owner / effective steward / admin.
   const hasBroadEdit = isAdmin || isOwner || isSteward;
-  const canEditField = useCanEditField('BUSINESS_PROCESS', user?.roles, hasBroadEdit);
+  // Per-field edit affordances come straight from the backend-computed editableFields on the detail
+  // response — the single source of truth that cannot drift from server-side enforcement.
+  const canEditField = (fieldName: string): boolean => process?.editableFields?.includes(fieldName) ?? false;
   // Lifecycle management of this process (create a sub-process, or delete it): an admin /
   // PROCESS_GOVERNANCE editor-lead, or this process's owner/steward.
   const canManage = canCreateChild(user?.roles, 'BUSINESS_PROCESS', user?.username, process?.processOwner?.username, process?.processSteward?.username);
@@ -240,9 +241,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   ];
   const isMandatory = (...fieldNames: string[]) =>
     fieldNames.some((f) =>
-      mandatoryList.includes(f) ||
-      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
-      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+      mandatoryList.includes(f) || mandatoryList.some((m) => m.startsWith(`${f}.`))
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
@@ -251,7 +250,11 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const hiddenList = process?.hiddenFields ?? [];
   const isHidden = (...fieldNames: string[]) =>
     hiddenList.length > 0 &&
-    fieldNames.some((f) => hiddenList.includes(f));
+    fieldNames.some(
+      (f) =>
+        hiddenList.includes(f) ||
+        (activeLocales.length > 0 && activeLocales.every((l) => hiddenList.includes(`${f}.${l.localeCode}`))),
+    );
   const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
   const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
 
@@ -1079,10 +1082,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {purposeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{purposeEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.purpose?.length ? 'text.primary' : 'text.secondary'}
-              sx={{ whiteSpace: 'pre-wrap' }}>
-              {getLocalizedText(process.purpose ?? [], t('common.notSet'))}
-            </Typography>
+            <LocalizedTextView value={process.purpose} showAll={canEditField('purpose')} emptyText={t('common.notSet')} />
           )}
         </PropRow>}
         {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={canEditField('securityMeasures')} isEditing={securityMeasuresEdit.isEditing}
@@ -1103,10 +1103,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               {securityMeasuresEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{securityMeasuresEdit.error}</Alert>}
             </Box>
           ) : (
-            <Typography variant="body2" color={process.securityMeasures?.length ? 'text.primary' : 'text.secondary'}
-              sx={{ whiteSpace: 'pre-wrap' }}>
-              {getLocalizedText(process.securityMeasures ?? [], t('common.notSet'))}
-            </Typography>
+            <LocalizedTextView value={process.securityMeasures} showAll={canEditField('securityMeasures')} emptyText={t('common.notSet')} />
           )}
         </PropRow>}
       </Paper>
@@ -1278,11 +1275,18 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {process.crossBorderTransfers.map((t, i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
-                  <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                  {t.notes && <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t.notes}</Typography>}
-                  {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
+                <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
+                    <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
+                    {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
+                  </Box>
+                  <LocalizedTextView
+                    value={t.notes}
+                    showAll={canEditField('crossBorderTransfers')}
+                    statusFor={(loc) => renderStatus(`crossBorderTransfer.${t.destinationCountry}.notes.${loc}`)}
+                    sx={{ pl: 1 }}
+                  />
                 </Box>
               ))}
             </Box>
@@ -1630,7 +1634,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Typography variant="body2" sx={{ flex: 1 }}>
                       {getCountryName(t.destinationCountry, preferredLocale ?? 'en')} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
-                      {t.notes && ` (${t.notes})`}
+                      {t.notes && t.notes.length > 0 && ` (${getLocalizedText(t.notes)})`}
                     </Typography>
                     <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
                       <Delete fontSize="small" />
@@ -1682,7 +1686,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                     setEditTransfers((prev) => [...prev, {
                       destinationCountry: newTransferCountry.code,
                       safeguard: newTransferSafeguard as CrossBorderTransferSafeguard,
-                      notes: newTransferNotes || undefined,
+                      notes: newTransferNotes ? [{ locale: preferredLocale ?? 'en', text: newTransferNotes }] : undefined,
                     }]);
                     setNewTransferCountry(null);
                     setNewTransferSafeguard('');

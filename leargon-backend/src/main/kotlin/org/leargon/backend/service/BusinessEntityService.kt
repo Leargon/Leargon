@@ -91,6 +91,16 @@ open class BusinessEntityService(
     open fun getBusinessEntityByKeyAsResponse(key: String): BusinessEntityResponse =
         businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(key))
 
+    /** Detail response including the current user's per-record [editableFields]. */
+    @ReadOnly
+    open fun getBusinessEntityByKeyAsResponse(
+        key: String,
+        currentUser: User
+    ): BusinessEntityResponse {
+        val m = businessEntityMapper
+        return m.toBusinessEntityResponse(getBusinessEntityByKey(key), currentUser)
+    }
+
     open fun getBusinessEntityTree(): List<BusinessEntity> = businessEntityRepository.findByParentIsNull()
 
     @ReadOnly
@@ -138,7 +148,7 @@ open class BusinessEntityService(
         if (request.descriptions != null) {
             entity.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
-        entity.retentionPeriod = request.retentionPeriod
+        entity.retentionPeriod = request.retentionPeriod?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
 
         if (request.owningUnitKey != null) {
             entity.owningUnit =
@@ -386,12 +396,12 @@ open class BusinessEntityService(
     @Transactional
     open fun updateRetentionPeriod(
         entityKey: String,
-        retentionPeriod: String?,
+        retentionPeriod: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "retentionPeriod")
-        entity.retentionPeriod = retentionPeriod
+        entity.retentionPeriod = retentionPeriod?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         entity = businessEntityRepository.update(entity)
         createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated retention period")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))

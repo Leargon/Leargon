@@ -19,6 +19,7 @@
 import type { EventDefinition } from './eventDefinition.ts';
 import type { FlowNodeType } from './flowNodeType.ts';
 import type { GatewayType } from './gatewayType.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface FlowNodeResponse {
   id: string;
@@ -26,8 +27,11 @@ export interface FlowNodeResponse {
   trackId?: string | null;
   position: number;
   nodeType: FlowNodeType;
-  /** @nullable */
-  label?: string | null;
+  /**
+     * Node label (localised)
+     * @nullable
+     */
+  label?: LocalizedText[] | null;
   /** @nullable */
   linkedProcessKey?: string | null;
   /** Computed by backend — true if the linked process has flow nodes beyond Start and End */

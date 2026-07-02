@@ -71,11 +71,9 @@ class BusinessDomain {
     @Column(name = "business_domain_type", length = 20)
     var type: String? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "vision_statement", columnDefinition = "LONGTEXT")
-    var visionStatement: String? = null
-        set(value) {
-            field = value?.trimEnd()
-        }
+    var visionStatement: MutableList<LocalizedText> = mutableListOf()
 
     fun addChild(child: BusinessDomain) {
         children.add(child)
