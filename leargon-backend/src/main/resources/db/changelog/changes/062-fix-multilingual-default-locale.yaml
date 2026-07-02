@@ -191,3 +191,44 @@ databaseChangeLog:
                 AND label IS NOT NULL AND JSON_VALID(label)
                 AND JSON_LENGTH(label) = 1
                 AND JSON_UNQUOTE(JSON_EXTRACT(label, '$[0].locale')) = 'en'
+
+  # Cross-border transfer notes are nested (processes.cross_border_transfers[*].notes[*]), so 061 wrapped
+  # each string note as a single-entry "en" array. Relabel those to the real default locale the same way,
+  # rebuilding the transfers array. No-op when the default locale is "en"; idempotent (only single-entry
+  # "en" note arrays are touched).
+  - changeSet:
+      id: 062-relabel-cross-border-transfer-notes-default-locale
+      author: leargon
+      changes:
+        - sql:
+            dbms: mysql
+            sql: |
+              UPDATE processes p
+              SET cross_border_transfers = (
+                SELECT JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                    'destinationCountry', JSON_UNQUOTE(t.dc),
+                    'safeguard', JSON_UNQUOTE(t.sg),
+                    'notes', CASE
+                      WHEN t.notes IS NULL THEN JSON_ARRAY()
+                      WHEN JSON_TYPE(t.notes) = 'ARRAY' AND JSON_LENGTH(t.notes) = 1
+                           AND JSON_UNQUOTE(JSON_EXTRACT(t.notes, '$[0].locale')) = 'en'
+                      THEN JSON_SET(t.notes, '$[0].locale',
+                           (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1))
+                      ELSE t.notes
+                    END
+                  )
+                )
+                FROM JSON_TABLE(
+                  p.cross_border_transfers,
+                  '$[*]' COLUMNS (
+                    dc JSON PATH '$.destinationCountry',
+                    sg JSON PATH '$.safeguard',
+                    notes JSON PATH '$.notes'
+                  )
+                ) t
+              )
+              WHERE (SELECT locale_code FROM supported_locales WHERE is_default = 1 LIMIT 1) <> 'en'
+                AND cross_border_transfers IS NOT NULL
+                AND JSON_TYPE(cross_border_transfers) = 'ARRAY'
+                AND JSON_LENGTH(cross_border_transfers) > 0;

@@ -72,137 +72,155 @@ databaseChangeLog:
             newDataType: LONGTEXT
 
   # ── Data migration: wrap existing plain-text values in JSON array format ──────
+  #
+  # Each statement normalises a legacy scalar column into a LocalizedText JSON array:
+  #   • a non-empty value        -> [{"locale":"en","text": <value>}]  (JSON_QUOTE-escaped)
+  #   • an empty/whitespace value -> NULL   (an empty string is not valid JSON and would break
+  #                                          the List<LocalizedText> read; NULL is the "no value" state)
+  #   • a value already in array form -> left untouched (idempotent re-run guard)
 
   - changeSet:
       id: 061-migrate-retention-period-to-json
       author: leargon
-      comment: Wrap existing retention_period string values in a LocalizedText JSON array
+      comment: Wrap existing retention_period string values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE business_entities
-              SET retention_period = CONCAT('[{"locale":"en","text":', JSON_QUOTE(retention_period), '}]')
-              WHERE retention_period IS NOT NULL AND retention_period != ''
+              SET retention_period = CASE WHEN TRIM(retention_period) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(retention_period), '}]') END
+              WHERE retention_period IS NOT NULL
               AND NOT (TRIM(retention_period) LIKE '[%' AND TRIM(retention_period) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-vision-statement-to-json
       author: leargon
-      comment: Wrap existing vision_statement string values in a LocalizedText JSON array
+      comment: Wrap existing vision_statement string values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE business_domains
-              SET vision_statement = CONCAT('[{"locale":"en","text":', JSON_QUOTE(vision_statement), '}]')
-              WHERE vision_statement IS NOT NULL AND vision_statement != ''
+              SET vision_statement = CASE WHEN TRIM(vision_statement) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(vision_statement), '}]') END
+              WHERE vision_statement IS NOT NULL
               AND NOT (TRIM(vision_statement) LIKE '[%' AND TRIM(vision_statement) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-context-relationship-fields-to-json
       author: leargon
-      comment: Wrap existing context_relationships text fields in LocalizedText JSON arrays
+      comment: Wrap existing context_relationships text fields in LocalizedText JSON arrays (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE context_relationships
-              SET upstream_role = CONCAT('[{"locale":"en","text":', JSON_QUOTE(upstream_role), '}]')
-              WHERE upstream_role IS NOT NULL AND upstream_role != ''
+              SET upstream_role = CASE WHEN TRIM(upstream_role) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(upstream_role), '}]') END
+              WHERE upstream_role IS NOT NULL
               AND NOT (TRIM(upstream_role) LIKE '[%' AND TRIM(upstream_role) LIKE '%]');
         - sql:
             dbms: mysql
             sql: >
               UPDATE context_relationships
-              SET downstream_role = CONCAT('[{"locale":"en","text":', JSON_QUOTE(downstream_role), '}]')
-              WHERE downstream_role IS NOT NULL AND downstream_role != ''
+              SET downstream_role = CASE WHEN TRIM(downstream_role) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(downstream_role), '}]') END
+              WHERE downstream_role IS NOT NULL
               AND NOT (TRIM(downstream_role) LIKE '[%' AND TRIM(downstream_role) LIKE '%]');
         - sql:
             dbms: mysql
             sql: >
               UPDATE context_relationships
-              SET description = CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]')
-              WHERE description IS NOT NULL AND description != ''
+              SET description = CASE WHEN TRIM(description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]') END
+              WHERE description IS NOT NULL
               AND NOT (TRIM(description) LIKE '[%' AND TRIM(description) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-translation-link-note-to-json
       author: leargon
-      comment: Wrap existing semantic_difference_note string values in a LocalizedText JSON array
+      comment: Wrap existing semantic_difference_note string values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE translation_links
-              SET semantic_difference_note = CONCAT('[{"locale":"en","text":', JSON_QUOTE(semantic_difference_note), '}]')
-              WHERE semantic_difference_note IS NOT NULL AND semantic_difference_note != ''
+              SET semantic_difference_note = CASE WHEN TRIM(semantic_difference_note) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(semantic_difference_note), '}]') END
+              WHERE semantic_difference_note IS NOT NULL
               AND NOT (TRIM(semantic_difference_note) LIKE '[%' AND TRIM(semantic_difference_note) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-dpia-text-fields-to-json
       author: leargon
-      comment: Wrap existing DPIA text fields in LocalizedText JSON arrays
+      comment: Wrap existing DPIA text fields in LocalizedText JSON arrays (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE dpia
-              SET risk_description = CONCAT('[{"locale":"en","text":', JSON_QUOTE(risk_description), '}]')
-              WHERE risk_description IS NOT NULL AND risk_description != ''
+              SET risk_description = CASE WHEN TRIM(risk_description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(risk_description), '}]') END
+              WHERE risk_description IS NOT NULL
               AND NOT (TRIM(risk_description) LIKE '[%' AND TRIM(risk_description) LIKE '%]');
         - sql:
             dbms: mysql
             sql: >
               UPDATE dpia
-              SET measures = CONCAT('[{"locale":"en","text":', JSON_QUOTE(measures), '}]')
-              WHERE measures IS NOT NULL AND measures != ''
+              SET measures = CASE WHEN TRIM(measures) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(measures), '}]') END
+              WHERE measures IS NOT NULL
               AND NOT (TRIM(measures) LIKE '[%' AND TRIM(measures) LIKE '%]');
         - sql:
             dbms: mysql
             sql: >
               UPDATE dpia
-              SET fdpic_consultation_outcome = CONCAT('[{"locale":"en","text":', JSON_QUOTE(fdpic_consultation_outcome), '}]')
-              WHERE fdpic_consultation_outcome IS NOT NULL AND fdpic_consultation_outcome != ''
+              SET fdpic_consultation_outcome = CASE WHEN TRIM(fdpic_consultation_outcome) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(fdpic_consultation_outcome), '}]') END
+              WHERE fdpic_consultation_outcome IS NOT NULL
               AND NOT (TRIM(fdpic_consultation_outcome) LIKE '[%' AND TRIM(fdpic_consultation_outcome) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-quality-rule-description-to-json
       author: leargon
-      comment: Wrap existing business_data_quality_rules description values in a LocalizedText JSON array
+      comment: Wrap existing business_data_quality_rules description values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE business_data_quality_rules
-              SET description = CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]')
-              WHERE description IS NOT NULL AND description != ''
+              SET description = CASE WHEN TRIM(description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]') END
+              WHERE description IS NOT NULL
               AND NOT (TRIM(description) LIKE '[%' AND TRIM(description) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-flow-node-label-to-json
       author: leargon
-      comment: Wrap existing process_flow_node label values in a LocalizedText JSON array
+      comment: Wrap existing process_flow_node label values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE process_flow_node
-              SET label = CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]')
-              WHERE label IS NOT NULL AND label != ''
+              SET label = CASE WHEN TRIM(label) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]') END
+              WHERE label IS NOT NULL
               AND NOT (TRIM(label) LIKE '[%' AND TRIM(label) LIKE '%]');
 
   - changeSet:
       id: 061-migrate-flow-track-label-to-json
       author: leargon
-      comment: Wrap existing process_flow_track label values in a LocalizedText JSON array
+      comment: Wrap existing process_flow_track label values in a LocalizedText JSON array (empty -> NULL)
       changes:
         - sql:
             dbms: mysql
             sql: >
               UPDATE process_flow_track
-              SET label = CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]')
-              WHERE label IS NOT NULL AND label != ''
+              SET label = CASE WHEN TRIM(label) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]') END
+              WHERE label IS NOT NULL
               AND NOT (TRIM(label) LIKE '[%' AND TRIM(label) LIKE '%]');
 
   - changeSet:
@@ -221,6 +239,7 @@ databaseChangeLog:
                     'safeguard', JSON_UNQUOTE(t.sg),
                     'notes', CASE
                       WHEN t.notes IS NULL THEN JSON_ARRAY()
+                      WHEN JSON_TYPE(t.notes) = 'STRING' AND JSON_UNQUOTE(t.notes) = '' THEN JSON_ARRAY()
                       WHEN JSON_TYPE(t.notes) = 'STRING' THEN JSON_ARRAY(JSON_OBJECT('locale', 'en', 'text', JSON_UNQUOTE(t.notes)))
                       ELSE t.notes
                     END

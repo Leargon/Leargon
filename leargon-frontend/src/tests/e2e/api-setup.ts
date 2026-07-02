@@ -183,8 +183,17 @@ export const saveProcessFlow = (
   nodes: Record<string, unknown>[],
   tracks: Record<string, unknown>[] = [],
   as = ADMIN,
-): Promise<Record<string, unknown>> =>
-  apiFetch(`/processes/${processKey}/flow`, 'PUT', { nodes, tracks }, as);
+): Promise<Record<string, unknown>> => {
+  // Flow node/track labels are multilingual (LocalizedText[]); accept a plain string for convenience.
+  const toArrayLabel = (o: Record<string, unknown>): Record<string, unknown> =>
+    typeof o.label === 'string' ? { ...o, label: [{ locale: 'en', text: o.label }] } : o;
+  return apiFetch(
+    `/processes/${processKey}/flow`,
+    'PUT',
+    { nodes: nodes.map(toArrayLabel), tracks: tracks.map(toArrayLabel) },
+    as,
+  );
+};
 
 export const setProcessDescriptions = (
   processKey: string,

@@ -56,7 +56,7 @@ class AzureLoginControllerSpec extends Specification {
     AzureTokenValidator tokenValidator
 
     @MockBean(AzureTokenValidator)
-    AzureTokenValidator tokenValidator() {
+    AzureTokenValidator mockTokenValidator() {
         return new StubValidator()
     }
 
