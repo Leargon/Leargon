@@ -5,14 +5,14 @@ import { alpha } from '@mui/material/styles';
 import {
   Box, Typography, Table, TableHead, TableBody, TableRow, TableCell,
   TableContainer, Chip, LinearProgress, Tooltip, CircularProgress, Alert,
-  Accordion, AccordionSummary, AccordionDetails,
 } from '@mui/material';
 import {
-  ExpandMore, Warning, CheckCircle, Groups, AccountTree, DomainVerification,
+  Warning, CheckCircle, Groups, AccountTree, DomainVerification,
   MoveToInbox, SyncAlt,
 } from '@mui/icons-material';
 import { useGetTeamInsights } from '../api/generated/analytics/analytics';
 import { useMethodology } from '../context/MethodologyContext';
+import { usePerspective } from '../context/PerspectiveContext';
 import type { BottleneckTeamItem } from '../api/generated/model/bottleneckTeamItem';
 import type { WronglyPlacedTeamItem } from '../api/generated/model/wronglyPlacedTeamItem';
 import type { SplitDomainItem } from '../api/generated/model/splitDomainItem';
@@ -20,54 +20,39 @@ import type { UserOwnershipWorkloadItem } from '../api/generated/model/userOwner
 import type { OrgUnitProcessLoadItem } from '../api/generated/model/orgUnitProcessLoadItem';
 import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlignment';
 import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
+import InsightCard from '../components/insights/InsightCard';
+import InsightGroup from '../components/insights/InsightGroup';
+import {
+  sectionsByMethodology,
+  sortSectionsBySignal,
+  type NormalizedInsights,
+} from '../utils/insightSections';
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
+// ─── Section icon map ─────────────────────────────────────────────────────────
 
-interface SectionProps {
-  title: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  count?: number;
-  severity?: 'info' | 'warning' | 'error';
-  defaultExpanded?: boolean;
-  children: React.ReactNode;
-}
+const SECTION_ICONS: Record<string, React.ReactNode> = {
+  userOwnershipWorkload: <AccountTree />,
+  orgUnitProcessLoad: <Groups />,
+  bottleneckTeams: <Warning />,
+  wronglyPlacedTeams: <MoveToInbox />,
+  splitDomains: <DomainVerification />,
+  conwaysLawAlignment: <SyncAlt />,
+  conwaysLawMisalignments: <Warning />,
+};
 
-const Section: React.FC<SectionProps> = ({ title, subtitle, icon, count, severity = 'info', defaultExpanded = true, children }) => (
-  <Accordion defaultExpanded={defaultExpanded} sx={{ mb: 2 }} variant="outlined">
-    <AccordionSummary expandIcon={<ExpandMore />}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-        <Box sx={{ color: severity === 'warning' ? 'warning.main' : severity === 'error' ? 'error.main' : 'primary.main' }}>
-          {icon}
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 600
-          }}>{title}</Typography>
-          {subtitle && <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>{subtitle}</Typography>}
-        </Box>
-        {count !== undefined && (
-          <Chip label={count} size="small" color={count === 0 ? 'default' : severity === 'warning' ? 'warning' : 'primary'} sx={{ mr: 2 }} />
-        )}
-      </Box>
-    </AccordionSummary>
-    <AccordionDetails sx={{ p: 0 }}>{children}</AccordionDetails>
-  </Accordion>
-);
+// ─── Methodology group definitions ───────────────────────────────────────────
+
+const INSIGHTS_GROUPS = [
+  { methodology: 'TEAM_TOPOLOGIES', labelKey: 'insights.groupTeamTopologies' },
+  { methodology: 'DDD', labelKey: 'insights.groupDdd' },
+] as const;
 
 // ─── 1. User Ownership Workload ───────────────────────────────────────────────
 
 const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ data }) => {
   const { t } = useTranslation();
   if (data.length === 0) return (
-    <Typography
-      variant="body2"
-      sx={{
-        color: "text.secondary",
-        p: 2
-      }}>{t('common.noResults')}</Typography>
+    <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>{t('common.noResults')}</Typography>
   );
   return (
     <TableContainer>
@@ -88,12 +73,8 @@ const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ d
             return (
               <TableRow key={row.userId} hover>
                 <TableCell>
-                  <Typography variant="body2" sx={{
-                    fontWeight: 500
-                  }}>{row.displayName}</Typography>
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>@{row.username}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{row.displayName}</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>@{row.username}</Typography>
                 </TableCell>
                 <TableCell align="right">{row.entityCount}</TableCell>
                 <TableCell align="right">{row.processCount}</TableCell>
@@ -117,12 +98,7 @@ const UserOwnershipTable: React.FC<{ data: UserOwnershipWorkloadItem[] }> = ({ d
 const OrgUnitLoadTable: React.FC<{ data: OrgUnitProcessLoadItem[] }> = ({ data }) => {
   const { t } = useTranslation();
   if (data.length === 0) return (
-    <Typography
-      variant="body2"
-      sx={{
-        color: "text.secondary",
-        p: 2
-      }}>{t('common.noResults')}</Typography>
+    <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>{t('common.noResults')}</Typography>
   );
   const max = data[0]?.processCount ?? 1;
   return (
@@ -164,9 +140,7 @@ const BottleneckTable: React.FC<{ data: BottleneckTeamItem[] }> = ({ data }) => 
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>{t('analytics.noBottlenecks')}</Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noBottlenecks')}</Typography>
     </Box>
   );
   return (
@@ -213,9 +187,7 @@ const WronglyPlacedTable: React.FC<{ data: WronglyPlacedTeamItem[] }> = ({ data 
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>{t('analytics.noWronglyPlaced')}</Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noWronglyPlaced')}</Typography>
     </Box>
   );
   return (
@@ -241,9 +213,7 @@ const WronglyPlacedTable: React.FC<{ data: WronglyPlacedTeamItem[] }> = ({ data 
                 <TableCell>
                   {row.dominantDomainName
                     ? <Chip label={row.dominantDomainName} size="small" variant="outlined" />
-                    : <Typography variant="body2" sx={{
-                    color: "text.secondary"
-                  }}>—</Typography>}
+                    : <Typography variant="body2" sx={{ color: 'text.secondary' }}>—</Typography>}
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -269,9 +239,7 @@ const SplitDomainsTable: React.FC<{ data: SplitDomainItem[] }> = ({ data }) => {
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>{t('analytics.noSplitDomains')}</Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noSplitDomains')}</Typography>
     </Box>
   );
   return (
@@ -319,20 +287,13 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
   const { domainKeys, orgUnitKeys, domainNames, orgUnitNames, cells } = data;
 
   if (domainKeys.length === 0 || orgUnitKeys.length === 0) return (
-    <Typography
-      variant="body2"
-      sx={{
-        color: "text.secondary",
-        p: 2
-      }}>{t('analytics.conwayNoData')}</Typography>
+    <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>{t('analytics.conwayNoData')}</Typography>
   );
 
-  // Build cell lookup
   const cellMap = new Map<string, number>();
   for (const cell of cells) {
     cellMap.set(`${cell.domainKey}::${cell.orgUnitKey}`, cell.processCount);
   }
-
   const maxCount = Math.max(...cells.map((c) => c.processCount), 1);
 
   const cellColor = (count: number): string => {
@@ -347,13 +308,7 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
 
   return (
     <Box sx={{ p: 2, overflowX: 'auto' }}>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          mb: 1,
-          display: 'block'
-        }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: 'block' }}>
         {t('analytics.conwayHint')}
       </Typography>
       <Table size="small" sx={{ borderCollapse: 'collapse', width: 'auto' }}>
@@ -394,16 +349,9 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
                     sx={{ bgcolor: cellColor(count), border: '1px solid', borderColor: 'divider', p: 0.5 }}>
                     {count > 0
                       ? <Tooltip title={`${domainNames[dk] ?? dk} × ${orgUnitNames[uk] ?? uk}: ${count} process${count !== 1 ? 'es' : ''}`}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 600,
-                              cursor: 'default'
-                            }}>{count}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, cursor: 'default' }}>{count}</Typography>
                         </Tooltip>
-                      : <Typography variant="body2" sx={{
-                      color: "text.disabled"
-                    }}>·</Typography>}
+                      : <Typography variant="body2" sx={{ color: 'text.disabled' }}>·</Typography>}
                   </TableCell>
                 );
               })}
@@ -424,9 +372,7 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
   if (data.length === 0) return (
     <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
       <CheckCircle color="success" fontSize="small" />
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>{t('analytics.noConwaysLawMisalignments')}</Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noConwaysLawMisalignments')}</Typography>
     </Box>
   );
 
@@ -444,9 +390,7 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
         <TableBody>
           {data.map((row, idx) => (
             <TableRow key={`${row.processKey}-${row.executingUnitKey}-${idx}`} hover>
-              <TableCell>
-                <Typography variant="body2">{row.processName}</Typography>
-              </TableCell>
+              <TableCell><Typography variant="body2">{row.processName}</Typography></TableCell>
               <TableCell>
                 <Chip
                   label={row.boundedContextName}
@@ -454,9 +398,7 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
                   sx={{ bgcolor: theme.palette.warning.light, color: theme.palette.warning.contrastText, fontWeight: 600 }}
                 />
               </TableCell>
-              <TableCell>
-                <Typography variant="body2">{row.executingUnitName}</Typography>
-              </TableCell>
+              <TableCell><Typography variant="body2">{row.executingUnitName}</Typography></TableCell>
               <TableCell>
                 <Chip
                   label={row.teamBoundedContextName}
@@ -472,96 +414,111 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
   );
 };
 
+// ─── Section detail content map ───────────────────────────────────────────────
+
+function renderSectionContent(sectionId: string, data: NormalizedInsights): React.ReactNode {
+  switch (sectionId) {
+    case 'userOwnershipWorkload':
+      return <UserOwnershipTable data={data.userOwnershipWorkload} />;
+    case 'orgUnitProcessLoad':
+      return <OrgUnitLoadTable data={data.orgUnitProcessLoad} />;
+    case 'bottleneckTeams':
+      return <BottleneckTable data={data.bottleneckTeams} />;
+    case 'wronglyPlacedTeams':
+      return <WronglyPlacedTable data={data.wronglyPlacedTeams} />;
+    case 'splitDomains':
+      return <SplitDomainsTable data={data.splitDomains} />;
+    case 'conwaysLawAlignment':
+      return <ConwayMatrix data={data.conwaysLawAlignment} />;
+    case 'conwaysLawMisalignments':
+      return <ConwayMisalignmentsTable data={data.conwaysLawMisalignments} />;
+    default:
+      return null;
+  }
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TeamInsightsPage: React.FC = () => {
   const { t } = useTranslation();
   const { data: response, isLoading, isError } = useGetTeamInsights();
   const { isMethodologyEnabled } = useMethodology();
-  const insights = response?.data;
-  const isDddEnabled = isMethodologyEnabled('DDD');
+  const { isInPerspective } = usePerspective();
+  const raw = response?.data;
+
+  // Micronaut Serde excludes empty collections from JSON; normalise to [] so components are safe
+  const data: NormalizedInsights | null = raw
+    ? {
+        userOwnershipWorkload: raw.userOwnershipWorkload ?? [],
+        orgUnitProcessLoad: raw.orgUnitProcessLoad ?? [],
+        bottleneckTeams: raw.bottleneckTeams ?? [],
+        wronglyPlacedTeams: raw.wronglyPlacedTeams ?? [],
+        splitDomains: raw.splitDomains ?? [],
+        conwaysLawAlignment: {
+          domainKeys: raw.conwaysLawAlignment?.domainKeys ?? [],
+          orgUnitKeys: raw.conwaysLawAlignment?.orgUnitKeys ?? [],
+          domainNames: raw.conwaysLawAlignment?.domainNames ?? {},
+          orgUnitNames: raw.conwaysLawAlignment?.orgUnitNames ?? {},
+          cells: raw.conwaysLawAlignment?.cells ?? [],
+        },
+        conwaysLawMisalignments: raw.conwaysLawMisalignments ?? [],
+      }
+    : null;
+
+  // For each group, keep only sections that are both methodology-enabled and in the role's perspective
+  const groupsWithSections = data
+    ? INSIGHTS_GROUPS
+        .map((group) => {
+          const roleSections = sectionsByMethodology(group.methodology).filter(
+            (s) => isMethodologyEnabled(group.methodology) && isInPerspective(s.id),
+          );
+          return { group, roleSections };
+        })
+        .filter(({ roleSections }) => roleSections.length > 0)
+    : [];
 
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto' }}>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 3 }}>
-        <Typography variant="h5" sx={{
-          fontWeight: 600
-        }}>{t('analytics.pageTitle')}</Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>{t('analytics.pageSubtitle')}</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>{t('insights.pageTitle')}</Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('insights.pageSubtitle')}</Typography>
       </Box>
+
       {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>}
       {isError && <Alert severity="error">{t('common.error')}</Alert>}
-      {insights ? <>
-        {(() => {
-          // Micronaut Serde excludes empty collections from JSON; normalise to [] so components are safe
-          const userOwnershipWorkload = insights.userOwnershipWorkload ?? [];
-          const orgUnitProcessLoad = insights.orgUnitProcessLoad ?? [];
-          const bottleneckTeams = insights.bottleneckTeams ?? [];
-          const wronglyPlacedTeams = insights.wronglyPlacedTeams ?? [];
-          const splitDomains = insights.splitDomains ?? [];
-          const conwaysLawMisalignments = insights.conwaysLawMisalignments ?? [];
-          const conwaysLawAlignment = {
-            domainKeys: insights.conwaysLawAlignment?.domainKeys ?? [],
-            orgUnitKeys: insights.conwaysLawAlignment?.orgUnitKeys ?? [],
-            domainNames: insights.conwaysLawAlignment?.domainNames ?? {},
-            orgUnitNames: insights.conwaysLawAlignment?.orgUnitNames ?? {},
-            cells: insights.conwaysLawAlignment?.cells ?? [],
-          };
 
-          return <>
-            <Section title={t('analytics.userOwnership')} subtitle={t('analytics.userOwnershipHint')}
-              icon={<AccountTree />} count={userOwnershipWorkload.length}>
-              <UserOwnershipTable data={userOwnershipWorkload} />
-            </Section>
+      {data && groupsWithSections.length === 0 && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          {t('insights.noInsightsForPerspective')}
+        </Alert>
+      )}
 
-            <Section title={t('analytics.orgUnitLoad')} subtitle={t('analytics.orgUnitLoadHint')}
-              icon={<Groups />} count={orgUnitProcessLoad.length}>
-              <OrgUnitLoadTable data={orgUnitProcessLoad} />
-            </Section>
+      {data && groupsWithSections.map(({ group, roleSections }) => {
+        const sorted = sortSectionsBySignal(roleSections, data);
+        const activeSections = sorted.filter((s) => !s.isDiagnostic || s.getSeverity(data) === 'warning');
+        const healthySections = sorted.filter((s) => s.isDiagnostic && s.getSeverity(data) === 'ok');
 
-            {isDddEnabled && (
-              <Section title={t('analytics.bottleneckTeams')} subtitle={t('analytics.bottleneckHint')}
-                icon={<Warning />} count={bottleneckTeams.length}
-                severity={bottleneckTeams.length > 0 ? 'warning' : 'info'}>
-                <BottleneckTable data={bottleneckTeams} />
-              </Section>
-            )}
-
-            {isDddEnabled && (
-              <Section title={t('analytics.wronglyPlaced')} subtitle={t('analytics.wronglyPlacedHint')}
-                icon={<MoveToInbox />} count={wronglyPlacedTeams.length}
-                severity={wronglyPlacedTeams.length > 0 ? 'warning' : 'info'}>
-                <WronglyPlacedTable data={wronglyPlacedTeams} />
-              </Section>
-            )}
-
-            {isDddEnabled && (
-              <Section title={t('analytics.splitDomains')} subtitle={t('analytics.splitDomainsHint')}
-                icon={<DomainVerification />} count={splitDomains.length}
-                severity={splitDomains.length > 0 ? 'warning' : 'info'}>
-                <SplitDomainsTable data={splitDomains} />
-              </Section>
-            )}
-
-            {isDddEnabled && (
-              <Section title={t('analytics.conwayMatrix')} subtitle={t('analytics.conwayHint')}
-                icon={<SyncAlt />} defaultExpanded>
-                <ConwayMatrix data={conwaysLawAlignment} />
-              </Section>
-            )}
-
-            {isDddEnabled && (
-              <Section title={t('analytics.conwaysLawMisalignments')} subtitle={t('analytics.conwaysLawMisalignmentsHint')}
-                icon={<Warning />} count={conwaysLawMisalignments.length}
-                severity={conwaysLawMisalignments.length > 0 ? 'warning' : 'info'}>
-                <ConwayMisalignmentsTable data={conwaysLawMisalignments} />
-              </Section>
-            )}
-          </>;
-        })()}
-      </> : null}
+        return (
+          <InsightGroup
+            key={group.methodology}
+            label={t(group.labelKey)}
+            healthyItemTitleKeys={healthySections.map((s) => s.titleKey)}
+          >
+            {activeSections.map((section) => (
+              <InsightCard
+                key={section.id}
+                title={t(section.titleKey)}
+                subtitle={t(section.subtitleKey)}
+                icon={SECTION_ICONS[section.id]}
+                count={section.getCount(data)}
+                severity={section.getSeverity(data)}
+              >
+                {renderSectionContent(section.id, data)}
+              </InsightCard>
+            ))}
+          </InsightGroup>
+        );
+      })}
     </Box>
   );
 };

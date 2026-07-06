@@ -3,7 +3,9 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.ContextRelationship
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.User
+import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ContextRelationshipMapper
 import org.leargon.backend.model.ContextRelationshipResponse
@@ -16,8 +18,24 @@ open class ContextRelationshipService(
     private val contextRelationshipRepository: ContextRelationshipRepository,
     private val contextRelationshipMapper: ContextRelationshipMapper,
     private val boundedContextService: BoundedContextService,
-    private val businessDomainService: BusinessDomainService
+    private val businessDomainService: BusinessDomainService,
+    private val roleService: RoleService
 ) {
+    /**
+     * Managing a context relationship requires an admin, a DDD editor/lead, or the owner/steward of one of
+     * the linked domains (a relationship can span two domains — either domain's owner may manage it).
+     */
+    private fun requireManage(
+        domainKeys: List<String>,
+        currentUser: User
+    ) {
+        if (roleService.isEditorFor(currentUser, "DDD")) return
+        if (domainKeys.any { businessDomainService.canEditDomain(it, currentUser) }) return
+        throw ForbiddenOperationException(
+            "Managing a context relationship requires an admin, a DDD editor/lead, or the owner/steward of a linked domain"
+        )
+    }
+
     /**
      * Re-version the domains owning the two endpoint bounded contexts so their per-item verification
      * status (`contextRelationship.<id>`) is reconciled. A relationship may span two domains.
@@ -50,14 +68,15 @@ open class ContextRelationshipService(
     ): ContextRelationshipResponse {
         val upstream = boundedContextService.getByKey(request.upstreamBoundedContextKey)
         val downstream = boundedContextService.getByKey(request.downstreamBoundedContextKey)
+        requireManage(listOfNotNull(upstream.domain?.key, downstream.domain?.key).distinct(), currentUser)
         val rel =
             ContextRelationship().apply {
                 this.upstreamBoundedContext = upstream
                 this.downstreamBoundedContext = downstream
                 this.relationshipType = request.relationshipType.value
-                this.upstreamRole = request.upstreamRole
-                this.downstreamRole = request.downstreamRole
-                this.description = request.description
+                this.upstreamRole = request.upstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+                this.downstreamRole = request.downstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+                this.description = request.description?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
                 this.createdBy = currentUser
             }
         val saved = contextRelationshipRepository.save(rel)
@@ -76,10 +95,11 @@ open class ContextRelationshipService(
             contextRelationshipRepository
                 .findById(id)
                 .orElseThrow { ResourceNotFoundException("Context relationship not found: $id") }
+        requireManage(domainKeysOf(rel), currentUser)
         rel.relationshipType = request.relationshipType.value
-        rel.upstreamRole = request.upstreamRole
-        rel.downstreamRole = request.downstreamRole
-        rel.description = request.description
+        rel.upstreamRole = request.upstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+        rel.downstreamRole = request.downstreamRole?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+        rel.description = request.description?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         val updated = contextRelationshipRepository.update(rel)
         reVersionDomains(domainKeysOf(updated), currentUser, "Updated context relationship #$id")
         val mapper = contextRelationshipMapper
@@ -98,6 +118,7 @@ open class ContextRelationshipService(
         // Capture the owning domains before the row is gone, delete, THEN reconcile so the now-missing
         // item's status row is removed (delete-on-missing only fires once the relationship is gone).
         val domainKeys = domainKeysOf(rel)
+        requireManage(domainKeys, currentUser)
         contextRelationshipRepository.deleteById(id)
         reVersionDomains(domainKeys, currentUser, "Deleted context relationship #$id")
     }

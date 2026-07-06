@@ -493,24 +493,44 @@ class DomainEventControllerSpec extends Specification {
         listResp.body().isEmpty()
     }
 
-    def "DELETE /domain-events/{key} returns 403 for non-admin"() {
+    def "DELETE /domain-events/{key} returns 403 for a user with no DDD role and no ownership"() {
         given:
         def adminToken = createAdminToken()
-        def userData = createUserWithToken("de-del403@test.com", "deDel403")
+        // A plain user: not admin, not a DDD editor, not the owner/steward of the event's domain.
+        def plain = createUserWithToken("de-del403@test.com", "deDel403", "ROLE_USER")
         def domainKey = createDomain(adminToken, "Domain Del 403 DE")
         def bcKey = createBoundedContext(adminToken, domainKey, "BC Del 403 DE")
-        def event = createDomainEvent(userData.token, bcKey, "Protected Event")
+        def event = createDomainEvent(adminToken, bcKey, "Protected Event")
         def encKey = encodedKey(event.key as String)
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.DELETE("/domain-events/${encKey}").bearerAuth(userData.token),
+            HttpRequest.DELETE("/domain-events/${encKey}").bearerAuth(plain.token),
             Void
         )
 
         then:
         def e = thrown(HttpClientResponseException)
         e.status == HttpStatus.FORBIDDEN
+    }
+
+    def "DELETE /domain-events/{key} succeeds for a DDD editor (broadened DDD management)"() {
+        given:
+        def adminToken = createAdminToken()
+        def dddEditor = createUserWithToken("de-del-ddd@test.com", "deDelDdd", "ROLE_USER,ROLE_EDITOR_DDD")
+        def domainKey = createDomain(adminToken, "Domain Del DDD DE")
+        def bcKey = createBoundedContext(adminToken, domainKey, "BC Del DDD DE")
+        def event = createDomainEvent(adminToken, bcKey, "Deletable Event")
+        def encKey = encodedKey(event.key as String)
+
+        when:
+        def resp = client.toBlocking().exchange(
+            HttpRequest.DELETE("/domain-events/${encKey}").bearerAuth(dddEditor.token),
+            Void
+        )
+
+        then:
+        resp.status == HttpStatus.NO_CONTENT
     }
 
     def "DELETE /domain-events/{key} returns 404 for unknown key"() {

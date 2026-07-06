@@ -16,11 +16,15 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface SaveFlowTrackRequest {
   id: string;
   gatewayNodeId: string;
   trackIndex: number;
-  /** @nullable */
-  label?: string | null;
+  /**
+     * Track label (localised)
+     * @nullable
+     */
+  label?: LocalizedText[] | null;
 }

@@ -16,8 +16,9 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface UpdateDomainVisionStatementRequest {
   /** @nullable */
-  visionStatement?: string | null;
+  visionStatement?: LocalizedText[] | null;
 }

@@ -6,6 +6,8 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 enum class FlowNodeType { START_EVENT, END_EVENT, TASK, INTERMEDIATE_EVENT, GATEWAY_SPLIT, GATEWAY_JOIN }
 
@@ -32,8 +34,9 @@ class ProcessFlowNode {
     @Column(name = "node_type", nullable = false, length = 30)
     var nodeType: FlowNodeType = FlowNodeType.START_EVENT
 
-    @Column(name = "label", length = 512)
-    var label: String? = null
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "label", columnDefinition = "LONGTEXT")
+    var label: MutableList<LocalizedText> = mutableListOf()
 
     @Column(name = "linked_process_key", length = 500)
     var linkedProcessKey: String? = null

@@ -4,6 +4,7 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.FlowEventDefinition
 import org.leargon.backend.domain.FlowGatewayType
 import org.leargon.backend.domain.FlowNodeType
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.ProcessFlowNode
 import org.leargon.backend.domain.ProcessFlowTrack
 
@@ -103,7 +104,7 @@ open class BpmnExportService {
                 val splitY = startY + (numTracks - 1) * V_GAP / 2
 
                 // Place split gateway
-                shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, splitY - h / 2, w, h, node.label, gatewayMarker(node)))
+                shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, splitY - h / 2, w, h, labelText(node.label), gatewayMarker(node)))
                 if (prevId != null) flows.add(FlowSpec("flow_${flowCounter.next()}", prevId, node.id))
 
                 // Find matching join gateway
@@ -143,7 +144,7 @@ open class BpmnExportService {
                             splitY - h / 2,
                             w,
                             h,
-                            joinNode.label,
+                            labelText(joinNode.label),
                             gatewayMarker(joinNode)
                         )
                     )
@@ -174,13 +175,15 @@ open class BpmnExportService {
                 } else {
                     ""
                 }
-            shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, node.label, nodeExtra, nodeChildren))
+            shapes.add(ShapeSpec(node.id, bpmnType(node), cx - w / 2, cy - h / 2, w, h, labelText(node.label), nodeExtra, nodeChildren))
             if (prevId != null) flows.add(FlowSpec("flow_${flowCounter.next()}", prevId, node.id))
             prevId = node.id
             x += H_GAP
         }
         return x
     }
+
+    private fun labelText(labels: List<LocalizedText>): String? = labels.find { it.locale == "en" }?.text ?: labels.firstOrNull()?.text
 
     private fun nodeDimensions(node: ProcessFlowNode): Pair<Int, Int> =
         when (node.nodeType) {

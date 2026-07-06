@@ -11,7 +11,7 @@ class BusinessDataQualityRuleMapper {
     fun toResponse(rule: BusinessDataQualityRule): BusinessDataQualityRuleResponse =
         BusinessDataQualityRuleResponse(
             rule.id!!,
-            rule.description,
+            LocalizedTextMapper.toModel(rule.descriptions),
             rule.createdAt.atZone(ZoneOffset.UTC),
         ).severity(rule.severity?.let { BusinessDataQualityRuleResponseSeverity.fromValue(it) })
             .updatedAt(rule.updatedAt?.atZone(ZoneOffset.UTC))

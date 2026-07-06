@@ -38,9 +38,9 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
   },
   BCM: {
     label: 'Business Capability Model',
-    description: 'Manage capabilities, team insights, and business continuity planning.',
+    description: 'Manage capabilities and business continuity planning.',
     sections: ['BCM'],
-    navPaths: ['/capabilities', '/team-insights'],
+    navPaths: ['/capabilities'],
   },
   TEAM_TOPOLOGIES: {
     label: 'Team Topologies',

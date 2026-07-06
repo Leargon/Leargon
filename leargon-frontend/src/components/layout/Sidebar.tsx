@@ -26,6 +26,7 @@ interface NavItem {
 
 const ALWAYS_VISIBLE_ITEMS: NavItem[] = [
   { labelKey: 'nav.home', path: '/home', icon: <Home /> },
+  { labelKey: 'nav.insights', path: '/team-insights', icon: <Groups /> },
   { labelKey: 'nav.help', path: '/help', icon: <HelpOutlined /> },
 ];
 
@@ -50,7 +51,6 @@ const ROLE_EXTRA_ITEMS: Record<Role, NavItem[]> = {
   ],
   operations: [
     { labelKey: 'nav.capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
-    { labelKey: 'nav.teamInsights', path: '/team-insights', icon: <Groups /> },
     { labelKey: 'nav.itSystems', path: '/it-systems', icon: <Computer /> },
   ],
   admin: [
@@ -58,7 +58,6 @@ const ROLE_EXTRA_ITEMS: Record<Role, NavItem[]> = {
     { labelKey: 'nav.serviceProviders', path: '/service-providers', icon: <Handshake /> },
     { labelKey: 'nav.dpiaRegister', path: '/dpia', icon: <GppGood /> },
     { labelKey: 'nav.capabilities', path: '/capabilities', icon: <AutoAwesomeMosaic /> },
-    { labelKey: 'nav.teamInsights', path: '/team-insights', icon: <Groups /> },
   ],
 };
 
@@ -184,7 +183,8 @@ const Sidebar: React.FC = () => {
           <NavItemButton key={item.path} item={item} />
         ))}
         <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />
-        <NavItemButton key="/help" item={ALWAYS_VISIBLE_ITEMS[1]} />
+        <NavItemButton key="/team-insights" item={ALWAYS_VISIBLE_ITEMS[1]} />
+        <NavItemButton key="/help" item={ALWAYS_VISIBLE_ITEMS[2]} />
       </List>
 
       {extraItems.length > 0 && (

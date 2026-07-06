@@ -35,7 +35,7 @@ class BusinessEntityFieldValueExtractor(
 
             fieldName == "boundedContext" -> entity.boundedContext?.key
 
-            fieldName == "retentionPeriod" -> FieldValueSupport.blankToNull(entity.retentionPeriod)
+            fieldName.startsWith("retentionPeriod.") -> FieldValueSupport.localized(entity.retentionPeriod, "retentionPeriod", fieldName)
 
             fieldName == "storageLocations" -> FieldValueSupport.keysOf(entity.storageLocations)
 
@@ -55,7 +55,7 @@ class BusinessEntityFieldValueExtractor(
 
     override fun collectionItemValues(entity: BusinessEntity): Map<String, String> {
         val result = HashMap<String, String>()
-        // Relationships — both directions, canonical row-based signature so both endpoints agree.
+        // Relationships — both directions. Base row = non-localized structure; descriptions per-locale.
         (entity.relationshipsFirst + entity.relationshipsSecond).forEach { rel ->
             val id = rel.id ?: return@forEach
             result["relationship.$id"] =
@@ -66,24 +66,30 @@ class BusinessEntityFieldValueExtractor(
                     rel.firstCardinalityMaximum,
                     rel.secondCardinalityMinimum,
                     rel.secondCardinalityMaximum,
-                    FieldValueSupport.localizedSignature(rel.descriptions),
                 )
+            result.putAll(FieldValueSupport.localizedItems("relationship.$id.descriptions", rel.descriptions))
         }
         result.putAll(FieldValueSupport.items("interface", entity.interfaceEntities, { it.key }, { it.key }))
         result.putAll(FieldValueSupport.items("implementation", entity.implementationEntities, { it.key }, { it.key }))
         // Quality rules — queried fresh (avoids stale lazy collection on live edits / backfill).
+        // Base row (severity) only when set; descriptions per-locale.
         qualityRuleRepository.findAllByBusinessEntityKey(entity.key).forEach { r ->
             val id = r.id ?: return@forEach
-            result["qualityRule.$id"] = FieldValueSupport.signature(r.description, r.severity)
+            r.severity?.let { result["qualityRule.$id"] = FieldValueSupport.signature(it) }
+            result.putAll(FieldValueSupport.localizedItems("qualityRule.$id.descriptions", r.descriptions))
         }
         // Translation links — not a collection on the entity; query by key (both directions).
+        // Base row = linked entity keys; semanticDifferenceNote per-locale.
         val translationLinks =
             translationLinkRepository.findByFirstEntityKey(entity.key) +
                 translationLinkRepository.findBySecondEntityKey(entity.key)
         translationLinks.forEach { link ->
             val id = link.id ?: return@forEach
             result["translationLink.$id"] =
-                FieldValueSupport.signature(link.firstEntity?.key, link.secondEntity?.key, link.semanticDifferenceNote)
+                FieldValueSupport.signature(link.firstEntity?.key, link.secondEntity?.key)
+            result.putAll(
+                FieldValueSupport.localizedItems("translationLink.$id.semanticDifferenceNote", link.semanticDifferenceNote)
+            )
         }
         return result
     }

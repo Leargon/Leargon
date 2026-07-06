@@ -23,6 +23,7 @@ const de = {
     "contextMap": "Kontextkarte",
     "capabilities": "Fähigkeiten",
     "teamInsights": "Team-Einblicke",
+    "insights": "Einblicke",
     "settings": "Einstellungen",
     "users": "Benutzer",
     "locales": "Sprachen",
@@ -265,6 +266,7 @@ const de = {
     "colType": "Typ",
     "colResidualRisk": "Restrisiko",
     "colFdpic": "EDÖB-Konsultation",
+    "fdpicOutcome": "Ergebnis der EDÖB-Konsultation",
     "colTriggeredBy": "Ausgelöst von",
     "colCreated": "Erstellt",
     "noRecorded": "Noch keine DSFAs erfasst",
@@ -275,6 +277,20 @@ const de = {
     "clickToSet": "Zum Festlegen klicken",
     "riskPlaceholder": "Identifizierte Risiken beschreiben...",
     "measuresPlaceholder": "Minderungsmassnahmen beschreiben..."
+  },
+  "insights": {
+    "pageTitle": "Einblicke",
+    "pageSubtitle": "Methodologie-gruppierte Analyse von Team- und Domänengesundheit",
+    "groupTeamTopologies": "Team Topologien",
+    "groupDdd": "Domain-Driven Design",
+    "noInsightsForPerspective": "Für die gewählte Perspektive sind keine Einblicke verfügbar. Wechseln Sie die Perspektive in der oberen Leiste.",
+    "healthy": "Gesund ({{count}})",
+    "perspective": {
+      "all": "Alle",
+      "architecture": "Architektur",
+      "compliance": "Compliance",
+      "governance": "Governance"
+    }
   },
   "analytics": {
     "pageTitle": "Team- & Org-Insights",
@@ -338,6 +354,8 @@ const de = {
     "contextRelationships": "Kontextbeziehungen",
     "noContextRelationships": "Keine Kontextbeziehungen dokumentiert",
     "addRelationship": "Beziehung hinzufügen",
+    "relSameBc": "Upstream und Downstream müssen unterschiedliche Bounded Contexts sein",
+    "relNeedsCurrentDomain": "Mindestens ein Bounded Context muss zu dieser Domäne gehören",
     "upstreamRole": "Upstream-Rolle",
     "downstreamRole": "Downstream-Rolle",
     "description": "Beschreibung",
@@ -402,6 +420,8 @@ const de = {
     "addConsumer": "Konsument hinzufügen",
     "addProcessLink": "Prozessverknüpfung hinzufügen",
     "deleteEvent": "Ereignis löschen",
+    "editEvent": "Domänenereignis bearbeiten",
+    "nameRequired": "In mindestens einer Sprache ist ein Name erforderlich",
     "entityLinks": "Datenobjekte",
     "noEntityLinks": "Keine verknüpften Datenobjekte",
     "addEntityLink": "Datenobjekt verknüpfen",

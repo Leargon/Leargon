@@ -18,6 +18,7 @@
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse.ts';
 import type { ContextMapperRelationshipType } from './contextMapperRelationshipType.ts';
+import type { LocalizedText } from './localizedText.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
 
 export interface ContextRelationshipResponse {
@@ -25,12 +26,21 @@ export interface ContextRelationshipResponse {
   relationshipType: ContextMapperRelationshipType;
   upstreamBoundedContext?: BoundedContextSummaryResponse | null;
   downstreamBoundedContext?: BoundedContextSummaryResponse | null;
-  /** @nullable */
-  upstreamRole?: string | null;
-  /** @nullable */
-  downstreamRole?: string | null;
-  /** @nullable */
-  description?: string | null;
+  /**
+     * Role of the upstream context (localised)
+     * @nullable
+     */
+  upstreamRole?: LocalizedText[] | null;
+  /**
+     * Role of the downstream context (localised)
+     * @nullable
+     */
+  downstreamRole?: LocalizedText[] | null;
+  /**
+     * Description of the relationship (localised)
+     * @nullable
+     */
+  description?: LocalizedText[] | null;
   createdBy?: UserSummaryResponse;
   createdAt?: string;
   updatedAt?: string;

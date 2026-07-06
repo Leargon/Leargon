@@ -63,6 +63,8 @@ import {
   useGetAllDomainEvents,
   getGetAllDomainEventsQueryKey,
   useCreateDomainEvent,
+  useUpdateDomainEventNames,
+  useUpdateDomainEventDescriptions,
   useDeleteDomainEvent,
 } from '../../api/generated/domain-event/domain-event';
 import {
@@ -83,6 +85,8 @@ import { useNavigation } from '../../context/NavigationContext';
 import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import NudgeBanner from '../common/NudgeBanner';
@@ -148,6 +152,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
   const domain = domainResponse?.data as BusinessDomainResponse | undefined;
+  // Per-field edit affordances come from the backend-computed editableFields (owner/steward/admin/DDD
+  // editor), so the edit buttons match enforcement — the domain owner can now edit, not just verify.
+  const canEditField = (fieldName: string): boolean => domain?.editableFields?.includes(fieldName) ?? false;
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetBusinessDomainVersions(domainKey);
@@ -165,6 +172,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   // Show relationships where either side's bounded context belongs to this domain
   const domainRels = allRels.filter(
     (r) => r.upstreamBoundedContext?.domainKey === domainKey || r.downstreamBoundedContext?.domainKey === domainKey,
+  );
+
+  // A context relationship links two bounded contexts that may live in DIFFERENT domains — cross-domain
+  // integration is the whole point of a context map (DDD). Offer every domain's BCs (grouped by domain).
+  const allBoundedContexts = allDomains.flatMap((d) =>
+    (d.boundedContexts ?? []).map((bc) => ({
+      key: bc.key,
+      name: bc.name,
+      domainName: getLocalizedText(d.names, d.key),
+    })),
   );
 
   // Bounded context management state
@@ -213,9 +230,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const [addRelUpstreamBcKey, setAddRelUpstreamBcKey] = useState<string | null>(null);
   const [addRelDownstreamBcKey, setAddRelDownstreamBcKey] = useState<string | null>(null);
   const [addRelType, setAddRelType] = useState<ContextMapperRelationshipType>('CUSTOMER_SUPPLIER');
-  const [addRelUpstreamRole, setAddRelUpstreamRole] = useState('');
-  const [addRelDownstreamRole, setAddRelDownstreamRole] = useState('');
-  const [addRelDescription, setAddRelDescription] = useState('');
+  const [addRelUpstreamRole, setAddRelUpstreamRole] = useState<LocalizedText[]>([]);
+  const [addRelDownstreamRole, setAddRelDownstreamRole] = useState<LocalizedText[]>([]);
+  const [addRelDescription, setAddRelDescription] = useState<LocalizedText[]>([]);
   const [addRelError, setAddRelError] = useState<string | null>(null);
 
   const createRel = useCreateContextRelationship();
@@ -230,17 +247,17 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const [editRelOpen, setEditRelOpen] = useState(false);
   const [editRelId, setEditRelId] = useState<number | null>(null);
   const [editRelType, setEditRelType] = useState<ContextMapperRelationshipType>('CUSTOMER_SUPPLIER');
-  const [editRelUpstreamRole, setEditRelUpstreamRole] = useState('');
-  const [editRelDownstreamRole, setEditRelDownstreamRole] = useState('');
-  const [editRelDescription, setEditRelDescription] = useState('');
+  const [editRelUpstreamRole, setEditRelUpstreamRole] = useState<LocalizedText[]>([]);
+  const [editRelDownstreamRole, setEditRelDownstreamRole] = useState<LocalizedText[]>([]);
+  const [editRelDescription, setEditRelDescription] = useState<LocalizedText[]>([]);
   const [editRelError, setEditRelError] = useState<string | null>(null);
 
   const handleOpenEditRel = (rel: ContextRelationshipResponse) => {
     setEditRelId(rel.id as number);
     setEditRelType(rel.relationshipType as ContextMapperRelationshipType);
-    setEditRelUpstreamRole(rel.upstreamRole || '');
-    setEditRelDownstreamRole(rel.downstreamRole || '');
-    setEditRelDescription(rel.description || '');
+    setEditRelUpstreamRole([...(rel.upstreamRole ?? [])]);
+    setEditRelDownstreamRole([...(rel.downstreamRole ?? [])]);
+    setEditRelDescription([...(rel.description ?? [])]);
     setEditRelError(null);
     setEditRelOpen(true);
   };
@@ -253,9 +270,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         id: editRelId,
         data: {
           relationshipType: editRelType,
-          upstreamRole: editRelUpstreamRole || undefined,
-          downstreamRole: editRelDownstreamRole || undefined,
-          description: editRelDescription || undefined,
+          upstreamRole: editRelUpstreamRole.length > 0 ? editRelUpstreamRole : undefined,
+          downstreamRole: editRelDownstreamRole.length > 0 ? editRelDownstreamRole : undefined,
+          description: editRelDescription.length > 0 ? editRelDescription : undefined,
         },
       });
       invalidateRels();
@@ -274,12 +291,20 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   );
 
   const createDomainEvent = useCreateDomainEvent();
+  const updateEventNames = useUpdateDomainEventNames();
+  const updateEventDescriptions = useUpdateDomainEventDescriptions();
   const deleteDomainEvent = useDeleteDomainEvent();
 
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventBcKey, setAddEventBcKey] = useState<string | null>(null);
   const [addEventName, setAddEventName] = useState('');
   const [addEventError, setAddEventError] = useState('');
+
+  const [editEventOpen, setEditEventOpen] = useState(false);
+  const [editEventKey, setEditEventKey] = useState<string | null>(null);
+  const [editEventNames, setEditEventNames] = useState<LocalizedText[]>([]);
+  const [editEventDescriptions, setEditEventDescriptions] = useState<LocalizedText[]>([]);
+  const [editEventError, setEditEventError] = useState('');
 
   const invalidateEvents = () => {
     queryClient.invalidateQueries({ queryKey: getGetAllDomainEventsQueryKey() });
@@ -308,27 +333,59 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     invalidateEvents();
   };
 
+  const handleOpenEditEvent = (ev: DomainEventResponse) => {
+    setEditEventKey(ev.key);
+    setEditEventNames([...(ev.names ?? [])]);
+    setEditEventDescriptions([...(ev.descriptions ?? [])]);
+    setEditEventError('');
+    setEditEventOpen(true);
+  };
+
+  const handleSaveEvent = async () => {
+    if (!editEventKey || editEventNames.length === 0) {
+      setEditEventError(t('domainEvent.nameRequired'));
+      return;
+    }
+    try {
+      await updateEventNames.mutateAsync({ key: editEventKey, data: editEventNames });
+      await updateEventDescriptions.mutateAsync({ key: editEventKey, data: editEventDescriptions });
+      invalidateEvents();
+      setEditEventOpen(false);
+    } catch (e) {
+      setEditEventError((e as Error).message);
+    }
+  };
+
   const handleAddRel = async () => {
     if (!addRelUpstreamBcKey || !addRelDownstreamBcKey) return;
     setAddRelError(null);
+    if (addRelUpstreamBcKey === addRelDownstreamBcKey) {
+      setAddRelError(t('domain.relSameBc'));
+      return;
+    }
+    // A relationship shown on this domain's context map must have at least one endpoint in this domain.
+    if (!bcKeys.has(addRelUpstreamBcKey) && !bcKeys.has(addRelDownstreamBcKey)) {
+      setAddRelError(t('domain.relNeedsCurrentDomain'));
+      return;
+    }
     try {
       await createRel.mutateAsync({
         data: {
           upstreamBoundedContextKey: addRelUpstreamBcKey,
           downstreamBoundedContextKey: addRelDownstreamBcKey,
           relationshipType: addRelType,
-          upstreamRole: addRelUpstreamRole || undefined,
-          downstreamRole: addRelDownstreamRole || undefined,
-          description: addRelDescription || undefined,
+          upstreamRole: addRelUpstreamRole.length > 0 ? addRelUpstreamRole : undefined,
+          downstreamRole: addRelDownstreamRole.length > 0 ? addRelDownstreamRole : undefined,
+          description: addRelDescription.length > 0 ? addRelDescription : undefined,
         },
       });
       invalidateRels();
       setAddRelOpen(false);
       setAddRelUpstreamBcKey(null);
       setAddRelDownstreamBcKey(null);
-      setAddRelUpstreamRole('');
-      setAddRelDownstreamRole('');
-      setAddRelDescription('');
+      setAddRelUpstreamRole([]);
+      setAddRelDownstreamRole([]);
+      setAddRelDescription([]);
     } catch (e) {
       setAddRelError((e as Error).message);
     }
@@ -340,7 +397,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   };
 
   const activeLocales = locales.filter((l) => l.isActive);
-  const descriptionLocales = canManage ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
+  const descriptionLocales = canEditField('names') ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
   // Mandatory field helpers
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
@@ -350,9 +407,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   ];
   const isMandatory = (...fieldNames: string[]) =>
     fieldNames.some((f) =>
-      mandatoryList.includes(f) ||
-      (f === 'names' && mandatoryList.some((m) => m === 'names' || m.startsWith('names.'))) ||
-      (f === 'descriptions' && mandatoryList.some((m) => m === 'descriptions' || m.startsWith('descriptions.')))
+      mandatoryList.includes(f) || mandatoryList.some((m) => m.startsWith(`${f}.`))
     );
   const isClassificationMandatory = (classKey: string) => mandatoryList.includes(`classification.${classKey}`);
   const anyClassificationMandatory = mandatoryList.some((f) => f.startsWith('classification.'));
@@ -361,7 +416,11 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const hiddenList = domain?.hiddenFields ?? [];
   const isHidden = (...fieldNames: string[]) =>
     hiddenList.length > 0 &&
-    fieldNames.some((f) => hiddenList.includes(f));
+    fieldNames.some(
+      (f) =>
+        hiddenList.includes(f) ||
+        (activeLocales.length > 0 && activeLocales.every((l) => hiddenList.includes(`${f}.${l.localeCode}`))),
+    );
   const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
   const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
 
@@ -435,9 +494,9 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   });
 
   // Inline edit for vision statement
-  const visionEdit = useInlineEdit<string>({
+  const visionEdit = useInlineEdit<LocalizedText[]>({
     onSave: async (val) => {
-      await updateVisionStatement.mutateAsync({ key: domainKey, data: { visionStatement: val || undefined } });
+      await updateVisionStatement.mutateAsync({ key: domainKey, data: { visionStatement: val.length > 0 ? val : undefined } });
       invalidate();
     },
   });
@@ -557,7 +616,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Names & Descriptions */}
       <SectionHeader
         title={t('domain.namesAndDescriptions')}
-        canEdit={canManage}
+        canEdit={canEditField('names')}
         isEditing={namesEdit.isEditing}
         onEdit={() => namesEdit.startEdit({ names: [...domain.names], descriptions: [...(domain.descriptions || [])] })}
         onSave={namesEdit.save}
@@ -650,7 +709,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.type')}
             statusIndicator={renderStatus('type')}
-            canEdit={canManage}
+            canEdit={canEditField('type')}
             isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(domain.type || null)}
             onSave={typeEdit.save}
@@ -704,7 +763,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.parentDomain')}
             statusIndicator={renderStatus('parent')}
-            canEdit={canManage}
+            canEdit={canEditField('parent')}
             isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(domain.parent?.key || null)}
             onSave={parentEdit.save}
@@ -771,39 +830,30 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           {/* Vision Statement */}
           <SectionHeader
             title={t('domain.visionStatement')}
-            statusIndicator={renderStatus('visionStatement')}
-            canEdit={canManage}
+            statusIndicator={renderStatus(...activeLocales.map((l) => `visionStatement.${l.localeCode}`))}
+
+            canEdit={canEditField('visionStatement')}
             isEditing={visionEdit.isEditing}
-            onEdit={() => visionEdit.startEdit(domain.visionStatement || '')}
+            onEdit={() => visionEdit.startEdit([...(domain.visionStatement ?? [])])}
             onSave={visionEdit.save}
             onCancel={visionEdit.cancel}
             isSaving={visionEdit.isSaving}
           />
           {visionEdit.isEditing ? (
             <Box sx={{ mb: 2 }}>
-              <TextField
-                value={visionEdit.editValue ?? ''}
-                onChange={(e) => visionEdit.setEditValue(e.target.value)}
-                size="small"
+              <LocalizedTextEditor
+                locales={locales}
+                value={visionEdit.editValue ?? []}
+                onChange={(v) => visionEdit.setEditValue(v)}
                 multiline
                 rows={3}
-                fullWidth
                 placeholder={t('domain.visionStatementPlaceholder')}
               />
               {visionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{visionEdit.error}</Alert>}
             </Box>
           ) : (
             <Box sx={{ mb: 2 }}>
-              {domain.visionStatement ? (
-                <Typography variant="body2">{domain.visionStatement}</Typography>
-              ) : (
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: "text.secondary",
-                    fontStyle: 'italic'
-                  }}>{t('common.notSet')}</Typography>
-              )}
+              <LocalizedTextView value={domain.visionStatement} showAll={canEditField('visionStatement')} emptyText={t('common.notSet')} />
             </Box>
           )}
         </>
@@ -816,7 +866,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <SectionHeader
             title={t('domain.owningUnit')}
             statusIndicator={renderStatus('owningUnit')}
-            canEdit={canManage}
+            canEdit={canEditField('owningUnit')}
             isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(domain.owningUnit?.key || null)}
             onSave={owningUnitEdit.save}
@@ -989,11 +1039,20 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {sections.contextRelationships && !isHidden('contextRelationships') && (<>
       <Divider sx={{ my: 2 }} />
 
-      {/* Context Relationships (between bounded contexts in this domain) */}
+      {/* Context Relationships — this domain's BCs may relate to BCs in other domains (cross-domain). */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.contextRelationships')}</Typography>
-        {canManage && boundedContexts.length >= 2 && (
-          <Button size="small" startIcon={<Add />} onClick={() => setAddRelOpen(true)}>
+        {canEditField('contextRelationships') && boundedContexts.length >= 1 && allBoundedContexts.length >= 2 && (
+          <Button
+            size="small"
+            startIcon={<Add />}
+            onClick={() => {
+              // Anchor one end in this domain by default (its context map should reference it).
+              setAddRelUpstreamBcKey(boundedContexts[0]?.key ?? null);
+              setAddRelDownstreamBcKey(null);
+              setAddRelOpen(true);
+            }}
+          >
             {t('domain.addRelationship')}
           </Button>
         )}
@@ -1034,20 +1093,26 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     }}>→ {t('domain.downstream')}:</Typography>
                     {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
                   </Box>
-                  {rel.description && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "text.secondary",
-                        display: "block",
-                        mt: 0.25
-                      }}>
-                      {rel.description}
-                    </Typography>
+                  {([
+                    ['upstreamRole', rel.upstreamRole, t('domain.upstreamRole')],
+                    ['downstreamRole', rel.downstreamRole, t('domain.downstreamRole')],
+                    ['description', rel.description, t('domain.description')],
+                  ] as const).map(([sub, val, label]) =>
+                    val && val.length > 0 ? (
+                      <Box key={sub} sx={{ mt: 0.25 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>{label}:</Typography>
+                        <LocalizedTextView
+                          value={val}
+                          showAll={canEditField('contextRelationships')}
+                          statusFor={rel.id != null ? (loc) => renderStatus(`contextRelationship.${rel.id}.${sub}.${loc}`) : undefined}
+                          sx={{ color: 'text.secondary', display: 'inline-block' }}
+                        />
+                      </Box>
+                    ) : null,
                   )}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
-                {canManage && (
+                {canEditField('contextRelationships') && (
                   <IconButton
                     size="small"
                     onClick={() => handleOpenEditRel(rel)}
@@ -1056,7 +1121,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     <Edit fontSize="small" />
                   </IconButton>
                 )}
-                {canManage && (
+                {canEditField('contextRelationships') && (
                   <IconButton
                     size="small"
                     color="error"
@@ -1077,7 +1142,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Domain Events */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('boundedContext.domainEvents')}</Typography>
-        {canManage && boundedContexts.length > 0 && (
+        {canEditField('domainEvents') && boundedContexts.length > 0 && (
           <Button
             size="small"
             startIcon={<Add />}
@@ -1111,7 +1176,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   color: "text.secondary"
                 }}>{ev.publishingBoundedContext?.name}</Typography>
               </Box>
-              {canManage && (
+              {canEditField('domainEvents') && (
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenEditEvent(ev)}
+                  title={t('domainEvent.editEvent')}
+                >
+                  <Edit fontSize="small" />
+                </IconButton>
+              )}
+              {canEditField('domainEvents') && (
                 <IconButton
                   size="small"
                   color="error"
@@ -1377,9 +1451,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         <DialogTitle>{t('domain.addRelationship')}</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
           <Autocomplete
-            options={boundedContexts}
-            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
-            value={boundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
+            options={allBoundedContexts}
+            groupBy={(option) => option.domainName}
+            getOptionLabel={(option) => option.name}
+            value={allBoundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelUpstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
               <TextField {...params} size="small" label={`${t('domain.upstream')} ${t('domain.provides')}`} />
@@ -1388,9 +1463,10 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             size="small"
           />
           <Autocomplete
-            options={boundedContexts}
-            getOptionLabel={(option) => getLocalizedText(option.names, option.key)}
-            value={boundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
+            options={allBoundedContexts}
+            groupBy={(option) => option.domainName}
+            getOptionLabel={(option) => option.name}
+            value={allBoundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelDownstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
               <TextField {...params} size="small" label={`${t('domain.downstream')} ${t('domain.consumes')}`} />
@@ -1412,26 +1488,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            size="small"
-            label={t('domain.upstreamRole')}
-            value={addRelUpstreamRole}
-            onChange={(e) => setAddRelUpstreamRole(e.target.value)}
-          />
-          <TextField
-            size="small"
-            label={t('domain.downstreamRole')}
-            value={addRelDownstreamRole}
-            onChange={(e) => setAddRelDownstreamRole(e.target.value)}
-          />
-          <TextField
-            size="small"
-            label={t('domain.description')}
-            value={addRelDescription}
-            onChange={(e) => setAddRelDescription(e.target.value)}
-            multiline
-            rows={2}
-          />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.upstreamRole')}</Typography>
+          <LocalizedTextEditor locales={locales} value={addRelUpstreamRole} onChange={setAddRelUpstreamRole} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.downstreamRole')}</Typography>
+          <LocalizedTextEditor locales={locales} value={addRelDownstreamRole} onChange={setAddRelDownstreamRole} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.description')}</Typography>
+          <LocalizedTextEditor locales={locales} value={addRelDescription} onChange={setAddRelDescription} multiline rows={2} />
           {addRelError && <Alert severity="error">{addRelError}</Alert>}
         </DialogContent>
         <DialogActions>
@@ -1462,9 +1524,12 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               ))}
             </Select>
           </FormControl>
-          <TextField size="small" label={t('domain.upstreamRole')} value={editRelUpstreamRole} onChange={(e) => setEditRelUpstreamRole(e.target.value)} />
-          <TextField size="small" label={t('domain.downstreamRole')} value={editRelDownstreamRole} onChange={(e) => setEditRelDownstreamRole(e.target.value)} />
-          <TextField size="small" label={t('domain.description')} value={editRelDescription} onChange={(e) => setEditRelDescription(e.target.value)} multiline rows={2} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.upstreamRole')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editRelUpstreamRole} onChange={setEditRelUpstreamRole} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.downstreamRole')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editRelDownstreamRole} onChange={setEditRelDownstreamRole} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.description')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editRelDescription} onChange={setEditRelDescription} multiline rows={2} />
           {editRelError && <Alert severity="error">{editRelError}</Alert>}
         </DialogContent>
         <DialogActions>
@@ -1506,6 +1571,28 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             disabled={!addEventBcKey || !addEventName.trim() || createDomainEvent.isPending}
           >
             {createDomainEvent.isPending ? t('common.saving') : t('common.create')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Domain Event Dialog (name + description, multilingual) */}
+      <Dialog open={editEventOpen} onClose={() => setEditEventOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('domainEvent.editEvent')}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('common.names')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editEventNames} onChange={setEditEventNames} />
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('common.descriptions')}</Typography>
+          <LocalizedTextEditor locales={locales} value={editEventDescriptions} onChange={setEditEventDescriptions} multiline rows={3} />
+          {editEventError && <Alert severity="error">{editEventError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditEventOpen(false)}>{t('common.cancel')}</Button>
+          <Button
+            onClick={handleSaveEvent}
+            variant="contained"
+            disabled={editEventNames.length === 0 || updateEventNames.isPending || updateEventDescriptions.isPending}
+          >
+            {updateEventNames.isPending || updateEventDescriptions.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

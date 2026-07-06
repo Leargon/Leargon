@@ -1,7 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { ADMIN } from './api-setup';
 import fs from 'node:fs';
 import path from 'node:path';
+
+/**
+ * The Insights page shows a methodology group only if it has a section visible in the active "view"
+ * (role). Both the Team Topologies and DDD groups are surfaced by the Architecture view, so switch to
+ * it before asserting group visibility. The switcher's accessible name is the tooltip "Current view";
+ * choosing a view navigates to /home, so we return to the insights page afterwards.
+ */
+async function switchToArchitectureView(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Current view' }).click();
+  await page.getByRole('menuitem', { name: 'Architecture', exact: true }).click();
+  await page.waitForURL('**/home');
+  await page.goto('/team-insights');
+  await page.waitForLoadState('networkidle');
+}
 
 const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
 const GOVERNANCE_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
@@ -130,7 +144,7 @@ test.describe('Methodology Settings', () => {
     await expect(page.getByRole('button', { name: 'Service Providers' })).not.toBeVisible();
   });
 
-  test('disabling BCM hides Capabilities and Team Insights nav items', async ({ page }) => {
+  test('disabling BCM hides Capabilities nav item but Insights link stays visible', async ({ page }) => {
     await setMethodologies(
       ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'BCM' })),
     );
@@ -138,8 +152,60 @@ test.describe('Methodology Settings', () => {
     await page.goto('/domains');
     await page.waitForLoadState('networkidle');
 
+    // Capabilities is BCM-gated and should disappear
     await expect(page.getByRole('button', { name: 'Capabilities' })).not.toBeVisible();
-    await expect(page.getByRole('button', { name: 'Team Insights' })).not.toBeVisible();
+
+    // The Insights nav link is now a permanent top-level item — must always be present
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+  });
+
+  test('Insights nav link survives all methodology toggles', async ({ page }) => {
+    // Disable every methodology
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: false })),
+    );
+
+    await page.goto('/domains');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+
+    // Re-enable all
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: true })),
+    );
+    await page.goto('/domains');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByRole('link', { name: 'Insights' })).toBeVisible();
+  });
+
+  test('disabling TEAM_TOPOLOGIES hides its group on the Insights page', async ({ page }) => {
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'TEAM_TOPOLOGIES' })),
+    );
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+    await switchToArchitectureView(page);
+
+    // TEAM_TOPOLOGIES is disabled → its group is gone, but DDD (still enabled) remains.
+    await expect(page.getByText('Team Topologies')).not.toBeVisible();
+    await expect(page.getByText('Domain-Driven Design')).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('disabling DDD hides its group on the Insights page', async ({ page }) => {
+    await setMethodologies(
+      ALL_METHODOLOGY_KEYS.map((k) => ({ key: k, enabled: k !== 'DDD' })),
+    );
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+    await switchToArchitectureView(page);
+
+    // DDD is disabled → its group is gone, but Team Topologies (still enabled) remains.
+    await expect(page.getByText('Domain-Driven Design')).not.toBeVisible();
+    await expect(page.getByText('Team Topologies').first()).toBeVisible({ timeout: 10_000 });
   });
 
   test('toggling a methodology off via UI disables it', async ({ page }) => {

@@ -625,7 +625,7 @@ for (en_name, parent_en, domain_type, nms, descs) in domain_data:
         api('PUT', f'/business-domains/{dkey}/type', {'type': domain_type}, T)
         if en_name in domain_vision:
             api('PUT', f'/business-domains/{dkey}/vision-statement',
-                {'visionStatement': domain_vision[en_name]}, T)
+                {'visionStatement': n4(domain_vision[en_name])}, T)
         if domain_type != 'BUSINESS':
             api('POST', f'/business-domains/{dkey}/bounded-contexts',
                 {'names': [{'locale': 'en', 'text': en_name}]}, T)
@@ -875,7 +875,7 @@ for entity_en, period in retention_periods.items():
     ekey = ek(entity_en)
     ok(f'  retention: {entity_en}',
        api('PUT', f'/business-entities/{ekey}/retention-period',
-           {'retentionPeriod': period}, T))
+           {'retentionPeriod': n4(period)}, T))
 
 
 # ── 7. Entity interfaces ────────────────────────────────────────────────────────
@@ -1646,6 +1646,11 @@ print('\n[8c/9] Process flows...')
 import uuid as _uuid
 
 
+def _fl(s):
+    # Flow node/track labels are multilingual (List<LocalizedText>); wrap a plain string, keep None as None.
+    return n4(s) if s else None
+
+
 def _flow(steps):
     """
     Build a SaveProcessFlowRequest from a simplified step list.
@@ -1671,7 +1676,7 @@ def _flow(steps):
         if t == 'task':
             nodes.append({
                 'id': str(_uuid.uuid4()), 'position': _np(), 'nodeType': 'TASK',
-                'label': step.get('label'), 'linkedProcessKey': step.get('linked'),
+                'label': _fl(step.get('label')), 'linkedProcessKey': step.get('linked'),
                 'trackId': track_id,
             })
         elif t == 'event':
@@ -1679,7 +1684,7 @@ def _flow(steps):
                 'id': str(_uuid.uuid4()), 'position': _np(),
                 'nodeType': 'INTERMEDIATE_EVENT',
                 'eventDefinition': step.get('definition', 'NONE'),
-                'label': step.get('label'), 'trackId': track_id,
+                'label': _fl(step.get('label')), 'trackId': track_id,
             })
         elif t == 'gateway':
             pair_id = str(_uuid.uuid4())
@@ -1689,14 +1694,14 @@ def _flow(steps):
             nodes.append({
                 'id': split_id, 'position': _np(), 'nodeType': 'GATEWAY_SPLIT',
                 'gatewayType': gtype, 'gatewayPairId': pair_id,
-                'label': step.get('label'), 'trackId': track_id,
+                'label': _fl(step.get('label')), 'trackId': track_id,
             })
             labels = step.get('trackLabels', [])
             for ti, tsteps in enumerate(step.get('tracks', [])):
                 tid = str(_uuid.uuid4())
                 tracks.append({
                     'id': tid, 'gatewayNodeId': split_id, 'trackIndex': ti,
-                    'label': labels[ti] if ti < len(labels) else None,
+                    'label': _fl(labels[ti] if ti < len(labels) else None),
                 })
                 for s in tsteps:
                     _add(s, tid)
@@ -2069,30 +2074,30 @@ ok('cross-border transfers: Process Payment',
    api('PUT', f'/processes/{pk("Process Payment")}/cross-border-transfers',
        {'transfers': [
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Payment gateway operated by Stripe (US)'},
+            'notes': n4('Payment gateway operated by Stripe (US)')},
        ]}, T))
 
 ok('cross-border transfers: Customer Registration',
    api('PUT', f'/processes/{pk("Customer Registration")}/cross-border-transfers',
        {'transfers': [
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Email verification service via Klaviyo (US); CRM sync via Salesforce (US)'},
+            'notes': n4('Email verification service via Klaviyo (US); CRM sync via Salesforce (US)')},
        ]}, T))
 
 ok('cross-border transfers: Recruit Employee',
    api('PUT', f'/processes/{pk("Recruit Employee")}/cross-border-transfers',
        {'transfers': [
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Applicant data processed in Workday HCM (US/IE)'},
+            'notes': n4('Applicant data processed in Workday HCM (US/IE)')},
            {'destinationCountry': 'IE', 'safeguard': 'ADEQUACY_DECISION',
-            'notes': 'Workday EU data centre (Ireland) — GDPR adequate jurisdiction'},
+            'notes': n4('Workday EU data centre (Ireland) — GDPR adequate jurisdiction')},
        ]}, T))
 
 ok('cross-border transfers: Search for Product',
    api('PUT', f'/processes/{pk("Search for Product")}/cross-border-transfers',
        {'transfers': [
            {'destinationCountry': 'US', 'safeguard': 'STANDARD_CONTRACTUAL_CLAUSES',
-            'notes': 'Behavioural analytics via Google Analytics 4 (US)'},
+            'notes': n4('Behavioural analytics via Google Analytics 4 (US)')},
        ]}, T))
 
 ok('storage locations: Employee',
@@ -2141,11 +2146,11 @@ for (up_en, dn_en, rel_type, up_role, dn_role, notes) in context_rels:
         'relationshipType': rel_type,
     }
     if up_role:
-        payload['upstreamRole'] = up_role
+        payload['upstreamRole'] = n4(up_role)
     if dn_role:
-        payload['downstreamRole'] = dn_role
+        payload['downstreamRole'] = n4(dn_role)
     if notes:
-        payload['description'] = notes
+        payload['description'] = n4(notes)
     ok(f'{up_en} →[{rel_type}]→ {dn_en}',
        api('POST', '/context-relationships', payload, T))
 
@@ -2247,7 +2252,7 @@ for (first_en, second_en, note) in translation_links:
        api('POST', '/translation-links', {
            'firstEntityKey': ek(first_en),
            'secondEntityKey': ek(second_en),
-           'semanticDifferenceNote': note,
+           'semanticDifferenceNote': n4(note),
        }, T))
 
 
@@ -2707,9 +2712,9 @@ for (proc_name, initial_risk, residual_risk, risk_desc, measures) in dpia_defs:
         dpia_key = dpia_result['key']
         # Set risk description and measures
         api('PUT', f'/dpia/{dpia_key}/risk-description',
-            {'riskDescription': risk_desc}, T)
+            {'riskDescription': n4(risk_desc)}, T)
         api('PUT', f'/dpia/{dpia_key}/measures',
-            {'measures': measures}, T)
+            {'measures': n4(measures)}, T)
         # Set initial and residual risk
         ok(f'DPIA: {proc_name}',
            api('PUT', f'/dpia/{dpia_key}/residual-risk', {

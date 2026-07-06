@@ -174,7 +174,7 @@ class TranslationLinkControllerSpec extends Specification {
         def body = [
             firstEntityKey        : entityKey1,
             secondEntityKey       : entityKey2,
-            semanticDifferenceNote: "Customer in BC1 includes billing info, Kunde in BC2 is just identity"
+            semanticDifferenceNote: [[locale: "en", text: "Customer in BC1 includes billing info, Kunde in BC2 is just identity"]]
         ]
 
         when:
@@ -188,7 +188,7 @@ class TranslationLinkControllerSpec extends Specification {
         def link = response.body()
         link.id != null
         link.linkedEntity.key == entityKey2
-        link.semanticDifferenceNote == "Customer in BC1 includes billing info, Kunde in BC2 is just identity"
+        link.semanticDifferenceNote[0].text == "Customer in BC1 includes billing info, Kunde in BC2 is just identity"
     }
 
     def "POST /translation-links creates link without semantic note"() {
@@ -209,7 +209,7 @@ class TranslationLinkControllerSpec extends Specification {
 
         then:
         response.status == HttpStatus.CREATED
-        response.body().semanticDifferenceNote == null
+        response.body().semanticDifferenceNote.isEmpty()
     }
 
     def "POST /translation-links returns 404 for unknown first entity"() {
@@ -288,12 +288,12 @@ class TranslationLinkControllerSpec extends Specification {
         def userData = createUserWithToken("tl-updater@test.com", "tlUpdater")
         def entityKey1 = createEntity(userData.token, "Update Entity A")
         def entityKey2 = createEntity(userData.token, "Update Entity B")
-        def createBody = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: "Old note"]
+        def createBody = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: [[locale: "en", text: "Old note"]]]
         def created = client.toBlocking().exchange(
             HttpRequest.POST("/translation-links", createBody).bearerAuth(userData.token), Map)
         def linkId = created.body().id
 
-        def updateBody = [semanticDifferenceNote: "Updated note"]
+        def updateBody = [semanticDifferenceNote: [[locale: "en", text: "Updated note"]]]
 
         when:
         def response = client.toBlocking().exchange(
@@ -303,7 +303,7 @@ class TranslationLinkControllerSpec extends Specification {
 
         then:
         response.status == HttpStatus.OK
-        response.body().semanticDifferenceNote == "Updated note"
+        response.body().semanticDifferenceNote[0].text == "Updated note"
     }
 
     def "PUT /translation-links/{id} returns 403 when user is not creator or admin"() {
@@ -319,7 +319,7 @@ class TranslationLinkControllerSpec extends Specification {
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.PUT("/translation-links/${linkId}", [semanticDifferenceNote: "Hostile update"]).bearerAuth(otherData.token),
+            HttpRequest.PUT("/translation-links/${linkId}", [semanticDifferenceNote: [[locale: "en", text: "Hostile update"]]]).bearerAuth(otherData.token),
             Map
         )
 
@@ -334,20 +334,20 @@ class TranslationLinkControllerSpec extends Specification {
         def userData = createUserWithToken("tl-admin-update@test.com", "tlAdminUpdate")
         def entityKey1 = createEntity(userData.token, "Admin Update Entity A")
         def entityKey2 = createEntity(userData.token, "Admin Update Entity B")
-        def createBody = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: "Original"]
+        def createBody = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: [[locale: "en", text: "Original"]]]
         def created = client.toBlocking().exchange(
             HttpRequest.POST("/translation-links", createBody).bearerAuth(userData.token), Map)
         def linkId = created.body().id
 
         when:
         def response = client.toBlocking().exchange(
-            HttpRequest.PUT("/translation-links/${linkId}", [semanticDifferenceNote: "Admin updated"]).bearerAuth(adminToken),
+            HttpRequest.PUT("/translation-links/${linkId}", [semanticDifferenceNote: [[locale: "en", text: "Admin updated"]]]).bearerAuth(adminToken),
             Map
         )
 
         then:
         response.status == HttpStatus.OK
-        response.body().semanticDifferenceNote == "Admin updated"
+        response.body().semanticDifferenceNote[0].text == "Admin updated"
     }
 
     def "PUT /translation-links/{id} returns 404 for unknown id"() {
@@ -356,7 +356,7 @@ class TranslationLinkControllerSpec extends Specification {
 
         when:
         client.toBlocking().exchange(
-            HttpRequest.PUT("/translation-links/999999", [semanticDifferenceNote: "No such link"]).bearerAuth(userData.token),
+            HttpRequest.PUT("/translation-links/999999", [semanticDifferenceNote: [[locale: "en", text: "No such link"]]]).bearerAuth(userData.token),
             Map
         )
 
@@ -438,7 +438,7 @@ class TranslationLinkControllerSpec extends Specification {
         def userData = createUserWithToken("tl-bilateral@test.com", "tlBilateral")
         def entityKey1 = createEntity(userData.token, "Bilateral Entity A")
         def entityKey2 = createEntity(userData.token, "Bilateral Entity B")
-        def body = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: "Bilateral note"]
+        def body = [firstEntityKey: entityKey1, secondEntityKey: entityKey2, semanticDifferenceNote: [[locale: "en", text: "Bilateral note"]]]
         client.toBlocking().exchange(
             HttpRequest.POST("/translation-links", body).bearerAuth(userData.token), Map)
 

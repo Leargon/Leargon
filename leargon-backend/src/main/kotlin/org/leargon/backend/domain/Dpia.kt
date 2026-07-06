@@ -11,6 +11,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.time.LocalDate
 
@@ -35,17 +37,13 @@ class Dpia {
     @JoinColumn(name = "entity_id")
     var entity: BusinessEntity? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "risk_description", columnDefinition = "LONGTEXT")
-    var riskDescription: String? = null
-        set(value) {
-            field = value?.trimEnd()
-        }
+    var riskDescription: MutableList<LocalizedText> = mutableListOf()
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "measures", columnDefinition = "LONGTEXT")
-    var measures: String? = null
-        set(value) {
-            field = value?.trimEnd()
-        }
+    var measures: MutableList<LocalizedText> = mutableListOf()
 
     @Column(name = "initial_risk", length = 10)
     var initialRisk: String? = null
@@ -62,11 +60,9 @@ class Dpia {
     @Column(name = "fdpic_consultation_date")
     var fdpicConsultationDate: LocalDate? = null
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "fdpic_consultation_outcome", columnDefinition = "LONGTEXT")
-    var fdpicConsultationOutcome: String? = null
-        set(value) {
-            field = value?.trimEnd()
-        }
+    var fdpicConsultationOutcome: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "triggered_by_id")

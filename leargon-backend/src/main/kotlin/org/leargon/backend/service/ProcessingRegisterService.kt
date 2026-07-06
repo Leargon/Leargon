@@ -176,10 +176,13 @@ open class ProcessingRegisterService(
                 .distinctBy { it.key }
                 .joinToString("; ") { localizedName(it, locale) }
 
-        val retentionEntities = allEntities.filter { !it.retentionPeriod.isNullOrBlank() }
+        val retentionEntities = allEntities.filter { it.retentionPeriod.isNotEmpty() }
         val retentionPeriods =
             retentionEntities.joinToString("; ") { e ->
-                "${localizedName(e, locale)}: ${e.retentionPeriod}"
+                val rp =
+                    e.retentionPeriod.find { it.locale == locale }?.text
+                        ?: e.retentionPeriod.firstOrNull()?.text ?: ""
+                "${localizedName(e, locale)}: $rp"
             }
 
         val recipients =

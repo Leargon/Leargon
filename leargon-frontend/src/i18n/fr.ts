@@ -23,6 +23,7 @@ const fr = {
     "contextMap": "Carte de contexte",
     "capabilities": "Capacités",
     "teamInsights": "Aperçu de l'équipe",
+    "insights": "Aperçus",
     "settings": "Paramètres",
     "users": "Utilisateurs",
     "locales": "Langues",
@@ -265,6 +266,7 @@ const fr = {
     "colType": "Type",
     "colResidualRisk": "Risque résiduel",
     "colFdpic": "Consultation PFPDT",
+    "fdpicOutcome": "Résultat de la consultation PFPDT",
     "colTriggeredBy": "Déclenchée par",
     "colCreated": "Créée le",
     "noRecorded": "Aucune AIPD enregistrée",
@@ -275,6 +277,20 @@ const fr = {
     "clickToSet": "Cliquer pour définir",
     "riskPlaceholder": "Décrire les risques identifiés...",
     "measuresPlaceholder": "Décrire les mesures de réduction..."
+  },
+  "insights": {
+    "pageTitle": "Aperçus",
+    "pageSubtitle": "Analyse groupée par méthodologie de la santé des équipes et des domaines",
+    "groupTeamTopologies": "Topologies d'équipe",
+    "groupDdd": "Domain-Driven Design",
+    "noInsightsForPerspective": "Aucun aperçu disponible pour la perspective sélectionnée. Changez la perspective dans la barre supérieure.",
+    "healthy": "Sain ({{count}})",
+    "perspective": {
+      "all": "Tous",
+      "architecture": "Architecture",
+      "compliance": "Conformité",
+      "governance": "Gouvernance"
+    }
   },
   "analytics": {
     "pageTitle": "Analyse des équipes et de l'org.",
@@ -338,6 +354,8 @@ const fr = {
     "contextRelationships": "Relations de contexte",
     "noContextRelationships": "Aucune relation de contexte documentée",
     "addRelationship": "Ajouter une relation",
+    "relSameBc": "L'amont et l'aval doivent être des bounded contexts différents",
+    "relNeedsCurrentDomain": "Au moins un bounded context doit appartenir à ce domaine",
     "upstreamRole": "Rôle amont",
     "downstreamRole": "Rôle aval",
     "description": "Description",
@@ -402,6 +420,8 @@ const fr = {
     "addConsumer": "Ajouter un consommateur",
     "addProcessLink": "Ajouter un lien de processus",
     "deleteEvent": "Supprimer l'événement",
+    "editEvent": "Modifier l'événement de domaine",
+    "nameRequired": "Un nom est requis dans au moins une langue",
     "entityLinks": "Entités de données",
     "noEntityLinks": "Aucune entité liée",
     "addEntityLink": "Lier une entité",

@@ -8,6 +8,9 @@ function getBackendUrl(): string {
   return url;
 }
 
+const lbl = (a?: Array<{ locale: string; text: string }> | null): string | undefined =>
+  a?.find((x) => x.locale === 'en')?.text;
+
 let _idSeq = 0;
 const uid = () => `pf-${++_idSeq}`;
 
@@ -70,7 +73,7 @@ describe('Process Flow API', () => {
     const updated = {
       nodes: [
         { id: uid(), position: 0, nodeType: 'START_EVENT' },
-        { id: uid(), position: 1, nodeType: 'TASK', label: 'Added task' },
+        { id: uid(), position: 1, nodeType: 'TASK', label: [{ locale: 'en', text: 'Added task' }] },
         { id: uid(), position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],
@@ -78,7 +81,7 @@ describe('Process Flow API', () => {
     const res = await client.put(`/processes/${proc.key}/flow`, updated);
     expect(res.status).toBe(200);
     expect(res.data.nodes.length).toBe(3);
-    expect(res.data.nodes.some((n: { label: string }) => n.label === 'Added task')).toBe(true);
+    expect(res.data.nodes.some((n: { label?: Array<{ locale: string; text: string }> }) => lbl(n.label) === 'Added task')).toBe(true);
   });
 
   it('PUT /flow returns 403 for non-owner', async () => {
@@ -105,7 +108,7 @@ describe('Process Flow API', () => {
     const flow = {
       nodes: [
         { id: uid(), position: 0, nodeType: 'START_EVENT' },
-        { id: uid(), position: 1, nodeType: 'INTERMEDIATE_EVENT', eventDefinition: 'TIMER', label: 'Wait 3 days' },
+        { id: uid(), position: 1, nodeType: 'INTERMEDIATE_EVENT', eventDefinition: 'TIMER', label: [{ locale: 'en', text: 'Wait 3 days' }] },
         { id: uid(), position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],
@@ -114,7 +117,7 @@ describe('Process Flow API', () => {
     expect(res.status).toBe(200);
     const ev = res.data.nodes.find((n: { nodeType: string }) => n.nodeType === 'INTERMEDIATE_EVENT');
     expect(ev.eventDefinition).toBe('TIMER');
-    expect(ev.label).toBe('Wait 3 days');
+    expect(lbl(ev.label)).toBe('Wait 3 days');
   });
 
   it('saves all 5 intermediate event definitions', async () => {
@@ -149,7 +152,7 @@ describe('Process Flow API', () => {
     await client.put(`/processes/${child.key}/flow`, {
       nodes: [
         { id: uid(), position: 0, nodeType: 'START_EVENT' },
-        { id: uid(), position: 1, nodeType: 'TASK', label: 'Inner' },
+        { id: uid(), position: 1, nodeType: 'TASK', label: [{ locale: 'en', text: 'Inner' }] },
         { id: uid(), position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],
@@ -225,8 +228,8 @@ describe('Process Flow API', () => {
         { id: gspId,  position: 1, nodeType: 'GATEWAY_SPLIT', gatewayPairId: pairId, gatewayType: 'PARALLEL' },
         { id: gjnId,  position: 2, nodeType: 'GATEWAY_JOIN',  gatewayPairId: pairId, gatewayType: 'PARALLEL' },
         { id: uid(),  position: 3, nodeType: 'END_EVENT' },
-        { id: uid(),  position: 0, nodeType: 'TASK', label: 'Track A', trackId: taId },
-        { id: uid(),  position: 0, nodeType: 'TASK', label: 'Track B', trackId: tbId },
+        { id: uid(),  position: 0, nodeType: 'TASK', label: [{ locale: 'en', text: 'Track A' }], trackId: taId },
+        { id: uid(),  position: 0, nodeType: 'TASK', label: [{ locale: 'en', text: 'Track B' }], trackId: tbId },
       ],
       tracks: [
         { id: taId, gatewayNodeId: gspId, trackIndex: 0 },
@@ -237,8 +240,8 @@ describe('Process Flow API', () => {
     expect(res.status).toBe(200);
     const trackA = res.data.tracks.find((t: { trackIndex: number }) => t.trackIndex === 0);
     const trackB = res.data.tracks.find((t: { trackIndex: number }) => t.trackIndex === 1);
-    expect(trackA.nodes.some((n: { label: string }) => n.label === 'Track A')).toBe(true);
-    expect(trackB.nodes.some((n: { label: string }) => n.label === 'Track B')).toBe(true);
+    expect(trackA.nodes.some((n: { label?: Array<{ locale: string; text: string }> }) => lbl(n.label) === 'Track A')).toBe(true);
+    expect(trackB.nodes.some((n: { label?: Array<{ locale: string; text: string }> }) => lbl(n.label) === 'Track B')).toBe(true);
   });
 
   it('saves track label', async () => {
@@ -253,14 +256,14 @@ describe('Process Flow API', () => {
         { id: uid(),  position: 3, nodeType: 'END_EVENT' },
       ],
       tracks: [
-        { id: taId, gatewayNodeId: gspId, trackIndex: 0, label: 'Yes path' },
-        { id: tbId, gatewayNodeId: gspId, trackIndex: 1, label: 'No path'  },
+        { id: taId, gatewayNodeId: gspId, trackIndex: 0, label: [{ locale: 'en', text: 'Yes path' }] },
+        { id: tbId, gatewayNodeId: gspId, trackIndex: 1, label: [{ locale: 'en', text: 'No path' }]  },
       ],
     };
     const res = await client.put(`/processes/${proc.key}/flow`, flow);
     expect(res.status).toBe(200);
-    const yes = res.data.tracks.find((t: { label: string }) => t.label === 'Yes path');
-    const no  = res.data.tracks.find((t: { label: string }) => t.label === 'No path');
+    const yes = res.data.tracks.find((t: { label?: Array<{ locale: string; text: string }> }) => lbl(t.label) === 'Yes path');
+    const no  = res.data.tracks.find((t: { label?: Array<{ locale: string; text: string }> }) => lbl(t.label) === 'No path');
     expect(yes).toBeTruthy();
     expect(no).toBeTruthy();
   });
@@ -280,10 +283,10 @@ describe('Process Flow API', () => {
         { id: sp2Id,  position: 0, nodeType: 'GATEWAY_SPLIT', gatewayPairId: pair2Id, gatewayType: 'PARALLEL', trackId: taId },
         { id: jn2Id,  position: 1, nodeType: 'GATEWAY_JOIN',  gatewayPairId: pair2Id, gatewayType: 'PARALLEL', trackId: taId },
         // Track nodes — outer track B
-        { id: uid(),  position: 0, nodeType: 'TASK', label: 'Alt step', trackId: tbId },
+        { id: uid(),  position: 0, nodeType: 'TASK', label: [{ locale: 'en', text: 'Alt step' }], trackId: tbId },
         // Inner track nodes (belong to inner gateway)
-        { id: uid(),  position: 0, nodeType: 'TASK', label: 'Inner A', trackId: tcId },
-        { id: uid(),  position: 0, nodeType: 'TASK', label: 'Inner B', trackId: tdId },
+        { id: uid(),  position: 0, nodeType: 'TASK', label: [{ locale: 'en', text: 'Inner A' }], trackId: tcId },
+        { id: uid(),  position: 0, nodeType: 'TASK', label: [{ locale: 'en', text: 'Inner B' }], trackId: tdId },
       ],
       tracks: [
         { id: taId, gatewayNodeId: sp1Id, trackIndex: 0 },
@@ -296,7 +299,7 @@ describe('Process Flow API', () => {
     expect(res.status).toBe(200);
     expect(res.data.tracks.length).toBe(4);
     const innerC = res.data.tracks.find((t: { id: string }) => t.id === tcId);
-    expect(innerC.nodes.some((n: { label: string }) => n.label === 'Inner A')).toBe(true);
+    expect(innerC.nodes.some((n: { label?: Array<{ locale: string; text: string }> }) => lbl(n.label) === 'Inner A')).toBe(true);
   });
 
   // ── BPMN export ────────────────────────────────────────────────────────────
@@ -306,7 +309,7 @@ describe('Process Flow API', () => {
     await client.put(`/processes/${proc.key}/flow`, {
       nodes: [
         { id: uid(), position: 0, nodeType: 'START_EVENT' },
-        { id: uid(), position: 1, nodeType: 'TASK', label: 'Do work' },
+        { id: uid(), position: 1, nodeType: 'TASK', label: [{ locale: 'en', text: 'Do work' }] },
         { id: uid(), position: 2, nodeType: 'END_EVENT' },
       ],
       tracks: [],

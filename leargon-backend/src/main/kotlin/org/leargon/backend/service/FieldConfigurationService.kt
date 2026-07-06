@@ -43,7 +43,7 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_ENTITY", "dataSteward", "Data Steward", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "technicalCustodian", "Technical Custodian", "CORE", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "parent", "Parent Entity", "CORE", "BASIC", false),
-            FieldDef("BUSINESS_ENTITY", "retentionPeriod", "Retention Period", "DATA_GOVERNANCE", "BASIC", true),
+            FieldDef("BUSINESS_ENTITY", "retentionPeriod.{locale}", "Retention Period", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "storageLocations", "Storage Locations", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "qualityRules", "Data Quality Rules", "DATA_QUALITY", "ADVANCED", true),
@@ -58,7 +58,7 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_DOMAIN", "type", "Domain Type", "CORE", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "parent", "Parent Domain", "CORE", "BASIC", false),
             FieldDef("BUSINESS_DOMAIN", "owningUnit", "Owning Unit", "CORE", "BASIC", true),
-            FieldDef("BUSINESS_DOMAIN", "visionStatement", "Vision Statement", "STRATEGIC", "BASIC", true),
+            FieldDef("BUSINESS_DOMAIN", "visionStatement.{locale}", "Vision Statement", "STRATEGIC", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "boundedContexts", "Bounded Contexts", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_DOMAIN", "contextRelationships", "Context Relationships", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_DOMAIN", "domainEvents", "Domain Events", "DDD", "ADVANCED", false),
@@ -211,6 +211,18 @@ open class FieldConfigurationService(
     @Transactional
     open fun concreteFieldNames(entityType: String): List<String> =
         getDefinitions().filter { it.entityType == entityType && it.localeGroup != true }.map { it.fieldName }
+
+    /**
+     * Base (locale/classification placeholder stripped) inventory field names for an entity type —
+     * e.g. `names.{locale}` → `names`, `classification.{classKey}` → `classification`, `dataOwner` →
+     * `dataOwner`. These match the field keys the frontend gates edit affordances on and are the domain
+     * of [RoleService.editableFields].
+     */
+    fun baseFieldNames(entityType: String): List<String> =
+        fieldInventory
+            .filter { it.entityType == entityType }
+            .map { it.fieldName.substringBefore(".{") }
+            .distinct()
 
     @Transactional
     open fun replace(entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> {

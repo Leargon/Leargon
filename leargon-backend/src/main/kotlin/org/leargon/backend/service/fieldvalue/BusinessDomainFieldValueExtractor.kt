@@ -2,7 +2,6 @@ package org.leargon.backend.service.fieldvalue
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDomain
-import org.leargon.backend.domain.ContextRelationship
 import org.leargon.backend.repository.ContextRelationshipRepository
 
 @Singleton
@@ -28,7 +27,7 @@ class BusinessDomainFieldValueExtractor(
 
             fieldName == "owningUnit" -> entity.owningUnit?.key
 
-            fieldName == "visionStatement" -> FieldValueSupport.blankToNull(entity.visionStatement)
+            fieldName.startsWith("visionStatement.") -> FieldValueSupport.localized(entity.visionStatement, "visionStatement", fieldName)
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "boundedContexts" -> null
@@ -53,24 +52,21 @@ class BusinessDomainFieldValueExtractor(
                 .flatMap { bc ->
                     relRepo.findByUpstreamBoundedContextKey(bc.key) + relRepo.findByDownstreamBoundedContextKey(bc.key)
                 }.distinctBy { it.id }
-        val contextRelationships =
-            FieldValueSupport.items(
-                "contextRelationship",
-                rels,
-                { it.id?.toString() },
-                { signatureOf(it) }
-            )
+        val contextRelationships = HashMap<String, String>()
+        rels.forEach { rel ->
+            val id = rel.id ?: return@forEach
+            // Base row = non-localized structure; each localized role/description per-locale.
+            contextRelationships["contextRelationship.$id"] =
+                FieldValueSupport.signature(
+                    rel.upstreamBoundedContext?.key,
+                    rel.downstreamBoundedContext?.key,
+                    rel.relationshipType
+                )
+            contextRelationships.putAll(FieldValueSupport.localizedItems("contextRelationship.$id.upstreamRole", rel.upstreamRole))
+            contextRelationships.putAll(FieldValueSupport.localizedItems("contextRelationship.$id.downstreamRole", rel.downstreamRole))
+            contextRelationships.putAll(FieldValueSupport.localizedItems("contextRelationship.$id.description", rel.description))
+        }
 
         return boundedContexts + contextRelationships
     }
-
-    private fun signatureOf(rel: ContextRelationship): String =
-        FieldValueSupport.signature(
-            rel.upstreamBoundedContext?.key,
-            rel.downstreamBoundedContext?.key,
-            rel.relationshipType,
-            rel.upstreamRole,
-            rel.downstreamRole,
-            rel.description
-        )
 }
