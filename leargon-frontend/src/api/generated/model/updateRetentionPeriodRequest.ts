@@ -16,11 +16,12 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface UpdateRetentionPeriodRequest {
   /**
-     * Retention period description (null to clear)
+     * Retention period (null or empty to clear) — localised
      * @nullable
      */
-  retentionPeriod?: string | null;
+  retentionPeriod?: LocalizedText[] | null;
 }

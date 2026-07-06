@@ -137,7 +137,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user4@qr.com", "qrUser4")
         String entityKey = createEntity(user.token)
-        def body = [description: "Age must be set and non-negative"]
+        def body = [descriptions: [[locale: "en", text: "Age must be set and non-negative"]]]
 
         when:
         def resp = client.toBlocking().exchange(
@@ -148,7 +148,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         resp.status == HttpStatus.CREATED
         def rule = resp.body()
         rule.id != null
-        rule.description == "Age must be set and non-negative"
+        rule.descriptions[0].text == "Age must be set and non-negative"
         rule.severity == null
         rule.createdAt != null
     }
@@ -157,7 +157,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user5@qr.com", "qrUser5")
         String entityKey = createEntity(user.token)
-        def body = [description: "Customer must be at least 18 years old", severity: "MUST"]
+        def body = [descriptions: [[locale: "en", text: "Customer must be at least 18 years old"]], severity: "MUST"]
 
         when:
         def resp = client.toBlocking().exchange(
@@ -166,7 +166,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
 
         then:
         resp.status == HttpStatus.CREATED
-        resp.body().description == "Customer must be at least 18 years old"
+        resp.body().descriptions[0].text == "Customer must be at least 18 years old"
         resp.body().severity == "MUST"
     }
 
@@ -174,7 +174,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user5b@qr.com", "qrUser5b")
         String entityKey = createEntity(user.token)
-        def body = [description: "Email should be in valid format", severity: "SHOULD"]
+        def body = [descriptions: [[locale: "en", text: "Email should be in valid format"]], severity: "SHOULD"]
 
         when:
         def resp = client.toBlocking().exchange(
@@ -190,7 +190,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user5c@qr.com", "qrUser5c")
         String entityKey = createEntity(user.token)
-        def body = [description: "Phone number may be provided for notifications", severity: "MAY"]
+        def body = [descriptions: [[locale: "en", text: "Phone number may be provided for notifications"]], severity: "MAY"]
 
         when:
         def resp = client.toBlocking().exchange(
@@ -207,7 +207,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         def owner = createUserWithToken("owner1@qr.com", "qrOwner1")
         String adminToken = createAdminToken("admin1@qr.com", "qrAdmin1")
         String entityKey = createEntity(owner.token)
-        def body = [description: "Email must follow RFC 5322 standard", severity: "MUST"]
+        def body = [descriptions: [[locale: "en", text: "Email must follow RFC 5322 standard"]], severity: "MUST"]
 
         when:
         def resp = client.toBlocking().exchange(
@@ -216,7 +216,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
 
         then:
         resp.status == HttpStatus.CREATED
-        resp.body().description == "Email must follow RFC 5322 standard"
+        resp.body().descriptions[0].text == "Email must follow RFC 5322 standard"
     }
 
     def "POST quality rule returns 403 for non-owner non-admin"() {
@@ -224,7 +224,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         def owner = createUserWithToken("owner2@qr.com", "qrOwner2")
         def other = createUserWithToken("other1@qr.com", "qrOther1", "ROLE_USER")
         String entityKey = createEntity(owner.token)
-        def body = [description: "Name must not be blank"]
+        def body = [descriptions: [[locale: "en", text: "Name must not be blank"]]]
 
         when:
         client.toBlocking().exchange(
@@ -239,7 +239,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
     def "POST quality rule returns 404 for unknown entity"() {
         given:
         def user = createUserWithToken("user6@qr.com", "qrUser6")
-        def body = [description: "Name must not be blank"]
+        def body = [descriptions: [[locale: "en", text: "Name must not be blank"]]]
 
         when:
         client.toBlocking().exchange(
@@ -255,7 +255,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user7@qr.com", "qrUser7")
         String entityKey = createEntity(user.token)
-        def body = [description: "Name must not be blank"]
+        def body = [descriptions: [[locale: "en", text: "Name must not be blank"]]]
 
         when:
         client.toBlocking().exchange(
@@ -272,8 +272,8 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user8@qr.com", "qrUser8")
         String entityKey = createEntity(user.token)
-        createRule(user.token, entityKey, [description: "Age must be at least 18", severity: "MUST"])
-        createRule(user.token, entityKey, [description: "Email should follow RFC 5322"])
+        createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Age must be at least 18"]], severity: "MUST"])
+        createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Email should follow RFC 5322"]]])
 
         when:
         def resp = client.toBlocking().exchange(
@@ -283,15 +283,15 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         then:
         resp.status == HttpStatus.OK
         resp.body().size() == 2
-        resp.body().any { it.description == "Age must be at least 18" && it.severity == "MUST" }
-        resp.body().any { it.description == "Email should follow RFC 5322" }
+        resp.body().any { it.descriptions[0].text == "Age must be at least 18" && it.severity == "MUST" }
+        resp.body().any { it.descriptions[0].text == "Email should follow RFC 5322" }
     }
 
     def "GET entity response includes qualityRules array"() {
         given:
         def user = createUserWithToken("user9@qr.com", "qrUser9")
         String entityKey = createEntity(user.token)
-        createRule(user.token, entityKey, [description: "Status must be one of: ACTIVE, INACTIVE", severity: "MUST"])
+        createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Status must be one of: ACTIVE, INACTIVE"]], severity: "MUST"])
 
         when:
         def resp = client.toBlocking().exchange(
@@ -302,7 +302,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         def rules = resp.body().qualityRules
         rules != null
         rules.size() == 1
-        rules[0].description == "Status must be one of: ACTIVE, INACTIVE"
+        rules[0].descriptions[0].text == "Status must be one of: ACTIVE, INACTIVE"
         rules[0].severity == "MUST"
     }
 
@@ -312,18 +312,18 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user10@qr.com", "qrUser10")
         String entityKey = createEntity(user.token)
-        def created = createRule(user.token, entityKey, [description: "Age must be set"])
+        def created = createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Age must be set"]]])
         long ruleId = created.id as long
 
         when:
         def resp = client.toBlocking().exchange(
             HttpRequest.PUT("/business-entities/${entityKey}/quality-rules/${ruleId}",
-                [description: "Customer age must be at least 21", severity: "MUST"]).bearerAuth(user.token),
+                [descriptions: [[locale: "en", text: "Customer age must be at least 21"]], severity: "MUST"]).bearerAuth(user.token),
             Map)
 
         then:
         resp.status == HttpStatus.OK
-        resp.body().description == "Customer age must be at least 21"
+        resp.body().descriptions[0].text == "Customer age must be at least 21"
         resp.body().severity == "MUST"
         resp.body().updatedAt != null
     }
@@ -332,18 +332,18 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user10b@qr.com", "qrUser10b")
         String entityKey = createEntity(user.token)
-        def created = createRule(user.token, entityKey, [description: "Age rule", severity: "MUST"])
+        def created = createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Age rule"]], severity: "MUST"])
         long ruleId = created.id as long
 
         when:
         def resp = client.toBlocking().exchange(
             HttpRequest.PUT("/business-entities/${entityKey}/quality-rules/${ruleId}",
-                [description: "Updated age rule"]).bearerAuth(user.token),
+                [descriptions: [[locale: "en", text: "Updated age rule"]]]).bearerAuth(user.token),
             Map)
 
         then:
         resp.status == HttpStatus.OK
-        resp.body().description == "Updated age rule"
+        resp.body().descriptions[0].text == "Updated age rule"
         resp.body().severity == null
     }
 
@@ -352,13 +352,13 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         def owner = createUserWithToken("owner3@qr.com", "qrOwner3")
         def other = createUserWithToken("other2@qr.com", "qrOther2", "ROLE_USER")
         String entityKey = createEntity(owner.token)
-        def created = createRule(owner.token, entityKey, [description: "Age must be set"])
+        def created = createRule(owner.token, entityKey, [descriptions: [[locale: "en", text: "Age must be set"]]])
         long ruleId = created.id as long
 
         when:
         client.toBlocking().exchange(
             HttpRequest.PUT("/business-entities/${entityKey}/quality-rules/${ruleId}",
-                [description: "Attempted update"]).bearerAuth(other.token),
+                [descriptions: [[locale: "en", text: "Attempted update"]]]).bearerAuth(other.token),
             Map)
 
         then:
@@ -374,7 +374,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         when:
         client.toBlocking().exchange(
             HttpRequest.PUT("/business-entities/${entityKey}/quality-rules/99999",
-                [description: "Some rule"]).bearerAuth(user.token),
+                [descriptions: [[locale: "en", text: "Some rule"]]]).bearerAuth(user.token),
             Map)
 
         then:
@@ -388,7 +388,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         given:
         def user = createUserWithToken("user12@qr.com", "qrUser12")
         String entityKey = createEntity(user.token)
-        def created = createRule(user.token, entityKey, [description: "Age must be set"])
+        def created = createRule(user.token, entityKey, [descriptions: [[locale: "en", text: "Age must be set"]]])
         long ruleId = created.id as long
 
         when:
@@ -410,7 +410,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         def owner = createUserWithToken("owner4@qr.com", "qrOwner4")
         def other = createUserWithToken("other3@qr.com", "qrOther3", "ROLE_USER")
         String entityKey = createEntity(owner.token)
-        def created = createRule(owner.token, entityKey, [description: "Age must be set"])
+        def created = createRule(owner.token, entityKey, [descriptions: [[locale: "en", text: "Age must be set"]]])
         long ruleId = created.id as long
 
         when:
@@ -443,7 +443,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         String adminToken = createAdminToken("admin2@qr.com", "qrAdmin2")
         def owner = createUserWithToken("owner5@qr.com", "qrOwner5")
         String entityKey = createEntity(owner.token, "Export Entity")
-        createRule(owner.token, entityKey, [description: "Customer must be at least 18 years old", severity: "MUST"])
+        createRule(owner.token, entityKey, [descriptions: [[locale: "en", text: "Customer must be at least 18 years old"]], severity: "MUST"])
 
         when:
         def resp = client.toBlocking().exchange(
@@ -460,7 +460,7 @@ class BusinessDataQualityRuleControllerSpec extends Specification {
         String adminToken = createAdminToken("admin3@qr.com", "qrAdmin3")
         def owner = createUserWithToken("owner6@qr.com", "qrOwner6")
         String entityKey = createEntity(owner.token, "Export Entity 2")
-        createRule(owner.token, entityKey, [description: "Email should follow standard format", severity: "SHOULD"])
+        createRule(owner.token, entityKey, [descriptions: [[locale: "en", text: "Email should follow standard format"]], severity: "SHOULD"])
 
         when:
         def resp = client.toBlocking().exchange(

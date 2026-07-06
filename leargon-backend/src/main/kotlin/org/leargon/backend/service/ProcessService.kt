@@ -88,6 +88,16 @@ open class ProcessService(
     @ReadOnly
     open fun getProcessByKeyAsResponse(key: String): ProcessResponse = processMapper.toProcessResponse(getProcessByKey(key))
 
+    /** Detail response including the current user's per-record [editableFields]. */
+    @ReadOnly
+    open fun getProcessByKeyAsResponse(
+        key: String,
+        currentUser: User
+    ): ProcessResponse {
+        val m = processMapper
+        return m.toProcessResponse(getProcessByKey(key), currentUser)
+    }
+
     @Transactional
     open fun createProcess(
         request: CreateProcessRequest,

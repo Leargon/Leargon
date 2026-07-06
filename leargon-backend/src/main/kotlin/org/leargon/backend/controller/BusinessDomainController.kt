@@ -45,7 +45,8 @@ open class BusinessDomainController(
 
     override fun getBusinessDomainTree(): List<BusinessDomainTreeResponse> = businessDomainService.getBusinessDomainTreeAsResponses()
 
-    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse = businessDomainService.getBusinessDomainByKeyAsResponse(key)
+    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse =
+        businessDomainService.getBusinessDomainByKeyAsResponse(key, getCurrentUser())
 
     override fun setBusinessDomainFieldVerification(
         key: String,
@@ -88,7 +89,7 @@ open class BusinessDomainController(
         @Valid @Body updateBusinessDomainParentRequest: UpdateBusinessDomainParentRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "parent")
         val domain = businessDomainService.updateBusinessDomainParent(key, updateBusinessDomainParentRequest.parentKey, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
@@ -98,7 +99,7 @@ open class BusinessDomainController(
         @Valid @Body updateDomainVisionStatementRequest: UpdateDomainVisionStatementRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "visionStatement")
         val domain =
             businessDomainService.updateBusinessDomainVisionStatement(
                 key,
@@ -113,7 +114,7 @@ open class BusinessDomainController(
         @Valid @Body updateBusinessDomainTypeRequest: UpdateBusinessDomainTypeRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "type")
         val domain = businessDomainService.updateBusinessDomainType(key, updateBusinessDomainTypeRequest.type?.value, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
@@ -123,7 +124,7 @@ open class BusinessDomainController(
         @Valid @Body names: List<LocalizedText>
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "names")
         val domain = businessDomainService.updateBusinessDomainNames(key, names, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
@@ -133,7 +134,7 @@ open class BusinessDomainController(
         @Valid @Body descriptions: List<LocalizedText>
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "descriptions")
         val domain = businessDomainService.updateBusinessDomainDescriptions(key, descriptions, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
@@ -143,7 +144,7 @@ open class BusinessDomainController(
         @Valid @Body updateDomainOwningUnitRequest: UpdateDomainOwningUnitRequest
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
-        roleService.requireEditorFor(currentUser, "DDD")
+        requireDomainEdit(key, currentUser, "owningUnit")
         val domain = businessDomainService.updateOwningUnit(key, updateDomainOwningUnitRequest.owningUnitKey, currentUser)
         return businessDomainMapper.toBusinessDomainResponse(domain)
     }
@@ -172,6 +173,25 @@ open class BusinessDomainController(
         return userService
             .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
+    }
+
+    /**
+     * Editing a domain field requires the domain owner/steward (owning-unit business owner/steward), a
+     * DDD editor/lead, or an admin — the same predicate the mapper uses to compute `editableFields`, so
+     * the UI affordance and the enforcement cannot drift.
+     */
+    private fun requireDomainEdit(
+        key: String,
+        currentUser: User,
+        fieldName: String
+    ) {
+        if (!businessDomainService.canEditDomain(key, currentUser) &&
+            !roleService.canEditFieldByRole(currentUser, "BUSINESS_DOMAIN", fieldName)
+        ) {
+            throw ForbiddenOperationException(
+                "Editing this domain requires an admin, a DDD editor/lead, or the domain owner/steward"
+            )
+        }
     }
 
     companion object {

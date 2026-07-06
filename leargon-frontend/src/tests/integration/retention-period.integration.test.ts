@@ -48,21 +48,21 @@ describe('Retention Period E2E', () => {
   });
 
   // =====================
-  // CREATE with retentionPeriod
+  // CREATE with retentionPeriod (multilingual)
   // =====================
 
   it('should create entity with retentionPeriod', async () => {
     const res = await ownerClient.post<BusinessEntityResponse>('/business-entities', {
       names: [{ locale: 'en', text: 'FE RP Create Entity' }],
-      retentionPeriod: '5 years',
+      retentionPeriod: [{ locale: 'en', text: '5 years' }],
     });
     expect(res.status).toBe(201);
-    expect(res.data.retentionPeriod).toBe('5 years');
+    expect(res.data.retentionPeriod).toEqual([{ locale: 'en', text: '5 years' }]);
   });
 
-  it('should create entity without retentionPeriod (null)', async () => {
+  it('should create entity without retentionPeriod (empty/null)', async () => {
     const entity = await createEntity(ownerClient, 'FE RP No Retention Entity');
-    expect(entity.retentionPeriod == null).toBe(true);
+    expect(entity.retentionPeriod == null || entity.retentionPeriod.length === 0).toBe(true);
   });
 
   // =====================
@@ -74,10 +74,10 @@ describe('Retention Period E2E', () => {
 
     const res = await ownerClient.put<BusinessEntityResponse>(
       `/business-entities/${entity.key}/retention-period`,
-      { retentionPeriod: '3 years' },
+      { retentionPeriod: [{ locale: 'en', text: '3 years' }] },
     );
     expect(res.status).toBe(200);
-    expect(res.data.retentionPeriod).toBe('3 years');
+    expect(res.data.retentionPeriod).toEqual([{ locale: 'en', text: '3 years' }]);
   });
 
   it('admin can update retentionPeriod on any entity', async () => {
@@ -85,16 +85,16 @@ describe('Retention Period E2E', () => {
 
     const res = await adminClient.put<BusinessEntityResponse>(
       `/business-entities/${entity.key}/retention-period`,
-      { retentionPeriod: '10 years' },
+      { retentionPeriod: [{ locale: 'en', text: '10 years' }] },
     );
     expect(res.status).toBe(200);
-    expect(res.data.retentionPeriod).toBe('10 years');
+    expect(res.data.retentionPeriod).toEqual([{ locale: 'en', text: '10 years' }]);
   });
 
-  it('owner can clear retentionPeriod (set to null)', async () => {
+  it('owner can clear retentionPeriod (set to empty/null)', async () => {
     const res = await ownerClient.post<BusinessEntityResponse>('/business-entities', {
       names: [{ locale: 'en', text: 'FE RP Clear Entity' }],
-      retentionPeriod: '2 years',
+      retentionPeriod: [{ locale: 'en', text: '2 years' }],
     });
     const entityKey = res.data.key;
 
@@ -103,7 +103,7 @@ describe('Retention Period E2E', () => {
       { retentionPeriod: null },
     );
     expect(clearRes.status).toBe(200);
-    expect(clearRes.data.retentionPeriod == null).toBe(true);
+    expect(clearRes.data.retentionPeriod == null || clearRes.data.retentionPeriod.length === 0).toBe(true);
   });
 
   it('non-owner cannot update retentionPeriod', async () => {
@@ -111,7 +111,7 @@ describe('Retention Period E2E', () => {
 
     const res = await otherClient.put(
       `/business-entities/${entity.key}/retention-period`,
-      { retentionPeriod: '7 years' },
+      { retentionPeriod: [{ locale: 'en', text: '7 years' }] },
     );
     expect(res.status).toBe(403);
   });
@@ -122,10 +122,45 @@ describe('Retention Period E2E', () => {
 
   it('GET entity returns retentionPeriod after update', async () => {
     const entity = await createEntity(ownerClient, 'FE RP Get Entity');
-    await ownerClient.put(`/business-entities/${entity.key}/retention-period`, { retentionPeriod: '1 year' });
+    await ownerClient.put(`/business-entities/${entity.key}/retention-period`, {
+      retentionPeriod: [{ locale: 'en', text: '1 year' }],
+    });
 
     const res = await ownerClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
     expect(res.status).toBe(200);
-    expect(res.data.retentionPeriod).toBe('1 year');
+    expect(res.data.retentionPeriod).toEqual([{ locale: 'en', text: '1 year' }]);
+  });
+
+  // =====================
+  // Multilingual round-trip
+  // =====================
+
+  it('stores and returns retentionPeriod in multiple locales, and replaces the set on update', async () => {
+    const entity = await createEntity(ownerClient, 'FE RP Multilingual Entity');
+
+    // Create with two locales
+    const twoLocales = await ownerClient.put<BusinessEntityResponse>(
+      `/business-entities/${entity.key}/retention-period`,
+      { retentionPeriod: [{ locale: 'en', text: '7 years' }, { locale: 'de', text: '7 Jahre' }] },
+    );
+    expect(twoLocales.status).toBe(200);
+    const stored = twoLocales.data.retentionPeriod ?? [];
+    expect(stored.find((x) => x.locale === 'en')?.text).toBe('7 years');
+    expect(stored.find((x) => x.locale === 'de')?.text).toBe('7 Jahre');
+
+    // Read back both locales
+    const get = await ownerClient.get<BusinessEntityResponse>(`/business-entities/${entity.key}`);
+    const readBack = get.data.retentionPeriod ?? [];
+    expect(readBack.find((x) => x.locale === 'en')?.text).toBe('7 years');
+    expect(readBack.find((x) => x.locale === 'de')?.text).toBe('7 Jahre');
+
+    // Update replaces the whole set (en-only) — de must be gone
+    const replaced = await ownerClient.put<BusinessEntityResponse>(
+      `/business-entities/${entity.key}/retention-period`,
+      { retentionPeriod: [{ locale: 'en', text: '8 years' }] },
+    );
+    const after = replaced.data.retentionPeriod ?? [];
+    expect(after.find((x) => x.locale === 'en')?.text).toBe('8 years');
+    expect(after.find((x) => x.locale === 'de')).toBeUndefined();
   });
 });

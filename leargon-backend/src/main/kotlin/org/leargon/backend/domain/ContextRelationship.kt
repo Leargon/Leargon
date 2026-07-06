@@ -11,6 +11,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 
 @Entity
@@ -31,17 +33,17 @@ class ContextRelationship {
     @Column(name = "relationship_type", length = 30, nullable = false)
     var relationshipType: String = ""
 
-    @Column(name = "upstream_role", length = 100)
-    var upstreamRole: String? = null
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "upstream_role", columnDefinition = "LONGTEXT")
+    var upstreamRole: MutableList<LocalizedText> = mutableListOf()
 
-    @Column(name = "downstream_role", length = 100)
-    var downstreamRole: String? = null
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "downstream_role", columnDefinition = "LONGTEXT")
+    var downstreamRole: MutableList<LocalizedText> = mutableListOf()
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "description", columnDefinition = "LONGTEXT")
-    var description: String? = null
-        set(value) {
-            field = value?.trimEnd()
-        }
+    var description: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

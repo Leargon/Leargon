@@ -1,0 +1,260 @@
+databaseChangeLog:
+  # ── DDL: widen varchar columns to LONGTEXT for JSON storage ──────────────────
+
+  - changeSet:
+      id: 061-widen-retention-period-to-longtext
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: business_entities
+            columnName: retention_period
+            newDataType: LONGTEXT
+
+  - changeSet:
+      id: 061-widen-context-relationship-roles
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: context_relationships
+            columnName: upstream_role
+            newDataType: LONGTEXT
+        - modifyDataType:
+            tableName: context_relationships
+            columnName: downstream_role
+            newDataType: LONGTEXT
+        - modifyDataType:
+            tableName: context_relationships
+            columnName: description
+            newDataType: LONGTEXT
+
+  - changeSet:
+      id: 061-widen-translation-link-note
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: translation_links
+            columnName: semantic_difference_note
+            newDataType: LONGTEXT
+
+  - changeSet:
+      id: 061-widen-dpia-text-fields
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: dpia
+            columnName: risk_description
+            newDataType: LONGTEXT
+        - modifyDataType:
+            tableName: dpia
+            columnName: measures
+            newDataType: LONGTEXT
+        - modifyDataType:
+            tableName: dpia
+            columnName: fdpic_consultation_outcome
+            newDataType: LONGTEXT
+
+  - changeSet:
+      id: 061-widen-flow-node-label
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: process_flow_node
+            columnName: label
+            newDataType: LONGTEXT
+
+  - changeSet:
+      id: 061-widen-flow-track-label
+      author: leargon
+      changes:
+        - modifyDataType:
+            tableName: process_flow_track
+            columnName: label
+            newDataType: LONGTEXT
+
+  # ── Data migration: wrap existing plain-text values in JSON array format ──────
+  #
+  # Each statement normalises a legacy scalar column into a LocalizedText JSON array:
+  #   • a non-empty value        -> [{"locale":"en","text": <value>}]  (JSON_QUOTE-escaped)
+  #   • an empty/whitespace value -> NULL   (an empty string is not valid JSON and would break
+  #                                          the List<LocalizedText> read; NULL is the "no value" state)
+  #   • a value already in array form -> left untouched (idempotent re-run guard)
+
+  - changeSet:
+      id: 061-migrate-retention-period-to-json
+      author: leargon
+      comment: Wrap existing retention_period string values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE business_entities
+              SET retention_period = CASE WHEN TRIM(retention_period) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(retention_period), '}]') END
+              WHERE retention_period IS NOT NULL
+              AND NOT (TRIM(retention_period) LIKE '[%' AND TRIM(retention_period) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-vision-statement-to-json
+      author: leargon
+      comment: Wrap existing vision_statement string values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE business_domains
+              SET vision_statement = CASE WHEN TRIM(vision_statement) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(vision_statement), '}]') END
+              WHERE vision_statement IS NOT NULL
+              AND NOT (TRIM(vision_statement) LIKE '[%' AND TRIM(vision_statement) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-context-relationship-fields-to-json
+      author: leargon
+      comment: Wrap existing context_relationships text fields in LocalizedText JSON arrays (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE context_relationships
+              SET upstream_role = CASE WHEN TRIM(upstream_role) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(upstream_role), '}]') END
+              WHERE upstream_role IS NOT NULL
+              AND NOT (TRIM(upstream_role) LIKE '[%' AND TRIM(upstream_role) LIKE '%]');
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE context_relationships
+              SET downstream_role = CASE WHEN TRIM(downstream_role) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(downstream_role), '}]') END
+              WHERE downstream_role IS NOT NULL
+              AND NOT (TRIM(downstream_role) LIKE '[%' AND TRIM(downstream_role) LIKE '%]');
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE context_relationships
+              SET description = CASE WHEN TRIM(description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]') END
+              WHERE description IS NOT NULL
+              AND NOT (TRIM(description) LIKE '[%' AND TRIM(description) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-translation-link-note-to-json
+      author: leargon
+      comment: Wrap existing semantic_difference_note string values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE translation_links
+              SET semantic_difference_note = CASE WHEN TRIM(semantic_difference_note) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(semantic_difference_note), '}]') END
+              WHERE semantic_difference_note IS NOT NULL
+              AND NOT (TRIM(semantic_difference_note) LIKE '[%' AND TRIM(semantic_difference_note) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-dpia-text-fields-to-json
+      author: leargon
+      comment: Wrap existing DPIA text fields in LocalizedText JSON arrays (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE dpia
+              SET risk_description = CASE WHEN TRIM(risk_description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(risk_description), '}]') END
+              WHERE risk_description IS NOT NULL
+              AND NOT (TRIM(risk_description) LIKE '[%' AND TRIM(risk_description) LIKE '%]');
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE dpia
+              SET measures = CASE WHEN TRIM(measures) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(measures), '}]') END
+              WHERE measures IS NOT NULL
+              AND NOT (TRIM(measures) LIKE '[%' AND TRIM(measures) LIKE '%]');
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE dpia
+              SET fdpic_consultation_outcome = CASE WHEN TRIM(fdpic_consultation_outcome) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(fdpic_consultation_outcome), '}]') END
+              WHERE fdpic_consultation_outcome IS NOT NULL
+              AND NOT (TRIM(fdpic_consultation_outcome) LIKE '[%' AND TRIM(fdpic_consultation_outcome) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-quality-rule-description-to-json
+      author: leargon
+      comment: Wrap existing business_data_quality_rules description values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE business_data_quality_rules
+              SET description = CASE WHEN TRIM(description) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(description), '}]') END
+              WHERE description IS NOT NULL
+              AND NOT (TRIM(description) LIKE '[%' AND TRIM(description) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-flow-node-label-to-json
+      author: leargon
+      comment: Wrap existing process_flow_node label values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE process_flow_node
+              SET label = CASE WHEN TRIM(label) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]') END
+              WHERE label IS NOT NULL
+              AND NOT (TRIM(label) LIKE '[%' AND TRIM(label) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-flow-track-label-to-json
+      author: leargon
+      comment: Wrap existing process_flow_track label values in a LocalizedText JSON array (empty -> NULL)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >
+              UPDATE process_flow_track
+              SET label = CASE WHEN TRIM(label) = '' THEN NULL
+                ELSE CONCAT('[{"locale":"en","text":', JSON_QUOTE(label), '}]') END
+              WHERE label IS NOT NULL
+              AND NOT (TRIM(label) LIKE '[%' AND TRIM(label) LIKE '%]');
+
+  - changeSet:
+      id: 061-migrate-cross-border-transfer-notes-to-json
+      author: leargon
+      comment: Wrap string notes inside cross_border_transfers JSON array to LocalizedText format
+      changes:
+        - sql:
+            dbms: mysql
+            sql: |
+              UPDATE processes p
+              SET cross_border_transfers = (
+                SELECT IFNULL(JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                    'destinationCountry', JSON_UNQUOTE(t.dc),
+                    'safeguard', JSON_UNQUOTE(t.sg),
+                    'notes', CASE
+                      WHEN t.notes IS NULL THEN JSON_ARRAY()
+                      WHEN JSON_TYPE(t.notes) = 'STRING' AND JSON_UNQUOTE(t.notes) = '' THEN JSON_ARRAY()
+                      WHEN JSON_TYPE(t.notes) = 'STRING' THEN JSON_ARRAY(JSON_OBJECT('locale', 'en', 'text', JSON_UNQUOTE(t.notes)))
+                      ELSE t.notes
+                    END
+                  )
+                ), JSON_ARRAY())
+                FROM JSON_TABLE(
+                  p.cross_border_transfers,
+                  '$[*]' COLUMNS (
+                    ord FOR ORDINALITY,
+                    dc JSON PATH '$.destinationCountry',
+                    sg JSON PATH '$.safeguard',
+                    notes JSON PATH '$.notes'
+                  )
+                ) t
+              )
+              WHERE cross_border_transfers IS NOT NULL
+                AND JSON_TYPE(cross_border_transfers) = 'ARRAY'
+                AND JSON_LENGTH(cross_border_transfers) > 0;

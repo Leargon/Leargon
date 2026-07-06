@@ -20,7 +20,7 @@ open class TranslationLinkMapper {
                 link.createdAt?.atZone(ZoneOffset.UTC),
                 link.updatedAt?.atZone(ZoneOffset.UTC)
             )
-        response.semanticDifferenceNote = link.semanticDifferenceNote
+        response.semanticDifferenceNote = LocalizedTextMapper.toModel(link.semanticDifferenceNote)
         response.createdBy = UserMapper.toUserSummary(link.createdBy)
         return response
     }

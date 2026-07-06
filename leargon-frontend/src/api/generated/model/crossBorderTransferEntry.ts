@@ -17,14 +17,15 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { CrossBorderTransferSafeguard } from './crossBorderTransferSafeguard.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface CrossBorderTransferEntry {
   /** ISO 3166-1 alpha-2 country code */
   destinationCountry: string;
   safeguard: CrossBorderTransferSafeguard;
   /**
-     * Additional notes (required for EXCEPTION safeguard)
+     * Additional notes — required for EXCEPTION safeguard (localised)
      * @nullable
      */
-  notes?: string | null;
+  notes?: LocalizedText[] | null;
 }

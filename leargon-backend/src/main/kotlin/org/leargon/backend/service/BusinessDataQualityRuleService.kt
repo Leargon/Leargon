@@ -53,7 +53,12 @@ open class BusinessDataQualityRuleService(
         val rule =
             BusinessDataQualityRule().apply {
                 businessEntity = entity
-                description = request.description
+                descriptions =
+                    request.descriptions
+                        .map {
+                            org.leargon.backend.domain
+                                .LocalizedText(it.locale, it.text)
+                        }.toMutableList()
                 severity = request.severity?.value
             }
         val repo = this.ruleRepository
@@ -85,7 +90,12 @@ open class BusinessDataQualityRuleService(
                 ResourceNotFoundException("Quality rule not found: $ruleId")
             }
         val m = this.mapper
-        rule.description = request.description
+        rule.descriptions =
+            request.descriptions
+                .map {
+                    org.leargon.backend.domain
+                        .LocalizedText(it.locale, it.text)
+                }.toMutableList()
         rule.severity = request.severity?.value
         rule.updatedAt = Instant.now()
         repo.update(rule)

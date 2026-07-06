@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional
 import org.leargon.backend.domain.FlowEventDefinition
 import org.leargon.backend.domain.FlowGatewayType
 import org.leargon.backend.domain.FlowNodeType
+import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.ProcessFlowNode
 import org.leargon.backend.domain.ProcessFlowTrack
 import org.leargon.backend.domain.User
@@ -58,7 +59,7 @@ open class ProcessFlowService(
                 trackId = n.trackId
                 position = n.position
                 nodeType = FlowNodeType.valueOf(n.nodeType.name)
-                label = n.label
+                label = n.label?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
                 linkedProcessKey = n.linkedProcessKey
                 eventDefinition = n.eventDefinition?.let { FlowEventDefinition.valueOf(it.name) }
                 gatewayType = n.gatewayType?.let { FlowGatewayType.valueOf(it.name) }
@@ -95,7 +96,7 @@ open class ProcessFlowService(
                             id = t.id
                             gatewayNodeId = t.gatewayNodeId
                             trackIndex = t.trackIndex
-                            label = t.label
+                            label = t.label?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
                         }
                     )
                 )

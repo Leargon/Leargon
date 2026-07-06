@@ -42,6 +42,21 @@ object FieldValueSupport {
     fun localizedSignature(list: List<LocalizedText>?): String =
         list.orEmpty().sortedBy { it.locale }.joinToString(",") { "${it.locale}=${it.text}" }
 
+    /**
+     * Per-locale verification entries for a localized field inside a collection item:
+     * `"<prefix>.<locale>" -> text` for each non-blank locale. Emitting one entry per locale (instead of a
+     * single folded [localizedSignature]) gives each locale its own status row — so verifying one language
+     * survives edits to another, exactly like the top-level per-locale fields (`names.en`, `names.de`).
+     */
+    fun localizedItems(
+        prefix: String,
+        list: List<LocalizedText>?
+    ): Map<String, String> =
+        list
+            .orEmpty()
+            .filter { it.text.isNotBlank() }
+            .associate { "$prefix.${it.locale}" to it.text }
+
     /** Pipe-joins parts into a stable item signature (nulls become empty). */
     fun signature(vararg parts: Any?): String = parts.joinToString("|") { it?.toString() ?: "" }
 

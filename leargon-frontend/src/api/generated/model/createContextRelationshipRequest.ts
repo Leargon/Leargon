@@ -17,15 +17,16 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ContextMapperRelationshipType } from './contextMapperRelationshipType.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface CreateContextRelationshipRequest {
   upstreamBoundedContextKey: string;
   downstreamBoundedContextKey: string;
   relationshipType: ContextMapperRelationshipType;
   /** @nullable */
-  upstreamRole?: string | null;
+  upstreamRole?: LocalizedText[] | null;
   /** @nullable */
-  downstreamRole?: string | null;
+  downstreamRole?: LocalizedText[] | null;
   /** @nullable */
-  description?: string | null;
+  description?: LocalizedText[] | null;
 }

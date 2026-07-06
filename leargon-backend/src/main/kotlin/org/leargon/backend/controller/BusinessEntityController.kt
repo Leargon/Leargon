@@ -48,7 +48,8 @@ open class BusinessEntityController(
 ) : BusinessEntityApi {
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> = businessEntityService.getAllBusinessEntitiesAsResponses()
 
-    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse = businessEntityService.getBusinessEntityByKeyAsResponse(key)
+    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse =
+        businessEntityService.getBusinessEntityByKeyAsResponse(key, getCurrentUser())
 
     override fun getBusinessEntityTree(): List<BusinessEntityTreeResponse> = businessEntityService.getBusinessEntityTreeAsResponses()
 

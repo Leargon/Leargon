@@ -9,6 +9,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 
 @Entity
@@ -22,11 +24,9 @@ class BusinessDataQualityRule {
     @JoinColumn(name = "business_entity_id", nullable = false)
     var businessEntity: BusinessEntity? = null
 
-    @Column(name = "description", columnDefinition = "LONGTEXT", nullable = false)
-    var description: String = ""
-        set(value) {
-            field = value.trimEnd()
-        }
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "description", columnDefinition = "LONGTEXT")
+    var descriptions: MutableList<LocalizedText> = mutableListOf()
 
     @Column(name = "severity", length = 10)
     var severity: String? = null

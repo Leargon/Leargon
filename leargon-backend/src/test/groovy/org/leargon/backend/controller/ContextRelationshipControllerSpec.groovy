@@ -129,7 +129,7 @@ class ContextRelationshipControllerSpec extends Specification {
             upstreamBoundedContextKey  : upKey,
             downstreamBoundedContextKey: downKey,
             relationshipType           : "CUSTOMER_SUPPLIER",
-            description                : "Test relationship"
+            description                : [[locale: "en", text: "Test relationship"]]
         ]
 
         when:
@@ -145,7 +145,7 @@ class ContextRelationshipControllerSpec extends Specification {
         rel.relationshipType == "CUSTOMER_SUPPLIER"
         rel.upstreamBoundedContext.key == upKey
         rel.downstreamBoundedContext.key == downKey
-        rel.description == "Test relationship"
+        rel.description[0].text == "Test relationship"
     }
 
     def "POST /context-relationships returns 403 for non-admin"() {
@@ -258,7 +258,7 @@ class ContextRelationshipControllerSpec extends Specification {
             upstreamBoundedContextKey  : upKey,
             downstreamBoundedContextKey: downKey,
             relationshipType           : "SEPARATE_WAYS",
-            description                : "These contexts decided not to integrate"
+            description                : [[locale: "en", text: "These contexts decided not to integrate"]]
         ]
 
         when:
@@ -274,7 +274,7 @@ class ContextRelationshipControllerSpec extends Specification {
         rel.relationshipType == "SEPARATE_WAYS"
         rel.upstreamBoundedContext.key == upKey
         rel.downstreamBoundedContext.key == downKey
-        rel.description == "These contexts decided not to integrate"
+        rel.description[0].text == "These contexts decided not to integrate"
 
         and: "can be retrieved from the list"
         def listResp = client.toBlocking().exchange(

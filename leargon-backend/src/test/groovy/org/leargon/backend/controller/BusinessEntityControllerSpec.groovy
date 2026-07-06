@@ -627,7 +627,7 @@ class BusinessEntityControllerSpec extends Specification {
 
         and: "a create request with retentionPeriod"
         def request = new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
-                .retentionPeriod("7 years")
+                .retentionPeriod([new LocalizedText("en", "7 years")])
 
         when: "creating an entity"
         def response = client.toBlocking().exchange(
@@ -637,7 +637,7 @@ class BusinessEntityControllerSpec extends Specification {
 
         then: "entity is created with retentionPeriod"
         response.status == HttpStatus.CREATED
-        response.body().retentionPeriod == "7 years"
+        response.body().retentionPeriod[0].text == "7 years"
     }
 
     def "PUT /business-entities/{key}/retention-period should update retentionPeriod"() {
@@ -651,26 +651,26 @@ class BusinessEntityControllerSpec extends Specification {
         def entityKey = createResponse.body().key
 
         and: "no retentionPeriod initially"
-        createResponse.body().retentionPeriod == null
+        createResponse.body().retentionPeriod.isEmpty()
 
         when: "updating the retention period"
         def updateResponse = client.toBlocking().exchange(
                 HttpRequest.PUT("/business-entities/${entityKey}/retention-period",
-                        [retentionPeriod: "5 years"]
+                        [retentionPeriod: [[locale: "en", text: "5 years"]]]
                 ).bearerAuth(userData.token),
                 BusinessEntityResponse
         )
 
         then: "retentionPeriod is updated"
         updateResponse.status == HttpStatus.OK
-        updateResponse.body().retentionPeriod == "5 years"
+        updateResponse.body().retentionPeriod[0].text == "5 years"
     }
 
     def "PUT /business-entities/{key}/retention-period should allow clearing retentionPeriod"() {
         given: "an entity with retentionPeriod"
         def userData = createUserWithToken("creator@example.com", "creator")
         def createRequest = new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
-                .retentionPeriod("7 years")
+                .retentionPeriod([new LocalizedText("en", "7 years")])
         def createResponse = client.toBlocking().exchange(
                 HttpRequest.POST("/business-entities", createRequest).bearerAuth(userData.token),
                 BusinessEntityResponse
@@ -680,14 +680,14 @@ class BusinessEntityControllerSpec extends Specification {
         when: "clearing the retention period"
         def updateResponse = client.toBlocking().exchange(
                 HttpRequest.PUT("/business-entities/${entityKey}/retention-period",
-                        [retentionPeriod: null]
+                        [retentionPeriod: []]
                 ).bearerAuth(userData.token),
                 BusinessEntityResponse
         )
 
         then: "retentionPeriod is cleared"
         updateResponse.status == HttpStatus.OK
-        updateResponse.body().retentionPeriod == null
+        updateResponse.body().retentionPeriod.isEmpty()
     }
 
     def "PUT /business-entities/{key}/retention-period should reject non-owner"() {
@@ -705,7 +705,7 @@ class BusinessEntityControllerSpec extends Specification {
         when: "non-owner attempts to update retention period"
         client.toBlocking().exchange(
                 HttpRequest.PUT("/business-entities/${entityKey}/retention-period",
-                        [retentionPeriod: "3 years"]
+                        [retentionPeriod: [[locale: "en", text: "3 years"]]]
                 ).bearerAuth(otherData.token),
                 BusinessEntityResponse
         )

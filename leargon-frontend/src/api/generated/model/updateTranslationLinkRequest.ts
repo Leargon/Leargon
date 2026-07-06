@@ -16,8 +16,9 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface UpdateTranslationLinkRequest {
   /** @nullable */
-  semanticDifferenceNote?: string | null;
+  semanticDifferenceNote?: LocalizedText[] | null;
 }
