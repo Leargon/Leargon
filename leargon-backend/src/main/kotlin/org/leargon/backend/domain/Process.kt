@@ -133,6 +133,38 @@ class Process {
     @ManyToMany(mappedBy = "linkedProcesses", fetch = FetchType.LAZY)
     var capabilities: MutableSet<Capability> = mutableSetOf()
 
+    // ── Value Stream Mapping (Lean / VSM) ────────────────────────────────────
+    @Column(name = "value_stream_type", length = 20)
+    var valueStreamType: String? = null
+
+    @Column(name = "cycle_time_minutes")
+    var cycleTimeMinutes: Double? = null
+
+    @Column(name = "wait_time_minutes")
+    var waitTimeMinutes: Double? = null
+
+    @Column(name = "changeover_time_minutes")
+    var changeoverTimeMinutes: Double? = null
+
+    @Column(name = "frequency_count")
+    var frequencyCount: Int? = null
+
+    @Column(name = "frequency_period", length = 10)
+    var frequencyPeriod: String? = null
+
+    @Column(name = "activity_type", length = 25)
+    var activityType: String? = null
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "activity_justification", columnDefinition = "LONGTEXT")
+    var activityJustification: MutableList<LocalizedText>? = null
+
+    @Column(name = "first_pass_yield")
+    var firstPassYield: Double? = null
+
+    @Column(name = "completion_rate")
+    var completionRate: Double? = null
+
     @DateCreated
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null

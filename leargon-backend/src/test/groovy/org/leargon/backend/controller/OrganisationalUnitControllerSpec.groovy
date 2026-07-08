@@ -21,6 +21,7 @@ import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
+import org.leargon.backend.model.UpdateOrgUnitMissionStatementRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.repository.ClassificationRepository
@@ -991,5 +992,104 @@ class OrganisationalUnitControllerSpec extends Specification {
         )
         fetched.body().descriptions.find { it.locale == "de" }?.text == "Aktualisierte Deutsche"
         fetched.body().descriptions.find { it.locale == "de" }?.text != "Erste Deutsche"
+    }
+
+    // =====================
+    // MISSION STATEMENT TESTS
+    // =====================
+
+    private String createUnitAsAdmin(String adminToken, String name, String ownerUsername = null, String stewardUsername = null) {
+        def request = new CreateOrganisationalUnitRequest([new LocalizedText("en", name)])
+        if (ownerUsername != null) request.businessOwnerUsername = ownerUsername
+        if (stewardUsername != null) request.businessStewardUsername = stewardUsername
+        return client.toBlocking().exchange(
+                HttpRequest.POST("/organisational-units", request).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        ).body().key
+    }
+
+    def "PUT /organisational-units/{key}/mission-statement updates mission in multiple locales as admin"() {
+        given: "an admin user and a unit"
+        String adminToken = createAdminToken()
+        def unitKey = createUnitAsAdmin(adminToken, "Platform")
+
+        and: "a mission in two locales"
+        def request = new UpdateOrgUnitMissionStatementRequest()
+                .missionStatement([new LocalizedText("en", "Enable teams"), new LocalizedText("de", "Teams befaehigen")])
+
+        when: "updating the mission statement"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/mission-statement", request).bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then: "both locales are stored and returned"
+        response.status == HttpStatus.OK
+        def mission = response.body().missionStatement
+        mission.size() == 2
+        mission.any { it.locale == "en" && it.text == "Enable teams" }
+        mission.any { it.locale == "de" && it.text == "Teams befaehigen" }
+
+        and: "GET returns the persisted mission"
+        client.toBlocking().exchange(
+                HttpRequest.GET("/organisational-units/${unitKey}").bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        ).body().missionStatement.any { it.locale == "de" && it.text == "Teams befaehigen" }
+    }
+
+    def "PUT /organisational-units/{key}/mission-statement allowed for the business steward"() {
+        given: "an admin, a steward user, and a unit stewarded by them"
+        String adminToken = createAdminToken()
+        def steward = createUserWithToken("steward@example.com", "stewarduser")
+        def unitKey = createUnitAsAdmin(adminToken, "Enabling", null, "stewarduser")
+
+        when: "the steward updates the mission statement"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/mission-statement",
+                        new UpdateOrgUnitMissionStatementRequest().missionStatement([new LocalizedText("en", "Coach teams")]))
+                        .bearerAuth(steward.token),
+                OrganisationalUnitResponse
+        )
+
+        then: "the update succeeds"
+        response.status == HttpStatus.OK
+        response.body().missionStatement.any { it.locale == "en" && it.text == "Coach teams" }
+    }
+
+    def "PUT /organisational-units/{key}/mission-statement returns 403 for an unrelated user"() {
+        given: "an admin-owned unit and an unrelated user"
+        String adminToken = createAdminToken()
+        def unitKey = createUnitAsAdmin(adminToken, "Stream Team")
+        def outsider = createUserWithToken("outsider@example.com", "outsider")
+
+        when: "the unrelated user tries to update the mission"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/mission-statement",
+                        new UpdateOrgUnitMissionStatementRequest().missionStatement([new LocalizedText("en", "Nope")]))
+                        .bearerAuth(outsider.token),
+                OrganisationalUnitResponse
+        )
+
+        then: "forbidden is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.FORBIDDEN
+    }
+
+    def "PUT /organisational-units/{key}/mission-statement returns 400 for an unsupported locale"() {
+        given: "an admin user and a unit"
+        String adminToken = createAdminToken()
+        def unitKey = createUnitAsAdmin(adminToken, "Complicated Subsystem")
+
+        when: "updating with an unsupported locale"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/organisational-units/${unitKey}/mission-statement",
+                        new UpdateOrgUnitMissionStatementRequest().missionStatement([new LocalizedText("xx", "Invalid")]))
+                        .bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+
+        then: "bad request is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.BAD_REQUEST
     }
 }

@@ -48,8 +48,10 @@ import type {
   UpdateOrgUnitEntityLinksRequest,
   UpdateOrgUnitExternalFieldsRequest,
   UpdateOrgUnitLeadRequest,
+  UpdateOrgUnitMissionStatementRequest,
   UpdateOrgUnitParentsRequest,
   UpdateOrgUnitStewardRequest,
+  UpdateOrgUnitTeamTopologyTypeRequest,
   UpdateOrgUnitTechnicalCustodianRequest,
   UpdateOrgUnitTypeRequest
 } from '../model';
@@ -923,6 +925,211 @@ export const useUpdateOrganisationalUnitDescriptions = <TError = ErrorResponse |
         TContext
       > => {
       return useMutation(getUpdateOrganisationalUnitDescriptionsMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitMissionStatementResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrganisationalUnitMissionStatementResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateOrganisationalUnitMissionStatementResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrganisationalUnitMissionStatementResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrganisationalUnitMissionStatementResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrganisationalUnitMissionStatementResponseSuccess = (updateOrganisationalUnitMissionStatementResponse200) & {
+  headers: Headers;
+};
+export type updateOrganisationalUnitMissionStatementResponseError = (updateOrganisationalUnitMissionStatementResponse400 | updateOrganisationalUnitMissionStatementResponse401 | updateOrganisationalUnitMissionStatementResponse403 | updateOrganisationalUnitMissionStatementResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrganisationalUnitMissionStatementResponse = (updateOrganisationalUnitMissionStatementResponseSuccess | updateOrganisationalUnitMissionStatementResponseError)
+
+export const getUpdateOrganisationalUnitMissionStatementUrl = (key: string,) => {
+
+
+
+
+  return `/organisational-units/${key}/mission-statement`
+}
+
+/**
+ * Replaces the localised mission statement (team purpose) of an organisational unit.
+ * @summary Update organisational unit mission statement
+ */
+export const updateOrganisationalUnitMissionStatement = async (key: string,
+    updateOrgUnitMissionStatementRequest: UpdateOrgUnitMissionStatementRequest, options?: RequestInit): Promise<updateOrganisationalUnitMissionStatementResponse> => {
+
+  return customAxios<updateOrganisationalUnitMissionStatementResponse>(getUpdateOrganisationalUnitMissionStatementUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateOrgUnitMissionStatementRequest)
+  }
+);}
+
+
+
+
+export const getUpdateOrganisationalUnitMissionStatementMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>, TError,{key: string;data: UpdateOrgUnitMissionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>, TError,{key: string;data: UpdateOrgUnitMissionStatementRequest}, TContext> => {
+
+const mutationKey = ['updateOrganisationalUnitMissionStatement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>, {key: string;data: UpdateOrgUnitMissionStatementRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrganisationalUnitMissionStatement(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitMissionStatementMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>>
+    export type UpdateOrganisationalUnitMissionStatementMutationBody = UpdateOrgUnitMissionStatementRequest
+    export type UpdateOrganisationalUnitMissionStatementMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update organisational unit mission statement
+ */
+export const useUpdateOrganisationalUnitMissionStatement = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>, TError,{key: string;data: UpdateOrgUnitMissionStatementRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitMissionStatement>>,
+        TError,
+        {key: string;data: UpdateOrgUnitMissionStatementRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitMissionStatementMutationOptions(options), queryClient);
+    }
+    export type updateOrganisationalUnitTeamTopologyTypeResponse200 = {
+  data: OrganisationalUnitResponse
+  status: 200
+}
+
+export type updateOrganisationalUnitTeamTopologyTypeResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateOrganisationalUnitTeamTopologyTypeResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateOrganisationalUnitTeamTopologyTypeResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateOrganisationalUnitTeamTopologyTypeResponseSuccess = (updateOrganisationalUnitTeamTopologyTypeResponse200) & {
+  headers: Headers;
+};
+export type updateOrganisationalUnitTeamTopologyTypeResponseError = (updateOrganisationalUnitTeamTopologyTypeResponse401 | updateOrganisationalUnitTeamTopologyTypeResponse403 | updateOrganisationalUnitTeamTopologyTypeResponse404) & {
+  headers: Headers;
+};
+
+export type updateOrganisationalUnitTeamTopologyTypeResponse = (updateOrganisationalUnitTeamTopologyTypeResponseSuccess | updateOrganisationalUnitTeamTopologyTypeResponseError)
+
+export const getUpdateOrganisationalUnitTeamTopologyTypeUrl = (key: string,) => {
+
+
+
+
+  return `/organisational-units/${key}/team-topology-type`
+}
+
+/**
+ * Sets the Team Topologies team type (stream-aligned, platform, enabling, complicated subsystem).
+ * @summary Update organisational unit team topology type
+ */
+export const updateOrganisationalUnitTeamTopologyType = async (key: string,
+    updateOrgUnitTeamTopologyTypeRequest: UpdateOrgUnitTeamTopologyTypeRequest, options?: RequestInit): Promise<updateOrganisationalUnitTeamTopologyTypeResponse> => {
+
+  return customAxios<updateOrganisationalUnitTeamTopologyTypeResponse>(getUpdateOrganisationalUnitTeamTopologyTypeUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateOrgUnitTeamTopologyTypeRequest)
+  }
+);}
+
+
+
+
+export const getUpdateOrganisationalUnitTeamTopologyTypeMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>, TError,{key: string;data: UpdateOrgUnitTeamTopologyTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>, TError,{key: string;data: UpdateOrgUnitTeamTopologyTypeRequest}, TContext> => {
+
+const mutationKey = ['updateOrganisationalUnitTeamTopologyType'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>, {key: string;data: UpdateOrgUnitTeamTopologyTypeRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateOrganisationalUnitTeamTopologyType(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrganisationalUnitTeamTopologyTypeMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>>
+    export type UpdateOrganisationalUnitTeamTopologyTypeMutationBody = UpdateOrgUnitTeamTopologyTypeRequest
+    export type UpdateOrganisationalUnitTeamTopologyTypeMutationError = void
+
+    /**
+ * @summary Update organisational unit team topology type
+ */
+export const useUpdateOrganisationalUnitTeamTopologyType = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>, TError,{key: string;data: UpdateOrgUnitTeamTopologyTypeRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrganisationalUnitTeamTopologyType>>,
+        TError,
+        {key: string;data: UpdateOrgUnitTeamTopologyTypeRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateOrganisationalUnitTeamTopologyTypeMutationOptions(options), queryClient);
     }
     export type updateOrganisationalUnitLeadResponse200 = {
   data: OrganisationalUnitResponse

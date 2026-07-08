@@ -18,6 +18,7 @@ import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.model.UpdateBusinessDomainParentRequest
 import org.leargon.backend.model.UpdateBusinessDomainTypeRequest
+import org.leargon.backend.model.UpdateDomainVisionStatementRequest
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
@@ -621,5 +622,62 @@ class BusinessDomainControllerSpec extends Specification {
         diff.previousVersionNumber == 1
         diff.changes != null
         diff.changes.size() > 0
+    }
+
+    // =====================
+    // VISION STATEMENT TESTS
+    // =====================
+
+    def "PUT /business-domains/{key}/vision-statement should update vision in multiple locales"() {
+        given: "an admin user and a domain"
+        String adminToken = createAdminToken()
+        def domainKey = client.toBlocking().exchange(
+                HttpRequest.POST("/business-domains", new CreateBusinessDomainRequest([new LocalizedText("en", "Sales")]))
+                        .bearerAuth(adminToken),
+                BusinessDomainResponse
+        ).body().key
+
+        and: "a vision statement in two locales"
+        def request = new UpdateDomainVisionStatementRequest()
+                .visionStatement([new LocalizedText("en", "Be the best"), new LocalizedText("de", "Der Beste sein")])
+
+        when: "updating the vision statement"
+        def response = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-domains/${domainKey}/vision-statement", request)
+                        .bearerAuth(adminToken),
+                BusinessDomainResponse
+        )
+
+        then: "both locales are stored and returned"
+        response.status == HttpStatus.OK
+        def vision = response.body().visionStatement
+        vision.size() == 2
+        vision.any { it.locale == "en" && it.text == "Be the best" }
+        vision.any { it.locale == "de" && it.text == "Der Beste sein" }
+    }
+
+    def "PUT /business-domains/{key}/vision-statement should return 400 for unsupported locale"() {
+        given: "an admin user and a domain"
+        String adminToken = createAdminToken()
+        def domainKey = client.toBlocking().exchange(
+                HttpRequest.POST("/business-domains", new CreateBusinessDomainRequest([new LocalizedText("en", "Sales")]))
+                        .bearerAuth(adminToken),
+                BusinessDomainResponse
+        ).body().key
+
+        and: "a vision statement with an unsupported locale"
+        def request = new UpdateDomainVisionStatementRequest()
+                .visionStatement([new LocalizedText("xx", "Invalid")])
+
+        when: "updating the vision statement"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-domains/${domainKey}/vision-statement", request)
+                        .bearerAuth(adminToken),
+                BusinessDomainResponse
+        )
+
+        then: "bad request exception is thrown"
+        def exception = thrown(HttpClientResponseException)
+        exception.status == HttpStatus.BAD_REQUEST
     }
 }

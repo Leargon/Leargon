@@ -200,6 +200,38 @@ open class OrganisationalUnitService(
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
+    open fun updateMissionStatement(
+        key: String,
+        missionStatement: List<org.leargon.backend.model.LocalizedText>?,
+        currentUser: User
+    ): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+
+        validateTranslations(missionStatement, false)
+
+        unit.missionStatement =
+            missionStatement?.map { input -> LocalizedText(input.locale, input.text) }?.toMutableList() ?: mutableListOf()
+        unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun updateTeamTopologyType(
+        key: String,
+        teamTopologyType: String?,
+        currentUser: User
+    ): OrganisationalUnitResponse {
+        var unit = getByKey(key)
+        unit.teamTopologyType = teamTopologyType
+        unit = organisationalUnitRepository.update(unit)
+        syncFieldVerifications(unit, currentUser)
+        return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
     open fun updateBusinessOwner(
         key: String,
         businessOwnerUsername: String?,

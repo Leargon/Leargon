@@ -87,9 +87,20 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_PROCESS", "serviceProviders", "Service Providers", "GDPR", "EXPERT", true),
             FieldDef("BUSINESS_PROCESS", "processDiagram", "Process Diagram", "DATA_FLOW", "ADVANCED", false),
             FieldDef("BUSINESS_PROCESS", "calledProcesses", "Called Sub-Processes", "BCM", "ADVANCED", false),
+            FieldDef("BUSINESS_PROCESS", "valueStreamType", "Value Stream Type", "LEAN", "ADVANCED", true),
+            FieldDef("BUSINESS_PROCESS", "cycleTimeMinutes", "Cycle Time (min)", "LEAN", "ADVANCED", true),
+            FieldDef("BUSINESS_PROCESS", "waitTimeMinutes", "Wait Time (min)", "LEAN", "ADVANCED", true),
+            FieldDef("BUSINESS_PROCESS", "changeoverTimeMinutes", "Changeover Time (min)", "LEAN", "EXPERT", false),
+            FieldDef("BUSINESS_PROCESS", "frequencyCount", "Frequency", "LEAN", "EXPERT", false),
+            FieldDef("BUSINESS_PROCESS", "activityType", "Activity Type", "LEAN", "ADVANCED", true),
+            FieldDef("BUSINESS_PROCESS", "activityJustification.{locale}", "Activity Justification", "LEAN", "ADVANCED", false),
+            FieldDef("BUSINESS_PROCESS", "firstPassYield", "First Pass Yield (%)", "LEAN", "EXPERT", false),
+            FieldDef("BUSINESS_PROCESS", "completionRate", "Completion Rate (%)", "LEAN", "EXPERT", false),
             // ── ORGANISATIONAL_UNIT ──────────────────────────────────────────────
             FieldDef("ORGANISATIONAL_UNIT", "names.{locale}", "Name", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "descriptions.{locale}", "Description", "CORE", "BASIC", true),
+            FieldDef("ORGANISATIONAL_UNIT", "missionStatement.{locale}", "Mission Statement", "TEAM_TOPOLOGIES", "BASIC", true),
+            FieldDef("ORGANISATIONAL_UNIT", "teamTopologyType", "Team Topology Type", "TEAM_TOPOLOGIES", "ADVANCED", true),
             FieldDef("ORGANISATIONAL_UNIT", "unitType", "Unit Type", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "businessOwner", "Business Owner", "CORE", "BASIC", true),
             FieldDef("ORGANISATIONAL_UNIT", "businessSteward", "Business Steward", "CORE", "ADVANCED", true),
@@ -153,16 +164,19 @@ open class FieldConfigurationService(
                     "ORGANISATIONAL_UNIT" to listOf("section:DDD"),
                 ),
             "BCM" to mapOf("BUSINESS_PROCESS" to listOf("section:BCM")),
+            "LEAN" to mapOf("BUSINESS_PROCESS" to listOf("section:LEAN")),
             "TEAM_TOPOLOGIES" to
                 mapOf(
                     "ORGANISATIONAL_UNIT" to
                         listOf(
                             "unitType",
                             "descriptions",
+                            "missionStatement",
                             "businessOwner",
                             "businessSteward",
                             "technicalCustodian",
-                            "section:DATA_GOVERNANCE"
+                            "section:DATA_GOVERNANCE",
+                            "section:TEAM_TOPOLOGIES"
                         ),
                 ),
         )

@@ -94,6 +94,27 @@ open class ProcessMapper(
                         process.classificationAssignments.any { it.classificationKey == classKey }
                     }
 
+                    fieldName.startsWith("activityJustification.") -> {
+                        val locale = fieldName.removePrefix("activityJustification.")
+                        process.activityJustification?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    }
+
+                    fieldName == "valueStreamType" -> !process.valueStreamType.isNullOrBlank()
+
+                    fieldName == "cycleTimeMinutes" -> process.cycleTimeMinutes != null
+
+                    fieldName == "waitTimeMinutes" -> process.waitTimeMinutes != null
+
+                    fieldName == "changeoverTimeMinutes" -> process.changeoverTimeMinutes != null
+
+                    fieldName == "frequencyCount" -> process.frequencyCount != null
+
+                    fieldName == "activityType" -> !process.activityType.isNullOrBlank()
+
+                    fieldName == "firstPassYield" -> process.firstPassYield != null
+
+                    fieldName == "completionRate" -> process.completionRate != null
+
                     else -> {
                         true
                     }
@@ -156,6 +177,16 @@ open class ProcessMapper(
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
             .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en"), it.processingCountries) })
             .derivedProcessingCountries(derivedProcessingCountries(process))
+            .valueStreamType(toValueStreamType(process.valueStreamType))
+            .cycleTimeMinutes(process.cycleTimeMinutes)
+            .waitTimeMinutes(process.waitTimeMinutes)
+            .changeoverTimeMinutes(process.changeoverTimeMinutes)
+            .frequencyCount(process.frequencyCount)
+            .frequencyPeriod(toFrequencyPeriod(process.frequencyPeriod))
+            .activityType(toActivityType(process.activityType))
+            .activityJustification(process.activityJustification?.let { LocalizedTextMapper.toModel(it) })
+            .firstPassYield(process.firstPassYield)
+            .completionRate(process.completionRate)
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
@@ -260,6 +291,24 @@ open class ProcessMapper(
         fun toLegalBasis(legalBasis: String?): LegalBasis? {
             if (legalBasis == null) return null
             return LegalBasis.fromValue(legalBasis)
+        }
+
+        @JvmStatic
+        fun toValueStreamType(value: String?): org.leargon.backend.model.ValueStreamType? {
+            if (value == null) return null
+            return org.leargon.backend.model.ValueStreamType.fromValue(value)
+        }
+
+        @JvmStatic
+        fun toFrequencyPeriod(value: String?): org.leargon.backend.model.FrequencyPeriod? {
+            if (value == null) return null
+            return org.leargon.backend.model.FrequencyPeriod.fromValue(value)
+        }
+
+        @JvmStatic
+        fun toActivityType(value: String?): org.leargon.backend.model.ActivityType? {
+            if (value == null) return null
+            return org.leargon.backend.model.ActivityType.fromValue(value)
         }
 
         @JvmStatic

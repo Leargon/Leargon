@@ -198,6 +198,13 @@ wipe('domains', '/business-domains',
      lambda k: f'/business-domains/{k}',
      sort_key=lambda d: -d['key'].count('.'))
 
+print('[5d/7] Team interactions...')
+_all_interactions = api('GET', '/team-interactions', token=T)
+if isinstance(_all_interactions, list):
+    for i in _all_interactions:
+        api('DELETE', f'/team-interactions/{i["id"]}', token=T)
+    print(f'  deleted {len(_all_interactions)} team interactions')
+
 print('[6/7] Organisational units...')
 wipe('org units', '/organisational-units',
      lambda k: f'/organisational-units/{k}',
@@ -510,6 +517,73 @@ for (unit_en, steward, custodian) in ou_governance:
     api('PUT', f'/organisational-units/{ukey}/technical-custodian',
         {'technicalCustodianUsername': custodian}, T)
 print(f'  set governance roles on {len(ou_governance)} units')
+
+# ── Team Topologies: team types + missions (team purpose) ───────────────────────
+print('  Setting team topology types and missions...')
+ou_team_types = {
+    'Online Shop':            'STREAM_ALIGNED',
+    'Marketing':              'STREAM_ALIGNED',
+    'Operations':             'STREAM_ALIGNED',
+    'Finance':                'STREAM_ALIGNED',
+    'Payment':                'STREAM_ALIGNED',
+    'Supply Chain':           'STREAM_ALIGNED',
+    'Human Resources':        'STREAM_ALIGNED',
+    'Logistics':              'COMPLICATED_SUBSYSTEM',
+    'Engineering':            'PLATFORM',
+    'Data Protection Office': 'ENABLING',
+}
+ou_missions = {
+    'Online Shop':            n4('Deliver a delightful end-to-end shopping experience for every customer.',
+                                 'Ein durchgängig erstklassiges Einkaufserlebnis für jeden Kunden bieten.'),
+    'Marketing':              n4('Grow customer acquisition and engagement through data-driven campaigns.',
+                                 'Kundengewinnung und -bindung durch datengetriebene Kampagnen steigern.'),
+    'Operations':             n4('Keep day-to-day order processing and customer service running smoothly.',
+                                 'Die tägliche Auftragsabwicklung und den Kundenservice reibungslos halten.'),
+    'Finance':                n4('Ensure accurate, timely invoicing, payments and financial reporting.',
+                                 'Korrekte und pünktliche Rechnungsstellung, Zahlungen und Finanzberichte sicherstellen.'),
+    'Payment':                n4('Process every payment securely and reliably.',
+                                 'Jede Zahlung sicher und zuverlässig verarbeiten.'),
+    'Supply Chain':           n4('Get the right product to the right place at the right time.',
+                                 'Das richtige Produkt zur richtigen Zeit an den richtigen Ort bringen.'),
+    'Human Resources':        n4('Attract, develop and support the people who make the company work.',
+                                 'Die Menschen gewinnen, fördern und unterstützen, die das Unternehmen tragen.'),
+    'Logistics':              n4('Run warehousing, picking and dispatch as a dependable capability.',
+                                 'Lagerung, Kommissionierung und Versand als verlässliche Fähigkeit betreiben.'),
+    'Engineering':            n4('Provide a reliable, self-service platform that other teams build on.',
+                                 'Eine zuverlässige Self-Service-Plattform bereitstellen, auf der andere Teams aufbauen.'),
+    'Data Protection Office': n4('Enable every team to handle personal data lawfully and confidently.',
+                                 'Jedes Team befähigen, personenbezogene Daten rechtssicher zu verarbeiten.'),
+}
+for unit_en, tt in ou_team_types.items():
+    ukey = ou_keys.get(unit_en)
+    if ukey:
+        api('PUT', f'/organisational-units/{ukey}/team-topology-type', {'teamTopologyType': tt}, T)
+        if unit_en in ou_missions:
+            api('PUT', f'/organisational-units/{ukey}/mission-statement',
+                {'missionStatement': ou_missions[unit_en]}, T)
+print(f'  set team types + missions on {len(ou_team_types)} units')
+
+# ── Team interactions (Team Topologies) ─────────────────────────────────────────
+print('  Creating team interactions...')
+# (source_en, target_en, mode, duration, healthScore)
+ou_interactions = [
+    ('Engineering',            'Online Shop', 'X_AS_A_SERVICE', 'ONGOING',   4),
+    ('Engineering',            'Finance',     'X_AS_A_SERVICE', 'ONGOING',   3),
+    ('Data Protection Office', 'Finance',     'FACILITATING',   'TEMPORARY', 5),
+    ('Data Protection Office', 'Online Shop', 'FACILITATING',   'TEMPORARY', 4),
+    ('Logistics',              'Supply Chain','X_AS_A_SERVICE', 'ONGOING',   4),
+    # Deliberate anti-pattern for the Team Insights demo: two stream-aligned teams
+    # locked in an ongoing collaboration (should converge to X-as-a-Service).
+    ('Online Shop',            'Operations',  'COLLABORATION',  'ONGOING',   2),
+]
+for (src, tgt, mode, dur, health) in ou_interactions:
+    sk = ou_keys.get(src)
+    tk = ou_keys.get(tgt)
+    if sk and tk:
+        ok(f'  {src} -{mode}-> {tgt}',
+           api('POST', '/team-interactions',
+               {'sourceUnitKey': sk, 'targetUnitKey': tk,
+                'mode': mode, 'duration': dur, 'healthScore': health}, T))
 
 
 # ── 5. Business domains ─────────────────────────────────────────────────────────
@@ -1484,6 +1558,38 @@ for proc_en, details in process_details.items():
         ekey = ek(entity_en)
         ok(f'  output {entity_en} <- {proc_en}',
            api('POST', f'/processes/{pkey}/outputs', {'entityKey': ekey}, T))
+
+
+# ── 8d. Value Stream Mapping (Lean / VSM) ──────────────────────────────────────
+print('\n[8d/9] Value stream metadata (VSM)...')
+vsm_justification = {
+    'VALUE_ADDING':          n4('Directly advances the order toward fulfilment — the customer would pay for this.',
+                                'Bringt die Bestellung direkt voran — dafür würde der Kunde zahlen.'),
+    'BUSINESS_VALUE_ADDED':  n4('Required for compliance or business needs but not directly customer-visible value.',
+                                'Für Compliance/Geschäft nötig, aber kein direkter Kundennutzen.'),
+    'WASTE':                 n4('Rework or waiting — a candidate for elimination.',
+                                'Nacharbeit oder Warten — Kandidat zur Eliminierung.'),
+}
+# (process_en, valueStreamType, cycleTimeMinutes, waitTimeMinutes, activityType, firstPassYield)
+vsm_data = [
+    ('Search for Product',        'OPERATIONAL',      2.0,   1.0, 'VALUE_ADDING',         99.0),
+    ('Add to Cart',               'OPERATIONAL',      1.0,   0.5, 'VALUE_ADDING',         98.0),
+    ('Checkout',                  'OPERATIONAL',      3.0,   2.0, 'VALUE_ADDING',         95.0),
+    ('Validate Shipping Address', 'BUSINESS_SUPPORT', 1.5,   3.0, 'BUSINESS_VALUE_ADDED', 92.0),
+    ('Process Payment',           'OPERATIONAL',      2.0,   5.0, 'VALUE_ADDING',         97.0),
+    ('Send Invoice',              'BUSINESS_SUPPORT', 1.0,  10.0, 'BUSINESS_VALUE_ADDED', 99.0),
+    ('Ship Order',                'OPERATIONAL',      5.0, 120.0, 'VALUE_ADDING',         96.0),
+    ('Pick and Pack',             'OPERATIONAL',     15.0,  30.0, 'VALUE_ADDING',         94.0),
+    ('Validate Customer Data',    'ENABLING',         1.0,   8.0, 'WASTE',                88.0),
+]
+for (pen, vst, ct, wt, at, fpy) in vsm_data:
+    pkey = pk(pen)
+    ok(f'  VSM {pen} ({at}, CT={ct}/WT={wt})',
+       api('PUT', f'/processes/{pkey}/value-stream',
+           {'valueStreamType': vst, 'cycleTimeMinutes': ct, 'waitTimeMinutes': wt,
+            'activityType': at, 'firstPassYield': fpy,
+            'frequencyCount': 1, 'frequencyPeriod': 'DAY',
+            'activityJustification': vsm_justification.get(at)}, T))
 
 
 # ── 9. Relationships + classification assignments ──────────────────────────────

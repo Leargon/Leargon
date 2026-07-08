@@ -3761,6 +3761,246 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /team-interactions:
+    get:
+      tags:
+      - TeamTopology
+      summary: List all team interactions
+      operationId: getAllTeamInteractions
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Interactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamInteractionResponse'
+        '401':
+          description: Not authenticated
+    post:
+      tags:
+      - TeamTopology
+      summary: Create a team interaction
+      operationId: createTeamInteraction
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeamInteractionRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInteractionResponse'
+        '400':
+          description: Invalid interaction (self/duplicate/bad enum)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '401':
+          description: Not authenticated
+  /team-interactions/{id}:
+    get:
+      tags:
+      - TeamTopology
+      summary: Get a team interaction
+      operationId: getTeamInteraction
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Interaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInteractionResponse'
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - TeamTopology
+      summary: Update a team interaction
+      operationId: updateTeamInteraction
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTeamInteractionRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamInteractionResponse'
+        '400':
+          description: Invalid interaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+      - TeamTopology
+      summary: Delete a team interaction
+      operationId: deleteTeamInteraction
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Not authorized
+        '404':
+          description: Not found
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/mission-statement:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit mission statement
+      description: Replaces the localised mission statement (team purpose) of an organisational unit.
+      operationId: updateOrganisationalUnitMissionStatement
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitMissionStatementRequest'
+      responses:
+        '200':
+          description: Mission statement updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not permitted to edit this unit
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/team-topology-type:
+    put:
+      tags:
+      - OrganisationalUnit
+      summary: Update organisational unit team topology type
+      description: Sets the Team Topologies team type (stream-aligned, platform, enabling, complicated subsystem).
+      operationId: updateOrganisationalUnitTeamTopologyType
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Organisational unit key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrgUnitTeamTopologyTypeRequest'
+      responses:
+        '200':
+          description: Team topology type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganisationalUnitResponse'
+        '403':
+          description: Not permitted to edit this unit
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
+  /organisational-units/{key}/team-interactions:
+    get:
+      tags:
+      - TeamTopology
+      summary: List team interactions touching an organisational unit
+      operationId: getTeamInteractionsForUnit
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Interactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamInteractionResponse'
+        '404':
+          description: Organisational unit not found
+        '401':
+          description: Not authenticated
   /organisational-units/{key}/lead:
     put:
       tags:
@@ -5060,6 +5300,80 @@ paths:
                 $ref: '#/components/schemas/ProcessResponse'
         '403':
           description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/value-stream:
+    put:
+      tags:
+      - Process
+      summary: Update process value-stream (VSM) metadata
+      description: Updates the Lean / Value Stream Mapping metadata of a process. Editable by the process owner, steward, a LEAN editor/lead, or an admin.
+      operationId: updateProcessValueStream
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProcessValueStreamRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+        '400':
+          description: Invalid VSM data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized
+        '404':
+          description: Process not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+  /processes/{key}/value-stream-summary:
+    get:
+      tags:
+      - Process
+      summary: Get aggregated value-stream summary for a process subtree
+      description: Aggregates VSM metrics (lead time, value-adding ratio, activity breakdown) over this process and all descendant sub-processes.
+      operationId: getProcessValueStreamSummary
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Value-stream summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValueStreamSummaryResponse'
         '404':
           description: Process not found
           content:
@@ -7873,6 +8187,8 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
+        teamTopologyType:
+          $ref: '#/components/schemas/TeamTopologyType'
         businessOwner:
           $ref: '#/components/schemas/UserSummaryResponse'
         businessSteward:
@@ -7893,6 +8209,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        missionStatement:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Team purpose / mission statement (localised, Team Topologies)
         parents:
           type: array
           items:
@@ -8086,6 +8408,117 @@ components:
           type: string
           nullable: true
           description: Type of organisational unit (freetext)
+    UpdateOrgUnitMissionStatementRequest:
+      type: object
+      properties:
+        missionStatement:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: Localised mission statement (team purpose); empty clears it
+    TeamTopologyType:
+      type: string
+      enum:
+      - STREAM_ALIGNED
+      - PLATFORM
+      - ENABLING
+      - COMPLICATED_SUBSYSTEM
+      - null
+      nullable: true
+      description: Team Topologies fundamental team type
+    UpdateOrgUnitTeamTopologyTypeRequest:
+      type: object
+      properties:
+        teamTopologyType:
+          $ref: '#/components/schemas/TeamTopologyType'
+    TeamInteractionMode:
+      type: string
+      enum:
+      - COLLABORATION
+      - X_AS_A_SERVICE
+      - FACILITATING
+      description: Team Topologies interaction mode
+    TeamInteractionDuration:
+      type: string
+      enum:
+      - TEMPORARY
+      - ONGOING
+      description: Expected duration of the interaction
+    TeamInteractionResponse:
+      type: object
+      required:
+      - id
+      - sourceUnit
+      - targetUnit
+      - mode
+      - duration
+      properties:
+        id:
+          type: integer
+          format: int64
+        sourceUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+        targetUnit:
+          $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
+        mode:
+          $ref: '#/components/schemas/TeamInteractionMode'
+        duration:
+          $ref: '#/components/schemas/TeamInteractionDuration'
+        healthScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: Current interaction health (1 = poor, 5 = healthy)
+        notes:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    CreateTeamInteractionRequest:
+      type: object
+      required:
+      - sourceUnitKey
+      - targetUnitKey
+      - mode
+      - duration
+      properties:
+        sourceUnitKey:
+          type: string
+        targetUnitKey:
+          type: string
+        mode:
+          $ref: '#/components/schemas/TeamInteractionMode'
+        duration:
+          $ref: '#/components/schemas/TeamInteractionDuration'
+        healthScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        notes:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    UpdateTeamInteractionRequest:
+      type: object
+      properties:
+        mode:
+          $ref: '#/components/schemas/TeamInteractionMode'
+        duration:
+          $ref: '#/components/schemas/TeamInteractionDuration'
+        healthScore:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+        notes:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     UpdateOrgUnitParentsRequest:
       type: object
       required:
@@ -8240,6 +8673,55 @@ components:
           items:
             type: string
           description: Processing countries derived from linked IT systems and data-processor service providers, including all child processes (read-only)
+        valueStreamType:
+          $ref: '#/components/schemas/ValueStreamType'
+        cycleTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: 'VSM: value-adding processing time (CT) in minutes'
+        waitTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: 'VSM: wait / queue time (WT) in minutes'
+        changeoverTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: 'VSM: changeover / setup time (CO) in minutes'
+        frequencyCount:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: 'VSM: how many times the step runs per frequency period'
+        frequencyPeriod:
+          $ref: '#/components/schemas/FrequencyPeriod'
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        activityJustification:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+          description: 'VSM: localised justification for the activity classification (the Lean value statement)'
+        firstPassYield:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 100
+          description: 'VSM: first pass yield (FPY) as a percentage 0–100'
+        completionRate:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 100
+          description: 'VSM: completion / accuracy rate as a percentage 0–100'
         missingMandatoryFields:
           type: array
           nullable: true
@@ -8350,6 +8832,160 @@ components:
       - null
       nullable: true
       description: Type of business process
+    ValueStreamType:
+      type: string
+      enum:
+      - ENABLING
+      - OPERATIONAL
+      - BUSINESS_SUPPORT
+      - null
+      nullable: true
+      description: 'VSM: role of this step in the value stream'
+    FrequencyPeriod:
+      type: string
+      enum:
+      - DAY
+      - WEEK
+      - MONTH
+      - YEAR
+      - null
+      nullable: true
+      description: 'VSM: period over which frequencyCount applies'
+    ActivityType:
+      type: string
+      enum:
+      - VALUE_ADDING
+      - BUSINESS_VALUE_ADDED
+      - WASTE
+      - null
+      nullable: true
+      description: 'VSM: Lean activity classification'
+    UpdateProcessValueStreamRequest:
+      type: object
+      properties:
+        valueStreamType:
+          $ref: '#/components/schemas/ValueStreamType'
+        cycleTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+        waitTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+        changeoverTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+        frequencyCount:
+          type: integer
+          nullable: true
+          minimum: 0
+        frequencyPeriod:
+          $ref: '#/components/schemas/FrequencyPeriod'
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        activityJustification:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        firstPassYield:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 100
+        completionRate:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 100
+    ValueStreamSummaryResponse:
+      type: object
+      required:
+      - stepCount
+      - totalLeadTimeMinutes
+      - totalValueAddingMinutes
+      - activityBreakdown
+      - steps
+      properties:
+        derivedFromDiagram:
+          type: boolean
+          nullable: true
+          description: True when the step sequence was derived from the process's BPMN flow (call-activity links); false when it falls back to the parent-child sub-process tree
+        stepCount:
+          type: integer
+          description: Number of process steps included in the value stream (this process + descendants)
+        totalLeadTimeMinutes:
+          type: number
+          format: double
+          description: Sum of cycle time + wait time across all steps
+        totalValueAddingMinutes:
+          type: number
+          format: double
+          description: Sum of cycle time across steps classified VALUE_ADDING
+        valueAddingRatio:
+          type: number
+          format: double
+          nullable: true
+          description: totalValueAddingMinutes / totalLeadTimeMinutes (null when lead time is 0)
+        processEfficiencyPct:
+          type: number
+          format: double
+          nullable: true
+          description: Process cycle efficiency as a percentage (valueAddingRatio * 100)
+        activityBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValueStreamActivityBreakdown'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValueStreamStep'
+    ValueStreamActivityBreakdown:
+      type: object
+      required:
+      - stepCount
+      - totalMinutes
+      properties:
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        stepCount:
+          type: integer
+          description: Number of steps with this activity type
+        totalMinutes:
+          type: number
+          format: double
+          description: Sum of cycle time for steps with this activity type
+    ValueStreamStep:
+      type: object
+      required:
+      - key
+      - name
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        cycleTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+        waitTimeMinutes:
+          type: number
+          format: double
+          nullable: true
+        activityType:
+          $ref: '#/components/schemas/ActivityType'
+        firstPassYield:
+          type: number
+          format: double
+          nullable: true
     ProcessVersionResponse:
       type: object
       required:
@@ -9550,6 +10186,107 @@ components:
           nullable: true
           items:
             $ref: '#/components/schemas/ConwaysLawMisalignmentItem'
+        cognitiveLoad:
+          type: array
+          nullable: true
+          description: Per-team cognitive-load estimate (Team Topologies); null/empty when TEAM_TOPOLOGIES is disabled
+          items:
+            $ref: '#/components/schemas/CognitiveLoadItem'
+        teamInteractionAntiPatterns:
+          type: array
+          nullable: true
+          description: Detected Team Topologies interaction anti-patterns; null/empty when TEAM_TOPOLOGIES is disabled
+          items:
+            $ref: '#/components/schemas/TeamInteractionAntiPatternItem'
+        teamTopologyGraph:
+          $ref: '#/components/schemas/TeamTopologyGraph'
+          nullable: true
+          description: Nodes (teams) and edges (interactions) for the interaction topology diagram; null when TEAM_TOPOLOGIES is disabled
+    CognitiveLoadItem:
+      type: object
+      required: [orgUnitKey, orgUnitName, score, boundedContextCount, capabilityCount, valueStreamCount, threshold, warning]
+      properties:
+        orgUnitKey:
+          type: string
+        orgUnitName:
+          type: string
+        score:
+          type: number
+          format: double
+        boundedContextCount:
+          type: integer
+        capabilityCount:
+          type: integer
+        valueStreamCount:
+          type: integer
+        threshold:
+          type: number
+          format: double
+        warning:
+          type: boolean
+          description: True when score exceeds the configured threshold
+    TeamInteractionAntiPatternItem:
+      type: object
+      required: [interactionId, sourceUnitKey, sourceUnitName, targetUnitKey, targetUnitName, reason]
+      properties:
+        interactionId:
+          type: integer
+          format: int64
+        sourceUnitKey:
+          type: string
+        sourceUnitName:
+          type: string
+        targetUnitKey:
+          type: string
+        targetUnitName:
+          type: string
+        reason:
+          type: string
+    TeamTopologyGraph:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamTopologyNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamTopologyEdge'
+    TeamTopologyNode:
+      type: object
+      required: [orgUnitKey, orgUnitName]
+      properties:
+        orgUnitKey:
+          type: string
+        orgUnitName:
+          type: string
+        teamTopologyType:
+          $ref: '#/components/schemas/TeamTopologyType'
+        cognitiveLoadScore:
+          type: number
+          format: double
+          nullable: true
+    TeamTopologyEdge:
+      type: object
+      required: [interactionId, sourceUnitKey, targetUnitKey, mode]
+      properties:
+        interactionId:
+          type: integer
+          format: int64
+        sourceUnitKey:
+          type: string
+        targetUnitKey:
+          type: string
+        mode:
+          $ref: '#/components/schemas/TeamInteractionMode'
+        healthScore:
+          type: integer
+          nullable: true
+        antiPattern:
+          type: boolean
+          nullable: true
     ConwaysLawMisalignmentItem:
       type: object
       required: [processKey, processName, boundedContextKey, boundedContextName, executingUnitKey, executingUnitName, teamBoundedContextKey, teamBoundedContextName]
@@ -10488,7 +11225,7 @@ components:
       properties:
         key:
           type: string
-          enum: [DATA_GOVERNANCE, PROCESS_GOVERNANCE, GDPR, DDD, BCM, TEAM_TOPOLOGIES]
+          enum: [DATA_GOVERNANCE, PROCESS_GOVERNANCE, GDPR, DDD, BCM, TEAM_TOPOLOGIES, LEAN]
           description: Methodology identifier
           example: GDPR
         enabled:

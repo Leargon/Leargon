@@ -30,6 +30,9 @@ class OrganisationalUnit {
     @Column(name = "unit_type", length = 20)
     var unitType: String? = null
 
+    @Column(name = "team_topology_type", length = 30)
+    var teamTopologyType: String? = null
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     var businessOwner: User? = null
@@ -53,6 +56,10 @@ class OrganisationalUnit {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "descriptions", columnDefinition = "LONGTEXT")
     var descriptions: MutableList<LocalizedText> = mutableListOf()
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "mission_statement", columnDefinition = "LONGTEXT")
+    var missionStatement: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "classification_assignments", columnDefinition = "LONGTEXT")

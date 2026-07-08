@@ -28,6 +28,8 @@ import {
   TableHead,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
   Switch,
   List,
   ListItem,
@@ -43,6 +45,8 @@ import {
   getGetAllOrganisationalUnitsQueryKey,
   useUpdateOrganisationalUnitNames,
   useUpdateOrganisationalUnitDescriptions,
+  useUpdateOrganisationalUnitMissionStatement,
+  useUpdateOrganisationalUnitTeamTopologyType,
   useUpdateOrganisationalUnitType,
   useUpdateOrganisationalUnitLead,
   useUpdateOrganisationalUnitSteward,
@@ -71,9 +75,20 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateChild, canCreateRoot } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
+import { useMethodology } from '../../context/MethodologyContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
+import LocalizedTextEditor from '../common/LocalizedTextEditor';
+import LocalizedTextView from '../common/LocalizedTextView';
+import {
+  useGetTeamInteractionsForUnit,
+  getGetTeamInteractionsForUnitQueryKey,
+  useCreateTeamInteraction,
+  useDeleteTeamInteraction,
+} from '../../api/generated/team-topology/team-topology';
+import { TeamTopologyType, TeamInteractionMode, TeamInteractionDuration } from '../../api/generated/model';
+import type { TeamInteractionResponse } from '../../api/generated/model';
 import CreateOrgUnitDialog from './CreateOrgUnitDialog';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
@@ -103,6 +118,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const { getLocalizedText, preferredLocale } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
+  const { isMethodologyEnabled } = useMethodology();
   const sections = ORG_UNIT_SECTIONS_BY_PERSPECTIVE[perspective];
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
@@ -200,6 +216,10 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
 
   const updateNames = useUpdateOrganisationalUnitNames();
   const updateDescriptions = useUpdateOrganisationalUnitDescriptions();
+  const updateMissionStatement = useUpdateOrganisationalUnitMissionStatement();
+  const updateTeamTopologyType = useUpdateOrganisationalUnitTeamTopologyType();
+  const createInteraction = useCreateTeamInteraction();
+  const deleteInteraction = useDeleteTeamInteraction();
   const updateType = useUpdateOrganisationalUnitType();
   const updateLead = useUpdateOrganisationalUnitLead();
   const updateSteward = useUpdateOrganisationalUnitSteward();
@@ -258,6 +278,63 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
       invalidate();
     },
   });
+
+  // Inline edit for mission statement (team purpose)
+  const missionEdit = useInlineEdit<LocalizedText[]>({
+    onSave: async (val) => {
+      await updateMissionStatement.mutateAsync({ key: unitKey, data: { missionStatement: val.length > 0 ? val : undefined } });
+      invalidate();
+    },
+  });
+
+  // Inline edit for team topology type
+  const teamTypeEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateTeamTopologyType.mutateAsync({ key: unitKey, data: { teamTopologyType: (val || undefined) as TeamTopologyType } });
+      invalidate();
+    },
+  });
+
+  // Team interactions
+  const isTeamTopologiesEnabled = isMethodologyEnabled('TEAM_TOPOLOGIES');
+  const { data: interactionsResponse } = useGetTeamInteractionsForUnit(
+    unitKey,
+    { query: { retry: false, enabled: isTeamTopologiesEnabled } },
+  );
+  const interactions = (interactionsResponse?.data as TeamInteractionResponse[] | undefined) || [];
+  const [interactionDialogOpen, setInteractionDialogOpen] = useState(false);
+  const [newInteractionTarget, setNewInteractionTarget] = useState<string>('');
+  const [newInteractionMode, setNewInteractionMode] = useState<string>(TeamInteractionMode.COLLABORATION);
+  const [newInteractionDuration, setNewInteractionDuration] = useState<string>(TeamInteractionDuration.ONGOING);
+  const [interactionError, setInteractionError] = useState('');
+
+  const invalidateInteractions = () => {
+    queryClient.invalidateQueries({ queryKey: getGetTeamInteractionsForUnitQueryKey(unitKey) });
+  };
+
+  const handleCreateInteraction = async () => {
+    setInteractionError('');
+    try {
+      await createInteraction.mutateAsync({
+        data: {
+          sourceUnitKey: unitKey,
+          targetUnitKey: newInteractionTarget,
+          mode: newInteractionMode as TeamInteractionMode,
+          duration: newInteractionDuration as TeamInteractionDuration,
+        },
+      });
+      setInteractionDialogOpen(false);
+      setNewInteractionTarget('');
+      invalidateInteractions();
+    } catch {
+      setInteractionError(t('teamTopology.interactionError'));
+    }
+  };
+
+  const handleDeleteInteraction = async (id: number) => {
+    await deleteInteraction.mutateAsync({ id });
+    invalidateInteractions();
+  };
 
   // Inline edit for lead (businessOwner)
   const leadEdit = useInlineEdit<string | null>({
@@ -346,6 +423,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   useEffect(() => {
     namesEdit.cancel();
     typeEdit.cancel();
+    missionEdit.cancel();
+    teamTypeEdit.cancel();
     leadEdit.cancel();
     stewardEdit.cancel();
     technicalCustodianEdit.cancel();
@@ -499,6 +578,153 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 );
               })}
             </Box>}
+          </>
+        )}
+
+        {/* Mission Statement (team purpose) */}
+        {!isHidden('missionStatement') && (
+          <>
+            <SectionHeader
+              title={t('orgUnit.missionStatement')}
+              statusIndicator={renderStatus(...activeLocales.map((l) => `missionStatement.${l.localeCode}`))}
+              canEdit={canEditOrgUnit}
+              isEditing={missionEdit.isEditing}
+              onEdit={() => missionEdit.startEdit([...(unit.missionStatement ?? [])])}
+              onSave={missionEdit.save}
+              onCancel={missionEdit.cancel}
+              isSaving={missionEdit.isSaving}
+              isMandatory={isMandatory('missionStatement')}
+            />
+            {missionEdit.isEditing ? (
+              <Box sx={{ mb: 2 }}>
+                <LocalizedTextEditor
+                  locales={locales}
+                  value={missionEdit.editValue ?? []}
+                  onChange={(v) => missionEdit.setEditValue(v)}
+                  multiline
+                  rows={3}
+                  placeholder={t('orgUnit.missionStatementPlaceholder')}
+                />
+                {missionEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{missionEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ mb: 2 }}>
+                <LocalizedTextView value={unit.missionStatement} showAll={canEditOrgUnit} emptyText={t('common.notSet')} />
+              </Box>
+            )}
+          </>
+        )}
+
+        {/* Team Topology type */}
+        {isTeamTopologiesEnabled && !isHidden('teamTopologyType') && (
+          <>
+            <SectionHeader
+              title={t('teamTopology.teamType')}
+              canEdit={canEditOrgUnit}
+              isEditing={teamTypeEdit.isEditing}
+              onEdit={() => teamTypeEdit.startEdit(unit.teamTopologyType || null)}
+              onSave={teamTypeEdit.save}
+              onCancel={teamTypeEdit.cancel}
+              isSaving={teamTypeEdit.isSaving}
+              isMandatory={isMandatory('teamTopologyType')}
+            />
+            {teamTypeEdit.isEditing ? (
+              <Box sx={{ mb: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 240 }}>
+                  <Select
+                    value={teamTypeEdit.editValue ?? ''}
+                    displayEmpty
+                    onChange={(e) => teamTypeEdit.setEditValue((e.target.value as string) || null)}
+                  >
+                    <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                    {Object.values(TeamTopologyType).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                {teamTypeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{teamTypeEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ mb: 2 }}>
+                {unit.teamTopologyType
+                  ? <Chip label={unit.teamTopologyType} color="secondary" size="small" />
+                  : <Typography variant="body2" color="text.secondary">{t('common.notSet')}</Typography>}
+              </Box>
+            )}
+          </>
+        )}
+
+        {/* Team Interactions */}
+        {isTeamTopologiesEnabled && (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Typography variant="subtitle2">{t('teamTopology.interactions')}</Typography>
+              {canEditOrgUnit && (
+                <IconButton size="small" onClick={() => setInteractionDialogOpen(true)} data-testid="add-interaction-btn">
+                  <Add fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              {interactions.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">{t('teamTopology.noInteractions')}</Typography>
+              ) : (
+                <Table size="small">
+                  <TableBody>
+                    {interactions.map((it) => (
+                      <TableRow key={it.id}>
+                        <TableCell sx={{ border: 0 }}>
+                          {it.sourceUnit.key === unitKey
+                            ? `→ ${getLocalizedText(allUnits.find((u) => u.key === it.targetUnit.key)?.names ?? [], it.targetUnit.name)}`
+                            : `← ${getLocalizedText(allUnits.find((u) => u.key === it.sourceUnit.key)?.names ?? [], it.sourceUnit.name)}`}
+                        </TableCell>
+                        <TableCell sx={{ border: 0 }}><Chip size="small" label={it.mode} /></TableCell>
+                        <TableCell sx={{ border: 0 }}>{it.duration}</TableCell>
+                        <TableCell sx={{ border: 0 }}>
+                          {canEditOrgUnit && (
+                            <IconButton size="small" onClick={() => handleDeleteInteraction(it.id)}>
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Box>
+            <Dialog open={interactionDialogOpen} onClose={() => setInteractionDialogOpen(false)}>
+              <DialogTitle>{t('teamTopology.addInteraction')}</DialogTitle>
+              <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 320, pt: 1 }}>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>{t('teamTopology.targetUnit')}</InputLabel>
+                  <Select
+                    label={t('teamTopology.targetUnit')}
+                    value={newInteractionTarget}
+                    onChange={(e) => setNewInteractionTarget(e.target.value)}
+                  >
+                    {parentCandidates.map((u) => (
+                      <MenuItem key={u.key} value={u.key}>{getLocalizedText(u.names, u.key)}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>{t('teamTopology.mode')}</InputLabel>
+                  <Select label={t('teamTopology.mode')} value={newInteractionMode} onChange={(e) => setNewInteractionMode(e.target.value)}>
+                    {Object.values(TeamInteractionMode).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>{t('teamTopology.duration')}</InputLabel>
+                  <Select label={t('teamTopology.duration')} value={newInteractionDuration} onChange={(e) => setNewInteractionDuration(e.target.value)}>
+                    {Object.values(TeamInteractionDuration).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                {interactionError && <Alert severity="error">{interactionError}</Alert>}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setInteractionDialogOpen(false)}>{t('common.cancel')}</Button>
+                <Button variant="contained" disabled={!newInteractionTarget} onClick={handleCreateInteraction}>{t('common.create')}</Button>
+              </DialogActions>
+            </Dialog>
           </>
         )}
 

@@ -113,6 +113,31 @@ test.describe('Business Process CRUD — Admin', () => {
     await expect(valueContainer.getByText('Not set', { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
+  test('admin can edit value-stream metadata in the Lean / VSM tab', async ({ page }) => {
+    await page.goto(`/processes/${processKey}`);
+    await page.waitForLoadState('networkidle');
+
+    // Expand the Lean / VSM accordion
+    await page.locator('[aria-expanded]').filter({ hasText: 'Lean / VSM' }).click();
+
+    const header = page.getByText('Value Stream Metadata', { exact: true }).locator('..');
+    await header.locator('button:has([data-testid="EditIcon"])').click();
+
+    await page.getByLabel('Cycle Time (min)').fill('15');
+
+    const [resp] = await Promise.all([
+      page.waitForResponse(
+        (r) => r.url().includes('/value-stream') && r.request().method() === 'PUT',
+        { timeout: 15_000 },
+      ),
+      header.locator('button:has([data-testid="CheckIcon"])').click(),
+    ]);
+    expect(resp.status()).toBe(200);
+
+    // Summary section renders after saving
+    await expect(page.getByText('Value Stream Summary')).toBeVisible({ timeout: 10_000 });
+  });
+
   test('purpose is visible in Compliance tab when set', async ({ page }) => {
     await setProcessPurpose(processKey, 'E2E purpose: manage billing data');
 

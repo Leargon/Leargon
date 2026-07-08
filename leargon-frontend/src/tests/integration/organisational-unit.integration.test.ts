@@ -139,6 +139,58 @@ describe('Organisational Unit E2E', () => {
   });
 
   // =====================
+  // UPDATE MISSION STATEMENT
+  // =====================
+
+  it('should update organisational unit mission statement in multiple locales', async () => {
+    const unit = await createOrgUnit(client, 'FE Mission Org Unit');
+
+    const res = await client.put(`/organisational-units/${unit.key}/mission-statement`, {
+      missionStatement: [
+        { locale: 'en', text: 'Enable stream-aligned teams' },
+        { locale: 'de', text: 'Stream-orientierte Teams befaehigen' },
+      ],
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.missionStatement.length).toBe(2);
+    expect(res.data.missionStatement.find((m: { locale: string }) => m.locale === 'en').text)
+      .toBe('Enable stream-aligned teams');
+
+    // round-trip: GET returns the persisted mission
+    const getRes = await client.get(`/organisational-units/${unit.key}`);
+    expect(getRes.data.missionStatement.find((m: { locale: string }) => m.locale === 'de').text)
+      .toBe('Stream-orientierte Teams befaehigen');
+  });
+
+  it('should reject mission statement with an unsupported locale', async () => {
+    const unit = await createOrgUnit(client, 'FE Bad Mission Locale Unit');
+
+    const res = await client.put(`/organisational-units/${unit.key}/mission-statement`, {
+      missionStatement: [{ locale: 'xx', text: 'Invalid' }],
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('should reject mission statement update by a non-owner', async () => {
+    const otherAuth = await signup(createClient(getBackendUrl()), {
+      email: 'fe-org-mission-nonowner@example.com',
+      username: 'feorgmissionnonowner',
+      password: 'password123',
+      firstName: 'Mission',
+      lastName: 'Outsider',
+    });
+
+    const unit = await createOrgUnit(client, 'FE Mission Permission Unit');
+
+    const otherClient = createClient(getBackendUrl());
+    withToken(otherClient, otherAuth.accessToken);
+    const res = await otherClient.put(`/organisational-units/${unit.key}/mission-statement`, {
+      missionStatement: [{ locale: 'en', text: 'Unauthorized' }],
+    });
+    expect(res.status).toBe(403);
+  });
+
+  // =====================
   // UPDATE TYPE
   // =====================
 

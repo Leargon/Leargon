@@ -16,9 +16,14 @@ class OrganisationalUnitFieldValueExtractor : FieldValueExtractor<Organisational
 
             fieldName.startsWith("descriptions.") -> FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
 
+            fieldName.startsWith("missionStatement.") ->
+                FieldValueSupport.localized(entity.missionStatement, "missionStatement", fieldName)
+
             fieldName.startsWith("classification.") -> FieldValueSupport.classification(entity.classificationAssignments, fieldName)
 
             fieldName == "unitType" -> FieldValueSupport.blankToNull(entity.unitType)
+
+            fieldName == "teamTopologyType" -> FieldValueSupport.blankToNull(entity.teamTopologyType)
 
             fieldName == "businessOwner" -> entity.businessOwner?.username
 

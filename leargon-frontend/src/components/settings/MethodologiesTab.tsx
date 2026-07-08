@@ -105,11 +105,12 @@ const METHODOLOGY_FILTER: Record<string, (d: FieldConfigurationDefinition) => bo
       ['type', 'descriptions', 'owningUnit'].some((n) => d.fieldName === n || d.fieldName.startsWith(n + '.'))),
   BCM: (d) => d.entityType === 'BUSINESS_PROCESS' && d.section === 'BCM',
   TEAM_TOPOLOGIES: (d) =>
-    (d.entityType === 'ORGANISATIONAL_UNIT' && d.section === 'DATA_GOVERNANCE') ||
+    (d.entityType === 'ORGANISATIONAL_UNIT' && ['DATA_GOVERNANCE', 'TEAM_TOPOLOGIES'].includes(d.section)) ||
     (d.entityType === 'ORGANISATIONAL_UNIT' &&
-      ['unitType', 'descriptions', 'businessOwner', 'businessSteward', 'technicalCustodian'].some(
+      ['unitType', 'descriptions', 'missionStatement', 'businessOwner', 'businessSteward', 'technicalCustodian'].some(
         (n) => d.fieldName === n || d.fieldName.startsWith(n + '.'),
       )),
+  LEAN: (d) => d.entityType === 'BUSINESS_PROCESS' && d.section === 'LEAN',
 };
 
 // ── Inner card component ──────────────────────────────────────────────────────

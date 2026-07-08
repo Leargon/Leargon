@@ -8,6 +8,8 @@ export const SECTION_TO_METHODOLOGY: Partial<Record<string, string>> = {
   DDD: 'DDD',
   STRATEGIC: 'DDD',
   BCM: 'BCM',
+  TEAM_TOPOLOGIES: 'TEAM_TOPOLOGIES',
+  LEAN: 'LEAN',
   TECHNICAL: 'TECHNICAL',
 };
 
@@ -20,6 +22,8 @@ export const SECTION_LABELS: Record<string, string> = {
   BCM: 'BCM',
   TECHNICAL: 'Technical',
   STRATEGIC: 'Strategic',
+  TEAM_TOPOLOGIES: 'Team Topologies',
+  LEAN: 'Lean / VSM',
   EXTERNAL: 'External',
   DATA_ACCESS: 'Data Access',
   DATA_FLOW: 'Data Flow',
@@ -36,6 +40,8 @@ export const SECTION_ORDER = [
   'BCM',
   'TECHNICAL',
   'STRATEGIC',
+  'TEAM_TOPOLOGIES',
+  'LEAN',
   'EXTERNAL',
   'DATA_ACCESS',
   'OTHER',

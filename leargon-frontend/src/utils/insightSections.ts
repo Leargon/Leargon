@@ -5,6 +5,8 @@ import type { UserOwnershipWorkloadItem } from '../api/generated/model/userOwner
 import type { OrgUnitProcessLoadItem } from '../api/generated/model/orgUnitProcessLoadItem';
 import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlignment';
 import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
+import type { CognitiveLoadItem } from '../api/generated/model/cognitiveLoadItem';
+import type { TeamInteractionAntiPatternItem } from '../api/generated/model/teamInteractionAntiPatternItem';
 
 export type InsightSeverity = 'ok' | 'warning';
 
@@ -16,6 +18,8 @@ export interface NormalizedInsights {
   splitDomains: SplitDomainItem[];
   conwaysLawAlignment: ConwaysLawAlignment;
   conwaysLawMisalignments: ConwaysLawMisalignmentItem[];
+  cognitiveLoad: CognitiveLoadItem[];
+  teamInteractionAntiPatterns: TeamInteractionAntiPatternItem[];
 }
 
 export interface InsightSection {
@@ -65,6 +69,24 @@ export const INSIGHT_SECTIONS: InsightSection[] = [
     isDiagnostic: true,
     getCount: (d) => d.wronglyPlacedTeams.length,
     getSeverity: (d) => (d.wronglyPlacedTeams.length > 0 ? 'warning' : 'ok'),
+  },
+  {
+    id: 'cognitiveLoad',
+    titleKey: 'analytics.cognitiveLoad',
+    subtitleKey: 'analytics.cognitiveLoadHint',
+    owningMethodology: 'TEAM_TOPOLOGIES',
+    isDiagnostic: true,
+    getCount: (d) => d.cognitiveLoad.filter((c) => c.warning).length,
+    getSeverity: (d) => (d.cognitiveLoad.some((c) => c.warning) ? 'warning' : 'ok'),
+  },
+  {
+    id: 'teamInteractionAntiPatterns',
+    titleKey: 'analytics.interactionAntiPatterns',
+    subtitleKey: 'analytics.interactionAntiPatternsHint',
+    owningMethodology: 'TEAM_TOPOLOGIES',
+    isDiagnostic: true,
+    getCount: (d) => d.teamInteractionAntiPatterns.length,
+    getSeverity: (d) => (d.teamInteractionAntiPatterns.length > 0 ? 'warning' : 'ok'),
   },
   {
     id: 'splitDomains',

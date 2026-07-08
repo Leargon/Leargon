@@ -6,7 +6,7 @@ import type { FieldConfigurationDefinition } from '@/api/generated/model/fieldCo
 import type { BusinessEntityResponse } from '@/api/generated/model/businessEntityResponse';
 import type { FieldConfigurationEntry } from '@/api/generated/model/fieldConfigurationEntry';
 
-const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES', 'LEAN'];
 
 function getBackendUrl(): string {
   const url = process.env.E2E_BACKEND_URL;
@@ -55,10 +55,10 @@ describe('Methodology Configuration', () => {
 
   // ── GET defaults ─────────────────────────────────────────────────────────
 
-  it('GET /administration/methodology-configurations returns all 6 methodologies enabled by default', async () => {
+  it('GET /administration/methodology-configurations returns all 7 methodologies enabled by default', async () => {
     const res = await adminClient.get<MethodologyConfigEntry[]>('/administration/methodology-configurations');
     expect(res.status).toBe(200);
-    expect(res.data.length).toBe(6);
+    expect(res.data.length).toBe(7);
     for (const entry of res.data) {
       expect(ALL_METHODOLOGY_KEYS).toContain(entry.key);
       expect(entry.enabled).toBe(true);
@@ -68,7 +68,7 @@ describe('Methodology Configuration', () => {
   it('GET /administration/methodology-configurations returns 200 for non-admin', async () => {
     const res = await userClient.get<MethodologyConfigEntry[]>('/administration/methodology-configurations');
     expect(res.status).toBe(200);
-    expect(res.data.length).toBe(6);
+    expect(res.data.length).toBe(7);
   });
 
   it('GET /administration/methodology-configurations returns 401 for unauthenticated', async () => {

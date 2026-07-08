@@ -25,8 +25,10 @@ import org.leargon.backend.model.UpdateLinkedServiceProvidersRequest
 import org.leargon.backend.model.UpdateOrgUnitEntityLinksRequest
 import org.leargon.backend.model.UpdateOrgUnitExternalFieldsRequest
 import org.leargon.backend.model.UpdateOrgUnitLeadRequest
+import org.leargon.backend.model.UpdateOrgUnitMissionStatementRequest
 import org.leargon.backend.model.UpdateOrgUnitParentsRequest
 import org.leargon.backend.model.UpdateOrgUnitStewardRequest
+import org.leargon.backend.model.UpdateOrgUnitTeamTopologyTypeRequest
 import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
@@ -89,6 +91,26 @@ open class OrganisationalUnitController(
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
         return organisationalUnitService.updateDescriptions(key, descriptions, currentUser)
+    }
+
+    override fun updateOrganisationalUnitMissionStatement(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitMissionStatementRequest
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        val unit = organisationalUnitService.getByKey(key)
+        checkEditPermission(unit, currentUser)
+        return organisationalUnitService.updateMissionStatement(key, request.missionStatement, currentUser)
+    }
+
+    override fun updateOrganisationalUnitTeamTopologyType(
+        key: String,
+        @Valid @Body request: UpdateOrgUnitTeamTopologyTypeRequest
+    ): OrganisationalUnitResponse {
+        val currentUser = getCurrentUser()
+        val unit = organisationalUnitService.getByKey(key)
+        checkEditPermission(unit, currentUser)
+        return organisationalUnitService.updateTeamTopologyType(key, request.teamTopologyType?.value, currentUser)
     }
 
     override fun updateOrganisationalUnitLead(

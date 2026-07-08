@@ -40,6 +40,26 @@ class ProcessFieldValueExtractor : FieldValueExtractor<Process> {
 
             fieldName == "boundedContext" -> entity.boundedContext?.key
 
+            // ── Value Stream Mapping (Lean / VSM) ──
+            fieldName.startsWith("activityJustification.") ->
+                FieldValueSupport.localized(entity.activityJustification, "activityJustification", fieldName)
+
+            fieldName == "valueStreamType" -> FieldValueSupport.blankToNull(entity.valueStreamType)
+
+            fieldName == "cycleTimeMinutes" -> entity.cycleTimeMinutes?.toString()
+
+            fieldName == "waitTimeMinutes" -> entity.waitTimeMinutes?.toString()
+
+            fieldName == "changeoverTimeMinutes" -> entity.changeoverTimeMinutes?.toString()
+
+            fieldName == "frequencyCount" -> entity.frequencyCount?.toString()
+
+            fieldName == "activityType" -> FieldValueSupport.blankToNull(entity.activityType)
+
+            fieldName == "firstPassYield" -> entity.firstPassYield?.toString()
+
+            fieldName == "completionRate" -> entity.completionRate?.toString()
+
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "inputEntities" -> null
 

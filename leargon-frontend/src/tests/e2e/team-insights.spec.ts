@@ -16,6 +16,19 @@ async function putJson(path: string, body: unknown, stateFile: string): Promise<
   });
 }
 
+async function postJson(path: string, body: unknown, stateFile: string): Promise<Response> {
+  const fs = (await import('node:fs')).default;
+  const nodePath = (await import('node:path')).default;
+  const tokenFile = stateFile.replace('.json', '-token.txt');
+  const absToken = nodePath.join(process.cwd(), tokenFile);
+  const token = fs.existsSync(absToken) ? fs.readFileSync(absToken, 'utf8').trim() : '';
+  return fetch(`${backendUrl()}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  });
+}
+
 /**
  * The insights page filters methodology-group sections by the active "view" (role) chosen in the
  * top-bar switcher. The views and what they surface:
@@ -157,5 +170,26 @@ test.describe('Insights page — data', () => {
     // The unit also appears in the collapsed Process Load / Wrongly Placed cards, so scope to the
     // now-visible (expanded Bottleneck) occurrence.
     await expect(page.getByText(orgUnitName).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('flags an interaction anti-pattern between two stream-aligned teams', async ({ page }) => {
+    const nameA = uid('PW Stream A');
+    const nameB = uid('PW Stream B');
+    const a = await createOrgUnit(nameA, ADMIN);
+    const b = await createOrgUnit(nameB, ADMIN);
+    await putJson(`/organisational-units/${a.key}/team-topology-type`, { teamTopologyType: 'STREAM_ALIGNED' }, ADMIN);
+    await putJson(`/organisational-units/${b.key}/team-topology-type`, { teamTopologyType: 'STREAM_ALIGNED' }, ADMIN);
+    await postJson('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: b.key, mode: 'COLLABORATION', duration: 'ONGOING',
+    }, ADMIN);
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+    await switchView(page, 'Architecture');
+
+    // The Interaction Anti-Patterns card is in the Team Topologies group; expand it.
+    // Exact match avoids also matching the card's subtitle, which contains the same phrase.
+    await page.getByText('Interaction Anti-Patterns', { exact: true }).click();
+    await expect(page.getByText(nameA).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -64,6 +64,8 @@ import type {
   UpdateProcessStewardRequest,
   UpdateProcessTechnicalCustodianRequest,
   UpdateProcessTypeRequest,
+  UpdateProcessValueStreamRequest,
+  ValueStreamSummaryResponse,
   VersionDiffResponse
 } from '../model';
 
@@ -2668,7 +2670,237 @@ export const useUpdateProcessPurpose = <TError = void | ErrorResponse,
       > => {
       return useMutation(getUpdateProcessPurposeMutationOptions(options), queryClient);
     }
-    export type updateProcessSecurityMeasuresResponse200 = {
+    export type updateProcessValueStreamResponse200 = {
+  data: ProcessResponse
+  status: 200
+}
+
+export type updateProcessValueStreamResponse400 = {
+  data: ErrorResponse
+  status: 400
+}
+
+export type updateProcessValueStreamResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateProcessValueStreamResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateProcessValueStreamResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateProcessValueStreamResponseSuccess = (updateProcessValueStreamResponse200) & {
+  headers: Headers;
+};
+export type updateProcessValueStreamResponseError = (updateProcessValueStreamResponse400 | updateProcessValueStreamResponse401 | updateProcessValueStreamResponse403 | updateProcessValueStreamResponse404) & {
+  headers: Headers;
+};
+
+export type updateProcessValueStreamResponse = (updateProcessValueStreamResponseSuccess | updateProcessValueStreamResponseError)
+
+export const getUpdateProcessValueStreamUrl = (key: string,) => {
+
+
+
+
+  return `/processes/${key}/value-stream`
+}
+
+/**
+ * Updates the Lean / Value Stream Mapping metadata of a process. Editable by the process owner, steward, a LEAN editor/lead, or an admin.
+ * @summary Update process value-stream (VSM) metadata
+ */
+export const updateProcessValueStream = async (key: string,
+    updateProcessValueStreamRequest: UpdateProcessValueStreamRequest, options?: RequestInit): Promise<updateProcessValueStreamResponse> => {
+
+  return customAxios<updateProcessValueStreamResponse>(getUpdateProcessValueStreamUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateProcessValueStreamRequest)
+  }
+);}
+
+
+
+
+export const getUpdateProcessValueStreamMutationOptions = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessValueStream>>, TError,{key: string;data: UpdateProcessValueStreamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProcessValueStream>>, TError,{key: string;data: UpdateProcessValueStreamRequest}, TContext> => {
+
+const mutationKey = ['updateProcessValueStream'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProcessValueStream>>, {key: string;data: UpdateProcessValueStreamRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateProcessValueStream(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProcessValueStreamMutationResult = NonNullable<Awaited<ReturnType<typeof updateProcessValueStream>>>
+    export type UpdateProcessValueStreamMutationBody = UpdateProcessValueStreamRequest
+    export type UpdateProcessValueStreamMutationError = ErrorResponse | void
+
+    /**
+ * @summary Update process value-stream (VSM) metadata
+ */
+export const useUpdateProcessValueStream = <TError = ErrorResponse | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProcessValueStream>>, TError,{key: string;data: UpdateProcessValueStreamRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateProcessValueStream>>,
+        TError,
+        {key: string;data: UpdateProcessValueStreamRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateProcessValueStreamMutationOptions(options), queryClient);
+    }
+    export type getProcessValueStreamSummaryResponse200 = {
+  data: ValueStreamSummaryResponse
+  status: 200
+}
+
+export type getProcessValueStreamSummaryResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getProcessValueStreamSummaryResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type getProcessValueStreamSummaryResponseSuccess = (getProcessValueStreamSummaryResponse200) & {
+  headers: Headers;
+};
+export type getProcessValueStreamSummaryResponseError = (getProcessValueStreamSummaryResponse401 | getProcessValueStreamSummaryResponse404) & {
+  headers: Headers;
+};
+
+export type getProcessValueStreamSummaryResponse = (getProcessValueStreamSummaryResponseSuccess | getProcessValueStreamSummaryResponseError)
+
+export const getGetProcessValueStreamSummaryUrl = (key: string,) => {
+
+
+
+
+  return `/processes/${key}/value-stream-summary`
+}
+
+/**
+ * Aggregates VSM metrics (lead time, value-adding ratio, activity breakdown) over this process and all descendant sub-processes.
+ * @summary Get aggregated value-stream summary for a process subtree
+ */
+export const getProcessValueStreamSummary = async (key: string, options?: RequestInit): Promise<getProcessValueStreamSummaryResponse> => {
+
+  return customAxios<getProcessValueStreamSummaryResponse>(getGetProcessValueStreamSummaryUrl(key),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProcessValueStreamSummaryQueryKey = (key: string,) => {
+    return [
+    `/processes/${key}/value-stream-summary`
+    ] as const;
+    }
+
+
+export const getGetProcessValueStreamSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError = void | ErrorResponse>(key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProcessValueStreamSummaryQueryKey(key);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProcessValueStreamSummary>>> = ({ signal }) => getProcessValueStreamSummary(key, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: key !== null && key !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProcessValueStreamSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getProcessValueStreamSummary>>>
+export type GetProcessValueStreamSummaryQueryError = void | ErrorResponse
+
+
+export function useGetProcessValueStreamSummary<TData = Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError = void | ErrorResponse>(
+ key: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessValueStreamSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessValueStreamSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessValueStreamSummary<TData = Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProcessValueStreamSummary>>,
+          TError,
+          Awaited<ReturnType<typeof getProcessValueStreamSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProcessValueStreamSummary<TData = Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get aggregated value-stream summary for a process subtree
+ */
+
+export function useGetProcessValueStreamSummary<TData = Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError = void | ErrorResponse>(
+ key: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProcessValueStreamSummary>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProcessValueStreamSummaryQueryOptions(key,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type updateProcessSecurityMeasuresResponse200 = {
   data: ProcessResponse
   status: 200
 }

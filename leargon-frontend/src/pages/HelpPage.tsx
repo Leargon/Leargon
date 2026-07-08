@@ -28,13 +28,14 @@ import {
   EngineeringOutlined,
   SupervisorAccount,
   Visibility,
+  Speed,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMethodology } from '../context/MethodologyContext';
 
-type GoalKey = 'dataGov' | 'ddd' | 'bcm' | 'bpm' | 'compliance' | 'orgDesign';
+type GoalKey = 'dataGov' | 'ddd' | 'bcm' | 'bpm' | 'compliance' | 'orgDesign' | 'lean';
 
 interface Step {
   labelKey: string;
@@ -75,8 +76,14 @@ const RECOMMENDATIONS: Record<GoalKey, Step[]> = {
   orgDesign: [
     { labelKey: 'help.stepOrgStructure', descKey: 'help.stepOrgStructureDesc', path: '/organisation' },
     { labelKey: 'help.stepModelProcesses', descKey: 'help.stepModelProcessesDesc', path: '/processes' },
+    { labelKey: 'help.stepTeamInteractions', descKey: 'help.stepTeamInteractionsDesc', path: '/organisation' },
     { labelKey: 'help.stepTeamInsights', descKey: 'help.stepTeamInsightsDesc', path: '/team-insights' },
     { labelKey: 'help.stepCapabilities', descKey: 'help.stepCapabilitiesDesc', path: '/capabilities' },
+  ],
+  lean: [
+    { labelKey: 'help.stepModelProcesses', descKey: 'help.stepModelProcessesDesc', path: '/processes' },
+    { labelKey: 'help.stepRecordVsm', descKey: 'help.stepRecordVsmDesc', path: '/processes' },
+    { labelKey: 'help.stepValueStream', descKey: 'help.stepValueStreamDesc', path: '/processes' },
   ],
 };
 
@@ -87,9 +94,10 @@ const GOAL_METHODOLOGY: Record<GoalKey, string> = {
   bpm: 'PROCESS_GOVERNANCE',
   compliance: 'GDPR',
   orgDesign: 'TEAM_TOPOLOGIES',
+  lean: 'LEAN',
 };
 
-const GOALS: GoalKey[] = ['dataGov', 'ddd', 'bcm', 'bpm', 'compliance', 'orgDesign'];
+const GOALS: GoalKey[] = ['dataGov', 'ddd', 'bcm', 'bpm', 'compliance', 'orgDesign', 'lean'];
 
 interface Framework {
   titleKey: string;
@@ -167,8 +175,15 @@ const FRAMEWORKS: Framework[] = [
     titleKey: 'help.ttTitle',
     descKey: 'help.ttDesc',
     icon: <Groups color="primary" />,
-    viewKeys: ['help.viewOrgStructure', 'help.viewTeamInsights'],
+    viewKeys: ['help.viewOrgStructure', 'help.viewTeamTopology', 'help.viewTeamInsights'],
     methodologyKey: 'TEAM_TOPOLOGIES',
+  },
+  {
+    titleKey: 'help.leanTitle',
+    descKey: 'help.leanDesc',
+    icon: <Speed color="primary" />,
+    viewKeys: ['help.viewProcessMap', 'help.viewValueStream'],
+    methodologyKey: 'LEAN',
   },
 ];
 

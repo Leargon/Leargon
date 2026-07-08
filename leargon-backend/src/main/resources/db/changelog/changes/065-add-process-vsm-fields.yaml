@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 065-add-process-vsm-fields
+      author: leargon
+      comment: Add Value Stream Mapping (Lean / VSM) metadata columns to processes
+      changes:
+        - addColumn:
+            tableName: processes
+            columns:
+              - column:
+                  name: value_stream_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: cycle_time_minutes
+                  type: DOUBLE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: wait_time_minutes
+                  type: DOUBLE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: changeover_time_minutes
+                  type: DOUBLE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: frequency_count
+                  type: INT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: frequency_period
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: activity_type
+                  type: VARCHAR(25)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: activity_justification
+                  type: LONGTEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: first_pass_yield
+                  type: DOUBLE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: completion_rate
+                  type: DOUBLE
+                  constraints:
+                    nullable: true

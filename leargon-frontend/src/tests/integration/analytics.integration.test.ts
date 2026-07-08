@@ -108,4 +108,52 @@ describe('Analytics API', () => {
     expect(entry).toBeDefined();
     expect(entry!.distinctDomainCount).toBeGreaterThanOrEqual(3);
   });
+
+  // ─── Team Topologies: interactions + analytics ───────────────────────────────
+
+  it('supports team interaction CRUD and lists them per unit', async () => {
+    const a = await createOrgUnit(adminClient, 'TT FE Unit A');
+    const b = await createOrgUnit(adminClient, 'TT FE Unit B');
+
+    const createRes = await adminClient.post('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: b.key, mode: 'X_AS_A_SERVICE', duration: 'ONGOING', healthScore: 4,
+    });
+    expect(createRes.status).toBe(201);
+    const id = createRes.data.id;
+
+    const listRes = await adminClient.get(`/organisational-units/${a.key}/team-interactions`);
+    expect(listRes.status).toBe(200);
+    expect(listRes.data.some((i: { id: number }) => i.id === id)).toBe(true);
+
+    const delRes = await adminClient.delete(`/team-interactions/${id}`);
+    expect(delRes.status).toBe(204);
+  });
+
+  it('rejects a self-interaction with 400', async () => {
+    const a = await createOrgUnit(adminClient, 'TT FE Self Unit');
+    const res = await adminClient.post('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: a.key, mode: 'COLLABORATION', duration: 'ONGOING',
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('flags an ongoing collaboration between two stream-aligned teams as an anti-pattern', async () => {
+    const a = await createOrgUnit(adminClient, 'TT FE Stream A');
+    const b = await createOrgUnit(adminClient, 'TT FE Stream B');
+    await adminClient.put(`/organisational-units/${a.key}/team-topology-type`, { teamTopologyType: 'STREAM_ALIGNED' });
+    await adminClient.put(`/organisational-units/${b.key}/team-topology-type`, { teamTopologyType: 'STREAM_ALIGNED' });
+    await adminClient.post('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: b.key, mode: 'COLLABORATION', duration: 'ONGOING',
+    });
+
+    const res = await adminClient.get('/analytics/team-insights');
+    expect(res.status).toBe(200);
+    const antiPatterns: Array<{ sourceUnitKey: string; targetUnitKey: string }> =
+      res.data.teamInteractionAntiPatterns ?? [];
+    expect(antiPatterns.some((p) => p.sourceUnitKey === a.key && p.targetUnitKey === b.key)).toBe(true);
+
+    // topology graph exposes the teams
+    expect(res.data.teamTopologyGraph).toBeTruthy();
+    expect(res.data.teamTopologyGraph.nodes.some((n: { orgUnitKey: string }) => n.orgUnitKey === a.key)).toBe(true);
+  });
 });

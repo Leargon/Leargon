@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 066-add-org-unit-team-topology
+      author: leargon
+      comment: Add Team Topologies team type to organisational units
+      changes:
+        - addColumn:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: team_topology_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: true

@@ -127,3 +127,11 @@ databaseChangeLog:
       file: db/changelog/changes/062-fix-multilingual-default-locale.yaml
   - include:
       file: db/changelog/changes/063-per-locale-collection-verification.yaml
+  - include:
+      file: db/changelog/changes/064-add-org-unit-mission-statement.yaml
+  - include:
+      file: db/changelog/changes/065-add-process-vsm-fields.yaml
+  - include:
+      file: db/changelog/changes/066-add-org-unit-team-topology.yaml
+  - include:
+      file: db/changelog/changes/067-create-team-interactions-table.yaml

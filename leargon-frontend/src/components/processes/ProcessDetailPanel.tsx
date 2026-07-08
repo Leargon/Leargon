@@ -10,6 +10,8 @@ import {
   TextField,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -61,6 +63,9 @@ import {
   useUpdateProcessCrossBorderTransfers,
   useUpdateProcessPurpose,
   useUpdateProcessSecurityMeasures,
+  useUpdateProcessValueStream,
+  useGetProcessValueStreamSummary,
+  getGetProcessValueStreamSummaryQueryKey,
   useGetProcessDpia,
   useTriggerProcessDpia,
   getGetProcessDpiaQueryKey,
@@ -91,6 +96,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
 import LocalizedTextView from '../common/LocalizedTextView';
+import LocalizedTextEditor from '../common/LocalizedTextEditor';
 import DpiaSection from '../compliance/DpiaSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import ProcessCreationWizard from './ProcessCreationWizard';
@@ -115,7 +121,8 @@ import type {
   ItSystemResponse,
   ServiceProviderResponse,
 } from '../../api/generated/model';
-import { CrossBorderTransferSafeguard } from '../../api/generated/model';
+import { CrossBorderTransferSafeguard, ValueStreamType, ActivityType, FrequencyPeriod } from '../../api/generated/model';
+import type { UpdateProcessValueStreamRequest, ValueStreamSummaryResponse } from '../../api/generated/model';
 import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
@@ -282,6 +289,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const updateItSystems = useUpdateProcessItSystems();
   const updateServiceProviders = useUpdateProcessServiceProviders();
   const updateParent = useUpdateProcessParent();
+  const updateValueStream = useUpdateProcessValueStream();
+
+  const isLeanEnabled = isMethodologyEnabled('LEAN');
+  const showLeanTab = visibleTabs.includes(3) && isLeanEnabled;
+  const { data: vsmSummaryResponse } = useGetProcessValueStreamSummary(
+    processKey,
+    { query: { retry: false, enabled: showLeanTab } },
+  );
+  const vsmSummary = vsmSummaryResponse?.data as ValueStreamSummaryResponse | undefined;
 
   // Cross-border transfers dialog state
   const [transfersDialogOpen, setTransfersDialogOpen] = useState(false);
@@ -406,6 +422,15 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
     onSave: async (val) => {
       await updatePurpose.mutateAsync({ key: processKey, data: { purpose: val.length > 0 ? val : undefined } });
       invalidate();
+    },
+  });
+
+  // Value stream (VSM) inline edit — grouped over all Lean fields
+  const vsmEdit = useInlineEdit<UpdateProcessValueStreamRequest>({
+    onSave: async (val) => {
+      await updateValueStream.mutateAsync({ key: processKey, data: val });
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: getGetProcessValueStreamSummaryQueryKey(processKey) });
     },
   });
 
@@ -1519,6 +1544,173 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         parentProcessKey={processKey}
       />
 
+        </AccordionDetails>
+      </Accordion>
+      )}
+
+      {/* Lean / Value Stream Mapping */}
+      {showLeanTab && (
+      <Accordion defaultExpanded={false} disableGutters elevation={0} sx={{ mb: 1, border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+        <AccordionSummary expandIcon={<ExpandMore />}>
+          <Typography variant="subtitle2">{t('tabs.lean')}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
+          <SectionHeader
+            title={t('vsm.metadata')}
+            canEdit={canEditField('valueStreamType')}
+            isEditing={vsmEdit.isEditing}
+            onEdit={() => vsmEdit.startEdit({
+              valueStreamType: process.valueStreamType ?? undefined,
+              cycleTimeMinutes: process.cycleTimeMinutes ?? undefined,
+              waitTimeMinutes: process.waitTimeMinutes ?? undefined,
+              changeoverTimeMinutes: process.changeoverTimeMinutes ?? undefined,
+              frequencyCount: process.frequencyCount ?? undefined,
+              frequencyPeriod: process.frequencyPeriod ?? undefined,
+              activityType: process.activityType ?? undefined,
+              activityJustification: process.activityJustification ?? undefined,
+              firstPassYield: process.firstPassYield ?? undefined,
+              completionRate: process.completionRate ?? undefined,
+            })}
+            onSave={vsmEdit.save}
+            onCancel={vsmEdit.cancel}
+            isSaving={vsmEdit.isSaving}
+          />
+          {vsmEdit.isEditing && vsmEdit.editValue ? (
+            <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <FormControl size="small" sx={{ maxWidth: 320 }}>
+                <InputLabel>{t('vsm.valueStreamType')}</InputLabel>
+                <Select
+                  label={t('vsm.valueStreamType')}
+                  value={vsmEdit.editValue.valueStreamType ?? ''}
+                  onChange={(e) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, valueStreamType: (e.target.value || undefined) as ValueStreamType })}
+                >
+                  <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                  {Object.values(ValueStreamType).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ maxWidth: 320 }}>
+                <InputLabel>{t('vsm.activityType')}</InputLabel>
+                <Select
+                  label={t('vsm.activityType')}
+                  value={vsmEdit.editValue.activityType ?? ''}
+                  onChange={(e) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, activityType: (e.target.value || undefined) as ActivityType })}
+                >
+                  <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                  {Object.values(ActivityType).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {([
+                  ['cycleTimeMinutes', t('vsm.cycleTime')],
+                  ['waitTimeMinutes', t('vsm.waitTime')],
+                  ['changeoverTimeMinutes', t('vsm.changeoverTime')],
+                  ['firstPassYield', t('vsm.firstPassYield')],
+                  ['completionRate', t('vsm.completionRate')],
+                ] as const).map(([field, label]) => (
+                  <TextField
+                    key={field}
+                    label={label}
+                    type="number"
+                    size="small"
+                    sx={{ width: 150 }}
+                    value={vsmEdit.editValue![field] ?? ''}
+                    onChange={(e) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, [field]: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  />
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <TextField
+                  label={t('vsm.frequencyCount')}
+                  type="number"
+                  size="small"
+                  sx={{ width: 150 }}
+                  value={vsmEdit.editValue.frequencyCount ?? ''}
+                  onChange={(e) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, frequencyCount: e.target.value === '' ? undefined : Number(e.target.value) })}
+                />
+                <FormControl size="small" sx={{ width: 150 }}>
+                  <InputLabel>{t('vsm.frequencyPeriod')}</InputLabel>
+                  <Select
+                    label={t('vsm.frequencyPeriod')}
+                    value={vsmEdit.editValue.frequencyPeriod ?? ''}
+                    onChange={(e) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, frequencyPeriod: (e.target.value || undefined) as FrequencyPeriod })}
+                  >
+                    <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
+                    {Object.values(FrequencyPeriod).map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Typography variant="body2" color="text.secondary">{t('vsm.activityJustification')}</Typography>
+              <LocalizedTextEditor
+                locales={locales}
+                value={vsmEdit.editValue.activityJustification ?? []}
+                onChange={(v) => vsmEdit.setEditValue({ ...vsmEdit.editValue!, activityJustification: v })}
+                multiline
+                rows={2}
+              />
+              {vsmEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{vsmEdit.error}</Alert>}
+            </Box>
+          ) : (
+            <Box sx={{ mb: 2 }}>
+              <Table size="small">
+                <TableBody>
+                  <TableRow><TableCell sx={{ fontWeight: 500, border: 0 }}>{t('vsm.valueStreamType')}</TableCell><TableCell sx={{ border: 0 }}>{process.valueStreamType ?? '—'}</TableCell></TableRow>
+                  <TableRow><TableCell sx={{ fontWeight: 500, border: 0 }}>{t('vsm.activityType')}</TableCell><TableCell sx={{ border: 0 }}>{process.activityType ?? '—'}</TableCell></TableRow>
+                  <TableRow><TableCell sx={{ fontWeight: 500, border: 0 }}>{t('vsm.cycleTime')}</TableCell><TableCell sx={{ border: 0 }}>{process.cycleTimeMinutes ?? '—'}</TableCell></TableRow>
+                  <TableRow><TableCell sx={{ fontWeight: 500, border: 0 }}>{t('vsm.waitTime')}</TableCell><TableCell sx={{ border: 0 }}>{process.waitTimeMinutes ?? '—'}</TableCell></TableRow>
+                  <TableRow><TableCell sx={{ fontWeight: 500, border: 0 }}>{t('vsm.firstPassYield')}</TableCell><TableCell sx={{ border: 0 }}>{process.firstPassYield ?? '—'}</TableCell></TableRow>
+                </TableBody>
+              </Table>
+              {process.activityJustification && process.activityJustification.length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" color="text.secondary">{t('vsm.activityJustification')}</Typography>
+                  <LocalizedTextView value={process.activityJustification} showAll={false} emptyText={t('common.notSet')} />
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Value stream summary (this process + descendants) */}
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('vsm.summaryTitle')}</Typography>
+          {vsmSummary ? (
+            <Box>
+              <Chip
+                size="small"
+                variant="outlined"
+                color={vsmSummary.derivedFromDiagram ? 'primary' : 'default'}
+                label={vsmSummary.derivedFromDiagram ? t('vsm.sourceDiagram') : t('vsm.sourceSubtree')}
+                sx={{ mb: 1 }}
+              />
+              <Typography variant="body2">{t('vsm.stepCount')}: {vsmSummary.stepCount}</Typography>
+              <Typography variant="body2">{t('vsm.totalLeadTime')}: {vsmSummary.totalLeadTimeMinutes}</Typography>
+              <Typography variant="body2">{t('vsm.totalValueAdding')}: {vsmSummary.totalValueAddingMinutes}</Typography>
+              <Typography variant="body2">
+                {t('vsm.efficiency')}: {vsmSummary.processEfficiencyPct != null ? `${vsmSummary.processEfficiencyPct.toFixed(1)}%` : '—'}
+              </Typography>
+              {vsmSummary.activityBreakdown.length > 0 && (
+                <Table size="small" sx={{ mt: 1 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 500 }}>{t('vsm.activityType')}</TableCell>
+                      <TableCell sx={{ fontWeight: 500 }}>{t('vsm.stepCount')}</TableCell>
+                      <TableCell sx={{ fontWeight: 500 }}>{t('vsm.minutes')}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {vsmSummary.activityBreakdown.map((b, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{b.activityType ?? '—'}</TableCell>
+                        <TableCell>{b.stepCount}</TableCell>
+                        <TableCell>{b.totalMinutes}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary">{t('vsm.summaryEmpty')}</Typography>
+          )}
         </AccordionDetails>
       </Accordion>
       )}

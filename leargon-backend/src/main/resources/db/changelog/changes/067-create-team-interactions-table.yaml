@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 067-create-team-interactions-table
+      author: leargon
+      comment: Create team_interactions table for Team Topologies typed interactions
+      changes:
+        - createTable:
+            tableName: team_interactions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: source_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_team_interaction_source
+                    references: organisational_units(id)
+              - column:
+                  name: target_unit_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_team_interaction_target
+                    references: organisational_units(id)
+              - column:
+                  name: mode
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: health_score
+                  type: INT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: notes
+                  type: LONGTEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_team_interaction_created_by
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
