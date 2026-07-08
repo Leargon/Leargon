@@ -58,15 +58,19 @@ function buildGraph(
       id: n.orgUnitKey,
       position: { x: 0, y: 0 },
       width: 200,
-      height: 64,
+      height: 78,
       data: {
         label: (
           <Box sx={{ px: 1, py: 0.5, textAlign: 'center' }}>
             <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>{n.orgUnitName}</Typography>
-            <Typography variant="caption" sx={{ display: 'block', opacity: 0.8 }}>
+            <Typography variant="caption" sx={{ display: 'block', opacity: 0.8, lineHeight: 1.25 }}>
               {type ? t(TEAM_TYPE_LABEL_KEY[type] ?? type) : t('teamTopology.typeUnset')}
-              {n.cognitiveLoadScore != null ? ` · ${t('teamTopology.load')} ${n.cognitiveLoadScore}` : ''}
             </Typography>
+            {n.cognitiveLoadScore != null && (
+              <Typography variant="caption" sx={{ display: 'block', opacity: 0.8, lineHeight: 1.25, whiteSpace: 'nowrap' }}>
+                {t('teamTopology.load')} {n.cognitiveLoadScore}
+              </Typography>
+            )}
           </Box>
         ),
       },

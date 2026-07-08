@@ -387,7 +387,7 @@ const en = {
     mode: 'Mode',
     duration: 'Duration',
     health: 'Health',
-    load: 'Load',
+    load: 'Cognitive Load',
     antiPattern: 'Anti-pattern',
     typeStreamAligned: 'Stream-aligned',
     typePlatform: 'Platform',

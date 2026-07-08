@@ -382,7 +382,7 @@ const fr = {
     "mode": "Mode",
     "duration": "Durée",
     "health": "Santé",
-    "load": "Charge",
+    "load": "Charge cognitive",
     "antiPattern": "Anti-modèle",
     "typeStreamAligned": "Aligné sur le flux",
     "typePlatform": "Plateforme",

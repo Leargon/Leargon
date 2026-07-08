@@ -382,7 +382,7 @@ const de = {
     "mode": "Modus",
     "duration": "Dauer",
     "health": "Zustand",
-    "load": "Last",
+    "load": "Kognitive Last",
     "antiPattern": "Anti-Pattern",
     "typeStreamAligned": "Stream-orientiert",
     "typePlatform": "Plattform",
