@@ -137,3 +137,5 @@ databaseChangeLog:
       file: db/changelog/changes/067-create-team-interactions-table.yaml
   - include:
       file: db/changelog/changes/068-add-team-topology-thresholds.yaml
+  - include:
+      file: db/changelog/changes/069-add-org-chart-default-view.yaml

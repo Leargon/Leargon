@@ -16,6 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { OrgChartView } from './orgChartView.ts';
 
 export interface OrganisationSettingsResponse {
   /**
@@ -46,4 +47,5 @@ export interface OrganisationSettingsResponse {
      * @nullable
      */
   teamInteractionHealthThreshold?: number | null;
+  orgChartDefaultView?: OrgChartView | null;
 }

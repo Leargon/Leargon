@@ -519,6 +519,8 @@ const fr = {
     "orgUnitLayer": "Unités org.",
     "entityLayer": "Entités",
     "processCountOverlay": "Nombre de processus",
+    "viewHierarchical": "Hiérarchie",
+    "viewContainer": "Conteneur",
     "legendRelationship": "Relation",
     "legendParentChild": "Parent–enfant",
     "legendInterface": "Implémente",

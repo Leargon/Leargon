@@ -26,7 +26,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import type { ProcessResponse } from '../../api/generated/model/processResponse';
 import { useLocale } from '../../context/LocaleContext';
 import { SHARED_NODE_TYPES, type ProcessNodeData, type DataEntityNodeData, type GroupNodeData } from './sharedNodes';
-import { applyDagreLayout, layoutGroups, domainColor } from './diagramUtils';
+import { applyDagreLayout, layoutNested, domainColor, DEFAULT_FIT_VIEW, DEFAULT_GROUP_PADDING, HEADERLESS_PADDING } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
 type LayerOption = 'domain' | 'orgUnit' | 'entities';
@@ -265,22 +265,34 @@ function buildGraph(
     } satisfies GroupNodeData,
   }));
 
-  const childNodes: Node[] = rawProcessNodes
-    .filter((n) => !!getContainerKey(n.id))
-    .map((n) => ({ ...n, parentId: `group__${getContainerKey(n.id)!}` }));
-
-  const ungroupedNodes: Node[] = rawProcessNodes.filter((n) => !getContainerKey(n.id));
-
-  const laidGrouped = layoutGroups(groupNodes, childNodes, processEdges, {
-    rankdir: 'TB', nodesep: 50, ranksep: 80,
+  // Every process joins a group in ONE nested pass: a real domain/org container, or — for a
+  // process with no container — its own INVISIBLE singleton group. This removes the old
+  // second independent layout pass (which overlapped the containers) and preserves the process
+  // hierarchy (parent→child edges surface as ordering edges between groups).
+  const singletonGroups: Node[] = [];
+  const childNodes: Node[] = rawProcessNodes.map((n) => {
+    const ck = getContainerKey(n.id);
+    if (ck) return { ...n, parentId: `group__${ck}` };
+    const gid = `nodomain__${n.id}`;
+    singletonGroups.push({
+      id: gid,
+      type: 'invisibleGroupNode',
+      position: { x: 0, y: 0 },
+      data: { label: '', color: '#9e9e9e' } satisfies GroupNodeData,
+    });
+    return { ...n, parentId: gid };
   });
 
-  const laidUngrouped =
-    ungroupedNodes.length > 0
-      ? applyDagreLayout(ungroupedNodes, [], { rankdir: 'TB', nodesep: 50, ranksep: 80 })
-      : [];
-
-  let allNodes: Node[] = [...laidGrouped, ...laidUngrouped];
+  let allNodes: Node[] = layoutNested(
+    [...groupNodes, ...singletonGroups, ...childNodes],
+    processEdges,
+    {
+      rankdir: 'TB',
+      nodesep: 50,
+      ranksep: 80,
+      paddingFor: (node) => (node.type === 'invisibleGroupNode' ? HEADERLESS_PADDING : DEFAULT_GROUP_PADDING),
+    },
+  );
 
   if (showEntities && entityNodes.length > 0) {
     // Place entity nodes to the right of the main diagram
@@ -447,7 +459,7 @@ const ProcessLandscapeDiagram: React.FC = () => {
           nodeTypes={SHARED_NODE_TYPES}
           colorMode={colorMode}
           fitView
-          fitViewOptions={{ padding: 0.12 }}
+          fitViewOptions={DEFAULT_FIT_VIEW}
           minZoom={0.05}
           maxZoom={2}
           nodesConnectable={false}

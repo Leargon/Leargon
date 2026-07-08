@@ -2,10 +2,12 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
+import org.leargon.backend.domain.OrgChartView
 import org.leargon.backend.domain.OrganisationSettings
 import org.leargon.backend.model.OrganisationSettingsRequest
 import org.leargon.backend.model.OrganisationSettingsResponse
 import org.leargon.backend.repository.OrganisationSettingsRepository
+import org.leargon.backend.model.OrgChartView as ModelOrgChartView
 
 @Singleton
 open class OrganisationSettingsService(
@@ -25,6 +27,7 @@ open class OrganisationSettingsService(
         settings.homeCountry = request.homeCountry
         settings.cognitiveLoadThreshold = request.cognitiveLoadThreshold
         settings.teamInteractionHealthThreshold = request.teamInteractionHealthThreshold
+        settings.orgChartDefaultView = request.orgChartDefaultView?.let { OrgChartView.valueOf(it.value) }
         val saved = organisationSettingsRepository.save(settings)
         return toResponse(saved)
     }
@@ -36,4 +39,5 @@ open class OrganisationSettingsService(
             .homeCountry(settings.homeCountry)
             .cognitiveLoadThreshold(settings.cognitiveLoadThreshold)
             .teamInteractionHealthThreshold(settings.teamInteractionHealthThreshold)
+            .orgChartDefaultView(settings.orgChartDefaultView?.let { ModelOrgChartView.fromValue(it.name) })
 }

@@ -519,6 +519,8 @@ const de = {
     "orgUnitLayer": "Org-Einheits-Schicht",
     "entityLayer": "Entitätenschicht",
     "processCountOverlay": "Prozessanzahl",
+    "viewHierarchical": "Hierarchie",
+    "viewContainer": "Container",
     "legendRelationship": "Beziehung",
     "legendParentChild": "Eltern-Kind",
     "legendInterface": "Implementiert",

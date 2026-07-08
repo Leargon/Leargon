@@ -11272,6 +11272,14 @@ components:
             (DATA_GOVERNANCE, PROCESS_GOVERNANCE, DDD, TEAM_TOPOLOGIES); ignored for others.
             Defaults to true.
           example: true
+    OrgChartView:
+      type: string
+      enum:
+      - HIERARCHICAL
+      - CONTAINER
+      - null
+      nullable: true
+      description: Default rendering mode for the organisational chart (HIERARCHICAL when unset)
     OrganisationSettingsResponse:
       type: object
       properties:
@@ -11302,6 +11310,8 @@ components:
           minimum: 1
           maximum: 5
           description: Team interaction health score at or below which the interaction is flagged as degraded (default 2 when unset)
+        orgChartDefaultView:
+          $ref: '#/components/schemas/OrgChartView'
     OrganisationSettingsRequest:
       type: object
       properties:
@@ -11329,6 +11339,8 @@ components:
           minimum: 1
           maximum: 5
           description: Health score at or below which a team interaction is flagged as degraded
+        orgChartDefaultView:
+          $ref: '#/components/schemas/OrgChartView'
     ProcessingRegisterEntryResponse:
       type: object
       required:

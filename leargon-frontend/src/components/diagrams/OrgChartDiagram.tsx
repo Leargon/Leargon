@@ -19,17 +19,22 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { BarChart } from '@mui/icons-material';
+import { BarChart, AccountTree, Dashboard } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useGetAllProcesses } from '../../api/generated/process/process';
+import { useGetOrganisationSettings } from '../../api/generated/administration/administration';
 import type { OrganisationalUnitResponse } from '../../api/generated/model/organisationalUnitResponse';
 import type { ProcessResponse } from '../../api/generated/model/processResponse';
 import { useLocale } from '../../context/LocaleContext';
 import { SHARED_NODE_TYPES, type OrgUnitNodeData } from './sharedNodes';
-import { applyDagreLayout } from './diagramUtils';
+import { applyDagreLayout, DEFAULT_FIT_VIEW } from './diagramUtils';
+import { buildOrgContainerGraph } from './orgChartLayout';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
+
+type OrgChartView = 'HIERARCHICAL' | 'CONTAINER';
+const VIEW_STORAGE_KEY = 'orgChart.viewMode';
 
 function buildGraph(
   units: OrganisationalUnitResponse[],
@@ -59,7 +64,7 @@ function buildGraph(
         id: `ou__${unit.key}__${child.key}`,
         source: unit.key,
         target: child.key,
-        type: 'default',
+        type: 'smoothstep',
         style: { stroke: '#ce93d8', strokeWidth: 1.5 },
         markerEnd: { type: 'arrowclosed' as const, color: '#ce93d8' },
       });
@@ -76,11 +81,24 @@ const OrgChartDiagram: React.FC = () => {
   const { getLocalizedText } = useLocale();
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
   const [showProcessCount, setShowProcessCount] = useState(true);
+  const [viewMode, setViewMode] = useState<OrgChartView | null>(
+    () => (localStorage.getItem(VIEW_STORAGE_KEY) as OrgChartView | null),
+  );
 
   const { data: unitsResponse, isLoading: unitsLoading, isError: unitsError } = useGetAllOrganisationalUnits();
   const units = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? undefined;
   const { data: processesResponse } = useGetAllProcesses();
   const processes = (processesResponse?.data as ProcessResponse[] | undefined) ?? undefined;
+  const { data: settingsResponse } = useGetOrganisationSettings();
+
+  // Effective view: per-user localStorage override › org default › HIERARCHICAL.
+  const effectiveView: OrgChartView =
+    viewMode ?? (settingsResponse?.data?.orgChartDefaultView as OrgChartView | undefined) ?? 'HIERARCHICAL';
+
+  const setView = useCallback((v: OrgChartView) => {
+    localStorage.setItem(VIEW_STORAGE_KEY, v);
+    setViewMode(v);
+  }, []);
 
   const processCountByUnit = React.useMemo(() => {
     const m = new Map<string, number>();
@@ -97,10 +115,16 @@ const OrgChartDiagram: React.FC = () => {
 
   useEffect(() => {
     if (!units) return;
+    if (effectiveView === 'CONTAINER') {
+      const { nodes: n, edges: e } = buildOrgContainerGraph(units, (u) => getLocalizedText(u.names, u.key));
+      setNodes(n);
+      setEdges(e);
+      return;
+    }
     const { nodes: n, edges: e } = buildGraph(units, processCountByUnit, showProcessCount, getLocalizedText);
     setNodes(n);
     setEdges(e);
-  }, [units, processCountByUnit, showProcessCount, getLocalizedText, setNodes, setEdges]);
+  }, [units, effectiveView, processCountByUnit, showProcessCount, getLocalizedText, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => navigate(`/organisation/${node.id}`),
@@ -132,14 +156,31 @@ const OrgChartDiagram: React.FC = () => {
       >
         <ToggleButtonGroup
           size="small"
-          value={showProcessCount ? ['processCount'] : []}
-          onChange={(_, v) => setShowProcessCount((v as string[]).includes('processCount'))}
+          exclusive
+          value={effectiveView}
+          onChange={(_, v) => { if (v) setView(v as OrgChartView); }}
         >
-          <ToggleButton value="processCount">
-            <BarChart sx={{ fontSize: 16, mr: 0.5 }} />
-            {t('diagrams.processCountOverlay')}
+          <ToggleButton value="HIERARCHICAL">
+            <AccountTree sx={{ fontSize: 16, mr: 0.5 }} />
+            {t('diagrams.viewHierarchical')}
+          </ToggleButton>
+          <ToggleButton value="CONTAINER">
+            <Dashboard sx={{ fontSize: 16, mr: 0.5 }} />
+            {t('diagrams.viewContainer')}
           </ToggleButton>
         </ToggleButtonGroup>
+        {effectiveView === 'HIERARCHICAL' && (
+          <ToggleButtonGroup
+            size="small"
+            value={showProcessCount ? ['processCount'] : []}
+            onChange={(_, v) => setShowProcessCount((v as string[]).includes('processCount'))}
+          >
+            <ToggleButton value="processCount">
+              <BarChart sx={{ fontSize: 16, mr: 0.5 }} />
+              {t('diagrams.processCountOverlay')}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        )}
         <Typography variant="caption" sx={{ ml: 'auto', color: 'text.secondary' }}>
           {t('diagrams.clickToNavigate')}
         </Typography>
@@ -156,7 +197,7 @@ const OrgChartDiagram: React.FC = () => {
           nodeTypes={SHARED_NODE_TYPES}
           colorMode={colorMode}
           fitView
-          fitViewOptions={{ padding: 0.15 }}
+          fitViewOptions={DEFAULT_FIT_VIEW}
           minZoom={0.05}
           maxZoom={2}
           nodesConnectable={false}

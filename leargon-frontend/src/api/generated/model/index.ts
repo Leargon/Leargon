@@ -140,6 +140,7 @@ export * from './organisationalUnitSummaryResponse.ts';
 export * from './organisationalUnitTreeResponse.ts';
 export * from './organisationSettingsRequest.ts';
 export * from './organisationSettingsResponse.ts';
+export * from './orgChartView.ts';
 export * from './orgUnitProcessLoadItem.ts';
 export * from './processDiagramResponse.ts';
 export * from './processFlowResponse.ts';

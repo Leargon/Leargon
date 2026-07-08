@@ -26,141 +26,11 @@ import { useTranslation } from 'react-i18next';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
-import { SHARED_NODE_TYPES, SHARED_EDGE_TYPES, type EntityNodeData, type GroupNodeData, type RelationshipEdgeData } from './sharedNodes';
-import { applyDagreLayout, layoutGroups, domainColor, cardinalityLabel } from './diagramUtils';
+import { SHARED_NODE_TYPES, SHARED_EDGE_TYPES, type EntityNodeData } from './sharedNodes';
+import { domainColor, DEFAULT_FIT_VIEW } from './diagramUtils';
+import { buildEntityGraph } from './entityMapLayout';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
-
-function buildEdges(
-  rootEntities: BusinessEntityResponse[],
-  childKeys: Set<string>,
-  getLocalizedText: (texts: { locale: string; text: string }[], fallback?: string) => string,
-): Edge[] {
-  const seen = new Set<string>();
-  const edges: Edge[] = [];
-  rootEntities.forEach((entity) => {
-    (entity.relationships ?? []).forEach((rel) => {
-      const items = rel.cardinality ?? [];
-      if (items.length !== 2) return;
-      const [a, b] = items;
-      if (childKeys.has(a.businessEntity.key) || childKeys.has(b.businessEntity.key)) return;
-      const edgeId = [a.businessEntity.key, b.businessEntity.key].sort().join('__rel__') + (rel.id ?? '');
-      if (seen.has(edgeId)) return;
-      seen.add(edgeId);
-      const cardLabel = `${cardinalityLabel(a.minimum, a.maximum)} — ${cardinalityLabel(b.minimum, b.maximum)}`;
-      const desc = rel.descriptions ? getLocalizedText(rel.descriptions, '') : '';
-      const descDisplay = desc.length > 15 ? `${desc.slice(0, 15)}…` : desc;
-      edges.push({
-        id: edgeId,
-        source: a.businessEntity.key,
-        target: b.businessEntity.key,
-        type: 'relationshipEdge',
-        style: { stroke: '#90a4ae' },
-        data: { desc, descDisplay, cardLabel } satisfies RelationshipEdgeData,
-      });
-    });
-    (entity.interfacesEntities ?? []).forEach((iface) => {
-      if (childKeys.has(iface.key)) return;
-      const edgeId = `iface__${entity.key}__${iface.key}`;
-      if (seen.has(edgeId)) return;
-      seen.add(edgeId);
-      edges.push({
-        id: edgeId,
-        source: entity.key,
-        target: iface.key,
-        type: 'interfaceEdge',
-        style: { stroke: '#9c27b0', strokeDasharray: '6,4', strokeWidth: 1.5 },
-      });
-    });
-  });
-  return edges;
-}
-
-function entityHeight(entity: BusinessEntityResponse): number {
-  const hasDescription = (entity.descriptions ?? []).some((d) => d.text);
-  const childrenHeight = (entity.children ?? []).length > 0 ? 8 + (entity.children ?? []).length * 19 : 0;
-  return 48 + (hasDescription ? 16 : 0) + childrenHeight;
-}
-
-function buildGraph(
-  entities: BusinessEntityResponse[],
-  showDomainLayer: boolean,
-  getLocalizedText: (texts: { locale: string; text: string }[], fallback?: string) => string,
-): { nodes: Node[]; edges: Edge[] } {
-  const childKeys = new Set(entities.flatMap((e) => (e.children ?? []).map((c) => c.key)));
-  const rootEntities = entities.filter((e) => !childKeys.has(e.key));
-  const edges = buildEdges(rootEntities, childKeys, getLocalizedText);
-
-  if (!showDomainLayer) {
-    // Flat layout — no containers
-    const nodes: Node[] = rootEntities.map((entity) => ({
-      id: entity.key,
-      type: 'entityNode',
-      position: { x: 0, y: 0 },
-      width: 180,
-      height: entityHeight(entity),
-      data: {
-        label: getLocalizedText(entity.names),
-        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
-      } satisfies EntityNodeData,
-    }));
-    return { nodes: applyDagreLayout(nodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 }), edges };
-  }
-
-  // Container layout — group by bounded context
-  const bcKeys = Array.from(new Set(rootEntities.map((e) => e.boundedContext?.key).filter(Boolean) as string[]));
-  const colorMap = new Map(bcKeys.map((k, i) => [k, domainColor(i)]));
-
-  const groupNodes: Node[] = bcKeys.map((bcKey) => {
-    const sample = rootEntities.find((e) => e.boundedContext?.key === bcKey);
-    const color = colorMap.get(bcKey)!;
-    return {
-      id: `group__${bcKey}`,
-      type: 'domainGroupNode',
-      position: { x: 0, y: 0 },
-      data: { label: sample?.boundedContext?.name ?? bcKey, color } satisfies GroupNodeData,
-    };
-  });
-
-  const childNodes: Node[] = rootEntities
-    .filter((e) => e.boundedContext?.key)
-    .map((entity) => ({
-      id: entity.key,
-      type: 'entityNode',
-      parentId: `group__${entity.boundedContext!.key}`,
-      position: { x: 0, y: 0 },
-      width: 180,
-      height: entityHeight(entity),
-      data: {
-        label: getLocalizedText(entity.names),
-        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
-      } satisfies EntityNodeData,
-    }));
-
-  const ungroupedNodes: Node[] = rootEntities
-    .filter((e) => !e.boundedContext?.key)
-    .map((entity) => ({
-      id: entity.key,
-      type: 'entityNode',
-      position: { x: 0, y: 0 },
-      width: 180,
-      height: entityHeight(entity),
-      data: {
-        label: getLocalizedText(entity.names),
-        description: getLocalizedText(entity.descriptions ?? [], '') || undefined,
-        children: (entity.children ?? []).map((c) => ({ key: c.key, name: getLocalizedText(entities.find(e => e.key === c.key)?.names ?? [], c.name) })),
-      } satisfies EntityNodeData,
-    }));
-
-  const laidNodes = layoutGroups(groupNodes, childNodes, edges, { rankdir: 'LR', nodesep: 60, ranksep: 130 });
-  const laidUngrouped = ungroupedNodes.length > 0
-    ? applyDagreLayout(ungroupedNodes, [], { rankdir: 'LR', nodesep: 60, ranksep: 130 })
-    : [];
-
-  return { nodes: [...laidNodes, ...laidUngrouped], edges };
-}
 
 const EntityMapDiagram: React.FC = () => {
   const { t } = useTranslation();
@@ -177,7 +47,12 @@ const EntityMapDiagram: React.FC = () => {
 
   useEffect(() => {
     if (!entities) return;
-    const { nodes: n, edges: e } = buildGraph(entities, showDomainLayer, getLocalizedText);
+    const { nodes: n, edges: e } = buildEntityGraph(
+      entities,
+      showDomainLayer,
+      (entity) => getLocalizedText(entity.names),
+      (texts) => getLocalizedText(texts, ''),
+    );
     setNodes(n);
     setEdges(e);
   }, [entities, showDomainLayer, getLocalizedText, setNodes, setEdges]);
@@ -292,7 +167,7 @@ const EntityMapDiagram: React.FC = () => {
           edgeTypes={SHARED_EDGE_TYPES}
           colorMode={colorMode}
           fitView
-          fitViewOptions={{ padding: 0.12 }}
+          fitViewOptions={DEFAULT_FIT_VIEW}
           minZoom={0.05}
           maxZoom={2}
           nodesConnectable={false}

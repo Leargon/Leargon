@@ -524,6 +524,8 @@ const en = {
     orgUnitLayer: 'Org unit layer',
     entityLayer: 'Entity layer',
     processCountOverlay: 'Process count',
+    viewHierarchical: 'Hierarchy',
+    viewContainer: 'Container',
     legendRelationship: 'Relationship',
     legendParentChild: 'Parent–child',
     legendInterface: 'Implements',

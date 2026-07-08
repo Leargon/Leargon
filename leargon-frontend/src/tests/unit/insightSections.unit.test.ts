@@ -15,6 +15,9 @@ function emptyInsights(): NormalizedInsights {
     splitDomains: [],
     conwaysLawAlignment: { domainKeys: [], orgUnitKeys: [], domainNames: {}, orgUnitNames: {}, cells: [] },
     conwaysLawMisalignments: [],
+    cognitiveLoad: [],
+    teamInteractionAntiPatterns: [],
+    teamInteractionHealthAlerts: [],
   };
 }
 

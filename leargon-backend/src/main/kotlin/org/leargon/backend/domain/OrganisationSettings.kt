@@ -2,10 +2,14 @@ package org.leargon.backend.domain
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+
+enum class OrgChartView { HIERARCHICAL, CONTAINER }
 
 @Entity
 @Table(name = "organisation_settings")
@@ -28,4 +32,8 @@ class OrganisationSettings {
 
     @Column(name = "team_interaction_health_threshold")
     var teamInteractionHealthThreshold: Int? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "org_chart_default_view", length = 20)
+    var orgChartDefaultView: OrgChartView? = null
 }

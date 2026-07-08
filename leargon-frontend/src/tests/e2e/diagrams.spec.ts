@@ -3,18 +3,22 @@ import { uid, createEntity, createProcess, createOrgUnit, ADMIN } from './api-se
 
 const backendUrl = (): string => process.env.E2E_BACKEND_URL ?? 'http://localhost:8080';
 
-async function postJson(path: string, body: unknown, stateFile: string): Promise<unknown> {
+async function sendJson(method: string, path: string, body: unknown, stateFile: string): Promise<unknown> {
   const fs = (await import('node:fs')).default;
   const nodePath = (await import('node:path')).default;
   const tokenFile = stateFile.replace('.json', '-token.txt');
   const absToken = nodePath.join(process.cwd(), tokenFile);
   const token = fs.existsSync(absToken) ? fs.readFileSync(absToken, 'utf8').trim() : '';
   const r = await fetch(`${backendUrl()}${path}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   });
-  return r.json();
+  return r.json().catch(() => ({}));
+}
+
+async function postJson(path: string, body: unknown, stateFile: string): Promise<unknown> {
+  return sendJson('POST', path, body, stateFile);
 }
 
 test.describe('Entity Map diagram', () => {
@@ -97,6 +101,26 @@ test.describe('Org Chart diagram', () => {
     await page.goto('/diagrams/organisation');
     await page.getByText(name).first().click();
     await expect(page.url()).toContain(`/organisation/${unit.key}`);
+  });
+
+  test('offers Hierarchy/Container view modes and renders nested container view', async ({ page }) => {
+    // Parent → child so the Container view has a box that nests a card.
+    const parentName = uid('ContParent');
+    const childName = uid('ContChild');
+    const parent = (await createOrgUnit(parentName, ADMIN)) as { key: string };
+    const child = (await createOrgUnit(childName, ADMIN)) as { key: string };
+    await sendJson('PUT', `/organisational-units/${child.key}/parents`, { keys: [parent.key] }, ADMIN);
+
+    await page.goto('/diagrams/organisation');
+    // Both view-mode buttons present
+    await expect(page.getByRole('button', { name: 'Hierarchy' })).toBeVisible({ timeout: 10_000 });
+    const containerBtn = page.getByRole('button', { name: 'Container' });
+    await expect(containerBtn).toBeVisible();
+
+    // Switch to Container view — parent (container header) and child (nested card) both visible.
+    await containerBtn.click();
+    await expect(page.locator('.react-flow').getByText(parentName)).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.react-flow').getByText(childName)).toBeVisible({ timeout: 15_000 });
   });
 });
 
