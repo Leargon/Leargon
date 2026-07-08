@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createOrgUnit, setTeamTopologyType, createTeamInteraction, uid, ADMIN, OWNER } from './api-setup';
+import { createOrgUnit, setTeamTopologyType, createTeamInteraction, uid, ADMIN } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
