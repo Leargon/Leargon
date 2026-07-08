@@ -78,15 +78,29 @@ and large ones don't shrink to dots. Optionally centre on a semantic anchor per 
 ## Feature B — Team Topology official notation  *(frontend only)*
 No backend change (`TeamTopologyGraph` already has `teamTopologyType`, `mode`, `antiPattern`,
 `healthWarning`).
-- **New `diagrams/teamTopologyNodes.tsx`** — shape per team type (SVG for non-rects):
-  `STREAM_ALIGNED` horizontal rounded rect · `ENABLING` vertical rounded rect ·
-  `COMPLICATED_SUBSYSTEM` octagon · `PLATFORM` dotted square-corner slab · null → dotted
-  "undefined" rect. Keep name/type/cognitive-load content + overload highlight.
-- **New interaction edges** — glyph at edge midpoint via `EdgeLabelRenderer`: `COLLABORATION`
-  parallelogram · `X_AS_A_SERVICE` triangle pointing at the consumer (target) · `FACILITATING`
-  facilitating glyph (lift exact symbol/colours from the official
-  [Team-Shape-Templates](https://github.com/TeamTopologies/Team-Shape-Templates); seed a
-  `TT_COLORS` const with a `// TODO official hex`).
+- **New `diagrams/teamTopologyNodes.tsx`** — shape + official colours per team type (SVG for
+  non-rects). Exact values from the official
+  [Team-Shape-Templates](https://github.com/TeamTopologies/Team-Shape-Templates):
+
+  | Team type | Shape | Fill | Outline |
+  |---|---|---|---|
+  | `STREAM_ALIGNED` | horizontal rounded rect | `#FFEDB8` | `#FFD966` |
+  | `ENABLING` | vertical rounded rect | `#DFBDCF` | `#D09CB7` |
+  | `COMPLICATED_SUBSYSTEM` | octagon (color-blind-safe form) | `#FFC08B` | `#E88814` |
+  | `PLATFORM` | square-corner rect, **dotted** border | `#B7CDF1` | `#6D9EEB` |
+  | null / unknown | horizontal rounded rect, **dotted** border | `background.paper` | `divider` (grey) |
+
+  Keep name/type/cognitive-load content + overload highlight.
+- **New interaction edges** — glyph at edge midpoint via `EdgeLabelRenderer`, all drawn at **50%
+  transparency** with a **dashed** outline (per the official stencil):
+
+  | Mode | Glyph | Fill | Outline |
+  |---|---|---|---|
+  | `COLLABORATION` | parallelogram | transparent | `#967EE2` (purple), dashed |
+  | `X_AS_A_SERVICE` | triangle, **point → consumer (target)** | `#B4B4B4` (grey) @50% | grey |
+  | `FACILITATING` | **plain circle** | transparent | `#78996B` (muted green), dashed |
+
+  Seed a `TT_COLORS` const with these exact hex values.
 - **`TeamTopologyDiagram.tsx`**: map type→node, mode→edge; delete the current inline `style`-based
   node build (removes its shared-node inconsistency); handles match orientation
   (`ENABLING` Top/Bottom, others Left/Right); legend shows shapes. Keep anti-pattern/health edges.
