@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 069-add-org-chart-default-view
+      author: leargon
+      comment: Add org-level default view mode for the organisational chart (HIERARCHICAL/CONTAINER)
+      changes:
+        - addColumn:
+            tableName: organisation_settings
+            columns:
+              - column:
+                  name: org_chart_default_view
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
