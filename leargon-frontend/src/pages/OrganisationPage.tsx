@@ -1,7 +1,7 @@
 import React, { lazy, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@mui/material';
-import { CorporateFare, AccountTreeOutlined, FormatListBulleted } from '@mui/icons-material';
+import { CorporateFare, AccountTreeOutlined, FormatListBulleted, HubOutlined } from '@mui/icons-material';
 import OrgUnitTreePanel from '../components/organisation/OrgUnitTreePanel';
 import OrgUnitDetailPanel from '../components/organisation/OrgUnitDetailPanel';
 import CreateOrgUnitDialog from '../components/organisation/CreateOrgUnitDialog';
@@ -12,8 +12,10 @@ import type { OrganisationalUnitResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
+import { useMethodology } from '../context/MethodologyContext';
 
 const OrgChartDiagram = lazy(() => import('../components/diagrams/OrgChartDiagram'));
+const TeamTopologyDiagram = lazy(() => import('../components/diagrams/TeamTopologyDiagram'));
 
 const OrganisationPage: React.FC = () => {
   const { t } = useTranslation();
@@ -21,6 +23,8 @@ const OrganisationPage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const { mode } = useWizardMode();
+  const { isMethodologyEnabled } = useMethodology();
+  const ttEnabled = isMethodologyEnabled('TEAM_TOPOLOGIES');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [setupWizardOpen, setSetupWizardOpen] = useState(false);
   const [setupWizardDismissed, setSetupWizardDismissed] = useState(false);
@@ -46,6 +50,9 @@ const OrganisationPage: React.FC = () => {
       views={[
         { value: 'list', label: t('pages.list'), icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },
         { value: 'chart', label: t('pages.orgChart'), icon: <AccountTreeOutlined sx={{ fontSize: 16, mr: 0.5 }} /> },
+        ...(ttEnabled
+          ? [{ value: 'topology', label: t('pages.teamTopology'), icon: <HubOutlined sx={{ fontSize: 16, mr: 0.5 }} /> }]
+          : []),
       ]}
       currentView={view}
       onViewChange={setView}
@@ -67,7 +74,7 @@ const OrganisationPage: React.FC = () => {
         )
       }
       hasSelection={!!key}
-      diagrams={{ chart: <OrgChartDiagram /> }}
+      diagrams={{ chart: <OrgChartDiagram />, ...(ttEnabled ? { topology: <TeamTopologyDiagram /> } : {}) }}
     >
       <CreateOrgUnitDialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} />
       <OrgSetupWizard open={setupWizardOpen} onClose={handleSetupClose} />

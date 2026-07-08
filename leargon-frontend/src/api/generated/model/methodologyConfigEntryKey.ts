@@ -30,4 +30,5 @@ export const MethodologyConfigEntryKey = {
   DDD: 'DDD',
   BCM: 'BCM',
   TEAM_TOPOLOGIES: 'TEAM_TOPOLOGIES',
+  LEAN: 'LEAN',
 } as const;

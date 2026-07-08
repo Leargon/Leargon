@@ -39,6 +39,8 @@ import org.leargon.backend.model.UpdateProcessSecurityMeasuresRequest
 import org.leargon.backend.model.UpdateProcessStewardRequest
 import org.leargon.backend.model.UpdateProcessTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateProcessTypeRequest
+import org.leargon.backend.model.UpdateProcessValueStreamRequest
+import org.leargon.backend.model.ValueStreamSummaryResponse
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.ClassificationService
 import org.leargon.backend.service.DpiaService
@@ -140,6 +142,16 @@ open class ProcessController(
         val currentUser = getCurrentUser()
         return processService.updateSecurityMeasures(key, request.securityMeasures, currentUser)
     }
+
+    override fun updateProcessValueStream(
+        key: String,
+        @Valid @Body request: UpdateProcessValueStreamRequest
+    ): ProcessResponse {
+        val currentUser = getCurrentUser()
+        return processService.updateProcessValueStream(key, request, currentUser)
+    }
+
+    override fun getProcessValueStreamSummary(key: String): ValueStreamSummaryResponse = processService.computeValueStreamSummary(key)
 
     override fun clearProcessOwner(key: String): ProcessResponse {
         val currentUser = getCurrentUser()

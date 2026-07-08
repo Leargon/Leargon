@@ -44,9 +44,15 @@ export const METHODOLOGY_DEFINITIONS: Record<string, MethodologyDefinition> = {
   },
   TEAM_TOPOLOGIES: {
     label: 'Team Topologies',
-    description: 'Define team ownership, stewardship roles, and organisational unit descriptions.',
-    sections: ['DATA_GOVERNANCE'],
+    description: 'Define team ownership, stewardship roles, team mission, and organisational unit descriptions.',
+    sections: ['DATA_GOVERNANCE', 'TEAM_TOPOLOGIES'],
     navPaths: ['/organisation'],
+  },
+  LEAN: {
+    label: 'Lean / VSM',
+    description: 'Map value streams: per-step cycle/wait time, activity classification, and value-stream summaries.',
+    sections: ['LEAN'],
+    navPaths: ['/processes'],
   },
 };
 
@@ -60,6 +66,8 @@ export const SECTION_TO_METHODOLOGY: Partial<Record<string, string>> = {
   DDD: 'DDD',
   STRATEGIC: 'DDD',
   BCM: 'BCM',
+  TEAM_TOPOLOGIES: 'TEAM_TOPOLOGIES',
+  LEAN: 'LEAN',
 };
 
 interface MethodologyContextValue {

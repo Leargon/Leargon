@@ -23,6 +23,7 @@ import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
 import type { ProcessSummaryResponse } from './processSummaryResponse.ts';
 import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryResponse.ts';
+import type { TeamTopologyType } from './teamTopologyType.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
 
 export interface OrganisationalUnitResponse {
@@ -33,6 +34,7 @@ export interface OrganisationalUnitResponse {
      * @nullable
      */
   unitType?: string | null;
+  teamTopologyType?: TeamTopologyType | null;
   businessOwner?: UserSummaryResponse;
   /** Business steward responsible for data quality and definitions */
   businessSteward?: UserSummaryResponse | null;
@@ -41,6 +43,11 @@ export interface OrganisationalUnitResponse {
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];
+  /**
+     * Team purpose / mission statement (localised, Team Topologies)
+     * @nullable
+     */
+  missionStatement?: LocalizedText[] | null;
   parents?: OrganisationalUnitSummaryResponse[];
   children?: OrganisationalUnitSummaryResponse[];
   /** Processes where this unit is set as an executing unit */

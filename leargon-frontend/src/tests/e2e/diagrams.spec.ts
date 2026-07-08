@@ -78,7 +78,7 @@ test.describe('Process Landscape diagram', () => {
 test.describe('Org Chart diagram', () => {
   test('page loads with org chart toolbar', async ({ page }) => {
     await page.goto('/diagrams/organisation');
-    await expect(page.getByText('Organisation Chart')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Organisational Chart')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Process count')).toBeVisible({ timeout: 10_000 });
   });
 

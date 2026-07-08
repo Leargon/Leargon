@@ -6,6 +6,7 @@ import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
+import org.leargon.backend.domain.FlowNodeType
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.ProcessVersion
@@ -19,6 +20,10 @@ import org.leargon.backend.model.FieldChange
 import org.leargon.backend.model.ProcessResponse
 import org.leargon.backend.model.ProcessTreeResponse
 import org.leargon.backend.model.ProcessVersionResponse
+import org.leargon.backend.model.UpdateProcessValueStreamRequest
+import org.leargon.backend.model.ValueStreamActivityBreakdown
+import org.leargon.backend.model.ValueStreamStep
+import org.leargon.backend.model.ValueStreamSummaryResponse
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
@@ -314,6 +319,143 @@ open class ProcessService(
         createProcessVersion(process, currentUser, "UPDATE", "Updated security measures")
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun updateProcessValueStream(
+        key: String,
+        request: UpdateProcessValueStreamRequest,
+        currentUser: User
+    ): ProcessResponse {
+        var process = getProcessByKey(key)
+        // All VSM fields belong to the LEAN section, so a single field check gates them all.
+        requireFieldEdit(process, currentUser, "valueStreamType")
+
+        requireNonNegative(request.cycleTimeMinutes, "cycleTimeMinutes")
+        requireNonNegative(request.waitTimeMinutes, "waitTimeMinutes")
+        requireNonNegative(request.changeoverTimeMinutes, "changeoverTimeMinutes")
+        request.frequencyCount?.let { if (it < 0) throw IllegalArgumentException("frequencyCount must be >= 0") }
+        requirePercent(request.firstPassYield, "firstPassYield")
+        requirePercent(request.completionRate, "completionRate")
+        validateTranslations(request.activityJustification, false)
+
+        process.valueStreamType = request.valueStreamType?.value
+        process.cycleTimeMinutes = request.cycleTimeMinutes
+        process.waitTimeMinutes = request.waitTimeMinutes
+        process.changeoverTimeMinutes = request.changeoverTimeMinutes
+        process.frequencyCount = request.frequencyCount
+        process.frequencyPeriod = request.frequencyPeriod?.value
+        process.activityType = request.activityType?.value
+        process.activityJustification =
+            request.activityJustification?.map { LocalizedText(it.locale, it.text) }?.toMutableList()
+        process.firstPassYield = request.firstPassYield
+        process.completionRate = request.completionRate
+        process.updatedBy = currentUser
+        process = processRepository.update(process)
+        createProcessVersion(process, currentUser, "UPDATE", "Updated value stream metadata")
+        process = getProcessByKey(process.key)
+        return processMapper.toProcessResponse(process)
+    }
+
+    @ReadOnly
+    open fun computeValueStreamSummary(key: String): ValueStreamSummaryResponse {
+        val root = getProcessByKey(key)
+        val flowRepo = this.processFlowNodeRepository
+        val procRepo = this.processRepository
+
+        // A process "has a BPMN value stream" when its flow contains task nodes that call sub-processes.
+        fun linkedTaskKeys(processKey: String): List<String> =
+            flowRepo
+                .findByProcessKeyOrderByPosition(processKey)
+                .filter { it.nodeType == FlowNodeType.TASK && !it.linkedProcessKey.isNullOrBlank() }
+                .mapNotNull { it.linkedProcessKey }
+
+        // A process counts as a measured value-stream step once any VSM metric is recorded on it.
+        fun hasVsmMetrics(p: Process): Boolean = p.cycleTimeMinutes != null || p.waitTimeMinutes != null || !p.activityType.isNullOrBlank()
+
+        // Derive the ordered steps by walking the BPMN flow: each call-activity that already carries VSM
+        // metrics is treated as a measured step (we stop there); otherwise, if it has its own flow, we
+        // drill into it; failing both, it is a (zero-valued) leaf step.
+        fun collectViaFlow(
+            p: Process,
+            visited: MutableSet<String>
+        ): List<Process> {
+            val linked = linkedTaskKeys(p.key)
+            if (linked.isEmpty()) return listOf(p)
+            val result = mutableListOf<Process>()
+            for (linkedKey in linked) {
+                if (!visited.add(linkedKey)) continue
+                val child = procRepo.findByKey(linkedKey).orElse(null) ?: continue
+                if (hasVsmMetrics(child)) {
+                    result.add(child)
+                } else {
+                    result.addAll(collectViaFlow(child, visited))
+                }
+            }
+            return result
+        }
+
+        // Fallback: the parent-child sub-process subtree (this process + all descendants).
+        fun collectViaChildren(p: Process): List<Process> {
+            val steps = mutableListOf<Process>()
+
+            fun collect(x: Process) {
+                steps.add(x)
+                x.children.forEach { collect(it) }
+            }
+            collect(p)
+            return steps
+        }
+
+        val derivedFromDiagram = linkedTaskKeys(root.key).isNotEmpty()
+        val steps =
+            if (derivedFromDiagram) {
+                collectViaFlow(root, mutableSetOf(root.key))
+            } else {
+                collectViaChildren(root)
+            }
+
+        val totalLead = steps.sumOf { (it.cycleTimeMinutes ?: 0.0) + (it.waitTimeMinutes ?: 0.0) }
+        val totalValueAdding = steps.filter { it.activityType == "VALUE_ADDING" }.sumOf { it.cycleTimeMinutes ?: 0.0 }
+        val ratio = if (totalLead > 0.0) totalValueAdding / totalLead else null
+
+        val breakdown =
+            steps
+                .filter { it.activityType != null }
+                .groupBy { it.activityType!! }
+                .map { (type, group) ->
+                    ValueStreamActivityBreakdown(group.size, group.sumOf { it.cycleTimeMinutes ?: 0.0 })
+                        .activityType(ProcessMapper.toActivityType(type))
+                }
+
+        val stepDtos =
+            steps.map { p ->
+                ValueStreamStep(p.key, p.getName("en"))
+                    .cycleTimeMinutes(p.cycleTimeMinutes)
+                    .waitTimeMinutes(p.waitTimeMinutes)
+                    .activityType(ProcessMapper.toActivityType(p.activityType))
+                    .firstPassYield(p.firstPassYield)
+            }
+
+        return ValueStreamSummaryResponse(steps.size, totalLead, totalValueAdding, breakdown, stepDtos)
+            .derivedFromDiagram(derivedFromDiagram)
+            .valueAddingRatio(ratio)
+            .processEfficiencyPct(ratio?.let { it * 100.0 })
+    }
+
+    private fun requireNonNegative(
+        value: Double?,
+        field: String
+    ) {
+        if (value != null && value < 0.0) throw IllegalArgumentException("$field must be >= 0")
+    }
+
+    private fun requirePercent(
+        value: Double?,
+        field: String
+    ) {
+        if (value != null && (value < 0.0 || value > 100.0)) throw IllegalArgumentException("$field must be between 0 and 100")
     }
 
     @Retryable(attempts = "3", delay = "100ms")
@@ -880,7 +1022,9 @@ open class ProcessService(
                 "legalBasis" to process.legalBasis,
                 "processOwnerUsername" to process.processOwner?.username,
                 "names" to process.names.map { mapOf("locale" to it.locale, "text" to it.text) },
-                "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) }
+                "descriptions" to process.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) },
+                "valueStreamType" to process.valueStreamType,
+                "activityType" to process.activityType
             )
 
         val version = ProcessVersion()

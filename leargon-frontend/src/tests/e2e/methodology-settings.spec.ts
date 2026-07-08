@@ -17,7 +17,7 @@ async function switchToArchitectureView(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
 }
 
-const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES'];
+const ALL_METHODOLOGY_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'GDPR', 'DDD', 'BCM', 'TEAM_TOPOLOGIES', 'LEAN'];
 const GOVERNANCE_KEYS = ['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES'];
 
 function backendUrl(): string {
@@ -65,7 +65,7 @@ test.describe('Methodology Settings', () => {
     await resetMethodologies();
   });
 
-  test('settings page shows all 6 methodology cards enabled by default', async ({ page }) => {
+  test('settings page shows all 7 methodology cards enabled by default', async ({ page }) => {
     await page.goto('/settings/methodologies');
     await page.waitForLoadState('networkidle');
 
@@ -76,11 +76,12 @@ test.describe('Methodology Settings', () => {
     await expect(page.getByText('Domain-Driven Design').first()).toBeVisible();
     await expect(page.getByText('Business Capability Model').first()).toBeVisible();
     await expect(page.getByText('Team Topologies').first()).toBeVisible();
+    await expect(page.getByText('Lean / VSM').first()).toBeVisible();
 
-    // All 6 methodology switches should be present
+    // All 7 methodology switches should be present
     const switches = page.locator('input[type="checkbox"][role="checkbox"], input[type="checkbox"]');
     const count = await switches.count();
-    expect(count).toBeGreaterThanOrEqual(6);
+    expect(count).toBeGreaterThanOrEqual(7);
   });
 
   test('disabling DDD hides DDD nav items from sidebar', async ({ page }) => {

@@ -41,6 +41,10 @@ open class OrganisationalUnitMapper(
                         !unit.unitType.isNullOrBlank()
                     }
 
+                    fieldName == "teamTopologyType" -> {
+                        !unit.teamTopologyType.isNullOrBlank()
+                    }
+
                     fieldName == "businessOwner" -> {
                         unit.businessOwner != null
                     }
@@ -53,6 +57,11 @@ open class OrganisationalUnitMapper(
                     fieldName.startsWith("descriptions.") -> {
                         val locale = fieldName.removePrefix("descriptions.")
                         unit.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    }
+
+                    fieldName.startsWith("missionStatement.") -> {
+                        val locale = fieldName.removePrefix("missionStatement.")
+                        unit.missionStatement.any { it.locale == locale && !it.text.isNullOrBlank() }
                     }
 
                     fieldName.startsWith("classification.") -> {
@@ -79,10 +88,12 @@ open class OrganisationalUnitMapper(
             toZonedDateTime(unit.createdAt),
             toZonedDateTime(unit.updatedAt)
         ).unitType(unit.unitType)
+            .teamTopologyType(toTeamTopologyType(unit.teamTopologyType))
             .businessOwner(if (unit.businessOwner != null) UserMapper.toUserSummary(unit.businessOwner) else null)
             .businessSteward(if (unit.businessSteward != null) UserMapper.toUserSummary(unit.businessSteward) else null)
             .technicalCustodian(if (unit.technicalCustodian != null) UserMapper.toUserSummary(unit.technicalCustodian) else null)
             .descriptions(LocalizedTextMapper.toModel(unit.descriptions))
+            .missionStatement(LocalizedTextMapper.toModel(unit.missionStatement))
             .parents(toSummaryList(unit.parents))
             .children(toSummaryList(unit.children))
             .executingProcesses(toProcessSummaryList(executingProcesses))
@@ -131,5 +142,12 @@ open class OrganisationalUnitMapper(
 
         @JvmStatic
         fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
+
+        @JvmStatic
+        fun toTeamTopologyType(value: String?): org.leargon.backend.model.TeamTopologyType? {
+            if (value == null) return null
+            return org.leargon.backend.model.TeamTopologyType
+                .fromValue(value)
+        }
     }
 }

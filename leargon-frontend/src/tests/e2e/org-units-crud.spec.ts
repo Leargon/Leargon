@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createOrgUnit, uid, ADMIN, OWNER } from './api-setup';
+import { createOrgUnit, setTeamTopologyType, createTeamInteraction, uid, ADMIN } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -50,6 +50,40 @@ test.describe('Organisational Unit CRUD — Admin', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
 
     await expect(page).not.toHaveURL(new RegExp(`/organisation/${unitKey}`), { timeout: 10_000 });
+  });
+
+  test('shows the Team Interaction Topology view next to Org Chart', async ({ page }) => {
+    // Two stream-aligned teams with an interaction → at least two nodes + one edge in the topology.
+    const a = await createOrgUnit(uid('PW Topo A'));
+    const b = await createOrgUnit(uid('PW Topo B'));
+    await setTeamTopologyType(a.key as string, 'STREAM_ALIGNED');
+    await setTeamTopologyType(b.key as string, 'PLATFORM');
+    await createTeamInteraction(a.key as string, b.key as string, 'X_AS_A_SERVICE', 'ONGOING');
+
+    await page.goto('/organisation');
+    await page.waitForLoadState('networkidle');
+
+    // Switch to the Team Interaction Topology view (third toggle next to List / Org Chart).
+    await page.getByRole('button', { name: 'Team Interaction Topology' }).click();
+
+    // The diagram renders a node per team; the legend labels the team types.
+    await expect(page.getByText('Stream-aligned').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('.react-flow__node').first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('can edit the mission statement', async ({ page }) => {
+    const missionText = uid('Empower stream-aligned teams');
+
+    await page.goto(`/organisation/${unitKey}`);
+    await page.waitForLoadState('networkidle');
+
+    const missionHeader = page.getByText('Mission Statement', { exact: true }).locator('..');
+    await missionHeader.locator('button:has([data-testid="EditIcon"])').click();
+
+    await page.getByPlaceholder(/purpose and mission/).fill(missionText);
+    await missionHeader.locator('button:has([data-testid="CheckIcon"])').click();
+
+    await expect(page.getByText(missionText)).toBeVisible({ timeout: 10_000 });
   });
 });
 

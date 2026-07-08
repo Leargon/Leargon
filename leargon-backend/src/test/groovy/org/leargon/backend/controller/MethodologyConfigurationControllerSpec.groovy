@@ -87,9 +87,9 @@ class MethodologyConfigurationControllerSpec extends Specification {
         then:
         response.status() == HttpStatus.OK
         def body = response.body()
-        body.size() == 6
+        body.size() == 7
         body.every { it.enabled == true }
-        body*.key.containsAll(["DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES"])
+        body*.key.containsAll(["DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES", "LEAN"])
     }
 
     def "GET /administration/methodology-configurations returns 200 for non-admin"() {
@@ -104,7 +104,7 @@ class MethodologyConfigurationControllerSpec extends Specification {
 
         then:
         response.status() == HttpStatus.OK
-        response.body().size() == 6
+        response.body().size() == 7
     }
 
     def "GET /administration/methodology-configurations returns 401 without auth"() {

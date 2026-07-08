@@ -5,18 +5,26 @@ import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.model.BottleneckTeamItem
+import org.leargon.backend.model.CognitiveLoadItem
 import org.leargon.backend.model.ConwaysLawAlignment
 import org.leargon.backend.model.ConwaysLawCell
 import org.leargon.backend.model.ConwaysLawMisalignmentItem
 import org.leargon.backend.model.OrgUnitProcessLoadItem
 import org.leargon.backend.model.SplitDomainItem
 import org.leargon.backend.model.TeamInsightsResponse
+import org.leargon.backend.model.TeamInteractionAntiPatternItem
+import org.leargon.backend.model.TeamInteractionMode
+import org.leargon.backend.model.TeamTopologyEdge
+import org.leargon.backend.model.TeamTopologyGraph
+import org.leargon.backend.model.TeamTopologyNode
+import org.leargon.backend.model.TeamTopologyType
 import org.leargon.backend.model.UserOwnershipWorkloadItem
 import org.leargon.backend.model.WronglyPlacedTeamItem
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.repository.TeamInteractionRepository
 
 @Singleton
 open class AnalyticsService(
@@ -24,7 +32,11 @@ open class AnalyticsService(
     private val businessEntityRepository: BusinessEntityRepository,
     private val boundedContextRepository: BoundedContextRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
+    private val teamInteractionRepository: TeamInteractionRepository,
+    private val methodologyConfigurationService: MethodologyConfigurationService,
 ) {
+    private val cognitiveLoadThreshold = 7.0
+
     @Transactional
     open fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
         // Capture for AOP proxy safety
@@ -225,6 +237,102 @@ open class AnalyticsService(
                     )
                 }
             }
+        }
+
+        // 8. Team Topologies analytics (cognitive load, interaction anti-patterns, topology graph).
+        // Only computed when the TEAM_TOPOLOGIES methodology is enabled.
+        val teamTopologiesEnabled = "TEAM_TOPOLOGIES" !in methodologyConfigurationService.getDisabledMethodologies()
+
+        if (teamTopologiesEnabled) {
+            val processByKey = processes.associateBy { it.key }
+
+            fun rootKey(start: org.leargon.backend.domain.Process): String {
+                var cur = start
+                var guard = 0
+                while (cur.parent != null && guard < 50) {
+                    cur = processByKey[cur.parent!!.key] ?: cur.parent!!
+                    guard++
+                }
+                return cur.key
+            }
+
+            // Cognitive load per team = # owned bounded contexts + # distinct capabilities executed + # distinct value streams.
+            val cognitiveLoad =
+                allOrgUnits
+                    .map { unit ->
+                        val procs = processesByOrgUnit[unit.key] ?: emptyList()
+                        val bcCount = allBoundedContexts.count { it.owningUnit?.key == unit.key }
+                        val capCount = procs.flatMap { p -> p.capabilities.map { it.key } }.toSet().size
+                        val vsCount = procs.map { rootKey(it) }.toSet().size
+                        val score = (bcCount + capCount + vsCount).toDouble()
+                        CognitiveLoadItem(
+                            unit.key,
+                            nameOf(unit.names, unit.key),
+                            score,
+                            bcCount,
+                            capCount,
+                            vsCount,
+                            cognitiveLoadThreshold,
+                            score > cognitiveLoadThreshold
+                        )
+                    }.sortedByDescending { it.score }
+            val scoreByUnitKey = cognitiveLoad.associate { it.orgUnitKey to it.score }
+
+            val interactions = this.teamInteractionRepository.findAll()
+
+            fun isStreamAligned(unit: org.leargon.backend.domain.OrganisationalUnit?): Boolean = unit?.teamTopologyType == "STREAM_ALIGNED"
+
+            fun isAntiPattern(i: org.leargon.backend.domain.TeamInteraction): Boolean =
+                isStreamAligned(i.sourceUnit) &&
+                    isStreamAligned(i.targetUnit) &&
+                    i.mode == "COLLABORATION" &&
+                    i.duration == "ONGOING"
+
+            val teamInteractionAntiPatterns =
+                interactions.filter { isAntiPattern(it) }.map { i ->
+                    val s = i.sourceUnit!!
+                    val t = i.targetUnit!!
+                    TeamInteractionAntiPatternItem(
+                        i.id!!,
+                        s.key,
+                        nameOf(s.names, s.key),
+                        t.key,
+                        nameOf(t.names, t.key),
+                        "Two stream-aligned teams in an ongoing collaboration — expected to converge to X-as-a-Service"
+                    )
+                }
+
+            // Topology graph: nodes = teams with a type or participating in an interaction; edges = interactions.
+            val interactionUnitKeys = interactions.flatMap { listOf(it.sourceUnit?.key, it.targetUnit?.key) }.filterNotNull().toSet()
+            val nodes =
+                allOrgUnits
+                    .filter { it.teamTopologyType != null || it.key in interactionUnitKeys }
+                    .map { unit ->
+                        TeamTopologyNode(unit.key, nameOf(unit.names, unit.key))
+                            .teamTopologyType(unit.teamTopologyType?.let { TeamTopologyType.fromValue(it) })
+                            .cognitiveLoadScore(scoreByUnitKey[unit.key])
+                    }
+            val edges =
+                interactions.map { i ->
+                    TeamTopologyEdge(i.id!!, i.sourceUnit!!.key, i.targetUnit!!.key, TeamInteractionMode.fromValue(i.mode))
+                        .healthScore(i.healthScore)
+                        .antiPattern(isAntiPattern(i))
+                }
+
+            val response =
+                TeamInsightsResponse(
+                    userOwnershipWorkload,
+                    orgUnitProcessLoad,
+                    bottleneckTeams,
+                    wronglyPlacedTeams,
+                    splitDomains,
+                    conwaysLawAlignment
+                )
+            response.conwaysLawMisalignments = conwaysLawMisalignments
+            response.cognitiveLoad = cognitiveLoad
+            response.teamInteractionAntiPatterns = teamInteractionAntiPatterns
+            response.teamTopologyGraph = TeamTopologyGraph(nodes, edges)
+            return response
         }
 
         val response =

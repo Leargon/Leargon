@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 064-add-org-unit-mission-statement
+      author: leargon
+      comment: Add localised mission statement (team purpose) to organisational units
+      changes:
+        - addColumn:
+            tableName: organisational_units
+            columns:
+              - column:
+                  name: mission_statement
+                  type: LONGTEXT
+                  constraints:
+                    nullable: true

@@ -649,4 +649,97 @@ describe('Process E2E', () => {
     expect(res.data.securityMeasures ?? null).toBeNull();
   });
 
+  // =====================
+  // VALUE STREAM MAPPING (VSM)
+  // =====================
+
+  it('should update value-stream metadata', async () => {
+    const proc = await createProcess(client, 'FE VSM Step');
+
+    const res = await client.put<ProcessResponse>(`/processes/${proc.key}/value-stream`, {
+      valueStreamType: 'OPERATIONAL',
+      cycleTimeMinutes: 12,
+      waitTimeMinutes: 4,
+      activityType: 'VALUE_ADDING',
+      activityJustification: [{ locale: 'en', text: 'Transforms the order' }],
+      firstPassYield: 90,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.valueStreamType).toBe('OPERATIONAL');
+    expect(res.data.cycleTimeMinutes).toBe(12);
+    expect(res.data.activityType).toBe('VALUE_ADDING');
+    expect(lbl(res.data.activityJustification)).toBe('Transforms the order');
+  });
+
+  it('should reject out-of-range first pass yield', async () => {
+    const proc = await createProcess(client, 'FE VSM Bad FPY');
+    const res = await client.put(`/processes/${proc.key}/value-stream`, { firstPassYield: 150 });
+    expect(res.status).toBe(400);
+  });
+
+  it('should compute a value-stream summary over a parent + child subtree', async () => {
+    const parent = await createProcess(client, 'FE VSM Parent');
+    const child = await createProcess(client, 'FE VSM Child');
+    await client.put(`/processes/${child.key}/parent`, { parentKey: parent.key });
+
+    await client.put(`/processes/${parent.key}/value-stream`, {
+      cycleTimeMinutes: 10, waitTimeMinutes: 5, activityType: 'VALUE_ADDING',
+    });
+    await client.put(`/processes/${child.key}/value-stream`, {
+      cycleTimeMinutes: 20, waitTimeMinutes: 10, activityType: 'WASTE',
+    });
+
+    const res = await client.get(`/processes/${parent.key}/value-stream-summary`);
+    expect(res.status).toBe(200);
+    expect(res.data.derivedFromDiagram).toBe(false);
+    expect(res.data.stepCount).toBe(2);
+    expect(res.data.totalLeadTimeMinutes).toBe(45);
+    expect(res.data.totalValueAddingMinutes).toBe(10);
+    expect(res.data.activityBreakdown.find((b: { activityType: string }) => b.activityType === 'WASTE').stepCount).toBe(1);
+  });
+
+  it('should derive the value-stream sequence from the BPMN flow when the process has one', async () => {
+    const parent = await createProcess(client, 'FE VSM Flow Parent');
+    // A and B are standalone (not children); they are only linked via the parent's diagram.
+    const a = await createProcess(client, 'FE VSM Flow A');
+    const b = await createProcess(client, 'FE VSM Flow B');
+    await client.put(`/processes/${a.key}/value-stream`, { cycleTimeMinutes: 10, waitTimeMinutes: 5, activityType: 'VALUE_ADDING' });
+    await client.put(`/processes/${b.key}/value-stream`, { cycleTimeMinutes: 20, waitTimeMinutes: 10, activityType: 'WASTE' });
+
+    await client.put(`/processes/${parent.key}/flow`, {
+      nodes: [
+        { id: 'n-start', position: 0, nodeType: 'START_EVENT' },
+        { id: 'n-a', position: 1, nodeType: 'TASK', linkedProcessKey: a.key },
+        { id: 'n-b', position: 2, nodeType: 'TASK', linkedProcessKey: b.key },
+        { id: 'n-end', position: 3, nodeType: 'END_EVENT' },
+      ],
+      tracks: [],
+    });
+
+    const res = await client.get(`/processes/${parent.key}/value-stream-summary`);
+    expect(res.status).toBe(200);
+    expect(res.data.derivedFromDiagram).toBe(true);
+    expect(res.data.stepCount).toBe(2);
+    expect(res.data.totalLeadTimeMinutes).toBe(45);
+    expect(res.data.totalValueAddingMinutes).toBe(10);
+    const stepKeys = res.data.steps.map((s: { key: string }) => s.key).sort();
+    expect(stepKeys).toEqual([a.key, b.key].sort());
+  });
+
+  it('should reject value-stream update by an unrelated user', async () => {
+    const proc = await createProcess(client, 'FE VSM Protected');
+    const otherAuth = await signup(createClient(getBackendUrl()), {
+      email: 'fe-vsm-outsider@example.com',
+      username: 'fevsmoutsider',
+      password: 'password123',
+      firstName: 'VSM',
+      lastName: 'Outsider',
+    });
+    const otherClient = createClient(getBackendUrl());
+    withToken(otherClient, otherAuth.accessToken);
+
+    const res = await otherClient.put(`/processes/${proc.key}/value-stream`, { cycleTimeMinutes: 1 });
+    expect(res.status).toBe(403);
+  });
+
 });

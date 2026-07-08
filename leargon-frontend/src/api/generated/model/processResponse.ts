@@ -16,12 +16,14 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { ActivityType } from './activityType.ts';
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse.ts';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { CapabilitySummaryResponse } from './capabilitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
+import type { FrequencyPeriod } from './frequencyPeriod.ts';
 import type { ItSystemSummaryResponse } from './itSystemSummaryResponse.ts';
 import type { LegalBasis } from './legalBasis.ts';
 import type { LocalizedText } from './localizedText.ts';
@@ -30,6 +32,7 @@ import type { ProcessSummaryResponse } from './processSummaryResponse.ts';
 import type { ProcessType } from './processType.ts';
 import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryResponse.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
+import type { ValueStreamType } from './valueStreamType.ts';
 
 export interface ProcessResponse {
   /** Process key (slug of code or default locale name) */
@@ -108,6 +111,52 @@ export interface ProcessResponse {
      * @nullable
      */
   derivedProcessingCountries?: string[] | null;
+  valueStreamType?: ValueStreamType | null;
+  /**
+     * VSM: value-adding processing time (CT) in minutes
+     * @minimum 0
+     * @nullable
+     */
+  cycleTimeMinutes?: number | null;
+  /**
+     * VSM: wait / queue time (WT) in minutes
+     * @minimum 0
+     * @nullable
+     */
+  waitTimeMinutes?: number | null;
+  /**
+     * VSM: changeover / setup time (CO) in minutes
+     * @minimum 0
+     * @nullable
+     */
+  changeoverTimeMinutes?: number | null;
+  /**
+     * VSM: how many times the step runs per frequency period
+     * @minimum 0
+     * @nullable
+     */
+  frequencyCount?: number | null;
+  frequencyPeriod?: FrequencyPeriod | null;
+  activityType?: ActivityType | null;
+  /**
+     * VSM: localised justification for the activity classification (the Lean value statement)
+     * @nullable
+     */
+  activityJustification?: LocalizedText[] | null;
+  /**
+     * VSM: first pass yield (FPY) as a percentage 0–100
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  firstPassYield?: number | null;
+  /**
+     * VSM: completion / accuracy rate as a percentage 0–100
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  completionRate?: number | null;
   /**
      * List of mandatory fields that are currently missing values
      * @nullable

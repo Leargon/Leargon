@@ -1,5 +1,6 @@
 package org.leargon.backend.controller
 
+import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
@@ -42,6 +43,7 @@ class AnalyticsControllerSpec extends Specification {
     @Inject BusinessDomainVersionRepository businessDomainVersionRepository
     @Inject BoundedContextRepository boundedContextRepository
     @Inject SupportedLocaleRepository localeRepository
+    @Inject org.leargon.backend.repository.TeamInteractionRepository teamInteractionRepository
 
     def setup() {
         if (localeRepository.count() == 0) {
@@ -51,6 +53,7 @@ class AnalyticsControllerSpec extends Specification {
     }
 
     def cleanup() {
+        teamInteractionRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.deleteAll()
         organisationalUnitRepository.deleteAll()
@@ -300,5 +303,112 @@ class AnalyticsControllerSpec extends Specification {
         response.status == HttpStatus.OK
         def bottleneck = response.body().bottleneckTeams
         bottleneck.every { it.orgUnitKey != unitKey }
+    }
+
+    // ─── Team Topologies: cognitive load & anti-patterns ────────────────────────
+
+    private void setTeamType(String adminToken, String unitKey, String type) {
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/organisational-units/${unitKey}/team-topology-type", [teamTopologyType: type])
+                .bearerAuth(adminToken), Map)
+    }
+
+    private void createInteraction(String adminToken, String source, String target, String mode, String duration) {
+        client.toBlocking().exchange(
+            HttpRequest.POST("/team-interactions",
+                [sourceUnitKey: source, targetUnitKey: target, mode: mode, duration: duration])
+                .bearerAuth(adminToken), Map)
+    }
+
+    def "cognitiveLoad flags a team whose value-stream count exceeds the threshold"() {
+        given:
+        def adminToken = createAdminToken()
+        def userData = createUserWithToken("cog@analytics.com", "coguser")
+        def token = userData.token
+        def unitKey = createOrgUnit(adminToken, "Cognitive Overload Team")
+
+        and: "8 distinct value streams (root processes) executed by the unit — over the threshold of 7"
+        (1..8).each { i ->
+            def procKey = createProcess(token, "Cog Process ${i}")
+            assignOrgUnit(token, procKey, unitKey)
+        }
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/analytics/team-insights").bearerAuth(token), Map)
+
+        then:
+        response.status == HttpStatus.OK
+        def item = response.body().cognitiveLoad.find { it.orgUnitKey == unitKey }
+        item != null
+        item.valueStreamCount == 8
+        item.score == 8.0
+        item.warning == true
+    }
+
+    def "teamInteractionAntiPatterns flags two stream-aligned teams in ongoing collaboration but not x-as-a-service"() {
+        given:
+        def adminToken = createAdminToken()
+        def token = createUserWithToken("ap@analytics.com", "apuser").token
+        def a = createOrgUnit(adminToken, "AP Stream A")
+        def b = createOrgUnit(adminToken, "AP Stream B")
+        def c = createOrgUnit(adminToken, "AP Platform C")
+        setTeamType(adminToken, a, "STREAM_ALIGNED")
+        setTeamType(adminToken, b, "STREAM_ALIGNED")
+        setTeamType(adminToken, c, "STREAM_ALIGNED")
+
+        and: "an anti-pattern interaction (ongoing collaboration between two stream-aligned teams)"
+        createInteraction(adminToken, a, b, "COLLABORATION", "ONGOING")
+        and: "a healthy X-as-a-Service interaction"
+        createInteraction(adminToken, a, c, "X_AS_A_SERVICE", "ONGOING")
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/analytics/team-insights").bearerAuth(token), Map)
+
+        then:
+        response.status == HttpStatus.OK
+        def antiPatterns = response.body().teamInteractionAntiPatterns
+        antiPatterns.size() == 1
+        antiPatterns[0].sourceUnitKey == a
+        antiPatterns[0].targetUnitKey == b
+
+        and: "the topology graph includes the teams and edges"
+        def graph = response.body().teamTopologyGraph
+        graph != null
+        graph.nodes.find { it.orgUnitKey == a } != null
+        graph.edges.find { it.antiPattern == true } != null
+    }
+
+    def "team topology analytics are omitted when TEAM_TOPOLOGIES is disabled"() {
+        given:
+        def adminToken = createAdminToken()
+        def a = createOrgUnit(adminToken, "Disabled A")
+        def b = createOrgUnit(adminToken, "Disabled B")
+        setTeamType(adminToken, a, "STREAM_ALIGNED")
+        setTeamType(adminToken, b, "STREAM_ALIGNED")
+        createInteraction(adminToken, a, b, "COLLABORATION", "ONGOING")
+
+        and: "TEAM_TOPOLOGIES is disabled"
+        client.toBlocking().exchange(
+            HttpRequest.PUT("/administration/methodology-configurations", [
+                [key: "DATA_GOVERNANCE", enabled: true],
+                [key: "PROCESS_GOVERNANCE", enabled: true],
+                [key: "GDPR", enabled: true],
+                [key: "DDD", enabled: true],
+                [key: "BCM", enabled: true],
+                [key: "TEAM_TOPOLOGIES", enabled: false],
+                [key: "LEAN", enabled: true],
+            ]).bearerAuth(adminToken), Argument.listOf(Map))
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/analytics/team-insights").bearerAuth(adminToken), Map)
+
+        then:
+        response.status == HttpStatus.OK
+        (response.body().cognitiveLoad == null || response.body().cognitiveLoad == [])
+        (response.body().teamInteractionAntiPatterns == null || response.body().teamInteractionAntiPatterns == [])
+        response.body().teamTopologyGraph == null
     }
 }

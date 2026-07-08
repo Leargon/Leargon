@@ -20,6 +20,8 @@ import type { UserOwnershipWorkloadItem } from '../api/generated/model/userOwner
 import type { OrgUnitProcessLoadItem } from '../api/generated/model/orgUnitProcessLoadItem';
 import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlignment';
 import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
+import type { CognitiveLoadItem } from '../api/generated/model/cognitiveLoadItem';
+import type { TeamInteractionAntiPatternItem } from '../api/generated/model/teamInteractionAntiPatternItem';
 import InsightCard from '../components/insights/InsightCard';
 import InsightGroup from '../components/insights/InsightGroup';
 import {
@@ -38,6 +40,8 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   splitDomains: <DomainVerification />,
   conwaysLawAlignment: <SyncAlt />,
   conwaysLawMisalignments: <Warning />,
+  cognitiveLoad: <Groups />,
+  teamInteractionAntiPatterns: <Warning />,
 };
 
 // ─── Methodology group definitions ───────────────────────────────────────────
@@ -414,6 +418,89 @@ const ConwayMisalignmentsTable: React.FC<{ data: ConwaysLawMisalignmentItem[] }>
   );
 };
 
+// ─── 8. Cognitive Load ────────────────────────────────────────────────────────
+
+const CognitiveLoadTable: React.FC<{ data: CognitiveLoadItem[] }> = ({ data }) => {
+  const { t } = useTranslation();
+  // Insights is problem-focused: only surface teams over the cognitive-load threshold.
+  const overloaded = data.filter((d) => d.warning);
+  if (overloaded.length === 0) return (
+    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CheckCircle color="success" fontSize="small" />
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noOverloadedTeams')}</Typography>
+    </Box>
+  );
+  const max = Math.max(...overloaded.map((d) => d.score), 1);
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colOrgUnit')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colBoundedContexts')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colCapabilities')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colValueStreams')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colScore')}</TableCell>
+            <TableCell sx={{ fontWeight: 600, minWidth: 120 }}>{t('analytics.colLoad')}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {overloaded.map((row) => (
+            <TableRow key={row.orgUnitKey} hover>
+              <TableCell>{row.orgUnitName}</TableCell>
+              <TableCell align="right">{row.boundedContextCount}</TableCell>
+              <TableCell align="right">{row.capabilityCount}</TableCell>
+              <TableCell align="right">{row.valueStreamCount}</TableCell>
+              <TableCell align="right"><strong>{row.score}</strong></TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LinearProgress variant="determinate" value={Math.round((row.score / max) * 100)}
+                    color={row.warning ? 'error' : 'primary'} sx={{ height: 6, borderRadius: 3, flex: 1 }} />
+                  {row.warning && <Chip icon={<Warning fontSize="small" />} label={t('analytics.overloaded')} size="small" color="error" />}
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+// ─── 9. Interaction Anti-Patterns ─────────────────────────────────────────────
+
+const AntiPatternTable: React.FC<{ data: TeamInteractionAntiPatternItem[] }> = ({ data }) => {
+  const { t } = useTranslation();
+  if (data.length === 0) return (
+    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CheckCircle color="success" fontSize="small" />
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noAntiPatterns')}</Typography>
+    </Box>
+  );
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colSourceTeam')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colTargetTeam')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colReason')}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map((row) => (
+            <TableRow key={row.interactionId} hover>
+              <TableCell>{row.sourceUnitName}</TableCell>
+              <TableCell>{row.targetUnitName}</TableCell>
+              <TableCell><Typography variant="body2" sx={{ color: 'text.secondary' }}>{row.reason}</Typography></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
 // ─── Section detail content map ───────────────────────────────────────────────
 
 function renderSectionContent(sectionId: string, data: NormalizedInsights): React.ReactNode {
@@ -432,6 +519,10 @@ function renderSectionContent(sectionId: string, data: NormalizedInsights): Reac
       return <ConwayMatrix data={data.conwaysLawAlignment} />;
     case 'conwaysLawMisalignments':
       return <ConwayMisalignmentsTable data={data.conwaysLawMisalignments} />;
+    case 'cognitiveLoad':
+      return <CognitiveLoadTable data={data.cognitiveLoad} />;
+    case 'teamInteractionAntiPatterns':
+      return <AntiPatternTable data={data.teamInteractionAntiPatterns} />;
     default:
       return null;
   }
@@ -462,6 +553,8 @@ const TeamInsightsPage: React.FC = () => {
           cells: raw.conwaysLawAlignment?.cells ?? [],
         },
         conwaysLawMisalignments: raw.conwaysLawMisalignments ?? [],
+        cognitiveLoad: raw.cognitiveLoad ?? [],
+        teamInteractionAntiPatterns: raw.teamInteractionAntiPatterns ?? [],
       }
     : null;
 

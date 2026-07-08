@@ -81,6 +81,22 @@ export const createOrgUnit = (
     as,
   );
 
+export const setTeamTopologyType = (
+  unitKey: string,
+  teamTopologyType: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/organisational-units/${unitKey}/team-topology-type`, 'PUT', { teamTopologyType }, as);
+
+export const createTeamInteraction = (
+  sourceUnitKey: string,
+  targetUnitKey: string,
+  mode: string,
+  duration: string,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch('/team-interactions', 'POST', { sourceUnitKey, targetUnitKey, mode, duration }, as);
+
 export const createServiceProvider = (
   name: string,
   processingCountries: string[] = ['DE'],

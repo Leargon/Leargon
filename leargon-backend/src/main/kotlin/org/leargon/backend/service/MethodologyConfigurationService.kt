@@ -12,7 +12,7 @@ import org.leargon.backend.repository.FieldConfigurationRepository
 open class MethodologyConfigurationService(
     private val fieldConfigurationRepository: FieldConfigurationRepository
 ) {
-    val allKeys = listOf("DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES")
+    val allKeys = listOf("DATA_GOVERNANCE", "PROCESS_GOVERNANCE", "GDPR", "DDD", "BCM", "TEAM_TOPOLOGIES", "LEAN")
 
     companion object {
         /** entityType for the per-area "verification enabled" flags (stored like the METHODOLOGY rows). */
@@ -88,15 +88,21 @@ open class MethodologyConfigurationService(
                         listOf(
                             "unitType",
                             "descriptions",
+                            "missionStatement",
                             "businessOwner",
                             "businessSteward",
                             "technicalCustodian",
-                            "section:DATA_GOVERNANCE"
+                            "section:DATA_GOVERNANCE",
+                            "section:TEAM_TOPOLOGIES"
                         ),
                 ),
             "BCM" to
                 mapOf(
                     "BUSINESS_PROCESS" to listOf("section:BCM"),
+                ),
+            "LEAN" to
+                mapOf(
+                    "BUSINESS_PROCESS" to listOf("section:LEAN"),
                 ),
         )
 

@@ -192,6 +192,8 @@ open class BusinessDomainService(
         visionStatement: List<org.leargon.backend.model.LocalizedText>?,
         currentUser: User
     ): BusinessDomain {
+        validateTranslations(visionStatement, false)
+
         var domain = getBusinessDomainByKey(domainKey)
         domain.visionStatement =
             visionStatement?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
