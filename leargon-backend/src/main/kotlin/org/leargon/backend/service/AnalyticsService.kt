@@ -13,6 +13,7 @@ import org.leargon.backend.model.OrgUnitProcessLoadItem
 import org.leargon.backend.model.SplitDomainItem
 import org.leargon.backend.model.TeamInsightsResponse
 import org.leargon.backend.model.TeamInteractionAntiPatternItem
+import org.leargon.backend.model.TeamInteractionHealthAlertItem
 import org.leargon.backend.model.TeamInteractionMode
 import org.leargon.backend.model.TeamTopologyEdge
 import org.leargon.backend.model.TeamTopologyGraph
@@ -22,6 +23,7 @@ import org.leargon.backend.model.UserOwnershipWorkloadItem
 import org.leargon.backend.model.WronglyPlacedTeamItem
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessEntityRepository
+import org.leargon.backend.repository.OrganisationSettingsRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.TeamInteractionRepository
@@ -33,9 +35,11 @@ open class AnalyticsService(
     private val boundedContextRepository: BoundedContextRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val teamInteractionRepository: TeamInteractionRepository,
+    private val organisationSettingsRepository: OrganisationSettingsRepository,
     private val methodologyConfigurationService: MethodologyConfigurationService,
 ) {
-    private val cognitiveLoadThreshold = 7.0
+    private val defaultCognitiveLoadThreshold = 7.0
+    private val defaultHealthThreshold = 2
 
     @Transactional
     open fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
@@ -244,6 +248,14 @@ open class AnalyticsService(
         val teamTopologiesEnabled = "TEAM_TOPOLOGIES" !in methodologyConfigurationService.getDisabledMethodologies()
 
         if (teamTopologiesEnabled) {
+            val settings =
+                this.organisationSettingsRepository.findFirst().orElse(
+                    org.leargon.backend.domain
+                        .OrganisationSettings()
+                )
+            val cogThreshold = settings.cognitiveLoadThreshold ?: defaultCognitiveLoadThreshold
+            val healthThreshold = settings.teamInteractionHealthThreshold ?: defaultHealthThreshold
+
             val processByKey = processes.associateBy { it.key }
 
             fun rootKey(start: org.leargon.backend.domain.Process): String {
@@ -272,8 +284,8 @@ open class AnalyticsService(
                             bcCount,
                             capCount,
                             vsCount,
-                            cognitiveLoadThreshold,
-                            score > cognitiveLoadThreshold
+                            cogThreshold,
+                            score > cogThreshold
                         )
                     }.sortedByDescending { it.score }
             val scoreByUnitKey = cognitiveLoad.associate { it.orgUnitKey to it.score }
@@ -302,6 +314,23 @@ open class AnalyticsService(
                     )
                 }
 
+            fun isHealthDegraded(i: org.leargon.backend.domain.TeamInteraction): Boolean =
+                i.healthScore != null && i.healthScore!! <= healthThreshold
+
+            val teamInteractionHealthAlerts =
+                interactions.filter { isHealthDegraded(it) }.map { i ->
+                    val s = i.sourceUnit!!
+                    val t = i.targetUnit!!
+                    TeamInteractionHealthAlertItem(
+                        i.id!!,
+                        s.key,
+                        nameOf(s.names, s.key),
+                        t.key,
+                        nameOf(t.names, t.key),
+                        healthThreshold
+                    ).healthScore(i.healthScore)
+                }
+
             // Topology graph: nodes = teams with a type or participating in an interaction; edges = interactions.
             val interactionUnitKeys = interactions.flatMap { listOf(it.sourceUnit?.key, it.targetUnit?.key) }.filterNotNull().toSet()
             val nodes =
@@ -317,6 +346,7 @@ open class AnalyticsService(
                     TeamTopologyEdge(i.id!!, i.sourceUnit!!.key, i.targetUnit!!.key, TeamInteractionMode.fromValue(i.mode))
                         .healthScore(i.healthScore)
                         .antiPattern(isAntiPattern(i))
+                        .healthWarning(isHealthDegraded(i))
                 }
 
             val response =
@@ -331,6 +361,7 @@ open class AnalyticsService(
             response.conwaysLawMisalignments = conwaysLawMisalignments
             response.cognitiveLoad = cognitiveLoad
             response.teamInteractionAntiPatterns = teamInteractionAntiPatterns
+            response.teamInteractionHealthAlerts = teamInteractionHealthAlerts
             response.teamTopologyGraph = TeamTopologyGraph(nodes, edges)
             return response
         }

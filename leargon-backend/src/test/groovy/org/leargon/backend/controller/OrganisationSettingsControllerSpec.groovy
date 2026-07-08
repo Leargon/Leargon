@@ -135,6 +135,27 @@ class OrganisationSettingsControllerSpec extends Specification {
         e.status == HttpStatus.FORBIDDEN
     }
 
+    def "PUT /administration/organisation-settings round-trips the Team Topologies thresholds"() {
+        given:
+        String adminToken = createAdminToken()
+
+        when:
+        def putResponse = client.toBlocking().exchange(
+            HttpRequest.PUT("/administration/organisation-settings",
+                [cognitiveLoadThreshold: 4.0, teamInteractionHealthThreshold: 3]).bearerAuth(adminToken), Map)
+
+        then:
+        putResponse.status == HttpStatus.OK
+        putResponse.body().cognitiveLoadThreshold == 4.0
+        putResponse.body().teamInteractionHealthThreshold == 3
+
+        and: "GET reflects them"
+        def getResponse = client.toBlocking().exchange(
+            HttpRequest.GET("/administration/organisation-settings").bearerAuth(adminToken), Map)
+        getResponse.body().cognitiveLoadThreshold == 4.0
+        getResponse.body().teamInteractionHealthThreshold == 3
+    }
+
     def "GET /administration/organisation-settings reflects PUT changes"() {
         given:
         String adminToken = createAdminToken()

@@ -173,6 +173,7 @@ export * from './supportedLocaleResponse.ts';
 export * from './teamInsightsResponse.ts';
 export * from './teamInteractionAntiPatternItem.ts';
 export * from './teamInteractionDuration.ts';
+export * from './teamInteractionHealthAlertItem.ts';
 export * from './teamInteractionMode.ts';
 export * from './teamInteractionResponse.ts';
 export * from './teamTopologyEdge.ts';

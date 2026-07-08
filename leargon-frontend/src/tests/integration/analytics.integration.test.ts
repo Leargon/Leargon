@@ -137,6 +137,43 @@ describe('Analytics API', () => {
     expect(res.status).toBe(400);
   });
 
+  it('round-trips the Team Topologies thresholds in organisation settings', async () => {
+    const res = await adminClient.put('/administration/organisation-settings', {
+      cognitiveLoadThreshold: 3.5,
+      teamInteractionHealthThreshold: 3,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data.cognitiveLoadThreshold).toBe(3.5);
+    expect(res.data.teamInteractionHealthThreshold).toBe(3);
+
+    // reset so it doesn't affect other analytics assertions
+    await adminClient.put('/administration/organisation-settings', {
+      cognitiveLoadThreshold: null,
+      teamInteractionHealthThreshold: null,
+    });
+  });
+
+  it('flags a low-health interaction in teamInteractionHealthAlerts with a healthWarning edge', async () => {
+    const a = await createOrgUnit(adminClient, 'TT FE Health A');
+    const b = await createOrgUnit(adminClient, 'TT FE Health B');
+    await adminClient.post('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: b.key, mode: 'X_AS_A_SERVICE', duration: 'ONGOING', healthScore: 1,
+    });
+    await adminClient.put('/administration/organisation-settings', { teamInteractionHealthThreshold: 2 });
+
+    const res = await adminClient.get('/analytics/team-insights');
+    expect(res.status).toBe(200);
+    const alerts: Array<{ sourceUnitKey: string; targetUnitKey: string; healthScore: number }> =
+      res.data.teamInteractionHealthAlerts ?? [];
+    expect(alerts.some((x) => x.sourceUnitKey === a.key && x.targetUnitKey === b.key && x.healthScore === 1)).toBe(true);
+    const edge = res.data.teamTopologyGraph.edges.find(
+      (e: { sourceUnitKey: string; targetUnitKey: string }) => e.sourceUnitKey === a.key && e.targetUnitKey === b.key,
+    );
+    expect(edge.healthWarning).toBe(true);
+
+    await adminClient.put('/administration/organisation-settings', { teamInteractionHealthThreshold: null });
+  });
+
   it('flags an ongoing collaboration between two stream-aligned teams as an anti-pattern', async () => {
     const a = await createOrgUnit(adminClient, 'TT FE Stream A');
     const b = await createOrgUnit(adminClient, 'TT FE Stream B');

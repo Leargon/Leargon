@@ -370,6 +370,11 @@ const de = {
     "overloaded": "Überlastet",
     "noAntiPatterns": "Keine Interaktions-Anti-Patterns erkannt.",
     "noOverloadedTeams": "Keine Teams über der kognitiven Lastschwelle.",
+    "interactionHealth": "Interaktionszustand",
+    "interactionHealthHint": "Team-Interaktionen, deren Zustandswert auf oder unter dem konfigurierten Schwellenwert liegt",
+    "colHealth": "Zustand",
+    "colThreshold": "Schwellenwert",
+    "noHealthAlerts": "Keine Team-Interaktionen unter dem Zustands-Schwellenwert.",
     "noTopology": "Noch keine Team-Interaktionen vorhanden."
   },
   "teamTopology": {
@@ -384,6 +389,7 @@ const de = {
     "health": "Zustand",
     "load": "Kognitive Last",
     "antiPattern": "Anti-Pattern",
+    "lowHealth": "Schlechter Zustand",
     "typeStreamAligned": "Stream-orientiert",
     "typePlatform": "Plattform",
     "typeEnabling": "Befähigend",

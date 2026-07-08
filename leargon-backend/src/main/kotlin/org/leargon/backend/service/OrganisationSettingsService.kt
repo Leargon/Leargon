@@ -23,6 +23,8 @@ open class OrganisationSettingsService(
         settings.euRepresentative = request.euRepresentative
         settings.dataProtectionOfficer = request.dataProtectionOfficer
         settings.homeCountry = request.homeCountry
+        settings.cognitiveLoadThreshold = request.cognitiveLoadThreshold
+        settings.teamInteractionHealthThreshold = request.teamInteractionHealthThreshold
         val saved = organisationSettingsRepository.save(settings)
         return toResponse(saved)
     }
@@ -32,4 +34,6 @@ open class OrganisationSettingsService(
             .euRepresentative(settings.euRepresentative)
             .dataProtectionOfficer(settings.dataProtectionOfficer)
             .homeCountry(settings.homeCountry)
+            .cognitiveLoadThreshold(settings.cognitiveLoadThreshold)
+            .teamInteractionHealthThreshold(settings.teamInteractionHealthThreshold)
 }

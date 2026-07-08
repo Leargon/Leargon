@@ -135,3 +135,5 @@ databaseChangeLog:
       file: db/changelog/changes/066-add-org-unit-team-topology.yaml
   - include:
       file: db/changelog/changes/067-create-team-interactions-table.yaml
+  - include:
+      file: db/changelog/changes/068-add-team-topology-thresholds.yaml

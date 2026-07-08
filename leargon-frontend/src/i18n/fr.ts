@@ -370,6 +370,11 @@ const fr = {
     "overloaded": "Surchargée",
     "noAntiPatterns": "Aucun anti-modèle d’interaction détecté.",
     "noOverloadedTeams": "Aucune équipe au-dessus du seuil de charge cognitive.",
+    "interactionHealth": "Santé des interactions",
+    "interactionHealthHint": "Interactions d’équipe dont le score de santé est inférieur ou égal au seuil configuré",
+    "colHealth": "Santé",
+    "colThreshold": "Seuil",
+    "noHealthAlerts": "Aucune interaction d’équipe sous le seuil de santé.",
     "noTopology": "Aucune interaction d’équipe à afficher pour le moment."
   },
   "teamTopology": {
@@ -384,6 +389,7 @@ const fr = {
     "health": "Santé",
     "load": "Charge cognitive",
     "antiPattern": "Anti-modèle",
+    "lowHealth": "Faible santé",
     "typeStreamAligned": "Aligné sur le flux",
     "typePlatform": "Plateforme",
     "typeEnabling": "Facilitateur",

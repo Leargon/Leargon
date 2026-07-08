@@ -10198,6 +10198,12 @@ components:
           description: Detected Team Topologies interaction anti-patterns; null/empty when TEAM_TOPOLOGIES is disabled
           items:
             $ref: '#/components/schemas/TeamInteractionAntiPatternItem'
+        teamInteractionHealthAlerts:
+          type: array
+          nullable: true
+          description: Interactions whose health score is at or below the configured threshold; null/empty when TEAM_TOPOLOGIES is disabled
+          items:
+            $ref: '#/components/schemas/TeamInteractionHealthAlertItem'
         teamTopologyGraph:
           $ref: '#/components/schemas/TeamTopologyGraph'
           nullable: true
@@ -10242,6 +10248,28 @@ components:
           type: string
         reason:
           type: string
+    TeamInteractionHealthAlertItem:
+      type: object
+      required: [interactionId, sourceUnitKey, sourceUnitName, targetUnitKey, targetUnitName, threshold]
+      properties:
+        interactionId:
+          type: integer
+          format: int64
+        sourceUnitKey:
+          type: string
+        sourceUnitName:
+          type: string
+        targetUnitKey:
+          type: string
+        targetUnitName:
+          type: string
+        healthScore:
+          type: integer
+          nullable: true
+          description: Current health score (1 = poor, 5 = healthy)
+        threshold:
+          type: integer
+          description: Threshold at or below which the interaction is flagged
     TeamTopologyGraph:
       type: object
       required: [nodes, edges]
@@ -10287,6 +10315,10 @@ components:
         antiPattern:
           type: boolean
           nullable: true
+        healthWarning:
+          type: boolean
+          nullable: true
+          description: True when the interaction's health score is at or below the configured threshold
     ConwaysLawMisalignmentItem:
       type: object
       required: [processKey, processName, boundedContextKey, boundedContextName, executingUnitKey, executingUnitName, teamBoundedContextKey, teamBoundedContextName]
@@ -11258,6 +11290,18 @@ components:
           nullable: true
           description: ISO 3166-1 alpha-2 code of the country where the organisation is headquartered. Used to exclude domestic transfers from the processing register.
           example: CH
+        cognitiveLoadThreshold:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: Team Topologies cognitive-load score above which a team is flagged as overloaded (default 7 when unset)
+        teamInteractionHealthThreshold:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: Team interaction health score at or below which the interaction is flagged as degraded (default 2 when unset)
     OrganisationSettingsRequest:
       type: object
       properties:
@@ -11273,6 +11317,18 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code of the organisation's home country
+        cognitiveLoadThreshold:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: Cognitive-load threshold above which a team is flagged as overloaded
+        teamInteractionHealthThreshold:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: Health score at or below which a team interaction is flagged as degraded
     ProcessingRegisterEntryResponse:
       type: object
       required:

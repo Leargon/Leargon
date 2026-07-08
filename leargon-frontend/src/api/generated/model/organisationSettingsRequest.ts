@@ -33,4 +33,17 @@ export interface OrganisationSettingsRequest {
      * @nullable
      */
   homeCountry?: string | null;
+  /**
+     * Cognitive-load threshold above which a team is flagged as overloaded
+     * @minimum 0
+     * @nullable
+     */
+  cognitiveLoadThreshold?: number | null;
+  /**
+     * Health score at or below which a team interaction is flagged as degraded
+     * @minimum 1
+     * @maximum 5
+     * @nullable
+     */
+  teamInteractionHealthThreshold?: number | null;
 }

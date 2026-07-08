@@ -47,6 +47,7 @@ const MODE_LABEL_KEY: Record<string, string> = {
 };
 
 const ANTI_PATTERN_COLOR = '#e53935';
+const HEALTH_WARNING_COLOR = '#fb8c00';
 
 function buildGraph(
   graph: TeamTopologyGraph,
@@ -87,18 +88,20 @@ function buildGraph(
 
   const edges: Edge[] = graph.edges.map((e) => {
     const anti = e.antiPattern === true;
-    const stroke = anti ? ANTI_PATTERN_COLOR : (MODE_COLOR[e.mode] ?? '#888');
+    const health = e.healthWarning === true && !anti; // anti-pattern styling takes precedence
+    const stroke = anti ? ANTI_PATTERN_COLOR : health ? HEALTH_WARNING_COLOR : (MODE_COLOR[e.mode] ?? '#888');
+    const modeLabel = t(MODE_LABEL_KEY[e.mode] ?? e.mode);
     return {
       id: `ti-${e.interactionId}`,
       source: e.sourceUnitKey,
       target: e.targetUnitKey,
-      label: anti ? `⚠ ${t(MODE_LABEL_KEY[e.mode] ?? e.mode)}` : t(MODE_LABEL_KEY[e.mode] ?? e.mode),
+      label: anti ? `⚠ ${modeLabel}` : health ? `♥ ${modeLabel}` : modeLabel,
       type: 'default',
       animated: anti,
-      style: anti
+      style: anti || health
         ? { stroke, strokeWidth: 2.5, strokeDasharray: '6 3' }
         : { stroke, strokeWidth: 1.75 },
-      labelStyle: { fill: stroke, fontSize: 11, fontWeight: anti ? 700 : 500 },
+      labelStyle: { fill: stroke, fontSize: 11, fontWeight: anti || health ? 700 : 500 },
       markerEnd: { type: 'arrowclosed' as const, color: stroke },
     };
   });
@@ -164,6 +167,7 @@ const TeamTopologyDiagram: React.FC = () => {
           <LegendDot key={type} color={color} label={t(TEAM_TYPE_LABEL_KEY[type])} />
         ))}
         <LegendDot color={ANTI_PATTERN_COLOR} label={t('teamTopology.antiPattern')} />
+        <LegendDot color={HEALTH_WARNING_COLOR} label={t('teamTopology.lowHealth')} />
         <Typography variant="caption" sx={{ ml: 'auto', color: 'text.secondary' }}>
           {t('diagrams.clickToNavigate')}
         </Typography>

@@ -3,8 +3,8 @@ import { useRole, type Role } from './RoleContext';
 
 const ROLE_TO_VISIBLE_SECTIONS: Record<Role, ReadonlySet<string>> = {
   compliance:   new Set(),
-  architecture: new Set(['splitDomains', 'conwaysLawAlignment', 'conwaysLawMisalignments', 'bottleneckTeams', 'wronglyPlacedTeams', 'cognitiveLoad', 'teamInteractionAntiPatterns']),
-  operations:   new Set(['orgUnitProcessLoad', 'bottleneckTeams', 'wronglyPlacedTeams', 'cognitiveLoad', 'teamInteractionAntiPatterns']),
+  architecture: new Set(['splitDomains', 'conwaysLawAlignment', 'conwaysLawMisalignments', 'bottleneckTeams', 'wronglyPlacedTeams', 'cognitiveLoad', 'teamInteractionAntiPatterns', 'teamInteractionHealthAlerts']),
+  operations:   new Set(['orgUnitProcessLoad', 'bottleneckTeams', 'wronglyPlacedTeams', 'cognitiveLoad', 'teamInteractionAntiPatterns', 'teamInteractionHealthAlerts']),
   admin:        new Set(['userOwnershipWorkload']),
 };
 

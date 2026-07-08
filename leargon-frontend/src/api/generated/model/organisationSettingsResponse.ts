@@ -33,4 +33,17 @@ export interface OrganisationSettingsResponse {
      * @nullable
      */
   homeCountry?: string | null;
+  /**
+     * Team Topologies cognitive-load score above which a team is flagged as overloaded (default 7 when unset)
+     * @minimum 0
+     * @nullable
+     */
+  cognitiveLoadThreshold?: number | null;
+  /**
+     * Team interaction health score at or below which the interaction is flagged as degraded (default 2 when unset)
+     * @minimum 1
+     * @maximum 5
+     * @nullable
+     */
+  teamInteractionHealthThreshold?: number | null;
 }

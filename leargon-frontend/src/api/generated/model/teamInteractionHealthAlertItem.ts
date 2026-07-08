@@ -16,20 +16,18 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { TeamInteractionMode } from './teamInteractionMode.ts';
 
-export interface TeamTopologyEdge {
+export interface TeamInteractionHealthAlertItem {
   interactionId: number;
   sourceUnitKey: string;
+  sourceUnitName: string;
   targetUnitKey: string;
-  mode: TeamInteractionMode;
-  /** @nullable */
-  healthScore?: number | null;
-  /** @nullable */
-  antiPattern?: boolean | null;
+  targetUnitName: string;
   /**
-     * True when the interaction's health score is at or below the configured threshold
+     * Current health score (1 = poor, 5 = healthy)
      * @nullable
      */
-  healthWarning?: boolean | null;
+  healthScore?: number | null;
+  /** Threshold at or below which the interaction is flagged */
+  threshold: number;
 }
