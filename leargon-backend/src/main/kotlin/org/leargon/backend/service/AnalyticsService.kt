@@ -36,6 +36,7 @@ open class AnalyticsService(
     private val methodologyConfigurationService: MethodologyConfigurationService,
 ) {
     private val cognitiveLoadThreshold = 7.0
+
     @Transactional
     open fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
         // Capture for AOP proxy safety
@@ -244,6 +245,7 @@ open class AnalyticsService(
 
         if (teamTopologiesEnabled) {
             val processByKey = processes.associateBy { it.key }
+
             fun rootKey(start: org.leargon.backend.domain.Process): String {
                 var cur = start
                 var guard = 0
@@ -256,29 +258,29 @@ open class AnalyticsService(
 
             // Cognitive load per team = # owned bounded contexts + # distinct capabilities executed + # distinct value streams.
             val cognitiveLoad =
-                allOrgUnits.map { unit ->
-                    val procs = processesByOrgUnit[unit.key] ?: emptyList()
-                    val bcCount = allBoundedContexts.count { it.owningUnit?.key == unit.key }
-                    val capCount = procs.flatMap { p -> p.capabilities.map { it.key } }.toSet().size
-                    val vsCount = procs.map { rootKey(it) }.toSet().size
-                    val score = (bcCount + capCount + vsCount).toDouble()
-                    CognitiveLoadItem(
-                        unit.key,
-                        nameOf(unit.names, unit.key),
-                        score,
-                        bcCount,
-                        capCount,
-                        vsCount,
-                        cognitiveLoadThreshold,
-                        score > cognitiveLoadThreshold
-                    )
-                }.sortedByDescending { it.score }
+                allOrgUnits
+                    .map { unit ->
+                        val procs = processesByOrgUnit[unit.key] ?: emptyList()
+                        val bcCount = allBoundedContexts.count { it.owningUnit?.key == unit.key }
+                        val capCount = procs.flatMap { p -> p.capabilities.map { it.key } }.toSet().size
+                        val vsCount = procs.map { rootKey(it) }.toSet().size
+                        val score = (bcCount + capCount + vsCount).toDouble()
+                        CognitiveLoadItem(
+                            unit.key,
+                            nameOf(unit.names, unit.key),
+                            score,
+                            bcCount,
+                            capCount,
+                            vsCount,
+                            cognitiveLoadThreshold,
+                            score > cognitiveLoadThreshold
+                        )
+                    }.sortedByDescending { it.score }
             val scoreByUnitKey = cognitiveLoad.associate { it.orgUnitKey to it.score }
 
             val interactions = this.teamInteractionRepository.findAll()
 
-            fun isStreamAligned(unit: org.leargon.backend.domain.OrganisationalUnit?): Boolean =
-                unit?.teamTopologyType == "STREAM_ALIGNED"
+            fun isStreamAligned(unit: org.leargon.backend.domain.OrganisationalUnit?): Boolean = unit?.teamTopologyType == "STREAM_ALIGNED"
 
             fun isAntiPattern(i: org.leargon.backend.domain.TeamInteraction): Boolean =
                 isStreamAligned(i.sourceUnit) &&

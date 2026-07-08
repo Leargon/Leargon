@@ -12,74 +12,139 @@ class ProcessFieldValueExtractor : FieldValueExtractor<Process> {
         fieldName: String
     ): String? =
         when {
-            fieldName.startsWith("names.") -> FieldValueSupport.localized(entity.names, "names", fieldName)
+            fieldName.startsWith("names.") -> {
+                FieldValueSupport.localized(entity.names, "names", fieldName)
+            }
 
-            fieldName.startsWith("descriptions.") -> FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+            fieldName.startsWith("descriptions.") -> {
+                FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+            }
 
-            fieldName.startsWith("purpose.") -> FieldValueSupport.localized(entity.purpose, "purpose", fieldName)
+            fieldName.startsWith("purpose.") -> {
+                FieldValueSupport.localized(entity.purpose, "purpose", fieldName)
+            }
 
-            fieldName.startsWith("securityMeasures.") -> FieldValueSupport.localized(entity.securityMeasures, "securityMeasures", fieldName)
+            fieldName.startsWith("securityMeasures.") -> {
+                FieldValueSupport.localized(entity.securityMeasures, "securityMeasures", fieldName)
+            }
 
-            fieldName.startsWith("classification.") -> FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+            fieldName.startsWith("classification.") -> {
+                FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+            }
 
-            fieldName == "processType" -> FieldValueSupport.blankToNull(entity.processType)
+            fieldName == "processType" -> {
+                FieldValueSupport.blankToNull(entity.processType)
+            }
 
-            fieldName == "code" -> FieldValueSupport.blankToNull(entity.code)
+            fieldName == "code" -> {
+                FieldValueSupport.blankToNull(entity.code)
+            }
 
-            fieldName == "processOwner" -> entity.processOwner?.username
+            fieldName == "processOwner" -> {
+                entity.processOwner?.username
+            }
 
-            fieldName == "owningUnit" -> entity.owningUnit?.key
+            fieldName == "owningUnit" -> {
+                entity.owningUnit?.key
+            }
 
-            fieldName == "processSteward" -> entity.processSteward?.username
+            fieldName == "processSteward" -> {
+                entity.processSteward?.username
+            }
 
-            fieldName == "technicalCustodian" -> entity.technicalCustodian?.username
+            fieldName == "technicalCustodian" -> {
+                entity.technicalCustodian?.username
+            }
 
-            fieldName == "parent" -> entity.parent?.key
+            fieldName == "parent" -> {
+                entity.parent?.key
+            }
 
-            fieldName == "legalBasis" -> FieldValueSupport.blankToNull(entity.legalBasis)
+            fieldName == "legalBasis" -> {
+                FieldValueSupport.blankToNull(entity.legalBasis)
+            }
 
-            fieldName == "boundedContext" -> entity.boundedContext?.key
+            fieldName == "boundedContext" -> {
+                entity.boundedContext?.key
+            }
 
             // ── Value Stream Mapping (Lean / VSM) ──
-            fieldName.startsWith("activityJustification.") ->
+            fieldName.startsWith("activityJustification.") -> {
                 FieldValueSupport.localized(entity.activityJustification, "activityJustification", fieldName)
+            }
 
-            fieldName == "valueStreamType" -> FieldValueSupport.blankToNull(entity.valueStreamType)
+            fieldName == "valueStreamType" -> {
+                FieldValueSupport.blankToNull(entity.valueStreamType)
+            }
 
-            fieldName == "cycleTimeMinutes" -> entity.cycleTimeMinutes?.toString()
+            fieldName == "cycleTimeMinutes" -> {
+                entity.cycleTimeMinutes?.toString()
+            }
 
-            fieldName == "waitTimeMinutes" -> entity.waitTimeMinutes?.toString()
+            fieldName == "waitTimeMinutes" -> {
+                entity.waitTimeMinutes?.toString()
+            }
 
-            fieldName == "changeoverTimeMinutes" -> entity.changeoverTimeMinutes?.toString()
+            fieldName == "changeoverTimeMinutes" -> {
+                entity.changeoverTimeMinutes?.toString()
+            }
 
-            fieldName == "frequencyCount" -> entity.frequencyCount?.toString()
+            fieldName == "frequencyCount" -> {
+                entity.frequencyCount?.toString()
+            }
 
-            fieldName == "activityType" -> FieldValueSupport.blankToNull(entity.activityType)
+            fieldName == "activityType" -> {
+                FieldValueSupport.blankToNull(entity.activityType)
+            }
 
-            fieldName == "firstPassYield" -> entity.firstPassYield?.toString()
+            fieldName == "firstPassYield" -> {
+                entity.firstPassYield?.toString()
+            }
 
-            fieldName == "completionRate" -> entity.completionRate?.toString()
+            fieldName == "completionRate" -> {
+                entity.completionRate?.toString()
+            }
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
-            fieldName == "inputEntities" -> null
+            fieldName == "inputEntities" -> {
+                null
+            }
 
-            fieldName == "outputEntities" -> null
+            fieldName == "outputEntities" -> {
+                null
+            }
 
-            fieldName == "executingUnits" -> null
+            fieldName == "executingUnits" -> {
+                null
+            }
 
-            fieldName == "crossBorderTransfers" -> null
+            fieldName == "crossBorderTransfers" -> {
+                null
+            }
 
-            fieldName == "capabilities" -> null
+            fieldName == "capabilities" -> {
+                null
+            }
 
-            fieldName == "itSystems" -> null
+            fieldName == "itSystems" -> {
+                null
+            }
 
-            fieldName == "serviceProviders" -> null
+            fieldName == "serviceProviders" -> {
+                null
+            }
 
-            fieldName == "processDiagram" -> null
+            fieldName == "processDiagram" -> {
+                null
+            }
 
-            fieldName == "calledProcesses" -> null
+            fieldName == "calledProcesses" -> {
+                null
+            }
 
-            else -> error("Unhandled BUSINESS_PROCESS field for verification: $fieldName")
+            else -> {
+                error("Unhandled BUSINESS_PROCESS field for verification: $fieldName")
+            }
         }
 
     override fun collectionItemValues(entity: Process): Map<String, String> {

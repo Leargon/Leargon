@@ -146,7 +146,8 @@ open class OrganisationalUnitMapper(
         @JvmStatic
         fun toTeamTopologyType(value: String?): org.leargon.backend.model.TeamTopologyType? {
             if (value == null) return null
-            return org.leargon.backend.model.TeamTopologyType.fromValue(value)
+            return org.leargon.backend.model.TeamTopologyType
+                .fromValue(value)
         }
     }
 }

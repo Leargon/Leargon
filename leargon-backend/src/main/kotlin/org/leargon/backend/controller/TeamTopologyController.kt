@@ -28,8 +28,7 @@ open class TeamTopologyController(
 
     override fun getTeamInteraction(id: Long): TeamInteractionResponse = teamInteractionService.getByIdAsResponse(id)
 
-    override fun getTeamInteractionsForUnit(key: String): List<TeamInteractionResponse> =
-        teamInteractionService.getForUnitAsResponses(key)
+    override fun getTeamInteractionsForUnit(key: String): List<TeamInteractionResponse> = teamInteractionService.getForUnitAsResponses(key)
 
     override fun createTeamInteraction(
         @Valid @Body request: CreateTeamInteractionRequest

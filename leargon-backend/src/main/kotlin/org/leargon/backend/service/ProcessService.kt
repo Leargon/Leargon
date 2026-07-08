@@ -372,8 +372,7 @@ open class ProcessService(
                 .mapNotNull { it.linkedProcessKey }
 
         // A process counts as a measured value-stream step once any VSM metric is recorded on it.
-        fun hasVsmMetrics(p: Process): Boolean =
-            p.cycleTimeMinutes != null || p.waitTimeMinutes != null || !p.activityType.isNullOrBlank()
+        fun hasVsmMetrics(p: Process): Boolean = p.cycleTimeMinutes != null || p.waitTimeMinutes != null || !p.activityType.isNullOrBlank()
 
         // Derive the ordered steps by walking the BPMN flow: each call-activity that already carries VSM
         // metrics is treated as a measured step (we stop there); otherwise, if it has its own flow, we
@@ -400,6 +399,7 @@ open class ProcessService(
         // Fallback: the parent-child sub-process subtree (this process + all descendants).
         fun collectViaChildren(p: Process): List<Process> {
             val steps = mutableListOf<Process>()
+
             fun collect(x: Process) {
                 steps.add(x)
                 x.children.forEach { collect(it) }

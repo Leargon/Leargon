@@ -12,45 +12,82 @@ class OrganisationalUnitFieldValueExtractor : FieldValueExtractor<Organisational
         fieldName: String
     ): String? =
         when {
-            fieldName.startsWith("names.") -> FieldValueSupport.localized(entity.names, "names", fieldName)
+            fieldName.startsWith("names.") -> {
+                FieldValueSupport.localized(entity.names, "names", fieldName)
+            }
 
-            fieldName.startsWith("descriptions.") -> FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+            fieldName.startsWith("descriptions.") -> {
+                FieldValueSupport.localized(entity.descriptions, "descriptions", fieldName)
+            }
 
-            fieldName.startsWith("missionStatement.") ->
+            fieldName.startsWith("missionStatement.") -> {
                 FieldValueSupport.localized(entity.missionStatement, "missionStatement", fieldName)
+            }
 
-            fieldName.startsWith("classification.") -> FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+            fieldName.startsWith("classification.") -> {
+                FieldValueSupport.classification(entity.classificationAssignments, fieldName)
+            }
 
-            fieldName == "unitType" -> FieldValueSupport.blankToNull(entity.unitType)
+            fieldName == "unitType" -> {
+                FieldValueSupport.blankToNull(entity.unitType)
+            }
 
-            fieldName == "teamTopologyType" -> FieldValueSupport.blankToNull(entity.teamTopologyType)
+            fieldName == "teamTopologyType" -> {
+                FieldValueSupport.blankToNull(entity.teamTopologyType)
+            }
 
-            fieldName == "businessOwner" -> entity.businessOwner?.username
+            fieldName == "businessOwner" -> {
+                entity.businessOwner?.username
+            }
 
-            fieldName == "businessSteward" -> entity.businessSteward?.username
+            fieldName == "businessSteward" -> {
+                entity.businessSteward?.username
+            }
 
-            fieldName == "technicalCustodian" -> entity.technicalCustodian?.username
+            fieldName == "technicalCustodian" -> {
+                entity.technicalCustodian?.username
+            }
 
-            fieldName == "isExternal" -> entity.isExternal.toString()
+            fieldName == "isExternal" -> {
+                entity.isExternal.toString()
+            }
 
-            fieldName == "externalCompanyName" -> FieldValueSupport.blankToNull(entity.externalCompanyName)
+            fieldName == "externalCompanyName" -> {
+                FieldValueSupport.blankToNull(entity.externalCompanyName)
+            }
 
-            fieldName == "countryOfExecution" -> FieldValueSupport.blankToNull(entity.countryOfExecution)
+            fieldName == "countryOfExecution" -> {
+                FieldValueSupport.blankToNull(entity.countryOfExecution)
+            }
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
-            fieldName == "parents" -> null
+            fieldName == "parents" -> {
+                null
+            }
 
-            fieldName == "executingProcesses" -> null
+            fieldName == "executingProcesses" -> {
+                null
+            }
 
-            fieldName == "dataAccessEntities" -> null
+            fieldName == "dataAccessEntities" -> {
+                null
+            }
 
-            fieldName == "dataManipulationEntities" -> null
+            fieldName == "dataManipulationEntities" -> {
+                null
+            }
 
-            fieldName == "serviceProviders" -> null
+            fieldName == "serviceProviders" -> {
+                null
+            }
 
-            fieldName == "boundedContexts" -> null
+            fieldName == "boundedContexts" -> {
+                null
+            }
 
-            else -> error("Unhandled ORGANISATIONAL_UNIT field for verification: $fieldName")
+            else -> {
+                error("Unhandled ORGANISATIONAL_UNIT field for verification: $fieldName")
+            }
         }
 
     override fun collectionItemValues(entity: OrganisationalUnit): Map<String, String> {

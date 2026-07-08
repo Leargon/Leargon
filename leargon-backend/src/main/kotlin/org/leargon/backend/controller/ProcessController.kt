@@ -151,8 +151,7 @@ open class ProcessController(
         return processService.updateProcessValueStream(key, request, currentUser)
     }
 
-    override fun getProcessValueStreamSummary(key: String): ValueStreamSummaryResponse =
-        processService.computeValueStreamSummary(key)
+    override fun getProcessValueStreamSummary(key: String): ValueStreamSummaryResponse = processService.computeValueStreamSummary(key)
 
     override fun clearProcessOwner(key: String): ProcessResponse {
         val currentUser = getCurrentUser()

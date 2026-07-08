@@ -30,8 +30,7 @@ open class TeamInteractionService(
         teamInteractionRepository.findAll().map { teamInteractionMapper.toResponse(it) }
 
     @ReadOnly
-    open fun getByIdAsResponse(id: Long): TeamInteractionResponse =
-        teamInteractionMapper.toResponse(getById(id))
+    open fun getByIdAsResponse(id: Long): TeamInteractionResponse = teamInteractionMapper.toResponse(getById(id))
 
     @ReadOnly
     open fun getForUnitAsResponses(key: String): List<TeamInteractionResponse> {
