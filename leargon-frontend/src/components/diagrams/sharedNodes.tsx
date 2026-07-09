@@ -41,6 +41,8 @@ export interface OrgUnitNodeData {
   showProcessCount?: boolean;
   /** Multi-parent (shared/matrix) unit — rendered with a dashed border spanning its parents. */
   shared?: boolean;
+  /** Container-view lane — the node fills its (full-width) node box instead of a fixed 200px. */
+  lane?: boolean;
 }
 
 // ─── Entity Node ──────────────────────────────────────────────────────────────
@@ -236,9 +238,9 @@ export const OrgUnitNode = memo(({ data, selected }: NodeProps) => {
   return (
     <Box
       sx={{
-        width: d.shared ? '100%' : 200,
+        width: d.shared || d.lane ? '100%' : 200,
         minHeight: 60,
-        height: d.shared ? '100%' : undefined,
+        height: d.shared || d.lane ? '100%' : undefined,
         border: 2,
         borderStyle: d.shared ? 'dashed' : 'solid',
         borderColor: selected ? 'secondary.main' : '#7b1fa2',

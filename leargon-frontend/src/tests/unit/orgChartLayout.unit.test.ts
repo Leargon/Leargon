@@ -39,17 +39,30 @@ describe('buildOrgContainerGraph', () => {
     expect(byId.get('C')?.type).toBe('orgUnitNode');
   });
 
-  it('renders a multi-parent unit as a top-level shared node spanning its parents', () => {
+  it('draws a multi-parent unit as a vertical band on the right spanning its parents (no edges)', () => {
     const { nodes, edges } = buildOrgContainerGraph(units, getName);
-    const s = nodes.find((n) => n.id === 'S')!;
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const s = byId.get('S')!;
+    const b = byId.get('B')!;
+    const c = byId.get('C')!;
 
     expect(s).toBeDefined();
-    expect(s.parentId).toBeUndefined(); // top-level, not nested (RF allows one parentId)
     expect((s.data as { shared?: boolean }).shared).toBe(true);
-    expect(s.width ?? 0).toBeGreaterThan(0);
+    expect(edges).toHaveLength(0);
+    // B and C both nest under A, so the band is hosted INSIDE A.
+    expect(s.parentId).toBe('A');
+    // Vertical band sits to the RIGHT of the lanes and spans both parents' vertical extent.
+    expect(s.position.x).toBeGreaterThan(b.position.x);
+    expect(s.position.x).toBeGreaterThan(c.position.x);
+    expect(s.position.y).toBeLessThanOrEqual(Math.min(b.position.y, c.position.y));
+    expect((s.height ?? 0)).toBeGreaterThanOrEqual((b.height ?? 0) + (c.height ?? 0));
+  });
 
-    // dashed edges from each parent to the shared unit
-    const toS = edges.filter((e) => e.target === 'S').map((e) => e.source).sort();
-    expect(toS).toEqual(['B', 'C']);
+  it('stacks the top-level unit as a full-width lane', () => {
+    const { nodes } = buildOrgContainerGraph(units, getName);
+    const a = nodes.find((n) => n.id === 'A')!;
+    expect(a.parentId).toBeUndefined();
+    expect(a.position.x).toBe(0);
+    expect(a.width ?? 0).toBeGreaterThanOrEqual(480);
   });
 });
