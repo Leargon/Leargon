@@ -5,7 +5,9 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
+| Owner to-do & governance tasks                | 3        | 30%    | 8/10  | **2.7**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
+| Guided modeling advisor                       | 6        | 40%    | 9/10  | **1.5**  |
 | Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
 | Performance & scalability                     | 3        | 30%    | 7/10  | **2.3**  |
 | Impact analysis & domain coupling             | 4        | 40%    | 8/10  | **2.0**  |
@@ -19,6 +21,169 @@
 *(Team Topologies and Value Stream Mapping are fully implemented and no longer listed here.)*
 
 ---
+
+---
+
+## Guided modeling advisor
+
+*Addresses the core usability gap documented in `REVIEW-FINDINGS.md` Part D: the mechanics of
+nesting are easy (an "Add Child" button exists), but the **judgement** — when something should be
+a child, a sibling, a relationship, or a separate item, and what that choice does downstream — is
+left entirely implicit. Léargon already encodes rich structure (entity trees, typed relationships,
+interface/implementation links, bounded contexts, process hierarchies, domain types) but never
+teaches the user which mechanism to use when. This feature turns that implicit expertise into an
+interactive, question-driven advisor that spans every methodology (data model, process, domain,
+organisation) and, crucially, explains the downstream consequence of each modelling choice
+(e.g. that nesting an entity rolls it up into its root's Art. 30 data-category grouping).*
+
+*Delivered as a reusable decision-tree engine (server-defined rule sets, so the frontend stays
+logic-free per project rules) plus a conversational entry point available both standalone and
+inline at every "Create" / "Add child" action. Not an LLM — a deterministic, explainable decision
+tree with typed questions and cited rationale, so recommendations are auditable and testable.*
+
+*⏱ Sessions: 6 · Weekly effort: ~40% · Value: 9/10 · Score: 1.5 · Breakdown: 2 backend
+(decision-tree model + rule sets for entity/process/domain/org + consequence-explanation service)
++ 3 frontend (advisor dialog, inline "Where should this go?" launcher on create actions, result →
+prefilled wizard hand-off) + 1 tests (integration coverage of each rule set + e2e of the flagship
+"order line" flow).*
+
+#### USER STORY 'Ask where a new concept belongs and get a recommendation'
+**AS A** data owner or modeller\
+**IF** I am about to add something and am unsure how to structure it\
+**I WANT** to open a "Where should this go?" advisor, describe what I am adding in plain terms
+(e.g. "an Order Line that is part of an Order") and answer a few guided questions\
+**SO THAT** I receive a concrete recommendation — make it a child entity of Order, a separate
+entity with a relationship, or an interface/implementation — with a plain-language rationale
+
+#### USER STORY 'Understand the downstream consequence of a modelling choice'
+**AS A** data owner or modeller\
+**IF** the advisor recommends a structure (or I am about to confirm one)\
+**I WANT** to see what that choice will affect — e.g. that nesting an entity under a parent means
+it is rolled up under the parent as its data category in the Art. 30 processing register, or that a
+child process's data flow rolls up into its parent\
+**SO THAT** I can make the decision knowing its compliance and reporting impact instead of
+discovering the effect only after the register looks wrong
+
+#### USER STORY 'Choose between the three ways to connect entities'
+**AS A** modeller\
+**IF** I want to relate two business entities\
+**I WANT** the advisor to help me choose between a parent-child aggregate, a typed relationship
+with cardinality, or an interface/implementation link, based on questions about ownership,
+lifecycle, and whether one cannot exist without the other\
+**SO THAT** I use the mechanism that matches the real semantics rather than guessing
+
+#### USER STORY 'Get placement guidance for processes'
+**AS A** process modeller\
+**IF** I am adding a business activity and unsure whether it is a sub-process, a sibling, or a
+standalone process\
+**I WANT** the advisor to ask whether the activity is a decomposition step of a larger flow, is
+triggered independently, or is reused across parents, and recommend sub-process vs. sibling vs.
+new root accordingly\
+**SO THAT** the process hierarchy reflects real decomposition and the value-stream / register
+roll-ups stay meaningful
+
+#### USER STORY 'Understand which process becomes a processing-register activity'
+**AS A** process modeller or data owner\
+**IF** I am creating a root or sub-process\
+**I WANT** the advisor to explain that the Art. 30 / revDSG processing register emits one
+rolled-up row per *root* process (the "processing activity"), and to help me judge whether this
+activity sits at the right altitude — not so coarse that unrelated purposes are merged, not so
+fine that a real activity is split\
+**SO THAT** the register is a valid inventory of activities without anyone needing to manually flag
+boundaries or know GDPR by heart
+
+#### USER STORY 'Be nudged when a register activity is drawn too coarse'
+**AS A** data owner or admin\
+**IF** a root process rolls up sub-processes whose purposes diverge significantly\
+**I WANT** a derived nudge suggesting the root may span multiple processing activities and could be
+split\
+**SO THAT** an over-broad root does not silently produce a meaningless, over-aggregated register
+row — the system detects the likely-wrong boundary instead of relying on the modeller to know it
+
+#### USER STORY 'Get placement guidance for domains and bounded contexts'
+**AS AN** admin\
+**IF** I am adding an entity, a bounded context, or a domain\
+**I WANT** the advisor to help me decide the correct bounded context and domain based on ownership
+and ubiquitous-language questions, and to flag when a proposed placement would put a child in a
+different bounded context than its parent\
+**SO THAT** the two hierarchies an entity lives in (tree parent and bounded context) stay
+coherent instead of silently disagreeing
+
+#### USER STORY 'Get placement guidance for organisational units'
+**AS AN** admin\
+**IF** I am adding an organisational unit\
+**I WANT** the advisor to help me decide whether it is a child unit, a sibling, or a new top-level
+unit, and which existing unit it reports into\
+**SO THAT** the org chart and the ownership chains derived from it are structured correctly
+
+#### USER STORY 'Launch the advisor inline from any create action'
+**AS A** logged in user\
+**IF** I click "Create" or "Add child" anywhere in the catalogue\
+**I WANT** an unobtrusive "Not sure where this belongs?" link that opens the advisor pre-scoped to
+that item type, and on completion hands its recommendation straight into the creation wizard with
+the parent, placement, and connection type pre-filled\
+**SO THAT** the guidance flows directly into the action without re-entering anything
+
+#### USER STORY 'Administer the advisor decision rules'
+**AS AN** admin\
+**IF** my organisation's modelling conventions differ from the defaults\
+**I WANT** to view and adjust the advisor's decision rules and the wording of its explanations per
+methodology\
+**SO THAT** the guidance matches our house rules and stays maintainable as conventions evolve
+
+---
+
+## Owner to-do & governance tasks
+
+*A per-owner to-do section that turns the governance gaps Léargon already detects into an explicit,
+actionable task list for the person responsible — rather than surfacing them only as passive
+banners on scattered detail pages. Complements the existing "Needs attention" dashboard block and
+the (planned) Review cycles by giving each owner a single, prioritised "what do I need to do"
+list, and giving admins an aggregate view of outstanding work by owner. Directly follows from
+`REVIEW-FINDINGS.md` Part C/D: guidance is only useful if the resulting to-dos are shown to the
+right person and can be tracked to completion.*
+
+*Read-heavy over existing data — tasks are derived (missing mandatory fields, missing legal basis
+on personal-data processes, unassigned owners, unresolved advisor recommendations, overdue
+reviews) — plus a small `task_dismissals` table so an owner can dismiss a non-applicable task with
+a reason. No duplication of source data.*
+
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 8/10 · Score: 2.7 · Breakdown: 1 backend
+(task-derivation service aggregating existing gap detectors + dismissals table) + 1.5 frontend
+(to-do section on the personal dashboard, per-item task chips, admin by-owner view) + 0.5 tests.*
+
+#### USER STORY 'View my outstanding governance to-dos'
+**AS A** data owner, process owner, or org-unit lead\
+**IF** one or more items I am responsible for has an outstanding governance gap (missing mandatory
+field, missing legal basis, missing owner/steward, unresolved advisor recommendation)\
+**I WANT** to see a single prioritised to-do list on my dashboard, each task naming the item, the
+gap, and a direct link to fix it\
+**SO THAT** I know exactly what I need to complete without hunting through detail pages
+
+#### USER STORY 'Jump from a to-do straight to the fix'
+**AS AN** owner\
+**IF** I select a to-do item\
+**I WANT** to be taken directly to the relevant field or section of the item, ready to edit\
+**SO THAT** I can resolve the gap in one click rather than searching for where it lives
+
+#### USER STORY 'Dismiss a non-applicable to-do with a reason'
+**AS AN** owner\
+**IF** a derived to-do does not apply to my item (e.g. a field genuinely has no value for this
+case)\
+**I WANT** to dismiss the task with a short reason\
+**SO THAT** it stops cluttering my list while leaving an auditable record of why it was skipped
+
+#### USER STORY 'See to-do progress for my responsibilities'
+**AS AN** owner\
+**I WANT** to see a simple completion indicator (e.g. "6 of 9 governance tasks done") across the
+items I own\
+**SO THAT** I have a sense of how close my area is to being fully documented
+
+#### USER STORY 'View outstanding tasks by owner'
+**AS AN** admin\
+**I WANT** to see outstanding governance tasks aggregated by responsible owner, ranked by count and
+severity\
+**SO THAT** I can see who has the most outstanding work and follow up on stewardship gaps
 
 ---
 
