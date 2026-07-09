@@ -1,6 +1,6 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
-import { layoutNested, domainColor, cardinalityLabel } from './diagramUtils';
+import { layoutNested, domainColor, cardinalityLabel, DEFAULT_GROUP_PADDING } from './diagramUtils';
 import type { EntityNodeData, GroupNodeData, RelationshipEdgeData } from './sharedNodes';
 
 const DEFAULT_BORDER = '#1976d2';
@@ -91,7 +91,11 @@ export function buildEntityGraph(
       return {
         ...base,
         type: 'entityGroupNode',
-        data: { label: getName(e), color: colorOf(e) } satisfies GroupNodeData,
+        data: {
+          label: getName(e),
+          color: colorOf(e),
+          description: getDesc(e.descriptions ?? []) || undefined,
+        } satisfies GroupNodeData,
       } as Node;
     }
     const description = getDesc(e.descriptions ?? []) || undefined;
@@ -133,6 +137,11 @@ export function buildEntityGraph(
     rankdir: 'LR',
     nodesep: 50,
     ranksep: 120,
+    // Parent-entity containers show a description under the name → reserve a taller header.
+    paddingFor: (n) =>
+      n.type === 'entityGroupNode' && (n.data as unknown as GroupNodeData)?.description
+        ? { ...DEFAULT_GROUP_PADDING, top: 56 }
+        : DEFAULT_GROUP_PADDING,
   });
   return { nodes: laid, edges };
 }

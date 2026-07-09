@@ -307,6 +307,10 @@ export interface GroupNodeData {
   label: string;
   color: string;
   subtypeLabel?: string;
+  /** Extra detail shown in the container header (so a parent card doesn't lose its info). */
+  unitType?: string;   // org unit type
+  leadName?: string;   // org unit owner / lead
+  description?: string; // entity description
 }
 
 /** Solid-border container for bounded context / domain grouping */
@@ -391,14 +395,20 @@ export const EntityGroupNode = memo(({ data, selected }: NodeProps) => {
           borderColor: d.color,
           bgcolor: d.color + '14',
           borderRadius: '4px 4px 0 0',
-          height: 32,
+          minHeight: 32,
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          justifyContent: 'center',
         }}
       >
         <Typography variant="body2" noWrap title={d.label} sx={{ fontWeight: 600, color: d.color }}>
           {d.label}
         </Typography>
+        {d.description && (
+          <Typography variant="caption" noWrap title={d.description} sx={{ color: 'text.secondary', fontSize: '0.68rem' }}>
+            {d.description}
+          </Typography>
+        )}
       </Box>
     </Box>
   );
@@ -431,9 +441,10 @@ export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
           borderColor: d.color,
           bgcolor: d.color + '18',
           borderRadius: '6px 6px 0 0',
-          height: 32,
+          minHeight: 32,
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          justifyContent: 'center',
           pointerEvents: 'all',
         }}
       >
@@ -446,6 +457,16 @@ export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
           }}>
           {d.label}
         </Typography>
+        {d.unitType && (
+          <Typography variant="caption" noWrap sx={{ color: d.color, fontSize: '0.68rem', opacity: 0.85 }}>
+            {d.unitType}
+          </Typography>
+        )}
+        {d.leadName && (
+          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+            {d.leadName}
+          </Typography>
+        )}
       </Box>
     </Box>
   );

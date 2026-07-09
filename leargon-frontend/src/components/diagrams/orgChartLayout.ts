@@ -10,7 +10,7 @@ const BAND_W = 160;     // vertical (shared/matrix) band width
 const BAND_GAP = 14;    // gap between stacked bands when several overlay the same lanes
 const BAND_INSET = 12;  // inset of the overlaid band from the lanes' right edge
 const PAD = 16;         // container inner padding
-const HEADER = 36;      // container header strip
+const HEADER = 76;      // container header strip (name + type + owner)
 const LANE_MIN_W = 300; // min lane width inside a container
 const TOP_MIN_W = 480;  // min top-level lane width
 
@@ -174,7 +174,12 @@ export function buildOrgContainerGraph(
       position: { x: 0, y: 0 },
       width: w,
       height: h,
-      data: { label: getName(u), color: ORG_COLOR } satisfies GroupNodeData,
+      data: {
+        label: getName(u),
+        color: ORG_COLOR,
+        unitType: u.unitType ?? undefined,
+        leadName: leadName(u),
+      } satisfies GroupNodeData,
     };
     return { node, extra: laid.nodes, w, h };
   }
