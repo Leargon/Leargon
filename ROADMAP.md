@@ -20,6 +20,18 @@
 
 *(Team Topologies and Value Stream Mapping are fully implemented and no longer listed here.)*
 
+### Technical follow-ups (carried over from the REVIEW-FINDINGS implementation)
+
+- **Stabilise path-based entity/process keys on reparent.** `recomputeKeysForSubtree` regenerates
+  an entity's/process's `key` from its name-derived path whenever its parent changes, which can
+  orphan references that store keys as strings (e.g. process input/output entity links). Same
+  "mutable value drives a functional identifier" hazard fixed for classification keys in that pass,
+  but larger in blast radius. Give these trees stable identifiers independent of the display-name path.
+- **Wire special categories into a DPIA-necessity nudge.** Art. 9 special-category processing is an
+  Art. 35 DPIA trigger. The typed personal-data work kept special categories informational; a future
+  enhancement should surface "DPIA recommended" when a process (effectively) touches special-category
+  data.
+
 ---
 
 ---
