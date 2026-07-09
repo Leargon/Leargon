@@ -396,7 +396,7 @@ const fr = {
     "typeComplicated": "Sous-système compliqué",
     "typeUnset": "Aucun type d’équipe",
     "modeCollaboration": "Collaboration",
-    "modeXaas": "X-as-a-Service",
+    "modeXaas": "XaaS",
     "modeFacilitating": "Facilitation",
     "emptyTitle": "Aucune interaction d’équipe pour le moment",
     "emptyDescription": "Attribuez des types de topologie d’équipe et ajoutez des interactions sur une unité organisationnelle pour voir la topologie ici."

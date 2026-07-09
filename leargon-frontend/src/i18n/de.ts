@@ -396,7 +396,7 @@ const de = {
     "typeComplicated": "Kompliziertes Subsystem",
     "typeUnset": "Kein Teamtyp",
     "modeCollaboration": "Zusammenarbeit",
-    "modeXaas": "X-as-a-Service",
+    "modeXaas": "XaaS",
     "modeFacilitating": "Unterstützend",
     "emptyTitle": "Noch keine Team-Interaktionen",
     "emptyDescription": "Weisen Sie Team-Topologie-Typen zu und fügen Sie Interaktionen an einer Organisationseinheit hinzu, um die Topologie hier zu sehen."

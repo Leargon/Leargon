@@ -13,6 +13,11 @@ export function useReactFlowTheme() {
 
   const canvasSx = {
     flex: 1,
+    // Theme-aware tokens for edge/overlay labels (e.g. Team Topology interaction chips) so text
+    // stays legible over both the dark canvas and the fixed light-fill team shapes.
+    '--tt-ink': isDark ? '#ececec' : '#222',
+    '--tt-chip': isDark ? 'rgba(18,18,22,0.72)' : 'rgba(255,255,255,0.80)',
+    '--tt-chip-border': isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)',
     // CSS custom properties (React Flow v12 API)
     '--xy-controls-button-background-color-default': theme.palette.background.paper,
     '--xy-controls-button-background-color-hover-default': hoverBg,

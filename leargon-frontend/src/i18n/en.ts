@@ -401,7 +401,7 @@ const en = {
     typeComplicated: 'Complicated subsystem',
     typeUnset: 'No team type',
     modeCollaboration: 'Collaboration',
-    modeXaas: 'X-as-a-Service',
+    modeXaas: 'XaaS',
     modeFacilitating: 'Facilitating',
     emptyTitle: 'No team interactions yet',
     emptyDescription: 'Assign team topology types and add interactions on an org unit to see the topology here.',
