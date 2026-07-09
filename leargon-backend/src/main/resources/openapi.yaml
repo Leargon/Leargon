@@ -2721,6 +2721,49 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /business-entities/{key}/personal-data:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update personal-data flag and entity role
+      description: Sets whether the entity contains personal data (tri-state) and its data-subject/data-attribute role. Only the Data Owner, Data Steward, or an Administrator can edit an entity.
+      operationId: updateBusinessEntityPersonalData
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonalDataRequest'
+      responses:
+        '200':
+          description: Personal-data fields updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner, Data Steward, or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
   /business-entities/{key}/parent:
     put:
       tags:
@@ -7440,6 +7483,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: >-
+            Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state:
+            null = not answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
         interfacesEntities:
           type: array
           items:
@@ -7913,6 +7964,14 @@ components:
           description: Retention period description for the entity (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: >-
+            Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state:
+            null = not yet answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
     CreateClassificationRequest:
       type: object
       required:
@@ -8821,6 +8880,24 @@ components:
       - null
       nullable: true
       description: Legal basis for processing personal data
+    EntityRole:
+      type: string
+      enum:
+      - DATA_SUBJECT
+      - DATA_ATTRIBUTE
+      description: >-
+        Role of a business entity for the processing register. DATA_SUBJECT = describes a
+        category of persons (Art. 30 "categories of data subjects"); DATA_ATTRIBUTE = describes a
+        category of data.
+    UpdatePersonalDataRequest:
+      type: object
+      properties:
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: Tri-state — null = not answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
     ProcessType:
       type: string
       enum:
@@ -11130,7 +11207,6 @@ components:
       - label
       - covered
       - total
-      - percentage
       properties:
         key:
           type: string
@@ -11146,7 +11222,8 @@ components:
           description: Total number of items in scope
         percentage:
           type: integer
-          description: Covered / total * 100, or 100 if total is 0
+          nullable: true
+          description: Covered / total * 100; null when total is 0 (nothing to measure / not applicable)
     MaturityMetricsResponse:
       type: object
       required:

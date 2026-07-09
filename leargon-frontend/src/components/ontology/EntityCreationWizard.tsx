@@ -35,6 +35,7 @@ import type {
   SupportedLocaleResponse,
   ClassificationResponse,
   ClassificationAssignmentRequest,
+  CreateBusinessEntityRequest,
   UserSummaryResponse,
 } from '../../api/generated/model';
 import { ClassificationAssignableTo } from '../../api/generated/model';
@@ -121,7 +122,9 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     }
   }, [open, parentEntity?.dataOwner?.username, parentEntity?.dataSteward?.username, parentEntity?.technicalCustodian?.username, parentEntity?.boundedContext?.key, allUsers.length]);
 
-  // Step 4 — Classifications
+  // Step 4 — Personal data (typed GDPR facts) + Classifications
+  const [containsPersonalData, setContainsPersonalData] = useState<boolean | null>(null);
+  const [entityRole, setEntityRole] = useState<string>('');
   const [assignments, setAssignments] = useState<ClassificationAssignmentRequest[]>([]);
 
   const [error, setError] = useState<string | null>(null);
@@ -158,6 +161,8 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
           descriptions: descriptions.filter((d) => d.text.trim()),
           dataOwnerUsername: dataOwner?.username || user?.username || undefined,
           parentKey: parentKey || null,
+          containsPersonalData: containsPersonalData,
+          entityRole: (entityRole || undefined) as CreateBusinessEntityRequest['entityRole'],
         },
       });
       const newEntity = response.data as BusinessEntityResponse;
@@ -208,6 +213,8 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     setDataOwner(null);
     setDataSteward(null);
     setTechnicalCustodian(null);
+    setContainsPersonalData(null);
+    setEntityRole('');
     setAssignments([]);
     setError(null);
   };
@@ -217,7 +224,12 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     onClose();
   };
 
-  const visibleClassifications = entityClassifications.filter((c) => !isHidden(`classification.${c.key}`));
+  const visibleClassifications = entityClassifications.filter(
+    (c) =>
+      !isHidden(`classification.${c.key}`) &&
+      // Special categories (Art. 9) only apply once the entity is marked as containing personal data.
+      (c.key !== 'special-categories' || containsPersonalData === true),
+  );
 
   const allSteps = [
     {
@@ -325,6 +337,50 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
                   helperText={t('wizard.entity.custodianHelper')} />
               )}
             />
+          )}
+        </Box>
+      ),
+    },
+    !isHidden('containsPersonalData') && {
+      id: 'personal-data',
+      title: t('wizard.entity.stepPersonalData'),
+      skippable: true,
+      guidedExplanation: (
+        <Typography variant="body2">{t('wizard.entity.guidedPersonalDataText')}</Typography>
+      ),
+      content: (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <FormControl size="small">
+            <InputLabel>{t('entity.containsPersonalData')}</InputLabel>
+            <Select
+              label={t('entity.containsPersonalData')}
+              value={containsPersonalData === true ? 'yes' : containsPersonalData === false ? 'no' : ''}
+              displayEmpty
+              onChange={(e: SelectChangeEvent) => {
+                const v = e.target.value;
+                setContainsPersonalData(v === 'yes' ? true : v === 'no' ? false : null);
+                if (v !== 'yes') setEntityRole('');
+              }}
+            >
+              <MenuItem value=""><em>{t('entity.personalDataNotSet')}</em></MenuItem>
+              <MenuItem value="yes">{t('common.yes')}</MenuItem>
+              <MenuItem value="no">{t('common.no')}</MenuItem>
+            </Select>
+          </FormControl>
+          {containsPersonalData === true && (
+            <FormControl size="small">
+              <InputLabel>{t('entity.entityRole')}</InputLabel>
+              <Select
+                label={t('entity.entityRole')}
+                value={entityRole}
+                displayEmpty
+                onChange={(e: SelectChangeEvent) => setEntityRole(e.target.value)}
+              >
+                <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
+                <MenuItem value="DATA_SUBJECT">{t('entity.roleDataSubject')}</MenuItem>
+                <MenuItem value="DATA_ATTRIBUTE">{t('entity.roleDataAttribute')}</MenuItem>
+              </Select>
+            </FormControl>
           )}
         </Box>
       ),

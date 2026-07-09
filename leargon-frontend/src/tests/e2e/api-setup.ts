@@ -242,6 +242,15 @@ export const assignClassificationsToEntity = (
 ): Promise<Record<string, unknown>> =>
   apiFetch(`/business-entities/${entityKey}/classifications`, 'PUT', assignments, as);
 
+/** Mark an entity as containing personal data via the typed field (replaces the old classification). */
+export const markEntityPersonalData = (
+  entityKey: string,
+  containsPersonalData: boolean | null = true,
+  entityRole: 'DATA_SUBJECT' | 'DATA_ATTRIBUTE' | null = null,
+  as = ADMIN,
+): Promise<Record<string, unknown>> =>
+  apiFetch(`/business-entities/${entityKey}/personal-data`, 'PUT', { containsPersonalData, entityRole }, as);
+
 export const addProcessInput = (
   processKey: string,
   entityKey: string,

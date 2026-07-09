@@ -16,6 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { EntityRole } from './entityRole.ts';
 import type { LocalizedText } from './localizedText.ts';
 
 export interface CreateBusinessEntityRequest {
@@ -47,4 +48,10 @@ export interface CreateBusinessEntityRequest {
      * @nullable
      */
   retentionPeriod?: LocalizedText[] | null;
+  /**
+     * Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state: null = not yet answered, true = yes, false = no.
+     * @nullable
+     */
+  containsPersonalData?: boolean | null;
+  entityRole?: EntityRole;
 }

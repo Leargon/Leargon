@@ -21,6 +21,7 @@ import type { BusinessDataQualityRuleResponse } from './businessDataQualityRuleR
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse.ts';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { EntityRole } from './entityRole.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
@@ -49,6 +50,12 @@ export interface BusinessEntityResponse {
   boundedContext?: BoundedContextSummaryResponse | null;
   names: LocalizedText[];
   descriptions: LocalizedText[];
+  /**
+     * Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state: null = not answered, true = yes, false = no.
+     * @nullable
+     */
+  containsPersonalData?: boolean | null;
+  entityRole?: EntityRole;
   interfacesEntities?: BusinessEntitySummaryResponse[];
   implementsEntities?: BusinessEntitySummaryResponse[];
   relationships?: BusinessEntityRelationshipResponse[];

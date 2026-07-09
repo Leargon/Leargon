@@ -39,7 +39,11 @@ function statusColor(pct: number): 'error' | 'warning' | 'success' {
 const MetricRow: React.FC<{ metric: MaturityMetricItem }> = ({ metric }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const color = statusColor(metric.percentage);
+  // null percentage = nothing to measure (N/A), not 0%.
+  const pct = metric.percentage;
+  const isNa = pct === null || pct === undefined;
+  const color = isNa ? 'inherit' : statusColor(pct);
+
   const route = METRIC_ROUTES[metric.key];
   const metricLabelKey = `maturity.metrics.${metric.key}` as Parameters<typeof t>[0];
   const metricLabel = t(metricLabelKey) !== metricLabelKey ? t(metricLabelKey) : metric.label;
@@ -49,7 +53,7 @@ const MetricRow: React.FC<{ metric: MaturityMetricItem }> = ({ metric }) => {
       <Tooltip title={`${metric.covered} / ${metric.total}`}>
         <Typography
           variant="body2"
-          sx={{ width: 200, flexShrink: 0, fontWeight: metric.percentage < 90 ? 600 : 400, color: metric.percentage < 50 ? 'error.main' : 'text.primary' }}
+          sx={{ width: 200, flexShrink: 0, fontWeight: !isNa && pct < 90 ? 600 : 400, color: !isNa && pct < 50 ? 'error.main' : 'text.primary' }}
         >
           {metricLabel}
         </Typography>
@@ -57,15 +61,15 @@ const MetricRow: React.FC<{ metric: MaturityMetricItem }> = ({ metric }) => {
       <Box sx={{ flexGrow: 1 }}>
         <LinearProgress
           variant="determinate"
-          value={metric.percentage}
-          color={color}
-          sx={{ height: 6, borderRadius: 3 }}
+          value={isNa ? 0 : pct}
+          color={isNa ? 'inherit' : color}
+          sx={{ height: 6, borderRadius: 3, opacity: isNa ? 0.4 : 1 }}
         />
       </Box>
-      <Typography variant="caption" sx={{ width: 40, textAlign: 'right', flexShrink: 0, color: `${color}.main` }}>
-        {metric.percentage}%
+      <Typography variant="caption" sx={{ width: 40, textAlign: 'right', flexShrink: 0, color: isNa ? 'text.disabled' : `${color}.main` }}>
+        {isNa ? t('maturity.notApplicable') : `${pct}%`}
       </Typography>
-      {route && metric.percentage < 100 && (
+      {route && !isNa && pct < 100 && (
         <Tooltip title={t('maturity.viewItems')}>
           <Button
             size="small"
@@ -103,8 +107,12 @@ const MaturityOverview: React.FC = () => {
 
   if (isError || !metrics.length) return null;
 
-  const overallPct = Math.round(metrics.reduce((s, m) => s + m.percentage, 0) / metrics.length);
-  const urgent = metrics.filter((m) => m.percentage < 50).length;
+  // Only average metrics that actually have something to measure (exclude N/A).
+  const measured = metrics.filter((m) => m.percentage !== null && m.percentage !== undefined);
+  const overallPct = measured.length
+    ? Math.round(measured.reduce((s, m) => s + (m.percentage as number), 0) / measured.length)
+    : 0;
+  const urgent = measured.filter((m) => (m.percentage as number) < 50).length;
 
   return (
     <Card>

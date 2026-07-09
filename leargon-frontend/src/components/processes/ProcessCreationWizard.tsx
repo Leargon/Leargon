@@ -24,6 +24,8 @@ import {
   useGetProcessByKey,
   useUpdateProcessSteward,
   useUpdateProcessTechnicalCustodian,
+  useUpdateProcessLegalBasis,
+  useUpdateProcessPurpose,
 } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
@@ -71,6 +73,8 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
   const assignExecutingUnits = useAssignExecutingUnits();
   const updateSteward = useUpdateProcessSteward();
   const updateCustodian = useUpdateProcessTechnicalCustodian();
+  const updateLegalBasis = useUpdateProcessLegalBasis();
+  const updatePurpose = useUpdateProcessPurpose();
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
@@ -172,6 +176,21 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
         await updateCustodian.mutateAsync({
           key: newProcess.key,
           data: { technicalCustodianUsername: technicalCustodian.username },
+        });
+      }
+
+      if (legalBasis) {
+        await updateLegalBasis.mutateAsync({
+          key: newProcess.key,
+          data: { legalBasis: legalBasis as LegalBasis },
+        });
+      }
+
+      const trimmedPurpose = purpose.trim();
+      if (trimmedPurpose) {
+        await updatePurpose.mutateAsync({
+          key: newProcess.key,
+          data: { purpose: [{ locale: defaultLocale, text: trimmedPurpose }] },
         });
       }
 

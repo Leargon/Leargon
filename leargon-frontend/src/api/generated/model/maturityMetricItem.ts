@@ -26,6 +26,9 @@ export interface MaturityMetricItem {
   covered: number;
   /** Total number of items in scope */
   total: number;
-  /** Covered / total * 100, or 100 if total is 0 */
-  percentage: number;
+  /**
+     * Covered / total * 100; null when total is 0 (nothing to measure / not applicable)
+     * @nullable
+     */
+  percentage?: number | null;
 }

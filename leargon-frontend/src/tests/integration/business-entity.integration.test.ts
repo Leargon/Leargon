@@ -60,6 +60,52 @@ describe('Business Entity E2E', () => {
   });
 
   // =====================
+  // PERSONAL DATA (typed GDPR fields)
+  // =====================
+
+  it('should round-trip personal-data typed fields as a tri-state', async () => {
+    const created = await client.post<BusinessEntityResponse>('/business-entities', {
+      names: [{ locale: 'en', text: 'FE PII Entity' }],
+      containsPersonalData: true,
+      entityRole: 'DATA_SUBJECT',
+    });
+    expect(created.data.containsPersonalData).toBe(true);
+    expect(created.data.entityRole).toBe('DATA_SUBJECT');
+    const key = created.data.key;
+
+    // clear to "not answered" (null) — must be distinct from false
+    const cleared = await client.put<BusinessEntityResponse>(`/business-entities/${key}/personal-data`, {
+      containsPersonalData: null,
+      entityRole: null,
+    });
+    expect(cleared.data.containsPersonalData).toBeNull();
+    expect(cleared.data.entityRole).toBeNull();
+
+    // explicit "no" (false)
+    const no = await client.put<BusinessEntityResponse>(`/business-entities/${key}/personal-data`, {
+      containsPersonalData: false,
+    });
+    expect(no.data.containsPersonalData).toBe(false);
+  });
+
+  it('should forbid a non-owner from changing the personal-data flag', async () => {
+    const entity = await createEntity(client, 'FE Locked PII Entity');
+
+    const stranger = createClient(getBackendUrl());
+    const auth = await signup(stranger, {
+      email: 'fe-pii-stranger@example.com',
+      username: 'fepiistranger',
+      password: 'password123',
+      firstName: 'Str',
+      lastName: 'Anger',
+    });
+    withToken(stranger, auth.accessToken);
+
+    const res = await stranger.put(`/business-entities/${entity.key}/personal-data`, { containsPersonalData: true });
+    expect(res.status).toBe(403);
+  });
+
+  // =====================
   // READ
   // =====================
 

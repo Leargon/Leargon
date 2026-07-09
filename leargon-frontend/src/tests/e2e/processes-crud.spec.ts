@@ -9,7 +9,7 @@ import {
   uid,
   createProcessOwnedBy,
   createEntity,
-  assignClassificationsToEntity,
+  markEntityPersonalData,
   addProcessInput,
 } from './api-setup';
 
@@ -29,9 +29,7 @@ test.describe('Business Process CRUD — Admin', () => {
     // Link an entity with personal data so compliance fields (Legal Basis) are visible
     const entity = await createEntity(uid('PW Admin Personal Data Entity'));
     const entityKey = entity.key as string;
-    await assignClassificationsToEntity(entityKey, [
-      { classificationKey: 'personal-data', valueKey: 'personal-data--contains' },
-    ]);
+    await markEntityPersonalData(entityKey, true);
     await addProcessInput(processKey, entityKey);
   });
 
@@ -320,9 +318,7 @@ test.describe('Business Process CRUD — Viewer', () => {
     // Link an entity with personal data so compliance fields (Legal Basis) are visible
     const entity = await createEntity(uid('PW Personal Data Entity'));
     const entityKey = entity.key as string;
-    await assignClassificationsToEntity(entityKey, [
-      { classificationKey: 'personal-data', valueKey: 'personal-data--contains' },
-    ]);
+    await markEntityPersonalData(entityKey, true);
     await addProcessInput(processKey, entityKey);
   });
 

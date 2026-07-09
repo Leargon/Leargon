@@ -497,6 +497,9 @@ open class ProcessService(
         if (parentKey != null) {
             if (parentKey == key) throw IllegalArgumentException("A process cannot be its own parent")
             val newParent = getProcessByKey(parentKey)
+            if (wouldCreateProcessCycle(process.id!!, newParent.id!!)) {
+                throw IllegalArgumentException("Cannot set parent: would create a cycle in the hierarchy")
+            }
             process.parent = newParent
         } else {
             process.parent = null
@@ -507,6 +510,24 @@ open class ProcessService(
         createProcessVersion(process, currentUser, "UPDATE", "Changed parent to ${parentKey ?: "none"}")
         process = getProcessByKey(process.key)
         return processMapper.toProcessResponse(process)
+    }
+
+    /** Walks up from [newParentId]; if [processId] is reached, setting it as parent would form a cycle. */
+    private fun wouldCreateProcessCycle(
+        processId: Long,
+        newParentId: Long
+    ): Boolean {
+        var currentId: Long? = newParentId
+        while (currentId != null) {
+            if (currentId == processId) return true
+            currentId =
+                processRepository
+                    .findById(currentId)
+                    .map { it.parent }
+                    .orElse(null)
+                    ?.id
+        }
+        return false
     }
 
     @Retryable(attempts = "3", delay = "100ms")

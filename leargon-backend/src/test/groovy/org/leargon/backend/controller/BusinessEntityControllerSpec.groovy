@@ -10,6 +10,7 @@ import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.CreateBusinessEntityRequest
+import org.leargon.backend.model.EntityRole
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.BusinessEntityResponse
@@ -176,6 +177,64 @@ class BusinessEntityControllerSpec extends Specification {
         then: "data owner is set to specified user"
         response.body().dataOwner.username == "owner"
         response.body().createdBy.username == "creator"
+    }
+
+    def "personal-data typed fields round-trip through create and PUT (tri-state)"() {
+        given: "an owner"
+        def userData = createUserWithToken("pdowner@example.com", "pdowner")
+        String token = userData.token
+
+        when: "creating an entity that contains personal data as a data subject"
+        def req = new CreateBusinessEntityRequest([new LocalizedText("en", "Customer PII")])
+        req.containsPersonalData = true
+        req.entityRole = EntityRole.SUBJECT
+        def createResp = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", req).bearerAuth(token),
+                BusinessEntityResponse)
+        String key = createResp.body().key
+
+        then: "the typed fields are persisted and returned"
+        createResp.body().containsPersonalData == true
+        createResp.body().entityRole == EntityRole.SUBJECT
+
+        when: "clearing to not-answered (null) via PUT"
+        def putResp = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${key}/personal-data", [containsPersonalData: null, entityRole: null]).bearerAuth(token),
+                BusinessEntityResponse)
+
+        then: "null is distinct from false — the field reads as not answered"
+        putResp.body().containsPersonalData == null
+        putResp.body().entityRole == null
+
+        when: "setting explicitly to false (no)"
+        def putResp2 = client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${key}/personal-data", [containsPersonalData: false]).bearerAuth(token),
+                BusinessEntityResponse)
+
+        then: "false is persisted and distinguishable from null"
+        putResp2.body().containsPersonalData == false
+    }
+
+    def "PUT personal-data is forbidden for a non-owner"() {
+        given: "an owner creates an entity"
+        def ownerData = createUserWithToken("owner2@example.com", "owner2")
+        def createResp = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities", new CreateBusinessEntityRequest([new LocalizedText("en", "Locked Entity")]))
+                        .bearerAuth(ownerData.token),
+                BusinessEntityResponse)
+        String key = createResp.body().key
+
+        and: "an unrelated plain user"
+        def strangerData = createUserWithToken("stranger@example.com", "stranger", "ROLE_USER")
+
+        when: "the stranger tries to change the personal-data flag"
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/business-entities/${key}/personal-data", [containsPersonalData: true]).bearerAuth(strangerData.token),
+                BusinessEntityResponse)
+
+        then: "it is forbidden"
+        def ex = thrown(HttpClientResponseException)
+        ex.status == HttpStatus.FORBIDDEN
     }
 
     def "POST /business-entities should return 400 without default locale translation"() {

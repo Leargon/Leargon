@@ -56,6 +56,7 @@ import type {
   UpdateBusinessEntityParentRequest,
   UpdateBusinessEntityRelationshipRequest,
   UpdateBusinessEntityTechnicalCustodianRequest,
+  UpdatePersonalDataRequest,
   UpdateRetentionPeriodRequest,
   UpdateStorageLocationsRequest,
   VersionDiffResponse
@@ -1804,6 +1805,106 @@ export const useUpdateBusinessEntityNames = <TError = ErrorResponse | void,
         TContext
       > => {
       return useMutation(getUpdateBusinessEntityNamesMutationOptions(options), queryClient);
+    }
+    export type updateBusinessEntityPersonalDataResponse200 = {
+  data: BusinessEntityResponse
+  status: 200
+}
+
+export type updateBusinessEntityPersonalDataResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBusinessEntityPersonalDataResponse403 = {
+  data: ErrorResponse
+  status: 403
+}
+
+export type updateBusinessEntityPersonalDataResponse404 = {
+  data: ErrorResponse
+  status: 404
+}
+
+export type updateBusinessEntityPersonalDataResponseSuccess = (updateBusinessEntityPersonalDataResponse200) & {
+  headers: Headers;
+};
+export type updateBusinessEntityPersonalDataResponseError = (updateBusinessEntityPersonalDataResponse401 | updateBusinessEntityPersonalDataResponse403 | updateBusinessEntityPersonalDataResponse404) & {
+  headers: Headers;
+};
+
+export type updateBusinessEntityPersonalDataResponse = (updateBusinessEntityPersonalDataResponseSuccess | updateBusinessEntityPersonalDataResponseError)
+
+export const getUpdateBusinessEntityPersonalDataUrl = (key: string,) => {
+
+
+
+
+  return `/business-entities/${key}/personal-data`
+}
+
+/**
+ * Sets whether the entity contains personal data (tri-state) and its data-subject/data-attribute role. Only the Data Owner, Data Steward, or an Administrator can edit an entity.
+ * @summary Update personal-data flag and entity role
+ */
+export const updateBusinessEntityPersonalData = async (key: string,
+    updatePersonalDataRequest: UpdatePersonalDataRequest, options?: RequestInit): Promise<updateBusinessEntityPersonalDataResponse> => {
+
+  return customAxios<updateBusinessEntityPersonalDataResponse>(getUpdateBusinessEntityPersonalDataUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updatePersonalDataRequest)
+  }
+);}
+
+
+
+
+export const getUpdateBusinessEntityPersonalDataMutationOptions = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>, TError,{key: string;data: UpdatePersonalDataRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>, TError,{key: string;data: UpdatePersonalDataRequest}, TContext> => {
+
+const mutationKey = ['updateBusinessEntityPersonalData'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>, {key: string;data: UpdatePersonalDataRequest}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBusinessEntityPersonalData(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusinessEntityPersonalDataMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>>
+    export type UpdateBusinessEntityPersonalDataMutationBody = UpdatePersonalDataRequest
+    export type UpdateBusinessEntityPersonalDataMutationError = void | ErrorResponse
+
+    /**
+ * @summary Update personal-data flag and entity role
+ */
+export const useUpdateBusinessEntityPersonalData = <TError = void | ErrorResponse,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>, TError,{key: string;data: UpdatePersonalDataRequest}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusinessEntityPersonalData>>,
+        TError,
+        {key: string;data: UpdatePersonalDataRequest},
+        TContext
+      > => {
+      return useMutation(getUpdateBusinessEntityPersonalDataMutationOptions(options), queryClient);
     }
     export type updateBusinessEntityParentResponse200 = {
   data: BusinessEntityResponse

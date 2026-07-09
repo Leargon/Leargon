@@ -329,6 +329,9 @@ open class OrganisationalUnitService(
                     organisationalUnitRepository
                         .findByKey(parentKey)
                         .orElseThrow { ResourceNotFoundException("Parent unit not found: $parentKey") }
+                if (wouldCreateCycle(unit.id!!, parent)) {
+                    throw IllegalArgumentException("Cannot set parent '$parentKey': would create a cycle in the hierarchy")
+                }
                 unit.parents.add(parent)
             }
         }
@@ -336,6 +339,28 @@ open class OrganisationalUnitService(
         unit = organisationalUnitRepository.update(unit)
         syncFieldVerifications(unit, currentUser)
         return organisationalUnitMapper.toResponse(getByKey(unit.key))
+    }
+
+    /**
+     * Org units form a DAG (many-to-many parents). Adding [candidateParent] to the unit [unitId]
+     * creates a cycle iff [unitId] is reachable by walking up from [candidateParent] through its
+     * own parents. Traverses transitively with a visited set to stay safe even on already-corrupt data.
+     */
+    private fun wouldCreateCycle(
+        unitId: Long,
+        candidateParent: OrganisationalUnit
+    ): Boolean {
+        val visited = mutableSetOf<Long>()
+        val stack = ArrayDeque<OrganisationalUnit>()
+        stack.addLast(candidateParent)
+        while (stack.isNotEmpty()) {
+            val current = stack.removeLast()
+            val id = current.id ?: continue
+            if (id == unitId) return true
+            if (!visited.add(id)) continue
+            current.parents.forEach { stack.addLast(it) }
+        }
+        return false
     }
 
     @Retryable(attempts = "3", delay = "100ms")

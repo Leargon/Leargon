@@ -11,6 +11,7 @@ import org.leargon.backend.model.BusinessEntitySummaryResponse
 import org.leargon.backend.model.BusinessEntityTreeResponse
 import org.leargon.backend.model.BusinessEntityVersionResponse
 import org.leargon.backend.model.BusinessEntityVersionResponseChangeType
+import org.leargon.backend.model.EntityRole
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.repository.ProcessRepository
@@ -81,6 +82,14 @@ open class BusinessEntityMapper(
                         classKey in effectiveClassificationKeys
                     }
 
+                    fieldName == "containsPersonalData" -> {
+                        businessEntity.containsPersonalData != null
+                    }
+
+                    fieldName == "entityRole" -> {
+                        businessEntity.entityRole != null
+                    }
+
                     else -> {
                         true
                     }
@@ -121,6 +130,8 @@ open class BusinessEntityMapper(
             .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
             .classificationAssignments(effectiveClassifications)
             .retentionPeriod(LocalizedTextMapper.toModel(businessEntity.retentionPeriod))
+            .containsPersonalData(businessEntity.containsPersonalData)
+            .entityRole(businessEntity.entityRole?.let { runCatching { EntityRole.fromValue(it) }.getOrNull() })
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .derivedStorageLocations(computeDerivedStorageLocations(businessEntity))
             .missingMandatoryFields(fc.missing)

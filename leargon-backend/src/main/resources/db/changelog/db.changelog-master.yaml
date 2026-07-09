@@ -139,3 +139,7 @@ databaseChangeLog:
       file: db/changelog/changes/068-add-team-topology-thresholds.yaml
   - include:
       file: db/changelog/changes/069-add-org-chart-default-view.yaml
+  - include:
+      file: db/changelog/changes/070-add-entity-personal-data-fields.yaml
+  - include:
+      file: db/changelog/changes/071-retire-system-classifications.yaml
