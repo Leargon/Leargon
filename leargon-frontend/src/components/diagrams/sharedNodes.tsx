@@ -24,6 +24,9 @@ export interface ProcessNodeData {
   expanded?: boolean;
   /** When true, handles are Left/Right (horizontal flow) instead of Top/Bottom (vertical tree). */
   horizontal?: boolean;
+  /** When true (and not horizontal), add extra Left(id "in") / Right(id "out") handles so data
+   *  entities flow horizontally into/out of the process while the tree stays vertical. */
+  entityFlow?: boolean;
 }
 
 export interface DataEntityNodeData {
@@ -143,6 +146,13 @@ export const ProcessNode = memo(({ data, selected }: NodeProps) => {
     >
       <Handle type="target" position={d.horizontal ? Position.Left : Position.Top} style={{ background: '#388e3c' }} />
       <Handle type="source" position={d.horizontal ? Position.Right : Position.Bottom} style={{ background: '#388e3c' }} />
+      {d.entityFlow && !d.horizontal && (
+        <>
+          {/* input entities attach on the left, output entities leave on the right */}
+          <Handle id="in" type="target" position={Position.Left} style={{ background: '#0097a7' }} />
+          <Handle id="out" type="source" position={Position.Right} style={{ background: '#f57c00' }} />
+        </>
+      )}
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
         <Typography
           variant="body2"
