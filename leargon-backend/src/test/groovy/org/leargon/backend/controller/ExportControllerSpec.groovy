@@ -7,7 +7,6 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
-import org.leargon.backend.domain.ClassificationAssignment
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest

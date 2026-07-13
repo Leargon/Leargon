@@ -85,6 +85,7 @@ class PersonalDataBackfillMigrationE2ESpec extends Specification {
         ps.close()
     }
 
+    @SuppressWarnings('BooleanMethodReturnsNull')
     private Boolean readBool(String key) {
         def rs = conn.createStatement().executeQuery(
             "SELECT contains_personal_data FROM business_entities WHERE `key` = '${key}'")
