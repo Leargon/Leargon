@@ -100,6 +100,15 @@ class BusinessEntity {
     @Column(name = "storage_locations", columnDefinition = "JSON")
     var storageLocations: MutableList<String>? = null
 
+    // Typed GDPR facts (replace the load-bearing system classifications). Tri-state boolean:
+    // null = not answered, true = yes, false = no.
+    @Column(name = "contains_personal_data")
+    var containsPersonalData: Boolean? = null
+
+    // EntityRole enum stored as string (DATA_SUBJECT / DATA_ATTRIBUTE), matching legalBasis/unitType.
+    @Column(name = "entity_role", length = 20)
+    var entityRole: String? = null
+
     @OneToMany(mappedBy = "businessEntity", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     var qualityRules: MutableList<BusinessDataQualityRule> = mutableListOf()
 

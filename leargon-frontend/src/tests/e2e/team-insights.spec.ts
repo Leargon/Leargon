@@ -192,4 +192,22 @@ test.describe('Insights page — data', () => {
     await page.getByText('Interaction Anti-Patterns', { exact: true }).click();
     await expect(page.getByText(nameA).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
   });
+
+  test('flags a low-health interaction in the Interaction Health card', async ({ page }) => {
+    const nameA = uid('PW Health A');
+    const nameB = uid('PW Health B');
+    const a = await createOrgUnit(nameA, ADMIN);
+    const b = await createOrgUnit(nameB, ADMIN);
+    // Default health threshold is 2, so a health score of 1 is flagged without changing settings.
+    await postJson('/team-interactions', {
+      sourceUnitKey: a.key, targetUnitKey: b.key, mode: 'X_AS_A_SERVICE', duration: 'ONGOING', healthScore: 1,
+    }, ADMIN);
+
+    await page.goto('/team-insights');
+    await page.waitForLoadState('networkidle');
+    await switchView(page, 'Architecture');
+
+    await page.getByText('Interaction Health', { exact: true }).click();
+    await expect(page.getByText(nameA).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+  });
 });

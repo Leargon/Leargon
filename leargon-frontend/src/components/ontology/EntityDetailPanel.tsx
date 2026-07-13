@@ -45,6 +45,7 @@ import {
   useUpdateBusinessEntityDataSteward,
   useUpdateBusinessEntityTechnicalCustodian,
   useUpdateBusinessEntityParent,
+  useUpdateBusinessEntityPersonalData,
   useAssignBoundedContextToBusinessEntity,
   useAssignOwningUnitToBusinessEntity,
   useUpdateBusinessEntityInterfaces,
@@ -107,6 +108,7 @@ import type {
   UserSummaryResponse,
   TranslationLinkResponse,
   OrganisationalUnitResponse,
+  EntityRole,
 } from '../../api/generated/model';
 
 import { getCountryName, getCountryOptions } from '../../utils/countries';
@@ -221,6 +223,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     );
   const isLocaleHidden = (prefix: string, localeCode: string) => hiddenList.includes(`${prefix}.${localeCode}`);
   const isClassificationHidden = (classKey: string) => hiddenList.includes(`classification.${classKey}`);
+  // Special categories (Art. 9) are a refinement of personal data — only meaningful once the
+  // entity is marked as containing personal data. Gate them accordingly.
+  const isClassificationVisible = (classKey: string) =>
+    !isClassificationHidden(classKey) &&
+    (classKey !== 'special-categories' || entity?.containsPersonalData === true);
 
   const descriptionLocales = isOwnerOrAdmin ? activeLocales : activeLocales.filter((l) => l.localeCode === preferredLocale);
 
@@ -231,6 +238,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const updateDataSteward = useUpdateBusinessEntityDataSteward();
   const updateTechnicalCustodian = useUpdateBusinessEntityTechnicalCustodian();
   const updateParent = useUpdateBusinessEntityParent();
+  const updatePersonalData = useUpdateBusinessEntityPersonalData();
   const assignBoundedContext = useAssignBoundedContextToBusinessEntity();
   const assignOwningUnit = useAssignOwningUnitToBusinessEntity();
   const createTranslationLink = useCreateTranslationLink();
@@ -254,6 +262,13 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   // Per-field edit affordances come straight from the backend-computed editableFields on the detail
   // response — the single source of truth that cannot drift from server-side enforcement.
   const canEditField = (fieldName: string): boolean => entity?.editableFields?.includes(fieldName) ?? false;
+  const savePersonalData = async (contains: boolean | null, role: string | null) => {
+    await updatePersonalData.mutateAsync({
+      key: entityKey,
+      data: { containsPersonalData: contains, entityRole: (role || undefined) as EntityRole | undefined },
+    });
+    queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
+  };
   // Lifecycle management of this entity (create a child under it, or delete it): an admin /
   // DATA_GOVERNANCE editor-lead, or this entity's owner/steward.
   const canManage = canCreateChild(user?.roles, 'BUSINESS_ENTITY', user?.username, entity?.dataOwner?.username, entity?.dataSteward?.username);
@@ -1206,6 +1221,57 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
+      {/* Personal data (typed GDPR facts) */}
+      {!isHidden('containsPersonalData') && (
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.containsPersonalData')}</Typography>
+            {canEditField('containsPersonalData') ? (
+              <Select
+                size="small"
+                sx={{ minWidth: 150 }}
+                value={entity.containsPersonalData === true ? 'yes' : entity.containsPersonalData === false ? 'no' : ''}
+                displayEmpty
+                onChange={(e: SelectChangeEvent) => {
+                  const v = e.target.value;
+                  savePersonalData(v === 'yes' ? true : v === 'no' ? false : null, entity.entityRole ?? null);
+                }}
+              >
+                <MenuItem value=""><em>{t('entity.personalDataNotSet')}</em></MenuItem>
+                <MenuItem value="yes">{t('common.yes')}</MenuItem>
+                <MenuItem value="no">{t('common.no')}</MenuItem>
+              </Select>
+            ) : (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {entity.containsPersonalData === true ? t('common.yes') : entity.containsPersonalData === false ? t('common.no') : t('entity.personalDataNotSet')}
+              </Typography>
+            )}
+          </Box>
+          {entity.containsPersonalData === true && !isHidden('entityRole') && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.entityRole')}</Typography>
+              {canEditField('containsPersonalData') ? (
+                <Select
+                  size="small"
+                  sx={{ minWidth: 150 }}
+                  value={entity.entityRole ?? ''}
+                  displayEmpty
+                  onChange={(e: SelectChangeEvent) => savePersonalData(entity.containsPersonalData ?? null, e.target.value || null)}
+                >
+                  <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
+                  <MenuItem value="DATA_SUBJECT">{t('entity.roleDataSubject')}</MenuItem>
+                  <MenuItem value="DATA_ATTRIBUTE">{t('entity.roleDataAttribute')}</MenuItem>
+                </Select>
+              ) : (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {entity.entityRole === 'DATA_SUBJECT' ? t('entity.roleDataSubject') : entity.entityRole === 'DATA_ATTRIBUTE' ? t('entity.roleDataAttribute') : t('common.none')}
+                </Typography>
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
+
       {/* Classifications */}
       <SectionHeader title={t('common.classifications')} canEdit={canEditField('classification')} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(
@@ -1217,7 +1283,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         isMandatory={anyClassificationMandatory} />
       {classEdit.isEditing && classEdit.editValue ? (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
+          {availableClassifications.filter((c) => isClassificationVisible(c.key)).map((c) => {
             if (c.multiValue) {
               const currentValues = classEdit.editValue!.filter((a) => a.classificationKey === c.key).map((a) => a.valueKey);
               return (
@@ -1272,7 +1338,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </Box>
       ) : (
         <Box sx={{ mb: 2 }}>
-          {availableClassifications.length > 0 ? availableClassifications.filter((c) => !isClassificationHidden(c.key)).map((c) => {
+          {availableClassifications.length > 0 ? availableClassifications.filter((c) => isClassificationVisible(c.key)).map((c) => {
             const assignments = entity.classificationAssignments?.filter((a) => a.classificationKey === c.key) || [];
             return (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

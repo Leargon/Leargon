@@ -256,13 +256,12 @@ class DashboardControllerSpec extends Specification {
             item.label != null &&
             item.covered != null &&
             item.total != null &&
-            item.percentage != null &&
-            item.percentage >= 0 &&
-            item.percentage <= 100
+            // percentage is nullable (null = N/A when there is nothing to measure)
+            (item.percentage == null || (item.percentage >= 0 && item.percentage <= 100))
         }
     }
 
-    def "GET /dashboard/maturity reports 100 percent when there are no items to measure"() {
+    def "GET /dashboard/maturity reports N/A (null percentage) when there are no items to measure"() {
         given:
         String adminToken = createAdminToken("adminEmpty@dashboard.com", "adminEmptyDash")
 
@@ -273,7 +272,8 @@ class DashboardControllerSpec extends Specification {
         then:
         resp.status == HttpStatus.OK
         def metrics = resp.body().metrics
-        // When total is 0, percentage should be 100 (nothing to fail)
-        metrics.findAll { it.totalCount == 0 }.every { it.percentage == 100 }
+        // When total is 0 there is nothing to measure: percentage is null (N/A), not a misleading 100%.
+        metrics.findAll { it.total == 0 }.every { it.percentage == null }
+        metrics.any { it.total == 0 }
     }
 }

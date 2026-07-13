@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 071-retire-system-classifications
+      author: leargon
+      comment: >-
+        Retire the load-bearing `personal-data` and `entity-type` system classifications now that
+        their meaning lives in typed BusinessEntity columns (backfilled in 070). Deletes the
+        classification definitions and their values. Stale assignments left in entity
+        classification_assignments JSON are no longer read by any logic and are not rendered
+        (the UI iterates known classifications), so they are left untouched. Runs after 070 so the
+        backfill has already captured the values. `special-categories` is intentionally kept.
+      changes:
+        - sql:
+            sql: >-
+              DELETE FROM classification_values
+              WHERE classification_id IN (
+                SELECT id FROM classifications WHERE `key` IN ('personal-data', 'entity-type')
+              )
+        - sql:
+            sql: >-
+              DELETE FROM classifications WHERE `key` IN ('personal-data', 'entity-type')

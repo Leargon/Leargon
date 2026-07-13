@@ -26,7 +26,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import type { ProcessResponse } from '../../api/generated/model/processResponse';
 import { useLocale } from '../../context/LocaleContext';
 import { SHARED_NODE_TYPES, type ProcessNodeData, type DataEntityNodeData, type GroupNodeData } from './sharedNodes';
-import { applyDagreLayout, layoutGroups, domainColor } from './diagramUtils';
+import { applyDagreLayout, layoutNested, domainColor, DEFAULT_FIT_VIEW, DEFAULT_GROUP_PADDING, HEADERLESS_PADDING } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
 type LayerOption = 'domain' | 'orgUnit' | 'entities';
@@ -82,10 +82,18 @@ function buildGraph(
   const rawProcessNodes: Node[] = [];
   const processInfoMap = new Map<string, { bcKey?: string; bcName?: string; orgKey?: string; orgName?: string }>();
   const processEdges: Edge[] = [];
-  // Deduplicated entity nodes: keyed by `input__${entity.key}` or `output__${entity.key}`
+  // One node per entity (deduped). Entities sit in a column to the right; entity↔process edges attach
+  // horizontally (process right ↔ entity left) while process↔process edges stay top/bottom.
   const entityNodeMap = new Map<string, Node>();
+  const entityConn = new Map<string, Set<string>>(); // entity id → connected process ids (for y-alignment)
+  const inputEntityIds = new Set<string>();  // used as an input by any process → left column
+  const outputEntityIds = new Set<string>(); // used as an output by any process → right column
   const entityEdges: Edge[] = [];
   const seen = new Set<string>();
+  const addConn = (eid: string, pk: string) => {
+    if (!entityConn.has(eid)) entityConn.set(eid, new Set());
+    entityConn.get(eid)!.add(pk);
+  };
 
   function addProcess(p: ProcessResponse) {
     if (seen.has(p.key)) return;
@@ -115,6 +123,7 @@ function buildGraph(
         orgUnitColor: orgNameInNode ? orgColor : undefined,
         hasChildren,
         expanded: isExpanded,
+        entityFlow: showEntities,
       } satisfies ProcessNodeData,
     });
 
@@ -126,7 +135,7 @@ function buildGraph(
     });
 
     if (showEntities) {
-      (p.inputEntities ?? []).forEach((entity) => {
+      const ensureEntity = (entity: { key: string; name: string }) => {
         const eid = `entity__${entity.key}`;
         if (!entityNodeMap.has(eid)) {
           entityNodeMap.set(eid, {
@@ -138,10 +147,19 @@ function buildGraph(
             data: { label: entity.name } satisfies DataEntityNodeData,
           });
         }
+        addConn(eid, p.key);
+        return eid;
+      };
+
+      (p.inputEntities ?? []).forEach((entity) => {
+        const eid = ensureEntity(entity);
+        inputEntityIds.add(eid);
+        // input entity (right) → process left handle ("in")
         entityEdges.push({
           id: `edge_in__${entity.key}__${p.key}`,
           source: eid,
           target: p.key,
+          targetHandle: 'in',
           type: 'default',
           label: 'in',
           labelStyle: { fontSize: 9, fill: '#0097a7' },
@@ -151,20 +169,13 @@ function buildGraph(
       });
 
       (p.outputEntities ?? []).forEach((entity) => {
-        const eid = `entity__${entity.key}`;
-        if (!entityNodeMap.has(eid)) {
-          entityNodeMap.set(eid, {
-            id: eid,
-            type: 'dataEntityNode',
-            position: { x: 0, y: 0 },
-            width: 150,
-            height: 44,
-            data: { label: entity.name } satisfies DataEntityNodeData,
-          });
-        }
+        const eid = ensureEntity(entity);
+        outputEntityIds.add(eid);
+        // process right handle ("out") → output entity (left)
         entityEdges.push({
           id: `edge_out__${p.key}__${entity.key}`,
           source: p.key,
+          sourceHandle: 'out',
           target: eid,
           type: 'default',
           label: 'out',
@@ -219,14 +230,83 @@ function buildGraph(
     });
   });
 
+  // Place each entity ORGANICALLY next to the process(es) it belongs to (not in far side-columns):
+  // an INPUT entity sits just to the LEFT of its process (its right handle → the process's left "in"
+  // handle); a purely OUTPUT entity sits just to the RIGHT (process's right "out" → entity's left).
+  // Entities shared by several processes align to their average row; overlaps are nudged downward.
+  const placeEntityColumns = (allNodes: Node[]): Node[] => {
+    if (!showEntities || entityNodes.length === 0) return allNodes;
+    const byId = new Map(allNodes.map((n) => [n.id, n]));
+    const absPos = (n: Node): { x: number; y: number } => {
+      let x = n.position.x;
+      let y = n.position.y;
+      let pid = n.parentId;
+      while (pid) {
+        const par = byId.get(pid);
+        if (!par) break;
+        x += par.position.x;
+        y += par.position.y;
+        pid = par.parentId;
+      }
+      return { x, y };
+    };
+    const procAbs = new Map<string, { x: number; y: number; w: number; h: number }>();
+    rawProcessNodes.forEach((pn) => {
+      const n = byId.get(pn.id);
+      if (n) {
+        const a = absPos(n);
+        procAbs.set(pn.id, { x: a.x, y: a.y, w: n.width ?? 200, h: n.height ?? 56 });
+      }
+    });
+    const GAP = 48;
+    const ROW_GAP = 12;
+
+    // Compute each entity's desired position relative to its connected processes.
+    const placed = entityNodes
+      .map((e) => {
+        const procs = [...(entityConn.get(e.id) ?? [])].map((pk) => procAbs.get(pk)).filter(Boolean) as {
+          x: number; y: number; w: number; h: number;
+        }[];
+        if (!procs.length) return null;
+        const w = e.width ?? 150;
+        const h = e.height ?? 44;
+        const y = procs.reduce((s, p) => s + p.y + p.h / 2, 0) / procs.length - h / 2;
+        const isInput = inputEntityIds.has(e.id);
+        const x = isInput
+          ? Math.min(...procs.map((p) => p.x)) - GAP - w   // just left of its leftmost process
+          : Math.max(...procs.map((p) => p.x + p.w)) + GAP; // just right of its rightmost process
+        return { e, x, y, w, h };
+      })
+      .filter(Boolean) as { e: Node; x: number; y: number; w: number; h: number }[];
+
+    // Resolve overlaps: push an entity down while its rectangle collides with an already-placed one.
+    placed.sort((a, b) => a.y - b.y);
+    const done: typeof placed = [];
+    for (const p of placed) {
+      let moved = true;
+      while (moved) {
+        moved = false;
+        for (const o of done) {
+          if (p.x < o.x + o.w && p.x + p.w > o.x && p.y < o.y + o.h + ROW_GAP && p.y + p.h > o.y) {
+            p.y = o.y + o.h + ROW_GAP;
+            moved = true;
+          }
+        }
+      }
+      done.push(p);
+    }
+
+    return [...allNodes, ...placed.map((p) => ({ ...p.e, position: { x: p.x, y: p.y } }))];
+  };
+
   // --- Step 2: flat layout (no containers) ----------------------------------------
   if (!useContainers) {
-    const allEdges = [...processEdges, ...entityEdges];
+    const laidProcesses = applyDagreLayout(rawProcessNodes, processEdges, {
+      rankdir: 'TB', nodesep: 50, ranksep: 80,
+    });
     return {
-      nodes: applyDagreLayout([...rawProcessNodes, ...entityNodes], allEdges, {
-        rankdir: 'TB', nodesep: 50, ranksep: 80,
-      }),
-      edges: allEdges,
+      nodes: placeEntityColumns(laidProcesses),
+      edges: [...processEdges, ...entityEdges],
     };
   }
 
@@ -265,40 +345,36 @@ function buildGraph(
     } satisfies GroupNodeData,
   }));
 
-  const childNodes: Node[] = rawProcessNodes
-    .filter((n) => !!getContainerKey(n.id))
-    .map((n) => ({ ...n, parentId: `group__${getContainerKey(n.id)!}` }));
-
-  const ungroupedNodes: Node[] = rawProcessNodes.filter((n) => !getContainerKey(n.id));
-
-  const laidGrouped = layoutGroups(groupNodes, childNodes, processEdges, {
-    rankdir: 'TB', nodesep: 50, ranksep: 80,
+  // Every process joins a group in ONE nested pass: a real domain/org container, or — for a
+  // process with no container — its own INVISIBLE singleton group. This removes the old
+  // second independent layout pass (which overlapped the containers) and preserves the process
+  // hierarchy (parent→child edges surface as ordering edges between groups).
+  const singletonGroups: Node[] = [];
+  const childNodes: Node[] = rawProcessNodes.map((n) => {
+    const ck = getContainerKey(n.id);
+    if (ck) return { ...n, parentId: `group__${ck}` };
+    const gid = `nodomain__${n.id}`;
+    singletonGroups.push({
+      id: gid,
+      type: 'invisibleGroupNode',
+      position: { x: 0, y: 0 },
+      data: { label: '', color: '#9e9e9e' } satisfies GroupNodeData,
+    });
+    return { ...n, parentId: gid };
   });
 
-  const laidUngrouped =
-    ungroupedNodes.length > 0
-      ? applyDagreLayout(ungroupedNodes, [], { rankdir: 'TB', nodesep: 50, ranksep: 80 })
-      : [];
+  const allNodes: Node[] = layoutNested(
+    [...groupNodes, ...singletonGroups, ...childNodes],
+    processEdges,
+    {
+      rankdir: 'TB',
+      nodesep: 50,
+      ranksep: 80,
+      paddingFor: (node) => (node.type === 'invisibleGroupNode' ? HEADERLESS_PADDING : DEFAULT_GROUP_PADDING),
+    },
+  );
 
-  let allNodes: Node[] = [...laidGrouped, ...laidUngrouped];
-
-  if (showEntities && entityNodes.length > 0) {
-    // Place entity nodes to the right of the main diagram
-    const maxX = Math.max(
-      ...allNodes.filter((n) => !n.parentId).map((n) => n.position.x + (n.width ?? 200)),
-      0,
-    );
-    const laidEntities = applyDagreLayout(entityNodes, entityEdges, {
-      rankdir: 'TB', nodesep: 30, ranksep: 60,
-    });
-    const offset = maxX + 160;
-    allNodes = [
-      ...allNodes,
-      ...laidEntities.map((n) => ({ ...n, position: { x: n.position.x + offset, y: n.position.y } })),
-    ];
-  }
-
-  return { nodes: allNodes, edges: [...processEdges, ...entityEdges] };
+  return { nodes: placeEntityColumns(allNodes), edges: [...processEdges, ...entityEdges] };
 }
 
 const ProcessLandscapeDiagram: React.FC = () => {
@@ -342,8 +418,8 @@ const ProcessLandscapeDiagram: React.FC = () => {
           navigate(`/processes/${node.id}`);
         }
       } else if (node.type === 'dataEntityNode') {
-        // id format: "entity__entityKey"
-        const entityKey = node.id.replace(/^entity__/, '');
+        // id format: "input__<entityKey>" or "output__<entityKey>"
+        const entityKey = node.id.replace(/^(input|output)__/, '');
         navigate(`/entities/${entityKey}`);
       }
     },
@@ -447,7 +523,7 @@ const ProcessLandscapeDiagram: React.FC = () => {
           nodeTypes={SHARED_NODE_TYPES}
           colorMode={colorMode}
           fitView
-          fitViewOptions={{ padding: 0.12 }}
+          fitViewOptions={DEFAULT_FIT_VIEW}
           minZoom={0.05}
           maxZoom={2}
           nodesConnectable={false}

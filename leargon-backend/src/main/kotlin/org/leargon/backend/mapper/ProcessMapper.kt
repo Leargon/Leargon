@@ -145,12 +145,7 @@ open class ProcessMapper(
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
         val effectiveOutputEntities = collectEffectiveEntities(process) { it.outputEntities }
         val allEffectiveEntities = (effectiveInputEntities + effectiveOutputEntities).distinctBy { it.key }
-        val containsPersonalData =
-            allEffectiveEntities.any { entity ->
-                entity.classificationAssignments.any {
-                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                }
-            }
+        val containsPersonalData = allEffectiveEntities.any { it.containsPersonalData == true }
         val fvSvc = this.fieldVerificationService
         val fieldStatuses =
             if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_PROCESS")) {
@@ -254,8 +249,10 @@ open class ProcessMapper(
         @JvmStatic
         fun derivedProcessingCountries(process: Process): List<String> {
             val result = mutableSetOf<String>()
+            val visited = mutableSetOf<String>()
 
             fun collect(p: Process) {
+                if (!visited.add(p.key)) return
                 p.itSystems.forEach { result.addAll(it.processingCountries) }
                 p.serviceProviders
                     .filter { it.serviceProviderType == "DATA_PROCESSOR" }
@@ -267,15 +264,31 @@ open class ProcessMapper(
             return result.sorted()
         }
 
+        /**
+         * Single source of truth for "does this process (effectively, including sub-processes)
+         * handle personal data?" — reads the typed [BusinessEntity.containsPersonalData] flag over
+         * the effective input+output entity roll-up. Used by the process response, the dashboard
+         * (needs-attention + DPIA coverage) and the processing register so they never disagree.
+         */
+        @JvmStatic
+        fun effectivelyHandlesPersonalData(process: Process): Boolean {
+            val entities =
+                collectEffectiveEntities(process) { it.inputEntities } +
+                    collectEffectiveEntities(process) { it.outputEntities }
+            return entities.any { it.containsPersonalData == true }
+        }
+
         @JvmStatic
         fun collectEffectiveEntities(
             process: Process,
             selector: (Process) -> Collection<BusinessEntity>
         ): List<BusinessEntity> {
             val seen = mutableSetOf<String>()
+            val visitedProcesses = mutableSetOf<String>()
             val result = mutableListOf<BusinessEntity>()
 
             fun collect(p: Process) {
+                if (!visitedProcesses.add(p.key)) return
                 for (entity in selector(p)) {
                     if (seen.add(entity.key)) result.add(entity)
                 }

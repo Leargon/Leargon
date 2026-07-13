@@ -149,6 +149,8 @@ open class BusinessEntityService(
             entity.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         }
         entity.retentionPeriod = request.retentionPeriod?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
+        entity.containsPersonalData = request.containsPersonalData
+        entity.entityRole = request.entityRole?.value
 
         if (request.owningUnitKey != null) {
             entity.owningUnit =
@@ -173,6 +175,23 @@ open class BusinessEntityService(
         currentUser: User
     ): BusinessEntityResponse {
         val entity = createBusinessEntity(request, currentUser)
+        return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
+    }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun updatePersonalData(
+        entityKey: String,
+        containsPersonalData: Boolean?,
+        entityRole: org.leargon.backend.model.EntityRole?,
+        currentUser: User
+    ): BusinessEntityResponse {
+        var entity = getBusinessEntityByKey(entityKey)
+        requireFieldEdit(entity, currentUser, "containsPersonalData")
+        entity.containsPersonalData = containsPersonalData
+        entity.entityRole = entityRole?.value
+        entity = businessEntityRepository.update(entity)
+        createBusinessEntityVersion(entity, currentUser, "UPDATE", "Updated personal-data classification")
         return businessEntityMapper.toBusinessEntityResponse(getBusinessEntityByKey(entity.key))
     }
 

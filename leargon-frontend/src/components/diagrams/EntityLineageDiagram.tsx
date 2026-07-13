@@ -19,7 +19,7 @@ import type { ProcessResponse } from '../../api/generated/model/processResponse'
 import type { BusinessEntityResponse } from '../../api/generated/model/businessEntityResponse';
 import { useLocale } from '../../context/LocaleContext';
 import { SHARED_NODE_TYPES, type EntityNodeData, type ProcessNodeData } from './sharedNodes';
-import { applyDagreLayout } from './diagramUtils';
+import { applyDagreLayout, DEFAULT_FIT_VIEW } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 
 interface Props {
@@ -75,7 +75,7 @@ function buildLineage(
       position: { x: 0, y: 0 },
       width: 200,
       height: 56,
-      data: { label: name } satisfies ProcessNodeData,
+      data: { label: name, horizontal: true } satisfies ProcessNodeData,
     });
   };
 
@@ -90,7 +90,7 @@ function buildLineage(
       id: `in__${entityKey}__${p.key}`,
       source: entityKey,
       target: procNodeId,
-      type: 'default',
+      type: 'smoothstep',
       style: { stroke: '#0097a7', strokeWidth: 2 },
       label: t('diagrams.lineageReadBy'),
       labelStyle: { fontSize: 9, fill: '#0097a7' },
@@ -105,7 +105,7 @@ function buildLineage(
         id: `out__${p.key}__${out.key}`,
         source: procNodeId,
         target: out.key,
-        type: 'default',
+        type: 'smoothstep',
         style: { stroke: '#f57c00', strokeWidth: 1.5 },
         markerEnd: { type: 'arrowclosed' as const, color: '#f57c00' },
       });
@@ -120,7 +120,7 @@ function buildLineage(
       id: `prod__${p.key}__${entityKey}`,
       source: procNodeId,
       target: entityKey,
-      type: 'default',
+      type: 'smoothstep',
       style: { stroke: '#f57c00', strokeWidth: 2 },
       label: t('diagrams.lineageWrittenBy'),
       labelStyle: { fontSize: 9, fill: '#f57c00' },
@@ -135,7 +135,7 @@ function buildLineage(
         id: `inp__${inp.key}__${p.key}`,
         source: inp.key,
         target: procNodeId,
-        type: 'default',
+        type: 'smoothstep',
         style: { stroke: '#0097a7', strokeWidth: 1.5 },
         markerEnd: { type: 'arrowclosed' as const, color: '#0097a7' },
       });
@@ -216,7 +216,7 @@ const EntityLineageDiagram: React.FC<Props> = ({ entityKey, entityName }) => {
         nodeTypes={SHARED_NODE_TYPES}
         colorMode={colorMode}
         fitView
-        fitViewOptions={{ padding: 0.15 }}
+        fitViewOptions={DEFAULT_FIT_VIEW}
         minZoom={0.1}
         maxZoom={2}
         nodesConnectable={false}

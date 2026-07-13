@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createEntity, createEntityOwnedBy, createOrgUnit, assignOwningUnitToEntity, uid } from './api-setup';
+import { createEntity, createEntityOwnedBy, createOrgUnit, assignOwningUnitToEntity, markEntityPersonalData, uid } from './api-setup';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Admin tests — uses default project storageState (.auth/admin.json)
@@ -26,6 +26,21 @@ test.describe('Business Entity CRUD — Admin', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
     await expect(page.getByRole('heading', { name: newName })).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('shows the typed personal-data fields on the entity detail page', async ({ page }) => {
+    const name = uid('PW PII Entity');
+    const entity = await createEntity(name);
+    await markEntityPersonalData(entity.key as string, true, 'DATA_SUBJECT');
+
+    await page.goto(`/entities/${entity.key}`);
+    await page.waitForLoadState('networkidle');
+
+    // Expand the Governance accordion, which holds the typed personal-data fields.
+    // (Use the button role so we don't collide with the "Current view" switcher that also reads "Governance".)
+    await page.getByRole('button', { name: 'Governance', exact: true }).click();
+    await expect(page.getByText('Contains personal data')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Data category role')).toBeVisible({ timeout: 10_000 });
   });
 
   test('can rename a business entity', async ({ page }) => {

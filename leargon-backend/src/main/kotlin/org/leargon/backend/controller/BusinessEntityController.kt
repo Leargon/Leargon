@@ -29,6 +29,7 @@ import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
 import org.leargon.backend.model.UpdateBusinessEntityTechnicalCustodianRequest
+import org.leargon.backend.model.UpdatePersonalDataRequest
 import org.leargon.backend.model.UpdateRetentionPeriodRequest
 import org.leargon.backend.model.UpdateStorageLocationsRequest
 import org.leargon.backend.model.VersionDiffResponse
@@ -104,6 +105,19 @@ open class BusinessEntityController(
     ): BusinessEntityResponse {
         val currentUser = getCurrentUser()
         return businessEntityService.updateBusinessEntityParentAsResponse(key, updateBusinessEntityParentRequest.parentKey, currentUser)
+    }
+
+    override fun updateBusinessEntityPersonalData(
+        key: String,
+        @Valid @Body updatePersonalDataRequest: UpdatePersonalDataRequest
+    ): BusinessEntityResponse {
+        val currentUser = getCurrentUser()
+        return businessEntityService.updatePersonalData(
+            key,
+            updatePersonalDataRequest.containsPersonalData,
+            updatePersonalDataRequest.entityRole,
+            currentUser
+        )
     }
 
     override fun clearBusinessEntityDataOwner(key: String): BusinessEntityResponse {

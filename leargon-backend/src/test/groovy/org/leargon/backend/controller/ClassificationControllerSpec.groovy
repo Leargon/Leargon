@@ -293,9 +293,9 @@ class ClassificationControllerSpec extends Specification {
                 ClassificationResponse
         )
 
-        then: "classification is updated"
+        then: "the name is updated but the key stays stable (renaming must not orphan assignments)"
         def body = updateResponse.body()
-        body.key == "data-sensitivity"
+        body.key == "sensitivity"
         body.names[0].text == "Data Sensitivity"
     }
 

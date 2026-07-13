@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 070-add-entity-personal-data-fields
+      author: leargon
+      comment: >-
+        Promote the load-bearing GDPR facts off the flexible classification system into typed
+        columns on business_entities. Tri-state contains_personal_data (null/true/false) and
+        entity_role (DATA_SUBJECT / DATA_ATTRIBUTE).
+      changes:
+        - addColumn:
+            tableName: business_entities
+            columns:
+              - column:
+                  name: contains_personal_data
+                  type: BOOLEAN
+                  constraints:
+                    nullable: true
+              - column:
+                  name: entity_role
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+  - changeSet:
+      id: 070-backfill-personal-data-from-classifications
+      author: leargon
+      comment: >-
+        Backfill the typed columns from the existing personal-data / entity-type classification
+        assignments so nothing is lost when those system classifications are retired. Rows without
+        those tags keep contains_personal_data = NULL (not answered).
+      changes:
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE business_entities
+              SET contains_personal_data = TRUE
+              WHERE classification_assignments IS NOT NULL
+                AND JSON_SEARCH(classification_assignments, 'one', 'personal-data--contains', NULL, '$[*].valueKey') IS NOT NULL
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE business_entities
+              SET contains_personal_data = FALSE
+              WHERE contains_personal_data IS NULL
+                AND classification_assignments IS NOT NULL
+                AND JSON_SEARCH(classification_assignments, 'one', 'personal-data--not-contains', NULL, '$[*].valueKey') IS NOT NULL
+        - sql:
+            dbms: mysql
+            sql: >-
+              UPDATE business_entities
+              SET entity_role = 'DATA_SUBJECT'
+              WHERE classification_assignments IS NOT NULL
+                AND JSON_SEARCH(classification_assignments, 'one', 'entity-type--role', NULL, '$[*].valueKey') IS NOT NULL

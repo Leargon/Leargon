@@ -23,13 +23,23 @@ open class ProcessingRegisterService(
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-    private fun rootEntity(e: BusinessEntity): BusinessEntity = if (e.parent == null) e else rootEntity(e.parent!!)
+    private fun rootEntity(e: BusinessEntity): BusinessEntity {
+        // Walk up to the top-level ancestor, guarding against accidental cycles in the data.
+        val visited = mutableSetOf<String>()
+        var current = e
+        while (current.parent != null && visited.add(current.key)) {
+            current = current.parent!!
+        }
+        return current
+    }
 
     private fun collectEffectiveTransfers(process: Process): List<CrossBorderTransfer> {
         val seen = mutableSetOf<String>()
+        val visitedProcesses = mutableSetOf<String>()
         val result = mutableListOf<CrossBorderTransfer>()
 
         fun collect(p: Process) {
+            if (!visitedProcesses.add(p.key)) return
             p.crossBorderTransfers?.forEach { t ->
                 if (seen.add("${t.destinationCountry}:${t.safeguard}")) result.add(t)
             }
@@ -121,7 +131,10 @@ open class ProcessingRegisterService(
                 .filter { it.parent != null }
                 .groupBy { it.parent!!.key }
 
+        // One row per *root* process — the Art. 30 / revDSG "processing activity". Sub-processes
+        // aggregate into their root's row (see roll-up helpers) rather than repeating as their own rows.
         return allProcesses
+            .filter { it.parent == null }
             .map { process -> buildEntry(process, locale, euRepresentative, dpo, homeCountry, currentUser, childKeysByParent) }
     }
 
@@ -149,27 +162,15 @@ open class ProcessingRegisterService(
             process.names.find { it.locale == locale }?.text ?: process.names.firstOrNull()?.text ?: process.key
         val responsible = process.effectiveOwner()?.let { "${it.firstName} ${it.lastName}".trim() } ?: ""
 
+        // Categories of data subjects (Art. 30(1)(c)) — personal-data entities marked DATA_SUBJECT.
         val roleEntities =
-            allEntities.filter { e ->
-                e.classificationAssignments.any {
-                    it.classificationKey == "entity-type" && it.valueKey == "entity-type--role"
-                } &&
-                    e.classificationAssignments.any {
-                        it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                    }
-            }
+            allEntities.filter { it.containsPersonalData == true && it.entityRole == "DATA_SUBJECT" }
         val personCategories =
             roleEntities.map { rootEntity(it) }.distinctBy { it.key }.joinToString("; ") { localizedName(it, locale) }
 
+        // Categories of personal data — personal-data entities that are not data-subject categories.
         val personalDataEntities =
-            allEntities.filter { e ->
-                e.classificationAssignments.any {
-                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                } &&
-                    e.classificationAssignments.none {
-                        it.classificationKey == "entity-type" && it.valueKey == "entity-type--role"
-                    }
-            }
+            allEntities.filter { it.containsPersonalData == true && it.entityRole != "DATA_SUBJECT" }
         val dataCategories =
             personalDataEntities
                 .map { rootEntity(it) }

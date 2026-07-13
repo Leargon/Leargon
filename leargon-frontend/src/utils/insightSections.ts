@@ -7,6 +7,7 @@ import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlign
 import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
 import type { CognitiveLoadItem } from '../api/generated/model/cognitiveLoadItem';
 import type { TeamInteractionAntiPatternItem } from '../api/generated/model/teamInteractionAntiPatternItem';
+import type { TeamInteractionHealthAlertItem } from '../api/generated/model/teamInteractionHealthAlertItem';
 
 export type InsightSeverity = 'ok' | 'warning';
 
@@ -20,6 +21,7 @@ export interface NormalizedInsights {
   conwaysLawMisalignments: ConwaysLawMisalignmentItem[];
   cognitiveLoad: CognitiveLoadItem[];
   teamInteractionAntiPatterns: TeamInteractionAntiPatternItem[];
+  teamInteractionHealthAlerts: TeamInteractionHealthAlertItem[];
 }
 
 export interface InsightSection {
@@ -87,6 +89,15 @@ export const INSIGHT_SECTIONS: InsightSection[] = [
     isDiagnostic: true,
     getCount: (d) => d.teamInteractionAntiPatterns.length,
     getSeverity: (d) => (d.teamInteractionAntiPatterns.length > 0 ? 'warning' : 'ok'),
+  },
+  {
+    id: 'teamInteractionHealthAlerts',
+    titleKey: 'analytics.interactionHealth',
+    subtitleKey: 'analytics.interactionHealthHint',
+    owningMethodology: 'TEAM_TOPOLOGIES',
+    isDiagnostic: true,
+    getCount: (d) => d.teamInteractionHealthAlerts.length,
+    getSeverity: (d) => (d.teamInteractionHealthAlerts.length > 0 ? 'warning' : 'ok'),
   },
   {
     id: 'splitDomains',

@@ -22,6 +22,7 @@ import type { ConwaysLawAlignment } from '../api/generated/model/conwaysLawAlign
 import type { ConwaysLawMisalignmentItem } from '../api/generated/model/conwaysLawMisalignmentItem';
 import type { CognitiveLoadItem } from '../api/generated/model/cognitiveLoadItem';
 import type { TeamInteractionAntiPatternItem } from '../api/generated/model/teamInteractionAntiPatternItem';
+import type { TeamInteractionHealthAlertItem } from '../api/generated/model/teamInteractionHealthAlertItem';
 import InsightCard from '../components/insights/InsightCard';
 import InsightGroup from '../components/insights/InsightGroup';
 import {
@@ -42,6 +43,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   conwaysLawMisalignments: <Warning />,
   cognitiveLoad: <Groups />,
   teamInteractionAntiPatterns: <Warning />,
+  teamInteractionHealthAlerts: <SyncAlt />,
 };
 
 // ─── Methodology group definitions ───────────────────────────────────────────
@@ -501,6 +503,42 @@ const AntiPatternTable: React.FC<{ data: TeamInteractionAntiPatternItem[] }> = (
   );
 };
 
+// ─── 10. Interaction Health ───────────────────────────────────────────────────
+
+const HealthAlertTable: React.FC<{ data: TeamInteractionHealthAlertItem[] }> = ({ data }) => {
+  const { t } = useTranslation();
+  if (data.length === 0) return (
+    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <CheckCircle color="success" fontSize="small" />
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('analytics.noHealthAlerts')}</Typography>
+    </Box>
+  );
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colSourceTeam')}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{t('analytics.colTargetTeam')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colHealth')}</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600 }}>{t('analytics.colThreshold')}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map((row) => (
+            <TableRow key={row.interactionId} hover>
+              <TableCell>{row.sourceUnitName}</TableCell>
+              <TableCell>{row.targetUnitName}</TableCell>
+              <TableCell align="right"><Chip size="small" color="warning" label={row.healthScore ?? '—'} /></TableCell>
+              <TableCell align="right">{row.threshold}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
 // ─── Section detail content map ───────────────────────────────────────────────
 
 function renderSectionContent(sectionId: string, data: NormalizedInsights): React.ReactNode {
@@ -523,6 +561,8 @@ function renderSectionContent(sectionId: string, data: NormalizedInsights): Reac
       return <CognitiveLoadTable data={data.cognitiveLoad} />;
     case 'teamInteractionAntiPatterns':
       return <AntiPatternTable data={data.teamInteractionAntiPatterns} />;
+    case 'teamInteractionHealthAlerts':
+      return <HealthAlertTable data={data.teamInteractionHealthAlerts} />;
     default:
       return null;
   }
@@ -555,6 +595,7 @@ const TeamInsightsPage: React.FC = () => {
         conwaysLawMisalignments: raw.conwaysLawMisalignments ?? [],
         cognitiveLoad: raw.cognitiveLoad ?? [],
         teamInteractionAntiPatterns: raw.teamInteractionAntiPatterns ?? [],
+        teamInteractionHealthAlerts: raw.teamInteractionHealthAlerts ?? [],
       }
     : null;
 

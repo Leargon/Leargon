@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
+import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.ActivityItem
 import org.leargon.backend.model.ActivityItemResourceType
 import org.leargon.backend.model.AttentionItem
@@ -69,11 +70,7 @@ open class DashboardService(
             .filter { process ->
                 (isAdmin || process.effectiveOwner()?.id == userId) &&
                     process.legalBasis == null &&
-                    (process.inputEntities + process.outputEntities).any { entity ->
-                        entity.classificationAssignments.any {
-                            it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                        }
-                    }
+                    ProcessMapper.effectivelyHandlesPersonalData(process)
             }.forEach { process ->
                 needsAttention.add(
                     AttentionItem(
@@ -240,8 +237,10 @@ open class DashboardService(
             covered: Int,
             total: Int
         ): MaturityMetricItem {
-            val pct = if (total == 0) 100 else (covered * 100 / total)
-            return MaturityMetricItem(key, label, covered, total, pct)
+            // total == 0 means there is nothing to measure — report N/A (null), not a
+            // misleading 100%.
+            val pct: Int? = if (total == 0) null else (covered * 100 / total)
+            return MaturityMetricItem(key, label, covered, total).also { it.percentage = pct }
         }
 
         // 1. Entity ownership coverage
@@ -253,16 +252,8 @@ open class DashboardService(
         // 3. Domain structure coverage (has at least one bounded context)
         val domainsWithBc = allDomains.count { !it.boundedContexts.isNullOrEmpty() }
 
-        // Helper: does this process handle personal data?
-        fun processHasPersonalData(p: org.leargon.backend.domain.Process): Boolean =
-            (p.inputEntities + p.outputEntities).any { entity ->
-                entity.classificationAssignments.any {
-                    it.classificationKey == "personal-data" && it.valueKey == "personal-data--contains"
-                }
-            }
-
-        // 4. DPIA coverage (personal data processes with a DPIA)
-        val personalDataProcesses = allProcesses.filter { processHasPersonalData(it) }
+        // 4. DPIA coverage (personal data processes with a DPIA) — same definition as everywhere else
+        val personalDataProcesses = allProcesses.filter { ProcessMapper.effectivelyHandlesPersonalData(it) }
         val processKeysWithDpia = allDpias.mapNotNull { it.process?.key }.toSet()
         val personalDataProcessesWithDpia = personalDataProcesses.count { it.key in processKeysWithDpia }
 

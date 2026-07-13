@@ -22,6 +22,11 @@ export interface ProcessNodeData {
   orgUnitColor?: string;
   hasChildren?: boolean;
   expanded?: boolean;
+  /** When true, handles are Left/Right (horizontal flow) instead of Top/Bottom (vertical tree). */
+  horizontal?: boolean;
+  /** When true (and not horizontal), add extra Left(id "in") / Right(id "out") handles so data
+   *  entities flow horizontally into/out of the process while the tree stays vertical. */
+  entityFlow?: boolean;
 }
 
 export interface DataEntityNodeData {
@@ -34,6 +39,10 @@ export interface OrgUnitNodeData {
   leadName?: string;
   processCount?: number;
   showProcessCount?: boolean;
+  /** Multi-parent (shared/matrix) unit — rendered with a dashed border spanning its parents. */
+  shared?: boolean;
+  /** Container-view lane — the node fills its (full-width) node box instead of a fixed 200px. */
+  lane?: boolean;
 }
 
 // ─── Entity Node ──────────────────────────────────────────────────────────────
@@ -137,8 +146,15 @@ export const ProcessNode = memo(({ data, selected }: NodeProps) => {
         '&:hover': { boxShadow: 3 },
       }}
     >
-      <Handle type="target" position={Position.Top} style={{ background: '#388e3c' }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: '#388e3c' }} />
+      <Handle type="target" position={d.horizontal ? Position.Left : Position.Top} style={{ background: '#388e3c' }} />
+      <Handle type="source" position={d.horizontal ? Position.Right : Position.Bottom} style={{ background: '#388e3c' }} />
+      {d.entityFlow && !d.horizontal && (
+        <>
+          {/* input entities attach on the left, output entities leave on the right */}
+          <Handle id="in" type="target" position={Position.Left} style={{ background: '#0097a7' }} />
+          <Handle id="out" type="source" position={Position.Right} style={{ background: '#f57c00' }} />
+        </>
+      )}
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
         <Typography
           variant="body2"
@@ -222,12 +238,14 @@ export const OrgUnitNode = memo(({ data, selected }: NodeProps) => {
   return (
     <Box
       sx={{
-        width: 200,
+        width: d.shared || d.lane ? '100%' : 200,
         minHeight: 60,
+        height: d.shared || d.lane ? '100%' : undefined,
         border: 2,
+        borderStyle: d.shared ? 'dashed' : 'solid',
         borderColor: selected ? 'secondary.main' : '#7b1fa2',
         borderRadius: 1.5,
-        bgcolor: 'background.paper',
+        bgcolor: d.shared ? 'rgba(123,31,162,0.06)' : 'background.paper',
         px: 1.5,
         py: 1,
         cursor: 'pointer',
@@ -289,6 +307,10 @@ export interface GroupNodeData {
   label: string;
   color: string;
   subtypeLabel?: string;
+  /** Extra detail shown in the container header (so a parent card doesn't lose its info). */
+  unitType?: string;   // org unit type
+  leadName?: string;   // org unit owner / lead
+  description?: string; // entity description
 }
 
 /** Solid-border container for bounded context / domain grouping */
@@ -346,6 +368,53 @@ export const DomainGroupNode = memo(({ data }: NodeProps) => {
 });
 DomainGroupNode.displayName = 'DomainGroupNode';
 
+/** Solid-border container for a parent ENTITY that nests its child entities (UML-ish composite). */
+export const EntityGroupNode = memo(({ data, selected }: NodeProps) => {
+  const d = data as unknown as GroupNodeData;
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        border: 2,
+        borderColor: selected ? 'primary.main' : d.color,
+        borderRadius: 1.5,
+        bgcolor: 'background.paper',
+        position: 'relative',
+        cursor: 'pointer',
+        boxShadow: selected ? 4 : 1,
+      }}
+    >
+      <Handle type="target" position={Position.Left} style={{ background: d.color, top: 18 }} />
+      <Handle type="source" position={Position.Right} style={{ background: d.color, top: 18 }} />
+      <Box
+        sx={{
+          px: 1.5,
+          py: 0.5,
+          borderBottom: 2,
+          borderColor: d.color,
+          bgcolor: d.color + '14',
+          borderRadius: '4px 4px 0 0',
+          minHeight: 32,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography variant="body2" noWrap title={d.label} sx={{ fontWeight: 600, color: d.color }}>
+          {d.label}
+        </Typography>
+        {d.description && (
+          <Typography variant="caption" noWrap title={d.description} sx={{ color: 'text.secondary', fontSize: '0.68rem' }}>
+            {d.description}
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+});
+EntityGroupNode.displayName = 'EntityGroupNode';
+
 /** Dashed-border container for organisational unit grouping */
 export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
   const d = data as unknown as GroupNodeData;
@@ -372,9 +441,10 @@ export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
           borderColor: d.color,
           bgcolor: d.color + '18',
           borderRadius: '6px 6px 0 0',
-          height: 32,
+          minHeight: 32,
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          justifyContent: 'center',
           pointerEvents: 'all',
         }}
       >
@@ -387,11 +457,28 @@ export const OrgUnitGroupNode = memo(({ data }: NodeProps) => {
           }}>
           {d.label}
         </Typography>
+        {d.unitType && (
+          <Typography variant="caption" noWrap sx={{ color: d.color, fontSize: '0.68rem', opacity: 0.85 }}>
+            {d.unitType}
+          </Typography>
+        )}
+        {d.leadName && (
+          <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+            {d.leadName}
+          </Typography>
+        )}
       </Box>
     </Box>
   );
 });
 OrgUnitGroupNode.displayName = 'OrgUnitGroupNode';
+
+/** Invisible container — sizes/positions a lone child in the shared layout pass without drawing
+ *  anything, so the child reads as standalone (used for domainless processes in Process Landscape). */
+export const InvisibleGroupNode = memo(() => (
+  <Box sx={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
+));
+InvisibleGroupNode.displayName = 'InvisibleGroupNode';
 
 // ─── Node types map ────────────────────────────────────────────────────────────
 
@@ -401,7 +488,9 @@ export const SHARED_NODE_TYPES = {
   dataEntityNode: DataEntityNode,
   orgUnitNode: OrgUnitNode,
   domainGroupNode: DomainGroupNode,
+  entityGroupNode: EntityGroupNode,
   orgUnitGroupNode: OrgUnitGroupNode,
+  invisibleGroupNode: InvisibleGroupNode,
 };
 
 // ─── Relationship Edge ─────────────────────────────────────────────────────────

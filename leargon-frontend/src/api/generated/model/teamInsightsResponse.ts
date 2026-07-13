@@ -23,6 +23,7 @@ import type { ConwaysLawMisalignmentItem } from './conwaysLawMisalignmentItem.ts
 import type { OrgUnitProcessLoadItem } from './orgUnitProcessLoadItem.ts';
 import type { SplitDomainItem } from './splitDomainItem.ts';
 import type { TeamInteractionAntiPatternItem } from './teamInteractionAntiPatternItem.ts';
+import type { TeamInteractionHealthAlertItem } from './teamInteractionHealthAlertItem.ts';
 import type { TeamTopologyGraph } from './teamTopologyGraph.ts';
 import type { UserOwnershipWorkloadItem } from './userOwnershipWorkloadItem.ts';
 import type { WronglyPlacedTeamItem } from './wronglyPlacedTeamItem.ts';
@@ -46,6 +47,11 @@ export interface TeamInsightsResponse {
      * @nullable
      */
   teamInteractionAntiPatterns?: TeamInteractionAntiPatternItem[] | null;
+  /**
+     * Interactions whose health score is at or below the configured threshold; null/empty when TEAM_TOPOLOGIES is disabled
+     * @nullable
+     */
+  teamInteractionHealthAlerts?: TeamInteractionHealthAlertItem[] | null;
   /** Nodes (teams) and edges (interactions) for the interaction topology diagram; null when TEAM_TOPOLOGIES is disabled */
   teamTopologyGraph?: TeamTopologyGraph | null;
 }

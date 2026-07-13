@@ -16,20 +16,14 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { TeamInteractionMode } from './teamInteractionMode.ts';
 
-export interface TeamTopologyEdge {
-  interactionId: number;
-  sourceUnitKey: string;
-  targetUnitKey: string;
-  mode: TeamInteractionMode;
-  /** @nullable */
-  healthScore?: number | null;
-  /** @nullable */
-  antiPattern?: boolean | null;
-  /**
-     * True when the interaction's health score is at or below the configured threshold
-     * @nullable
-     */
-  healthWarning?: boolean | null;
-}
+/**
+ * Role of a business entity for the processing register. DATA_SUBJECT = describes a category of persons (Art. 30 "categories of data subjects"); DATA_ATTRIBUTE = describes a category of data.
+ */
+export type EntityRole = typeof EntityRole[keyof typeof EntityRole];
+
+
+export const EntityRole = {
+  DATA_SUBJECT: 'DATA_SUBJECT',
+  DATA_ATTRIBUTE: 'DATA_ATTRIBUTE',
+} as const;

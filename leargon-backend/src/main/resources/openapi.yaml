@@ -2721,6 +2721,49 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Not authenticated
+  /business-entities/{key}/personal-data:
+    put:
+      tags:
+      - BusinessEntity
+      summary: Update personal-data flag and entity role
+      description: Sets whether the entity contains personal data (tri-state) and its data-subject/data-attribute role. Only the Data Owner, Data Steward, or an Administrator can edit an entity.
+      operationId: updateBusinessEntityPersonalData
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        description: Business Entity key
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonalDataRequest'
+      responses:
+        '200':
+          description: Personal-data fields updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessEntityResponse'
+        '403':
+          description: Only the Data Owner, Data Steward, or an Administrator can edit this entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Business Entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
   /business-entities/{key}/parent:
     put:
       tags:
@@ -7440,6 +7483,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocalizedText'
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: >-
+            Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state:
+            null = not answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
         interfacesEntities:
           type: array
           items:
@@ -7913,6 +7964,14 @@ components:
           description: Retention period description for the entity (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: >-
+            Whether this entity contains personal data (GDPR Art. 4 / revDSG). Tri-state:
+            null = not yet answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
     CreateClassificationRequest:
       type: object
       required:
@@ -8821,6 +8880,24 @@ components:
       - null
       nullable: true
       description: Legal basis for processing personal data
+    EntityRole:
+      type: string
+      enum:
+      - DATA_SUBJECT
+      - DATA_ATTRIBUTE
+      description: >-
+        Role of a business entity for the processing register. DATA_SUBJECT = describes a
+        category of persons (Art. 30 "categories of data subjects"); DATA_ATTRIBUTE = describes a
+        category of data.
+    UpdatePersonalDataRequest:
+      type: object
+      properties:
+        containsPersonalData:
+          type: boolean
+          nullable: true
+          description: Tri-state — null = not answered, true = yes, false = no.
+        entityRole:
+          $ref: '#/components/schemas/EntityRole'
     ProcessType:
       type: string
       enum:
@@ -10198,6 +10275,12 @@ components:
           description: Detected Team Topologies interaction anti-patterns; null/empty when TEAM_TOPOLOGIES is disabled
           items:
             $ref: '#/components/schemas/TeamInteractionAntiPatternItem'
+        teamInteractionHealthAlerts:
+          type: array
+          nullable: true
+          description: Interactions whose health score is at or below the configured threshold; null/empty when TEAM_TOPOLOGIES is disabled
+          items:
+            $ref: '#/components/schemas/TeamInteractionHealthAlertItem'
         teamTopologyGraph:
           $ref: '#/components/schemas/TeamTopologyGraph'
           nullable: true
@@ -10242,6 +10325,28 @@ components:
           type: string
         reason:
           type: string
+    TeamInteractionHealthAlertItem:
+      type: object
+      required: [interactionId, sourceUnitKey, sourceUnitName, targetUnitKey, targetUnitName, threshold]
+      properties:
+        interactionId:
+          type: integer
+          format: int64
+        sourceUnitKey:
+          type: string
+        sourceUnitName:
+          type: string
+        targetUnitKey:
+          type: string
+        targetUnitName:
+          type: string
+        healthScore:
+          type: integer
+          nullable: true
+          description: Current health score (1 = poor, 5 = healthy)
+        threshold:
+          type: integer
+          description: Threshold at or below which the interaction is flagged
     TeamTopologyGraph:
       type: object
       required: [nodes, edges]
@@ -10287,6 +10392,10 @@ components:
         antiPattern:
           type: boolean
           nullable: true
+        healthWarning:
+          type: boolean
+          nullable: true
+          description: True when the interaction's health score is at or below the configured threshold
     ConwaysLawMisalignmentItem:
       type: object
       required: [processKey, processName, boundedContextKey, boundedContextName, executingUnitKey, executingUnitName, teamBoundedContextKey, teamBoundedContextName]
@@ -11098,7 +11207,6 @@ components:
       - label
       - covered
       - total
-      - percentage
       properties:
         key:
           type: string
@@ -11114,7 +11222,8 @@ components:
           description: Total number of items in scope
         percentage:
           type: integer
-          description: Covered / total * 100, or 100 if total is 0
+          nullable: true
+          description: Covered / total * 100; null when total is 0 (nothing to measure / not applicable)
     MaturityMetricsResponse:
       type: object
       required:
@@ -11240,6 +11349,14 @@ components:
             (DATA_GOVERNANCE, PROCESS_GOVERNANCE, DDD, TEAM_TOPOLOGIES); ignored for others.
             Defaults to true.
           example: true
+    OrgChartView:
+      type: string
+      enum:
+      - HIERARCHICAL
+      - CONTAINER
+      - null
+      nullable: true
+      description: Default rendering mode for the organisational chart (HIERARCHICAL when unset)
     OrganisationSettingsResponse:
       type: object
       properties:
@@ -11258,6 +11375,20 @@ components:
           nullable: true
           description: ISO 3166-1 alpha-2 code of the country where the organisation is headquartered. Used to exclude domestic transfers from the processing register.
           example: CH
+        cognitiveLoadThreshold:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: Team Topologies cognitive-load score above which a team is flagged as overloaded (default 7 when unset)
+        teamInteractionHealthThreshold:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: Team interaction health score at or below which the interaction is flagged as degraded (default 2 when unset)
+        orgChartDefaultView:
+          $ref: '#/components/schemas/OrgChartView'
     OrganisationSettingsRequest:
       type: object
       properties:
@@ -11273,6 +11404,20 @@ components:
           type: string
           nullable: true
           description: ISO 3166-1 alpha-2 country code of the organisation's home country
+        cognitiveLoadThreshold:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          description: Cognitive-load threshold above which a team is flagged as overloaded
+        teamInteractionHealthThreshold:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          description: Health score at or below which a team interaction is flagged as degraded
+        orgChartDefaultView:
+          $ref: '#/components/schemas/OrgChartView'
     ProcessingRegisterEntryResponse:
       type: object
       required:

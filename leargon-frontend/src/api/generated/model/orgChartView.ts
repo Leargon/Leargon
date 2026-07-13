@@ -16,20 +16,15 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { TeamInteractionMode } from './teamInteractionMode.ts';
 
-export interface TeamTopologyEdge {
-  interactionId: number;
-  sourceUnitKey: string;
-  targetUnitKey: string;
-  mode: TeamInteractionMode;
-  /** @nullable */
-  healthScore?: number | null;
-  /** @nullable */
-  antiPattern?: boolean | null;
-  /**
-     * True when the interaction's health score is at or below the configured threshold
-     * @nullable
-     */
-  healthWarning?: boolean | null;
-}
+/**
+ * Default rendering mode for the organisational chart (HIERARCHICAL when unset)
+ * @nullable
+ */
+export type OrgChartView = typeof OrgChartView[keyof typeof OrgChartView] | null;
+
+
+export const OrgChartView = {
+  HIERARCHICAL: 'HIERARCHICAL',
+  CONTAINER: 'CONTAINER',
+} as const;

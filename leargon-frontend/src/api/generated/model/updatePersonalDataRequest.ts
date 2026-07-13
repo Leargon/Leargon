@@ -16,20 +16,13 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { TeamInteractionMode } from './teamInteractionMode.ts';
+import type { EntityRole } from './entityRole.ts';
 
-export interface TeamTopologyEdge {
-  interactionId: number;
-  sourceUnitKey: string;
-  targetUnitKey: string;
-  mode: TeamInteractionMode;
-  /** @nullable */
-  healthScore?: number | null;
-  /** @nullable */
-  antiPattern?: boolean | null;
+export interface UpdatePersonalDataRequest {
   /**
-     * True when the interaction's health score is at or below the configured threshold
+     * Tri-state — null = not answered, true = yes, false = no.
      * @nullable
      */
-  healthWarning?: boolean | null;
+  containsPersonalData?: boolean | null;
+  entityRole?: EntityRole;
 }

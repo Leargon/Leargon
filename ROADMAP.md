@@ -5,9 +5,9 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| Team Topologies                               | 2.5      | 25%    | 8/10  | **3.2**  |
-| Value Stream Mapping (VSM)                    | 2.5      | 25%    | 7/10  | **2.8**  |
+| Owner to-do & governance tasks                | 3        | 30%    | 8/10  | **2.7**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
+| Guided modeling advisor                       | 6        | 40%    | 9/10  | **1.5**  |
 | Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
 | Performance & scalability                     | 3        | 30%    | 7/10  | **2.3**  |
 | Impact analysis & domain coupling             | 4        | 40%    | 8/10  | **2.0**  |
@@ -17,9 +17,185 @@
 | Watch & notifications                         | 4        | 40%    | 6/10  | **1.5**  |
 | Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
 | Extended BPMN event types (Story 2b)          | 3        | 30%    | 6/10  | **2.0**  |
-| Localise all remaining free-text fields       | 3        | 30%    | 7/10  | **2.3**  |
+
+*(Team Topologies and Value Stream Mapping are fully implemented and no longer listed here.)*
+
+### Technical follow-ups (carried over from the REVIEW-FINDINGS implementation)
+
+- **Stabilise path-based entity/process keys on reparent.** `recomputeKeysForSubtree` regenerates
+  an entity's/process's `key` from its name-derived path whenever its parent changes, which can
+  orphan references that store keys as strings (e.g. process input/output entity links). Same
+  "mutable value drives a functional identifier" hazard fixed for classification keys in that pass,
+  but larger in blast radius. Give these trees stable identifiers independent of the display-name path.
+- **Wire special categories into a DPIA-necessity nudge.** Art. 9 special-category processing is an
+  Art. 35 DPIA trigger. The typed personal-data work kept special categories informational; a future
+  enhancement should surface "DPIA recommended" when a process (effectively) touches special-category
+  data.
 
 ---
+
+---
+
+## Guided modeling advisor
+
+*Addresses the core usability gap documented in `REVIEW-FINDINGS.md` Part D: the mechanics of
+nesting are easy (an "Add Child" button exists), but the **judgement** — when something should be
+a child, a sibling, a relationship, or a separate item, and what that choice does downstream — is
+left entirely implicit. Léargon already encodes rich structure (entity trees, typed relationships,
+interface/implementation links, bounded contexts, process hierarchies, domain types) but never
+teaches the user which mechanism to use when. This feature turns that implicit expertise into an
+interactive, question-driven advisor that spans every methodology (data model, process, domain,
+organisation) and, crucially, explains the downstream consequence of each modelling choice
+(e.g. that nesting an entity rolls it up into its root's Art. 30 data-category grouping).*
+
+*Delivered as a reusable decision-tree engine (server-defined rule sets, so the frontend stays
+logic-free per project rules) plus a conversational entry point available both standalone and
+inline at every "Create" / "Add child" action. Not an LLM — a deterministic, explainable decision
+tree with typed questions and cited rationale, so recommendations are auditable and testable.*
+
+*⏱ Sessions: 6 · Weekly effort: ~40% · Value: 9/10 · Score: 1.5 · Breakdown: 2 backend
+(decision-tree model + rule sets for entity/process/domain/org + consequence-explanation service)
++ 3 frontend (advisor dialog, inline "Where should this go?" launcher on create actions, result →
+prefilled wizard hand-off) + 1 tests (integration coverage of each rule set + e2e of the flagship
+"order line" flow).*
+
+#### USER STORY 'Ask where a new concept belongs and get a recommendation'
+**AS A** data owner or modeller\
+**IF** I am about to add something and am unsure how to structure it\
+**I WANT** to open a "Where should this go?" advisor, describe what I am adding in plain terms
+(e.g. "an Order Line that is part of an Order") and answer a few guided questions\
+**SO THAT** I receive a concrete recommendation — make it a child entity of Order, a separate
+entity with a relationship, or an interface/implementation — with a plain-language rationale
+
+#### USER STORY 'Understand the downstream consequence of a modelling choice'
+**AS A** data owner or modeller\
+**IF** the advisor recommends a structure (or I am about to confirm one)\
+**I WANT** to see what that choice will affect — e.g. that nesting an entity under a parent means
+it is rolled up under the parent as its data category in the Art. 30 processing register, or that a
+child process's data flow rolls up into its parent\
+**SO THAT** I can make the decision knowing its compliance and reporting impact instead of
+discovering the effect only after the register looks wrong
+
+#### USER STORY 'Choose between the three ways to connect entities'
+**AS A** modeller\
+**IF** I want to relate two business entities\
+**I WANT** the advisor to help me choose between a parent-child aggregate, a typed relationship
+with cardinality, or an interface/implementation link, based on questions about ownership,
+lifecycle, and whether one cannot exist without the other\
+**SO THAT** I use the mechanism that matches the real semantics rather than guessing
+
+#### USER STORY 'Get placement guidance for processes'
+**AS A** process modeller\
+**IF** I am adding a business activity and unsure whether it is a sub-process, a sibling, or a
+standalone process\
+**I WANT** the advisor to ask whether the activity is a decomposition step of a larger flow, is
+triggered independently, or is reused across parents, and recommend sub-process vs. sibling vs.
+new root accordingly\
+**SO THAT** the process hierarchy reflects real decomposition and the value-stream / register
+roll-ups stay meaningful
+
+#### USER STORY 'Understand which process becomes a processing-register activity'
+**AS A** process modeller or data owner\
+**IF** I am creating a root or sub-process\
+**I WANT** the advisor to explain that the Art. 30 / revDSG processing register emits one
+rolled-up row per *root* process (the "processing activity"), and to help me judge whether this
+activity sits at the right altitude — not so coarse that unrelated purposes are merged, not so
+fine that a real activity is split\
+**SO THAT** the register is a valid inventory of activities without anyone needing to manually flag
+boundaries or know GDPR by heart
+
+#### USER STORY 'Be nudged when a register activity is drawn too coarse'
+**AS A** data owner or admin\
+**IF** a root process rolls up sub-processes whose purposes diverge significantly\
+**I WANT** a derived nudge suggesting the root may span multiple processing activities and could be
+split\
+**SO THAT** an over-broad root does not silently produce a meaningless, over-aggregated register
+row — the system detects the likely-wrong boundary instead of relying on the modeller to know it
+
+#### USER STORY 'Get placement guidance for domains and bounded contexts'
+**AS AN** admin\
+**IF** I am adding an entity, a bounded context, or a domain\
+**I WANT** the advisor to help me decide the correct bounded context and domain based on ownership
+and ubiquitous-language questions, and to flag when a proposed placement would put a child in a
+different bounded context than its parent\
+**SO THAT** the two hierarchies an entity lives in (tree parent and bounded context) stay
+coherent instead of silently disagreeing
+
+#### USER STORY 'Get placement guidance for organisational units'
+**AS AN** admin\
+**IF** I am adding an organisational unit\
+**I WANT** the advisor to help me decide whether it is a child unit, a sibling, or a new top-level
+unit, and which existing unit it reports into\
+**SO THAT** the org chart and the ownership chains derived from it are structured correctly
+
+#### USER STORY 'Launch the advisor inline from any create action'
+**AS A** logged in user\
+**IF** I click "Create" or "Add child" anywhere in the catalogue\
+**I WANT** an unobtrusive "Not sure where this belongs?" link that opens the advisor pre-scoped to
+that item type, and on completion hands its recommendation straight into the creation wizard with
+the parent, placement, and connection type pre-filled\
+**SO THAT** the guidance flows directly into the action without re-entering anything
+
+#### USER STORY 'Administer the advisor decision rules'
+**AS AN** admin\
+**IF** my organisation's modelling conventions differ from the defaults\
+**I WANT** to view and adjust the advisor's decision rules and the wording of its explanations per
+methodology\
+**SO THAT** the guidance matches our house rules and stays maintainable as conventions evolve
+
+---
+
+## Owner to-do & governance tasks
+
+*A per-owner to-do section that turns the governance gaps Léargon already detects into an explicit,
+actionable task list for the person responsible — rather than surfacing them only as passive
+banners on scattered detail pages. Complements the existing "Needs attention" dashboard block and
+the (planned) Review cycles by giving each owner a single, prioritised "what do I need to do"
+list, and giving admins an aggregate view of outstanding work by owner. Directly follows from
+`REVIEW-FINDINGS.md` Part C/D: guidance is only useful if the resulting to-dos are shown to the
+right person and can be tracked to completion.*
+
+*Read-heavy over existing data — tasks are derived (missing mandatory fields, missing legal basis
+on personal-data processes, unassigned owners, unresolved advisor recommendations, overdue
+reviews) — plus a small `task_dismissals` table so an owner can dismiss a non-applicable task with
+a reason. No duplication of source data.*
+
+*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 8/10 · Score: 2.7 · Breakdown: 1 backend
+(task-derivation service aggregating existing gap detectors + dismissals table) + 1.5 frontend
+(to-do section on the personal dashboard, per-item task chips, admin by-owner view) + 0.5 tests.*
+
+#### USER STORY 'View my outstanding governance to-dos'
+**AS A** data owner, process owner, or org-unit lead\
+**IF** one or more items I am responsible for has an outstanding governance gap (missing mandatory
+field, missing legal basis, missing owner/steward, unresolved advisor recommendation)\
+**I WANT** to see a single prioritised to-do list on my dashboard, each task naming the item, the
+gap, and a direct link to fix it\
+**SO THAT** I know exactly what I need to complete without hunting through detail pages
+
+#### USER STORY 'Jump from a to-do straight to the fix'
+**AS AN** owner\
+**IF** I select a to-do item\
+**I WANT** to be taken directly to the relevant field or section of the item, ready to edit\
+**SO THAT** I can resolve the gap in one click rather than searching for where it lives
+
+#### USER STORY 'Dismiss a non-applicable to-do with a reason'
+**AS AN** owner\
+**IF** a derived to-do does not apply to my item (e.g. a field genuinely has no value for this
+case)\
+**I WANT** to dismiss the task with a short reason\
+**SO THAT** it stops cluttering my list while leaving an auditable record of why it was skipped
+
+#### USER STORY 'See to-do progress for my responsibilities'
+**AS AN** owner\
+**I WANT** to see a simple completion indicator (e.g. "6 of 9 governance tasks done") across the
+items I own\
+**SO THAT** I have a sense of how close my area is to being fully documented
+
+#### USER STORY 'View outstanding tasks by owner'
+**AS AN** admin\
+**I WANT** to see outstanding governance tasks aggregated by responsible owner, ranked by count and
+severity\
+**SO THAT** I can see who has the most outstanding work and follow up on stewardship gaps
 
 ---
 
@@ -509,173 +685,3 @@ Requires extending the `EventDefinition` enum and `FlowNodeType` enum in `openap
 **AS A** developer\
 **I WANT** all list endpoints (`/entities`, `/processes`, `/domains`, `/organisational-units`) to support cursor-based or offset pagination with a configurable page size\
 **SO THAT** the API and frontend remain responsive when a catalogue contains thousands of items, rather than loading the entire collection into memory on every request
-
-## Team Topologies
-*Extends the existing organisational unit model with Team Topologies types and interaction modes — the social equivalent of the DDD context map. Each process in Léargon is a step in a value stream, and each org unit is a team. Adding team type and interaction records makes the team topology explicitly modelled alongside the technical topology, enabling cognitive load analysis and hand-off bottleneck detection. Requires one new `team_interactions` table; team type can use the existing classification system or a new enum field on OrganisationalUnit.*\
-*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 8/10 · Score: 3.2*
-
-#### USER STORY 'Assign team topology type to an organisational unit'
-**AS AN** architect or engineering manager\
-**I WANT** to assign a Team Topologies type — Stream-aligned, Platform, Enabling, or Complicated Subsystem — to each organisational unit\
-**SO THAT** the team's mission and expected interaction patterns are explicit and aligned with the Team Topologies model, making Conway's Law analysis more actionable
-
-#### USER STORY 'Define interaction mode between two teams'
-**AS AN** architect\
-**IF** two organisational units collaborate on shared processes or bounded contexts\
-**I WANT** to define a typed interaction record between them specifying the mode (Collaboration, X-as-a-Service, or Facilitating) and whether the interaction is temporary or ongoing\
-**SO THAT** the social topology of the organisation is modelled alongside the technical context map as a complementary, equally explicit view
-
-#### USER STORY 'Track interaction health'
-**AS AN** engineering manager\
-**IF** team interactions are defined\
-**I WANT** to record a health indicator on each interaction — such as average handoff wait time or a qualitative score — and see interactions flagged when health degrades\
-**SO THAT** overloaded interfaces and slow coordination points are visible before they become delivery bottlenecks
-
-#### USER STORY 'View team interaction topology diagram'
-**AS AN** architect\
-**I WANT** to see a diagram of all organisational units and their defined interaction modes, rendered similarly to the DDD context map\
-**SO THAT** the team topology and the technical context map can be read side by side as two complementary views of the same organisation
-
-#### USER STORY 'View cognitive load score per team'
-**AS AN** architect or manager\
-**I WANT** to see a computed cognitive load score for each organisational unit, calculated from the number of bounded contexts owned, capabilities owned, and active value streams handled — with a warning when the score exceeds a configurable threshold\
-**SO THAT** teams at risk of cognitive overload are identified before their scope needs to be split or reduced
-
-#### USER STORY 'Detect mismatched interaction modes'
-**AS AN** architect\
-**IF** two Stream-aligned teams interact via Collaboration rather than X-as-a-Service\
-**I WANT** Léargon to surface this as a potential bottleneck, since sustained Collaboration between two Stream-aligned teams is a Team Topologies anti-pattern that reduces autonomy and increases cognitive load\
-**SO THAT** interaction anti-patterns are identified and can be addressed — either by formalising an X-as-a-Service boundary or by consolidating the teams
-
----
-
-## Value Stream Mapping (VSM)
-*Adds lean/VSM metadata to the existing process model. Each Léargon process represents one step in a value stream. Adding cycle time, wait time, activity classification, and frequency to processes enables end-to-end lead time calculation and waste identification without any new entity types — only new fields on Process and a VSM summary view. A process is classified at the stream level (Enabling / Operational / Business Support) and at the activity level (Value-Adding, Business Value-Added, or Waste), with a free-text justification that answers the transformation, customer, error, and necessity checks.*\
-*⏱ Sessions: 2.5 · Weekly effort: ~25% · Value: 7/10 · Score: 2.8*
-
-#### USER STORY 'Classify a process as a value stream type'
-**AS A** lean practitioner or operations manager\
-**I WANT** to classify each business process as one of three value stream types: Enabling (prerequisite — removes barriers for the main stream), Operational (revenue-generating, directly customer-facing), or Business Support (internal services)\
-**SO THAT** the value stream portfolio is visible, each process's strategic role is explicit, and lean improvement efforts can be focused on the highest-leverage streams first
-
-#### USER STORY 'Record time metadata on a process'
-**AS A** process analyst\
-**IF** I am documenting a process\
-**I WANT** to record the average cycle time (CT — actual processing time), wait time (WT — average queue time before the step begins), and changeover time (CO — setup time between instances) on a process\
-**SO THAT** end-to-end lead time, process efficiency ratio (VA time ÷ total lead time), and queue-to-work ratios can be computed across a value stream
-
-#### USER STORY 'Record process frequency'
-**AS A** process analyst\
-**IF** I am documenting a process\
-**I WANT** to record how many instances of the process run per day / week / month / year\
-**SO THAT** throughput, takt time, and cumulative wait time at scale can be derived, and bottleneck steps with high volume and high wait time can be identified
-
-#### USER STORY 'Classify process activity type and justify it'
-**AS A** lean practitioner\
-**IF** I am analysing process efficiency\
-**I WANT** to classify each process step as Value-Adding (VA — directly transforms the product or information for the customer), Business Value-Added (BVA — necessary but not directly valuable to the customer, e.g. compliance checks, legal documentation), or Waste (Muda — can be eliminated, e.g. rework, redundant data entry, waiting without purpose) with a free-text justification\
-**SO THAT** non-value-adding activities are explicit, improvement candidates are prioritised by waste category, and the classification decision is traceable
-
-#### USER STORY 'Record quality metrics on a process'
-**AS A** process analyst\
-**I WANT** to record the First Pass Yield (FPY %) — the percentage of process instances completed correctly on the first attempt without rework — and a completion rate on a process\
-**SO THAT** processes with quality defects are visible in the value stream summary and can be targeted for root cause analysis before they inflate downstream rework waste
-
-#### USER STORY 'View value stream summary across processes'
-**AS A** lean practitioner or operations manager\
-**IF** processes are documented with time metadata, activity classifications, and frequency\
-**I WANT** to see a value stream summary view showing: total lead time (sum of CT + WT across a process chain), value-adding ratio (VA time ÷ total lead time), and a breakdown of activity types across the stream\
-**SO THAT** I can identify the biggest improvement opportunities — steps with high wait time, low FPY, or Waste classification — and measure improvement over time as metadata is refined
-
----
-
-## Localise all remaining free-text fields
-
-*All user-visible text fields that are currently plain `String` / `varchar` columns should become `LocalizedText[]` (JSON-stored lists), consistent with the pattern already used for `names`, `descriptions`, `purpose`, and `securityMeasures`. Existing values are migrated to the system default locale. The change touches openapi.yaml, domain entities, Liquibase migrations, mappers, services, and the frontend editor components.*
-
-*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 7/10 · Score: 2.3*
-
-**Fields in scope** (plain `String` today → `LocalizedText[]` after):
-
-| Entity | Field | DB column |
-|--------|-------|-----------|
-| `BusinessDomain` | `visionStatement` | `vision_statement` |
-| `BusinessEntity` | `retentionPeriod` | `retention_period` |
-| `ContextRelationship` | `description` | `description` |
-| `TranslationLink` | `semanticDifferenceNote` | `semantic_difference_note` |
-| `Dpia` | `riskDescription` | `risk_description` |
-| `Dpia` | `measures` | `measures` |
-| `Dpia` | `fdpicConsultationOutcome` | `fdpic_consultation_outcome` |
-| `CrossBorderTransfer` | `notes` | `notes` |
-| `Process` | `legalBasis` | `legal_basis` |
-| `ProcessFlowNode` | `label` | `label` |
-| `ProcessFlowTrack` | `label` | `label` |
-| `BusinessDataQualityRule` | `description` | `description` |
-
-**Migration strategy per field:**
-1. Add a new `TEXT` column (e.g. `vision_statement_i18n`) storing JSON.
-2. Migrate existing values: `UPDATE … SET vision_statement_i18n = JSON_ARRAY(JSON_OBJECT('locale', <defaultLocale>, 'text', vision_statement)) WHERE vision_statement IS NOT NULL`.
-3. Drop the old column.
-4. Rename the new column to the original name.
-
-All migrations run via Liquibase and apply automatically on startup.
-
-#### USER STORY 'Localise the domain vision statement'
-**AS A** data governance manager\
-**IF** I am editing a business domain in a multilingual organisation\
-**I WANT** to enter the vision statement in each active language using the standard translation editor\
-**SO THAT** domain vision is readable in the viewer's preferred language rather than always appearing in the language it was first written in
-
-#### USER STORY 'Localise the entity retention period'
-**AS A** privacy officer\
-**IF** I am documenting the retention period of a business entity in a multilingual organisation\
-**I WANT** to enter the retention period description in each active language using the standard translation editor\
-**SO THAT** retention policies are understandable to staff in all supported languages without requiring manual translation outside the system
-
-#### USER STORY 'Localise context relationship descriptions'
-**AS A** domain architect\
-**IF** I am documenting the relationship between two bounded contexts\
-**I WANT** to enter the relationship description in each active language\
-**SO THAT** the context map annotations are accessible to all stakeholders regardless of their preferred language
-
-#### USER STORY 'Localise translation link semantic difference notes'
-**AS A** domain architect\
-**IF** I am documenting a translation link between two entities in different bounded contexts\
-**I WANT** to enter the semantic difference note in each active language\
-**SO THAT** the explanation of the conceptual difference between the two entities is understandable to all team members
-
-#### USER STORY 'Localise DPIA narrative fields'
-**AS A** privacy officer\
-**IF** I am conducting a Data Protection Impact Assessment in a multilingual organisation\
-**I WANT** to enter the risk description, proposed measures, and FDPIC consultation outcome in each active language\
-**SO THAT** the DPIA documentation meets regulatory requirements in all relevant jurisdictions and is reviewable by local stakeholders
-
-#### USER STORY 'Localise cross-border transfer notes'
-**AS A** privacy officer\
-**IF** I am documenting a cross-border data transfer with additional context\
-**I WANT** to enter the transfer notes in each active language\
-**SO THAT** the notes are meaningful to reviewers who read documentation in different languages
-
-#### USER STORY 'Localise the process legal basis'
-**AS A** privacy officer\
-**IF** I am documenting the legal basis of a business process under GDPR or DSG\
-**I WANT** to enter the legal basis text in each active language\
-**SO THAT** the documented basis is understandable across jurisdictions and internal reviewers can read it in their preferred language
-
-#### USER STORY 'Localise BPMN node and lane labels'
-**AS A** process modeller\
-**IF** I am labelling a task, gateway, event, or swimlane in the BPMN diagram editor\
-**I WANT** to enter the label in each active language\
-**SO THAT** the diagram is readable to all stakeholders regardless of their preferred language, consistent with all other catalogue text
-
-#### USER STORY 'Localise data quality rule descriptions'
-**AS A** data steward\
-**IF** I am documenting a quality rule on a business entity\
-**I WANT** to enter the rule description in each active language\
-**SO THAT** quality rules are understandable to data consumers in all supported languages
-
-#### USER STORY 'Migrate all existing free-text values to the default locale'
-**AS AN** administrator upgrading Léargon to the localised free-text version\
-**IF** the system already contains vision statements, retention periods, legal bases, and other plain-text values entered before this feature existed\
-**I WANT** the upgrade migration to automatically preserve all existing text by associating it with the system default locale\
-**SO THAT** no information is lost during the upgrade and the system continues to display all previously entered content without any manual re-entry

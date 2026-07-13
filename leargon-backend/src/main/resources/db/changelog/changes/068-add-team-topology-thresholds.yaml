@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 068-add-team-topology-thresholds
+      author: leargon
+      comment: Add configurable cognitive-load and team-interaction health thresholds to organisation settings
+      changes:
+        - addColumn:
+            tableName: organisation_settings
+            columns:
+              - column:
+                  name: cognitive_load_threshold
+                  type: DOUBLE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: team_interaction_health_threshold
+                  type: INT
+                  constraints:
+                    nullable: true

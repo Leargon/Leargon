@@ -51,42 +51,10 @@ open class SystemClassificationBootstrap(
 
         private val SYSTEM_CLASSIFICATIONS =
             listOf(
-                ClassificationSeed(
-                    key = "personal-data",
-                    names =
-                        listOf(
-                            LocalizedText("en", "Personal Data"),
-                            LocalizedText("de", "Personenbezogene Daten"),
-                            LocalizedText("fr", "Données Personnelles"),
-                        ),
-                    descriptions =
-                        listOf(
-                            LocalizedText("en", "Indicates whether this entity contains personal data as defined by DSG/GDPR Art. 4."),
-                        ),
-                    assignableTo = "BUSINESS_ENTITY",
-                    multiValue = false,
-                    values =
-                        listOf(
-                            ValueSeed(
-                                key = "personal-data--contains",
-                                names =
-                                    listOf(
-                                        LocalizedText("en", "Contains Personal Data"),
-                                        LocalizedText("de", "Enthält personenbezogene Daten"),
-                                        LocalizedText("fr", "Contient des données personnelles"),
-                                    ),
-                            ),
-                            ValueSeed(
-                                key = "personal-data--not-contains",
-                                names =
-                                    listOf(
-                                        LocalizedText("en", "Does Not Contain Personal Data"),
-                                        LocalizedText("de", "Enthält keine personenbezogenen Daten"),
-                                        LocalizedText("fr", "Ne contient pas de données personnelles"),
-                                    ),
-                            ),
-                        ),
-                ),
+                // NOTE: `personal-data` and `entity-type` used to live here as load-bearing system
+                // classifications. They are now typed fields on BusinessEntity
+                // (containsPersonalData / entityRole). Only the informational Art. 9 special
+                // categories remain as a seeded classification.
                 ClassificationSeed(
                     key = "special-categories",
                     names =
@@ -177,10 +145,6 @@ open class SystemClassificationBootstrap(
                                     LocalizedText("de", "Strafrechtliche Verurteilungen"),
                                     LocalizedText("fr", "Condamnations pénales")
                                 )
-                            ),
-                            ValueSeed(
-                                "special-categories--none",
-                                listOf(LocalizedText("en", "None"), LocalizedText("de", "Keine"), LocalizedText("fr", "Aucune"))
                             ),
                         ),
                 ),

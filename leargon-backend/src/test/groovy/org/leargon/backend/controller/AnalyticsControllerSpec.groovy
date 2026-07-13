@@ -44,6 +44,7 @@ class AnalyticsControllerSpec extends Specification {
     @Inject BoundedContextRepository boundedContextRepository
     @Inject SupportedLocaleRepository localeRepository
     @Inject org.leargon.backend.repository.TeamInteractionRepository teamInteractionRepository
+    @Inject org.leargon.backend.repository.OrganisationSettingsRepository organisationSettingsRepository
 
     def setup() {
         if (localeRepository.count() == 0) {
@@ -53,6 +54,7 @@ class AnalyticsControllerSpec extends Specification {
     }
 
     def cleanup() {
+        organisationSettingsRepository.deleteAll()
         teamInteractionRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.deleteAll()
@@ -313,11 +315,74 @@ class AnalyticsControllerSpec extends Specification {
                 .bearerAuth(adminToken), Map)
     }
 
-    private void createInteraction(String adminToken, String source, String target, String mode, String duration) {
+    private void createInteraction(String adminToken, String source, String target, String mode, String duration, Integer healthScore = null) {
+        def body = [sourceUnitKey: source, targetUnitKey: target, mode: mode, duration: duration]
+        if (healthScore != null) body.healthScore = healthScore
+        client.toBlocking().exchange(HttpRequest.POST("/team-interactions", body).bearerAuth(adminToken), Map)
+    }
+
+    private void setThresholds(String adminToken, Double cognitiveLoadThreshold, Integer healthThreshold) {
+        def body = [:]
+        if (cognitiveLoadThreshold != null) body.cognitiveLoadThreshold = cognitiveLoadThreshold
+        if (healthThreshold != null) body.teamInteractionHealthThreshold = healthThreshold
         client.toBlocking().exchange(
-            HttpRequest.POST("/team-interactions",
-                [sourceUnitKey: source, targetUnitKey: target, mode: mode, duration: duration])
-                .bearerAuth(adminToken), Map)
+            HttpRequest.PUT("/administration/organisation-settings", body).bearerAuth(adminToken), Map)
+    }
+
+    def "cognitiveLoad uses the configurable threshold from organisation settings"() {
+        given:
+        def adminToken = createAdminToken()
+        def token = createUserWithToken("cfgcog@analytics.com", "cfgcoguser").token
+        def unitKey = createOrgUnit(adminToken, "Config Threshold Team")
+
+        and: "3 value streams — under the default threshold of 7, but over a threshold of 2"
+        (1..3).each { i ->
+            def procKey = createProcess(token, "Cfg Process ${i}")
+            assignOrgUnit(token, procKey, unitKey)
+        }
+        setThresholds(adminToken, 2.0, null)
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/analytics/team-insights").bearerAuth(token), Map)
+
+        then:
+        def item = response.body().cognitiveLoad.find { it.orgUnitKey == unitKey }
+        item != null
+        item.score == 3.0
+        item.threshold == 2.0
+        item.warning == true
+    }
+
+    def "teamInteractionHealthAlerts flags interactions at or below the health threshold"() {
+        given:
+        def adminToken = createAdminToken()
+        def token = createUserWithToken("health@analytics.com", "healthuser").token
+        def a = createOrgUnit(adminToken, "Health A")
+        def b = createOrgUnit(adminToken, "Health B")
+        def c = createOrgUnit(adminToken, "Health C")
+
+        and: "one degraded interaction (health 1) and one healthy (health 5), threshold 2"
+        createInteraction(adminToken, a, b, "X_AS_A_SERVICE", "ONGOING", 1)
+        createInteraction(adminToken, a, c, "X_AS_A_SERVICE", "ONGOING", 5)
+        setThresholds(adminToken, null, 2)
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/analytics/team-insights").bearerAuth(token), Map)
+
+        then:
+        def alerts = response.body().teamInteractionHealthAlerts
+        alerts.size() == 1
+        alerts[0].sourceUnitKey == a
+        alerts[0].targetUnitKey == b
+        alerts[0].healthScore == 1
+        alerts[0].threshold == 2
+
+        and: "the degraded edge carries healthWarning, the healthy one does not"
+        def edges = response.body().teamTopologyGraph.edges
+        edges.find { it.targetUnitKey == b }.healthWarning == true
+        edges.find { it.targetUnitKey == c }.healthWarning == false
     }
 
     def "cognitiveLoad flags a team whose value-stream count exceeds the threshold"() {

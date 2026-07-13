@@ -108,10 +108,8 @@ open class ClassificationService(
         if (!request.names.isNullOrEmpty()) {
             validateTranslations(request.names)
             classification.names = request.names!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
-
-            val defaultLocale = localeService.getDefaultLocale()
-            val defaultName = classification.names.find { it.locale == defaultLocale?.localeCode }?.text
-            classification.key = SlugUtil.slugify(defaultName)
+            // Do NOT recompute the key from the (mutable) display name: the key is a stable
+            // identifier referenced by every classification assignment. Renaming must not orphan them.
         }
 
         if (request.descriptions != null) {
@@ -353,6 +351,13 @@ open class ClassificationService(
                 .map {
                     ClassificationAssignment(it.classificationKey, it.valueKey)
                 }.toMutableList()
+
+        // Auto-imply: recording any special-category value (Art. 9) necessarily means the entity
+        // contains personal data (Art. 4). Keep the typed flag consistent so the two can never
+        // contradict each other.
+        if (entity.classificationAssignments.any { it.classificationKey == SPECIAL_CATEGORIES_KEY }) {
+            entity.containsPersonalData = true
+        }
         businessEntityRepository.update(entity)
 
         businessEntityService.recordVersion(
@@ -550,6 +555,9 @@ open class ClassificationService(
     }
 
     companion object {
+        /** Stable key of the Art. 9 special-categories classification (kept for the auto-imply rule). */
+        const val SPECIAL_CATEGORIES_KEY = "special-categories"
+
         @JvmStatic
         private fun checkAdminRole(user: User) {
             if (!user.roles.contains("ROLE_ADMIN")) {

@@ -19,6 +19,8 @@ const OrganisationSettingsTab: React.FC = () => {
   const [euRepresentative, setEuRepresentative] = useState('');
   const [dataProtectionOfficer, setDataProtectionOfficer] = useState('');
   const [homeCountry, setHomeCountry] = useState<string | null>(null);
+  const [cognitiveLoadThreshold, setCognitiveLoadThreshold] = useState('');
+  const [healthThreshold, setHealthThreshold] = useState('');
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -27,6 +29,8 @@ const OrganisationSettingsTab: React.FC = () => {
       setEuRepresentative(data.data.euRepresentative ?? '');
       setDataProtectionOfficer(data.data.dataProtectionOfficer ?? '');
       setHomeCountry(data.data.homeCountry ?? null);
+      setCognitiveLoadThreshold(data.data.cognitiveLoadThreshold != null ? String(data.data.cognitiveLoadThreshold) : '');
+      setHealthThreshold(data.data.teamInteractionHealthThreshold != null ? String(data.data.teamInteractionHealthThreshold) : '');
     }
   }, [data]);
 
@@ -39,6 +43,8 @@ const OrganisationSettingsTab: React.FC = () => {
           euRepresentative: euRepresentative || null,
           dataProtectionOfficer: dataProtectionOfficer || null,
           homeCountry: homeCountry || null,
+          cognitiveLoadThreshold: cognitiveLoadThreshold.trim() === '' ? null : Number(cognitiveLoadThreshold),
+          teamInteractionHealthThreshold: healthThreshold.trim() === '' ? null : Number(healthThreshold),
         },
       });
       await queryClient.invalidateQueries({ queryKey: getGetOrganisationSettingsQueryKey() });
@@ -102,6 +108,27 @@ const OrganisationSettingsTab: React.FC = () => {
           rows={2}
           fullWidth
           helperText="Name and contact details of the DPO or data protection advisor"
+        />
+
+        <Typography variant="subtitle2" sx={{ mt: 1 }}>Team Topologies thresholds</Typography>
+
+        <TextField
+          label="Cognitive load threshold"
+          type="number"
+          value={cognitiveLoadThreshold}
+          onChange={(e) => setCognitiveLoadThreshold(e.target.value)}
+          sx={{ maxWidth: 320 }}
+          helperText="A team is flagged as overloaded when its cognitive-load score exceeds this value (default 7)."
+        />
+
+        <TextField
+          label="Interaction health threshold"
+          type="number"
+          value={healthThreshold}
+          onChange={(e) => setHealthThreshold(e.target.value)}
+          slotProps={{ htmlInput: { min: 1, max: 5 } }}
+          sx={{ maxWidth: 320 }}
+          helperText="A team interaction is flagged when its health score (1–5) is at or below this value (default 2)."
         />
 
         {saved && (

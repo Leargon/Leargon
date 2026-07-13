@@ -135,6 +135,59 @@ class OrganisationSettingsControllerSpec extends Specification {
         e.status == HttpStatus.FORBIDDEN
     }
 
+    def "PUT /administration/organisation-settings round-trips the Team Topologies thresholds"() {
+        given:
+        String adminToken = createAdminToken()
+
+        when:
+        def putResponse = client.toBlocking().exchange(
+            HttpRequest.PUT("/administration/organisation-settings",
+                [cognitiveLoadThreshold: 4.0, teamInteractionHealthThreshold: 3]).bearerAuth(adminToken), Map)
+
+        then:
+        putResponse.status == HttpStatus.OK
+        putResponse.body().cognitiveLoadThreshold == 4.0
+        putResponse.body().teamInteractionHealthThreshold == 3
+
+        and: "GET reflects them"
+        def getResponse = client.toBlocking().exchange(
+            HttpRequest.GET("/administration/organisation-settings").bearerAuth(adminToken), Map)
+        getResponse.body().cognitiveLoadThreshold == 4.0
+        getResponse.body().teamInteractionHealthThreshold == 3
+    }
+
+    def "PUT /administration/organisation-settings round-trips the org-chart default view"() {
+        given:
+        String adminToken = createAdminToken()
+
+        when:
+        def putResponse = client.toBlocking().exchange(
+            HttpRequest.PUT("/administration/organisation-settings",
+                [orgChartDefaultView: "CONTAINER"]).bearerAuth(adminToken), Map)
+
+        then:
+        putResponse.status == HttpStatus.OK
+        putResponse.body().orgChartDefaultView == "CONTAINER"
+
+        and: "GET reflects it"
+        def getResponse = client.toBlocking().exchange(
+            HttpRequest.GET("/administration/organisation-settings").bearerAuth(adminToken), Map)
+        getResponse.body().orgChartDefaultView == "CONTAINER"
+    }
+
+    def "org-chart default view is null when unset"() {
+        given:
+        String adminToken = createAdminToken()
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/administration/organisation-settings").bearerAuth(adminToken), Map)
+
+        then:
+        response.status == HttpStatus.OK
+        response.body().orgChartDefaultView == null
+    }
+
     def "GET /administration/organisation-settings reflects PUT changes"() {
         given:
         String adminToken = createAdminToken()

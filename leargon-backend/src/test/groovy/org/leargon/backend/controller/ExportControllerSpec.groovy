@@ -7,7 +7,6 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
-import org.leargon.backend.domain.ClassificationAssignment
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.LoginRequest
 import org.leargon.backend.model.SignupRequest
@@ -124,9 +123,10 @@ class ExportControllerSpec extends Specification {
         String adminToken = createAdminToken()
         String processKey = createProcess(adminToken, "Export Test Process")
         String entityKey = createBusinessEntity(adminToken, "Test Person Entity")
-        // Stamp personal-data classification directly — Liquibase doesn't run in H2 tests
+        // Personal data is now a typed field, not a classification
         def entity = businessEntityRepository.findByKey(entityKey).get()
-        entity.classificationAssignments = [new ClassificationAssignment("personal-data", "personal-data--contains")]
+        entity.containsPersonalData = true
+        entity.entityRole = "DATA_ATTRIBUTE"
         businessEntityRepository.update(entity)
         // Link entity to process so it appears in dataCategories
         client.toBlocking().exchange(

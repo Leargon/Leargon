@@ -154,20 +154,24 @@ describe('Dashboard API', () => {
       expect(item).toHaveProperty('covered');
       expect(item).toHaveProperty('total');
       expect(item).toHaveProperty('percentage');
-      expect(item.percentage as number).toBeGreaterThanOrEqual(0);
-      expect(item.percentage as number).toBeLessThanOrEqual(100);
+      // percentage is nullable (null = N/A when there is nothing to measure)
+      if (item.percentage !== null) {
+        expect(item.percentage as number).toBeGreaterThanOrEqual(0);
+        expect(item.percentage as number).toBeLessThanOrEqual(100);
+      }
     });
   });
 
-  it('maturity metrics report 100 percent when total is 0', async () => {
+  it('maturity metrics report N/A (null) when total is 0', async () => {
     const res = await adminClient.get('/dashboard/maturity');
     expect(res.status).toBe(200);
 
-    const metrics = res.data.metrics as Array<{ total: number; percentage: number }>;
+    const metrics = res.data.metrics as Array<{ total: number; percentage: number | null }>;
+    // Nothing to measure → percentage is null (N/A), not a misleading 100%.
     metrics
       .filter((m) => m.total === 0)
       .forEach((m) => {
-        expect(m.percentage).toBe(100);
+        expect(m.percentage).toBeNull();
       });
   });
 
