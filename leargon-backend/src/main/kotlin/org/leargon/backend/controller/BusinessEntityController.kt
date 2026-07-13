@@ -27,9 +27,9 @@ import org.leargon.backend.model.UpdateBusinessEntityDataOwnerRequest
 import org.leargon.backend.model.UpdateBusinessEntityDataStewardRequest
 import org.leargon.backend.model.UpdateBusinessEntityInterfacesRequest
 import org.leargon.backend.model.UpdateBusinessEntityParentRequest
-import org.leargon.backend.model.UpdatePersonalDataRequest
 import org.leargon.backend.model.UpdateBusinessEntityRelationshipRequest
 import org.leargon.backend.model.UpdateBusinessEntityTechnicalCustodianRequest
+import org.leargon.backend.model.UpdatePersonalDataRequest
 import org.leargon.backend.model.UpdateRetentionPeriodRequest
 import org.leargon.backend.model.UpdateStorageLocationsRequest
 import org.leargon.backend.model.VersionDiffResponse

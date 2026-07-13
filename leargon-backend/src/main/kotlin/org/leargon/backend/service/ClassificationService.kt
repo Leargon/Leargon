@@ -43,7 +43,6 @@ open class ClassificationService(
     private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor,
     private val roleService: RoleService
 ) {
-
     @Transactional
     open fun getClassifications(assignableTo: String?): List<ClassificationResponse> {
         val classifications =
