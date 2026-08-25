@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { FRONTEND_ORIGIN } from './src/tests/e2e/frontendUrl';
 
 export default defineConfig({
   testDir: 'src/tests/e2e',
@@ -14,7 +15,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/playwright-results.xml' }],
   ],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: FRONTEND_ORIGIN,
     trace: 'on-first-retry',
   },
   projects: [
@@ -31,7 +32,12 @@ export default defineConfig({
         storageState: '.auth/admin.json',
       },
       dependencies: ['setup', 'setup-roles'],
-      testIgnore: [/auth(-roles)?\.setup\.ts/, /methodology-settings\.spec\.ts/, /field-verification\.spec\.ts/],
+      testIgnore: [
+        /auth(-roles)?\.setup\.ts/,
+        /methodology-settings\.spec\.ts/,
+        /field-verification\.spec\.ts/,
+        /tasks\.spec\.ts/,
+      ],
     },
     // Config-mutating specs run AFTER the parallel bulk, chained so they never overlap each other or
     // the bulk (both PUT the global methodology config, which would otherwise race concurrent specs).
@@ -46,6 +52,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: '.auth/admin.json' },
       dependencies: ['chromium-methodology'],
       testMatch: /field-verification\.spec\.ts/,
+    },
+    // The to-do spec PUTs the app-wide field and to-do rule configuration, so it runs last and alone.
+    // Both of its describe blocks live in one file on purpose: separate files would run in parallel
+    // workers and clobber each other's configuration fixture.
+    {
+      name: 'chromium-tasks',
+      use: { ...devices['Desktop Chrome'], storageState: '.auth/admin.json' },
+      dependencies: ['chromium-verification'],
+      testMatch: /tasks\.spec\.ts/,
+      fullyParallel: false,
     },
   ],
   globalSetup: 'src/tests/e2e/global-setup.ts',

@@ -42,59 +42,7 @@ open class BusinessEntityMapper(
                 businessEntity.classificationAssignments,
                 businessEntity.interfaceEntities,
             )
-        val effectiveClassificationKeys = effectiveClassifications.map { it.classificationKey }.toSet()
-        val fc =
-            fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies) { fieldName ->
-                when {
-                    fieldName == "names" -> {
-                        businessEntity.names.isNotEmpty()
-                    }
-
-                    fieldName == "descriptions" -> {
-                        businessEntity.descriptions.isNotEmpty()
-                    }
-
-                    fieldName == "boundedContext" -> {
-                        businessEntity.boundedContext != null
-                    }
-
-                    fieldName == "dataOwner" -> {
-                        businessEntity.effectiveOwner() != null
-                    }
-
-                    fieldName.startsWith("retentionPeriod.") -> {
-                        val locale = fieldName.removePrefix("retentionPeriod.")
-                        businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }
-                    }
-
-                    fieldName.startsWith("names.") -> {
-                        val locale = fieldName.removePrefix("names.")
-                        businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("descriptions.") -> {
-                        val locale = fieldName.removePrefix("descriptions.")
-                        businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("classification.") -> {
-                        val classKey = fieldName.removePrefix("classification.")
-                        classKey in effectiveClassificationKeys
-                    }
-
-                    fieldName == "containsPersonalData" -> {
-                        businessEntity.containsPersonalData != null
-                    }
-
-                    fieldName == "entityRole" -> {
-                        businessEntity.entityRole != null
-                    }
-
-                    else -> {
-                        true
-                    }
-                }
-            }
+        val fc = fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies, presenceOf(businessEntity))
         val effectiveOwningUnit =
             businessEntity.owningUnit
                 ?: businessEntity.boundedContext?.owningUnit
@@ -255,6 +203,70 @@ open class BusinessEntityMapper(
         fun toBusinessEntitySummaryResponseArray(businessEntities: Collection<BusinessEntity>?): List<BusinessEntitySummaryResponse> {
             if (businessEntities == null) return emptyList()
             return businessEntities.map { toBusinessEntitySummaryResponse(it)!! }
+        }
+    }
+
+    /**
+     * Whether each configurable field of [businessEntity] currently has a value. Shared by the response mapper
+     * (for `missingMandatoryFields`) and `TaskService` (for MISSING_MANDATORY_FIELD to-dos), so the two
+     * can never disagree about what counts as filled in.
+     */
+    fun presenceOf(businessEntity: BusinessEntity): (String) -> Boolean {
+        val effectiveClassificationKeys =
+            ClassificationMapper
+                .computeEffectiveAssignments(businessEntity.classificationAssignments, businessEntity.interfaceEntities)
+                .map { it.classificationKey }
+                .toSet()
+        return { fieldName ->
+            when {
+                fieldName == "names" -> {
+                    businessEntity.names.isNotEmpty()
+                }
+
+                fieldName == "descriptions" -> {
+                    businessEntity.descriptions.isNotEmpty()
+                }
+
+                fieldName == "boundedContext" -> {
+                    businessEntity.boundedContext != null
+                }
+
+                fieldName == "dataOwner" -> {
+                    businessEntity.effectiveOwner() != null
+                }
+
+                fieldName.startsWith("retentionPeriod.") -> {
+                    val locale = fieldName.removePrefix("retentionPeriod.")
+                    businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }
+                }
+
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    businessEntity.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    businessEntity.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    classKey in effectiveClassificationKeys
+                }
+
+                fieldName == "containsPersonalData" -> {
+                    businessEntity.containsPersonalData != null
+                }
+
+                fieldName == "entityRole" -> {
+                    businessEntity.entityRole != null
+                }
+
+                else -> {
+                    true
+                }
+            }
         }
     }
 }

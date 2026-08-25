@@ -5,7 +5,6 @@
 
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
-| Owner to-do & governance tasks                | 3        | 30%    | 8/10  | **2.7**  |
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
 | Guided modeling advisor                       | 6        | 40%    | 9/10  | **1.5**  |
 | Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
@@ -18,7 +17,8 @@
 | Review cycles                                 | 4        | 40%    | 6/10  | **1.5**  |
 | Extended BPMN event types (Story 2b)          | 3        | 30%    | 6/10  | **2.0**  |
 
-*(Team Topologies and Value Stream Mapping are fully implemented and no longer listed here.)*
+*(Team Topologies, Value Stream Mapping and the Owner to-do list are fully implemented and no
+longer listed here.)*
 
 ### Technical follow-ups (carried over from the REVIEW-FINDINGS implementation)
 
@@ -145,57 +145,17 @@ methodology\
 
 ---
 
-## Owner to-do & governance tasks
+## Owner to-do & governance tasks — IMPLEMENTED
 
-*A per-owner to-do section that turns the governance gaps Léargon already detects into an explicit,
-actionable task list for the person responsible — rather than surfacing them only as passive
-banners on scattered detail pages. Complements the existing "Needs attention" dashboard block and
-the (planned) Review cycles by giving each owner a single, prioritised "what do I need to do"
-list, and giving admins an aggregate view of outstanding work by owner. Directly follows from
-`REVIEW-FINDINGS.md` Part C/D: guidance is only useful if the resulting to-dos are shown to the
-right person and can be tracked to completion.*
-
-*Read-heavy over existing data — tasks are derived (missing mandatory fields, missing legal basis
-on personal-data processes, unassigned owners, unresolved advisor recommendations, overdue
-reviews) — plus a small `task_dismissals` table so an owner can dismiss a non-applicable task with
-a reason. No duplication of source data.*
-
-*⏱ Sessions: 3 · Weekly effort: ~30% · Value: 8/10 · Score: 2.7 · Breakdown: 1 backend
-(task-derivation service aggregating existing gap detectors + dismissals table) + 1.5 frontend
-(to-do section on the personal dashboard, per-item task chips, admin by-owner view) + 0.5 tests.*
-
-#### USER STORY 'View my outstanding governance to-dos'
-**AS A** data owner, process owner, or org-unit lead\
-**IF** one or more items I am responsible for has an outstanding governance gap (missing mandatory
-field, missing legal basis, missing owner/steward, unresolved advisor recommendation)\
-**I WANT** to see a single prioritised to-do list on my dashboard, each task naming the item, the
-gap, and a direct link to fix it\
-**SO THAT** I know exactly what I need to complete without hunting through detail pages
-
-#### USER STORY 'Jump from a to-do straight to the fix'
-**AS AN** owner\
-**IF** I select a to-do item\
-**I WANT** to be taken directly to the relevant field or section of the item, ready to edit\
-**SO THAT** I can resolve the gap in one click rather than searching for where it lives
-
-#### USER STORY 'Dismiss a non-applicable to-do with a reason'
-**AS AN** owner\
-**IF** a derived to-do does not apply to my item (e.g. a field genuinely has no value for this
-case)\
-**I WANT** to dismiss the task with a short reason\
-**SO THAT** it stops cluttering my list while leaving an auditable record of why it was skipped
-
-#### USER STORY 'See to-do progress for my responsibilities'
-**AS AN** owner\
-**I WANT** to see a simple completion indicator (e.g. "6 of 9 governance tasks done") across the
-items I own\
-**SO THAT** I have a sense of how close my area is to being fully documented
-
-#### USER STORY 'View outstanding tasks by owner'
-**AS AN** admin\
-**I WANT** to see outstanding governance tasks aggregated by responsible owner, ranked by count and
-severity\
-**SO THAT** I can see who has the most outstanding work and follow up on stewardship gaps
+*Delivered: `GET /tasks` derives a prioritised, per-owner to-do list from live catalogue data
+(`TaskService` + `TaskRuleCatalog`), `POST/DELETE /tasks/{taskId}/dismissal` records a dismissal with
+a reason that is voided as soon as the item changes, and `GET /tasks/by-owner` aggregates outstanding
+work per responsible owner (including an unassigned bucket). The rule catalogue is admin-configurable
+via `/administration/task-rules` — each rule can be switched off or downgraded from "should do" to
+"could do", with Starting out / Growing / Mature presets — so an organisation can pace the list to its
+maturity. Frontend: the **My to-dos** page, a home-page summary card, and the **Settings → To-do
+rules** screen; the detail-panel nudges now render from the same backend rules rather than their own
+hard-coded conditions. User stories live in `user-stories/technical/tasks.md`.*
 
 ---
 

@@ -38,104 +38,7 @@ open class ProcessMapper(
         currentUser: org.leargon.backend.domain.User? = null
     ): ProcessResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
-        val fc =
-            fieldConfigurationService.compute("BUSINESS_PROCESS", disabledMethodologies) { fieldName ->
-                when {
-                    fieldName == "names" -> {
-                        process.names.isNotEmpty()
-                    }
-
-                    fieldName == "descriptions" -> {
-                        process.descriptions.isNotEmpty()
-                    }
-
-                    fieldName == "boundedContext" -> {
-                        process.boundedContext != null
-                    }
-
-                    fieldName == "processOwner" -> {
-                        (
-                            process.processOwner
-                                ?: (process.owningUnit ?: process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit)
-                                    ?.businessOwner
-                        ) != null
-                    }
-
-                    fieldName == "executingUnits" -> {
-                        process.executingUnits.isNotEmpty()
-                    }
-
-                    fieldName == "legalBasis" -> {
-                        process.legalBasis != null
-                    }
-
-                    fieldName.startsWith("names.") -> {
-                        val locale = fieldName.removePrefix("names.")
-                        process.names.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("descriptions.") -> {
-                        val locale = fieldName.removePrefix("descriptions.")
-                        process.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("purpose.") -> {
-                        val locale = fieldName.removePrefix("purpose.")
-                        process.purpose?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
-                    }
-
-                    fieldName.startsWith("securityMeasures.") -> {
-                        val locale = fieldName.removePrefix("securityMeasures.")
-                        process.securityMeasures?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
-                    }
-
-                    fieldName.startsWith("classification.") -> {
-                        val classKey = fieldName.removePrefix("classification.")
-                        process.classificationAssignments.any { it.classificationKey == classKey }
-                    }
-
-                    fieldName.startsWith("activityJustification.") -> {
-                        val locale = fieldName.removePrefix("activityJustification.")
-                        process.activityJustification?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
-                    }
-
-                    fieldName == "valueStreamType" -> {
-                        !process.valueStreamType.isNullOrBlank()
-                    }
-
-                    fieldName == "cycleTimeMinutes" -> {
-                        process.cycleTimeMinutes != null
-                    }
-
-                    fieldName == "waitTimeMinutes" -> {
-                        process.waitTimeMinutes != null
-                    }
-
-                    fieldName == "changeoverTimeMinutes" -> {
-                        process.changeoverTimeMinutes != null
-                    }
-
-                    fieldName == "frequencyCount" -> {
-                        process.frequencyCount != null
-                    }
-
-                    fieldName == "activityType" -> {
-                        !process.activityType.isNullOrBlank()
-                    }
-
-                    fieldName == "firstPassYield" -> {
-                        process.firstPassYield != null
-                    }
-
-                    fieldName == "completionRate" -> {
-                        process.completionRate != null
-                    }
-
-                    else -> {
-                        true
-                    }
-                }
-            }
+        val fc = fieldConfigurationService.compute("BUSINESS_PROCESS", disabledMethodologies, presenceOf(process))
         val effectiveOwningUnit =
             process.owningUnit
                 ?: process.boundedContext?.owningUnit
@@ -346,4 +249,108 @@ open class ProcessMapper(
         @JvmStatic
         fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)
     }
+
+    /**
+     * Whether each configurable field of [process] currently has a value. Shared by the response mapper
+     * (for `missingMandatoryFields`) and `TaskService` (for MISSING_MANDATORY_FIELD to-dos), so the two
+     * can never disagree about what counts as filled in.
+     */
+    fun presenceOf(process: Process): (String) -> Boolean =
+        { fieldName ->
+            when {
+                fieldName == "names" -> {
+                    process.names.isNotEmpty()
+                }
+
+                fieldName == "descriptions" -> {
+                    process.descriptions.isNotEmpty()
+                }
+
+                fieldName == "boundedContext" -> {
+                    process.boundedContext != null
+                }
+
+                fieldName == "processOwner" -> {
+                    (
+                        process.processOwner
+                            ?: (process.owningUnit ?: process.boundedContext?.owningUnit ?: process.boundedContext?.domain?.owningUnit)
+                                ?.businessOwner
+                    ) != null
+                }
+
+                fieldName == "executingUnits" -> {
+                    process.executingUnits.isNotEmpty()
+                }
+
+                fieldName == "legalBasis" -> {
+                    process.legalBasis != null
+                }
+
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    process.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    process.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("purpose.") -> {
+                    val locale = fieldName.removePrefix("purpose.")
+                    process.purpose?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                }
+
+                fieldName.startsWith("securityMeasures.") -> {
+                    val locale = fieldName.removePrefix("securityMeasures.")
+                    process.securityMeasures?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                }
+
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    process.classificationAssignments.any { it.classificationKey == classKey }
+                }
+
+                fieldName.startsWith("activityJustification.") -> {
+                    val locale = fieldName.removePrefix("activityJustification.")
+                    process.activityJustification?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                }
+
+                fieldName == "valueStreamType" -> {
+                    !process.valueStreamType.isNullOrBlank()
+                }
+
+                fieldName == "cycleTimeMinutes" -> {
+                    process.cycleTimeMinutes != null
+                }
+
+                fieldName == "waitTimeMinutes" -> {
+                    process.waitTimeMinutes != null
+                }
+
+                fieldName == "changeoverTimeMinutes" -> {
+                    process.changeoverTimeMinutes != null
+                }
+
+                fieldName == "frequencyCount" -> {
+                    process.frequencyCount != null
+                }
+
+                fieldName == "activityType" -> {
+                    !process.activityType.isNullOrBlank()
+                }
+
+                fieldName == "firstPassYield" -> {
+                    process.firstPassYield != null
+                }
+
+                fieldName == "completionRate" -> {
+                    process.completionRate != null
+                }
+
+                else -> {
+                    true
+                }
+            }
+        }
 }

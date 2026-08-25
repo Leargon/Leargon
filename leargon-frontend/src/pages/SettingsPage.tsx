@@ -5,6 +5,7 @@ import UsersTab from '../components/settings/UsersTab';
 import LocalesTab from '../components/settings/LocalesTab';
 import ClassificationsTab from '../components/settings/ClassificationsTab';
 import MethodologiesTab from '../components/settings/MethodologiesTab';
+import TaskRulesTab from '../components/settings/TaskRulesTab';
 import OrganisationSettingsTab from '../components/settings/OrganisationSettingsTab';
 
 const SettingsPage: React.FC = () => {
@@ -16,6 +17,7 @@ const SettingsPage: React.FC = () => {
       {location.pathname === '/settings/locales' && <LocalesTab />}
       {location.pathname === '/settings/classifications' && <ClassificationsTab />}
       {location.pathname === '/settings/methodologies' && <MethodologiesTab />}
+      {location.pathname === '/settings/task-rules' && <TaskRulesTab />}
       {location.pathname === '/settings/organisation' && <OrganisationSettingsTab />}
     </Box>
   );

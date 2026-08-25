@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 073-create-task-rule-configurations-table
+      author: leargon
+      comment: Create task_rule_configurations table so administrators can switch governance to-do rules off or downgrade them
+      changes:
+        - createTable:
+            tableName: task_rule_configurations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: rule_code
+                  type: VARCHAR(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: priority
+                  type: VARCHAR(15)
+                  constraints:
+                    nullable: true
+        - addUniqueConstraint:
+            tableName: task_rule_configurations
+            columnNames: rule_code
+            constraintName: uq_task_rule_config_code

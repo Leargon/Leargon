@@ -26,6 +26,7 @@ import type { ActivityItem } from '../api/generated/model';
 import { useAuth } from '../context/AuthContext';
 import { useMethodology } from '../context/MethodologyContext';
 import MaturityOverview from '../components/dashboard/MaturityOverview';
+import MyTasksCard from '../components/tasks/MyTasksCard';
 import GovernanceSetupWizard from '../components/settings/GovernanceSetupWizard';
 
 function useFormatRelativeTime() {
@@ -52,66 +53,6 @@ const RESOURCE_TYPE_PATHS: Record<string, string> = {
 
 const RESOURCE_TYPE_NO_DETAIL = new Set(['DPIA']);
 
-/*
-function AttentionSection({ items }: { items: AttentionItem[] }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-
-  if (items.length === 0) {
-    return (
-      <Box sx={{ px: 2, py: 1.5, color: 'text.secondary' }}>
-        <Typography variant="body2">{t('home.nothingNeedsAttention')}</Typography>
-      </Box>
-    );
-  }
-
-  const issueLabel = (code: string): string => {
-    const map: Record<string, string> = {
-      NO_LEGAL_BASIS: t('home.issueNoLegalBasis'),
-      DPIA_IN_PROGRESS: t('home.issueDpiaInProgress'),
-      MISSING_OWNER: t('home.issueMissingOwner'),
-    };
-    return map[code] ?? code;
-  };
-
-  return (
-    <List dense disablePadding>
-      {items.map((item, idx) => (
-        <React.Fragment key={`${item.resourceType}-${item.key}-${idx}`}>
-          {idx > 0 && <Divider component="li" />}
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => {
-                const basePath = RESOURCE_TYPE_PATHS[item.resourceType];
-                if (basePath && !RESOURCE_TYPE_NO_DETAIL.has(item.resourceType)) navigate(`${basePath}/${item.key}`);
-                else if (basePath) navigate(basePath);
-              }}
-              sx={{ py: 0.75, px: 2 }}
-            >
-              <Box sx={{ mr: 1.5, display: 'flex', alignItems: 'center', color: item.severity === 'ERROR' ? 'error.main' : 'warning.main' }}>
-                {item.severity === 'ERROR' ? <ErrorIcon fontSize="small" /> : <Warning fontSize="small" />}
-              </Box>
-              <ListItemText
-                primary={item.name}
-                secondary={issueLabel(item.issueCode)}
-                slotProps={{
-                  primary: { variant: 'body2', sx: { fontWeight: 500 } },
-                  secondary: { variant: 'caption' }
-                }} />
-              <Chip
-                label={item.resourceType.toLowerCase()}
-                size="small"
-                variant="outlined"
-                sx={{ ml: 1, textTransform: 'capitalize', flexShrink: 0 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </React.Fragment>
-      ))}
-    </List>
-  );
-}
-*/
 
 function ActivitySection({ items }: { items: ActivityItem[] }) {
   const { t } = useTranslation();
@@ -235,12 +176,7 @@ const HomePage: React.FC = () => {
   const { isMethodologyEnabled } = useMethodology();
   const [governanceWizardOpen, setGovernanceWizardOpen] = useState(false);
 
-  /*
-  const filteredAttention = (dashboard?.needsAttention ?? []).filter((item) => {
-    const m = ATTENTION_METHODOLOGY(item);
-    return !m || isMethodologyEnabled(m);
-  });
-  */
+
   const showEntities = isMethodologyEnabled('DATA_GOVERNANCE');
   const showProcesses = isMethodologyEnabled('PROCESS_GOVERNANCE');
 
@@ -277,14 +213,8 @@ const HomePage: React.FC = () => {
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       {dashboard && (
         <>
-          {/* Needs Attention — always shown to admin; shown to others only when there are items */}
-          {/*
-          {(isAdmin || filteredAttention.length > 0) && (
-            <SectionCard title={t('home.needsAttention')} icon={<Warning fontSize="small" />}>
-              <AttentionSection items={filteredAttention} />
-            </SectionCard>
-          )}
-          */}
+          <MyTasksCard />
+
 
           {/* My Responsibilities */}
           {(showEntities || showProcesses) && (

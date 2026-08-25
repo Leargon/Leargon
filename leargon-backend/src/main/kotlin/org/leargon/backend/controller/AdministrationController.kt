@@ -18,6 +18,8 @@ import org.leargon.backend.model.MethodologyConfigEntry
 import org.leargon.backend.model.OrganisationSettingsRequest
 import org.leargon.backend.model.OrganisationSettingsResponse
 import org.leargon.backend.model.SignupRequest
+import org.leargon.backend.model.TaskRuleConfigEntry
+import org.leargon.backend.model.TaskRuleDefinition
 import org.leargon.backend.model.UpdateUserRequest
 import org.leargon.backend.model.UserResponse
 import org.leargon.backend.model.UserSummaryResponse
@@ -25,6 +27,7 @@ import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.MethodologyConfigurationService
 import org.leargon.backend.service.OrganisationSettingsService
 import org.leargon.backend.service.RoleService
+import org.leargon.backend.service.TaskRuleConfigurationService
 import org.leargon.backend.service.UserService
 
 @Controller
@@ -32,6 +35,7 @@ open class AdministrationController(
     private val userService: UserService,
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
+    private val taskRuleConfigurationService: TaskRuleConfigurationService,
     private val organisationSettingsService: OrganisationSettingsService,
     private val roleService: RoleService,
     private val securityService: SecurityService
@@ -119,6 +123,20 @@ open class AdministrationController(
     ): List<MethodologyConfigEntry> {
         val scopes = roleService.scopesOf(getCurrentUser())
         return methodologyConfigurationService.replaceScoped(methodologyConfigEntries, scopes.leadMethodologies, scopes.isAdmin)
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    override fun getTaskRuleDefinitions(): List<TaskRuleDefinition> = taskRuleConfigurationService.getDefinitions()
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    override fun getTaskRuleConfigurations(): List<TaskRuleConfigEntry> = taskRuleConfigurationService.getAll()
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    override fun replaceTaskRuleConfigurations(
+        @Body @Valid taskRuleConfigEntries: List<TaskRuleConfigEntry>
+    ): List<TaskRuleConfigEntry> {
+        val scopes = roleService.scopesOf(getCurrentUser())
+        return taskRuleConfigurationService.replaceScoped(taskRuleConfigEntries, scopes.leadMethodologies, scopes.isAdmin)
     }
 
     @Secured(SecurityRule.IS_AUTHENTICATED)

@@ -6,7 +6,7 @@ import {
   Handshake, FactCheck, GppGood, Hub,
   FlashOn, Computer,
   People, Language, Label, AutoAwesomeMosaic,
-  Home, Groups, Map, HelpOutlined, Schema,
+  Home, Groups, Map, HelpOutlined, Schema, ChecklistRtl, Rule,
 } from '@mui/icons-material';
 import { useRole, type Role } from '../../context/RoleContext';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,7 @@ interface NavItem {
 
 const ALWAYS_VISIBLE_ITEMS: NavItem[] = [
   { labelKey: 'nav.home', path: '/home', icon: <Home /> },
+  { labelKey: 'nav.myTasks', path: '/my-tasks', icon: <ChecklistRtl /> },
   { labelKey: 'nav.insights', path: '/team-insights', icon: <Groups /> },
   { labelKey: 'nav.help', path: '/help', icon: <HelpOutlined /> },
 ];
@@ -73,6 +74,7 @@ const SETTINGS_ITEMS: NavItem[] = [
   { labelKey: 'nav.locales', path: '/settings/locales', icon: <Language />, adminOnly: true },
   { labelKey: 'nav.classifications', path: '/settings/classifications', icon: <Label />, adminOnly: true },
   { labelKey: 'nav.methodologies', path: '/settings/methodologies', icon: <Schema /> },
+  { labelKey: 'nav.taskRules', path: '/settings/task-rules', icon: <Rule /> },
   { labelKey: 'nav.organisationSettings', path: '/settings/organisation', icon: <CorporateFare />, adminOnly: true },
 ];
 

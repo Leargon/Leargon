@@ -43,6 +43,8 @@ import type {
   OrganisationSettingsRequest,
   OrganisationSettingsResponse,
   SignupRequest,
+  TaskRuleConfigEntry,
+  TaskRuleDefinition,
   UpdateUserRequest,
   UserResponse,
   UserSummaryResponse
@@ -1817,4 +1819,338 @@ export const useUpdateOrganisationSettings = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateOrganisationSettingsMutationOptions(options), queryClient);
+    }
+    export type getTaskRuleDefinitionsResponse200 = {
+  data: TaskRuleDefinition[]
+  status: 200
+}
+
+export type getTaskRuleDefinitionsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getTaskRuleDefinitionsResponseSuccess = (getTaskRuleDefinitionsResponse200) & {
+  headers: Headers;
+};
+export type getTaskRuleDefinitionsResponseError = (getTaskRuleDefinitionsResponse401) & {
+  headers: Headers;
+};
+
+export type getTaskRuleDefinitionsResponse = (getTaskRuleDefinitionsResponseSuccess | getTaskRuleDefinitionsResponseError)
+
+export const getGetTaskRuleDefinitionsUrl = () => {
+
+
+
+
+  return `/administration/task-rules/definitions`
+}
+
+/**
+ * Returns the static inventory of governance to-do rules with their default priority and maturity tier. Rules belonging to a disabled methodology are omitted. Requires authentication.
+ * @summary Get all configurable to-do rule definitions
+ */
+export const getTaskRuleDefinitions = async ( options?: RequestInit): Promise<getTaskRuleDefinitionsResponse> => {
+
+  return customAxios<getTaskRuleDefinitionsResponse>(getGetTaskRuleDefinitionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTaskRuleDefinitionsQueryKey = () => {
+    return [
+    `/administration/task-rules/definitions`
+    ] as const;
+    }
+
+
+export const getGetTaskRuleDefinitionsQueryOptions = <TData = Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTaskRuleDefinitionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskRuleDefinitions>>> = ({ signal }) => getTaskRuleDefinitions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTaskRuleDefinitionsQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskRuleDefinitions>>>
+export type GetTaskRuleDefinitionsQueryError = void
+
+
+export function useGetTaskRuleDefinitions<TData = Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskRuleDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskRuleDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaskRuleDefinitions<TData = Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskRuleDefinitions>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskRuleDefinitions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaskRuleDefinitions<TData = Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get all configurable to-do rule definitions
+ */
+
+export function useGetTaskRuleDefinitions<TData = Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleDefinitions>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTaskRuleDefinitionsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type getTaskRuleConfigurationsResponse200 = {
+  data: TaskRuleConfigEntry[]
+  status: 200
+}
+
+export type getTaskRuleConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type getTaskRuleConfigurationsResponseSuccess = (getTaskRuleConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type getTaskRuleConfigurationsResponseError = (getTaskRuleConfigurationsResponse401) & {
+  headers: Headers;
+};
+
+export type getTaskRuleConfigurationsResponse = (getTaskRuleConfigurationsResponseSuccess | getTaskRuleConfigurationsResponseError)
+
+export const getGetTaskRuleConfigurationsUrl = () => {
+
+
+
+
+  return `/administration/task-rules`
+}
+
+/**
+ * Returns the stored enable/priority overrides per rule. Rules without an entry use their definition default. Requires authentication.
+ * @summary Get the saved to-do rule configuration
+ */
+export const getTaskRuleConfigurations = async ( options?: RequestInit): Promise<getTaskRuleConfigurationsResponse> => {
+
+  return customAxios<getTaskRuleConfigurationsResponse>(getGetTaskRuleConfigurationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTaskRuleConfigurationsQueryKey = () => {
+    return [
+    `/administration/task-rules`
+    ] as const;
+    }
+
+
+export const getGetTaskRuleConfigurationsQueryOptions = <TData = Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTaskRuleConfigurationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskRuleConfigurations>>> = ({ signal }) => getTaskRuleConfigurations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTaskRuleConfigurationsQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskRuleConfigurations>>>
+export type GetTaskRuleConfigurationsQueryError = void
+
+
+export function useGetTaskRuleConfigurations<TData = Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskRuleConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskRuleConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaskRuleConfigurations<TData = Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskRuleConfigurations>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskRuleConfigurations>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTaskRuleConfigurations<TData = Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the saved to-do rule configuration
+ */
+
+export function useGetTaskRuleConfigurations<TData = Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskRuleConfigurations>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTaskRuleConfigurationsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export type replaceTaskRuleConfigurationsResponse200 = {
+  data: TaskRuleConfigEntry[]
+  status: 200
+}
+
+export type replaceTaskRuleConfigurationsResponse401 = {
+  data: void
+  status: 401
+}
+
+export type replaceTaskRuleConfigurationsResponse403 = {
+  data: void
+  status: 403
+}
+
+export type replaceTaskRuleConfigurationsResponseSuccess = (replaceTaskRuleConfigurationsResponse200) & {
+  headers: Headers;
+};
+export type replaceTaskRuleConfigurationsResponseError = (replaceTaskRuleConfigurationsResponse401 | replaceTaskRuleConfigurationsResponse403) & {
+  headers: Headers;
+};
+
+export type replaceTaskRuleConfigurationsResponse = (replaceTaskRuleConfigurationsResponseSuccess | replaceTaskRuleConfigurationsResponseError)
+
+export const getReplaceTaskRuleConfigurationsUrl = () => {
+
+
+
+
+  return `/administration/task-rules`
+}
+
+/**
+ * Replaces the complete to-do rule configuration. Requires ROLE_ADMIN, or a LEAD role for every methodology touched by the submitted entries.
+ * @summary Replace the to-do rule configuration
+ */
+export const replaceTaskRuleConfigurations = async (taskRuleConfigEntry: TaskRuleConfigEntry[], options?: RequestInit): Promise<replaceTaskRuleConfigurationsResponse> => {
+
+  return customAxios<replaceTaskRuleConfigurationsResponse>(getReplaceTaskRuleConfigurationsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(taskRuleConfigEntry)
+  }
+);}
+
+
+
+
+export const getReplaceTaskRuleConfigurationsMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>, TError,{data: TaskRuleConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>, TError,{data: TaskRuleConfigEntry[]}, TContext> => {
+
+const mutationKey = ['replaceTaskRuleConfigurations'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>, {data: TaskRuleConfigEntry[]}> = (props) => {
+          const {data} = props ?? {};
+
+          return  replaceTaskRuleConfigurations(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReplaceTaskRuleConfigurationsMutationResult = NonNullable<Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>>
+    export type ReplaceTaskRuleConfigurationsMutationBody = TaskRuleConfigEntry[]
+    export type ReplaceTaskRuleConfigurationsMutationError = void
+
+    /**
+ * @summary Replace the to-do rule configuration
+ */
+export const useReplaceTaskRuleConfigurations = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>, TError,{data: TaskRuleConfigEntry[]}, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof replaceTaskRuleConfigurations>>,
+        TError,
+        {data: TaskRuleConfigEntry[]},
+        TContext
+      > => {
+      return useMutation(getReplaceTaskRuleConfigurationsMutationOptions(options), queryClient);
     }

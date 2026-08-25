@@ -83,6 +83,9 @@ import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
+import useFocusField, { fieldMatches } from '../../hooks/useFocusField';
+import useItemTasks from '../../hooks/useItemTasks';
+import { taskLabelKey } from '../../utils/taskNavigation';
 import TranslationEditor from '../common/TranslationEditor';
 import LocalizedTextEditor from '../common/LocalizedTextEditor';
 import LocalizedTextView from '../common/LocalizedTextView';
@@ -128,6 +131,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const isDddEnabled = isMethodologyEnabled('DDD');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
+  const focusedField = useFocusField();
+  // Governance to-dos for this item are derived by the backend, so the panel never re-implements
+  // the rules (and an administrator can switch any of them off).
+  const { topTask, hasTask } = useItemTasks('ENTITY', entityKey);
 
 
   const visibleTabs = ENTITY_TABS_BY_PERSPECTIVE[perspective];
@@ -557,8 +564,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         entityType="BUSINESS_ENTITY"
       />
 
-      {/* Item 3: Owner resolution warning — no owner at all (neither explicit nor computed) */}
-      {canEditField('dataOwner') && !entity.dataOwner && (
+      {/* Owner gap — raised by the backend MISSING_OWNER rule */}
+      {canEditField('dataOwner') && hasTask('MISSING_OWNER') && (
         <NudgeBanner
           title={t('nudge.entity.noOwnerTitle')}
           message={t('nudge.entity.noOwnerMessage')}
@@ -569,8 +576,8 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         />
       )}
 
-      {/* Item 8: Orphaned entity — no bounded context */}
-      {isDddEnabled && canEditField('boundedContext') && !entity.boundedContext && (
+      {/* Orphaned entity — raised by the backend ENTITY_NO_BOUNDED_CONTEXT rule */}
+      {isDddEnabled && canEditField('boundedContext') && hasTask('ENTITY_NO_BOUNDED_CONTEXT') && (
         <NudgeBanner
           severity="info"
           title={t('nudge.entity.noBcTitle')}
@@ -665,7 +672,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('dataOwner') && <PropRow label={t('entity.dataOwner')} statusIndicator={renderStatus('dataOwner')} canEdit={canEditField('dataOwner')} isEditing={ownerEdit.isEditing}
+        {!isHidden('dataOwner') && <PropRow fieldName="dataOwner" highlighted={fieldMatches(focusedField, 'dataOwner')} label={t('entity.dataOwner')} statusIndicator={renderStatus('dataOwner')} canEdit={canEditField('dataOwner')} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(entity.dataOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -703,7 +710,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           )}
         </PropRow>}
         {fields.owningUnit && !isHidden('owningUnit') && (
-          <PropRow label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={canEditField('owningUnit')} isEditing={owningUnitEdit.isEditing}
+          <PropRow fieldName="owningUnit" highlighted={fieldMatches(focusedField, 'owningUnit')} label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={canEditField('owningUnit')} isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(entity.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
             onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
             {owningUnitEdit.isEditing ? (
@@ -727,7 +734,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.dataSteward && !isHidden('dataSteward') && (
-          <PropRow label={t('entity.dataSteward')} statusIndicator={renderStatus('dataSteward')} canEdit={canEditField('dataSteward')} isEditing={dataStewardEdit.isEditing}
+          <PropRow fieldName="dataSteward" highlighted={fieldMatches(focusedField, 'dataSteward')} label={t('entity.dataSteward')} statusIndicator={renderStatus('dataSteward')} canEdit={canEditField('dataSteward')} isEditing={dataStewardEdit.isEditing}
             onEdit={() => dataStewardEdit.startEdit(entity.dataSteward?.username || null)} onSave={dataStewardEdit.save}
             onCancel={dataStewardEdit.cancel} isSaving={dataStewardEdit.isSaving}>
             {dataStewardEdit.isEditing ? (
@@ -766,7 +773,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('entity.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={canEditField('technicalCustodian')} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow fieldName="technicalCustodian" highlighted={fieldMatches(focusedField, 'technicalCustodian')} label={t('entity.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={canEditField('technicalCustodian')} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(entity.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
@@ -805,7 +812,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.parentEntity && !isHidden('parent') && (
-          <PropRow label={t('entity.parentEntity')} statusIndicator={renderStatus('parent')} canEdit={canEditField('parent')} isEditing={parentEdit.isEditing}
+          <PropRow fieldName="parent" highlighted={fieldMatches(focusedField, 'parent')} label={t('entity.parentEntity')} statusIndicator={renderStatus('parent')} canEdit={canEditField('parent')} isEditing={parentEdit.isEditing}
             onEdit={() => parentEdit.startEdit(entity.parent?.key || null)} onSave={parentEdit.save}
             onCancel={parentEdit.cancel} isSaving={parentEdit.isSaving}>
             {parentEdit.isEditing ? (
@@ -833,7 +840,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
-          <PropRow label={t('entity.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={canEditField('boundedContext')} isEditing={boundedContextEdit.isEditing}
+          <PropRow fieldName="boundedContext" highlighted={fieldMatches(focusedField, 'boundedContext')} label={t('entity.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={canEditField('boundedContext')} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(entity.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
             {boundedContextEdit.isEditing ? (
@@ -866,7 +873,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           </PropRow>
         )}
         {fields.retentionPeriod && !isHidden('retentionPeriod') && (
-          <PropRow label={t('entity.retentionPeriod')} statusIndicator={renderStatus(...activeLocales.map((l) => `retentionPeriod.${l.localeCode}`))} canEdit={canEditField('retentionPeriod')} isEditing={retentionEdit.isEditing}
+          <PropRow fieldName="retentionPeriod" highlighted={fieldMatches(focusedField, 'retentionPeriod')} label={t('entity.retentionPeriod')} statusIndicator={renderStatus(...activeLocales.map((l) => `retentionPeriod.${l.localeCode}`))} canEdit={canEditField('retentionPeriod')} isEditing={retentionEdit.isEditing}
             onEdit={() => retentionEdit.startEdit([...(entity.retentionPeriod ?? [])])}
             onSave={retentionEdit.save} onCancel={retentionEdit.cancel} isSaving={retentionEdit.isSaving}
             isMandatory={isMandatory('retentionPeriod')}>
@@ -1463,14 +1470,18 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
       </Accordion>
       )}
 
-      {/* Item 6: What's next suggestion */}
-      {hasBroadEdit && (() => {
-        const steps = [];
-        if (!entity.boundedContext) steps.push({ description: t('nudge.entity.nextAssignBcDesc'), actionLabel: t('nudge.entity.assignBc'), onClick: () => boundedContextEdit.startEdit(null) });
-        else if (!entity.dataOwner) steps.push({ description: t('nudge.entity.nextAssignOwnerDesc'), actionLabel: t('nudge.entity.assignOwner'), onClick: () => ownerEdit.startEdit('') });
-        else if ((entity.missingMandatoryFields?.length ?? 0) > 0) steps.push({ description: t('nudge.entity.nextFillFields', { count: entity.missingMandatoryFields!.length }), actionLabel: t('nudge.entity.showFields'), onClick: () => {} });
-        return <WhatNextBanner steps={steps} />;
-      })()}
+      {/* What's next — the single most important to-do the backend derived for this entity */}
+      {hasBroadEdit && topTask && (
+        <WhatNextBanner
+          steps={[
+            {
+              description: t(taskLabelKey(topTask.ruleCode), { defaultValue: topTask.ruleCode }),
+              actionLabel: t('tasks.viewAll'),
+              onClick: () => navigate('/my-tasks'),
+            },
+          ]}
+        />
+      )}
 
       {/* Create Child Entity Dialog */}
       <EntityCreationWizard

@@ -78,6 +78,8 @@ tags:
   description: Business Capability management endpoints
 - name: Search
   description: Full-text catalogue search endpoint
+- name: Task
+  description: Owner governance to-do list endpoints
 - name: ProcessingRegister
   description: Processing register (Verzeichnis der Bearbeitungstätigkeiten) endpoints
 paths:
@@ -6639,6 +6641,180 @@ paths:
                 $ref: '#/components/schemas/TeamInsightsResponse'
         '401':
           description: Unauthorized
+  /administration/task-rules/definitions:
+    get:
+      tags:
+      - Administration
+      summary: Get all configurable to-do rule definitions
+      description: Returns the static inventory of governance to-do rules with their default priority and maturity tier. Rules belonging to a disabled methodology are omitted. Requires authentication.
+      operationId: getTaskRuleDefinitions
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of to-do rule definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskRuleDefinition'
+        '401':
+          description: Not authenticated
+  /administration/task-rules:
+    get:
+      tags:
+      - Administration
+      summary: Get the saved to-do rule configuration
+      description: Returns the stored enable/priority overrides per rule. Rules without an entry use their definition default. Requires authentication.
+      operationId: getTaskRuleConfigurations
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of to-do rule configuration entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskRuleConfigEntry'
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+      - Administration
+      summary: Replace the to-do rule configuration
+      description: Replaces the complete to-do rule configuration. Requires ROLE_ADMIN, or a LEAD role for every methodology touched by the submitted entries.
+      operationId: replaceTaskRuleConfigurations
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskRuleConfigEntry'
+      responses:
+        '200':
+          description: Updated to-do rule configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskRuleConfigEntry'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions
+  /tasks:
+    get:
+      tags:
+      - Task
+      summary: Get the current user's governance to-dos
+      description: Returns the derived, prioritised to-do list for every catalogue item the current user owns or stewards, together with a completion summary.
+      operationId: getMyTasks
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: includeDismissed
+        in: query
+        required: false
+        description: When true, dismissed tasks are included with dismissed=true instead of being omitted
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: The current user's to-do list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          description: Not authenticated
+  /tasks/by-owner:
+    get:
+      tags:
+      - Task
+      summary: Get outstanding to-dos aggregated by responsible owner (admin only)
+      operationId: getTasksByOwner
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Outstanding to-do counts per owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerTaskLoadResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions (requires ROLE_ADMIN)
+  /tasks/{taskId}/dismissal:
+    post:
+      tags:
+      - Task
+      summary: Dismiss a to-do with a reason
+      description: Records a dismissal for the given derived task. The dismissal is automatically voided once the underlying item changes.
+      operationId: dismissTask
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        description: Derived task identifier
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DismissTaskRequest'
+      responses:
+        '200':
+          description: Task dismissed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskItem'
+        '400':
+          description: Missing or empty reason
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not responsible for this task
+        '404':
+          description: Task not found
+    delete:
+      tags:
+      - Task
+      summary: Undo a to-do dismissal
+      operationId: undismissTask
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        description: Derived task identifier
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Dismissal removed
+        '401':
+          description: Not authenticated
+        '403':
+          description: Not responsible for this task
+        '404':
+          description: Dismissal not found
   /dashboard/maturity:
     get:
       tags:
@@ -11233,6 +11409,210 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MaturityMetricItem'
+    TaskItem:
+      type: object
+      required:
+      - id
+      - resourceType
+      - resourceKey
+      - resourceNames
+      - ruleCode
+      - priority
+      - severity
+      - responsibility
+      - dismissed
+      properties:
+        id:
+          type: string
+          description: 'Deterministic task identifier: <entityType>:<resourceKey>:<ruleCode>:<fieldName>'
+          example: 'BUSINESS_PROCESS:order-intake:NO_LEGAL_BASIS:'
+        resourceType:
+          type: string
+          enum:
+          - ENTITY
+          - PROCESS
+          - DOMAIN
+          - ORG_UNIT
+        resourceKey:
+          type: string
+          description: Key of the catalogue item the task belongs to
+        resourceNames:
+          type: array
+          description: Localised names of the catalogue item
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        ruleCode:
+          type: string
+          description: Machine-readable rule code; the frontend renders its label from i18n
+          example: NO_LEGAL_BASIS
+        priority:
+          type: string
+          enum:
+          - REQUIRED
+          - RECOMMENDED
+          description: REQUIRED = should do, RECOMMENDED = could do
+        severity:
+          type: string
+          enum:
+          - ERROR
+          - WARNING
+          - INFO
+        fieldName:
+          type: string
+          nullable: true
+          description: Field the task targets, used to deep-link into the detail panel
+        section:
+          type: string
+          nullable: true
+          description: Methodology section of the targeted field (CORE, GDPR, DDD, …)
+        methodology:
+          type: string
+          nullable: true
+          description: Methodology owning this rule; null for methodology-independent rules
+        responsibility:
+          type: string
+          enum:
+          - OWNER
+          - STEWARD
+          description: Why this task is on the user's list
+        dismissed:
+          type: boolean
+          description: True when the current user has dismissed this task and the item has not changed since
+        dismissedReason:
+          type: string
+          nullable: true
+    TaskSummary:
+      type: object
+      required:
+      - open
+      - required
+      - recommended
+      - checksEvaluated
+      - checksPassed
+      properties:
+        open:
+          type: integer
+          description: Number of open (non-dismissed) tasks
+        required:
+          type: integer
+        recommended:
+          type: integer
+        checksEvaluated:
+          type: integer
+          description: Total number of rule checks run across the user's items
+        checksPassed:
+          type: integer
+          description: Number of checks that passed (no task raised)
+        completionPercentage:
+          type: integer
+          nullable: true
+          description: checksPassed / checksEvaluated * 100; null when nothing was evaluated
+    TaskListResponse:
+      type: object
+      required:
+      - tasks
+      - summary
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskItem'
+        summary:
+          $ref: '#/components/schemas/TaskSummary'
+    DismissTaskRequest:
+      type: object
+      required:
+      - reason
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Why the task does not apply to this item (audit record, not catalogue content)
+    OwnerTaskLoadItem:
+      type: object
+      required:
+      - required
+      - recommended
+      - total
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        required:
+          type: integer
+        recommended:
+          type: integer
+        total:
+          type: integer
+    OwnerTaskLoadResponse:
+      type: object
+      required:
+      - owners
+      properties:
+        owners:
+          type: array
+          items:
+            $ref: '#/components/schemas/OwnerTaskLoadItem'
+    TaskRuleDefinition:
+      type: object
+      required:
+      - ruleCode
+      - label
+      - description
+      - entityType
+      - section
+      - maturityLevel
+      - defaultPriority
+      - enabledByDefault
+      properties:
+        ruleCode:
+          type: string
+          example: NO_LEGAL_BASIS
+        label:
+          type: string
+          description: Human-readable rule name (English fallback; the UI prefers its own i18n key)
+        description:
+          type: string
+          description: What the rule checks and why it matters
+        entityType:
+          type: string
+          description: Entity type the rule applies to (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT)
+        methodology:
+          type: string
+          nullable: true
+        section:
+          type: string
+        maturityLevel:
+          type: string
+          enum:
+          - BASIC
+          - ADVANCED
+          - EXPERT
+        defaultPriority:
+          type: string
+          enum:
+          - REQUIRED
+          - RECOMMENDED
+        enabledByDefault:
+          type: boolean
+          description: Whether the rule is active when no configuration has been saved (BASIC tier only)
+    TaskRuleConfigEntry:
+      type: object
+      required:
+      - ruleCode
+      - enabled
+      properties:
+        ruleCode:
+          type: string
+        enabled:
+          type: boolean
+        priority:
+          type: string
+          nullable: true
+          enum:
+          - REQUIRED
+          - RECOMMENDED
+          description: Overrides the rule's default priority; null keeps the default
     DashboardResponse:
       type: object
       required:

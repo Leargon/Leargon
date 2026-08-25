@@ -51,3 +51,22 @@
 **IF** the same concept exists under different names in different bounded contexts\
 **I WANT** to create translation links between semantically equivalent entities in different bounded contexts\
 **SO THAT** cross-domain language differences are made explicit and the ubiquitous language boundaries are documented
+
+
+#### USER STORY 'Know what to do next'
+**AS A** data owner or process owner\
+**IF** items I am responsible for still have governance gaps\
+**I WANT** one prioritised to-do list that names each gap and links straight to the field that closes it\
+**SO THAT** I can keep my part of the catalogue complete without hunting through detail pages
+
+#### USER STORY 'Set aside a to-do that does not apply'
+**AS A** data owner or process owner\
+**IF** a derived to-do genuinely does not apply to my item\
+**I WANT** to dismiss it with a short reason, knowing it returns if the item changes\
+**SO THAT** my list stays realistic while the decision remains auditable
+
+#### USER STORY 'Match the governance ambition to our maturity'
+**AS AN** admin\
+**IF** our organisation is still building its data landscape\
+**I WANT** to switch to-do rules off or mark them as optional, tier by tier\
+**SO THAT** owners are given an achievable list instead of every gap at once
