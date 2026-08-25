@@ -50,6 +50,9 @@ test.describe('My to-dos', () => {
     await expect(page.getByText(/^Should do \(/)).toBeVisible({ timeout: 20_000 });
     const row = page.getByRole('button', { name: new RegExp(entityName, 'i') }).first();
     await expect(row).toBeVisible({ timeout: 20_000 });
+    // The row names the field in human terms, not by its storage key.
+    await expect(row).toContainText('field: Description (en)');
+    await expect(row).not.toContainText('descriptions.en');
 
     await row.click();
     await page.waitForURL(new RegExp(`/entities/${entityKey}\\?field=descriptions`));

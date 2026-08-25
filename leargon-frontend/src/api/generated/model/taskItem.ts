@@ -40,6 +40,8 @@ export interface TaskItem {
      * @nullable
      */
   fieldName?: string | null;
+  /** Localised, human-readable name of that field (e.g. "Description (en)", "Classification: Data Sensitivity"). Empty when the field name matches nothing known, in which case the caller shows the raw fieldName. */
+  fieldLabels?: LocalizedText[];
   /**
      * Methodology section of the targeted field (CORE, GDPR, DDD, …)
      * @nullable

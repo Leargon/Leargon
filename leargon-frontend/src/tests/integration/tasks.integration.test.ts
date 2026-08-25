@@ -98,6 +98,7 @@ describe('Tasks API', () => {
     expect(task).toBeDefined();
     expect(task.priority).toBe('REQUIRED');
     expect(task.fieldName).toBe('descriptions.en');
+    expect(task.fieldLabels.find((l: { locale: string }) => l.locale === 'en').text).toBe('Description (en)');
     expect(task.responsibility).toBe('OWNER');
     expect(task.resourceNames.some((n: { locale: string }) => n.locale === 'en')).toBe(true);
   });

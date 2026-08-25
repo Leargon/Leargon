@@ -60,6 +60,7 @@ open class TaskService(
     private val taskDismissalRepository: TaskDismissalRepository,
     private val userRepository: UserRepository,
     private val fieldConfigurationService: FieldConfigurationService,
+    private val fieldLabelService: FieldLabelService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val taskRuleConfigurationService: TaskRuleConfigurationService,
     private val businessEntityMapper: BusinessEntityMapper,
@@ -77,6 +78,7 @@ open class TaskService(
         val priority: String,
         val severity: String,
         val fieldName: String?,
+        val fieldLabels: List<LocalizedText>,
         val section: String?,
         val methodology: String?,
         val ownerId: Long?,
@@ -357,6 +359,9 @@ open class TaskService(
                     priority = rule.priority,
                     severity = rule.definition.severity,
                     fieldName = fieldName,
+                    // Resolved here so the list names the field — and the record it points at — the way a
+                    // reader would, instead of echoing the storage key.
+                    fieldLabels = fieldName?.let { fieldLabelService.labelsOf(entityType, it) } ?: emptyList(),
                     section = section ?: rule.definition.section,
                     methodology = rule.definition.methodology,
                     ownerId = ownerId,
@@ -530,6 +535,7 @@ open class TaskService(
             if (task.ownerId == userId) TaskItemResponsibility.OWNER else TaskItemResponsibility.STEWARD,
             dismissed
         ).fieldName(task.fieldName)
+            .fieldLabels(LocalizedTextMapper.toModel(task.fieldLabels))
             .section(task.section)
             .methodology(task.methodology)
             .dismissedReason(dismissedReason)

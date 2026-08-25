@@ -11461,6 +11461,14 @@ components:
           type: string
           nullable: true
           description: Field the task targets, used to deep-link into the detail panel
+        fieldLabels:
+          type: array
+          description: >
+            Localised, human-readable name of that field (e.g. "Description (en)", "Classification:
+            Data Sensitivity"). Empty when the field name matches nothing known, in which case the
+            caller shows the raw fieldName.
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         section:
           type: string
           nullable: true

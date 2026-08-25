@@ -4,6 +4,8 @@ import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.leargon.backend.domain.BusinessDomain
 import org.leargon.backend.domain.BusinessEntity
+import org.leargon.backend.domain.Classification
+import org.leargon.backend.domain.FieldConfiguration
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.Process
@@ -14,6 +16,8 @@ import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
 import org.leargon.backend.repository.BusinessEntityVersionRepository
+import org.leargon.backend.repository.ClassificationRepository
+import org.leargon.backend.repository.ClassificationValueRepository
 import org.leargon.backend.repository.FieldConfigurationRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.ProcessRepository
@@ -41,6 +45,8 @@ class TaskServiceSpec extends Specification {
     @Inject BusinessDomainRepository domainRepository
     @Inject OrganisationalUnitRepository unitRepository
     @Inject FieldConfigurationRepository fieldConfigurationRepository
+    @Inject ClassificationRepository classificationRepository
+    @Inject ClassificationValueRepository classificationValueRepository
     @Inject TaskRuleConfigurationRepository taskRuleConfigurationRepository
     @Inject TaskDismissalRepository taskDismissalRepository
     @Inject SupportedLocaleRepository localeRepository
@@ -63,6 +69,8 @@ class TaskServiceSpec extends Specification {
         taskDismissalRepository.deleteAll()
         taskRuleConfigurationRepository.deleteAll()
         fieldConfigurationRepository.deleteAll()
+        classificationValueRepository.deleteAll()
+        classificationRepository.deleteAll()
         processVersionRepository.deleteAll()
         processRepository.deleteAll()
         entityVersionRepository.deleteAll()
@@ -144,6 +152,31 @@ class TaskServiceSpec extends Specification {
         task.resourceNames.find { it.locale == "de" }.text == "Kunde"
     }
 
+    def "a mandatory classification is named after the classification, not its key"() {
+        given:
+        def owner = createUser()
+        classificationRepository.save(new Classification(
+            key: "data-sensitivity",
+            names: [new LocalizedText("en", "Data Sensitivity"), new LocalizedText("de", "Datensensitivität")],
+            assignableTo: "BUSINESS_ENTITY",
+            createdBy: owner))
+        fieldConfigurationRepository.save(new FieldConfiguration(
+            entityType: "BUSINESS_ENTITY",
+            fieldName: "classification.data-sensitivity",
+            visibility: "SHOWN",
+            section: "DATA_GOVERNANCE",
+            maturityLevel: "BASIC"))
+        saveEntity(owner, "unclassified")
+
+        when:
+        def task = tasksOf(owner, "MISSING_MANDATORY_FIELD").find { it.fieldName == "classification.data-sensitivity" }
+
+        then:
+        task != null
+        task.fieldLabels.find { it.locale == "en" }.text == "Classification: Data Sensitivity"
+        task.fieldLabels.find { it.locale == "de" }.text == "Klassifizierung: Datensensitivität"
+    }
+
     // ─── individual rules ──────────────────────────────────────────────────────
 
     def "a personal-data process without a legal basis raises a required to-do"() {
@@ -160,6 +193,7 @@ class TaskServiceSpec extends Specification {
         tasks[0].priority.value == "REQUIRED"
         tasks[0].severity.value == "ERROR"
         tasks[0].fieldName == "legalBasis"
+        tasks[0].fieldLabels.find { it.locale == "en" }.text == "Legal Basis"
         tasks[0].methodology == "GDPR"
     }
 

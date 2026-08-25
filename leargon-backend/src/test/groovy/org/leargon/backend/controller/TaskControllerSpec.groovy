@@ -172,6 +172,8 @@ class TaskControllerSpec extends Specification {
         task != null
         task.resourceType == "ENTITY"
         task.fieldName == "descriptions.en"
+        // The list names the field the way the detail panel does, not by its storage key.
+        task.fieldLabels.find { it.locale == "en" }.text == "Description (en)"
         task.priority == "REQUIRED"
         task.responsibility == "OWNER"
         task.dismissed == false

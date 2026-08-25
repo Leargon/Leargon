@@ -56,8 +56,10 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onResto
   const name = getLocalizedText(task.resourceNames, task.resourceKey);
   // The backend labels every rule; the field name only refines it, so both are shown when present.
   const label = t(taskLabelKey(task.ruleCode), { defaultValue: task.ruleCode });
+  // The backend resolves the field's display label in every locale — including the name behind a
+  // classification or relationship key. The raw key is only a fallback for names it cannot resolve.
   const detail = task.fieldName
-    ? t('tasks.fieldDetail', { field: task.fieldName })
+    ? t('tasks.fieldDetail', { field: getLocalizedText(task.fieldLabels, task.fieldName) })
     : undefined;
 
   return (

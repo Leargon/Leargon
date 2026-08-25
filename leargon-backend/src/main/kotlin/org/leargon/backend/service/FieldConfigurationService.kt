@@ -213,6 +213,30 @@ open class FieldConfigurationService(
         return null
     }
 
+    /**
+     * Resolves the human-readable label of a concrete field name (e.g. "retentionPeriod" → "Retention
+     * Period", "names.en" → "Name (en)", "classification.gdpr" → "Classification: gdpr"), matching what
+     * [getDefinitions] emits. Returns null for names outside the inventory — per-item collection fields
+     * such as "relationship.5" among them — so callers can fall back to the raw key.
+     */
+    fun labelOf(
+        entityType: String,
+        fieldName: String
+    ): String? {
+        fieldInventory.firstOrNull { it.entityType == entityType && it.fieldName == fieldName }?.let { return it.label }
+        val base = fieldName.substringBefore(".")
+        val suffix = fieldName.substringAfter(".", "")
+        fieldInventory
+            .firstOrNull { it.entityType == entityType && it.fieldName == "$base.{locale}" }
+            ?.let { return if (suffix.isEmpty()) it.label else "${it.label} ($suffix)" }
+        if (fieldName.startsWith("classification.")) {
+            fieldInventory
+                .firstOrNull { it.entityType == entityType && it.fieldName == "classification.{classKey}" }
+                ?.let { return "${it.label}: $suffix" }
+        }
+        return null
+    }
+
     @Transactional
     open fun getAll(): List<FieldConfigurationEntry> = fieldConfigurationRepository.findAll().map { toEntry(it) }
 
