@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 072-create-task-dismissals-table
+      author: leargon
+      comment: Create task_dismissals table so owners can dismiss a derived governance to-do with a reason
+      changes:
+        - createTable:
+            tableName: task_dismissals
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_task_dismissal_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_updated_at
+                  type: DATETIME
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: task_dismissals
+            columnNames: task_id, user_id
+            constraintName: uq_task_dismissal_task_user

@@ -92,6 +92,9 @@ import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
+import useFocusField, { fieldMatches } from '../../hooks/useFocusField';
+import useItemTasks from '../../hooks/useItemTasks';
+import { taskLabelKey } from '../../utils/taskNavigation';
 import TranslationEditor from '../common/TranslationEditor';
 import DetailPanelHeader from '../common/DetailPanelHeader';
 import PropRow from '../common/PropRow';
@@ -166,6 +169,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const isDddEnabled = isMethodologyEnabled('DDD');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
+  const focusedField = useFocusField();
+  // Governance to-dos for this item are derived by the backend, so the panel never re-implements
+  // the rules (and an administrator can switch any of them off).
+  const { topTask, hasTask } = useItemTasks('PROCESS', processKey);
 
 
   const visibleTabs = PROCESS_TABS_BY_PERSPECTIVE[perspective];
@@ -604,8 +611,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         entityType="BUSINESS_PROCESS"
       />
 
-      {/* Item 3: Owner resolution warning */}
-      {canEditField('processOwner') && !process.processOwner && (
+      {/* Owner gap — raised by the backend MISSING_OWNER rule */}
+      {canEditField('processOwner') && hasTask('MISSING_OWNER') && (
         <NudgeBanner
           title={t('nudge.process.noOwnerTitle')}
           message={t('nudge.process.noOwnerMessage')}
@@ -614,12 +621,13 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         />
       )}
 
-      {/* Item 5: Compliance health indicator — shown for processes with personal data */}
-      {process.containsPersonalData && isOwnerOrAdmin && (() => {
-        const missing = [];
-        if (!process.legalBasis) missing.push(t('nudge.missingFields.fields.legalBasis'));
-        if (!process.purpose?.length) missing.push(t('nudge.missingFields.fields.purpose'));
-        if (!dpia && !isDpiaLoading) missing.push('DPIA');
+      {/* Compliance health — the backend GDPR rules decide what is missing, and whether they run at all */}
+      {isOwnerOrAdmin && (() => {
+        const missing = [
+          hasTask('NO_LEGAL_BASIS') ? t('nudge.missingFields.fields.legalBasis') : null,
+          hasTask('MISSING_PURPOSE') ? t('nudge.missingFields.fields.purpose') : null,
+          hasTask('DPIA_RECOMMENDED') || hasTask('DPIA_IN_PROGRESS') ? 'DPIA' : null,
+        ].filter(Boolean) as string[];
         if (!missing.length) return null;
         return (
           <NudgeBanner
@@ -630,8 +638,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         );
       })()}
 
-      {/* No entity coverage warning */}
-      {isOwnerOrAdmin && !hasAnyEffectiveEntities && (
+      {/* No entity coverage — raised by the backend NO_ENTITY_COVERAGE rule */}
+      {isOwnerOrAdmin && hasTask('NO_ENTITY_COVERAGE') && (
         <NudgeBanner
           severity="warning"
           title={t('nudge.process.noEntityCoverageTitle')}
@@ -722,7 +730,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Compact scalar properties */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('processOwner') && <PropRow label={t('process.processOwner')} statusIndicator={renderStatus('processOwner')} canEdit={canEditField('processOwner')} isEditing={ownerEdit.isEditing}
+        {!isHidden('processOwner') && <PropRow fieldName="processOwner" highlighted={fieldMatches(focusedField, 'processOwner')} label={t('process.processOwner')} statusIndicator={renderStatus('processOwner')} canEdit={canEditField('processOwner')} isEditing={ownerEdit.isEditing}
           onEdit={() => ownerEdit.startEdit(process.processOwner?.username ?? '')} onSave={ownerEdit.save}
           onCancel={ownerEdit.cancel} isSaving={ownerEdit.isSaving}>
           {ownerEdit.isEditing ? (
@@ -760,7 +768,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           )}
         </PropRow>}
         {fields.owningUnit && !isHidden('owningUnit') && (
-          <PropRow label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={canEditField('owningUnit')} isEditing={owningUnitEdit.isEditing}
+          <PropRow fieldName="owningUnit" highlighted={fieldMatches(focusedField, 'owningUnit')} label={t('common.owningUnit')} statusIndicator={renderStatus('owningUnit')} canEdit={canEditField('owningUnit')} isEditing={owningUnitEdit.isEditing}
             onEdit={() => owningUnitEdit.startEdit(process.owningUnit?.key ?? null)} onSave={owningUnitEdit.save}
             onCancel={owningUnitEdit.cancel} isSaving={owningUnitEdit.isSaving} isMandatory={isMandatory('owningUnit')}>
             {owningUnitEdit.isEditing ? (
@@ -784,7 +792,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.processSteward && !isHidden('processSteward') && (
-          <PropRow label={t('process.processSteward')} statusIndicator={renderStatus('processSteward')} canEdit={canEditField('processSteward')} isEditing={stewardEdit.isEditing}
+          <PropRow fieldName="processSteward" highlighted={fieldMatches(focusedField, 'processSteward')} label={t('process.processSteward')} statusIndicator={renderStatus('processSteward')} canEdit={canEditField('processSteward')} isEditing={stewardEdit.isEditing}
             onEdit={() => stewardEdit.startEdit(process.processSteward?.username || null)} onSave={stewardEdit.save}
             onCancel={stewardEdit.cancel} isSaving={stewardEdit.isSaving}>
             {stewardEdit.isEditing ? (
@@ -823,7 +831,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.technicalCustodian && !isHidden('technicalCustodian') && (
-          <PropRow label={t('process.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={canEditField('technicalCustodian')} isEditing={technicalCustodianEdit.isEditing}
+          <PropRow fieldName="technicalCustodian" highlighted={fieldMatches(focusedField, 'technicalCustodian')} label={t('process.technicalCustodian')} statusIndicator={renderStatus('technicalCustodian')} canEdit={canEditField('technicalCustodian')} isEditing={technicalCustodianEdit.isEditing}
             onEdit={() => technicalCustodianEdit.startEdit(process.technicalCustodian?.username || null)} onSave={technicalCustodianEdit.save}
             onCancel={technicalCustodianEdit.cancel} isSaving={technicalCustodianEdit.isSaving}>
             {technicalCustodianEdit.isEditing ? (
@@ -862,7 +870,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.code && !isHidden('code') && (
-          <PropRow label={t('process.code')} statusIndicator={renderStatus('code')} canEdit={canEditField('code')} isEditing={codeEdit.isEditing}
+          <PropRow fieldName="code" highlighted={fieldMatches(focusedField, 'code')} label={t('process.code')} statusIndicator={renderStatus('code')} canEdit={canEditField('code')} isEditing={codeEdit.isEditing}
             onEdit={() => codeEdit.startEdit(process.code || '')} onSave={codeEdit.save}
             onCancel={codeEdit.cancel} isSaving={codeEdit.isSaving}>
             {codeEdit.isEditing ? (
@@ -879,7 +887,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.processType && !isHidden('processType') && (
-          <PropRow label={t('process.processType')} statusIndicator={renderStatus('processType')} canEdit={canEditField('processType')} isEditing={typeEdit.isEditing}
+          <PropRow fieldName="processType" highlighted={fieldMatches(focusedField, 'processType')} label={t('process.processType')} statusIndicator={renderStatus('processType')} canEdit={canEditField('processType')} isEditing={typeEdit.isEditing}
             onEdit={() => typeEdit.startEdit(process.processType || '')} onSave={typeEdit.save}
             onCancel={typeEdit.cancel} isSaving={typeEdit.isSaving}>
             {typeEdit.isEditing ? (
@@ -910,7 +918,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {fields.legalBasis && !isHidden('legalBasis') && (
-          <PropRow label={t('process.legalBasis')} statusIndicator={renderStatus('legalBasis')} canEdit={canEditField('legalBasis')} isEditing={legalBasisEdit.isEditing}
+          <PropRow fieldName="legalBasis" highlighted={fieldMatches(focusedField, 'legalBasis')} label={t('process.legalBasis')} statusIndicator={renderStatus('legalBasis')} canEdit={canEditField('legalBasis')} isEditing={legalBasisEdit.isEditing}
             onEdit={() => legalBasisEdit.startEdit(process.legalBasis || '')} onSave={legalBasisEdit.save}
             onCancel={legalBasisEdit.cancel} isSaving={legalBasisEdit.isSaving}>
             {legalBasisEdit.isEditing ? (
@@ -941,7 +949,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </PropRow>
         )}
         {isDddEnabled && fields.boundedContext && !isHidden('boundedContext') && (
-          <PropRow label={t('process.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={canEditField('boundedContext')} isEditing={boundedContextEdit.isEditing}
+          <PropRow fieldName="boundedContext" highlighted={fieldMatches(focusedField, 'boundedContext')} label={t('process.boundedContext')} statusIndicator={renderStatus('boundedContext')} canEdit={canEditField('boundedContext')} isEditing={boundedContextEdit.isEditing}
             onEdit={() => boundedContextEdit.startEdit(process.boundedContext?.key || null)} onSave={boundedContextEdit.save}
             onCancel={boundedContextEdit.cancel} isSaving={boundedContextEdit.isSaving} isMandatory={isMandatory('boundedContext')}>
             {boundedContextEdit.isEditing ? (
@@ -1059,8 +1067,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 <Typography variant="body2" sx={{
                   color: "text.secondary"
                 }}>None</Typography>
-                {/* Item 9: No executing unit nudge */}
-                {canEditField('executingUnits') && (
+                {/* No executing unit — raised by the backend NO_EXECUTING_UNIT rule */}
+                {canEditField('executingUnits') && hasTask('NO_EXECUTING_UNIT') && (
                   <NudgeBanner
                     severity="info"
                     title={t('nudge.process.noUnitTitle')}
@@ -1089,7 +1097,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Purpose & Security Measures */}
       <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
-        {!isHidden('purpose') && <PropRow label={t('process.purpose')} statusIndicator={renderStatus(...activeLocales.map((l) => `purpose.${l.localeCode}`))} canEdit={canEditField('purpose')} isEditing={purposeEdit.isEditing}
+        {!isHidden('purpose') && <PropRow fieldName="purpose" highlighted={fieldMatches(focusedField, 'purpose')} label={t('process.purpose')} statusIndicator={renderStatus(...activeLocales.map((l) => `purpose.${l.localeCode}`))} canEdit={canEditField('purpose')} isEditing={purposeEdit.isEditing}
           onEdit={() => purposeEdit.startEdit([...(process.purpose ?? [])])} onSave={purposeEdit.save}
           onCancel={purposeEdit.cancel} isSaving={purposeEdit.isSaving}>
           {purposeEdit.isEditing ? (
@@ -1110,7 +1118,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <LocalizedTextView value={process.purpose} showAll={canEditField('purpose')} emptyText={t('common.notSet')} />
           )}
         </PropRow>}
-        {!isHidden('securityMeasures') && <PropRow label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={canEditField('securityMeasures')} isEditing={securityMeasuresEdit.isEditing}
+        {!isHidden('securityMeasures') && <PropRow fieldName="securityMeasures" highlighted={fieldMatches(focusedField, 'securityMeasures')} label={t('process.securityMeasures')} statusIndicator={renderStatus(...activeLocales.map((l) => `securityMeasures.${l.localeCode}`))} canEdit={canEditField('securityMeasures')} isEditing={securityMeasuresEdit.isEditing}
           onEdit={() => securityMeasuresEdit.startEdit([...(process.securityMeasures ?? [])])} onSave={securityMeasuresEdit.save}
           onCancel={securityMeasuresEdit.cancel} isSaving={securityMeasuresEdit.isSaving}>
           {securityMeasuresEdit.isEditing ? (
@@ -1323,8 +1331,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Item 4: Legal basis nudge — personal data process with no legal basis */}
-      {process.containsPersonalData && !process.legalBasis && canEditField('legalBasis') && (
+      {/* Legal basis — raised by the backend NO_LEGAL_BASIS rule */}
+      {hasTask('NO_LEGAL_BASIS') && canEditField('legalBasis') && (
         <NudgeBanner
           title={t('nudge.process.legalBasisTitle')}
           message={t('nudge.process.legalBasisMessage')}
@@ -1333,8 +1341,8 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         />
       )}
 
-      {/* Item 2: DPIA suggestion nudge — personal data process without DPIA */}
-      {process.containsPersonalData && !dpia && !isDpiaLoading && hasBroadEdit && (
+      {/* DPIA suggestion — raised by the backend DPIA_RECOMMENDED rule */}
+      {hasTask('DPIA_RECOMMENDED') && hasBroadEdit && (
         <NudgeBanner
           severity="info"
           title={t('nudge.process.dpiaTitle')}
@@ -1788,15 +1796,18 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         </Paper>
       )}
 
-      {/* Item 6: What's next suggestion */}
-      {hasBroadEdit && (() => {
-        const steps = [];
-        if (!process.processOwner) steps.push({ description: t('nudge.process.nextAssignOwnerDesc'), actionLabel: t('nudge.process.assignOwner'), onClick: () => ownerEdit.startEdit('') });
-        else if (process.containsPersonalData && !process.legalBasis) steps.push({ description: t('nudge.process.nextSetLegalBasisDesc'), actionLabel: t('nudge.process.setLegalBasis'), onClick: () => legalBasisEdit.startEdit('') });
-        else if (!process.executingUnits?.length) steps.push({ description: t('nudge.process.nextAssignUnitDesc'), actionLabel: t('nudge.process.assignUnitShort'), onClick: () => execUnitsEdit.startEdit([]) });
-        else if (process.containsPersonalData && !dpia && !isDpiaLoading) steps.push({ description: t('nudge.process.nextCheckDpiaDesc'), actionLabel: t('nudge.process.checkDpia'), onClick: async () => {} });
-        return <WhatNextBanner steps={steps} />;
-      })()}
+      {/* What's next — the single most important to-do the backend derived for this process */}
+      {hasBroadEdit && topTask && (
+        <WhatNextBanner
+          steps={[
+            {
+              description: t(taskLabelKey(topTask.ruleCode), { defaultValue: topTask.ruleCode }),
+              actionLabel: t('tasks.viewAll'),
+              onClick: () => navigate('/my-tasks'),
+            },
+          ]}
+        />
+      )}
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>

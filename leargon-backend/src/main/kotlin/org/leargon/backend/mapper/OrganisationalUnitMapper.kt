@@ -26,54 +26,7 @@ open class OrganisationalUnitMapper(
         executingProcesses: List<Process> = emptyList()
     ): OrganisationalUnitResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
-        val fc =
-            fieldConfigurationService.compute("ORGANISATIONAL_UNIT", disabledMethodologies) { fieldName ->
-                when {
-                    fieldName == "names" -> {
-                        unit.names.isNotEmpty()
-                    }
-
-                    fieldName == "descriptions" -> {
-                        unit.descriptions.isNotEmpty()
-                    }
-
-                    fieldName == "unitType" -> {
-                        !unit.unitType.isNullOrBlank()
-                    }
-
-                    fieldName == "teamTopologyType" -> {
-                        !unit.teamTopologyType.isNullOrBlank()
-                    }
-
-                    fieldName == "businessOwner" -> {
-                        unit.businessOwner != null
-                    }
-
-                    fieldName.startsWith("names.") -> {
-                        val locale = fieldName.removePrefix("names.")
-                        unit.names.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("descriptions.") -> {
-                        val locale = fieldName.removePrefix("descriptions.")
-                        unit.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("missionStatement.") -> {
-                        val locale = fieldName.removePrefix("missionStatement.")
-                        unit.missionStatement.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("classification.") -> {
-                        val classKey = fieldName.removePrefix("classification.")
-                        unit.classificationAssignments.any { it.classificationKey == classKey }
-                    }
-
-                    else -> {
-                        true
-                    }
-                }
-            }
+        val fc = fieldConfigurationService.compute("ORGANISATIONAL_UNIT", disabledMethodologies, presenceOf(unit))
         val fvSvc = this.fieldVerificationService
         val fieldStatuses =
             if (methodologyConfigurationService.isVerificationEnabled("ORGANISATIONAL_UNIT")) {
@@ -150,4 +103,58 @@ open class OrganisationalUnitMapper(
                 .fromValue(value)
         }
     }
+
+    /**
+     * Whether each configurable field of [unit] currently has a value. Shared by the response mapper
+     * (for `missingMandatoryFields`) and `TaskService` (for MISSING_MANDATORY_FIELD to-dos), so the two
+     * can never disagree about what counts as filled in.
+     */
+    fun presenceOf(unit: OrganisationalUnit): (String) -> Boolean =
+        { fieldName ->
+            when {
+                fieldName == "names" -> {
+                    unit.names.isNotEmpty()
+                }
+
+                fieldName == "descriptions" -> {
+                    unit.descriptions.isNotEmpty()
+                }
+
+                fieldName == "unitType" -> {
+                    !unit.unitType.isNullOrBlank()
+                }
+
+                fieldName == "teamTopologyType" -> {
+                    !unit.teamTopologyType.isNullOrBlank()
+                }
+
+                fieldName == "businessOwner" -> {
+                    unit.businessOwner != null
+                }
+
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    unit.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    unit.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("missionStatement.") -> {
+                    val locale = fieldName.removePrefix("missionStatement.")
+                    unit.missionStatement.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    unit.classificationAssignments.any { it.classificationKey == classKey }
+                }
+
+                else -> {
+                    true
+                }
+            }
+        }
 }

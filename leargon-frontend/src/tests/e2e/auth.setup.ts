@@ -1,6 +1,7 @@
 import { test as setup } from '@playwright/test';
 import path from 'node:path';
 import fs from 'node:fs';
+import { FRONTEND_ORIGIN } from './frontendUrl';
 
 const authFile = path.join(process.cwd(), '.auth/admin.json');
 const tokenFile = path.join(process.cwd(), '.auth/admin-token.txt');
@@ -48,7 +49,7 @@ setup('authenticate as admin', async () => {
     cookies: [],
     origins: [
       {
-        origin: 'http://localhost:5173',
+        origin: FRONTEND_ORIGIN,
         localStorage: [
           { name: 'auth_token', value: accessToken },
           { name: 'auth_user', value: JSON.stringify(storedUser) },

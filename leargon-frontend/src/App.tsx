@@ -20,6 +20,7 @@ const SetupWizardPage = lazy(() => import('./pages/SetupWizardPage'));
 const MsalCallback = lazy(() => import('./pages/MsalCallback'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
+const MyTasksPage = lazy(() => import('./pages/MyTasksPage'));
 const DomainsPage = lazy(() => import('./pages/DomainsPage'));
 const OntologyPage = lazy(() => import('./pages/OntologyPage'));
 const ProcessesPage = lazy(() => import('./pages/ProcessesPage'));
@@ -66,6 +67,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/home" replace /> },
       { path: 'home', element: <HomePage /> },
+      { path: 'my-tasks', element: <MyTasksPage /> },
       { path: 'domains', element: <DomainsPage /> },
       { path: 'domains/:key', element: <DomainsPage /> },
       { path: 'entities', element: <OntologyPage /> },
@@ -78,6 +80,7 @@ const router = createBrowserRouter([
       { path: 'settings/locales', element: <SettingsPage /> },
       { path: 'settings/classifications', element: <SettingsPage /> },
       { path: 'settings/methodologies', element: <SettingsPage /> },
+      { path: 'settings/task-rules', element: <SettingsPage /> },
       { path: 'settings/organisation', element: <SettingsPage /> },
       { path: 'service-providers', element: <ServiceProvidersPage /> },
       { path: 'service-providers/:key', element: <ServiceProvidersPage /> },

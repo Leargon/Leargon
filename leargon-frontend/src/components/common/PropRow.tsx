@@ -11,6 +11,13 @@ export interface PropRowProps {
   onCancel: () => void;
   isSaving: boolean;
   isMandatory?: boolean;
+  /**
+   * Backend field name this row edits. Rendered as `id="field-<name>"` so a to-do can deep-link
+   * straight to it (see `useFocusField`).
+   */
+  fieldName?: string;
+  /** Briefly highlights the row when a to-do link pointed here. */
+  highlighted?: boolean;
   /** Optional verification-status indicator rendered after the value. */
   statusIndicator?: React.ReactNode;
   children: React.ReactNode;
@@ -25,15 +32,22 @@ const PropRow: React.FC<PropRowProps> = ({
   onCancel,
   isSaving,
   isMandatory,
+  fieldName,
+  highlighted,
   statusIndicator,
   children,
 }) => (
   <Box
+    id={fieldName ? `field-${fieldName}` : undefined}
     sx={(theme) => ({
       display: 'flex',
       alignItems: 'flex-start',
       px: 1.5,
       py: 0.75,
+      transition: 'background-color 0.4s ease',
+      ...(highlighted
+        ? { bgcolor: 'action.selected', boxShadow: `inset 3px 0 0 ${theme.palette.primary.main}` }
+        : {}),
       '&:not(:last-child)': { borderBottom: `1px solid ${theme.palette.divider}` },
     })}
   >

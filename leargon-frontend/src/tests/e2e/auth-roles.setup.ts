@@ -1,6 +1,7 @@
 import { test as setup } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { FRONTEND_ORIGIN } from './frontendUrl';
 
 const USERS = [
   {
@@ -22,7 +23,7 @@ function writeStorageState(stateFile: string, accessToken: string, user: unknown
     cookies: [],
     origins: [
       {
-        origin: 'http://localhost:5173',
+        origin: FRONTEND_ORIGIN,
         localStorage: [
           { name: 'auth_token', value: accessToken },
           { name: 'auth_user', value: JSON.stringify(user) },

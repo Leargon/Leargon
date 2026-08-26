@@ -2,7 +2,9 @@ import { spawn, type ChildProcess } from 'node:child_process';
 import { GenericContainer, Network, Wait } from 'testcontainers';
 import { MySqlContainer } from '@testcontainers/mysql';
 
-const FRONTEND_URL = 'http://localhost:5173';
+import { FRONTEND_ORIGIN, FRONTEND_PORT } from './frontendUrl';
+
+const FRONTEND_URL = FRONTEND_ORIGIN;
 const FRONTEND_STARTUP_TIMEOUT = 60_000;
 
 async function waitForFrontend(): Promise<void> {
@@ -67,7 +69,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   process.env.E2E_BACKEND_URL = backendUrl;
 
   console.log('[E2E] Starting Vite dev server...');
-  const viteProcess: ChildProcess = spawn('npm', ['run', 'dev'], {
+  const viteProcess: ChildProcess = spawn('npm', ['run', 'dev', '--', '--port', String(FRONTEND_PORT), '--strictPort'], {
     cwd: process.cwd(),
     shell: true,
     env: {

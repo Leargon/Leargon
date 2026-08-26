@@ -31,46 +31,7 @@ open class BusinessDomainMapper(
         currentUser: org.leargon.backend.domain.User? = null
     ): BusinessDomainResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
-        val fc =
-            fieldConfigurationService.compute("BUSINESS_DOMAIN", disabledMethodologies) { fieldName ->
-                when {
-                    fieldName == "names" -> {
-                        domain.names.isNotEmpty()
-                    }
-
-                    fieldName == "descriptions" -> {
-                        domain.descriptions.isNotEmpty()
-                    }
-
-                    fieldName == "type" -> {
-                        domain.type != null
-                    }
-
-                    fieldName.startsWith("visionStatement.") -> {
-                        val locale = fieldName.removePrefix("visionStatement.")
-                        domain.visionStatement.any { it.locale == locale && it.text.isNotBlank() }
-                    }
-
-                    fieldName.startsWith("names.") -> {
-                        val locale = fieldName.removePrefix("names.")
-                        domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("descriptions.") -> {
-                        val locale = fieldName.removePrefix("descriptions.")
-                        domain.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
-                    }
-
-                    fieldName.startsWith("classification.") -> {
-                        val classKey = fieldName.removePrefix("classification.")
-                        domain.classificationAssignments.any { it.classificationKey == classKey }
-                    }
-
-                    else -> {
-                        true
-                    }
-                }
-            }
+        val fc = fieldConfigurationService.compute("BUSINESS_DOMAIN", disabledMethodologies, presenceOf(domain))
         val fvSvc = this.fieldVerificationService
         val fieldStatuses =
             if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_DOMAIN")) {
@@ -177,4 +138,50 @@ open class BusinessDomainMapper(
             return BusinessDomainSummaryResponse(domain.key, domain.getName("en"))
         }
     }
+
+    /**
+     * Whether each configurable field of [domain] currently has a value. Shared by the response mapper
+     * (for `missingMandatoryFields`) and `TaskService` (for MISSING_MANDATORY_FIELD to-dos), so the two
+     * can never disagree about what counts as filled in.
+     */
+    fun presenceOf(domain: BusinessDomain): (String) -> Boolean =
+        { fieldName ->
+            when {
+                fieldName == "names" -> {
+                    domain.names.isNotEmpty()
+                }
+
+                fieldName == "descriptions" -> {
+                    domain.descriptions.isNotEmpty()
+                }
+
+                fieldName == "type" -> {
+                    domain.type != null
+                }
+
+                fieldName.startsWith("visionStatement.") -> {
+                    val locale = fieldName.removePrefix("visionStatement.")
+                    domain.visionStatement.any { it.locale == locale && it.text.isNotBlank() }
+                }
+
+                fieldName.startsWith("names.") -> {
+                    val locale = fieldName.removePrefix("names.")
+                    domain.names.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("descriptions.") -> {
+                    val locale = fieldName.removePrefix("descriptions.")
+                    domain.descriptions.any { it.locale == locale && !it.text.isNullOrBlank() }
+                }
+
+                fieldName.startsWith("classification.") -> {
+                    val classKey = fieldName.removePrefix("classification.")
+                    domain.classificationAssignments.any { it.classificationKey == classKey }
+                }
+
+                else -> {
+                    true
+                }
+            }
+        }
 }
