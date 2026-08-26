@@ -76,6 +76,16 @@ object FieldLabelTranslations {
             "Value Stream Type" to mapOf("de" to "Wertstromtyp", "fr" to "Type de chaîne de valeur"),
             "Vision Statement" to mapOf("de" to "Visionsbeschreibung", "fr" to "Énoncé de vision"),
             "Wait Time (min)" to mapOf("de" to "Wartezeit (Min.)", "fr" to "Temps d'attente (min)"),
+            // ── overview grouping dimensions ─────────────────────────────────
+            // These name a way of grouping a list rather than a field on a record, so they live
+            // alongside the inventory labels they are built from ("Owning Unit", "Bounded Context").
+            "Hierarchy" to mapOf("de" to "Hierarchie", "fr" to "Hiérarchie"),
+            "Owner" to mapOf("de" to "Eigentümer", "fr" to "Propriétaire"),
+            "Domain" to mapOf("de" to "Domäne", "fr" to "Domaine"),
+            "Vendor" to mapOf("de" to "Anbieter", "fr" to "Fournisseur"),
+            "Processing Country" to mapOf("de" to "Verarbeitungsland", "fr" to "Pays de traitement"),
+            "Service Provider Type" to mapOf("de" to "Dienstleistertyp", "fr" to "Type de prestataire"),
+            "Unassigned" to mapOf("de" to "Nicht zugewiesen", "fr" to "Non attribué"),
             // ── per-item collection prefixes ─────────────────────────────────
             "Relationship" to mapOf("de" to "Beziehung", "fr" to "Relation"),
             "Translation Link" to mapOf("de" to "Übersetzungsverknüpfung", "fr" to "Lien de traduction"),

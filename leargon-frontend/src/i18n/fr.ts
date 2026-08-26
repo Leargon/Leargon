@@ -2328,6 +2328,10 @@ const fr = {
     "title": "Carte des capacités",
     "subtitle": "Modèle de capacités métier — vue hiérarchique imbriquée. Cliquez sur une capacité pour ouvrir son panneau de détail.",
   },
+  "groupBy": {
+    "label": "Grouper par",
+    "contextOnly": "Affiché pour le contexte — cet élément appartient à un autre groupe",
+  },
 } as const;
 
 export default fr;

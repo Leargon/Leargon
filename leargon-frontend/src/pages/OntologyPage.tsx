@@ -6,6 +6,8 @@ import EntityTreePanel from '../components/ontology/EntityTreePanel';
 import EntityDetailPanel from '../components/ontology/EntityDetailPanel';
 import EntityCreationWizard from '../components/ontology/EntityCreationWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 
 const EntityMapDiagram = lazy(() => import('../components/diagrams/EntityMapDiagram'));
 
@@ -14,6 +16,7 @@ const OntologyPage: React.FC = () => {
   const { key } = useParams<{ key: string }>();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [view, setView] = useState('list');
+  const [groupBy, setGroupBy] = useGroupByPreference('BUSINESS_ENTITY');
 
   return (
     <SplitPageLayout
@@ -25,7 +28,12 @@ const OntologyPage: React.FC = () => {
       ]}
       currentView={view}
       onViewChange={setView}
-      list={<EntityTreePanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      actions={
+        view === 'list' ? (
+          <GroupByControl resourceType="BUSINESS_ENTITY" value={groupBy} onChange={setGroupBy} />
+        ) : undefined
+      }
+      list={<EntityTreePanel selectedKey={key} groupBy={groupBy} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <EntityDetailPanel entityKey={key} />

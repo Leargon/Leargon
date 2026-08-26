@@ -9,6 +9,8 @@ import CapabilitySetupWizard from '../components/capabilities/CapabilitySetupWiz
 import { CapabilityMapContent } from './CapabilityMapPage';
 import { StrategicMapContent } from './StrategicMapPage';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { useGetAllCapabilities } from '../api/generated/capability/capability';
 import type { CapabilityResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +18,7 @@ import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
 
 const CapabilitiesPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('CAPABILITY');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const navigate = useNavigate();
@@ -51,7 +54,8 @@ const CapabilitiesPage: React.FC = () => {
       ]}
       currentView={view}
       onViewChange={setView}
-      list={<CapabilityListPanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      actions={view === 'list' ? (<GroupByControl resourceType="CAPABILITY" value={groupBy} onChange={setGroupBy} />) : undefined}
+      list={<CapabilityListPanel groupBy={groupBy} selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <CapabilityDetailPanel capabilityKey={key} />

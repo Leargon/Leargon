@@ -25,19 +25,24 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateRoot } from '../../utils/roles';
 import type { BusinessEntityTreeResponse } from '../../api/generated/model';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 
 interface EntityTreePanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain parent-child tree. */
+  groupBy?: string;
 }
 
-const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'BUSINESS_ENTITY');
-  const { data: treeResponse, isLoading } = useGetBusinessEntityTree();
+  const isGrouped = groupBy !== NO_GROUPING;
+  const { data: treeResponse, isLoading } = useGetBusinessEntityTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as BusinessEntityTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -76,7 +81,17 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="BUSINESS_ENTITY"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<AccountTree fontSize="small" />}
+            onSelect={(entityKey) => navigate(`/entities/${entityKey}`)}
+            emptyLabel={t('entity.emptyList')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",

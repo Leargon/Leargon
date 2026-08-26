@@ -7,6 +7,8 @@ import DomainDetailPanel from '../components/domains/DomainDetailPanel';
 import DomainCreationWizard from '../components/domains/DomainCreationWizard';
 import DomainModelWizard from '../components/domains/DomainModelWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { tokenStorage } from '../utils/tokenStorage';
 import { useGetAllBusinessDomains } from '../api/generated/business-domain/business-domain';
 import type { BusinessDomainResponse } from '../api/generated/model';
@@ -17,6 +19,7 @@ import { useAuth } from '../context/AuthContext';
 const ContextMapDiagram = lazy(() => import('../components/diagrams/ContextMapDiagram'));
 
 const DomainsPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('BUSINESS_DOMAIN');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
@@ -70,9 +73,11 @@ const DomainsPage: React.FC = () => {
           <Button size="small" startIcon={<Download />} onClick={handleExportCml} variant="outlined">
             {t('pages.exportCml')}
           </Button>
-        ) : undefined
+        ) : (
+          <GroupByControl resourceType="BUSINESS_DOMAIN" value={groupBy} onChange={setGroupBy} />
+        )
       }
-      list={<DomainTreePanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      list={<DomainTreePanel groupBy={groupBy} selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <DomainDetailPanel domainKey={key} />

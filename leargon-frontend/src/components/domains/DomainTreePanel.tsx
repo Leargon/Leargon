@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -31,15 +33,18 @@ import type { BusinessDomainTreeResponse } from '../../api/generated/model';
 interface DomainTreePanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
-  const { data: treeResponse, isLoading } = useGetBusinessDomainTree();
+  const { data: treeResponse, isLoading } = useGetBusinessDomainTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as BusinessDomainTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -78,7 +83,17 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="BUSINESS_DOMAIN"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Folder fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/domains/${itemKey}`)}
+            emptyLabel={t('domainTree.noDomainsYet')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",

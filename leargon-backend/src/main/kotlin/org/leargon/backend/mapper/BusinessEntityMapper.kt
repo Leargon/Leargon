@@ -48,10 +48,7 @@ open class BusinessEntityMapper(
                 businessEntity.interfaceEntities,
             )
         val fc = fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies, presenceOf(businessEntity))
-        val effectiveOwningUnit =
-            businessEntity.owningUnit
-                ?: businessEntity.boundedContext?.owningUnit
-                ?: businessEntity.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit = businessEntity.effectiveOwningUnit()
         val effectiveSteward = businessEntity.effectiveSteward()
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val fvSvc = this.fieldVerificationService

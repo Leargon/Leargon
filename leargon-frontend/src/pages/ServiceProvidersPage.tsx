@@ -7,6 +7,8 @@ import ServiceProviderDetailPanel from '../components/service-providers/ServiceP
 import CreateServiceProviderDialog from '../components/service-providers/CreateServiceProviderDialog';
 import ServiceProvidersSetupWizard from '../components/service-providers/ServiceProvidersSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../context/LocaleContext';
 import { downloadExport } from '../api/exportApi';
@@ -16,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useWizardMode } from '../context/WizardModeContext';
 
 const ServiceProvidersPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('SERVICE_PROVIDER');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
@@ -45,7 +48,9 @@ const ServiceProvidersPage: React.FC = () => {
       title={t('serviceProvider.pageTitle')}
       subtitle={t('serviceProvider.pageSubtitle')}
       actions={
-        isAdmin ? (
+        <>
+          <GroupByControl resourceType="SERVICE_PROVIDER" value={groupBy} onChange={setGroupBy} />
+          {isAdmin ? (
           <>
             <Button
               variant="outlined"
@@ -71,10 +76,12 @@ const ServiceProvidersPage: React.FC = () => {
               </MenuItem>
             </Menu>
           </>
-        ) : undefined
+          ) : null}
+        </>
       }
       list={
         <ServiceProviderListPanel
+          groupBy={groupBy}
           selectedKey={key}
           onCreateClick={() => setCreateDialogOpen(true)}
         />

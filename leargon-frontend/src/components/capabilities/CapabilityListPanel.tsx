@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -25,15 +27,18 @@ import type { CapabilityResponse, CapabilitySummaryResponse, OrganisationalUnitR
 interface CapabilityListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText, localizedName } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'CAPABILITY');
-  const { data: response, isLoading } = useGetAllCapabilities();
+  const { data: response, isLoading } = useGetAllCapabilities({ query: { enabled: !isGrouped } });
   const { data: unitsResponse } = useGetAllOrganisationalUnits();
   const capabilities = (response?.data as CapabilityResponse[] | undefined) ?? [];
   const allUnits = (unitsResponse?.data as OrganisationalUnitResponse[] | undefined) ?? [];
@@ -92,7 +97,17 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="CAPABILITY"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<AccountTree fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/capabilities/${itemKey}`)}
+            emptyLabel={t('capability.emptyList')}
+          />
+        ) : isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>

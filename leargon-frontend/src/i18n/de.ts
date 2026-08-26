@@ -2328,6 +2328,10 @@ const de = {
     "title": "Fähigkeitskarte",
     "subtitle": "Business-Capability-Modell — verschachtelte Hierarchieansicht. Klicken Sie auf eine Fähigkeit, um ihr Detailfenster zu öffnen.",
   },
+  "groupBy": {
+    "label": "Gruppieren nach",
+    "contextOnly": "Nur zur Orientierung — dieses Element gehört zu einer anderen Gruppe",
+  },
 } as const;
 
 export default de;

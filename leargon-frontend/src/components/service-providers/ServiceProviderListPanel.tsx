@@ -12,26 +12,31 @@ import {
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
-import { Add, Search, CheckCircle, Warning } from '@mui/icons-material';
+import { Add, Search, CheckCircle, Warning, Business } from '@mui/icons-material';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import type { ServiceProviderResponse } from '../../api/generated/model';
 
 interface ServiceProviderListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
-  const { data: response, isLoading } = useGetAllServiceProviders();
+  const { data: response, isLoading } = useGetAllServiceProviders({ query: { enabled: !isGrouped } });
   const providers = (response?.data as ServiceProviderResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
 
@@ -71,7 +76,17 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="SERVICE_PROVIDER"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Business fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/service-providers/${itemKey}`)}
+            emptyLabel={t('serviceProvider.noProvidersYet')}
+          />
+        ) : isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>

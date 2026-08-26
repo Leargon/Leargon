@@ -178,7 +178,11 @@ class Process {
         version.process = this
     }
 
-    private fun effectiveOwningUnit(): OrganisationalUnit? =
+    /**
+     * The unit that answers for this process: its own, else the one owning its bounded context,
+     * else the one owning that context's domain. Public because the overview grouping buckets by it.
+     */
+    fun effectiveOwningUnit(): OrganisationalUnit? =
         owningUnit
             ?: boundedContext?.owningUnit
             ?: boundedContext?.domain?.owningUnit

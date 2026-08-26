@@ -44,10 +44,7 @@ open class ProcessMapper(
     ): ProcessResponse {
         val disabledMethodologies = methodologyConfigurationService.getDisabledMethodologies()
         val fc = fieldConfigurationService.compute("BUSINESS_PROCESS", disabledMethodologies, presenceOf(process))
-        val effectiveOwningUnit =
-            process.owningUnit
-                ?: process.boundedContext?.owningUnit
-                ?: process.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit = process.effectiveOwningUnit()
         val effectiveSteward = process.effectiveSteward()
         val effectiveCustodian = process.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -30,15 +32,18 @@ import type { ProcessTreeResponse } from '../../api/generated/model';
 interface ProcessListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'BUSINESS_PROCESS');
-  const { data: treeResponse, isLoading } = useGetProcessTree();
+  const { data: treeResponse, isLoading } = useGetProcessTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as ProcessTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -77,7 +82,17 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="BUSINESS_PROCESS"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Timeline fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/processes/${itemKey}`)}
+            emptyLabel={t('process.emptyList')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",

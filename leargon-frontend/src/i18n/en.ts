@@ -2333,6 +2333,10 @@ const en = {
     title: "Capability Map",
     subtitle: "Business Capability Model — nested hierarchy view. Click any capability to open its detail panel.",
   },
+  groupBy: {
+    label: "Group by",
+    contextOnly: "Shown for context — this item belongs to a different group",
+  },
 } as const;
 
 export type TranslationKeys = typeof en;
