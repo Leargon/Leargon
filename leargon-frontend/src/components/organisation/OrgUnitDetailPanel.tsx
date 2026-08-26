@@ -115,7 +115,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
   const { isMethodologyEnabled } = useMethodology();
@@ -460,7 +460,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   if (error || !unit) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Organisational unit not found or failed to load.</Alert>
+        <Alert severity="error">{t('orgUnit.notFound')}</Alert>
       </Box>
     );
   }
@@ -471,7 +471,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
-        title={getLocalizedText(unit.names, 'Unnamed Unit')}
+        title={getLocalizedText(unit.names, t('orgUnit.unnamed'))}
         itemKey={unit.key}
         chips={<>
           {unit.unitType && <Chip label={unit.unitType} size="small" color="primary" />}
@@ -501,7 +501,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         />
 
         {/* Names & Descriptions */}
-        <SectionHeader title="Names & Descriptions" canEdit={canEditOrgUnit} isEditing={namesEdit.isEditing}
+        <SectionHeader title={t('common.namesAndDescriptions')} canEdit={canEditOrgUnit} isEditing={namesEdit.isEditing}
           onEdit={() => namesEdit.startEdit({ names: [...unit.names], descriptions: [...(unit.descriptions || [])] })}
           onSave={namesEdit.save} onCancel={namesEdit.cancel} isSaving={namesEdit.isSaving} />
         {namesEdit.isEditing && namesEdit.editValue ? (
@@ -736,7 +736,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           <AccordionDetails>
             {/* Type */}
             <SectionHeader
-              title="Type"
+              title={t('common.type')}
               statusIndicator={renderStatus('unitType')}
               canEdit={canEditOrgUnit}
               isEditing={typeEdit.isEditing}
@@ -752,7 +752,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   value={typeEdit.editValue || ''}
                   onChange={(e) => typeEdit.setEditValue(e.target.value || null)}
                   size="small"
-                  placeholder="Enter unit type..."
+                  placeholder={t('orgUnit.typePlaceholder')}
                   sx={{ minWidth: 200 }}
                 />
                 {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
@@ -764,14 +764,14 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (
                   <Typography variant="body2" sx={{
                     color: "text.secondary"
-                  }}>Not set</Typography>
+                  }}>{t('common.notSet')}</Typography>
                 )}
               </Box>
             )}
             <Divider sx={{ my: 2 }} />
             {/* Parents */}
             <SectionHeader
-              title="Parents"
+              title={t('common.parents')}
               canEdit={canEditOrgUnit}
               isEditing={parentsEdit.isEditing}
               onEdit={() => parentsEdit.startEdit(unit.parents?.map((p) => p.key) || [])}
@@ -789,7 +789,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     value={parentCandidates.filter((u) => parentsEdit.editValue?.includes(u.key))}
                     onChange={(_, newVal) => parentsEdit.setEditValue(newVal.map((v) => v.key))}
                     renderInput={(params) => (
-                      <TextField {...params} size="small" placeholder="Search for parent units..." sx={{ width: 350 }} />
+                      <TextField {...params} size="small" placeholder={t('orgUnit.searchParents')} sx={{ width: 350 }} />
                     )}
                     isOptionEqualToValue={(option, value) => option.key === value.key}
                     size="small"
@@ -803,7 +803,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       {unit.parents.map((p) => (
                         <Box key={p.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
                           <Chip
-                            label={p.name}
+                            label={localizedName(p)}
                             size="small"
                             onClick={() => navigate(`/organisation/${p.key}`)}
                             clickable
@@ -815,7 +815,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   ) : (
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
-                    }}>Top-level unit</Typography>
+                    }}>{t('orgUnit.topLevel')}</Typography>
                   )}
                 </>
               )}
@@ -868,7 +868,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               value={users.find((u) => u.username === leadEdit.editValue) || null}
               onChange={(_, newVal) => leadEdit.setEditValue(newVal?.username || null)}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for business owner..." sx={{ width: 350 }} />
+                <TextField {...params} size="small" placeholder={t('orgUnit.searchBusinessOwner')} sx={{ width: 350 }} />
               )}
               isOptionEqualToValue={(option, value) => option.username === value.username}
               size="small"
@@ -883,7 +883,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 size="small"
               />
             ) : (
-              <span style={{ color: '#888' }}>No business owner assigned</span>
+              <span style={{ color: '#888' }}>{t('orgUnit.noBusinessOwner')}</span>
             )}
           </Typography>
         )}
@@ -912,7 +912,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               value={users.find((u) => u.username === stewardEdit.editValue) || null}
               onChange={(_, newVal) => stewardEdit.setEditValue(newVal?.username || null)}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for business steward..." sx={{ width: 350 }} />
+                <TextField {...params} size="small" placeholder={t('orgUnit.searchBusinessSteward')} sx={{ width: 350 }} />
               )}
               isOptionEqualToValue={(option, value) => option.username === value.username}
               size="small"
@@ -927,7 +927,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 size="small"
               />
             ) : (
-              <span style={{ color: '#888' }}>No business steward assigned</span>
+              <span style={{ color: '#888' }}>{t('orgUnit.noBusinessSteward')}</span>
             )}
           </Typography>
         )}
@@ -954,7 +954,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               value={users.find((u) => u.username === technicalCustodianEdit.editValue) || null}
               onChange={(_, newVal) => technicalCustodianEdit.setEditValue(newVal?.username || null)}
               renderInput={(params) => (
-                <TextField {...params} size="small" placeholder="Search for technical custodian..." sx={{ width: 350 }} />
+                <TextField {...params} size="small" placeholder={t('orgUnit.searchTechnicalCustodian')} sx={{ width: 350 }} />
               )}
               isOptionEqualToValue={(option, value) => option.username === value.username}
               size="small"
@@ -969,7 +969,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 size="small"
               />
             ) : (
-              <span style={{ color: '#888' }}>No technical custodian assigned</span>
+              <span style={{ color: '#888' }}>{t('orgUnit.noTechnicalCustodian')}</span>
             )}
           </Typography>
         )}
@@ -980,13 +980,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Bounded Contexts */}
         {sections.boundedContexts && !isHidden('boundedContexts') && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Bounded Contexts</Typography>
+            <Typography variant="subtitle2">{t('common.boundedContexts')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               {canAssignBc && (
                 <Button size="small" variant="outlined" startIcon={<Add />} onClick={() => setAssignBcDialogOpen(true)}>
-                  Assign
+                  {t('common.assign')}
                 </Button>
               )}
             </Box>
@@ -1011,8 +1011,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     }
                   >
                     <ListItemText
-                      primary={bc.name}
-                      secondary={bc.domainName}
+                      primary={localizedName(bc)}
+                      secondary={getLocalizedText(bc.domainNames, bc.domainName)}
                       slotProps={{
                         primary: { variant: 'body2' },
                         secondary: { variant: 'caption' }
@@ -1023,7 +1023,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             ) : (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
-              }}>No bounded contexts owned</Typography>
+              }}>{t('orgUnit.noBoundedContexts')}</Typography>
             )}
           </AccordionDetails>
         </Accordion>}
@@ -1032,7 +1032,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {unit.executingProcesses && unit.executingProcesses.length > 0 && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle2">Executing Processes</Typography>
+              <Typography variant="subtitle2">{t('orgUnit.executingProcesses')}</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -1054,7 +1054,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {sections.externalFields && !isHidden('isExternal') && (canEditOrgUnit || unit.isExternal) && (
           <Accordion disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography variant="subtitle2">External Party</Typography>
+              <Typography variant="subtitle2">{t('orgUnit.externalParty')}</Typography>
             </AccordionSummary>
             <AccordionDetails>
           <InlineEditControls canEdit={canEditOrgUnit} edit={externalFieldsEdit} onStart={() => externalFieldsEdit.startEdit({ isExternal: unit.isExternal ?? false, externalCompanyName: unit.externalCompanyName ?? '', countryOfExecution: unit.countryOfExecution ?? '' })} />
@@ -1062,7 +1062,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             {externalFieldsEdit.isEditing && externalFieldsEdit.editValue !== null ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" sx={{ minWidth: 180 }}>External Unit:</Typography>
+                  <Typography variant="body2" sx={{ minWidth: 180 }}>{t('orgUnit.externalUnit')}</Typography>
                   <Switch
                     checked={externalFieldsEdit.editValue.isExternal}
                     onChange={(e) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, isExternal: e.target.checked })}
@@ -1072,7 +1072,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 {externalFieldsEdit.editValue.isExternal && (
                   <>
                     <TextField
-                      label="Company Name"
+                      label={t('orgUnit.companyName')}
                       size="small"
                       value={externalFieldsEdit.editValue.externalCompanyName}
                       onChange={(e) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, externalCompanyName: e.target.value })}
@@ -1083,7 +1083,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       getOptionLabel={(o) => `${o.code} – ${o.name}`}
                       value={countryOptions.find((c) => c.code === externalFieldsEdit.editValue!.countryOfExecution) || null}
                       onChange={(_, val) => externalFieldsEdit.setEditValue({ ...externalFieldsEdit.editValue!, countryOfExecution: val?.code ?? '' })}
-                      renderInput={(params) => <TextField {...params} size="small" label="Country of Execution" sx={{ width: 300 }} />}
+                      renderInput={(params) => <TextField {...params} size="small" label={t('orgUnit.countryOfExecution')} sx={{ width: 300 }} />}
                     />
                   </>
                 )}
@@ -1097,8 +1097,8 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                     sx={{
                       color: "text.secondary",
                       minWidth: 180
-                    }}>External Unit:</Typography>
-                  <Chip label={unit.isExternal ? 'Yes' : 'No'} size="small" color={unit.isExternal ? 'warning' : 'default'} />
+                    }}>{t('orgUnit.externalUnit')}</Typography>
+                  <Chip label={unit.isExternal ? t('common.yes') : t('common.no')} size="small" color={unit.isExternal ? 'warning' : 'default'} />
                 </Box>
                 {unit.isExternal && (
                   <>
@@ -1108,7 +1108,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                         sx={{
                           color: "text.secondary",
                           minWidth: 180
-                        }}>Company Name:</Typography>
+                        }}>{t('orgUnit.companyNameLabel')}</Typography>
                       <Typography variant="body2">{unit.externalCompanyName ?? '—'}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1117,7 +1117,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                         sx={{
                           color: "text.secondary",
                           minWidth: 180
-                        }}>Country of Execution:</Typography>
+                        }}>{t('orgUnit.countryOfExecutionLabel')}</Typography>
                       <Typography variant="body2">
                         {unit.countryOfExecution
                           ? `${getCountryName(unit.countryOfExecution, preferredLocale ?? 'en')} (${unit.countryOfExecution})`
@@ -1134,7 +1134,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
             <>
               {/* Data Access Entities (Read) */}
               <SectionHeader
-                title="Data Access Entities (Read)"
+                title={t('orgUnit.dataAccessTitle')}
                 canEdit={canEditOrgUnit}
                 isEditing={dataAccessEdit.isEditing}
                 onEdit={() => dataAccessEdit.startEdit((unit.dataAccessEntities ?? []).map((e) => e.key))}
@@ -1151,7 +1151,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                       value={allEntities.filter((e) => dataAccessEdit.editValue!.includes(e.key))}
                       onChange={(_, val) => dataAccessEdit.setEditValue(val.map((v) => v.key))}
-                      renderInput={(params) => <TextField {...params} size="small" label="Data Access Entities" />}
+                      renderInput={(params) => <TextField {...params} size="small" label={t('orgUnit.dataAccessLabel')} />}
                       renderValue={(val, getItemProps) =>
                         val.map((option, index) => (
                           <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
@@ -1172,13 +1172,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (
                   <Typography variant="body2" sx={{
                     color: "text.secondary"
-                  }}>No data access entities defined</Typography>
+                  }}>{t('orgUnit.noDataAccess')}</Typography>
                 )}
               </Box>
 
               {/* Data Manipulation Entities (Write) */}
               <SectionHeader
-                title="Data Manipulation Entities (Write)"
+                title={t('orgUnit.dataManipulationTitle')}
                 canEdit={canEditOrgUnit}
                 isEditing={dataManipulationEdit.isEditing}
                 onEdit={() => dataManipulationEdit.startEdit((unit.dataManipulationEntities ?? []).map((e) => e.key))}
@@ -1195,7 +1195,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                       getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                       value={allEntities.filter((e) => dataManipulationEdit.editValue!.includes(e.key))}
                       onChange={(_, val) => dataManipulationEdit.setEditValue(val.map((v) => v.key))}
-                      renderInput={(params) => <TextField {...params} size="small" label="Data Manipulation Entities" />}
+                      renderInput={(params) => <TextField {...params} size="small" label={t('orgUnit.dataManipulationLabel')} />}
                       renderValue={(val, getItemProps) =>
                         val.map((option, index) => (
                           <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
@@ -1216,7 +1216,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 ) : (
                   <Typography variant="body2" sx={{
                     color: "text.secondary"
-                  }}>No data manipulation entities defined</Typography>
+                  }}>{t('orgUnit.noDataManipulation')}</Typography>
                 )}
               </Box>
             </>
@@ -1228,7 +1228,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         {/* Service Providers */}
         {sections.serviceProviders && !isHidden('serviceProviders') && <Accordion disableGutters>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Service Providers</Typography>
+            <Typography variant="subtitle2">{t('common.serviceProviders')}</Typography>
           </AccordionSummary>
           <AccordionDetails>
         <InlineEditControls canEdit={canEditOrgUnit} edit={serviceProvidersEdit} onStart={() => serviceProvidersEdit.startEdit((unit.serviceProviders ?? []).map((s) => s.key))} />
@@ -1241,7 +1241,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                 getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
                 value={allServiceProviders.filter((s) => serviceProvidersEdit.editValue!.includes(s.key))}
                 onChange={(_, val) => serviceProvidersEdit.setEditValue(val.map((v) => v.key))}
-                renderInput={(params) => <TextField {...params} size="small" label="Service Providers" />}
+                renderInput={(params) => <TextField {...params} size="small" label={t('common.serviceProviders')} />}
                 renderValue={(val, getItemProps) =>
                   val.map((option, index) => (
                     <Chip {...getItemProps({ index })} key={option.key} label={getLocalizedText(option.names, option.key)} size="small" />
@@ -1262,7 +1262,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           ) : (
             <Typography variant="body2" sx={{
               color: "text.secondary"
-            }}>No service providers linked</Typography>
+            }}>{t('orgUnit.noServiceProviders')}</Typography>
           )}
         </Box>
           </AccordionDetails>
@@ -1319,7 +1319,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
                   if (e.target.value) newAssignments.push({ classificationKey: c.key, valueKey: e.target.value });
                   classEdit.setEditValue(newAssignments);
                 }} size="small" displayEmpty sx={{ minWidth: 150 }}>
-                  <MenuItem value=""><em>None</em></MenuItem>
+                  <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                   {c.values?.map((v) => (
                     <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
                   ))}
@@ -1330,7 +1330,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           {availableClassifications.length === 0 && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
-            }}>No classifications configured for organisational units</Typography>
+            }}>{t('orgUnit.noClassificationsForUnits')}</Typography>
           )}
           {classEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{classEdit.error}</Alert>}
         </Box>
@@ -1372,7 +1372,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           }) : (
             <Typography variant="body2" sx={{
               color: "text.secondary"
-            }}>No classifications configured</Typography>
+            }}>{t('orgUnit.noClassifications')}</Typography>
           )}
         </Box>
       )}
@@ -1389,15 +1389,15 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
               <Table size="small">
                 <TableBody>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{t('common.createdBy')}</TableCell>
                     <TableCell>{unit.createdBy.firstName} {unit.createdBy.lastName}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{t('common.created')}</TableCell>
                     <TableCell>{new Date(unit.createdAt).toLocaleString()}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{t('common.lastUpdated')}</TableCell>
                     <TableCell>{new Date(unit.updatedAt).toLocaleString()}</TableCell>
                   </TableRow>
                 </TableBody>
@@ -1412,7 +1412,7 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
         <DialogContent>
           <Autocomplete
             options={allBoundedContexts}
-            getOptionLabel={(bc) => `${bc.name} (${bc.domainName})`}
+            getOptionLabel={(bc) => `${localizedName(bc)} (${getLocalizedText(bc.domainNames, bc.domainName)})`}
             value={allBoundedContexts.find((bc) => bc.key === selectedBcKey) || null}
             onChange={(_, newVal) => setSelectedBcKey(newVal?.key || null)}
             renderInput={(params) => (

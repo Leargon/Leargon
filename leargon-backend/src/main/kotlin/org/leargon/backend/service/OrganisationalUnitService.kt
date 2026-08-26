@@ -33,7 +33,8 @@ open class OrganisationalUnitService(
     private val businessEntityRepository: BusinessEntityRepository,
     private val boundedContextRepository: BoundedContextRepository,
     private val fieldVerificationService: FieldVerificationService,
-    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor
+    private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
     /**
      * Reconciles per-field verification status after a mutation. Organisational units have no version
@@ -412,7 +413,7 @@ open class OrganisationalUnitService(
     @ReadOnly
     open fun getOwnedBoundedContexts(unitKey: String): List<BoundedContextSummaryResponse> {
         val repo = boundedContextRepository
-        return repo.findByOwningUnitKey(unitKey).mapNotNull { BoundedContextMapper.toSummaryResponse(it) }
+        return repo.findByOwningUnitKey(unitKey).mapNotNull { BoundedContextMapper.toSummaryResponse(it, defaultLocaleProvider.code()) }
     }
 
     @Transactional

@@ -9,6 +9,7 @@ import org.leargon.backend.model.FieldConfigurationDefinitionMaturityLevel
 import org.leargon.backend.model.FieldConfigurationEntry
 import org.leargon.backend.model.FieldConfigurationEntryMaturityLevel
 import org.leargon.backend.model.FieldConfigurationEntryVisibility
+import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.repository.ClassificationRepository
 import org.leargon.backend.repository.FieldConfigurationRepository
 import org.leargon.backend.repository.SupportedLocaleRepository
@@ -403,13 +404,25 @@ open class FieldConfigurationService(
                 when {
                     def.fieldName.contains("{locale}") -> {
                         val base = def.fieldName.substringBefore(".{locale}")
-                        val groupEntry = toDefinition(def, base, def.label, mandatoryCapable = false, localeGroup = true)
+                        val groupEntry =
+                            toDefinition(
+                                def,
+                                base,
+                                def.label,
+                                localeCodes,
+                                mandatoryCapable = false,
+                                localeGroup = true
+                            )
                         val localeEntries =
                             localeCodes.map { locale ->
                                 toDefinition(
                                     def,
                                     def.fieldName.replace("{locale}", locale),
                                     "${def.label} ($locale)",
+                                    localeCodes,
+                                    // The suffix names the locale of the field itself, so it is the same
+                                    // word in every language and only the label before it is translated.
+                                    labelFor = { uiLocale -> "${FieldLabelTranslations.translate(def.label, uiLocale)} ($locale)" },
                                     mandatoryCapable = def.mandatoryCapable,
                                     localeGroup = false
                                 )
@@ -421,12 +434,22 @@ open class FieldConfigurationService(
                         classifications
                             .filter { it.assignableTo == def.entityType }
                             .map { c ->
-                                toDefinition(def, def.fieldName.replace("{classKey}", c.key), "${def.label}: ${c.key}")
+                                toDefinition(
+                                    def,
+                                    def.fieldName.replace("{classKey}", c.key),
+                                    "${def.label}: ${c.key}",
+                                    localeCodes,
+                                    // A classification is user content, so its own translated name is the
+                                    // right thing to show — the key is only a last resort.
+                                    labelFor = { uiLocale ->
+                                        "${FieldLabelTranslations.translate(def.label, uiLocale)}: ${c.getName(uiLocale)}"
+                                    }
+                                )
                             }
                     }
 
                     else -> {
-                        listOf(toDefinition(def, def.fieldName, def.label))
+                        listOf(toDefinition(def, def.fieldName, def.label, localeCodes))
                     }
                 }
             }
@@ -527,10 +550,19 @@ open class FieldConfigurationService(
             it.maturityLevel = FieldConfigurationEntryMaturityLevel.valueOf(config.maturityLevel)
         }
 
+    /**
+     * One entry of the field inventory, carrying its display name in every active locale.
+     *
+     * [label] stays as the English fallback for clients that do not read `labels`; [labelFor] builds the
+     * per-locale text and defaults to the shared translation table, which already covers the platform's
+     * own vocabulary because the to-do list translates the very same labels.
+     */
     private fun toDefinition(
         def: FieldDef,
         fieldName: String,
         label: String,
+        localeCodes: List<String>,
+        labelFor: (String) -> String = { locale -> FieldLabelTranslations.translateLabel(label, locale) },
         mandatoryCapable: Boolean = def.mandatoryCapable,
         localeGroup: Boolean = false
     ): FieldConfigurationDefinition =
@@ -543,5 +575,6 @@ open class FieldConfigurationService(
             mandatoryCapable
         ).also {
             it.localeGroup = localeGroup
+            it.labels = localeCodes.map { locale -> LocalizedText(locale, labelFor(locale)) }
         }
 }

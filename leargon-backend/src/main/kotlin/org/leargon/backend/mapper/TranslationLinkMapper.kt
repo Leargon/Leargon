@@ -4,10 +4,13 @@ import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.TranslationLink
 import org.leargon.backend.model.TranslationLinkResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import java.time.ZoneOffset
 
 @Singleton
-open class TranslationLinkMapper {
+open class TranslationLinkMapper(
+    private val defaultLocaleProvider: DefaultLocaleProvider
+) {
     fun toResponse(
         link: TranslationLink,
         perspectiveEntity: BusinessEntity
@@ -16,7 +19,7 @@ open class TranslationLinkMapper {
         val response =
             TranslationLinkResponse(
                 link.id,
-                BusinessEntityMapper.toBusinessEntitySummaryResponse(linkedEntity),
+                BusinessEntityMapper.toBusinessEntitySummaryResponse(linkedEntity, defaultLocaleProvider.code()),
                 link.createdAt?.atZone(ZoneOffset.UTC),
                 link.updatedAt?.atZone(ZoneOffset.UTC)
             )

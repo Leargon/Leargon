@@ -10,19 +10,24 @@ import org.leargon.backend.model.DomainEventEntityLinkType
 import org.leargon.backend.model.DomainEventLinkType
 import org.leargon.backend.model.DomainEventProcessLinkResponse
 import org.leargon.backend.model.DomainEventResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import java.time.ZoneOffset
 
 @Singleton
 open class DomainEventMapper(
-    private val processMapper: ProcessMapper
+    private val processMapper: ProcessMapper,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toResponse(
         event: DomainEvent,
         processLinks: List<DomainEventProcessLink>,
         entityLinks: List<DomainEventEntityLink>
     ): DomainEventResponse {
-        val publishingBc = BoundedContextMapper.toSummaryResponse(event.publishingBoundedContext)
-        val consumers = event.consumers.map { BoundedContextMapper.toSummaryResponse(it)!! }
+        val publishingBc = BoundedContextMapper.toSummaryResponse(event.publishingBoundedContext, defaultLocale)
+        val consumers = event.consumers.mapNotNull { BoundedContextMapper.toSummaryResponse(it, defaultLocale) }
         val mappedProcessLinks = processLinks.map { toProcessLinkResponse(it) }
         val mappedEntityLinks = entityLinks.map { toEntityLinkResponse(it) }
 
@@ -56,7 +61,7 @@ open class DomainEventMapper(
         val entity = link.entity
         val entitySummary =
             if (entity != null) {
-                BusinessEntitySummaryResponse(entity.key, entity.getName("en"))
+                SummaryMappers.entity(entity, defaultLocale)
             } else {
                 null
             }

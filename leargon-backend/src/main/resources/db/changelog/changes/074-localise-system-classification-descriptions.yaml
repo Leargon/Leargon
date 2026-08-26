@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 074-localise-system-classification-descriptions
+      author: leargon
+      comment: >-
+        Backfill the German and French descriptions of the seeded `special-categories` classification.
+        Its names were trilingual from the start but the description was seeded English-only, so a
+        German or French reader saw an English paragraph under a translated heading. The bootstrap now
+        seeds all three; this brings already-installed tenants to the same state.
+
+        Guarded on the current value so a description an administrator has since edited is left alone.
+      changes:
+        - update:
+            tableName: classifications
+            columns:
+              - column:
+                  name: descriptions
+                  value: >-
+                    [{"locale":"en","text":"Special categories of personal data as defined by Art. 9 GDPR / DSG requiring heightened protection."},{"locale":"de","text":"Besondere Kategorien personenbezogener Daten nach Art. 9 DSGVO / DSG, die einen erhöhten Schutz erfordern."},{"locale":"fr","text":"Catégories particulières de données personnelles au sens de l'art. 9 RGPD / LPD, exigeant une protection renforcée."}]
+            where: >-
+              `key` = 'special-categories'
+              AND descriptions = '[{"locale":"en","text":"Special categories of personal data as defined by Art. 9 GDPR / DSG requiring heightened protection."}]'
+      rollback:
+        - update:
+            tableName: classifications
+            columns:
+              - column:
+                  name: descriptions
+                  value: >-
+                    [{"locale":"en","text":"Special categories of personal data as defined by Art. 9 GDPR / DSG requiring heightened protection."}]
+            where: "`key` = 'special-categories'"

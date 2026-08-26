@@ -114,6 +114,26 @@ object FieldLabelTranslations {
         return translations[locale.lowercase().substringBefore("-")] ?: englishLabel
     }
 
+    /**
+     * As [translate], but also aware of the locale suffix the field inventory appends to a per-locale
+     * field ("Description (en)"): only the words are translated, the suffix names a locale and stays put.
+     *
+     * The whole-label lookup is tried first, because several inventory labels legitimately end in
+     * parentheses ("Cycle Time (min)") and must not be mistaken for a locale suffix.
+     */
+    fun translateLabel(
+        label: String,
+        locale: String
+    ): String {
+        translateOrNull(label, locale)?.let { return it }
+        val match = LOCALE_SUFFIX.matchEntire(label) ?: return label
+        val (base, suffix) = match.destructured
+        return "${translate(base, locale)} ($suffix)"
+    }
+
     /** Every English label the table covers — used by the coverage test that guards new inventory fields. */
     fun coveredLabels(): Set<String> = byLabel.keys
+
+    /** An inventory label carrying the locale of a per-locale field, e.g. "Description (en)". */
+    private val LOCALE_SUFFIX = Regex("""^(.*) \(([a-zA-Z-]{2,10})\)$""")
 }

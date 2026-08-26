@@ -29,7 +29,7 @@ interface BoundedContextULPanelProps {
 const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, owningTeam }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
 
   const { data: entitiesData, isLoading: entitiesLoading } = useGetAllBusinessEntities();
   const { data: processesData, isLoading: processesLoading } = useGetAllProcesses();
@@ -72,7 +72,7 @@ const BoundedContextULPanel: React.FC<BoundedContextULPanelProps> = ({ bcKey, ow
           }}>
             {t('boundedContext.owningTeam')}:
           </Typography>
-          <Chip label={owningTeam.name} size="small" variant="outlined" color="primary" />
+          <Chip label={localizedName(owningTeam)} size="small" variant="outlined" color="primary" />
         </Box>
       )}
       {/* Nouns — Entities */}

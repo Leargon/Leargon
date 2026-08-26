@@ -13,6 +13,7 @@ import org.leargon.backend.domain.ProcessVersion
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ForbiddenOperationException
 import org.leargon.backend.exception.ResourceNotFoundException
+import org.leargon.backend.mapper.LocalizedTextMapper
 import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.model.AddProcessEntityRequest
 import org.leargon.backend.model.CreateProcessRequest
@@ -54,7 +55,8 @@ open class ProcessService(
     private val processFlowNodeRepository: ProcessFlowNodeRepository,
     private val fieldVerificationService: FieldVerificationService,
     private val roleService: RoleService,
-    private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor
+    private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -431,7 +433,8 @@ open class ProcessService(
 
         val stepDtos =
             steps.map { p ->
-                ValueStreamStep(p.key, p.getName("en"))
+                ValueStreamStep(p.key, p.getName(defaultLocaleProvider.code()))
+                    .names(LocalizedTextMapper.toModel(p.names))
                     .cycleTimeMinutes(p.cycleTimeMinutes)
                     .waitTimeMinutes(p.waitTimeMinutes)
                     .activityType(ProcessMapper.toActivityType(p.activityType))
@@ -694,7 +697,7 @@ open class ProcessService(
         var process = getProcessByKey(key)
         requireFieldEdit(process, currentUser, "boundedContext")
 
-        val oldName = process.boundedContext?.getName("en") ?: "none"
+        val oldName = process.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
 
         process.boundedContext =
             if (boundedContextKey != null) {
@@ -708,7 +711,7 @@ open class ProcessService(
         process.updatedBy = currentUser
         process = processRepository.update(process)
 
-        val newName = process.boundedContext?.getName("en") ?: "none"
+        val newName = process.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
         createProcessVersion(
             process,
             currentUser,
@@ -730,7 +733,7 @@ open class ProcessService(
         var process = getProcessByKey(key)
         requireFieldEdit(process, currentUser, "owningUnit")
 
-        val oldName = process.owningUnit?.getName("en") ?: "none"
+        val oldName = process.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
 
         process.owningUnit =
             if (owningUnitKey != null) {
@@ -758,7 +761,7 @@ open class ProcessService(
         process.updatedBy = currentUser
         process = processRepository.update(process)
 
-        val newName = process.owningUnit?.getName("en") ?: "none"
+        val newName = process.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
         createProcessVersion(
             process,
             currentUser,

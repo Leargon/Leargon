@@ -2,6 +2,7 @@ package org.leargon.backend.service
 
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDataQualityRule
+import org.leargon.backend.domain.textForLocale
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -24,6 +25,7 @@ open class ExportService(
     private val businessEntityRepository: BusinessEntityRepository,
     private val processingRegisterService: ProcessingRegisterService,
     private val userRepository: UserRepository,
+    private val defaultLocaleProvider: DefaultLocaleProvider,
 ) {
     private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -622,7 +624,10 @@ open class ExportService(
 
     private fun toCmlIdentifier(name: String): String = name.replace(Regex("[^A-Za-z0-9]"), "_").replace(Regex("_+"), "_").trim('_')
 
-    fun exportBusinessDataQualityRules(rules: List<BusinessDataQualityRule>): String {
+    fun exportBusinessDataQualityRules(
+        rules: List<BusinessDataQualityRule>,
+        locale: String
+    ): String {
         val sb = StringBuilder()
         sb.appendLine(
             csvRow(
@@ -635,12 +640,12 @@ open class ExportService(
         for (rule in rules) {
             val entity = rule.businessEntity
             val entityKey = entity?.key ?: ""
-            val entityName = entity?.names?.firstOrNull()?.text ?: entityKey
+            val entityName = entity?.names?.textForLocale(locale, entityKey) ?: entityKey
             sb.appendLine(
                 csvRow(
                     entityKey,
                     entityName,
-                    rule.descriptions.find { it.locale == "en" }?.text ?: rule.descriptions.firstOrNull()?.text ?: "",
+                    rule.descriptions.textForLocale(locale, ""),
                     rule.severity
                 )
             )

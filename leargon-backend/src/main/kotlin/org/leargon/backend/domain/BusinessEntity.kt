@@ -159,7 +159,7 @@ class BusinessEntity {
 
     fun effectiveSteward(): User? = dataSteward ?: effectiveOwningUnit()?.businessSteward
 
-    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
+    fun getName(locale: String): String = names.textForLocale(locale, key)
 
-    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
+    fun getDescription(locale: String): String = descriptions.textForLocale(locale, "")
 }

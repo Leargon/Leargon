@@ -69,6 +69,14 @@ open class SystemClassificationBootstrap(
                                 "en",
                                 "Special categories of personal data as defined by Art. 9 GDPR / DSG requiring heightened protection."
                             ),
+                            LocalizedText(
+                                "de",
+                                "Besondere Kategorien personenbezogener Daten nach Art. 9 DSGVO / DSG, die einen erhöhten Schutz erfordern."
+                            ),
+                            LocalizedText(
+                                "fr",
+                                "Catégories particulières de données personnelles au sens de l'art. 9 RGPD / LPD, exigeant une protection renforcée."
+                            ),
                         ),
                     assignableTo = "BUSINESS_ENTITY",
                     multiValue = true,

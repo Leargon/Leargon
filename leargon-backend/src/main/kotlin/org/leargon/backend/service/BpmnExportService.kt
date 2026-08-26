@@ -7,6 +7,7 @@ import org.leargon.backend.domain.FlowNodeType
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.ProcessFlowNode
 import org.leargon.backend.domain.ProcessFlowTrack
+import org.leargon.backend.domain.textForLocale
 
 /**
  * Generates BPMN 2.0 XML from stored flow nodes and tracks.
@@ -14,7 +15,9 @@ import org.leargon.backend.domain.ProcessFlowTrack
  * Layout: nodes 120×60 px, 140 px apart horizontally; gateway tracks stacked 100 px apart vertically.
  */
 @Singleton
-open class BpmnExportService {
+open class BpmnExportService(
+    private val defaultLocaleProvider: DefaultLocaleProvider
+) {
     companion object {
         private const val NODE_W = 120
         private const val NODE_H = 60
@@ -183,7 +186,8 @@ open class BpmnExportService {
         return x
     }
 
-    private fun labelText(labels: List<LocalizedText>): String? = labels.find { it.locale == "en" }?.text ?: labels.firstOrNull()?.text
+    private fun labelText(labels: List<LocalizedText>): String? =
+        labels.takeIf { it.isNotEmpty() }?.textForLocale(defaultLocaleProvider.code(), "")?.takeIf { it.isNotBlank() }
 
     private fun nodeDimensions(node: ProcessFlowNode): Pair<Int, Int> =
         when (node.nodeType) {

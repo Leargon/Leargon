@@ -9,6 +9,7 @@ import org.leargon.backend.api.ProcessingRegisterApi
 import org.leargon.backend.domain.User
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.model.ProcessingRegisterEntryResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.ProcessingRegisterService
 import org.leargon.backend.service.UserService
 
@@ -18,10 +19,15 @@ open class ProcessingRegisterController(
     private val processingRegisterService: ProcessingRegisterService,
     private val userService: UserService,
     private val securityService: SecurityService,
+    private val defaultLocaleProvider: DefaultLocaleProvider,
 ) : ProcessingRegisterApi {
     override fun getProcessingRegister(
-        @QueryValue(defaultValue = "en") locale: String
-    ): List<ProcessingRegisterEntryResponse> = processingRegisterService.getEntries(locale, getCurrentUser())
+        @QueryValue locale: String?
+    ): List<ProcessingRegisterEntryResponse> =
+        processingRegisterService.getEntries(
+            locale?.takeIf { it.isNotBlank() } ?: defaultLocaleProvider.code(),
+            getCurrentUser()
+        )
 
     private fun getCurrentUser(): User {
         val email =

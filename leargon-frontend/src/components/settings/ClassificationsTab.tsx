@@ -204,7 +204,7 @@ const ClassificationsTab: React.FC = () => {
           endIcon={<ArrowDropDownIcon />}
           onClick={(e) => setNewMenuAnchor(e.currentTarget)}
         >
-          New
+          {t('classifications.newMenu')}
         </Button>
         <Menu
           anchorEl={newMenuAnchor}
@@ -215,11 +215,11 @@ const ClassificationsTab: React.FC = () => {
         >
           <MenuItem onClick={() => { setNewMenuAnchor(null); resetCreateForm(); setCreateOpen(true); }}>
             <AddIcon fontSize="small" sx={{ mr: 1 }} />
-            New Classification
+            {t('classifications.newClassification')}
           </MenuItem>
           <MenuItem onClick={() => { setNewMenuAnchor(null); setTaxonomyWizardOpen(true); }}>
             <AutoAwesome fontSize="small" sx={{ mr: 1 }} />
-            From Template
+            {t('classifications.fromTemplate')}
           </MenuItem>
         </Menu>
       </Box>
@@ -231,23 +231,21 @@ const ClassificationsTab: React.FC = () => {
           sx={{ p: 3, textAlign: 'center', borderStyle: 'dashed' }}
         >
           <AutoAwesome sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-          <Typography variant="h6" sx={{ mb: 0.5 }}>No classifications yet</Typography>
+          <Typography variant="h6" sx={{ mb: 0.5 }}>{t('classifications.noneYet')}</Typography>
           <Typography
             variant="body2"
             sx={{
               color: "text.secondary",
               mb: 2
             }}>
-            Classifications are metadata labels — like "Personal Data" or "Confidentiality" — that
-            you attach to entities, domains, processes, and org units to drive governance rules and
-            compliance reports.
+            {t('classifications.emptyHint')}
           </Typography>
           <Button
             variant="contained"
             startIcon={<AutoAwesome />}
             onClick={() => setTaxonomyWizardOpen(true)}
           >
-            Set Up Classification Taxonomy
+            {t('classifications.setUpTaxonomy')}
           </Button>
         </Paper>
       ) : (
@@ -270,9 +268,9 @@ const ClassificationsTab: React.FC = () => {
                       {getLocalizedText(c.names, c.key)}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
-                      <Chip label={c.assignableTo.replace('BUSINESS_', '')} size="small" variant="outlined" />
-                      <Chip label={`${(c.values ?? []).length} values`} size="small" variant="outlined" />
-                      {c.multiValue && <Chip label="multi-value" size="small" color="primary" variant="outlined" />}
+                      <Chip label={t(`entityType.${c.assignableTo}`, { defaultValue: c.assignableTo })} size="small" variant="outlined" />
+                      <Chip label={t('classifications.valueCount', { count: (c.values ?? []).length })} size="small" variant="outlined" />
+                      {c.multiValue && <Chip label={t('classifications.multiValue')} size="small" color="primary" variant="outlined" />}
                       {c.isSystem && (
                         <Tooltip title={t('classifications.systemTooltip')}>
                           <Chip
@@ -287,7 +285,7 @@ const ClassificationsTab: React.FC = () => {
                     </Box>
                   </Box>
                   {!c.isSystem && (
-                    <Tooltip title="Delete classification">
+                    <Tooltip title={t('classifications.deleteClassification')}>
                       <IconButton
                         size="small"
                         color="error"
@@ -304,21 +302,21 @@ const ClassificationsTab: React.FC = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                       <Typography variant="body2" sx={{
                         fontWeight: 500
-                      }}>Values</Typography>
+                      }}>{t('common.values')}</Typography>
                       {!c.isSystem && (
                         <Button
                           size="small"
                           startIcon={<AddIcon />}
                           onClick={() => { resetValueForm(); setValueParentKey(c.key); setCreateValueOpen(true); }}
                         >
-                          Add Value
+                          {t('common.addValue')}
                         </Button>
                       )}
                     </Box>
                     {!c.values?.length ? (
                       <Typography variant="body2" sx={{
                         color: "text.secondary"
-                      }}>No values defined.</Typography>
+                      }}>{t('classifications.noValues')}</Typography>
                     ) : (
                       <List dense disablePadding>
                         {c.values.map((v) => (
@@ -349,7 +347,7 @@ const ClassificationsTab: React.FC = () => {
       )}
       {/* Create Classification Dialog */}
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>New Classification</DialogTitle>
+        <DialogTitle>{t('classifications.newClassification')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TranslationEditor
@@ -365,35 +363,35 @@ const ClassificationsTab: React.FC = () => {
               size="small"
               displayEmpty
             >
-              <MenuItem value="BUSINESS_ENTITY">Business Entity</MenuItem>
-              <MenuItem value="BUSINESS_DOMAIN">Business Domain</MenuItem>
-              <MenuItem value="BUSINESS_PROCESS">Business Process</MenuItem>
-              <MenuItem value="ORGANISATIONAL_UNIT">Organisational Unit</MenuItem>
+              <MenuItem value="BUSINESS_ENTITY">{t('entityType.BUSINESS_ENTITY')}</MenuItem>
+              <MenuItem value="BUSINESS_DOMAIN">{t('entityType.BUSINESS_DOMAIN')}</MenuItem>
+              <MenuItem value="BUSINESS_PROCESS">{t('entityType.BUSINESS_PROCESS')}</MenuItem>
+              <MenuItem value="ORGANISATIONAL_UNIT">{t('entityType.ORGANISATIONAL_UNIT')}</MenuItem>
             </Select>
             <FormControlLabel
               control={<Switch checked={newMultiValue} onChange={(e) => setNewMultiValue(e.target.checked)} />}
-              label="Allow multiple values per entity"
+              label={t('classifications.allowMultiple')}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleCreateClassification} variant="contained" disabled={createClassification.isPending || !hasDefaultName(newNames)}>
-            {createClassification.isPending ? 'Creating...' : 'Create'}
+            {createClassification.isPending ? t('common.creating') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>
       {/* Create Value Dialog */}
       <Dialog open={createValueOpen} onClose={() => setCreateValueOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Classification Value</DialogTitle>
+        <DialogTitle>{t('classifications.addValueTitle')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Value Key"
+              label={t('classifications.valueKey')}
               value={newValueKey}
               onChange={(e) => setNewValueKey(e.target.value)}
               size="small"
-              helperText="1-20 character unique key"
+              helperText={t('classifications.valueKeyHint')}
             />
             <TranslationEditor
               locales={locales}
@@ -405,9 +403,9 @@ const ClassificationsTab: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateValueOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateValueOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleCreateValue} variant="contained" disabled={createValue.isPending || !newValueKey.trim() || !hasDefaultName(newValueNames)}>
-            {createValue.isPending ? 'Creating...' : 'Create'}
+            {createValue.isPending ? t('common.creating') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -147,3 +147,5 @@ databaseChangeLog:
       file: db/changelog/changes/072-create-task-dismissals-table.yaml
   - include:
       file: db/changelog/changes/073-create-task-rule-configurations-table.yaml
+  - include:
+      file: db/changelog/changes/074-localise-system-classification-descriptions.yaml

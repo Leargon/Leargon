@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -31,6 +32,7 @@ interface EntityTreePanelProps {
 }
 
 const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
@@ -53,7 +55,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search entities..."
+          placeholder={t('entity.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -69,7 +71,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
         />
         {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.newBtn')}
           </Button>
         )}
       </Box>
@@ -79,7 +81,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
             sx={{
               color: "text.secondary",
               p: 2
-            }}>Loading...</Typography>
+            }}>{t('common.loading')}</Typography>
         ) : filteredTree.length === 0 ? (
           <Typography
             sx={{
@@ -87,7 +89,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
               p: 2,
               textAlign: 'center'
             }}>
-            {filter ? 'No matches found.' : 'No entities yet. Create one to get started.'}
+            {filter ? t('common.noMatches') : t('entity.emptyList')}
           </Typography>
         ) : (
           <List dense disablePadding>
@@ -129,6 +131,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   getLocalizedText,
   matchesFilter,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const hasChildren = entity.children && entity.children.length > 0;
   const isSelected = entity.key === selectedKey;
@@ -160,7 +163,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
         <ListItemText
           primary={
             <Typography variant="body2" noWrap>
-              {getLocalizedText(entity.names, 'Unnamed')}
+              {getLocalizedText(entity.names, t('common.unnamed'))}
             </Typography>
           }
         />

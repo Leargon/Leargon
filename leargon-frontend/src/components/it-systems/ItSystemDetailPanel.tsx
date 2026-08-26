@@ -59,7 +59,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   // IT systems are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
   const canManage = canCreateRoot(user?.roles, 'IT_SYSTEM');
@@ -188,7 +188,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
         chips={
           system.owningUnit ? (
             <Chip
-              label={getLocalizedText(allOrgUnits.find(u => u.key === system.owningUnit!.key)?.names ?? [], system.owningUnit.name)}
+              label={localizedName(system.owningUnit)}
               size="small"
               variant="outlined"
               onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}
@@ -315,7 +315,7 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
               </Box>
             ) : system.owningUnit ? (
               <Chip
-                label={getLocalizedText(allOrgUnits.find(u => u.key === system.owningUnit!.key)?.names ?? [], system.owningUnit.name)}
+                label={localizedName(system.owningUnit)}
                 size="small"
                 variant="outlined"
                 onClick={() => navigate(`/organisation/${system.owningUnit!.key}`)}

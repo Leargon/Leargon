@@ -28,6 +28,7 @@ import { useMethodology } from '../context/MethodologyContext';
 import MaturityOverview from '../components/dashboard/MaturityOverview';
 import MyTasksCard from '../components/tasks/MyTasksCard';
 import GovernanceSetupWizard from '../components/settings/GovernanceSetupWizard';
+import { useLocale } from '../context/LocaleContext';
 
 function useFormatRelativeTime() {
   const { t } = useTranslation();
@@ -84,9 +85,9 @@ function ActivitySection({ items }: { items: ActivityItem[] }) {
               <ListItemText
                 primary={item.name}
                 secondary={(() => {
-                  const action = item.changeType.toLowerCase().replace('_', ' ').replace(/e$/, '') + 'ed';
+                  const action = t(`home.activity.${item.changeType}`, { defaultValue: item.changeType.toLowerCase() });
                   const by = item.changedBy
-                    ? ` by ${item.changedBy.firstName} ${item.changedBy.lastName}`
+                    ? t('home.activityBy', { name: `${item.changedBy.firstName} ${item.changedBy.lastName}` })
                     : '';
                   const summary = item.changeSummary ? ` (${item.changeSummary})` : '';
                   return `${action}${by}${summary}`;
@@ -171,7 +172,8 @@ const HomePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
-  const { data: response, isLoading } = useGetDashboard();
+  const { preferredLocale } = useLocale();
+  const { data: response, isLoading } = useGetDashboard({ locale: preferredLocale });
   const dashboard = (response?.data) as import('../api/generated/model').DashboardResponse | undefined;
   const { isMethodologyEnabled } = useMethodology();
   const [governanceWizardOpen, setGovernanceWizardOpen] = useState(false);

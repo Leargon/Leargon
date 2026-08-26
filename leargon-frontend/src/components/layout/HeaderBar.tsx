@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -21,6 +22,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 
 const HeaderBar: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { preferredLocale, setPreferredLocale } = useLocale();
@@ -79,25 +81,25 @@ const HeaderBar: React.FC = () => {
           </MenuItem>
         ))}
         {locales.length === 0 && (
-          <MenuItem value="en">English</MenuItem>
+          <MenuItem value="en">{t('localeManagement.english')}</MenuItem>
         )}
       </Select>
       {/* Dark mode toggle */}
-      <Tooltip title={effectiveMode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+      <Tooltip title={effectiveMode === 'dark' ? t('nav.switchToLight') : t('nav.switchToDark')}>
         <IconButton size="small" onClick={toggleMode}>
           {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
         </IconButton>
       </Tooltip>
       {/* Settings (admin only) */}
       {isAdmin && (
-        <Tooltip title="Settings">
+        <Tooltip title={t('nav.settings')}>
           <IconButton size="small" onClick={() => navigate('/settings/users')}>
             <Settings />
           </IconButton>
         </Tooltip>
       )}
       {/* Profile avatar + menu */}
-      <Tooltip title={user?.username || 'Profile'}>
+      <Tooltip title={user?.username || t('nav.profile')}>
         <IconButton size="small" onClick={handleProfileMenuOpen}>
           <Avatar sx={{ width: 28, height: 28, fontSize: '0.875rem', bgcolor: 'primary.main' }}>
             {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
@@ -119,11 +121,11 @@ const HeaderBar: React.FC = () => {
         </Box>
         <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/profile'); }}>
           <ListItemIcon><Person fontSize="small" /></ListItemIcon>
-          <ListItemText>Profile</ListItemText>
+          <ListItemText>{t('nav.profile')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleLogout}>
           <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
-          <ListItemText>Logout</ListItemText>
+          <ListItemText>{t('nav.logout')}</ListItemText>
         </MenuItem>
       </Menu>
     </Box>

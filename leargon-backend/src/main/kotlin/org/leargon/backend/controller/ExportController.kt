@@ -7,6 +7,7 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.QueryValue
 import io.micronaut.security.annotation.Secured
 import org.leargon.backend.service.BusinessDataQualityRuleService
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.ExportService
 
 @Controller("/export")
@@ -14,12 +15,20 @@ import org.leargon.backend.service.ExportService
 open class ExportController(
     private val exportService: ExportService,
     private val businessDataQualityRuleService: BusinessDataQualityRuleService,
+    private val defaultLocaleProvider: DefaultLocaleProvider,
 ) {
+    /**
+     * The locale to render an export in: the one the caller asked for, otherwise the tenant default.
+     * The parameter used to default to `"en"`, which handed a German tenant an English CSV unless the
+     * UI remembered to pass a locale.
+     */
+    private fun resolve(locale: String?): String = locale?.takeIf { it.isNotBlank() } ?: defaultLocaleProvider.code()
+
     @Get("/processing-register")
     fun exportProcessingRegister(
-        @QueryValue(defaultValue = "en") locale: String
+        @QueryValue locale: String?
     ): HttpResponse<String> {
-        val csv = exportService.exportProcessingRegister(locale)
+        val csv = exportService.exportProcessingRegister(resolve(locale))
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
@@ -28,9 +37,9 @@ open class ExportController(
 
     @Get("/service-providers")
     fun exportServiceProviders(
-        @QueryValue(defaultValue = "en") locale: String
+        @QueryValue locale: String?
     ): HttpResponse<String> {
-        val csv = exportService.exportServiceProviders(locale)
+        val csv = exportService.exportServiceProviders(resolve(locale))
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
@@ -39,9 +48,9 @@ open class ExportController(
 
     @Get("/dpia-register")
     fun exportDpiaRegister(
-        @QueryValue(defaultValue = "en") locale: String,
+        @QueryValue locale: String?,
     ): HttpResponse<String> {
-        val csv = exportService.exportDpiaRegister(locale)
+        val csv = exportService.exportDpiaRegister(resolve(locale))
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
@@ -49,8 +58,10 @@ open class ExportController(
     }
 
     @Get("/business-data-quality-rules")
-    fun exportBusinessDataQualityRules(): HttpResponse<String> {
-        val csv = exportService.exportBusinessDataQualityRules(businessDataQualityRuleService.getAllRules())
+    fun exportBusinessDataQualityRules(
+        @QueryValue locale: String?
+    ): HttpResponse<String> {
+        val csv = exportService.exportBusinessDataQualityRules(businessDataQualityRuleService.getAllRules(), resolve(locale))
         return HttpResponse
             .ok(csv)
             .contentType(MediaType.of("text/csv;charset=UTF-8"))
@@ -59,9 +70,9 @@ open class ExportController(
 
     @Get("/context-map")
     fun exportContextMap(
-        @QueryValue(defaultValue = "en") locale: String
+        @QueryValue locale: String?
     ): HttpResponse<String> {
-        val cml = exportService.exportContextMap(locale)
+        val cml = exportService.exportContextMap(resolve(locale))
         return HttpResponse
             .ok(cml)
             .contentType(MediaType.of("text/plain;charset=UTF-8"))

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Typography,
   Paper,
@@ -52,6 +53,7 @@ import type { UserResponse, UpdateUserRequest } from '../../api/generated/model'
 import { useAuth } from '../../context/AuthContext';
 
 const UsersTab: React.FC = () => {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { data: usersResponse, isLoading } = useGetAllUsers();
@@ -144,11 +146,11 @@ const UsersTab: React.FC = () => {
         ...(editingSelf ? {} : { roles: assembleRoles() as UpdateUserRequest['roles'] }),
       };
       await updateUserMutation.mutateAsync({ id: editingUser.id, data: request });
-      setSuccess('User updated successfully');
+      setSuccess(t('users.updated'));
       setEditDialogOpen(false);
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to update user');
+      setError(err?.response?.data?.message || t('users.failedUpdate'));
     }
   };
 
@@ -161,14 +163,14 @@ const UsersTab: React.FC = () => {
       setDeleteDialogOpen(false);
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to delete user');
+      setError(err?.response?.data?.message || t('users.failedDelete'));
     }
   };
 
   const handlePasswordChange = async () => {
     if (!passwordUser) return;
     if (!newPassword || newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('users.passwordTooShort'));
       return;
     }
     try {
@@ -178,17 +180,17 @@ const UsersTab: React.FC = () => {
       setPasswordDialogOpen(false);
       setNewPassword('');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to change password');
+      setError(err?.response?.data?.message || t('users.failedPassword'));
     }
   };
 
   const handleCreateUser = async () => {
     if (!createForm.email || !createForm.username || !createForm.password || !createForm.firstName || !createForm.lastName) {
-      setError('All fields are required');
+      setError(t('users.allFieldsRequired'));
       return;
     }
     if (createForm.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('users.passwordTooShort'));
       return;
     }
     try {
@@ -199,7 +201,7 @@ const UsersTab: React.FC = () => {
       setCreateForm({ email: '', username: '', password: '', firstName: '', lastName: '' });
       invalidate();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to create user');
+      setError(err?.response?.data?.message || t('users.failedCreate'));
     }
   };
 
@@ -214,13 +216,13 @@ const UsersTab: React.FC = () => {
   return (
     <>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">User Management</Typography>
+        <Typography variant="h6">{t('users.title')}</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="contained" size="small" startIcon={<PersonAddIcon />} onClick={() => { setCreateForm({ email: '', username: '', password: '', firstName: '', lastName: '' }); setCreateDialogOpen(true); }}>
-            Add User
+            {t('users.addUser')}
           </Button>
           <Button variant="outlined" size="small" startIcon={<RefreshIcon />} onClick={() => invalidate()}>
-            Refresh
+            {t('users.refresh')}
           </Button>
         </Box>
       </Box>
@@ -232,12 +234,12 @@ const UsersTab: React.FC = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Username</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Roles</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>{t('users.colUsername')}</TableCell>
+              <TableCell>{t('users.colEmail')}</TableCell>
+              <TableCell>{t('users.colName')}</TableCell>
+              <TableCell>{t('users.colRoles')}</TableCell>
+              <TableCell>{t('users.colStatus')}</TableCell>
+              <TableCell align="right">{t('users.colActions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -250,28 +252,28 @@ const UsersTab: React.FC = () => {
                   {user.roles.map((role) => (
                     <Chip key={role} label={role.replace('ROLE_', '')} color={role === 'ROLE_ADMIN' ? 'primary' : 'default'} size="small" sx={{ mr: 0.5 }} />
                   ))}
-                  {user.isFallbackAdministrator && <Chip label="PROTECTED" color="warning" size="small" />}
+                  {user.isFallbackAdministrator && <Chip label={t('users.protectedChip')} color="warning" size="small" />}
                 </TableCell>
                 <TableCell>
-                  <Chip label={user.enabled ? 'Enabled' : 'Disabled'} color={user.enabled ? 'success' : 'error'} size="small" />
+                  <Chip label={user.enabled ? t('users.enabled') : t('users.disabled')} color={user.enabled ? 'success' : 'error'} size="small" />
                 </TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Tooltip title={user.isFallbackAdministrator ? 'Protected' : 'Edit'}>
+                    <Tooltip title={user.isFallbackAdministrator ? t('users.protected') : t('common.edit')}>
                       <span>
                         <IconButton size="small" onClick={() => handleEditClick(user)} color="primary" disabled={user.isFallbackAdministrator}>
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title={user.isFallbackAdministrator ? 'Protected' : 'Change Password'}>
+                    <Tooltip title={user.isFallbackAdministrator ? t('users.protected') : t('users.changePassword')}>
                       <span>
                         <IconButton size="small" onClick={() => { setPasswordUser(user); setNewPassword(''); setPasswordDialogOpen(true); }} color="info" disabled={user.isFallbackAdministrator}>
                           <VpnKeyIcon fontSize="small" />
                         </IconButton>
                       </span>
                     </Tooltip>
-                    <Tooltip title={user.isFallbackAdministrator ? 'Protected' : 'Delete'}>
+                    <Tooltip title={user.isFallbackAdministrator ? t('users.protected') : t('common.delete')}>
                       <span>
                         <IconButton size="small" onClick={() => { setUserToDelete(user); setDeleteDialogOpen(true); }} color="error" disabled={user.isFallbackAdministrator || user.id === currentUser?.id}>
                           <DeleteIcon fontSize="small" />
@@ -288,37 +290,37 @@ const UsersTab: React.FC = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit User</DialogTitle>
+        <DialogTitle>{t('users.editTitle')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} size="small" fullWidth />
-            <TextField label="Username" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} size="small" fullWidth />
-            <TextField label="First Name" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} size="small" fullWidth />
-            <TextField label="Last Name" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} size="small" fullWidth />
+            <TextField label={t('users.colEmail')} value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} size="small" fullWidth />
+            <TextField label={t('users.colUsername')} value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} size="small" fullWidth />
+            <TextField label={t('auth.firstName')} value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} size="small" fullWidth />
+            <TextField label={t('auth.lastName')} value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} size="small" fullWidth />
             <FormControlLabel
               control={<Switch checked={editForm.enabled} onChange={(e) => setEditForm({ ...editForm, enabled: e.target.checked })} disabled={editingUser?.id === currentUser?.id} />}
-              label="Account Enabled"
+              label={t('users.accountEnabled')}
             />
 
             <Divider />
             {editingUser?.id === currentUser?.id ? (
-              <Alert severity="info">You cannot change your own roles.</Alert>
+              <Alert severity="info">{t('users.ownRolesLocked')}</Alert>
             ) : (
               <>
-                <MuiTypography variant="subtitle2">Roles</MuiTypography>
+                <MuiTypography variant="subtitle2">{t('users.rolesHeading')}</MuiTypography>
                 <FormControlLabel
                   control={<Switch checked={editForm.admin} onChange={(e) => setEditForm({ ...editForm, admin: e.target.checked })} />}
-                  label="Administrator (full access)"
+                  label={t('users.administrator')}
                 />
                 <MuiTypography variant="caption" color="text.secondary">
-                  Methodology roles — Editor can edit that methodology's fields (changes need re-verification); Lead can additionally configure the methodology. Ignored while Administrator is on.
+                  {t('users.methodologyRolesHint')}
                 </MuiTypography>
                 {ALL_METHODOLOGY_KEYS.map((key) => (
                   <FormControl key={key} size="small" fullWidth disabled={editForm.admin}>
-                    <InputLabel id={`role-${key}`}>{METHODOLOGY_DEFINITIONS[key]?.label ?? key}</InputLabel>
+                    <InputLabel id={`role-${key}`}>{t(`methodology.${key}.label`, { defaultValue: METHODOLOGY_DEFINITIONS[key]?.label ?? key })}</InputLabel>
                     <Select
                       labelId={`role-${key}`}
-                      label={METHODOLOGY_DEFINITIONS[key]?.label ?? key}
+                      label={t(`methodology.${key}.label`, { defaultValue: METHODOLOGY_DEFINITIONS[key]?.label ?? key })}
                       value={editForm.methodologyRoles[key] ?? 'NONE'}
                       onChange={(e) =>
                         setEditForm({
@@ -327,9 +329,9 @@ const UsersTab: React.FC = () => {
                         })
                       }
                     >
-                      <MenuItem value="NONE">None</MenuItem>
-                      <MenuItem value="EDITOR">Editor</MenuItem>
-                      <MenuItem value="LEAD">Lead</MenuItem>
+                      <MenuItem value="NONE">{t('users.roleNone')}</MenuItem>
+                      <MenuItem value="EDITOR">{t('users.roleEditor')}</MenuItem>
+                      <MenuItem value="LEAD">{t('users.roleLead')}</MenuItem>
                     </Select>
                   </FormControl>
                 ))}
@@ -338,65 +340,65 @@ const UsersTab: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditSave} variant="contained">Save</Button>
+          <Button onClick={() => setEditDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleEditSave} variant="contained">{t('common.save')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>{t('users.confirmDeleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Permanently delete user <strong>{userToDelete?.username}</strong>? This cannot be undone. The user must have no data ownership, process ownership, or organisational unit lead assignments.
+            <Trans i18nKey="users.confirmDeleteText" values={{ username: userToDelete?.username }} components={{ 1: <strong /> }} />
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">{t('common.delete')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Password Dialog */}
       <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Change Password for {passwordUser?.username}</DialogTitle>
+        <DialogTitle>{t('users.passwordTitle', { username: passwordUser?.username })}</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 1 }}>
-            Set a new password for this user.
+            {t('users.passwordIntro')}
           </DialogContentText>
           <TextField
             autoFocus
-            label="New Password"
+            label={t('users.newPassword')}
             type="password"
             fullWidth
             size="small"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            helperText="Must be at least 8 characters"
+            helperText={t('users.passwordHint')}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPasswordDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handlePasswordChange} variant="contained">Change Password</Button>
+          <Button onClick={() => setPasswordDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handlePasswordChange} variant="contained">{t('users.changePassword')}</Button>
         </DialogActions>
       </Dialog>
 
       {/* Create User Dialog */}
       <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Add User</DialogTitle>
+        <DialogTitle>{t('users.createTitle')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label="Email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} size="small" fullWidth type="email" />
-            <TextField label="Username" value={createForm.username} onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })} size="small" fullWidth helperText="3-50 characters" />
-            <TextField label="Password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} size="small" fullWidth type="password" helperText="Minimum 8 characters" />
-            <TextField label="First Name" value={createForm.firstName} onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })} size="small" fullWidth />
-            <TextField label="Last Name" value={createForm.lastName} onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })} size="small" fullWidth />
+            <TextField label={t('users.colEmail')} value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} size="small" fullWidth type="email" />
+            <TextField label={t('users.colUsername')} value={createForm.username} onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })} size="small" fullWidth helperText={t('users.usernameHint')} />
+            <TextField label={t('auth.password')} value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} size="small" fullWidth type="password" helperText={t('users.createPasswordHint')} />
+            <TextField label={t('auth.firstName')} value={createForm.firstName} onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })} size="small" fullWidth />
+            <TextField label={t('auth.lastName')} value={createForm.lastName} onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })} size="small" fullWidth />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleCreateUser} variant="contained" disabled={createUserMutation.isPending}>
-            {createUserMutation.isPending ? 'Creating...' : 'Create'}
+            {createUserMutation.isPending ? t('common.creating') : t('common.create')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -27,8 +28,9 @@ interface CapabilityListPanelProps {
 }
 
 const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, onCreateClick }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'CAPABILITY');
   const { data: response, isLoading } = useGetAllCapabilities();
@@ -52,7 +54,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
     if (name.includes(filter.toLowerCase()) || cap.key.toLowerCase().includes(filter.toLowerCase())) return true;
     return (cap.children ?? []).some((child) => {
       const full = capMap.get(child.key);
-      return full ? matchesFilter(full) : child.name.toLowerCase().includes(filter.toLowerCase());
+      return full ? matchesFilter(full) : localizedName(child).toLowerCase().includes(filter.toLowerCase());
     });
   };
 
@@ -63,7 +65,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search capabilities..."
+          placeholder={t('capability.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -85,7 +87,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
             onClick={onCreateClick}
             sx={{ whiteSpace: 'nowrap' }}
           >
-            New
+            {t('common.newBtn')}
           </Button>
         )}
       </Box>
@@ -101,7 +103,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
               p: 2,
               textAlign: 'center'
             }}>
-            {filter ? 'No results' : 'No capabilities yet'}
+            {filter ? t('common.noResults') : t('capability.emptyList')}
           </Typography>
         ) : (
           <List dense disablePadding>
@@ -117,6 +119,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
                 matchesFilter={matchesFilter}
                 onSelect={(key) => navigate(`/capabilities/${key}`)}
                 getLocalizedText={getLocalizedText}
+                localizedName={localizedName}
               />
             ))}
           </List>
@@ -136,6 +139,7 @@ interface TreeItemProps {
   matchesFilter: (cap: CapabilityResponse) => boolean;
   onSelect: (key: string) => void;
   getLocalizedText: (translations: any[], fallback?: string) => string;
+  localizedName: (summary: { key: string; name?: string | null; names?: any[] | null } | null | undefined) => string;
 }
 
 const CapabilityTreeItem: React.FC<TreeItemProps> = ({
@@ -148,11 +152,11 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
   matchesFilter,
   onSelect,
   getLocalizedText,
+  localizedName,
 }) => {
   const [open, setOpen] = useState(!filter);
   const hasChildren = (capability.children?.length ?? 0) > 0;
   const isSelected = capability.key === selectedKey;
-  const owningUnit = capability.owningUnit ? unitMap.get(capability.owningUnit.key) : undefined;
 
   const sortedChildren = [...(capability.children ?? [])]
     .map((s: CapabilitySummaryResponse) => capMap.get(s.key))
@@ -196,7 +200,7 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
               <Typography variant="caption" noWrap sx={{
                 color: "text.secondary"
               }}>
-                {getLocalizedText(owningUnit?.names ?? [], capability.owningUnit.name)}
+                {localizedName(capability.owningUnit)}
               </Typography>
             ) : undefined
           }
@@ -216,6 +220,7 @@ const CapabilityTreeItem: React.FC<TreeItemProps> = ({
               matchesFilter={matchesFilter}
               onSelect={onSelect}
               getLocalizedText={getLocalizedText}
+              localizedName={localizedName}
             />
           ))}
         </Collapse>

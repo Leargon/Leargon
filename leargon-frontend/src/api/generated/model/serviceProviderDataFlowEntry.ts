@@ -19,12 +19,15 @@
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry.ts';
 import type { LegalBasis } from './legalBasis.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface ServiceProviderDataFlowEntry {
   /** Key of the linked process */
   processKey: string;
-  /** Name of the linked process in default locale */
+  /** Name of the linked process in the tenant default locale (fallback for clients that do not read `processNames`) */
   processName: string;
+  /** Linked process name in every locale it is defined in */
+  processNames?: LocalizedText[];
   legalBasis?: LegalBasis | null;
   /** Input entities of this process */
   inputEntities?: BusinessEntitySummaryResponse[];
@@ -36,8 +39,10 @@ export interface ServiceProviderDataFlowEntry {
      */
   crossBorderTransfers?: CrossBorderTransferEntry[] | null;
   /**
-     * Security measures description (default locale)
+     * Security measures description in the tenant default locale (fallback for clients that do not read `securityMeasuresLocalized`)
      * @nullable
      */
   securityMeasures?: string | null;
+  /** Security measures description in every locale it is defined in */
+  securityMeasuresLocalized?: LocalizedText[];
 }

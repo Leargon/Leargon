@@ -194,11 +194,11 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
           {!isHidden('type') && (
             <>
               <FormControl size="small">
-                <InputLabel>{t('wizard.domain.domainType') || 'Domain Type'}</InputLabel>
+                <InputLabel>{t('wizard.domain.domainType')}</InputLabel>
                 <Select
                   value={domainType}
                   onChange={(e: SelectChangeEvent) => setDomainType(e.target.value)}
-                  label={t('wizard.domain.domainType') || 'Domain Type'}
+                  label={t('wizard.domain.domainType')}
                 >
                   <MenuItem value=""><em>{t('common.notSet')}</em></MenuItem>
                   {DOMAIN_TYPE_VALUES.map((dt) => (

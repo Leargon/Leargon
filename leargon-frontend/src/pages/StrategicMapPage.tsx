@@ -14,19 +14,15 @@ import { useGetAllBusinessDomains } from '../api/generated/business-domain/busin
 import type { CapabilityResponse } from '../api/generated/model/capabilityResponse';
 import type { BusinessDomainResponse } from '../api/generated/model/businessDomainResponse';
 import { useLocale } from '../context/LocaleContext';
+import { useTranslation } from 'react-i18next';
+
+const DOMAIN_TYPE_VALUES = ['CORE', 'SUPPORT', 'GENERIC', 'BUSINESS'] as const;
 
 const DOMAIN_TYPE_COLORS: Record<string, string> = {
   CORE: '#1565c0',
   SUPPORT: '#2e7d32',
   GENERIC: '#616161',
   BUSINESS: '#6a1b9a',
-};
-
-const DOMAIN_TYPE_LABELS: Record<string, string> = {
-  CORE: 'Core',
-  SUPPORT: 'Support',
-  GENERIC: 'Generic',
-  BUSINESS: 'Business',
 };
 
 function getRootCapabilities(capabilities: CapabilityResponse[]): CapabilityResponse[] {
@@ -55,6 +51,7 @@ function getCapabilitySubtreeKeys(cap: CapabilityResponse, allCaps: CapabilityRe
 }
 
 export const StrategicMapContent: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
 
@@ -99,7 +96,7 @@ export const StrategicMapContent: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="info">
-          No domains or capabilities defined yet. Create capabilities and business domains to see the strategic map.
+          {t('strategicMap.empty')}
         </Alert>
       </Box>
     );
@@ -109,10 +106,10 @@ export const StrategicMapContent: React.FC = () => {
     <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
       {/* Legend */}
       <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-        {Object.entries(DOMAIN_TYPE_LABELS).map(([type, label]) => (
+        {DOMAIN_TYPE_VALUES.map((type) => (
           <Chip
             key={type}
-            label={label}
+            label={t(`domainType.${type}`)}
             size="small"
             sx={{ bgcolor: DOMAIN_TYPE_COLORS[type], color: '#fff', fontSize: '0.7rem' }}
           />
@@ -124,7 +121,7 @@ export const StrategicMapContent: React.FC = () => {
             alignSelf: 'center',
             ml: 1
           }}>
-          Domain types
+          {t('domain.domainTypes')}
         </Typography>
       </Box>
       {/* Matrix table */}
@@ -145,7 +142,7 @@ export const StrategicMapContent: React.FC = () => {
                 fontWeight: 600,
                 color: "text.secondary"
               }}>
-              Domain / Capability
+              {t('strategicMap.domainCapability')}
             </Typography>
           </Box>
 
@@ -153,7 +150,7 @@ export const StrategicMapContent: React.FC = () => {
             <Box sx={{ bgcolor: 'action.hover', p: 1, borderRadius: 1, display: 'flex', alignItems: 'center' }}>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>No capabilities defined</Typography>
+              }}>{t('capability.noneDefined')}</Typography>
             </Box>
           ) : (
             rootCapabilities.map((cap) => (
@@ -185,7 +182,7 @@ export const StrategicMapContent: React.FC = () => {
                 )}
                 {cap.children && cap.children.length > 0 && (
                   <Chip
-                    label={`${cap.children.length} sub`}
+                    label={t('strategicMap.subCount', { count: cap.children.length })}
                     size="small"
                     sx={{ height: 16, fontSize: '0.6rem', mt: 0.5, bgcolor: 'rgba(255,255,255,0.2)', color: 'inherit' }}
                   />
@@ -199,7 +196,7 @@ export const StrategicMapContent: React.FC = () => {
             const domainName = getLocalizedText(domain.names, domain.key);
             const domainType = domain.effectiveType ?? domain.type;
             const typeColor = domainType ? DOMAIN_TYPE_COLORS[domainType] : '#9e9e9e';
-            const typeLabel = domainType ? DOMAIN_TYPE_LABELS[domainType] : null;
+            const typeLabel = domainType ? t(`domainType.${domainType}`, { defaultValue: domainType }) : null;
             const bcs = domain.boundedContexts ?? [];
             const subdomains = domain.subdomains ?? [];
 
@@ -240,7 +237,7 @@ export const StrategicMapContent: React.FC = () => {
                         color: "text.secondary",
                         fontSize: '0.65rem'
                       }}>
-                      {subdomains.length} subdomain{subdomains.length !== 1 ? 's' : ''}
+                      {t('strategicMap.subdomainCount', { count: subdomains.length })}
                     </Typography>
                   )}
                 </Paper>
@@ -311,7 +308,7 @@ export const StrategicMapContent: React.FC = () => {
                               mt: 0.5,
                               fontSize: '0.6rem'
                             }}>
-                            {capChildCount} sub-cap{capChildCount !== 1 ? 's' : ''}
+                            {t('strategicMap.subCapCount', { count: capChildCount })}
                           </Typography>
                         )}
                       </Paper>
@@ -332,7 +329,7 @@ export const StrategicMapContent: React.FC = () => {
               fontWeight: 600,
               mb: 1
             }}>
-            Bounded Contexts Overview
+            {t('strategicMap.bcOverview')}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {rootDomains.map((domain) => {
@@ -368,17 +365,18 @@ export const StrategicMapContent: React.FC = () => {
 };
 
 const StrategicMapPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
         <Typography variant="h6" sx={{
           fontWeight: 600
-        }}>Strategic Map</Typography>
+        }}>{t('pages.strategicMap')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Business domains (rows) × top-level capabilities (columns) — bounded contexts and alignment overview.
+          {t('strategicMap.legend')}
         </Typography>
       </Box>
       <StrategicMapContent />

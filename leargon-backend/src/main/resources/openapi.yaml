@@ -6632,6 +6632,13 @@ paths:
       operationId: getTeamInsights
       security:
       - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale.
+        schema:
+          type: string
       responses:
         '200':
           description: Team and org insights
@@ -6842,6 +6849,13 @@ paths:
       operationId: getDashboard
       security:
       - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale.
+        schema:
+          type: string
       responses:
         '200':
           description: Dashboard data for the current user
@@ -7372,20 +7386,35 @@ components:
           example: sales/default
         name:
           type: string
-          description: Bounded context name in default locale
+          description: Bounded context name in the tenant default locale (fallback for clients that do not read `names`)
           example: Sales
+        names:
+          type: array
+          description: Bounded context name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         domainKey:
           type: string
           description: Parent domain key
           example: sales
         domainName:
           type: string
-          description: Parent domain name in default locale
+          description: Parent domain name in the tenant default locale (fallback for clients that do not read `domainNames`)
           example: Sales Domain
+        domainNames:
+          type: array
+          description: Parent domain name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         owningUnitName:
           type: string
           nullable: true
           description: Name of the owning organisational unit (used for computed owner/steward/custodian display)
+        owningUnitNames:
+          type: array
+          description: Owning organisational unit name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BoundedContextResponse:
       type: object
       required:
@@ -7493,8 +7522,13 @@ components:
           example: sales
         name:
           type: string
-          description: BusinessDomain name in default locale
+          description: BusinessDomain name in the tenant default locale (fallback for clients that do not read `names`)
           example: Sales
+        names:
+          type: array
+          description: BusinessDomain name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BusinessDomainTreeResponse:
       type: object
       required:
@@ -7814,8 +7848,13 @@ components:
           example: customer
         name:
           type: string
-          description: BusinessEntity name in default locale
+          description: BusinessEntity name in the tenant default locale (fallback for clients that do not read `names`)
           example: Customer
+        names:
+          type: array
+          description: BusinessEntity name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         parentKey:
           type: string
           nullable: true
@@ -7824,8 +7863,13 @@ components:
         parentName:
           type: string
           nullable: true
-          description: Name of the parent entity in default locale, null if top-level
+          description: Name of the parent entity in the tenant default locale (fallback for clients that do not read `parentNames`), null if top-level
           example: Sales
+        parentNames:
+          type: array
+          description: Parent entity name in every locale it is defined in, null if top-level
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         rootKey:
           type: string
           nullable: true
@@ -7834,15 +7878,25 @@ components:
         rootName:
           type: string
           nullable: true
-          description: Name of the root ancestor entity in default locale, null if this entity is itself top-level
+          description: Name of the root ancestor entity in the tenant default locale (fallback for clients that do not read `rootNames`), null if this entity is itself top-level
           example: Sales
+        rootNames:
+          type: array
+          description: Root ancestor entity name in every locale it is defined in, null if this entity is itself top-level
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         boundedContext:
           $ref: '#/components/schemas/BoundedContextSummaryResponse'
           nullable: true
         description:
           type: string
           nullable: true
-          description: Description in the default locale
+          description: Description in the tenant default locale (fallback for clients that do not read `descriptions`)
+        descriptions:
+          type: array
+          description: Description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         retentionPeriod:
           type: array
           nullable: true
@@ -8268,9 +8322,16 @@ components:
     ErrorResponse:
       type: object
       properties:
+        errorCode:
+          type: string
+          nullable: true
+          description: >
+            Stable machine-readable error code. The UI renders its own localised text from this code
+            and only falls back to `message` when it does not recognise the code.
+          example: USER_NOT_FOUND
         message:
           type: string
-          description: Error message
+          description: Error message in English; a human-readable fallback, not a display string
           example: User not found
         path:
           type: string
@@ -8572,8 +8633,13 @@ components:
           example: engineering
         name:
           type: string
-          description: Organisational unit name in default locale
+          description: Organisational unit name in the tenant default locale (fallback for clients that do not read `names`)
           example: Engineering
+        names:
+          type: array
+          description: Organisational unit name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         isExternal:
           type: boolean
           nullable: true
@@ -9013,15 +9079,25 @@ components:
           example: order-fulfillment
         name:
           type: string
-          description: Process name in default locale
+          description: Process name in the tenant default locale (fallback for clients that do not read `names`)
           example: Order Fulfillment
+        names:
+          type: array
+          description: Process name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         boundedContext:
           $ref: '#/components/schemas/BoundedContextSummaryResponse'
           nullable: true
         description:
           type: string
           nullable: true
-          description: Description in the default locale
+          description: Description in the tenant default locale (fallback for clients that do not read `descriptions`)
+        descriptions:
+          type: array
+          description: Description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     ProcessTreeResponse:
       type: object
       required:
@@ -9225,6 +9301,12 @@ components:
           type: string
         name:
           type: string
+          description: Step name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: Step name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         cycleTimeMinutes:
           type: number
           format: double
@@ -9972,8 +10054,13 @@ components:
           example: retentionPeriod
         label:
           type: string
-          description: Human-readable display name for the field
+          description: Human-readable display name in English; a fallback for clients that do not read `labels`
           example: Retention Period
+        labels:
+          type: array
+          description: Display name of the field in every active locale
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         section:
           type: string
           description: Methodology section this field belongs to (e.g. CORE, GDPR, DDD)
@@ -10167,8 +10254,13 @@ components:
           example: hr-onboarding
         processName:
           type: string
-          description: Name of the linked process in default locale
+          description: Name of the linked process in the tenant default locale (fallback for clients that do not read `processNames`)
           example: HR Onboarding
+        processNames:
+          type: array
+          description: Linked process name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
           nullable: true
@@ -10191,7 +10283,12 @@ components:
         securityMeasures:
           type: string
           nullable: true
-          description: Security measures description (default locale)
+          description: Security measures description in the tenant default locale (fallback for clients that do not read `securityMeasuresLocalized`)
+        securityMeasuresLocalized:
+          type: array
+          description: Security measures description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     CreateServiceProviderRequest:
       type: object
       required:
@@ -10290,6 +10387,12 @@ components:
         linkedResourceName:
           type: string
           nullable: true
+          description: Linked process or entity name in the tenant default locale (fallback for clients that do not read `linkedResourceNames`)
+        linkedResourceNames:
+          type: array
+          description: Linked process or entity name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         riskDescription:
           type: array
           nullable: true
@@ -10501,6 +10604,14 @@ components:
           type: string
         reason:
           type: string
+          description: English explanation; a fallback for clients that do not recognise `reasonCode`
+        reasonCode:
+          type: string
+          nullable: true
+          description: >
+            Machine-readable reason code. The UI renders its own localised sentence from this code,
+            the same way it renders a to-do from `TaskItem.ruleCode`.
+          example: COLLABORATION_SHOULD_CONVERGE_TO_XAAS
     TeamInteractionHealthAlertItem:
       type: object
       required: [interactionId, sourceUnitKey, sourceUnitName, targetUnitKey, targetUnitName, threshold]
@@ -11043,7 +11154,12 @@ components:
           description: IT system key
         name:
           type: string
-          description: IT system name in default locale
+          description: IT system name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: IT system name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         processingCountries:
           type: array
           items:
@@ -11311,7 +11427,12 @@ components:
           example: customer-management
         name:
           type: string
-          description: Capability name in default locale
+          description: Capability name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: Capability name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
           example: Customer Management
         owningUnit:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
@@ -11389,7 +11510,7 @@ components:
           description: Machine-readable metric key
         label:
           type: string
-          description: Human-readable label
+          description: English label; the UI renders `maturity.metrics.<key>` from its own i18n and only falls back to this
         covered:
           type: integer
           description: Number of items that satisfy the metric
@@ -11581,7 +11702,9 @@ components:
           description: Human-readable rule name (English fallback; the UI prefers its own i18n key)
         description:
           type: string
-          description: What the rule checks and why it matters
+          description: >
+            What the rule checks and why it matters, in English. Like `label`, this is a fallback: the UI
+            renders `tasks.ruleDescriptions.<ruleCode>` from its own i18n and only falls back to this.
         entityType:
           type: string
           description: Entity type the rule applies to (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT)

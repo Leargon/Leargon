@@ -30,6 +30,7 @@ import {
   sortSectionsBySignal,
   type NormalizedInsights,
 } from '../utils/insightSections';
+import { useLocale } from '../context/LocaleContext';
 
 // ─── Section icon map ─────────────────────────────────────────────────────────
 
@@ -354,7 +355,7 @@ const ConwayMatrix: React.FC<{ data: ConwaysLawAlignment }> = ({ data }) => {
                   <TableCell key={uk} align="center"
                     sx={{ bgcolor: cellColor(count), border: '1px solid', borderColor: 'divider', p: 0.5 }}>
                     {count > 0
-                      ? <Tooltip title={`${domainNames[dk] ?? dk} × ${orgUnitNames[uk] ?? uk}: ${count} process${count !== 1 ? 'es' : ''}`}>
+                      ? <Tooltip title={t('analytics.conwayCellTooltip', { domain: domainNames[dk] ?? dk, unit: orgUnitNames[uk] ?? uk, count })}>
                           <Typography variant="body2" sx={{ fontWeight: 600, cursor: 'default' }}>{count}</Typography>
                         </Tooltip>
                       : <Typography variant="body2" sx={{ color: 'text.disabled' }}>·</Typography>}
@@ -494,7 +495,9 @@ const AntiPatternTable: React.FC<{ data: TeamInteractionAntiPatternItem[] }> = (
             <TableRow key={row.interactionId} hover>
               <TableCell>{row.sourceUnitName}</TableCell>
               <TableCell>{row.targetUnitName}</TableCell>
-              <TableCell><Typography variant="body2" sx={{ color: 'text.secondary' }}>{row.reason}</Typography></TableCell>
+              <TableCell><Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {row.reasonCode ? t(`analytics.reason.${row.reasonCode}`, { defaultValue: row.reason }) : row.reason}
+              </Typography></TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -572,7 +575,8 @@ function renderSectionContent(sectionId: string, data: NormalizedInsights): Reac
 
 const TeamInsightsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { data: response, isLoading, isError } = useGetTeamInsights();
+  const { preferredLocale } = useLocale();
+  const { data: response, isLoading, isError } = useGetTeamInsights({ locale: preferredLocale });
   const { isMethodologyEnabled } = useMethodology();
   const { isInPerspective } = usePerspective();
   const raw = response?.data;

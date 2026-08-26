@@ -46,6 +46,7 @@ function buildGraph(
   layers: Set<LayerOption>,
   expandedKeys: Set<string>,
   getLocalizedText: (texts: { locale: string; text: string }[]) => string,
+  localizedName: (summary: { key: string; name?: string | null; names?: { locale: string; text: string }[] | null } | null | undefined) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   const showDomainLayer = layers.has('domain');
   const showOrgLayer = layers.has('orgUnit');
@@ -117,9 +118,9 @@ function buildGraph(
       height: nodeHeight,
       data: {
         label: getLocalizedText(p.names),
-        domainName: domainNameInNode ? p.boundedContext?.name : undefined,
+        domainName: domainNameInNode ? localizedName(p.boundedContext) || undefined : undefined,
         domainColor: domainNameInNode ? domColor : undefined,
-        orgUnitName: orgNameInNode ? primaryUnit?.name : undefined,
+        orgUnitName: orgNameInNode ? localizedName(primaryUnit) || undefined : undefined,
         orgUnitColor: orgNameInNode ? orgColor : undefined,
         hasChildren,
         expanded: isExpanded,
@@ -129,9 +130,9 @@ function buildGraph(
 
     processInfoMap.set(p.key, {
       bcKey: p.boundedContext?.key,
-      bcName: p.boundedContext?.name,
+      bcName: localizedName(p.boundedContext) || undefined,
       orgKey: primaryUnit?.key,
-      orgName: primaryUnit?.name,
+      orgName: localizedName(primaryUnit) || undefined,
     });
 
     if (showEntities) {
@@ -144,7 +145,7 @@ function buildGraph(
             position: { x: 0, y: 0 },
             width: 150,
             height: 44,
-            data: { label: entity.name } satisfies DataEntityNodeData,
+            data: { label: localizedName(entity) } satisfies DataEntityNodeData,
           });
         }
         addConn(eid, p.key);
@@ -380,7 +381,7 @@ function buildGraph(
 const ProcessLandscapeDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
   const [layers, setLayers] = useState<Set<LayerOption>>(new Set());
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
@@ -398,10 +399,10 @@ const ProcessLandscapeDiagram: React.FC = () => {
 
   useEffect(() => {
     if (!processes) return;
-    const { nodes: n, edges: e } = buildGraph(processes, layers, expandedKeys, getLocalizedText);
+    const { nodes: n, edges: e } = buildGraph(processes, layers, expandedKeys, getLocalizedText, localizedName);
     setNodes(n);
     setEdges(e);
-  }, [processes, layers, expandedKeys, getLocalizedText, setNodes, setEdges]);
+  }, [processes, layers, expandedKeys, getLocalizedText, localizedName, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => {

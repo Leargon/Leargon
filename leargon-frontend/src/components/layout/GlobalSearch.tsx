@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -52,6 +53,7 @@ const TYPE_CONFIG: Record<
 };
 
 const GlobalSearch: React.FC = () => {
+  const { t } = useTranslation();
     const navigate = useNavigate();
     const { getLocalizedText } = useLocale();
     const [inputValue, setInputValue] = useState('');
@@ -112,7 +114,7 @@ const GlobalSearch: React.FC = () => {
         <Box ref={anchorRef} sx={{ position: 'relative', width: 220 }}>
             <TextField
                 size="small"
-                placeholder="Search…"
+                placeholder={t('common.search')}
                 value={inputValue}
                 onChange={(e) => {
                     setInputValue(e.target.value);
@@ -175,7 +177,7 @@ const GlobalSearch: React.FC = () => {
                                 px: 2,
                                 py: 1.5
                             }}>
-                            No results for &quot;{debouncedQuery}&quot;
+                            {t('common.noResultsFor', { query: debouncedQuery })}
                         </Typography>
                     ) : (
                         Object.entries(grouped).map(([type, items], idx) => {

@@ -22,6 +22,7 @@ open class DuplicateResourceExceptionHandler : ExceptionHandler<DuplicateResourc
         val error =
             ErrorResponse()
                 .status(HttpStatus.CONFLICT.code)
+                .errorCode(exception.errorCode ?: GENERIC_CONFLICT)
                 .message(exception.message)
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
@@ -40,6 +41,7 @@ open class ResourceNotFoundExceptionHandler : ExceptionHandler<ResourceNotFoundE
         val error =
             ErrorResponse()
                 .status(HttpStatus.NOT_FOUND.code)
+                .errorCode(exception.errorCode ?: GENERIC_NOT_FOUND)
                 .message(exception.message)
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
@@ -58,6 +60,7 @@ open class AuthenticationExceptionHandler : ExceptionHandler<AuthenticationExcep
         val error =
             ErrorResponse()
                 .status(HttpStatus.UNAUTHORIZED.code)
+                .errorCode(exception.errorCode ?: GENERIC_UNAUTHORIZED)
                 .message(exception.message)
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
@@ -76,6 +79,7 @@ open class ForbiddenOperationExceptionHandler : ExceptionHandler<ForbiddenOperat
         val error =
             ErrorResponse()
                 .status(HttpStatus.FORBIDDEN.code)
+                .errorCode(exception.errorCode ?: GENERIC_FORBIDDEN)
                 .message(exception.message)
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
@@ -94,6 +98,7 @@ open class IllegalArgumentExceptionHandler : ExceptionHandler<IllegalArgumentExc
         val error =
             ErrorResponse()
                 .status(HttpStatus.BAD_REQUEST.code)
+                .errorCode(GENERIC_BAD_REQUEST)
                 .message(exception.message)
                 .path(request.path)
                 .timestamp(ZonedDateTime.now())
@@ -112,6 +117,25 @@ open class GenericExceptionHandler : ExceptionHandler<Exception, HttpResponse<*>
         exception: Exception
     ): HttpResponse<*> {
         log.error("Unhandled exception on {} {}: {}", request.method, request.uri, exception.message, exception)
-        return HttpResponse.serverError(mapOf("message" to "An internal server error occurred"))
+        return HttpResponse.serverError(
+            mapOf(
+                "errorCode" to GENERIC_INTERNAL_ERROR,
+                "message" to "An internal server error occurred"
+            )
+        )
     }
 }
+
+/**
+ * Fallback error codes, one per HTTP status.
+ *
+ * An exception that names no code of its own still has to produce something the UI can localise, so the
+ * handler falls back to the code for its status. That gives every error a translated message today, and
+ * lets individual throw sites be refined into specific codes over time without another API change.
+ */
+const val GENERIC_NOT_FOUND: String = "GENERIC_NOT_FOUND"
+const val GENERIC_FORBIDDEN: String = "GENERIC_FORBIDDEN"
+const val GENERIC_CONFLICT: String = "GENERIC_CONFLICT"
+const val GENERIC_UNAUTHORIZED: String = "GENERIC_UNAUTHORIZED"
+const val GENERIC_BAD_REQUEST: String = "GENERIC_BAD_REQUEST"
+const val GENERIC_INTERNAL_ERROR: String = "GENERIC_INTERNAL_ERROR"

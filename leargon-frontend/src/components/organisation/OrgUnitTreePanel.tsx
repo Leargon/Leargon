@@ -168,7 +168,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography variant="body2" noWrap>
-                {getLocalizedText(unit.names, 'Unnamed')}
+                {getLocalizedText(unit.names, t('common.unnamed'))}
               </Typography>
               {unit.unitType && (
                 <Chip

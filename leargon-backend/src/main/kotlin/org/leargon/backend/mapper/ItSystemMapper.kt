@@ -6,15 +6,21 @@ import org.leargon.backend.model.ItSystemResponse
 import org.leargon.backend.model.ItSystemSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import java.time.ZoneOffset
 
 @Singleton
-class ItSystemMapper {
-    fun toItSystemSummaryResponse(itSystem: ItSystem): ItSystemSummaryResponse =
-        ItSystemSummaryResponse(itSystem.key, itSystem.getName("en"), itSystem.processingCountries)
+open class ItSystemMapper(
+    private val defaultLocaleProvider: DefaultLocaleProvider,
+    private val serviceProviderMapper: ServiceProviderMapper
+) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
+    fun toItSystemSummaryResponse(itSystem: ItSystem): ItSystemSummaryResponse = SummaryMappers.itSystem(itSystem, defaultLocale)!!
 
     fun toItSystemResponse(itSystem: ItSystem): ItSystemResponse {
-        val spMapper = ServiceProviderMapper()
+        val spMapper = serviceProviderMapper
         return ItSystemResponse(
             itSystem.key,
             LocalizedTextMapper.toModel(itSystem.names),
@@ -25,11 +31,7 @@ class ItSystemMapper {
             .systemUrl(itSystem.systemUrl)
             .processingCountries(itSystem.processingCountries)
             .serviceProviders(itSystem.serviceProviders.map { spMapper.toServiceProviderSummaryResponse(it) })
-            .owningUnit(itSystem.owningUnit?.let { u -> OrganisationalUnitSummaryResponse(u.key, u.getName("en")) })
-            .linkedProcesses(
-                itSystem.linkedProcesses.map { p ->
-                    ProcessSummaryResponse(p.key, p.getName("en"))
-                }
-            )
+            .owningUnit(SummaryMappers.orgUnit(itSystem.owningUnit, defaultLocale))
+            .linkedProcesses(SummaryMappers.processes(itSystem.linkedProcesses, defaultLocale))
     }
 }

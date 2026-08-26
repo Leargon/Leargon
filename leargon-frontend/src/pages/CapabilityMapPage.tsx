@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, CircularProgress, Alert, Chip, Tooltip } from '@mui/material';
 import { useGetAllCapabilities } from '../api/generated/capability/capability';
@@ -45,6 +46,7 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
   node,
   onClick,
 }) => {
+  const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const colors = LEVEL_COLORS[Math.min(node.level, LEVEL_COLORS.length - 1)];
   const name = getLocalizedText(node.names, node.key);
@@ -85,7 +87,7 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
           {name}
         </Typography>
         {node.linkedProcesses && node.linkedProcesses.length > 0 && (
-          <Tooltip title={`${node.linkedProcesses.length} linked process${node.linkedProcesses.length !== 1 ? 'es' : ''}`}>
+          <Tooltip title={t('capabilityMap.linkedProcessCount', { count: node.linkedProcesses.length })}>
             <Chip
               label={node.linkedProcesses.length}
               size="small"
@@ -94,7 +96,7 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
           </Tooltip>
         )}
         {node.owningUnit && (
-          <Tooltip title={`Owned by: ${node.owningUnit.name}`}>
+          <Tooltip title={t('capabilityMap.ownedBy', { name: node.owningUnit.name })}>
             <Typography variant="caption" sx={{ opacity: 0.75, whiteSpace: 'nowrap', fontSize: '0.65rem' }}>
               {node.owningUnit.name}
             </Typography>
@@ -114,6 +116,7 @@ const CapabilityBox: React.FC<{ node: CapabilityNode; onClick: (key: string) => 
 };
 
 export const CapabilityMapContent: React.FC<{ onNavigate?: (key: string) => void }> = ({ onNavigate }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetAllCapabilities();
   const capabilities = useMemo(
@@ -139,14 +142,14 @@ export const CapabilityMapContent: React.FC<{ onNavigate?: (key: string) => void
   }
 
   if (isError) {
-    return <Alert severity="error" sx={{ m: 2 }}>Failed to load capabilities.</Alert>;
+    return <Alert severity="error" sx={{ m: 2 }}>{t('capabilityMap.loadFailed')}</Alert>;
   }
 
   return (
     <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>
       {roots.length === 0 ? (
         <Alert severity="info">
-          No capabilities defined yet. Use the Capabilities page to create your first capability.
+          {t('capabilityMap.empty')}
         </Alert>
       ) : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' }}>
@@ -164,16 +167,17 @@ export const CapabilityMapContent: React.FC<{ onNavigate?: (key: string) => void
 };
 
 const CapabilityMapPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h6" sx={{
           fontWeight: 600
-        }}>Capability Map</Typography>
+        }}>{t('capabilityMap.title')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Business Capability Model — nested hierarchy view. Click any capability to open its detail.
+          {t('capabilityMap.subtitle')}
         </Typography>
       </Box>
       <CapabilityMapContent />

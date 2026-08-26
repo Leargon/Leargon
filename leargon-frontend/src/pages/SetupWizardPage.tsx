@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -17,9 +18,11 @@ import LocalesTab from '../components/settings/LocalesTab';
 import MethodologiesTab from '../components/settings/MethodologiesTab';
 import type { UserResponse } from '../api/generated/model';
 
-const STEPS = ['Languages', 'Methodologies'];
+const STEP_KEYS = ['stepLanguages', 'stepMethodologies'] as const;
+
 
 const SetupWizardPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading, updateUser } = useAuth();
   const navigate = useNavigate();
   const completeSetup = useCompleteSetup();
@@ -52,25 +55,25 @@ const SetupWizardPage: React.FC = () => {
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Welcome to Léargon
+          {t('setup.welcome')}
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>
-          Before you get started, configure your organisation's languages and active methodologies.
+          {t('setup.intro')}
         </Typography>
 
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {STEPS.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+          {STEP_KEYS.map((key) => (
+            <Step key={key}>
+              <StepLabel>{t(`setup.${key}`)}</StepLabel>
             </Step>
           ))}
         </Stepper>
 
         {activeStep === 0 && (
           <>
-            <Typography variant="h6" gutterBottom>Supported Languages</Typography>
+            <Typography variant="h6" gutterBottom>{t('setup.languagesTitle')}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Add, remove, or reorder locales. The first active locale will be used as the default.
+              {t('setup.languagesHint')}
             </Typography>
             <LocalesTab allowSetDefault />
           </>
@@ -80,17 +83,17 @@ const SetupWizardPage: React.FC = () => {
 
         {completeSetup.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            Failed to complete setup. Please try again.
+            {t('setup.failed')}
           </Alert>
         )}
 
         <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
           <Button onClick={handleBack} disabled={activeStep === 0}>
-            Back
+            {t('common.back')}
           </Button>
-          {activeStep < STEPS.length - 1 ? (
+          {activeStep < STEP_KEYS.length - 1 ? (
             <Button variant="contained" onClick={handleNext}>
-              Next
+              {t('common.next')}
             </Button>
           ) : (
             <Button
@@ -99,7 +102,7 @@ const SetupWizardPage: React.FC = () => {
               onClick={handleComplete}
               disabled={completeSetup.isPending}
             >
-              {completeSetup.isPending ? 'Completing...' : 'Complete Setup'}
+              {completeSetup.isPending ? t('setup.completing') : t('setup.complete')}
             </Button>
           )}
         </Box>

@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 const NotFoundPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -13,14 +15,14 @@ const NotFoundPage: React.FC = () => {
         minHeight: "100vh",
         gap: 2
       }}>
-      <Typography variant="h4">404 — Page not found</Typography>
+      <Typography variant="h4">{t('notFound.title')}</Typography>
       <Typography variant="body1" sx={{
         color: "text.secondary"
       }}>
-        The page you are looking for does not exist.
+        {t('notFound.text')}
       </Typography>
       <Button variant="contained" component={RouterLink} to="/home">
-        Go to Home
+        {t('notFound.goHome')}
       </Button>
     </Box>
   );

@@ -73,7 +73,7 @@ const BcSelector: React.FC<{
 
 const EventFlowPage: React.FC = () => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, defaultLocale } = useLocale();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
@@ -262,7 +262,7 @@ const EventFlowPage: React.FC = () => {
                 ) : showNoPublisher ? (
                   <Typography variant="caption" sx={{
                     color: "text.secondary"
-                  }}>No publishing context</Typography>
+                  }}>{t('eventFlow.noPublishingContext')}</Typography>
                 ) : null}
               </TableCell>
               <TableCell>
@@ -339,9 +339,7 @@ const EventFlowPage: React.FC = () => {
       </Box>
       {events.length === 0 && (
         <Alert severity="info">
-          {isAdmin
-            ? 'No domain events defined. Use the Create button above to add your first domain event.'
-            : 'No domain events defined yet.'}
+          {isAdmin ? t('eventFlow.emptyAdmin') : t('eventFlow.empty')}
         </Alert>
       )}
       {Array.from(eventsByDomain.entries()).map(([domainKey, domainEvents]) => {
@@ -351,7 +349,7 @@ const EventFlowPage: React.FC = () => {
           <Box key={domainKey} sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>{domainName}</Typography>
-              <Chip label={`${domainEvents.length} event${domainEvents.length !== 1 ? 's' : ''}`} size="small" variant="outlined" />
+              <Chip label={t('eventFlow.eventCount', { count: domainEvents.length })} size="small" variant="outlined" />
             </Box>
             {renderEventsTable(domainEvents)}
           </Box>
@@ -359,7 +357,7 @@ const EventFlowPage: React.FC = () => {
       })}
       {noDomainEvents.length > 0 && (
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Unassigned</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>{t('eventFlow.unassigned')}</Typography>
           {renderEventsTable(noDomainEvents, true)}
         </Box>
       )}
@@ -394,7 +392,7 @@ const EventFlowPage: React.FC = () => {
               domainKey={addConsumerDomainKey}
               value={addConsumerBc}
               onChange={setAddConsumerBc}
-              label="Bounded Context"
+              label={t('ubiquitousLanguage.boundedContext')}
               getLocalizedText={getLocalizedText}
             />
           )}
@@ -512,13 +510,13 @@ const EventFlowPage: React.FC = () => {
               domainKey={createDomainKey}
               value={createBc}
               onChange={setCreateBc}
-              label="Publishing Bounded Context"
+              label={t('eventFlow.publishingBoundedContext')}
               getLocalizedText={getLocalizedText}
             />
           )}
           <TextField
             size="small"
-            label="Event Name (English)"
+            label={t('eventFlow.eventNameDefault', { locale: defaultLocale })}
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
             fullWidth

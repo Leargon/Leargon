@@ -61,7 +61,7 @@ const MissingFieldsBanner: React.FC<MissingFieldsBannerProps> = ({
                 variant="caption"
                 sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, opacity: 0.7 }}
               >
-                {label}
+                {t(`section.${section}`, { defaultValue: label })}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
                 {fields.map((field) => (

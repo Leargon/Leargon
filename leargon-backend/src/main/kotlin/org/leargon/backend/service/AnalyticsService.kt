@@ -42,7 +42,7 @@ open class AnalyticsService(
     private val defaultHealthThreshold = 2
 
     @Transactional
-    open fun getTeamInsights(locale: String = "en"): TeamInsightsResponse {
+    open fun getTeamInsights(locale: String): TeamInsightsResponse {
         // Capture for AOP proxy safety
         val procRepo = this.processRepository
         val entityRepo = this.businessEntityRepository
@@ -311,7 +311,7 @@ open class AnalyticsService(
                         t.key,
                         nameOf(t.names, t.key),
                         "Two stream-aligned teams in an ongoing collaboration — expected to converge to X-as-a-Service"
-                    )
+                    ).reasonCode(COLLABORATION_SHOULD_CONVERGE)
                 }
 
             fun isHealthDegraded(i: org.leargon.backend.domain.TeamInteraction): Boolean =
@@ -377,5 +377,13 @@ open class AnalyticsService(
             )
         response.conwaysLawMisalignments = conwaysLawMisalignments
         return response
+    }
+
+    companion object {
+        /**
+         * Why a team interaction is flagged. The English `reason` alongside it is only a fallback — the UI
+         * renders `analytics.reason.<code>` from its own i18n, exactly as it does for a to-do's `ruleCode`.
+         */
+        const val COLLABORATION_SHOULD_CONVERGE: String = "COLLABORATION_SHOULD_CONVERGE_TO_XAAS"
     }
 }

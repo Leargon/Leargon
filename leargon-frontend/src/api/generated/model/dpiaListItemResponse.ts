@@ -30,8 +30,13 @@ export interface DpiaListItemResponse {
   linkedResourceType?: DpiaListItemResponseLinkedResourceType;
   /** @nullable */
   linkedResourceKey?: string | null;
-  /** @nullable */
+  /**
+     * Linked process or entity name in the tenant default locale (fallback for clients that do not read `linkedResourceNames`)
+     * @nullable
+     */
   linkedResourceName?: string | null;
+  /** Linked process or entity name in every locale it is defined in */
+  linkedResourceNames?: LocalizedText[];
   /**
      * Risk description (localised)
      * @nullable

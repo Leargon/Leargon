@@ -69,5 +69,5 @@ class Classification {
         value.classification = null
     }
 
-    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
+    fun getName(locale: String): String = names.textForLocale(locale, key)
 }

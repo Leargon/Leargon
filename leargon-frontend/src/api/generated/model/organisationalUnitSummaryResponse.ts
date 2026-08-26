@@ -16,12 +16,15 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface OrganisationalUnitSummaryResponse {
   /** Organisational unit key */
   key: string;
-  /** Organisational unit name in default locale */
+  /** Organisational unit name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** Organisational unit name in every locale it is defined in */
+  names?: LocalizedText[];
   /**
      * Whether this is an external unit (body leasing / contractor)
      * @nullable

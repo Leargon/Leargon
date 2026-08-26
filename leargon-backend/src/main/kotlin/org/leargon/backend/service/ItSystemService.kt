@@ -36,7 +36,8 @@ open class ItSystemService(
     private val processRepository: ProcessRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
     private val serviceProviderRepository: ServiceProviderRepository,
-    private val itSystemMapper: ItSystemMapper
+    private val itSystemMapper: ItSystemMapper,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
     @Transactional
     open fun getAll(): List<ItSystemResponse> {
@@ -55,7 +56,7 @@ open class ItSystemService(
     @Transactional
     open fun create(request: CreateItSystemRequest): ItSystemResponse {
         val slug =
-            request.names.find { it.locale == "en" }?.text
+            request.names.firstOrNull { it.locale == defaultLocaleProvider.code() }?.text
                 ?: request.names.first().text
         val key = slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
         if (itSystemRepository.existsByKey(key)) {

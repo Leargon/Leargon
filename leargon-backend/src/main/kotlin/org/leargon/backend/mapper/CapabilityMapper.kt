@@ -7,10 +7,16 @@ import org.leargon.backend.model.CapabilityResponse
 import org.leargon.backend.model.CapabilitySummaryResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import java.time.ZoneOffset
 
 @Singleton
-class CapabilityMapper {
+open class CapabilityMapper(
+    private val defaultLocaleProvider: DefaultLocaleProvider
+) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toCapabilityResponse(capability: Capability): CapabilityResponse =
         CapabilityResponse(
             capability.key,
@@ -20,16 +26,17 @@ class CapabilityMapper {
             .children(capability.children.map { toCapabilitySummaryResponse(it) })
             .owningUnit(capability.owningUnit?.let { toOrgUnitSummary(it) })
             .linkedProcesses(
-                capability.linkedProcesses.map { ProcessSummaryResponse(it.key, it.getName("en")) }
+                SummaryMappers.processes(capability.linkedProcesses, defaultLocale)
             ).classificationAssignments(
                 ClassificationMapper.toClassificationAssignmentResponses(capability.classificationAssignments)
             ).createdAt(capability.createdAt.atZone(ZoneOffset.UTC))
             .updatedAt(capability.updatedAt?.atZone(ZoneOffset.UTC))
 
     fun toCapabilitySummaryResponse(capability: Capability): CapabilitySummaryResponse =
-        CapabilitySummaryResponse(capability.key, capability.getName("en"))
+        SummaryMappers
+            .capability(capability, defaultLocale)!!
             .owningUnit(capability.owningUnit?.let { toOrgUnitSummary(it) })
 
     private fun toOrgUnitSummary(unit: OrganisationalUnit): OrganisationalUnitSummaryResponse =
-        OrganisationalUnitSummaryResponse(unit.key, unit.getName("en"))
+        SummaryMappers.orgUnit(unit, defaultLocale)!!
 }

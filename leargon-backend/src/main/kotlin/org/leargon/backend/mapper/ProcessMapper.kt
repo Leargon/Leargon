@@ -15,6 +15,7 @@ import org.leargon.backend.model.ProcessType
 import org.leargon.backend.model.ProcessVersionResponse
 import org.leargon.backend.model.ProcessVersionResponseChangeType
 import org.leargon.backend.repository.ProcessFlowNodeRepository
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
@@ -31,8 +32,12 @@ open class ProcessMapper(
     private val capabilityMapper: CapabilityMapper,
     private val processFlowNodeRepository: ProcessFlowNodeRepository,
     private val fieldVerificationService: FieldVerificationService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toProcessResponse(
         process: Process,
         currentUser: org.leargon.backend.domain.User? = null
@@ -66,7 +71,7 @@ open class ProcessMapper(
             toZonedDateTime(process.createdAt),
             toZonedDateTime(process.updatedAt)
         ).updatedBy(UserMapper.toUserSummary(process.updatedBy))
-            .owningUnit(process.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
+            .owningUnit(SummaryMappers.orgUnit(process.owningUnit, defaultLocale))
             .processOwner(UserMapper.toUserSummary(process.effectiveOwner()))
             .processSteward(UserMapper.toUserSummary(effectiveSteward))
             .stewardIsExplicit(process.processSteward != null)
@@ -74,12 +79,12 @@ open class ProcessMapper(
             .custodianIsExplicit(process.technicalCustodian != null)
             .code(process.code)
             .processType(toProcessType(process.processType))
-            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
-            .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities))
-            .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities))
-            .effectiveInputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveInputEntities))
-            .effectiveOutputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveOutputEntities))
-            .executingUnits(toOrgUnitSummaryList(process.executingUnits))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext, defaultLocale))
+            .inputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.inputEntities, defaultLocale))
+            .outputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(process.outputEntities, defaultLocale))
+            .effectiveInputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveInputEntities, defaultLocale))
+            .effectiveOutputEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(effectiveOutputEntities, defaultLocale))
+            .executingUnits(toOrgUnitSummaryList(process.executingUnits, defaultLocale))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(process.classificationAssignments))
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
@@ -89,7 +94,7 @@ open class ProcessMapper(
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
-            .itSystems(process.itSystems.map { ItSystemSummaryResponse(it.key, it.getName("en"), it.processingCountries) })
+            .itSystems(process.itSystems.mapNotNull { SummaryMappers.itSystem(it, defaultLocale) })
             .derivedProcessingCountries(derivedProcessingCountries(process))
             .valueStreamType(toValueStreamType(process.valueStreamType))
             .cycleTimeMinutes(process.cycleTimeMinutes)
@@ -122,9 +127,9 @@ open class ProcessMapper(
 
     fun toProcessSummaryResponse(process: Process?): ProcessSummaryResponse? {
         if (process == null) return null
-        return ProcessSummaryResponse(process.key, process.getName("en"))
-            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext))
-            .description(process.descriptions.firstOrNull()?.text)
+        return SummaryMappers
+            .process(process, defaultLocale)!!
+            .boundedContext(BoundedContextMapper.toSummaryResponse(process.boundedContext, defaultLocale))
     }
 
     fun toProcessVersionResponse(version: ProcessVersion): ProcessVersionResponse =
@@ -202,10 +207,10 @@ open class ProcessMapper(
         }
 
         @JvmStatic
-        fun toOrgUnitSummaryList(units: Collection<OrganisationalUnit>?): List<OrganisationalUnitSummaryResponse> {
-            if (units == null) return emptyList()
-            return units.map { unit -> OrganisationalUnitSummaryResponse(unit.key, unit.getName("en")) }
-        }
+        fun toOrgUnitSummaryList(
+            units: Collection<OrganisationalUnit>?,
+            defaultLocale: String
+        ): List<OrganisationalUnitSummaryResponse> = SummaryMappers.orgUnits(units, defaultLocale)
 
         @JvmStatic
         fun toProcessType(processType: String?): ProcessType? {

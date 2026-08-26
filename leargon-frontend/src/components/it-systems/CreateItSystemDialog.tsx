@@ -22,6 +22,7 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, OrganisationalUnitResponse, SupportedLocaleResponse } from '../../api/generated/model';
 import type { ItSystemResponse } from '../../api/generated/model';
+import { useLocale } from '../../context/LocaleContext';
 
 interface CreateItSystemDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ interface CreateItSystemDialogProps {
 
 const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: localesResponse } = useGetSupportedLocales();
@@ -114,7 +116,7 @@ const CreateItSystemDialog: React.FC<CreateItSystemDialogProps> = ({ open, onClo
         />
         <Autocomplete
           options={allOrgUnits}
-          getOptionLabel={(o) => `${o.names.find((n) => n.locale === 'en')?.text ?? o.key} (${o.key})`}
+          getOptionLabel={(o) => `${getLocalizedText(o.names, o.key)} (${o.key})`}
           value={allOrgUnits.find((u) => u.key === owningUnitKey) ?? null}
           onChange={(_, val) => setOwningUnitKey((val as OrganisationalUnitResponse | null)?.key ?? null)}
           renderInput={(params) => <TextField {...params} label={t('itSystemDialog.owningUnitLabel')} size="small" />}

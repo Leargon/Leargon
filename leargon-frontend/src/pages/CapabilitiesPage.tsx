@@ -42,7 +42,7 @@ const CapabilitiesPage: React.FC = () => {
 
   return (
     <SplitPageLayout
-      title="Business Capabilities"
+      title={t('pages.capabilities')}
       subtitle="BCM — Capability Model"
       views={[
         { value: 'list', label: 'List', icon: <FormatListBulleted sx={{ fontSize: 16, mr: 0.5 }} /> },

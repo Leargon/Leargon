@@ -23,7 +23,7 @@ export interface TaskRuleDefinition {
   ruleCode: string;
   /** Human-readable rule name (English fallback; the UI prefers its own i18n key) */
   label: string;
-  /** What the rule checks and why it matters */
+  /** What the rule checks and why it matters, in English. Like `label`, this is a fallback: the UI renders `tasks.ruleDescriptions.<ruleCode>` from its own i18n and only falls back to this. */
   description: string;
   /** Entity type the rule applies to (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT) */
   entityType: string;

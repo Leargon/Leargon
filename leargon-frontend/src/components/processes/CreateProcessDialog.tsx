@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -26,20 +27,13 @@ import TranslationEditor from '../common/TranslationEditor';
 import type { LocalizedText, ProcessType, ProcessResponse, SupportedLocaleResponse } from '../../api/generated/model';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
-const PROCESS_TYPE_LABELS: Record<string, string> = {
-  OPERATIONAL_CORE: 'Operational/Core',
-  SUPPORT: 'Support',
-  MANAGEMENT: 'Management',
-  INNOVATION: 'Innovation',
-  COMPLIANCE: 'Compliance',
-};
-
 interface CreateProcessDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
 const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createProcess = useCreateProcess();
@@ -78,7 +72,7 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
       resetForm();
       navigate(`/processes/${newKey}`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create process');
+      setError(err?.response?.data?.message || err?.message || t('process.failedCreate'));
     }
   };
 
@@ -97,7 +91,7 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Create Business Process</DialogTitle>
+      <DialogTitle>{t('process.createTitle')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TranslationEditor
@@ -110,24 +104,24 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
 
           <TextField
             size="small"
-            label="Code (optional)"
+            label={t('process.codeOptional')}
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            helperText="If set, the code is used as the key instead of the name"
+            helperText={t('process.codeHint')}
           />
 
           <FormControl size="small">
-            <InputLabel>Process Type</InputLabel>
+            <InputLabel>{t('process.processType')}</InputLabel>
             <Select
               value={processType}
               onChange={(e: SelectChangeEvent) => setProcessType(e.target.value)}
-              label="Process Type"
+              label={t('process.processType')}
             >
               <MenuItem value="">
-                <em>None</em>
+                <em>{t('common.none')}</em>
               </MenuItem>
-              {PROCESS_TYPE_VALUES.map((t) => (
-                <MenuItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</MenuItem>
+              {PROCESS_TYPE_VALUES.map((pt) => (
+                <MenuItem key={pt} value={pt}>{t(`processType.${pt}`)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -136,13 +130,13 @@ const CreateProcessDialog: React.FC<CreateProcessDialogProps> = ({ open, onClose
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           onClick={handleCreate}
           variant="contained"
           disabled={createProcess.isPending || !hasDefaultName}
         >
-          {createProcess.isPending ? 'Creating...' : 'Create'}
+          {createProcess.isPending ? t('common.creating') : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>

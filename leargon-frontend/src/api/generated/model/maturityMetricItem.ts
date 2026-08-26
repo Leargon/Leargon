@@ -20,7 +20,7 @@
 export interface MaturityMetricItem {
   /** Machine-readable metric key */
   key: string;
-  /** Human-readable label */
+  /** English label; the UI renders `maturity.metrics.<key>` from its own i18n and only falls back to this */
   label: string;
   /** Number of items that satisfy the metric */
   covered: number;
