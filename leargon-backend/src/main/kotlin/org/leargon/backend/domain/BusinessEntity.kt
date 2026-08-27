@@ -150,7 +150,11 @@ class BusinessEntity {
         return all
     }
 
-    private fun effectiveOwningUnit(): OrganisationalUnit? =
+    /**
+     * The unit that answers for this entity: its own, else the one owning its bounded context,
+     * else the one owning that context's domain. Public because the overview grouping buckets by it.
+     */
+    fun effectiveOwningUnit(): OrganisationalUnit? =
         owningUnit
             ?: boundedContext?.owningUnit
             ?: boundedContext?.domain?.owningUnit
@@ -159,7 +163,7 @@ class BusinessEntity {
 
     fun effectiveSteward(): User? = dataSteward ?: effectiveOwningUnit()?.businessSteward
 
-    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
+    fun getName(locale: String): String = names.textForLocale(locale, key)
 
-    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
+    fun getDescription(locale: String): String = descriptions.textForLocale(locale, "")
 }

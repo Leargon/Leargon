@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PublicClientApplication, EventType, AuthError } from '@azure/msal-browser';
 import type { AuthenticationResult } from '@azure/msal-browser';
@@ -6,6 +7,7 @@ import { Box, CircularProgress, Alert, Button } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
 const MsalCallback: React.FC = () => {
+  const { t } = useTranslation();
   const { azureLogin } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +41,12 @@ const MsalCallback: React.FC = () => {
         const payload = event.payload as AuthenticationResult;
         azureLogin(payload.idToken)
           .then(() => navigate('/', { replace: true }))
-          .catch((err) => { console.error(err); setError('Azure login failed. Please try again.'); });
+          .catch((err) => { console.error(err); setError(t('auth.azureFailed')); });
       } else if (event.eventType === EventType.ACQUIRE_TOKEN_FAILURE) {
         handled = true;
         const err = event.payload as AuthError;
         console.error(err);
-        setError('Azure login failed. Please try again.');
+        setError(t('auth.azureFailed'));
       }
     });
 
@@ -61,7 +63,7 @@ const MsalCallback: React.FC = () => {
       })
       .catch((err: unknown) => {
         console.error(err);
-        if (!handled) setError('Azure login failed. Please try again.');
+        if (!handled) setError(t('auth.azureFailed'));
       });
 
     return () => {
@@ -84,7 +86,7 @@ const MsalCallback: React.FC = () => {
           gap: 2
         }}>
         <Alert severity="error">{error}</Alert>
-        <Button variant="outlined" onClick={() => navigate('/login')}>Back to Login</Button>
+        <Button variant="outlined" onClick={() => navigate('/login')}>{t('auth.backToLogin')}</Button>
       </Box>
     );
   }

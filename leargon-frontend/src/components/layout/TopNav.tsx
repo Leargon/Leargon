@@ -26,6 +26,9 @@ import { hasAnyLeadRole } from '../../utils/roles';
 import type { SupportedLocaleResponse } from '../../api/generated/model';
 import { useTranslation } from 'react-i18next';
 
+/** The roles a user can switch the navigation to; `viewer` is the implicit fallback. */
+const SWITCHABLE_ROLES: Role[] = ['compliance', 'architecture', 'operations', 'admin'];
+
 const ROLE_I18N_KEYS: Record<Role, string> = {
   compliance: 'nav.sectionCompliance',
   architecture: 'nav.sectionArchitecture',
@@ -79,7 +82,7 @@ const TopNav: React.FC = () => {
         onClick={() => navigate('/')}
       />
       {/* Role switcher */}
-      <Tooltip title={isTemporary ? 'Temporary view — resets on next login' : 'Current view'}>
+      <Tooltip title={isTemporary ? t('nav.temporaryView') : t('nav.currentView')}>
         <Button
           size="small"
           variant="outlined"
@@ -110,9 +113,9 @@ const TopNav: React.FC = () => {
         <Box sx={{ px: 2, py: 0.75 }}>
           <Typography variant="caption" sx={{
             color: "text.secondary"
-          }}>Switch view</Typography>
+          }}>{t('nav.switchView')}</Typography>
         </Box>
-        {(['compliance', 'architecture', 'operations', 'admin'] as Role[]).map((r) => (
+        {SWITCHABLE_ROLES.map((r) => (
           <MenuItem
             key={r}
             selected={role === r && !isTemporary}
@@ -149,17 +152,17 @@ const TopNav: React.FC = () => {
         {locales.map((l) => (
           <MenuItem key={l.localeCode} value={l.localeCode}>{l.displayName}</MenuItem>
         ))}
-        {locales.length === 0 && <MenuItem value="en">English</MenuItem>}
+        {locales.length === 0 && <MenuItem value="en">{t('localeManagement.english')}</MenuItem>}
       </Select>
       {/* Dark mode toggle */}
-      <Tooltip title={effectiveMode === 'dark' ? 'Light mode' : 'Dark mode'}>
+      <Tooltip title={effectiveMode === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}>
         <IconButton size="small" onClick={toggleMode} sx={{ color: 'grey.400', '&:hover': { color: 'white' } }}>
           {effectiveMode === 'dark' ? <LightMode fontSize="small" /> : <DarkMode fontSize="small" />}
         </IconButton>
       </Tooltip>
       {/* Settings (admins + methodology leads) */}
       {canAccessSettings && (
-        <Tooltip title="Settings">
+        <Tooltip title={t('nav.settings')}>
           <IconButton
             size="small"
             onClick={() => navigate(isAdmin ? '/settings/users' : '/settings/methodologies')}
@@ -175,7 +178,7 @@ const TopNav: React.FC = () => {
         </Tooltip>
       )}
       {/* Profile */}
-      <Tooltip title={user?.username || 'Profile'}>
+      <Tooltip title={user?.username || t('nav.profile')}>
         <IconButton size="small" onClick={(e) => setAnchorEl(e.currentTarget)}>
           <Avatar sx={{ width: 26, height: 26, fontSize: '0.8rem', bgcolor: 'primary.main' }}>
             {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
@@ -197,11 +200,11 @@ const TopNav: React.FC = () => {
         </Box>
         <MenuItem onClick={() => { setAnchorEl(null); navigate('/profile'); }}>
           <ListItemIcon><Person fontSize="small" /></ListItemIcon>
-          <ListItemText>Profile</ListItemText>
+          <ListItemText>{t('nav.profile')}</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => { setAnchorEl(null); logout(); navigate('/login'); }}>
           <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
-          <ListItemText>Logout</ListItemText>
+          <ListItemText>{t('nav.logout')}</ListItemText>
         </MenuItem>
       </Menu>
     </Box>

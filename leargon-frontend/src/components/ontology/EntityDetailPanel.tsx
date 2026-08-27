@@ -124,7 +124,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
   const { isMethodologyEnabled } = useMethodology();
@@ -727,7 +727,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
               </Box>
             ) : entity.owningUnit ? (
-              <Chip label={entity.owningUnit.name} size="small" variant="outlined" />
+              <Chip label={localizedName(entity.owningUnit)} size="small" variant="outlined" />
             ) : (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notAssigned')}</Typography>
             )}
@@ -831,7 +831,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 {parentEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{parentEdit.error}</Alert>}
               </Box>
             ) : entity.parent ? (
-              <Chip label={entity.parent.name} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
+              <Chip label={localizedName(entity.parent)} size="small" onClick={() => navigate(`/entities/${entity.parent!.key}`)} clickable />
             ) : (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
@@ -847,7 +847,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               <Box>
                 <Autocomplete
                   options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
-                  getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                  getOptionLabel={(option) => `${localizedName(option)} (${getLocalizedText(option.domainNames, option.domainName)})`}
                   value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
                   onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
@@ -860,10 +860,10 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               </Box>
             ) : entity.boundedContext ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Chip label={entity.boundedContext.name} size="small" />
+                <Chip label={localizedName(entity.boundedContext)} size="small" />
                 <Typography variant="caption" sx={{
                   color: "text.secondary"
-                }}>({entity.boundedContext.domainName})</Typography>
+                }}>({getLocalizedText(entity.boundedContext.domainNames, entity.boundedContext.domainName)})</Typography>
               </Box>
             ) : (
               <Typography variant="body2" sx={{
@@ -999,7 +999,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {entity.interfacesEntities.map((e) => (
               <Box key={e.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
-                <Chip label={e.name} size="small" onClick={() => navigate(`/entities/${e.key}`)} clickable />
+                <Chip label={localizedName(e)} size="small" onClick={() => navigate(`/entities/${e.key}`)} clickable />
                 {renderStatus(`interface.${e.key}`)}
               </Box>
             ))}
@@ -1037,7 +1037,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 <TableRow key={r.id}>
                   <TableCell>
                     {r.cardinality?.map((c, i) => (
-                      <span key={i}>{i > 0 ? ' — ' : ''}{c.businessEntity.name} [{c.minimum}..{c.maximum ?? '*'}]</span>
+                      <span key={i}>{i > 0 ? ' — ' : ''}{localizedName(c.businessEntity)} [{c.minimum}..{c.maximum ?? '*'}]</span>
                     ))}
                   </TableCell>
                   <TableCell>
@@ -1437,7 +1437,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
               <TableBody>
                 {versions.map((v: BusinessEntityVersionResponse) => (
                   <TableRow key={v.versionNumber}>
-                    <TableCell>v{v.versionNumber}</TableCell>
+                    <TableCell>{t('common.versionNumber', { number: v.versionNumber })}</TableCell>
                     <TableCell><Chip label={v.changeType} size="small" variant="outlined" /></TableCell>
                     <TableCell>{v.changeSummary || '—'}</TableCell>
                     <TableCell>{v.changedBy.firstName} {v.changedBy.lastName}</TableCell>
@@ -1572,7 +1572,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 <Typography variant="body2" sx={{
                   color: "text.secondary"
                 }}>
-                  {rel.cardinality[0]?.businessEntity.name}— {rel.cardinality[1]?.businessEntity.name}
+                  {localizedName(rel.cardinality[0]?.businessEntity)}— {localizedName(rel.cardinality[1]?.businessEntity)}
                 </Typography>
               );
             })()}

@@ -35,7 +35,7 @@ import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
 const EntityMapDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
   const [showDomainLayer, setShowDomainLayer] = useState(false);
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
 
@@ -52,10 +52,11 @@ const EntityMapDiagram: React.FC = () => {
       showDomainLayer,
       (entity) => getLocalizedText(entity.names),
       (texts) => getLocalizedText(texts, ''),
+      localizedName,
     );
     setNodes(n);
     setEdges(e);
-  }, [entities, showDomainLayer, getLocalizedText, setNodes, setEdges]);
+  }, [entities, showDomainLayer, getLocalizedText, localizedName, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback(
     (_, node) => navigate(`/entities/${node.id}`),
@@ -71,7 +72,7 @@ const EntityMapDiagram: React.FC = () => {
     );
     return domainKeys.map((dk, i) => {
       const entity = rootEntities.find((e) => e.boundedContext?.key === dk);
-      return { name: entity?.boundedContext?.name ?? dk, color: domainColor(i) };
+      return { name: localizedName(entity?.boundedContext) || dk, color: domainColor(i) };
     });
   }, [entities, showDomainLayer]);
 

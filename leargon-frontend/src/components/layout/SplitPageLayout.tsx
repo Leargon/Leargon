@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -69,6 +70,7 @@ const SplitPageLayout: React.FC<SplitPageLayoutProps> = ({
   diagrams,
   children,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const isNarrow = useMediaQuery('(max-width:999px)');
   const isWide = useMediaQuery('(min-width:1400px)');
@@ -104,7 +106,7 @@ const SplitPageLayout: React.FC<SplitPageLayoutProps> = ({
             size="small"
             color="inherit"
           >
-            Back
+            {t('common.back')}
           </Button>
         ) : (
           <>

@@ -21,8 +21,10 @@ import { useGetAllBusinessDomains } from '../../api/generated/business-domain/bu
 import type { ContextRelationshipResponse } from '../../api/generated/model/contextRelationshipResponse';
 import type { BusinessDomainResponse } from '../../api/generated/model/businessDomainResponse';
 import type { BoundedContextSummaryResponse } from '../../api/generated/model/boundedContextSummaryResponse';
+import type { LocalizedText } from '../../api/generated/model/localizedText';
 import { applyDagreLayout } from './diagramUtils';
 import { useReactFlowTheme } from '../../hooks/useReactFlowTheme';
+import { useLocale } from '../../context/LocaleContext';
 
 // ─── Color maps ────────────────────────────────────────────────────────────
 
@@ -123,6 +125,7 @@ const DOMAIN_NODE_TYPES = { domainNode: DomainNode };
 function buildGraph(
   rels: ContextRelationshipResponse[],
   allDomains: BusinessDomainResponse[],
+  getLocalizedText: (translations: LocalizedText[] | undefined, fallback?: string) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   // Always include all bounded contexts from all domains
   const bcMap = new Map<string, BoundedContextSummaryResponse>();
@@ -131,8 +134,10 @@ function buildGraph(
       bcMap.set(bc.key, {
         key: bc.key,
         name: bc.name,
+        names: bc.names,
         domainKey: d.key,
-        domainName: bc.domainName || d.key,
+        domainName: getLocalizedText(d.names, d.key),
+        domainNames: d.names,
       });
     });
   });
@@ -158,10 +163,10 @@ function buildGraph(
       width: 180,
       height: 80,
       data: {
-        label: bc.name,
+        label: getLocalizedText(bc.names, bc.name || bc.key),
         domainType,
         domainKey: bc.domainKey,
-        domainName: bc.domainName,
+        domainName: getLocalizedText(bc.domainNames, bc.domainName),
       } satisfies DomainNodeData,
     };
   });
@@ -243,6 +248,7 @@ const RelationshipLegend: React.FC = () => {
 const ContextMapDiagram: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { getLocalizedText } = useLocale();
   const { canvasSx, miniMapProps, colorMode } = useReactFlowTheme();
 
   const { data: relsResponse, isLoading: relsLoading, isError: relsError } = useGetAllContextRelationships();
@@ -257,8 +263,8 @@ const ContextMapDiagram: React.FC = () => {
   const isLoading = relsLoading || domainsLoading;
 
   const { nodes: builtNodes, edges: builtEdges } = useMemo(
-    () => buildGraph(rels, allDomains),
-    [rels, allDomains],
+    () => buildGraph(rels, allDomains, getLocalizedText),
+    [rels, allDomains, getLocalizedText],
   );
 
   useEffect(() => {

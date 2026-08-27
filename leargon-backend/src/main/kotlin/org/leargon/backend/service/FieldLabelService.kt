@@ -113,14 +113,7 @@ open class FieldLabelService(
     private fun translateInventoryLabel(
         label: String,
         locale: String
-    ): String {
-        // Whole-label lookup wins: several inventory labels legitimately end in parentheses
-        // ("Cycle Time (min)") and must not be mistaken for a locale suffix.
-        FieldLabelTranslations.translateOrNull(label, locale)?.let { return it }
-        val match = LOCALE_SUFFIX.matchEntire(label) ?: return label
-        val (base, suffix) = match.destructured
-        return "${translate(base, locale)} ($suffix)"
-    }
+    ): String = FieldLabelTranslations.translateLabel(label, locale)
 
     /**
      * Labels for a per-item collection field (`relationship.42`, `qualityRule.7.descriptions.de`, …),
@@ -287,9 +280,4 @@ open class FieldLabelService(
         englishLabel: String,
         locale: String
     ): String = FieldLabelTranslations.translate(englishLabel, locale)
-
-    companion object {
-        /** An inventory label carrying the locale of a per-locale field, e.g. "Description (en)". */
-        private val LOCALE_SUFFIX = Regex("""^(.*) \(([a-zA-Z-]{2,10})\)$""")
-    }
 }

@@ -10,6 +10,7 @@ import org.leargon.backend.model.BusinessDomainType
 import org.leargon.backend.model.BusinessDomainVersionResponse
 import org.leargon.backend.model.BusinessDomainVersionResponseChangeType
 import org.leargon.backend.model.LocalizedBusinessDomainResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
@@ -24,8 +25,12 @@ open class BusinessDomainMapper(
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
     private val fieldVerificationService: FieldVerificationService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toBusinessDomainResponse(
         domain: BusinessDomain,
         currentUser: org.leargon.backend.domain.User? = null
@@ -52,7 +57,7 @@ open class BusinessDomainMapper(
             .visionStatement(LocalizedTextMapper.toModel(domain.visionStatement))
             .owningUnit(organisationalUnitMapper.toSummaryResponse(domain.owningUnit))
             .subdomains(toBusinessDomainSummaryResponseArray(domain.children))
-            .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts))
+            .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts, defaultLocale))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(domain.classificationAssignments))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
@@ -101,10 +106,8 @@ open class BusinessDomainMapper(
             toZonedDateTime(version.createdAt)
         ).changeSummary(version.changeSummary)
 
-    fun toBusinessDomainSummaryResponse(domain: BusinessDomain?): BusinessDomainSummaryResponse? {
-        if (domain == null) return null
-        return BusinessDomainSummaryResponse(domain.key, domain.getName("en"))
-    }
+    fun toBusinessDomainSummaryResponse(domain: BusinessDomain?): BusinessDomainSummaryResponse? =
+        SummaryMappers.domain(domain, defaultLocale)
 
     fun toBusinessDomainTreeResponses(businessDomains: Collection<BusinessDomain>?): List<BusinessDomainTreeResponse> {
         if (businessDomains == null) return emptyList()
@@ -133,10 +136,10 @@ open class BusinessDomainMapper(
         }
 
         @JvmStatic
-        fun toBusinessDomainSummary(domain: BusinessDomain?): BusinessDomainSummaryResponse? {
-            if (domain == null) return null
-            return BusinessDomainSummaryResponse(domain.key, domain.getName("en"))
-        }
+        fun toBusinessDomainSummary(
+            domain: BusinessDomain?,
+            defaultLocale: String
+        ): BusinessDomainSummaryResponse? = SummaryMappers.domain(domain, defaultLocale)
     }
 
     /**

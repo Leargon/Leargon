@@ -17,10 +17,14 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ActivityType } from './activityType.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface ValueStreamStep {
   key: string;
+  /** Step name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** Step name in every locale it is defined in */
+  names?: LocalizedText[];
   /** @nullable */
   cycleTimeMinutes?: number | null;
   /** @nullable */

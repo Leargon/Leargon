@@ -82,6 +82,8 @@ tags:
   description: Owner governance to-do list endpoints
 - name: ProcessingRegister
   description: Processing register (Verzeichnis der Bearbeitungstätigkeiten) endpoints
+- name: Overview
+  description: Grouped overview-list endpoints backing the "Group by" control
 paths:
   /administration/users:
     get:
@@ -6632,6 +6634,13 @@ paths:
       operationId: getTeamInsights
       security:
       - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale.
+        schema:
+          type: string
       responses:
         '200':
           description: Team and org insights
@@ -6734,6 +6743,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          description: Not authenticated
+  /overviews/{resourceType}/groupings:
+    get:
+      tags:
+      - Overview
+      summary: Get the grouping dimensions available for an overview list
+      description: >-
+        Returns the ways this catalogue list can be grouped, in the caller's active locales. The set
+        is decided server-side: a dimension whose methodology is disabled, whose backing field an
+        administrator has hidden, or which the resource type simply does not carry, is omitted rather
+        than returned and filtered by the client. NONE ("Hierarchy", the plain parent-child tree) is
+        always the first option.
+      operationId: getOverviewGroupings
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: resourceType
+        in: path
+        required: true
+        description: Which catalogue list the groupings are for
+        schema:
+          $ref: '#/components/schemas/OverviewResourceType'
+      responses:
+        '200':
+          description: Available grouping dimensions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupingOptionsResponse'
+        '400':
+          description: Unknown resource type
+        '401':
+          description: Not authenticated
+  /overviews/{resourceType}:
+    get:
+      tags:
+      - Overview
+      summary: Get an overview list grouped by one dimension
+      description: >-
+        Returns the list bucketed by the requested dimension. Each group keeps the parent-child
+        sub-trees of its members: an ancestor that is only present to give a member its place in the
+        tree comes back with `matchesGroup: false`, so a client can show it as context without
+        offering it as a member of that group. Items with no value for the dimension land in the
+        unassigned group, whose `key` is null.
+      operationId: getGroupedOverview
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: resourceType
+        in: path
+        required: true
+        description: Which catalogue list to return
+        schema:
+          $ref: '#/components/schemas/OverviewResourceType'
+      - name: groupBy
+        in: query
+        required: true
+        description: >-
+          The grouping dimension, from `GET /overviews/{resourceType}/groupings`. Passing a dimension
+          that is not available for this resource type is a 400.
+        schema:
+          type: string
+          example: OWNER
+      responses:
+        '200':
+          description: The grouped list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupedOverviewResponse'
+        '400':
+          description: Unknown resource type, or a grouping that does not apply to it
         '401':
           description: Not authenticated
   /tasks/by-owner:
@@ -6842,6 +6924,13 @@ paths:
       operationId: getDashboard
       security:
       - bearerAuth: []
+      parameters:
+      - name: locale
+        in: query
+        required: false
+        description: Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale.
+        schema:
+          type: string
       responses:
         '200':
           description: Dashboard data for the current user
@@ -7372,20 +7461,35 @@ components:
           example: sales/default
         name:
           type: string
-          description: Bounded context name in default locale
+          description: Bounded context name in the tenant default locale (fallback for clients that do not read `names`)
           example: Sales
+        names:
+          type: array
+          description: Bounded context name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         domainKey:
           type: string
           description: Parent domain key
           example: sales
         domainName:
           type: string
-          description: Parent domain name in default locale
+          description: Parent domain name in the tenant default locale (fallback for clients that do not read `domainNames`)
           example: Sales Domain
+        domainNames:
+          type: array
+          description: Parent domain name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         owningUnitName:
           type: string
           nullable: true
           description: Name of the owning organisational unit (used for computed owner/steward/custodian display)
+        owningUnitNames:
+          type: array
+          description: Owning organisational unit name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BoundedContextResponse:
       type: object
       required:
@@ -7493,8 +7597,13 @@ components:
           example: sales
         name:
           type: string
-          description: BusinessDomain name in default locale
+          description: BusinessDomain name in the tenant default locale (fallback for clients that do not read `names`)
           example: Sales
+        names:
+          type: array
+          description: BusinessDomain name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     BusinessDomainTreeResponse:
       type: object
       required:
@@ -7814,8 +7923,13 @@ components:
           example: customer
         name:
           type: string
-          description: BusinessEntity name in default locale
+          description: BusinessEntity name in the tenant default locale (fallback for clients that do not read `names`)
           example: Customer
+        names:
+          type: array
+          description: BusinessEntity name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         parentKey:
           type: string
           nullable: true
@@ -7824,8 +7938,13 @@ components:
         parentName:
           type: string
           nullable: true
-          description: Name of the parent entity in default locale, null if top-level
+          description: Name of the parent entity in the tenant default locale (fallback for clients that do not read `parentNames`), null if top-level
           example: Sales
+        parentNames:
+          type: array
+          description: Parent entity name in every locale it is defined in, null if top-level
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         rootKey:
           type: string
           nullable: true
@@ -7834,15 +7953,25 @@ components:
         rootName:
           type: string
           nullable: true
-          description: Name of the root ancestor entity in default locale, null if this entity is itself top-level
+          description: Name of the root ancestor entity in the tenant default locale (fallback for clients that do not read `rootNames`), null if this entity is itself top-level
           example: Sales
+        rootNames:
+          type: array
+          description: Root ancestor entity name in every locale it is defined in, null if this entity is itself top-level
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         boundedContext:
           $ref: '#/components/schemas/BoundedContextSummaryResponse'
           nullable: true
         description:
           type: string
           nullable: true
-          description: Description in the default locale
+          description: Description in the tenant default locale (fallback for clients that do not read `descriptions`)
+        descriptions:
+          type: array
+          description: Description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         retentionPeriod:
           type: array
           nullable: true
@@ -8268,9 +8397,16 @@ components:
     ErrorResponse:
       type: object
       properties:
+        errorCode:
+          type: string
+          nullable: true
+          description: >
+            Stable machine-readable error code. The UI renders its own localised text from this code
+            and only falls back to `message` when it does not recognise the code.
+          example: USER_NOT_FOUND
         message:
           type: string
-          description: Error message
+          description: Error message in English; a human-readable fallback, not a display string
           example: User not found
         path:
           type: string
@@ -8572,8 +8708,13 @@ components:
           example: engineering
         name:
           type: string
-          description: Organisational unit name in default locale
+          description: Organisational unit name in the tenant default locale (fallback for clients that do not read `names`)
           example: Engineering
+        names:
+          type: array
+          description: Organisational unit name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         isExternal:
           type: boolean
           nullable: true
@@ -9013,15 +9154,25 @@ components:
           example: order-fulfillment
         name:
           type: string
-          description: Process name in default locale
+          description: Process name in the tenant default locale (fallback for clients that do not read `names`)
           example: Order Fulfillment
+        names:
+          type: array
+          description: Process name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         boundedContext:
           $ref: '#/components/schemas/BoundedContextSummaryResponse'
           nullable: true
         description:
           type: string
           nullable: true
-          description: Description in the default locale
+          description: Description in the tenant default locale (fallback for clients that do not read `descriptions`)
+        descriptions:
+          type: array
+          description: Description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     ProcessTreeResponse:
       type: object
       required:
@@ -9225,6 +9376,12 @@ components:
           type: string
         name:
           type: string
+          description: Step name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: Step name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         cycleTimeMinutes:
           type: number
           format: double
@@ -9972,8 +10129,13 @@ components:
           example: retentionPeriod
         label:
           type: string
-          description: Human-readable display name for the field
+          description: Human-readable display name in English; a fallback for clients that do not read `labels`
           example: Retention Period
+        labels:
+          type: array
+          description: Display name of the field in every active locale
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         section:
           type: string
           description: Methodology section this field belongs to (e.g. CORE, GDPR, DDD)
@@ -10167,8 +10329,13 @@ components:
           example: hr-onboarding
         processName:
           type: string
-          description: Name of the linked process in default locale
+          description: Name of the linked process in the tenant default locale (fallback for clients that do not read `processNames`)
           example: HR Onboarding
+        processNames:
+          type: array
+          description: Linked process name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         legalBasis:
           $ref: '#/components/schemas/LegalBasis'
           nullable: true
@@ -10191,7 +10358,12 @@ components:
         securityMeasures:
           type: string
           nullable: true
-          description: Security measures description (default locale)
+          description: Security measures description in the tenant default locale (fallback for clients that do not read `securityMeasuresLocalized`)
+        securityMeasuresLocalized:
+          type: array
+          description: Security measures description in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
     CreateServiceProviderRequest:
       type: object
       required:
@@ -10290,6 +10462,12 @@ components:
         linkedResourceName:
           type: string
           nullable: true
+          description: Linked process or entity name in the tenant default locale (fallback for clients that do not read `linkedResourceNames`)
+        linkedResourceNames:
+          type: array
+          description: Linked process or entity name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         riskDescription:
           type: array
           nullable: true
@@ -10501,6 +10679,14 @@ components:
           type: string
         reason:
           type: string
+          description: English explanation; a fallback for clients that do not recognise `reasonCode`
+        reasonCode:
+          type: string
+          nullable: true
+          description: >
+            Machine-readable reason code. The UI renders its own localised sentence from this code,
+            the same way it renders a to-do from `TaskItem.ruleCode`.
+          example: COLLABORATION_SHOULD_CONVERGE_TO_XAAS
     TeamInteractionHealthAlertItem:
       type: object
       required: [interactionId, sourceUnitKey, sourceUnitName, targetUnitKey, targetUnitName, threshold]
@@ -11043,7 +11229,12 @@ components:
           description: IT system key
         name:
           type: string
-          description: IT system name in default locale
+          description: IT system name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: IT system name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
         processingCountries:
           type: array
           items:
@@ -11311,7 +11502,12 @@ components:
           example: customer-management
         name:
           type: string
-          description: Capability name in default locale
+          description: Capability name in the tenant default locale (fallback for clients that do not read `names`)
+        names:
+          type: array
+          description: Capability name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
           example: Customer Management
         owningUnit:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
@@ -11389,7 +11585,7 @@ components:
           description: Machine-readable metric key
         label:
           type: string
-          description: Human-readable label
+          description: English label; the UI renders `maturity.metrics.<key>` from its own i18n and only falls back to this
         covered:
           type: integer
           description: Number of items that satisfy the metric
@@ -11537,6 +11733,134 @@ components:
           minLength: 1
           maxLength: 500
           description: Why the task does not apply to this item (audit record, not catalogue content)
+    OverviewResourceType:
+      type: string
+      description: >-
+        A catalogue list that supports grouping. The first four values match the entity types used by
+        the field-configuration system, so a hidden-field rule keyed on BUSINESS_ENTITY also governs
+        the entity overview.
+      enum:
+      - BUSINESS_ENTITY
+      - BUSINESS_DOMAIN
+      - BUSINESS_PROCESS
+      - ORGANISATIONAL_UNIT
+      - CAPABILITY
+      - IT_SYSTEM
+      - SERVICE_PROVIDER
+    GroupingOption:
+      type: object
+      required:
+      - key
+      - labels
+      properties:
+        key:
+          type: string
+          description: >-
+            Machine-readable dimension. NONE is the un-grouped parent-child tree; the rest name the
+            field grouped on. Not an enum in the schema because the available set differs per resource
+            type and is answered by the groupings endpoint.
+          example: OWNER
+        labels:
+          type: array
+          description: Display name of the dimension, in every active locale
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    GroupingOptionsResponse:
+      type: object
+      required:
+      - resourceType
+      - options
+      properties:
+        resourceType:
+          $ref: '#/components/schemas/OverviewResourceType'
+        options:
+          type: array
+          description: Available dimensions, NONE first
+          items:
+            $ref: '#/components/schemas/GroupingOption'
+    OverviewNode:
+      type: object
+      required:
+      - key
+      - names
+      - matchesGroup
+      - children
+      properties:
+        key:
+          type: string
+          description: Key of the catalogue item, for navigation
+        names:
+          type: array
+          description: Item name in every locale it is defined in
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        matchesGroup:
+          type: boolean
+          description: >-
+            True when the item itself belongs to this group. False when it is only present as an
+            ancestor of a member — its own value for the grouping dimension differs — in which case a
+            client should render it as context and not make it selectable.
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/OverviewNode'
+    OverviewGroup:
+      type: object
+      required:
+      - labels
+      - itemCount
+      - nodes
+      properties:
+        key:
+          type: string
+          nullable: true
+          description: >-
+            Identifies the grouping value — a username, an org-unit key, an enum value. Null is the
+            unassigned bucket, for items with no value for this dimension.
+        labelKey:
+          type: string
+          nullable: true
+          description: >-
+            i18n key for the heading, set when the grouping value is a closed enum the UI already
+            translates (`processType.OPERATIONAL_CORE`, `orgUnitType.TEAM`) or the unassigned bucket
+            (`common.unassigned`). The client renders this key and falls back to `labels`. Null when
+            the value is user content, which has no key and arrives translated in `labels`.
+          example: processType.OPERATIONAL_CORE
+        labels:
+          type: array
+          description: >-
+            Group heading in every active locale. For a grouping value that is user content (a unit or
+            bounded-context name) these are the record's own translations; for an enum value it is the
+            English fallback behind `labelKey`.
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        itemCount:
+          type: integer
+          description: Number of items that actually belong to the group; context-only ancestors are not counted
+          example: 7
+        nodes:
+          type: array
+          description: Roots of the sub-trees in this group
+          items:
+            $ref: '#/components/schemas/OverviewNode'
+    GroupedOverviewResponse:
+      type: object
+      required:
+      - resourceType
+      - groupBy
+      - groups
+      properties:
+        resourceType:
+          $ref: '#/components/schemas/OverviewResourceType'
+        groupBy:
+          type: string
+          description: The dimension the list was grouped by
+          example: OWNER
+        groups:
+          type: array
+          description: Groups in display order, with the unassigned group last
+          items:
+            $ref: '#/components/schemas/OverviewGroup'
     OwnerTaskLoadItem:
       type: object
       required:
@@ -11581,7 +11905,9 @@ components:
           description: Human-readable rule name (English fallback; the UI prefers its own i18n key)
         description:
           type: string
-          description: What the rule checks and why it matters
+          description: >
+            What the rule checks and why it matters, in English. Like `label`, this is a fallback: the UI
+            renders `tasks.ruleDescriptions.<ruleCode>` from its own i18n and only falls back to this.
         entityType:
           type: string
           description: Entity type the rule applies to (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT)

@@ -33,6 +33,7 @@ import type {
 
 import type {
   DashboardResponse,
+  GetDashboardParams,
   MaturityMetricsResponse
 } from '../model';
 
@@ -201,20 +202,27 @@ export type getDashboardResponseError = (getDashboardResponse401) & {
 
 export type getDashboardResponse = (getDashboardResponseSuccess | getDashboardResponseError)
 
-export const getGetDashboardUrl = () => {
+export const getGetDashboardUrl = (params?: GetDashboardParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/dashboard`
+  return stringifiedParams.length > 0 ? `/dashboard?${stringifiedParams}` : `/dashboard`
 }
 
 /**
  * @summary Get role-specific dashboard data
  */
-export const getDashboard = async ( options?: RequestInit): Promise<getDashboardResponse> => {
+export const getDashboard = async (params?: GetDashboardParams, options?: RequestInit): Promise<getDashboardResponse> => {
 
-  return customAxios<getDashboardResponse>(getGetDashboardUrl(),
+  return customAxios<getDashboardResponse>(getGetDashboardUrl(params),
   {
     ...options,
     method: 'GET'
@@ -227,23 +235,23 @@ export const getDashboard = async ( options?: RequestInit): Promise<getDashboard
 
 
 
-export const getGetDashboardQueryKey = () => {
+export const getGetDashboardQueryKey = (params?: GetDashboardParams,) => {
     return [
-    `/dashboard`
+    `/dashboard`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+export const getGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>(params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetDashboardQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboard>>> = ({ signal }) => getDashboard({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboard>>> = ({ signal }) => getDashboard(params, { signal, ...requestOptions });
 
 
 
@@ -257,7 +265,7 @@ export type GetDashboardQueryError = void
 
 
 export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
+ params: undefined |  GetDashboardParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getDashboard>>,
           TError,
@@ -267,7 +275,7 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
+ params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getDashboard>>,
           TError,
@@ -277,7 +285,7 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -285,11 +293,11 @@ export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>
  */
 
 export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ params?: GetDashboardParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetDashboardQueryOptions(options)
+  const queryOptions = getGetDashboardQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

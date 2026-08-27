@@ -7,6 +7,8 @@ import ItSystemDetailPanel from '../components/it-systems/ItSystemDetailPanel';
 import CreateItSystemDialog from '../components/it-systems/CreateItSystemDialog';
 import ItSystemsSetupWizard from '../components/it-systems/ItSystemsSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { useGetAllItSystems } from '../api/generated/it-system/it-system';
 import type { ItSystemResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +16,7 @@ import { useWizardMode } from '../context/WizardModeContext';
 import { useAuth } from '../context/AuthContext';
 
 const ItSystemsPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('IT_SYSTEM');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
@@ -40,7 +43,8 @@ const ItSystemsPage: React.FC = () => {
     <SplitPageLayout
       title={t('itSystem.pageTitle')}
       subtitle={t('itSystem.pageSubtitle')}
-      list={<ItSystemListPanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      actions={<GroupByControl resourceType="IT_SYSTEM" value={groupBy} onChange={setGroupBy} />}
+      list={<ItSystemListPanel groupBy={groupBy} selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <ItSystemDetailPanel systemKey={key} />

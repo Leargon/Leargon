@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -29,14 +32,18 @@ import type { ProcessTreeResponse } from '../../api/generated/model';
 interface ProcessListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'BUSINESS_PROCESS');
-  const { data: treeResponse, isLoading } = useGetProcessTree();
+  const { data: treeResponse, isLoading } = useGetProcessTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as ProcessTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -54,7 +61,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search processes..."
+          placeholder={t('process.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -70,17 +77,27 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
         />
         {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.newBtn')}
           </Button>
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="BUSINESS_PROCESS"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Timeline fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/processes/${itemKey}`)}
+            emptyLabel={t('process.emptyList')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",
               p: 2
-            }}>Loading...</Typography>
+            }}>{t('common.loading')}</Typography>
         ) : filteredTree.length === 0 ? (
           <Typography
             sx={{
@@ -88,7 +105,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
               p: 2,
               textAlign: 'center'
             }}>
-            {filter ? 'No matches found.' : 'No processes yet. Create one to get started.'}
+            {filter ? t('common.noMatches') : t('process.emptyList')}
           </Typography>
         ) : (
           <List dense disablePadding>
@@ -130,6 +147,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   getLocalizedText,
   matchesFilter,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const hasChildren = process.children && process.children.length > 0;
   const isSelected = process.key === selectedKey;
@@ -162,7 +180,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography variant="body2" noWrap>
-                {getLocalizedText(process.names, 'Unnamed')}
+                {getLocalizedText(process.names, t('common.unnamed'))}
               </Typography>
               {process.processType && (
                 <Chip

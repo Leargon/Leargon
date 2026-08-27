@@ -22,7 +22,7 @@ function truncate(s: string): string {
 
 const UbiquitousLanguagePage: React.FC = () => {
   const { t } = useTranslation();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
   const navigate = useNavigate();
 
   const { data: entitiesData, isLoading: entitiesLoading } = useGetAllBusinessEntities();
@@ -53,8 +53,8 @@ const UbiquitousLanguagePage: React.FC = () => {
     return entities.filter(
       (e) =>
         getLocalizedText(e.names).toLowerCase().includes(q) ||
-        (e.boundedContext?.name ?? '').toLowerCase().includes(q) ||
-        (e.boundedContext?.domainName ?? '').toLowerCase().includes(q),
+        localizedName(e.boundedContext).toLowerCase().includes(q) ||
+        getLocalizedText(e.boundedContext?.domainNames, e.boundedContext?.domainName ?? '').toLowerCase().includes(q),
     );
   }, [entities, entitySearch, getLocalizedText]);
 
@@ -63,8 +63,8 @@ const UbiquitousLanguagePage: React.FC = () => {
     return processes.filter(
       (p) =>
         getLocalizedText(p.names).toLowerCase().includes(q) ||
-        (p.boundedContext?.name ?? '').toLowerCase().includes(q) ||
-        (p.boundedContext?.domainName ?? '').toLowerCase().includes(q),
+        localizedName(p.boundedContext).toLowerCase().includes(q) ||
+        getLocalizedText(p.boundedContext?.domainNames, p.boundedContext?.domainName ?? '').toLowerCase().includes(q),
     );
   }, [processes, processSearch, getLocalizedText]);
 
@@ -73,8 +73,8 @@ const UbiquitousLanguagePage: React.FC = () => {
     return events.filter(
       (e) =>
         getLocalizedText(e.names).toLowerCase().includes(q) ||
-        (e.publishingBoundedContext?.name ?? '').toLowerCase().includes(q) ||
-        (e.publishingBoundedContext?.domainName ?? '').toLowerCase().includes(q),
+        localizedName(e.publishingBoundedContext).toLowerCase().includes(q) ||
+        getLocalizedText(e.publishingBoundedContext?.domainNames, e.publishingBoundedContext?.domainName ?? '').toLowerCase().includes(q),
     );
   }, [events, eventSearch, getLocalizedText]);
 
@@ -161,8 +161,8 @@ const UbiquitousLanguagePage: React.FC = () => {
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ fontWeight: 500 }}>{name}</TableCell>
-                      <TableCell>{entity.boundedContext?.name ?? noBc}</TableCell>
-                      <TableCell>{entity.boundedContext?.domainName ?? noBc}</TableCell>
+                      <TableCell>{localizedName(entity.boundedContext) || noBc}</TableCell>
+                      <TableCell>{getLocalizedText(entity.boundedContext?.domainNames, entity.boundedContext?.domainName) || noBc}</TableCell>
                       <TableCell>
                         {desc ? (
                           <Tooltip title={getLocalizedText(entity.descriptions ?? [])} disableHoverListener={desc.length === getLocalizedText(entity.descriptions ?? []).length}>
@@ -270,8 +270,8 @@ const UbiquitousLanguagePage: React.FC = () => {
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ fontWeight: 500 }}>{name}</TableCell>
-                      <TableCell>{process.boundedContext?.name ?? noBc}</TableCell>
-                      <TableCell>{process.boundedContext?.domainName ?? noBc}</TableCell>
+                      <TableCell>{localizedName(process.boundedContext) || noBc}</TableCell>
+                      <TableCell>{getLocalizedText(process.boundedContext?.domainNames, process.boundedContext?.domainName) || noBc}</TableCell>
                       <TableCell>
                         {desc ? (
                           <Tooltip title={getLocalizedText(process.descriptions ?? [])} disableHoverListener={desc.length === getLocalizedText(process.descriptions ?? []).length}>
@@ -348,8 +348,8 @@ const UbiquitousLanguagePage: React.FC = () => {
                   return (
                     <TableRow key={event.key} hover sx={{ cursor: 'default' }}>
                       <TableCell sx={{ fontWeight: 500 }}>{name}</TableCell>
-                      <TableCell>{event.publishingBoundedContext?.name ?? noBc}</TableCell>
-                      <TableCell>{event.publishingBoundedContext?.domainName ?? noBc}</TableCell>
+                      <TableCell>{localizedName(event.publishingBoundedContext) || noBc}</TableCell>
+                      <TableCell>{getLocalizedText(event.publishingBoundedContext?.domainNames, event.publishingBoundedContext?.domainName) || noBc}</TableCell>
                       <TableCell>
                         {(event.consumers ?? []).length === 0 ? (
                           <Typography variant="body2" sx={{

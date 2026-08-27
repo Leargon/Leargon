@@ -178,7 +178,11 @@ class Process {
         version.process = this
     }
 
-    private fun effectiveOwningUnit(): OrganisationalUnit? =
+    /**
+     * The unit that answers for this process: its own, else the one owning its bounded context,
+     * else the one owning that context's domain. Public because the overview grouping buckets by it.
+     */
+    fun effectiveOwningUnit(): OrganisationalUnit? =
         owningUnit
             ?: boundedContext?.owningUnit
             ?: boundedContext?.domain?.owningUnit
@@ -187,7 +191,7 @@ class Process {
 
     fun effectiveSteward(): User? = processSteward ?: effectiveOwningUnit()?.businessSteward
 
-    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.first().text
+    fun getName(locale: String): String = names.textForLocale(locale, key)
 
-    fun getDescription(locale: String): String = descriptions.find { it.locale == locale }?.text ?: descriptions.first().text
+    fun getDescription(locale: String): String = descriptions.textForLocale(locale, "")
 }

@@ -22,34 +22,42 @@ import type { LocalizedText } from './localizedText.ts';
 export interface BusinessEntitySummaryResponse {
   /** BusinessEntity key */
   key: string;
-  /** BusinessEntity name in default locale */
+  /** BusinessEntity name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** BusinessEntity name in every locale it is defined in */
+  names?: LocalizedText[];
   /**
      * Key of the parent entity, null if this is a top-level entity
      * @nullable
      */
   parentKey?: string | null;
   /**
-     * Name of the parent entity in default locale, null if top-level
+     * Name of the parent entity in the tenant default locale (fallback for clients that do not read `parentNames`), null if top-level
      * @nullable
      */
   parentName?: string | null;
+  /** Parent entity name in every locale it is defined in, null if top-level */
+  parentNames?: LocalizedText[];
   /**
      * Key of the root (top-level) ancestor entity, null if this entity is itself top-level
      * @nullable
      */
   rootKey?: string | null;
   /**
-     * Name of the root ancestor entity in default locale, null if this entity is itself top-level
+     * Name of the root ancestor entity in the tenant default locale (fallback for clients that do not read `rootNames`), null if this entity is itself top-level
      * @nullable
      */
   rootName?: string | null;
+  /** Root ancestor entity name in every locale it is defined in, null if this entity is itself top-level */
+  rootNames?: LocalizedText[];
   boundedContext?: BoundedContextSummaryResponse | null;
   /**
-     * Description in the default locale
+     * Description in the tenant default locale (fallback for clients that do not read `descriptions`)
      * @nullable
      */
   description?: string | null;
+  /** Description in every locale it is defined in */
+  descriptions?: LocalizedText[];
   /**
      * Retention period or criteria for this entity (localised)
      * @nullable

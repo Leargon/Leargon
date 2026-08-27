@@ -132,6 +132,13 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
   SEPARATE_WAYS: '#9e9e9e',
 };
 
+/** The localised text parts of a context relationship, and the i18n key naming each one. */
+const CONTEXT_RELATIONSHIP_PARTS = [
+  { sub: 'upstreamRole', labelKey: 'domain.upstreamRole' },
+  { sub: 'downstreamRole', labelKey: 'domain.downstreamRole' },
+  { sub: 'description', labelKey: 'domain.description' },
+] as const;
+
 const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 
 interface DomainDetailPanelProps {
@@ -141,7 +148,7 @@ interface DomainDetailPanelProps {
 const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
   const sections = DOMAIN_SECTIONS_BY_PERSPECTIVE[perspective];
@@ -180,6 +187,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     (d.boundedContexts ?? []).map((bc) => ({
       key: bc.key,
       name: bc.name,
+      names: bc.names,
       domainName: getLocalizedText(d.names, d.key),
     })),
   );
@@ -565,7 +573,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             />
           )}
           {domain.owningUnit?.name && (
-            <Chip label={getLocalizedText(allOrgUnits.find(u => u.key === domain.owningUnit!.key)?.names ?? [], domain.owningUnit.name)} size="small" variant="outlined" />
+            <Chip label={localizedName(domain.owningUnit)} size="small" variant="outlined" />
           )}
           {canManage && (domain.missingMandatoryFields?.length ?? 0) > 0 && (
             <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: domain.missingMandatoryFields!.length })} size="small" color="warning" />
@@ -792,7 +800,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                   <Chip
                     label={(() => {
                       const full = allDomains.find((d) => d.key === domain.parent!.key);
-                      return full ? getLocalizedText(full.names, domain.parent!.key) : domain.parent!.name || domain.parent!.key;
+                      return full ? getLocalizedText(full.names, domain.parent!.key) : localizedName(domain.parent);
                     })()}
                     size="small"
                     onClick={() => navigate(`/domains/${domain.parent!.key}`)}
@@ -892,7 +900,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             ) : (
               <Typography variant="body2">
                 {domain.owningUnit ? (
-                  <Chip label={getLocalizedText(allOrgUnits.find(u => u.key === domain.owningUnit!.key)?.names ?? [], domain.owningUnit.name)} size="small" />
+                  <Chip label={localizedName(domain.owningUnit)} size="small" />
                 ) : (
                   <span style={{ color: '#888' }}>{t('common.notSet')}</span>
                 )}
@@ -1008,7 +1016,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               ) : (
                 <>
                   {selectedBc?.owningTeam ? (
-                    <Chip label={selectedBc.owningTeam.name} size="small" variant="outlined" />
+                    <Chip label={localizedName(selectedBc.owningTeam)} size="small" variant="outlined" />
                   ) : (
                     <Typography variant="caption" sx={{
                       color: "text.secondary"
@@ -1087,20 +1095,18 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                     <Typography variant="caption" sx={{
                       color: "text.secondary"
                     }}>{t('domain.upstream')}:</Typography>
-                    {upstreamBc && <Chip label={upstreamBc.name} size="small" variant="outlined" />}
+                    {upstreamBc && <Chip label={localizedName(upstreamBc)} size="small" variant="outlined" />}
                     <Typography variant="caption" sx={{
                       color: "text.secondary"
                     }}>→ {t('domain.downstream')}:</Typography>
-                    {downstreamBc && <Chip label={downstreamBc.name} size="small" variant="outlined" />}
+                    {downstreamBc && <Chip label={localizedName(downstreamBc)} size="small" variant="outlined" />}
                   </Box>
-                  {([
-                    ['upstreamRole', rel.upstreamRole, t('domain.upstreamRole')],
-                    ['downstreamRole', rel.downstreamRole, t('domain.downstreamRole')],
-                    ['description', rel.description, t('domain.description')],
-                  ] as const).map(([sub, val, label]) =>
-                    val && val.length > 0 ? (
+                  {CONTEXT_RELATIONSHIP_PARTS.map(({ sub, labelKey }) => {
+                    const val = rel[sub];
+                    if (!val || val.length === 0) return null;
+                    return (
                       <Box key={sub} sx={{ mt: 0.25 }}>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>{label}:</Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mr: 0.5 }}>{t(labelKey)}:</Typography>
                         <LocalizedTextView
                           value={val}
                           showAll={canEditField('contextRelationships')}
@@ -1108,8 +1114,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                           sx={{ color: 'text.secondary', display: 'inline-block' }}
                         />
                       </Box>
-                    ) : null,
-                  )}
+                    );
+                  })}
                 </Box>
                 {rel.id != null && renderStatus(`contextRelationship.${rel.id}`)}
                 {canEditField('contextRelationships') && (
@@ -1174,7 +1180,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 }}>{getLocalizedText(ev.names, ev.key)}</Typography>
                 <Typography variant="caption" sx={{
                   color: "text.secondary"
-                }}>{ev.publishingBoundedContext?.name}</Typography>
+                }}>{localizedName(ev.publishingBoundedContext)}</Typography>
               </Box>
               {canEditField('domainEvents') && (
                 <IconButton
@@ -1376,7 +1382,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
               <TableBody>
                 {versions.map((v: BusinessDomainVersionResponse) => (
                   <TableRow key={v.versionNumber}>
-                    <TableCell>v{v.versionNumber}</TableCell>
+                    <TableCell>{t('common.versionNumber', { number: v.versionNumber })}</TableCell>
                     <TableCell>
                       <Chip label={v.changeType} size="small" variant="outlined" />
                     </TableCell>
@@ -1453,7 +1459,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Autocomplete
             options={allBoundedContexts}
             groupBy={(option) => option.domainName}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => localizedName(option)}
             value={allBoundedContexts.find((bc) => bc.key === addRelUpstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelUpstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (
@@ -1465,7 +1471,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
           <Autocomplete
             options={allBoundedContexts}
             groupBy={(option) => option.domainName}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => localizedName(option)}
             value={allBoundedContexts.find((bc) => bc.key === addRelDownstreamBcKey) || null}
             onChange={(_, newVal) => setAddRelDownstreamBcKey(newVal?.key || null)}
             renderInput={(params) => (

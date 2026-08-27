@@ -15,6 +15,7 @@ import org.leargon.backend.model.EntityRole
 import org.leargon.backend.model.LocalizedBusinessEntityResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
@@ -30,8 +31,12 @@ open class BusinessEntityMapper(
     private val businessDataQualityRuleMapper: BusinessDataQualityRuleMapper,
     private val processRepository: ProcessRepository,
     private val fieldVerificationService: FieldVerificationService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toBusinessEntityResponse(
         businessEntity: BusinessEntity,
         currentUser: org.leargon.backend.domain.User? = null
@@ -43,10 +48,7 @@ open class BusinessEntityMapper(
                 businessEntity.interfaceEntities,
             )
         val fc = fieldConfigurationService.compute("BUSINESS_ENTITY", disabledMethodologies, presenceOf(businessEntity))
-        val effectiveOwningUnit =
-            businessEntity.owningUnit
-                ?: businessEntity.boundedContext?.owningUnit
-                ?: businessEntity.boundedContext?.domain?.owningUnit
+        val effectiveOwningUnit = businessEntity.effectiveOwningUnit()
         val effectiveSteward = businessEntity.effectiveSteward()
         val effectiveCustodian = businessEntity.technicalCustodian ?: effectiveOwningUnit?.technicalCustodian
         val fvSvc = this.fieldVerificationService
@@ -64,18 +66,18 @@ open class BusinessEntityMapper(
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toZonedDateTime(businessEntity.createdAt),
             toZonedDateTime(businessEntity.updatedAt)
-        ).owningUnit(businessEntity.owningUnit?.let { OrganisationalUnitSummaryResponse(it.key, it.getName("en")) })
+        ).owningUnit(SummaryMappers.orgUnit(businessEntity.owningUnit, defaultLocale))
             .dataOwner(UserMapper.toUserSummary(businessEntity.effectiveOwner()))
             .dataSteward(UserMapper.toUserSummary(effectiveSteward))
             .stewardIsExplicit(businessEntity.dataSteward != null)
             .technicalCustodian(UserMapper.toUserSummary(effectiveCustodian))
             .custodianIsExplicit(businessEntity.technicalCustodian != null)
-            .parent(toBusinessEntitySummaryResponse(businessEntity.parent))
-            .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext))
-            .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities))
-            .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities))
+            .parent(toBusinessEntitySummaryResponse(businessEntity.parent, defaultLocale))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(businessEntity.boundedContext, defaultLocale))
+            .interfacesEntities(toBusinessEntitySummaryResponseArray(businessEntity.interfaceEntities, defaultLocale))
+            .implementsEntities(toBusinessEntitySummaryResponseArray(businessEntity.implementationEntities, defaultLocale))
             .relationships(toBusinessEntityRelationships(businessEntity.getAllRelationships()))
-            .children(toBusinessEntitySummaryResponseArray(businessEntity.children))
+            .children(toBusinessEntitySummaryResponseArray(businessEntity.children, defaultLocale))
             .classificationAssignments(effectiveClassifications)
             .retentionPeriod(LocalizedTextMapper.toModel(businessEntity.retentionPeriod))
             .containsPersonalData(businessEntity.containsPersonalData)
@@ -120,8 +122,8 @@ open class BusinessEntityMapper(
             toZonedDateTime(entity.updatedAt),
         ).description(if (entity.descriptions.isEmpty()) null else entity.getDescription(locale))
             .dataOwner(UserMapper.toUserSummary(entity.effectiveOwner()))
-            .parent(toBusinessEntitySummaryResponse(entity.parent))
-            .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
+            .parent(toBusinessEntitySummaryResponse(entity.parent, defaultLocale))
+            .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext, defaultLocale))
             .classificationAssignments(
                 ClassificationMapper.computeEffectiveAssignments(
                     entity.classificationAssignments,
@@ -139,12 +141,12 @@ open class BusinessEntityMapper(
                 .descriptions(LocalizedTextMapper.toModel(rel.descriptions))
                 .addCardinalityItem(
                     BusinessEntityRelationshipResponseCardinalityInner(
-                        toBusinessEntitySummaryResponse(rel.firstBusinessEntity),
+                        toBusinessEntitySummaryResponse(rel.firstBusinessEntity, defaultLocale),
                         rel.firstCardinalityMinimum
                     ).maximum(rel.firstCardinalityMaximum)
                 ).addCardinalityItem(
                     BusinessEntityRelationshipResponseCardinalityInner(
-                        toBusinessEntitySummaryResponse(rel.secondBusinessEntity),
+                        toBusinessEntitySummaryResponse(rel.secondBusinessEntity, defaultLocale),
                         rel.secondCardinalityMinimum
                     ).maximum(rel.secondCardinalityMaximum)
                 )
@@ -165,7 +167,7 @@ open class BusinessEntityMapper(
             LocalizedTextMapper.toModel(businessEntity.names),
             LocalizedTextMapper.toModel(businessEntity.descriptions),
             toBusinessEntityTreeResponses(businessEntity.children)
-        ).parent(toBusinessEntitySummaryResponse(businessEntity.parent))
+        ).parent(toBusinessEntitySummaryResponse(businessEntity.parent, defaultLocale))
 
     fun toBusinessEntityTreeResponses(businessEntities: Collection<BusinessEntity>?): List<BusinessEntityTreeResponse> {
         if (businessEntities == null) return emptyList()
@@ -186,23 +188,33 @@ open class BusinessEntityMapper(
         fun rootOf(entity: BusinessEntity): BusinessEntity = if (entity.parent == null) entity else rootOf(entity.parent!!)
 
         @JvmStatic
-        fun toBusinessEntitySummaryResponse(entity: BusinessEntity?): BusinessEntitySummaryResponse? {
+        fun toBusinessEntitySummaryResponse(
+            entity: BusinessEntity?,
+            defaultLocale: String
+        ): BusinessEntitySummaryResponse? {
             if (entity == null) return null
             val root = if (entity.parent == null) null else rootOf(entity.parent!!)
-            return BusinessEntitySummaryResponse(entity.key, entity.getName("en"))
+            return SummaryMappers
+                .entity(entity, defaultLocale)!!
                 .parentKey(entity.parent?.key)
-                .parentName(entity.parent?.getName("en"))
+                .parentName(entity.parent?.getName(defaultLocale))
+                .parentNames(LocalizedTextMapper.toModel(entity.parent?.names.orEmpty()))
                 .rootKey(root?.key)
-                .rootName(root?.getName("en"))
-                .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext))
-                .description(entity.descriptions.firstOrNull()?.text)
+                .rootName(root?.getName(defaultLocale))
+                .rootNames(LocalizedTextMapper.toModel(root?.names.orEmpty()))
+                .boundedContext(BoundedContextMapper.toSummaryResponse(entity.boundedContext, defaultLocale))
+                .description(entity.descriptions.takeIf { it.isNotEmpty() }?.let { entity.getDescription(defaultLocale) })
+                .descriptions(LocalizedTextMapper.toModel(entity.descriptions))
                 .retentionPeriod(LocalizedTextMapper.toModel(entity.retentionPeriod))
         }
 
         @JvmStatic
-        fun toBusinessEntitySummaryResponseArray(businessEntities: Collection<BusinessEntity>?): List<BusinessEntitySummaryResponse> {
+        fun toBusinessEntitySummaryResponseArray(
+            businessEntities: Collection<BusinessEntity>?,
+            defaultLocale: String
+        ): List<BusinessEntitySummaryResponse> {
             if (businessEntities == null) return emptyList()
-            return businessEntities.map { toBusinessEntitySummaryResponse(it)!! }
+            return businessEntities.map { toBusinessEntitySummaryResponse(it, defaultLocale)!! }
         }
     }
 

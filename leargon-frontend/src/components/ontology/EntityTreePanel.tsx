@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -24,18 +25,24 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateRoot } from '../../utils/roles';
 import type { BusinessEntityTreeResponse } from '../../api/generated/model';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 
 interface EntityTreePanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain parent-child tree. */
+  groupBy?: string;
 }
 
-const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'BUSINESS_ENTITY');
-  const { data: treeResponse, isLoading } = useGetBusinessEntityTree();
+  const isGrouped = groupBy !== NO_GROUPING;
+  const { data: treeResponse, isLoading } = useGetBusinessEntityTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as BusinessEntityTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -53,7 +60,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
       <Box sx={{ p: 2, pb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
         <TextField
           size="small"
-          placeholder="Search entities..."
+          placeholder={t('entity.searchPlaceholder')}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           fullWidth
@@ -69,17 +76,27 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
         />
         {canCreate && (
           <Button variant="contained" size="small" startIcon={<Add />} onClick={onCreateClick} sx={{ whiteSpace: 'nowrap' }}>
-            New
+            {t('common.newBtn')}
           </Button>
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="BUSINESS_ENTITY"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<AccountTree fontSize="small" />}
+            onSelect={(entityKey) => navigate(`/entities/${entityKey}`)}
+            emptyLabel={t('entity.emptyList')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",
               p: 2
-            }}>Loading...</Typography>
+            }}>{t('common.loading')}</Typography>
         ) : filteredTree.length === 0 ? (
           <Typography
             sx={{
@@ -87,7 +104,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
               p: 2,
               textAlign: 'center'
             }}>
-            {filter ? 'No matches found.' : 'No entities yet. Create one to get started.'}
+            {filter ? t('common.noMatches') : t('entity.emptyList')}
           </Typography>
         ) : (
           <List dense disablePadding>
@@ -129,6 +146,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
   getLocalizedText,
   matchesFilter,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const hasChildren = entity.children && entity.children.length > 0;
   const isSelected = entity.key === selectedKey;
@@ -160,7 +178,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
         <ListItemText
           primary={
             <Typography variant="body2" noWrap>
-              {getLocalizedText(entity.names, 'Unnamed')}
+              {getLocalizedText(entity.names, t('common.unnamed'))}
             </Typography>
           }
         />

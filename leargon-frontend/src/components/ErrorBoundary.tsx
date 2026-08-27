@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Typography, Button } from '@mui/material';
+// A class component cannot use the hook, so it reads the i18n instance directly.
+import i18n from '../i18n';
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; }
@@ -25,9 +27,9 @@ export class ErrorBoundary extends Component<Props, State> {
             minHeight: "100vh",
             gap: 2
           }}>
-          <Typography variant="h5">Something went wrong</Typography>
+          <Typography variant="h5">{i18n.t('common.somethingWentWrong')}</Typography>
           <Button variant="contained" onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}>
-            Return to home
+            {i18n.t('common.returnHome')}
           </Button>
         </Box>
       );

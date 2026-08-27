@@ -34,14 +34,6 @@ import { useWizardMode } from '../../context/WizardModeContext';
 import { useLocale } from '../../context/LocaleContext';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
-const PROCESS_TYPE_LABELS: Record<string, string> = {
-  OPERATIONAL_CORE: 'Operational / Core',
-  SUPPORT: 'Support',
-  MANAGEMENT: 'Management',
-  INNOVATION: 'Innovation',
-  COMPLIANCE: 'Compliance',
-};
-
 interface ProcessLandscapeWizardProps {
   open: boolean;
   onClose: () => void;
@@ -174,7 +166,7 @@ const ProcessLandscapeWizard: React.FC<ProcessLandscapeWizardProps> = ({ open, o
             >
               <MenuItem value=""><em>{t('wizard.onboarding.processLandscape.typeNone')}</em></MenuItem>
               {PROCESS_TYPE_VALUES.map((pt) => (
-                <MenuItem key={pt} value={pt}>{PROCESS_TYPE_LABELS[pt]}</MenuItem>
+                <MenuItem key={pt} value={pt}>{t(`processType.${pt}`)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -254,7 +246,7 @@ const ProcessLandscapeWizard: React.FC<ProcessLandscapeWizardProps> = ({ open, o
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <SummaryRow label={t('wizard.onboarding.processLandscape.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
           <SummaryRow label={t('wizard.onboarding.processLandscape.summaryCode')} value={code || t('wizard.onboarding.processLandscape.summaryCodeAuto')} />
-          <SummaryRow label={t('wizard.onboarding.processLandscape.summaryType')} value={processType ? PROCESS_TYPE_LABELS[processType] : '—'} />
+          <SummaryRow label={t('wizard.onboarding.processLandscape.summaryType')} value={processType ? t(`processType.${processType}`) : '—'} />
           <SummaryRow label={t('wizard.onboarding.processLandscape.summaryOwner')} value={processOwnerUsername || t('wizard.onboarding.processLandscape.summaryOwnerDefault', { username: user?.username || '' })} />
         </Box>
       ),

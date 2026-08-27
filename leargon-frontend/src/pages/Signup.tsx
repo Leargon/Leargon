@@ -1,4 +1,5 @@
 import React, { useState, FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -17,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import type { ErrorResponse } from '../api/generated/model';
 
 const Signup: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signup } = useAuth();
   const [email, setEmail] = useState('');
@@ -33,7 +35,7 @@ const Signup: React.FC = () => {
     setError('');
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t('auth.passwordTooShort'));
       setLoading(false);
       return;
     }
@@ -43,7 +45,7 @@ const Signup: React.FC = () => {
       navigate('/');
     } catch (err) {
       const axiosError = err as AxiosError<ErrorResponse>;
-      setError(axiosError.response?.data?.message || 'Signup failed. Please try again.');
+      setError(axiosError.response?.data?.message || t('auth.signupFailed'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,7 @@ const Signup: React.FC = () => {
         <Card sx={{ width: '100%' }}>
           <CardContent sx={{ p: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center">
-              Sign Up
+              {t('auth.signUp')}
             </Typography>
             <Typography
               variant="body2"
@@ -72,7 +74,7 @@ const Signup: React.FC = () => {
                 color: "text.secondary",
                 mb: 3
               }}>
-              Create your Léargon account
+              {t('auth.signupSubtitle')}
             </Typography>
 
             {error && (
@@ -84,7 +86,7 @@ const Signup: React.FC = () => {
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
@@ -95,7 +97,7 @@ const Signup: React.FC = () => {
               />
               <TextField
                 fullWidth
-                label="Username"
+                label={t('auth.username')}
                 value={username}
                 onChange={(e) => { setUsername(e.target.value); setError(''); }}
                 margin="normal"
@@ -106,7 +108,7 @@ const Signup: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
-                    label="First Name"
+                    label={t('auth.firstName')}
                     value={firstName}
                     onChange={(e) => { setFirstName(e.target.value); setError(''); }}
                     required
@@ -116,7 +118,7 @@ const Signup: React.FC = () => {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
-                    label="Last Name"
+                    label={t('auth.lastName')}
                     value={lastName}
                     onChange={(e) => { setLastName(e.target.value); setError(''); }}
                     required
@@ -126,14 +128,14 @@ const Signup: React.FC = () => {
               </Grid>
               <TextField
                 fullWidth
-                label="Password"
+                label={t('auth.password')}
                 type="password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                 margin="normal"
                 required
                 autoComplete="new-password"
-                helperText="Minimum 8 characters"
+                helperText={t('auth.passwordHint')}
               />
               <Button
                 type="submit"
@@ -143,7 +145,7 @@ const Signup: React.FC = () => {
                 disabled={loading}
                 sx={{ mt: 3, mb: 2 }}
               >
-                {loading ? 'Creating account...' : 'Sign Up'}
+                {loading ? t('auth.creatingAccount') : t('auth.signUp')}
               </Button>
             </form>
 
@@ -153,9 +155,9 @@ const Signup: React.FC = () => {
                 mt: 2
               }}>
               <Typography variant="body2">
-                Already have an account?{' '}
+                {t('auth.haveAccount')}{' '}
                 <Link component={RouterLink} to="/login" underline="hover">
-                  Login
+                  {t('auth.login')}
                 </Link>
               </Typography>
             </Box>

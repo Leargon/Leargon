@@ -41,7 +41,7 @@ open class DashboardService(
     @Transactional
     open fun getDashboard(
         email: String,
-        locale: String = "en",
+        locale: String,
         isAdmin: Boolean = true,
     ): DashboardResponse {
         // Capture for AOP proxy safety

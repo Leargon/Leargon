@@ -11,26 +11,31 @@ import {
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
-import { Add, Search } from '@mui/icons-material';
+import { Add, Search, Storage } from '@mui/icons-material';
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import type { ItSystemResponse } from '../../api/generated/model';
 
 interface ItSystemListPanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCreateClick }) => {
+const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'IT_SYSTEM');
-  const { data: response, isLoading } = useGetAllItSystems();
+  const { data: response, isLoading } = useGetAllItSystems({ query: { enabled: !isGrouped } });
   const systems = (response?.data as ItSystemResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');
 
@@ -71,7 +76,17 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="IT_SYSTEM"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Storage fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/it-systems/${itemKey}`)}
+            emptyLabel={t('itSystem.noSystemsYet')}
+          />
+        ) : isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress size={24} />
           </Box>

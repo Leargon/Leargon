@@ -23,5 +23,11 @@ export interface TeamInteractionAntiPatternItem {
   sourceUnitName: string;
   targetUnitKey: string;
   targetUnitName: string;
+  /** English explanation; a fallback for clients that do not recognise `reasonCode` */
   reason: string;
+  /**
+     * Machine-readable reason code. The UI renders its own localised sentence from this code, the same way it renders a to-do from `TaskItem.ruleCode`.
+     * @nullable
+     */
+  reasonCode?: string | null;
 }

@@ -7,6 +7,8 @@ import OrgUnitDetailPanel from '../components/organisation/OrgUnitDetailPanel';
 import CreateOrgUnitDialog from '../components/organisation/CreateOrgUnitDialog';
 import OrgSetupWizard from '../components/organisation/OrgSetupWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { useGetAllOrganisationalUnits } from '../api/generated/organisational-unit/organisational-unit';
 import type { OrganisationalUnitResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +20,7 @@ const OrgChartDiagram = lazy(() => import('../components/diagrams/OrgChartDiagra
 const TeamTopologyDiagram = lazy(() => import('../components/diagrams/TeamTopologyDiagram'));
 
 const OrganisationPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('ORGANISATIONAL_UNIT');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
@@ -56,7 +59,8 @@ const OrganisationPage: React.FC = () => {
       ]}
       currentView={view}
       onViewChange={setView}
-      list={<OrgUnitTreePanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      actions={view === 'list' ? (<GroupByControl resourceType="ORGANISATIONAL_UNIT" value={groupBy} onChange={setGroupBy} />) : undefined}
+      list={<OrgUnitTreePanel groupBy={groupBy} selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <OrgUnitDetailPanel unitKey={key} />

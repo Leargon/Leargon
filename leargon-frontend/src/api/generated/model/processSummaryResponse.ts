@@ -17,16 +17,21 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BoundedContextSummaryResponse } from './boundedContextSummaryResponse.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface ProcessSummaryResponse {
   /** Process key */
   key: string;
-  /** Process name in default locale */
+  /** Process name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** Process name in every locale it is defined in */
+  names?: LocalizedText[];
   boundedContext?: BoundedContextSummaryResponse | null;
   /**
-     * Description in the default locale
+     * Description in the tenant default locale (fallback for clients that do not read `descriptions`)
      * @nullable
      */
   description?: string | null;
+  /** Description in every locale it is defined in */
+  descriptions?: LocalizedText[];
 }

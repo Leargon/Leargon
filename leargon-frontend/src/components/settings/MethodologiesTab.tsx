@@ -37,34 +37,16 @@ import { METHODOLOGY_DEFINITIONS } from '../../context/MethodologyContext';
 import { useAuth } from '../../context/AuthContext';
 import { getRoleScopes } from '../../utils/roles';
 import { SECTION_LABELS } from '../../utils/missingFieldsGrouping';
-
-export const MATURITY_LABELS: Record<string, string> = {
-  BASIC: 'Basic',
-  ADVANCED: 'Advanced',
-  EXPERT: 'Expert',
-};
+import { useTranslation, Trans } from 'react-i18next';
+import { useLocale } from '../../context/LocaleContext';
 
 export const MATURITY_ORDER = ['BASIC', 'ADVANCED', 'EXPERT'] as const;
-
-export const ENTITY_TYPE_LABELS: Record<string, string> = {
-  BUSINESS_ENTITY: 'Business Entity',
-  BUSINESS_DOMAIN: 'Business Domain',
-  BUSINESS_PROCESS: 'Business Process',
-  ORGANISATIONAL_UNIT: 'Organisational Unit',
-};
 
 const ALL_KEYS = Object.values(MethodologyConfigEntryKey) as string[];
 
 /** Methodologies that own a verifiable governance entity type — the only ones with a verification switch. */
 const VERIFICATION_CAPABLE = new Set<string>(['DATA_GOVERNANCE', 'PROCESS_GOVERNANCE', 'DDD', 'TEAM_TOPOLOGIES']);
 
-/** Which governance area each verification-capable methodology controls (for the helper text). */
-const VERIFICATION_AREA_LABEL: Record<string, string> = {
-  DATA_GOVERNANCE: 'business entities',
-  PROCESS_GOVERNANCE: 'processes',
-  DDD: 'business domains',
-  TEAM_TOPOLOGIES: 'organisational units',
-};
 
 type VisibilityState = 'MANDATORY' | 'SHOWN' | 'HIDDEN';
 
@@ -140,6 +122,8 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
   allConfigurations,
   isMethSaving,
 }) => {
+  const { t } = useTranslation();
+  const { getLocalizedText } = useLocale();
   const queryClient = useQueryClient();
   const replaceConfigs = useReplaceFieldConfigurations();
   const def = METHODOLOGY_DEFINITIONS[methodologyKey];
@@ -257,7 +241,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-            {def.label}
+            {t(`methodology.${methodologyKey}.label`, { defaultValue: def.label })}
           </Typography>
           <Switch
             checked={enabled}
@@ -268,7 +252,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
         </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {def.description}
+          {t(`methodology.${methodologyKey}.description`, { defaultValue: def.description })}
         </Typography>
 
         {VERIFICATION_CAPABLE.has(methodologyKey) && (
@@ -286,9 +270,9 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
             }}
           >
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2">Field verification</Typography>
+              <Typography variant="body2">{t('methodologyTab.fieldVerification')}</Typography>
               <Typography variant="caption" color="text.secondary">
-                Show verify/unverify indicators on {VERIFICATION_AREA_LABEL[methodologyKey]}
+                {t('methodologyTab.verificationHint', { area: t(`methodologyTab.area.${methodologyKey}`, { defaultValue: methodologyKey }) })}
               </Typography>
             </Box>
             <Switch
@@ -303,13 +287,13 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
         {sections.length > 0 && (
           <Box sx={{ mb: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-              Sections
+              {t('common.sections')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {sections.map((s) => (
                 <Chip
                   key={s}
-                  label={SECTION_LABELS[s] ?? s}
+                  label={t(`section.${s}`, { defaultValue: SECTION_LABELS[s] ?? s })}
                   size="small"
                   variant="outlined"
                   color={enabled ? 'primary' : 'default'}
@@ -322,7 +306,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
         {navLabels.length > 0 && (
           <Box sx={{ mb: hasFields ? 1 : 0 }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-              Navigation items hidden when disabled
+              {t('methodologyTab.navHiddenWhenDisabled')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {navLabels.map((label) => (
@@ -346,7 +330,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
               <Typography variant="caption" color="text.secondary">
-                Apply:
+                {t('common.apply')}:
               </Typography>
               {MATURITY_ORDER.map((level) => (
                 <Button
@@ -357,7 +341,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                   onClick={() => handleApplyPreset(level)}
                   sx={{ minWidth: 0, px: 1, py: 0.25, fontSize: '0.7rem' }}
                 >
-                  {MATURITY_LABELS[level]}
+                  {t(`maturityLevel.${level}`)}
                 </Button>
               ))}
             </Box>
@@ -367,7 +351,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
               onClick={() => onExpandChange(methodologyKey, !expanded)}
               disabled={!enabled}
             >
-              Configure
+              {t('common.configure')}
             </Button>
           </Box>
         )}
@@ -383,7 +367,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                     color="text.secondary"
                     sx={{ display: 'block', mb: 1, letterSpacing: 1 }}
                   >
-                    {MATURITY_LABELS[level]}
+                    {t(`maturityLevel.${level}`)}
                   </Typography>
                   {Object.entries(byMaturity[level]).map(([entityType, fields]) => (
                     <Box key={entityType} sx={{ mb: 2 }}>
@@ -391,7 +375,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                         variant="caption"
                         sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 0.5 }}
                       >
-                        {ENTITY_TYPE_LABELS[entityType] ?? entityType}
+                        {t(`entityType.${entityType}`, { defaultValue: entityType })}
                       </Typography>
                       {/* Locale group blocks: group Shown/Hidden header + per-locale Mandatory/Optional rows */}
                       {fields
@@ -429,9 +413,9 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                                 }}
                               >
                                 <Typography variant="body2" sx={{ fontWeight: 500, flex: 1, mr: 1 }}>
-                                  {groupDef.label}{' '}
+                                  {getLocalizedText(groupDef.labels, groupDef.label)}{' '}
                                   <Typography component="span" variant="caption" color="text.secondary">
-                                    (all locales)
+                                    {t('methodologyTab.allLocales')}
                                   </Typography>
                                 </Typography>
                                 <ToggleButtonGroup
@@ -444,14 +428,14 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                                   disabled={isSaving || isMethSaving}
                                 >
                                   <ToggleButton value="SHOWN" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
-                                    Shown
+                                    {t('methodologyTab.shown')}
                                   </ToggleButton>
                                   <ToggleButton
                                     value="HIDDEN"
                                     disabled={anyLocaleMandatory}
                                     sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
                                   >
-                                    Hidden
+                                    {t('methodologyTab.hidden')}
                                   </ToggleButton>
                                 </ToggleButtonGroup>
                               </Box>
@@ -488,10 +472,10 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                                       data-testid={`field-toggle-${def.fieldName}`}
                                     >
                                       <ToggleButton value="MANDATORY" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
-                                        Mandatory
+                                        {t('methodologyTab.mandatory')}
                                       </ToggleButton>
                                       <ToggleButton value="SHOWN" sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}>
-                                        Optional
+                                        {t('methodologyTab.optional')}
                                       </ToggleButton>
                                     </ToggleButtonGroup>
                                   </Box>
@@ -519,7 +503,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                               }}
                             >
                               <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
-                                {field.label}
+                                {getLocalizedText(field.labels, field.label)}
                               </Typography>
                               <ToggleButtonGroup
                                 value={state}
@@ -535,20 +519,20 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                                     value="MANDATORY"
                                     sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
                                   >
-                                    Mandatory
+                                    {t('methodologyTab.mandatory')}
                                   </ToggleButton>
                                 )}
                                 <ToggleButton
                                   value="SHOWN"
                                   sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
                                 >
-                                  Shown
+                                  {t('methodologyTab.shown')}
                                 </ToggleButton>
                                 <ToggleButton
                                   value="HIDDEN"
                                   sx={{ fontSize: '0.65rem', px: 1, py: 0.25, lineHeight: 1.4 }}
                                 >
-                                  Hidden
+                                  {t('methodologyTab.hidden')}
                                 </ToggleButton>
                               </ToggleButtonGroup>
                             </Box>
@@ -569,6 +553,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
 // ── Main tab component ────────────────────────────────────────────────────────
 
 const MethodologiesTab: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
@@ -628,18 +613,16 @@ const MethodologiesTab: React.FC = () => {
   }
 
   if (isError) {
-    return <Alert severity="error">Failed to load methodology configurations.</Alert>;
+    return <Alert severity="error">{t('methodologyTab.loadFailed')}</Alert>;
   }
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Methodology Configuration
+        {t('methodologyTab.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enable or disable methodologies for your organisation. Disabling a methodology hides its fields, sections, and
-        navigation items. Use <strong>Apply</strong> presets or expand <strong>Configure</strong> to set individual
-        field visibility.
+        <Trans i18nKey="methodologyTab.intro" components={{ 1: <strong />, 3: <strong /> }} />
       </Typography>
       <Grid container spacing={2}>
         {visibleKeys.map((key) => {

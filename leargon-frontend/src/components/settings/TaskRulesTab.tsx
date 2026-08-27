@@ -163,7 +163,9 @@ const TaskRulesTab: React.FC = () => {
                           <Chip label={def.methodology} size="small" variant="outlined" sx={{ height: 18, fontSize: '0.7rem' }} />
                         )}
                       </Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{def.description}</Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        {t(`tasks.ruleDescriptions.${def.ruleCode}`, { defaultValue: def.description })}
+                      </Typography>
                     </Box>
                     <Tooltip title={editable ? '' : t('tasks.rulesNotYours')}>
                       <span>

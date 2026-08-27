@@ -18,7 +18,12 @@
  */
 
 export interface ErrorResponse {
-  /** Error message */
+  /**
+     * Stable machine-readable error code. The UI renders its own localised text from this code and only falls back to `message` when it does not recognise the code.
+     * @nullable
+     */
+  errorCode?: string | null;
+  /** Error message in English; a human-readable fallback, not a display string */
   message?: string;
   /** Request path */
   path?: string;

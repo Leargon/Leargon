@@ -7,6 +7,7 @@ import org.leargon.backend.model.OrganisationalUnitResponse
 import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.OrganisationalUnitTreeResponse
 import org.leargon.backend.model.ProcessSummaryResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import org.leargon.backend.service.FieldConfigurationService
 import org.leargon.backend.service.FieldVerificationService
 import org.leargon.backend.service.MethodologyConfigurationService
@@ -19,8 +20,12 @@ open class OrganisationalUnitMapper(
     private val fieldConfigurationService: FieldConfigurationService,
     private val methodologyConfigurationService: MethodologyConfigurationService,
     private val serviceProviderMapper: ServiceProviderMapper,
-    private val fieldVerificationService: FieldVerificationService
+    private val fieldVerificationService: FieldVerificationService,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toResponse(
         unit: OrganisationalUnit,
         executingProcesses: List<Process> = emptyList()
@@ -49,14 +54,16 @@ open class OrganisationalUnitMapper(
             .missionStatement(LocalizedTextMapper.toModel(unit.missionStatement))
             .parents(toSummaryList(unit.parents))
             .children(toSummaryList(unit.children))
-            .executingProcesses(toProcessSummaryList(executingProcesses))
+            .executingProcesses(toProcessSummaryList(executingProcesses, defaultLocale))
             .isExternal(unit.isExternal)
             .externalCompanyName(unit.externalCompanyName)
             .countryOfExecution(unit.countryOfExecution)
             .serviceProviders(unit.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
-            .dataAccessEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataAccessEntities))
-            .dataManipulationEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataManipulationEntities))
-            .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
+            .dataAccessEntities(BusinessEntityMapper.toBusinessEntitySummaryResponseArray(unit.dataAccessEntities, defaultLocale))
+            .dataManipulationEntities(
+                BusinessEntityMapper
+                    .toBusinessEntitySummaryResponseArray(unit.dataManipulationEntities, defaultLocale)
+            ).classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(unit.classificationAssignments))
             .missingMandatoryFields(fc.missing)
             .mandatoryFields(fc.mandatory)
             .hiddenFields(fc.hidden)
@@ -76,22 +83,17 @@ open class OrganisationalUnitMapper(
                 toTreeResponse(it)
             }.sortedBy { it.key }
 
-    fun toSummaryResponse(unit: OrganisationalUnit?): OrganisationalUnitSummaryResponse? {
-        if (unit == null) return null
-        return OrganisationalUnitSummaryResponse(unit.key, unit.getName("en"))
-    }
+    fun toSummaryResponse(unit: OrganisationalUnit?): OrganisationalUnitSummaryResponse? = SummaryMappers.orgUnit(unit, defaultLocale)
 
-    fun toSummaryList(units: Collection<OrganisationalUnit>?): List<OrganisationalUnitSummaryResponse> {
-        if (units == null) return emptyList()
-        return units.map { toSummaryResponse(it)!! }
-    }
+    fun toSummaryList(units: Collection<OrganisationalUnit>?): List<OrganisationalUnitSummaryResponse> =
+        SummaryMappers.orgUnits(units, defaultLocale)
 
     companion object {
         @JvmStatic
-        fun toProcessSummaryList(processes: List<Process>?): List<ProcessSummaryResponse> {
-            if (processes == null) return emptyList()
-            return processes.map { proc -> ProcessSummaryResponse(proc.key, proc.getName("en")) }
-        }
+        fun toProcessSummaryList(
+            processes: List<Process>?,
+            defaultLocale: String
+        ): List<ProcessSummaryResponse> = SummaryMappers.processes(processes, defaultLocale)
 
         @JvmStatic
         fun toZonedDateTime(instant: Instant?): ZonedDateTime? = instant?.atZone(ZoneOffset.UTC)

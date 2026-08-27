@@ -66,7 +66,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   // Service providers are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
   const canManage = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
@@ -356,7 +356,7 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
                 {(provider.linkedProcesses ?? []).map((p) => (
                   <Chip
                     key={p.key}
-                    label={p.name}
+                    label={localizedName(p)}
                     size="small"
                     variant="outlined"
                     onClick={() => navigate(`/processes/${p.key}`)}

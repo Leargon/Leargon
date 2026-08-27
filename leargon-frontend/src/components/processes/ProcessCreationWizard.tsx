@@ -46,6 +46,7 @@ import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
+import { useLocale } from '../../context/LocaleContext';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
 
@@ -65,6 +66,7 @@ interface ProcessCreationWizardProps {
 
 const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onClose, parentProcessKey }) => {
   const { t } = useTranslation();
+  const { getLocalizedText, localizedName } = useLocale();
   const { mode } = useWizardMode();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -364,7 +366,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {selected.map((key) => {
                       const unit = allUnits.find((u) => u.key === key);
-                      return <Chip key={key} label={unit?.names ? unit.names.find((n: any) => n.locale === 'en')?.text || unit.key : unit?.key || key} size="small" />;
+                      return <Chip key={key} label={unit ? getLocalizedText(unit.names, unit.key) : key} size="small" />;
                     })}
                   </Box>
                 )}
@@ -372,7 +374,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
                 {allUnits.map((u) => (
                   <MenuItem key={u.key} value={u.key}>
                     <Checkbox checked={executingUnitKeys.includes(u.key)} size="small" />
-                    {u.names ? u.names.find((n: any) => n.locale === 'en')?.text || u.key : u.key}
+                    {getLocalizedText(u.names, u.key)}
                   </MenuItem>
                 ))}
               </Select>
@@ -409,12 +411,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
                 }
                 input={<OutlinedInput label={t('wizard.process.inputEntitiesLabel')} />}
                 renderValue={(selected) =>
-                  selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
+                  selected.map((k) => { const e = allEntities.find((x) => x.key === k); return e ? localizedName(e) : k; }).join(', ')
                 }
               >
                 {allEntities.map((e) => (
                   <MenuItem key={e.key} value={e.key}>
-                    {e.name || e.key}
+                    {localizedName(e)}
                   </MenuItem>
                 ))}
               </Select>
@@ -431,12 +433,12 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
                 }
                 input={<OutlinedInput label={t('wizard.process.outputEntitiesLabel')} />}
                 renderValue={(selected) =>
-                  selected.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ')
+                  selected.map((k) => { const e = allEntities.find((x) => x.key === k); return e ? localizedName(e) : k; }).join(', ')
                 }
               >
                 {allEntities.map((e) => (
                   <MenuItem key={e.key} value={e.key}>
-                    {e.name || e.key}
+                    {localizedName(e)}
                   </MenuItem>
                 ))}
               </Select>
@@ -518,11 +520,11 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
           {!isHidden('code') && <SummaryRow label={t('wizard.process.summaryCode')} value={code || t('wizard.process.summaryCodeAuto')} />}
           {!isHidden('processType') && <SummaryRow label={t('wizard.process.summaryType')} value={processType ? t(PROCESS_TYPE_KEYS[processType]) : '—'} />}
           <SummaryRow label={t('wizard.process.summaryOwner')} value={processOwner ? `${processOwner.firstName} ${processOwner.lastName}` : t('wizard.process.summaryOwnerDefault', { username: user?.username || '' })} />
-          {!isHidden('executingUnits') && <SummaryRow label={t('wizard.process.summaryExecutingUnits')} value={executingUnitKeys.length > 0 ? executingUnitKeys.map((k) => allUnits.find((u) => u.key === k)?.names?.find((n: any) => n.locale === 'en')?.text || k).join(', ') : '—'} />}
+          {!isHidden('executingUnits') && <SummaryRow label={t('wizard.process.summaryExecutingUnits')} value={executingUnitKeys.length > 0 ? executingUnitKeys.map((k) => { const u = allUnits.find((x) => x.key === k); return u ? getLocalizedText(u.names, k) : k; }).join(', ') : '—'} />}
           {!isHidden('processSteward') && <SummaryRow label={t('wizard.process.summarySteward')} value={processSteward ? `${processSteward.firstName} ${processSteward.lastName}` : '—'} />}
           {!isHidden('technicalCustodian') && <SummaryRow label={t('wizard.process.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />}
-          {!isHidden('inputEntities') && <SummaryRow label={t('wizard.process.summaryInputEntities')} value={inputEntityKeys.length > 0 ? inputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />}
-          {!isHidden('outputEntities') && <SummaryRow label={t('wizard.process.summaryOutputEntities')} value={outputEntityKeys.length > 0 ? outputEntityKeys.map((k) => allEntities.find((e) => e.key === k)?.name || k).join(', ') : '—'} />}
+          {!isHidden('inputEntities') && <SummaryRow label={t('wizard.process.summaryInputEntities')} value={inputEntityKeys.length > 0 ? inputEntityKeys.map((k) => { const e = allEntities.find((x) => x.key === k); return e ? localizedName(e) : k; }).join(', ') : '—'} />}
+          {!isHidden('outputEntities') && <SummaryRow label={t('wizard.process.summaryOutputEntities')} value={outputEntityKeys.length > 0 ? outputEntityKeys.map((k) => { const e = allEntities.find((x) => x.key === k); return e ? localizedName(e) : k; }).join(', ') : '—'} />}
           {!isHidden('legalBasis') && <SummaryRow label={t('wizard.process.summaryLegalBasis')} value={legalBasis ? t(`legalBasis.${legalBasis}`, { defaultValue: legalBasis }) : '—'} />}
         </Box>
       ),

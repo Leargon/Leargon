@@ -46,7 +46,8 @@ open class BusinessEntityService(
     private val businessEntityMapper: BusinessEntityMapper,
     private val fieldVerificationService: FieldVerificationService,
     private val roleService: RoleService,
-    private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor
+    private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -691,7 +692,7 @@ open class BusinessEntityService(
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "boundedContext")
 
-        val oldName = entity.boundedContext?.getName("en") ?: "none"
+        val oldName = entity.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
 
         entity.boundedContext =
             if (boundedContextKey != null) {
@@ -704,7 +705,7 @@ open class BusinessEntityService(
 
         entity = businessEntityRepository.update(entity)
 
-        val newName = entity.boundedContext?.getName("en") ?: "none"
+        val newName = entity.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
         createBusinessEntityVersion(
             entity,
             currentUser,
@@ -726,7 +727,7 @@ open class BusinessEntityService(
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "owningUnit")
 
-        val oldName = entity.owningUnit?.getName("en") ?: "none"
+        val oldName = entity.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
 
         entity.owningUnit =
             if (owningUnitKey != null) {
@@ -753,7 +754,7 @@ open class BusinessEntityService(
 
         entity = businessEntityRepository.update(entity)
 
-        val newName = entity.owningUnit?.getName("en") ?: "none"
+        val newName = entity.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
         createBusinessEntityVersion(
             entity,
             currentUser,

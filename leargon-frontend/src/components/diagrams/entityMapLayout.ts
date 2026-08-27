@@ -59,6 +59,7 @@ export function buildEntityGraph(
   showDomainLayer: boolean,
   getName: (e: BusinessEntityResponse) => string,
   getDesc: (texts: { locale: string; text: string }[]) => string,
+  getBcName: (bc: { key: string; name?: string | null; names?: { locale: string; text: string }[] | null } | null | undefined) => string,
 ): { nodes: Node[]; edges: Edge[] } {
   const byKey = new Map(entities.map((e) => [e.key, e]));
 
@@ -128,7 +129,7 @@ export function buildEntityGraph(
         id: `bc__${bcKey}`,
         type: 'domainGroupNode',
         position: { x: 0, y: 0 },
-        data: { label: sample?.boundedContext?.name ?? bcKey, color: bcColor.get(bcKey) ?? DEFAULT_BORDER } satisfies GroupNodeData,
+        data: { label: getBcName(sample?.boundedContext) || bcKey, color: bcColor.get(bcKey) ?? DEFAULT_BORDER } satisfies GroupNodeData,
       } as Node);
     });
   }

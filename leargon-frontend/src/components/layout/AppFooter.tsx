@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Chip, Divider, Typography } from '@mui/material';
 
 const STANDARDS = [
@@ -7,7 +8,9 @@ const STANDARDS = [
   { label: 'GDPR / DSG', title: 'General Data Protection Regulation & Swiss Data Protection Act' },
 ];
 
-const AppFooter: React.FC = () => (
+const AppFooter: React.FC = () => {
+  const { t } = useTranslation();
+  return (
   <Box
     component="footer"
     sx={{
@@ -28,7 +31,7 @@ const AppFooter: React.FC = () => (
         color: "text.disabled",
         fontFamily: 'monospace'
       }}>
-      v{__APP_VERSION__}
+      {t('common.appVersion', { version: __APP_VERSION__ })}
     </Typography>
 
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -46,5 +49,6 @@ const AppFooter: React.FC = () => (
     </Box>
   </Box>
 );
+};
 
 export default AppFooter;

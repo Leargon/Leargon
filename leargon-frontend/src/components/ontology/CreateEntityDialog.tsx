@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -27,6 +28,7 @@ interface CreateEntityDialogProps {
 }
 
 const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, parentKey }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createEntity = useCreateBusinessEntity();
@@ -63,7 +65,7 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
       resetForm();
       navigate(`/entities/${newKey}`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to create entity');
+      setError(err?.response?.data?.message || err?.message || t('entity.failedCreate'));
     }
   };
 
@@ -81,14 +83,14 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{parentKey ? 'Create Child Entity' : 'Create Business Entity'}</DialogTitle>
+      <DialogTitle>{parentKey ? t('entity.createChildTitle') : t('entity.createTitle')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           {parentKey && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Parent: <strong>{parentKey}</strong>
+              {t('common.parentLabel')}: <strong>{parentKey}</strong>
             </Typography>
           )}
 
@@ -101,24 +103,24 @@ const CreateEntityDialog: React.FC<CreateEntityDialogProps> = ({ open, onClose, 
           />
 
           <TextField
-            label="Data Owner Username"
+            label={t('entity.dataOwnerUsername')}
             value={dataOwnerUsername}
             onChange={(e) => setDataOwnerUsername(e.target.value)}
             size="small"
-            helperText="Leave empty to default to yourself"
+            helperText={t('entity.dataOwnerHint')}
           />
 
           {error && <Alert severity="error">{error}</Alert>}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           onClick={handleCreate}
           variant="contained"
           disabled={createEntity.isPending || !hasDefaultName}
         >
-          {createEntity.isPending ? 'Creating...' : 'Create'}
+          {createEntity.isPending ? t('common.creating') : t('common.create')}
         </Button>
       </DialogActions>
     </Dialog>

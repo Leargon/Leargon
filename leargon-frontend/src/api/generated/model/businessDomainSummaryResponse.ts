@@ -16,10 +16,13 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface BusinessDomainSummaryResponse {
   /** BusinessDomain key */
   key: string;
-  /** BusinessDomain name in default locale */
+  /** BusinessDomain name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** BusinessDomain name in every locale it is defined in */
+  names?: LocalizedText[];
 }

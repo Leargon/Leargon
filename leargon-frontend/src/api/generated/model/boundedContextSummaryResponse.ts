@@ -16,19 +16,26 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface BoundedContextSummaryResponse {
   /** Bounded context key */
   key: string;
-  /** Bounded context name in default locale */
+  /** Bounded context name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** Bounded context name in every locale it is defined in */
+  names?: LocalizedText[];
   /** Parent domain key */
   domainKey: string;
-  /** Parent domain name in default locale */
+  /** Parent domain name in the tenant default locale (fallback for clients that do not read `domainNames`) */
   domainName: string;
+  /** Parent domain name in every locale it is defined in */
+  domainNames?: LocalizedText[];
   /**
      * Name of the owning organisational unit (used for computed owner/steward/custodian display)
      * @nullable
      */
   owningUnitName?: string | null;
+  /** Owning organisational unit name in every locale it is defined in */
+  owningUnitNames?: LocalizedText[];
 }

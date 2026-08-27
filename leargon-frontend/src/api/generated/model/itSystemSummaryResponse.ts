@@ -16,12 +16,15 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 
 export interface ItSystemSummaryResponse {
   /** IT system key */
   key: string;
-  /** IT system name in default locale */
+  /** IT system name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** IT system name in every locale it is defined in */
+  names?: LocalizedText[];
   /** ISO 3166-1 alpha-2 country codes where this IT system is deployed */
   processingCountries: string[];
 }

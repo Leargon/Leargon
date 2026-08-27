@@ -129,29 +129,25 @@ import type { UpdateProcessValueStreamRequest, ValueStreamSummaryResponse } from
 import { getCountryName, getCountryOptions } from '../../utils/countries';
 
 const PROCESS_TYPE_VALUES = ['OPERATIONAL_CORE', 'SUPPORT', 'MANAGEMENT', 'INNOVATION', 'COMPLIANCE'] as const;
-const PROCESS_TYPE_LABELS: Record<string, string> = {
-  OPERATIONAL_CORE: 'Operational/Core',
-  SUPPORT: 'Support',
-  MANAGEMENT: 'Management',
-  INNOVATION: 'Innovation',
-  COMPLIANCE: 'Compliance',
-};
-
 const LEGAL_BASIS_VALUES = ['CONSENT', 'CONTRACT', 'LEGAL_OBLIGATION', 'VITAL_INTEREST', 'PUBLIC_TASK', 'LEGITIMATE_INTEREST'] as const;
-const LEGAL_BASIS_LABELS: Record<string, string> = {
-  CONSENT: 'Consent',
-  CONTRACT: 'Contract',
-  LEGAL_OBLIGATION: 'Legal Obligation',
-  VITAL_INTEREST: 'Vital Interests',
-  PUBLIC_TASK: 'Public Task',
-  LEGITIMATE_INTEREST: 'Legitimate Interests',
-};
 
-const SAFEGUARD_LABELS: Record<string, string> = {
-  ADEQUACY_DECISION: 'Adequacy Decision',
-  STANDARD_CONTRACTUAL_CLAUSES: 'Standard Contractual Clauses',
-  BINDING_CORPORATE_RULES: 'Binding Corporate Rules',
-  EXCEPTION: 'Art. 17 Exception',
+const SAFEGUARD_VALUES = ['ADEQUACY_DECISION', 'STANDARD_CONTRACTUAL_CLAUSES', 'BINDING_CORPORATE_RULES', 'EXCEPTION'] as const;
+
+/** The numeric value-stream metrics, and the i18n key naming each one. */
+const VSM_METRIC_FIELDS = [
+  'cycleTimeMinutes',
+  'waitTimeMinutes',
+  'changeoverTimeMinutes',
+  'firstPassYield',
+  'completionRate',
+] as const;
+
+const VSM_METRIC_LABEL_KEYS: Record<(typeof VSM_METRIC_FIELDS)[number], string> = {
+  cycleTimeMinutes: 'vsm.cycleTime',
+  waitTimeMinutes: 'vsm.waitTime',
+  changeoverTimeMinutes: 'vsm.changeoverTime',
+  firstPassYield: 'vsm.firstPassYield',
+  completionRate: 'vsm.completionRate',
 };
 
 interface ProcessDetailPanelProps {
@@ -162,7 +158,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const navigate = useNavigate();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { getLocalizedText, preferredLocale } = useLocale();
+  const { getLocalizedText, preferredLocale, localizedName } = useLocale();
   const { user } = useAuth();
   const { perspective } = useNavigation();
   const { isMethodologyEnabled } = useMethodology();
@@ -554,7 +550,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   if (error || !process) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Process not found or failed to load.</Alert>
+        <Alert severity="error">{t('process.notFound')}</Alert>
       </Box>
     );
   }
@@ -572,7 +568,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <DetailPanelHeader
-        title={getLocalizedText(process.names, 'Unnamed Process')}
+        title={getLocalizedText(process.names, t('process.unnamed'))}
         itemKey={process.key}
         chips={<>
           {process.processOwner ? (
@@ -581,7 +577,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label="No owner" size="small" color="warning" />
           ) : null}
           {process.legalBasis ? (
-            <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} size="small" color="secondary" variant="outlined" />
+            <Chip label={t(`legalBasis.${process.legalBasis}`, { defaultValue: process.legalBasis })} size="small" color="secondary" variant="outlined" />
           ) : isOwnerOrAdmin ? (
             <Chip icon={<WarningIcon fontSize="small" />} label="No legal basis" size="small" color="warning" />
           ) : null}
@@ -785,7 +781,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {owningUnitEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{owningUnitEdit.error}</Alert>}
               </Box>
             ) : process.owningUnit ? (
-              <Chip label={process.owningUnit.name} size="small" variant="outlined" />
+              <Chip label={localizedName(process.owningUnit)} size="small" variant="outlined" />
             ) : (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t('common.notAssigned')}</Typography>
             )}
@@ -876,7 +872,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             {codeEdit.isEditing ? (
               <Box>
                 <TextField size="small" value={codeEdit.editValue || ''} onChange={(e) => codeEdit.setEditValue(e.target.value)}
-                  placeholder="Process code" helperText="If set, the code is used as the key instead of the name" sx={{ width: 300 }} />
+                  placeholder={t('process.codePlaceholder')} helperText={t('process.codeHint')} sx={{ width: 300 }} />
                 {codeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{codeEdit.error}</Alert>}
               </Box>
             ) : (
@@ -900,16 +896,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   sx={{ minWidth: 200 }}
                 >
                   <MenuItem value="">
-                    <em>None</em>
+                    <em>{t('common.none')}</em>
                   </MenuItem>
-                  {PROCESS_TYPE_VALUES.map((t) => (
-                    <MenuItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</MenuItem>
+                  {PROCESS_TYPE_VALUES.map((pt) => (
+                    <MenuItem key={pt} value={pt}>{t(`processType.${pt}`)}</MenuItem>
                   ))}
                 </Select>
                 {typeEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{typeEdit.error}</Alert>}
               </Box>
             ) : process.processType ? (
-              <Chip label={PROCESS_TYPE_LABELS[process.processType] || process.processType} color="primary" size="small" />
+              <Chip label={t(`processType.${process.processType}`, { defaultValue: process.processType })} color="primary" size="small" />
             ) : (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
@@ -931,16 +927,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   sx={{ minWidth: 300 }}
                 >
                   <MenuItem value="">
-                    <em>None</em>
+                    <em>{t('common.none')}</em>
                   </MenuItem>
                   {LEGAL_BASIS_VALUES.map((v) => (
-                    <MenuItem key={v} value={v}>{LEGAL_BASIS_LABELS[v]}</MenuItem>
+                    <MenuItem key={v} value={v}>{t(`legalBasis.${v}`)}</MenuItem>
                   ))}
                 </Select>
                 {legalBasisEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{legalBasisEdit.error}</Alert>}
               </Box>
             ) : process.legalBasis ? (
-              <Chip label={LEGAL_BASIS_LABELS[process.legalBasis] || process.legalBasis} color="secondary" size="small" />
+              <Chip label={t(`legalBasis.${process.legalBasis}`, { defaultValue: process.legalBasis })} color="secondary" size="small" />
             ) : (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
@@ -956,7 +952,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               <Box>
                 <Autocomplete
                   options={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) })))}
-                  getOptionLabel={(option) => `${option.name} (${option.domainName})`}
+                  getOptionLabel={(option) => `${localizedName(option)} (${getLocalizedText(option.domainNames, option.domainName)})`}
                   value={allDomains.flatMap((d) => (d.boundedContexts || []).map((bc) => ({ ...bc, domainName: getLocalizedText(d.names, d.key) }))).find((bc) => bc.key === boundedContextEdit.editValue) || null}
                   onChange={(_, newVal) => boundedContextEdit.setEditValue(newVal?.key || null)}
                   renderInput={(params) => (
@@ -969,10 +965,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               </Box>
             ) : process.boundedContext ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Chip label={process.boundedContext.name} size="small" />
+                <Chip label={localizedName(process.boundedContext)} size="small" />
                 <Typography variant="caption" sx={{
                   color: "text.secondary"
-                }}>({process.boundedContext.domainName})</Typography>
+                }}>({getLocalizedText(process.boundedContext.domainNames, process.boundedContext.domainName)})</Typography>
               </Box>
             ) : (
               <Typography variant="body2" sx={{
@@ -1053,7 +1049,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 {process.executingUnits.map((u) => (
                   <Box key={u.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
                     <Chip
-                      label={u.name || u.key}
+                      label={localizedName(u)}
                       size="small"
                       onClick={() => navigate(`/organisation/${u.key}`)}
                       clickable
@@ -1066,7 +1062,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               <>
                 <Typography variant="body2" sx={{
                   color: "text.secondary"
-                }}>None</Typography>
+                }}>{t('common.none')}</Typography>
                 {/* No executing unit — raised by the backend NO_EXECUTING_UNIT rule */}
                 {canEditField('executingUnits') && hasTask('NO_EXECUTING_UNIT') && (
                   <NudgeBanner
@@ -1145,7 +1141,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Service Providers */}
       {!isHidden('serviceProviders') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Service Providers</Typography>
+        <Typography variant="subtitle2">{t('process.serviceProviders')}</Typography>
         {canEditField('serviceProviders') && !serviceProvidersEdit.isEditing && (
           <IconButton size="small" onClick={() => serviceProvidersEdit.startEdit((process.serviceProviders ?? []).map((s) => s.key))}>
             <EditIcon fontSize="small" />
@@ -1197,7 +1193,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         ) : (
           <Typography variant="body2" sx={{
             color: "text.secondary"
-          }}>No service providers linked</Typography>
+          }}>{t('process.noServiceProviders')}</Typography>
         )}
       </Box>}
 
@@ -1245,7 +1241,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             {(process.itSystems ?? []).map((s) => (
               <Box key={s.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
                 <Chip
-                  label={s.name || s.key}
+                  label={localizedName(s)}
                   size="small"
                   variant="outlined"
                   onClick={() => navigate(`/it-systems/${s.key}`)}
@@ -1307,17 +1303,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <Box sx={{ mb: 2 }}>
           {process.crossBorderTransfers && process.crossBorderTransfers.length > 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {process.crossBorderTransfers.map((t, i) => (
+              {process.crossBorderTransfers.map((transfer, i) => (
                 <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Chip label={getCountryName(t.destinationCountry, preferredLocale ?? 'en')} size="small" />
-                    <Chip label={SAFEGUARD_LABELS[t.safeguard] || t.safeguard} size="small" variant="outlined" />
-                    {renderStatus(`crossBorderTransfer.${t.destinationCountry}`)}
+                    <Chip label={getCountryName(transfer.destinationCountry, preferredLocale ?? 'en')} size="small" />
+                    <Chip label={t(`crossBorderSafeguard.${transfer.safeguard}`, { defaultValue: transfer.safeguard })} size="small" variant="outlined" />
+                    {renderStatus(`crossBorderTransfer.${transfer.destinationCountry}`)}
                   </Box>
                   <LocalizedTextView
-                    value={t.notes}
+                    value={transfer.notes}
                     showAll={canEditField('crossBorderTransfers')}
-                    statusFor={(loc) => renderStatus(`crossBorderTransfer.${t.destinationCountry}.notes.${loc}`)}
+                    statusFor={(loc) => renderStatus(`crossBorderTransfer.${transfer.destinationCountry}.notes.${loc}`)}
                     sx={{ pl: 1 }}
                   />
                 </Box>
@@ -1376,7 +1372,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
       {/* Classifications */}
-      <SectionHeader title="Classifications" canEdit={canEditField('classification')} isEditing={classEdit.isEditing}
+      <SectionHeader title={t('common.classifications')} canEdit={canEditField('classification')} isEditing={classEdit.isEditing}
         onEdit={() => classEdit.startEdit(process.classificationAssignments?.map((a) => ({
           classificationKey: a.classificationKey, valueKey: a.valueKey,
         })) || [])}
@@ -1426,7 +1422,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                   if (e.target.value) newAssignments.push({ classificationKey: c.key, valueKey: e.target.value });
                   classEdit.setEditValue(newAssignments);
                 }} size="small" displayEmpty sx={{ minWidth: 150 }}>
-                  <MenuItem value=""><em>None</em></MenuItem>
+                  <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
                   {c.values?.map((v) => (
                     <MenuItem key={v.key} value={v.key}>{getLocalizedText(v.names, v.key)}</MenuItem>
                   ))}
@@ -1473,7 +1469,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           }) : (
             <Typography variant="body2" sx={{
               color: "text.secondary"
-            }}>No classifications configured</Typography>
+            }}>{t('process.noClassifications')}</Typography>
           )}
         </Box>
       )}
@@ -1482,7 +1478,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Parent Process */}
       {!isHidden('parent') && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-        <Typography variant="subtitle2">Parent Process</Typography>
+        <Typography variant="subtitle2">{t('process.parentProcess')}</Typography>
         {canEditField('parent') && !parentEdit.isEditing && (
           <IconButton size="small" onClick={() => parentEdit.startEdit(process.parentProcess?.key ?? null)}>
             <EditIcon fontSize="small" />
@@ -1517,7 +1513,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
           </Box>
         ) : process.parentProcess ? (
           <Chip
-            label={process.parentProcess.name || process.parentProcess.key}
+            label={localizedName(process.parentProcess)}
             size="small"
             onClick={() => navigate(`/processes/${process.parentProcess!.key}`)}
             clickable
@@ -1525,19 +1521,19 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         ) : (
           <Typography variant="body2" sx={{
             color: "text.secondary"
-          }}>Top-level process</Typography>
+          }}>{t('process.topLevel')}</Typography>
         )}
       </Box>}
 
       {/* Child Processes */}
       <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Child Processes</Typography>
+        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>{t('process.childProcesses')}</Typography>
         {process.childProcesses && process.childProcesses.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
             {process.childProcesses.map((child) => (
               <Chip
                 key={child.key}
-                label={child.name || child.key}
+                label={localizedName(child)}
                 size="small"
                 onClick={() => navigate(`/processes/${child.key}`)}
                 clickable
@@ -1608,16 +1604,10 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 </Select>
               </FormControl>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {([
-                  ['cycleTimeMinutes', t('vsm.cycleTime')],
-                  ['waitTimeMinutes', t('vsm.waitTime')],
-                  ['changeoverTimeMinutes', t('vsm.changeoverTime')],
-                  ['firstPassYield', t('vsm.firstPassYield')],
-                  ['completionRate', t('vsm.completionRate')],
-                ] as const).map(([field, label]) => (
+                {VSM_METRIC_FIELDS.map((field) => (
                   <TextField
                     key={field}
-                    label={label}
+                    label={t(VSM_METRIC_LABEL_KEYS[field])}
                     type="number"
                     size="small"
                     sx={{ width: 150 }}
@@ -1732,7 +1722,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
         sx={{ '&:before': { display: 'none' } }}
       >
         <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography variant="subtitle2">Process Diagram</Typography>
+          <Typography variant="subtitle2">{t('process.diagram')}</Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ p: 1 }}>
           {diagramOpen && (
@@ -1746,20 +1736,20 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <Divider sx={{ my: 2 }} />
 
       {/* Metadata */}
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>Metadata</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('common.metadata')}</Typography>
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Table size="small">
           <TableBody>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created by</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.createdBy')}</TableCell>
               <TableCell>{process.createdBy.firstName} {process.createdBy.lastName}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Created</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.created')}</TableCell>
               <TableCell>{new Date(process.createdAt).toLocaleString()}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell sx={{ fontWeight: 500 }}>Last updated</TableCell>
+              <TableCell sx={{ fontWeight: 500 }}>{t('common.lastUpdated')}</TableCell>
               <TableCell>{new Date(process.updatedAt).toLocaleString()}</TableCell>
             </TableRow>
           </TableBody>
@@ -1770,20 +1760,20 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
       <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', mb: 1 }}
         onClick={() => setVersionsOpen(!versionsOpen)}>
         {versionsOpen ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
-        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>Version History ({versions.length})</Typography>
+        <Typography variant="subtitle2" sx={{ ml: 0.5 }}>{t('common.versionHistory')} ({versions.length})</Typography>
       </Box>
       {versionsOpen && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
           {versions.length === 0 ? (
             <Typography variant="body2" sx={{
               color: "text.secondary"
-            }}>No version history</Typography>
+            }}>{t('common.noVersionHistory')}</Typography>
           ) : (
             <Table size="small">
               <TableBody>
                 {versions.map((v: ProcessVersionResponse) => (
                   <TableRow key={v.versionNumber}>
-                    <TableCell>v{v.versionNumber}</TableCell>
+                    <TableCell>{t('common.versionNumber', { number: v.versionNumber })}</TableCell>
                     <TableCell><Chip label={v.changeType} size="small" variant="outlined" /></TableCell>
                     <TableCell>{v.changeSummary || '\u2014'}</TableCell>
                     <TableCell>{v.changedBy.firstName} {v.changedBy.lastName}</TableCell>
@@ -1811,33 +1801,33 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>
-        <DialogTitle>Delete Process</DialogTitle>
+        <DialogTitle>{t('process.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete "{getLocalizedText(process.names)}"?
+            {t('process.deleteConfirm', { name: getLocalizedText(process.names) })}
           </DialogContentText>
           {deleteError && <Alert severity="error" sx={{ mt: 2 }}>{deleteError}</Alert>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>Cancel</Button>
+          <Button onClick={() => { setDeleteDialogOpen(false); setDeleteError(''); }}>{t('common.cancel')}</Button>
           <Button onClick={handleDelete} color="error" variant="contained" disabled={deleteProcess.isPending}>
-            {deleteProcess.isPending ? 'Deleting...' : 'Delete'}
+            {deleteProcess.isPending ? t('common.deleting') : t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Cross-border Transfers Dialog */}
       <Dialog open={transfersDialogOpen} onClose={() => setTransfersDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Cross-border Transfers</DialogTitle>
+        <DialogTitle>{t('process.editTransfers')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             {editTransfers.length > 0 && (
               <Box>
-                {editTransfers.map((t, i) => (
+                {editTransfers.map((transfer, i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <Typography variant="body2" sx={{ flex: 1 }}>
-                      {getCountryName(t.destinationCountry, preferredLocale ?? 'en')} — {SAFEGUARD_LABELS[t.safeguard] || t.safeguard}
-                      {t.notes && t.notes.length > 0 && ` (${getLocalizedText(t.notes)})`}
+                      {getCountryName(transfer.destinationCountry, preferredLocale ?? 'en')} — {t(`crossBorderSafeguard.${transfer.safeguard}`, { defaultValue: transfer.safeguard })}
+                      {transfer.notes && transfer.notes.length > 0 && ` (${getLocalizedText(transfer.notes)})`}
                     </Typography>
                     <IconButton size="small" onClick={() => setEditTransfers((prev) => prev.filter((_, idx) => idx !== i))}>
                       <Delete fontSize="small" />
@@ -1852,7 +1842,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 sx={{
                   color: "text.secondary",
                   width: '100%'
-                }}>Add transfer</Typography>
+                }}>{t('process.addTransfer')}</Typography>
               <Autocomplete
                 options={countryOptions}
                 getOptionLabel={(o) => `${o.name} (${o.code})`}
@@ -1869,16 +1859,16 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 displayEmpty
                 sx={{ minWidth: 240 }}
               >
-                <MenuItem value=""><em>Select safeguard</em></MenuItem>
-                {Object.entries(SAFEGUARD_LABELS).map(([value, label]) => (
-                  <MenuItem key={value} value={value}>{label}</MenuItem>
+                <MenuItem value=""><em>{t('process.selectSafeguard')}</em></MenuItem>
+                {SAFEGUARD_VALUES.map((value) => (
+                  <MenuItem key={value} value={value}>{t(`crossBorderSafeguard.${value}`)}</MenuItem>
                 ))}
               </Select>
               <TextField
                 value={newTransferNotes}
                 onChange={(e) => setNewTransferNotes(e.target.value)}
                 size="small"
-                placeholder="Notes (optional)"
+                placeholder={t('process.notesOptional')}
                 sx={{ flex: 1, minWidth: 150 }}
               />
               <Button
@@ -1898,14 +1888,14 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
                 }}
                 disabled={!newTransferCountry || !newTransferSafeguard}
               >
-                Add
+                {t('common.add')}
               </Button>
             </Box>
             {transfersError && <Alert severity="error">{transfersError}</Alert>}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTransfersDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setTransfersDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             disabled={updateCrossBorderTransfers.isPending}
@@ -1920,7 +1910,7 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
               }
             }}
           >
-            {updateCrossBorderTransfers.isPending ? 'Saving...' : 'Save'}
+            {updateCrossBorderTransfers.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2052,7 +2042,7 @@ const EntityListSection: React.FC<EntityListSectionProps> = ({
         ) : (
           <Typography variant="body2" sx={{
             color: "text.secondary"
-          }}>None</Typography>
+          }}>{t('common.none')}</Typography>
         )}
         {hasRootEntities && entities.length > 0 && (
           <Alert severity="info" sx={{ mt: 1, py: 0, fontSize: '0.75rem' }}>

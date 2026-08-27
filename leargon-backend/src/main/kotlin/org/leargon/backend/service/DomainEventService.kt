@@ -32,7 +32,8 @@ open class DomainEventService(
     private val processRepository: ProcessRepository,
     private val businessEntityRepository: BusinessEntityRepository,
     private val domainEventMapper: DomainEventMapper,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val defaultLocaleProvider: DefaultLocaleProvider
 ) {
     /**
      * Managing a domain event requires an admin, a DDD editor/lead, or the owner/steward of the domain
@@ -89,7 +90,7 @@ open class DomainEventService(
             event.descriptions = request.descriptions!!.map { LocalizedText(it.locale, it.text) }.toMutableList()
         }
 
-        val slug = SlugUtil.slugify(event.getName("en").ifBlank { event.names.firstOrNull()?.text ?: "event" })
+        val slug = SlugUtil.slugify(event.getName(defaultLocaleProvider.code()).ifBlank { "event" })
         event.key = "${publishingBc.key}.$slug"
 
         return domainEventRepository.save(event)

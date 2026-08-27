@@ -17,14 +17,17 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { FieldConfigurationDefinitionMaturityLevel } from './fieldConfigurationDefinitionMaturityLevel.ts';
+import type { LocalizedText } from './localizedText.ts';
 
 export interface FieldConfigurationDefinition {
   /** Entity type (BUSINESS_ENTITY, BUSINESS_DOMAIN, BUSINESS_PROCESS, ORGANISATIONAL_UNIT) */
   entityType: string;
   /** Field name key used in configuration (e.g. retentionPeriod, names.en) */
   fieldName: string;
-  /** Human-readable display name for the field */
+  /** Human-readable display name in English; a fallback for clients that do not read `labels` */
   label: string;
+  /** Display name of the field in every active locale */
+  labels?: LocalizedText[];
   /** Methodology section this field belongs to (e.g. CORE, GDPR, DDD) */
   section: string;
   /** Maturity level of the field */

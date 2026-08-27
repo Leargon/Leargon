@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -55,7 +55,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { getLocalizedText } = useLocale();
+  const { getLocalizedText, localizedName } = useLocale();
   const { user } = useAuth();
   // Capabilities are governed by BCM (no per-user owner/steward) — admin or a BCM editor/lead manages them.
   const canManage = canCreateRoot(user?.roles, 'CAPABILITY');
@@ -156,7 +156,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
   if (error || !capability) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Capability not found</Alert>
+        <Alert severity="error">{t('capability.notFound')}</Alert>
       </Box>
     );
   }
@@ -171,7 +171,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         itemKey={capability.key}
         chips={
           capability.owningUnit ? (
-            <Chip label={getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name)} size="small" variant="outlined" />
+            <Chip label={localizedName(capability.owningUnit)} size="small" variant="outlined" />
           ) : undefined
         }
         actions={
@@ -229,7 +229,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
             <Box>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>Parent Capability</Typography>
+              }}>{t('capability.parentCapability')}</Typography>
               <Box sx={{ mt: 0.5 }}>
                 {parentEdit.isEditing ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -263,7 +263,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
             <Box>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
-              }}>Owning Unit</Typography>
+              }}>{t('common.owningUnit')}</Typography>
               <Box sx={{ mt: 0.5 }}>
                 {owningUnitEdit.isEditing ? (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -283,7 +283,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                     <Typography variant="body2" sx={{
                       color: "text.secondary"
                     }}>
-                      {capability.owningUnit ? getLocalizedText(allUnits.find(u => u.key === capability.owningUnit?.key)?.names ?? [], capability.owningUnit.name) : '—'}
+                      {capability.owningUnit ? localizedName(capability.owningUnit) : '—'}
                     </Typography>
                     {canManage && (
                       <Button size="small" onClick={() => owningUnitEdit.startEdit(capability.owningUnit?.key ?? null)}>
@@ -308,7 +308,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
                 {capability.children!.map((child) => (
                   <Chip
                     key={child.key}
-                    label={getLocalizedText(allCapabilities.find(c => c.key === child.key)?.names ?? [], child.name)}
+                    label={localizedName(child)}
                     size="small"
                     onClick={() => navigate(`/capabilities/${child.key}`)}
                     clickable
@@ -356,13 +356,13 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
             ) : linkedProcessKeys.length === 0 ? (
               <Typography variant="body2" sx={{
                 color: "text.secondary"
-              }}>No processes linked</Typography>
+              }}>{t('capability.noProcessesLinked')}</Typography>
             ) : (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {capability.linkedProcesses!.map((p) => (
                   <Chip
                     key={p.key}
-                    label={getLocalizedText(allProcesses.find(proc => proc.key === p.key)?.names ?? [], p.name)}
+                    label={localizedName(p)}
                     size="small"
                     onClick={() => navigate(`/processes/${p.key}`)}
                     clickable
@@ -378,7 +378,7 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
         <DialogTitle>{t('capability.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Delete <strong>{capabilityName}</strong>? This action cannot be undone.
+            <Trans i18nKey="capability.deleteConfirm" values={{ name: capabilityName }} components={{ 1: <strong /> }} />
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -59,5 +59,5 @@ class DomainEvent {
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
 
-    fun getName(locale: String): String = names.find { it.locale == locale }?.text ?: names.firstOrNull()?.text ?: key
+    fun getName(locale: String): String = names.textForLocale(locale, key)
 }

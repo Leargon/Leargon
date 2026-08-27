@@ -187,7 +187,7 @@ const DpiaRow: React.FC<DpiaRowProps> = ({ dpia, currentUsername, isAdmin, onSav
               <Box>
                 <Typography variant="body2" sx={{
                   fontWeight: 500
-                }}>{dpia.linkedResourceName}</Typography>
+                }}>{getLocalizedText(dpia.linkedResourceNames, dpia.linkedResourceName ?? '')}</Typography>
               </Box>
               {dpia.linkedResourceKey && (
                 <IconButton size="small" onClick={navigateToLinked} sx={{ p: 0.25, opacity: 0.4, '&:hover': { opacity: 1 } }}>

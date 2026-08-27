@@ -26,20 +26,25 @@ import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
 import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
+import GroupedTreeList from '../common/GroupedTreeList';
+import { NO_GROUPING } from '../../hooks/useGroupByPreference';
 import type { OrganisationalUnitTreeResponse } from '../../api/generated/model';
 
 interface OrgUnitTreePanelProps {
   selectedKey?: string;
   onCreateClick: () => void;
+  /** The active grouping dimension; NONE keeps the plain list. */
+  groupBy?: string;
 }
 
-const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCreateClick }) => {
+const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCreateClick, groupBy = NO_GROUPING }) => {
+  const isGrouped = groupBy !== NO_GROUPING;
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
   const { user } = useAuth();
   const canCreate = canCreateRoot(user?.roles, 'ORGANISATIONAL_UNIT');
-  const { data: treeResponse, isLoading } = useGetOrganisationalUnitTree();
+  const { data: treeResponse, isLoading } = useGetOrganisationalUnitTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as OrganisationalUnitTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');
 
@@ -78,7 +83,17 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-        {isLoading ? (
+        {isGrouped ? (
+          <GroupedTreeList
+            resourceType="ORGANISATIONAL_UNIT"
+            groupBy={groupBy}
+            selectedKey={selectedKey}
+            filter={filter}
+            icon={<Folder fontSize="small" />}
+            onSelect={(itemKey) => navigate(`/organisation/${itemKey}`)}
+            emptyLabel={t('organisation.noUnitsYet')}
+          />
+        ) : isLoading ? (
           <Typography
             sx={{
               color: "text.secondary",
@@ -168,7 +183,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography variant="body2" noWrap>
-                {getLocalizedText(unit.names, 'Unnamed')}
+                {getLocalizedText(unit.names, t('common.unnamed'))}
               </Typography>
               {unit.unitType && (
                 <Chip

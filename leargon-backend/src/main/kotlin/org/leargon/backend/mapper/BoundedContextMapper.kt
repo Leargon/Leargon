@@ -6,6 +6,7 @@ import org.leargon.backend.domain.BoundedContext
 import org.leargon.backend.model.BoundedContextResponse
 import org.leargon.backend.model.BoundedContextResponseContextType
 import org.leargon.backend.model.BoundedContextSummaryResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 import java.time.ZoneOffset
 
 @Singleton
@@ -13,8 +14,11 @@ open class BoundedContextMapper {
     @Inject
     lateinit var organisationalUnitMapper: OrganisationalUnitMapper
 
+    @Inject
+    lateinit var defaultLocaleProvider: DefaultLocaleProvider
+
     fun toResponse(bc: BoundedContext): BoundedContextResponse {
-        val domainSummary = BusinessDomainMapper.toBusinessDomainSummary(bc.domain)
+        val domainSummary = BusinessDomainMapper.toBusinessDomainSummary(bc.domain, defaultLocaleProvider.code())
         val response =
             BoundedContextResponse(
                 bc.key,
@@ -34,18 +38,15 @@ open class BoundedContextMapper {
 
     companion object {
         @JvmStatic
-        fun toSummaryResponse(bc: BoundedContext?): BoundedContextSummaryResponse? {
-            if (bc == null) return null
-            return BoundedContextSummaryResponse(
-                bc.key,
-                bc.getName("en"),
-                bc.domain?.key ?: "",
-                bc.domain?.getName("en") ?: ""
-            ).owningUnitName(bc.owningUnit?.getName("en"))
-        }
+        fun toSummaryResponse(
+            bc: BoundedContext?,
+            defaultLocale: String
+        ): BoundedContextSummaryResponse? = SummaryMappers.boundedContext(bc, defaultLocale)
 
         @JvmStatic
-        fun toSummaryResponseList(boundedContexts: Collection<BoundedContext>): List<BoundedContextSummaryResponse> =
-            boundedContexts.map { toSummaryResponse(it)!! }
+        fun toSummaryResponseList(
+            boundedContexts: Collection<BoundedContext>,
+            defaultLocale: String
+        ): List<BoundedContextSummaryResponse> = boundedContexts.mapNotNull { toSummaryResponse(it, defaultLocale) }
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState, FormEvent, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -21,6 +22,7 @@ import { useGetAzureConfig } from '../api/generated/authentication/authenticatio
 import type { AzureConfigResponse, ErrorResponse } from '../api/generated/model';
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -42,7 +44,7 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err) {
       const axiosError = err as AxiosError<ErrorResponse>;
-      setError(axiosError.response?.data?.message || 'Login failed. Please try again.');
+      setError(axiosError.response?.data?.message || t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -74,9 +76,9 @@ const Login: React.FC = () => {
       // loginRedirect navigates the page away — nothing below this runs
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message || 'Azure login failed. Please try again.');
+        setError(err.message || t('auth.azureFailed'));
       } else {
-        setError('Azure login failed. Please try again.');
+        setError(t('auth.azureFailed'));
       }
       console.error(err);
       setLoading(false);
@@ -87,7 +89,7 @@ const Login: React.FC = () => {
     <form onSubmit={handleSubmit}>
       <TextField
         fullWidth
-        label="Email"
+        label={t('auth.email')}
         type="email"
         value={email}
         onChange={(e) => { setEmail(e.target.value); setError(''); }}
@@ -98,7 +100,7 @@ const Login: React.FC = () => {
       />
       <TextField
         fullWidth
-        label="Password"
+        label={t('auth.password')}
         type="password"
         value={password}
         onChange={(e) => { setPassword(e.target.value); setError(''); }}
@@ -114,7 +116,7 @@ const Login: React.FC = () => {
         disabled={loading}
         sx={{ mt: 3, mb: 2 }}
       >
-        {loading ? 'Signing in...' : 'Sign In'}
+        {loading ? t('auth.signingIn') : t('auth.signIn')}
       </Button>
     </form>
   );
@@ -154,7 +156,7 @@ const Login: React.FC = () => {
                 color: "text.secondary",
                 mb: 3
               }}>
-              Sign in to your Léargon account
+              {t('auth.loginSubtitle')}
             </Typography>
 
             {error && (
@@ -173,7 +175,7 @@ const Login: React.FC = () => {
                   onClick={handleAzureLogin}
                   sx={{ mt: 1, mb: 2 }}
                 >
-                  Sign in with Microsoft
+                  {t('auth.signInWithMicrosoft')}
                 </Button>
 
                 <Divider sx={{ my: 2 }} />
@@ -187,7 +189,7 @@ const Login: React.FC = () => {
                     underline="hover"
                     onClick={() => setShowAdminLogin(!showAdminLogin)}
                   >
-                    {showAdminLogin ? 'Hide administrator login' : 'Administrator login'}
+                    {showAdminLogin ? t('auth.hideAdminLogin') : t('auth.showAdminLogin')}
                   </Link>
                 </Box>
 
@@ -205,9 +207,9 @@ const Login: React.FC = () => {
                     mt: 2
                   }}>
                   <Typography variant="body2">
-                    Don't have an account?{' '}
+                    {t('auth.noAccount')}{' '}
                     <Link component={RouterLink} to="/signup" underline="hover">
-                      Sign up
+                      {t('auth.signUp')}
                     </Link>
                   </Typography>
                 </Box>

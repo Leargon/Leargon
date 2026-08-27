@@ -7,6 +7,8 @@ import ProcessDetailPanel from '../components/processes/ProcessDetailPanel';
 import ProcessCreationWizard from '../components/processes/ProcessCreationWizard';
 import ProcessLandscapeWizard from '../components/processes/ProcessLandscapeWizard';
 import SplitPageLayout, { EmptyDetailState } from '../components/layout/SplitPageLayout';
+import GroupByControl from '../components/common/GroupByControl';
+import { useGroupByPreference } from '../hooks/useGroupByPreference';
 import { useGetAllProcesses } from '../api/generated/process/process';
 import type { ProcessResponse } from '../api/generated/model';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 const ProcessLandscapeDiagram = lazy(() => import('../components/diagrams/ProcessLandscapeDiagram'));
 
 const ProcessesPage: React.FC = () => {
+  const [groupBy, setGroupBy] = useGroupByPreference('BUSINESS_PROCESS');
   const { t } = useTranslation();
   const { key } = useParams<{ key: string }>();
   const { user } = useAuth();
@@ -49,7 +52,8 @@ const ProcessesPage: React.FC = () => {
       ]}
       currentView={view}
       onViewChange={setView}
-      list={<ProcessListPanel selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
+      actions={view === 'list' ? (<GroupByControl resourceType="BUSINESS_PROCESS" value={groupBy} onChange={setGroupBy} />) : undefined}
+      list={<ProcessListPanel groupBy={groupBy} selectedKey={key} onCreateClick={() => setCreateDialogOpen(true)} />}
       detail={
         key ? (
           <ProcessDetailPanel processKey={key} />

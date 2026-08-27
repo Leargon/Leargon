@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Autocomplete, Box, Button, CircularProgress, TextField, Typography } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -10,6 +11,7 @@ import { getCountryOptions } from '../../utils/countries';
 import { useLocale } from '../../context/LocaleContext';
 
 const OrganisationSettingsTab: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { preferredLocale } = useLocale();
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
@@ -50,7 +52,7 @@ const OrganisationSettingsTab: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: getGetOrganisationSettingsQueryKey() });
       setSaved(true);
     } catch {
-      setSaveError('Failed to save organisation settings.');
+      setSaveError(t('orgSettings.saveFailed'));
     }
   };
 
@@ -63,16 +65,16 @@ const OrganisationSettingsTab: React.FC = () => {
   }
 
   if (isError) {
-    return <Alert severity="error">Failed to load organisation settings.</Alert>;
+    return <Alert severity="error">{t('orgSettings.loadFailed')}</Alert>;
   }
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Organisation Settings
+        {t('orgSettings.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        These values appear in every row of the processing register export (Art. 30 DSG / GDPR).
+        {t('orgSettings.intro')}
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 600 }}>
@@ -84,56 +86,56 @@ const OrganisationSettingsTab: React.FC = () => {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Home Country"
-              helperText="The country where the organisation is headquartered. Transfers to this country are excluded from the processing register."
+              label={t('orgSettings.homeCountry')}
+              helperText={t('orgSettings.homeCountryHint')}
             />
           )}
         />
 
         <TextField
-          label="EU-Vertreter / EU Representative"
+          label={t('orgSettings.euRepresentative')}
           value={euRepresentative}
           onChange={(e) => setEuRepresentative(e.target.value)}
           multiline
           rows={2}
           fullWidth
-          helperText="Art. 27 GDPR / Art. 14 DSG — name and contact of the EU/CH representative"
+          helperText={t('orgSettings.euRepresentativeHint')}
         />
 
         <TextField
-          label="Datenschutzbeauftragter/-berater / Data Protection Officer"
+          label={t('orgSettings.dpo')}
           value={dataProtectionOfficer}
           onChange={(e) => setDataProtectionOfficer(e.target.value)}
           multiline
           rows={2}
           fullWidth
-          helperText="Name and contact details of the DPO or data protection advisor"
+          helperText={t('orgSettings.dpoHint')}
         />
 
-        <Typography variant="subtitle2" sx={{ mt: 1 }}>Team Topologies thresholds</Typography>
+        <Typography variant="subtitle2" sx={{ mt: 1 }}>{t('orgSettings.ttThresholds')}</Typography>
 
         <TextField
-          label="Cognitive load threshold"
+          label={t('orgSettings.cognitiveLoad')}
           type="number"
           value={cognitiveLoadThreshold}
           onChange={(e) => setCognitiveLoadThreshold(e.target.value)}
           sx={{ maxWidth: 320 }}
-          helperText="A team is flagged as overloaded when its cognitive-load score exceeds this value (default 7)."
+          helperText={t('orgSettings.cognitiveLoadHint')}
         />
 
         <TextField
-          label="Interaction health threshold"
+          label={t('orgSettings.interactionHealth')}
           type="number"
           value={healthThreshold}
           onChange={(e) => setHealthThreshold(e.target.value)}
           slotProps={{ htmlInput: { min: 1, max: 5 } }}
           sx={{ maxWidth: 320 }}
-          helperText="A team interaction is flagged when its health score (1–5) is at or below this value (default 2)."
+          helperText={t('orgSettings.interactionHealthHint')}
         />
 
         {saved && (
           <Alert severity="success" onClose={() => setSaved(false)}>
-            Organisation settings saved.
+            {t('orgSettings.saved')}
           </Alert>
         )}
 
@@ -145,7 +147,7 @@ const OrganisationSettingsTab: React.FC = () => {
 
         <Box>
           <Button variant="contained" onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? 'Saving…' : 'Save'}
+            {updateMutation.isPending ? t('common.saving') : t('common.save')}
           </Button>
         </Box>
       </Box>

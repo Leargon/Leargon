@@ -32,6 +32,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetTeamInsightsParams,
   TeamInsightsResponse
 } from '../model';
 
@@ -76,20 +77,27 @@ export type getTeamInsightsResponseError = (getTeamInsightsResponse401) & {
 
 export type getTeamInsightsResponse = (getTeamInsightsResponseSuccess | getTeamInsightsResponseError)
 
-export const getGetTeamInsightsUrl = () => {
+export const getGetTeamInsightsUrl = (params?: GetTeamInsightsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/analytics/team-insights`
+  return stringifiedParams.length > 0 ? `/analytics/team-insights?${stringifiedParams}` : `/analytics/team-insights`
 }
 
 /**
  * @summary Get team and org insights
  */
-export const getTeamInsights = async ( options?: RequestInit): Promise<getTeamInsightsResponse> => {
+export const getTeamInsights = async (params?: GetTeamInsightsParams, options?: RequestInit): Promise<getTeamInsightsResponse> => {
 
-  return customAxios<getTeamInsightsResponse>(getGetTeamInsightsUrl(),
+  return customAxios<getTeamInsightsResponse>(getGetTeamInsightsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -102,23 +110,23 @@ export const getTeamInsights = async ( options?: RequestInit): Promise<getTeamIn
 
 
 
-export const getGetTeamInsightsQueryKey = () => {
+export const getGetTeamInsightsQueryKey = (params?: GetTeamInsightsParams,) => {
     return [
-    `/analytics/team-insights`
+    `/analytics/team-insights`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetTeamInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+export const getGetTeamInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(params?: GetTeamInsightsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTeamInsightsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetTeamInsightsQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamInsights>>> = ({ signal }) => getTeamInsights({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTeamInsights>>> = ({ signal }) => getTeamInsights(params, { signal, ...requestOptions });
 
 
 
@@ -132,7 +140,7 @@ export type GetTeamInsightsQueryError = void
 
 
 export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
+ params: undefined |  GetTeamInsightsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTeamInsights>>,
           TError,
@@ -142,7 +150,7 @@ export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsi
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
+ params?: GetTeamInsightsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getTeamInsights>>,
           TError,
@@ -152,7 +160,7 @@ export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsi
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ params?: GetTeamInsightsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -160,11 +168,11 @@ export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsi
  */
 
 export function useGetTeamInsights<TData = Awaited<ReturnType<typeof getTeamInsights>>, TError = void>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
+ params?: GetTeamInsightsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTeamInsights>>, TError, TData>>, request?: SecondParameter<typeof customAxios>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetTeamInsightsQueryOptions(options)
+  const queryOptions = getGetTeamInsightsQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

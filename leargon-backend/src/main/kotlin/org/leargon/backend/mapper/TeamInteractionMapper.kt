@@ -6,16 +6,22 @@ import org.leargon.backend.model.OrganisationalUnitSummaryResponse
 import org.leargon.backend.model.TeamInteractionDuration
 import org.leargon.backend.model.TeamInteractionMode
 import org.leargon.backend.model.TeamInteractionResponse
+import org.leargon.backend.service.DefaultLocaleProvider
 
 @Singleton
-class TeamInteractionMapper {
+open class TeamInteractionMapper(
+    private val defaultLocaleProvider: DefaultLocaleProvider
+) {
+    /** The tenant default locale, used for the flat `name` fallback on every summary DTO. */
+    private val defaultLocale: String get() = defaultLocaleProvider.code()
+
     fun toResponse(interaction: TeamInteraction): TeamInteractionResponse {
         val source = interaction.sourceUnit!!
         val target = interaction.targetUnit!!
         return TeamInteractionResponse(
             interaction.id!!,
-            OrganisationalUnitSummaryResponse(source.key, source.getName("en")),
-            OrganisationalUnitSummaryResponse(target.key, target.getName("en")),
+            SummaryMappers.orgUnit(source, defaultLocale)!!,
+            SummaryMappers.orgUnit(target, defaultLocale)!!,
             TeamInteractionMode.fromValue(interaction.mode),
             TeamInteractionDuration.fromValue(interaction.duration)
         ).healthScore(interaction.healthScore)

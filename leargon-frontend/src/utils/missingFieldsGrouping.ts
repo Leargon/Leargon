@@ -13,6 +13,11 @@ export const SECTION_TO_METHODOLOGY: Partial<Record<string, string>> = {
   TECHNICAL: 'TECHNICAL',
 };
 
+/**
+ * English section names, kept as the `defaultValue` for `t('section.<KEY>')`. The displayed text comes
+ * from i18n; this table only answers "what if the key is missing", so a new section shows a readable
+ * word rather than a bare enum value.
+ */
 export const SECTION_LABELS: Record<string, string> = {
   CORE: 'Core',
   DATA_GOVERNANCE: 'Data Governance',

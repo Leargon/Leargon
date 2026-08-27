@@ -16,12 +16,15 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
 
 export interface CapabilitySummaryResponse {
   /** Capability key */
   key: string;
-  /** Capability name in default locale */
+  /** Capability name in the tenant default locale (fallback for clients that do not read `names`) */
   name: string;
+  /** Capability name in every locale it is defined in */
+  names?: LocalizedText[];
   owningUnit?: OrganisationalUnitSummaryResponse | null;
 }
