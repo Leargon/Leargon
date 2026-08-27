@@ -2329,6 +2329,10 @@ const fr = {
     "subtitle": "Modèle de capacités métier — vue hiérarchique imbriquée. Cliquez sur une capacité pour ouvrir son panneau de détail.",
   },
   "groupBy": {
+    "expandAll": "Tout déplier",
+    "collapseAll": "Tout replier",
+    "expandGroup": "Afficher les éléments de {{group}}",
+    "collapseGroup": "Masquer les éléments de {{group}}",
     "label": "Grouper par",
     "contextOnly": "Affiché pour le contexte — cet élément appartient à un autre groupe",
   },

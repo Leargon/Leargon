@@ -34,6 +34,11 @@ async function selectGrouping(page: Page, label: string): Promise<void> {
   await page.getByRole('option', { name: label }).click();
 }
 
+/** Groups start closed, so most assertions about rows need the heading clicked first. */
+async function openGroup(page: Page, heading: string): Promise<void> {
+  await page.getByText(heading, { exact: false }).click();
+}
+
 test.describe('Grouping an overview list', () => {
   let unitA: string;
   let unitB: string;
@@ -88,6 +93,7 @@ test.describe('Grouping an overview list', () => {
 
     await selectGrouping(page, 'Owning Unit');
     await expect(page.getByText(`${unitB} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await openGroup(page, `${unitB} (1)`);
 
     // Support's group shows the child under its parent, but the parent belongs to Sales.
     const contextRow = page.getByRole('button', { name: parentName }).last();
@@ -111,11 +117,63 @@ test.describe('Grouping an overview list', () => {
     await expect(page.getByText(`${unitA} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
   });
 
+  test('groups start collapsed, showing headings and counts but no items', async ({ page }) => {
+    await page.goto('/entities');
+    await page.waitForLoadState('networkidle');
+
+    await selectGrouping(page, 'Owning Unit');
+
+    // The point of grouping: an overview of who owns what, not a longer list than before.
+    await expect(page.getByText(`${unitA} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: childName })).toHaveCount(0);
+  });
+
+  test('clicking a heading opens that group and leaves the others shut', async ({ page }) => {
+    await page.goto('/entities');
+    await page.waitForLoadState('networkidle');
+
+    await selectGrouping(page, 'Owning Unit');
+    await expect(page.getByText(`${unitB} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
+
+    await openGroup(page, `${unitB} (1)`);
+
+    await expect(page.getByRole('button', { name: childName }).last()).toBeVisible();
+  });
+
+  test('expand all opens every group at once', async ({ page }) => {
+    await page.goto('/entities');
+    await page.waitForLoadState('networkidle');
+
+    await selectGrouping(page, 'Owning Unit');
+    await expect(page.getByText(`${unitA} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
+
+    await page.getByRole('button', { name: 'Expand all' }).click();
+
+    await expect(page.getByRole('button', { name: childName }).last()).toBeVisible();
+    // and the control now offers the reverse
+    await expect(page.getByRole('button', { name: 'Collapse all' })).toBeVisible();
+  });
+
+  test('searching reveals matches without expanding anything by hand', async ({ page }) => {
+    await page.goto('/entities');
+    await page.waitForLoadState('networkidle');
+
+    await selectGrouping(page, 'Owning Unit');
+    await expect(page.getByText(`${unitA} (1)`, { exact: false })).toBeVisible({ timeout: 20_000 });
+
+    // A closed group during a search would make the box look broken.
+    await page.getByPlaceholder('Search entities...').fill(childName);
+
+    await expect(page.getByRole('button', { name: childName }).last()).toBeVisible({ timeout: 20_000 });
+  });
+
   test('a signed-out visitor gets the login page, not a grouped catalogue', async ({ page, context }) => {
     // Negative case: grouping must not have opened an unauthenticated read of the list.
+    // The token is cleared before the first navigation. Clearing it afterwards races the app's own
+    // redirect to /login, which tears down the execution context mid-evaluate — that made this test
+    // pass or fail depending on timing.
     await context.clearCookies();
-    await page.goto('/entities');
-    await page.evaluate(() => {
+    await page.addInitScript(() => {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
     });

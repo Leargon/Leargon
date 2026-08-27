@@ -2329,6 +2329,10 @@ const de = {
     "subtitle": "Business-Capability-Modell — verschachtelte Hierarchieansicht. Klicken Sie auf eine Fähigkeit, um ihr Detailfenster zu öffnen.",
   },
   "groupBy": {
+    "expandAll": "Alle ausklappen",
+    "collapseAll": "Alle einklappen",
+    "expandGroup": "Einträge in {{group}} anzeigen",
+    "collapseGroup": "Einträge in {{group}} ausblenden",
     "label": "Gruppieren nach",
     "contextOnly": "Nur zur Orientierung — dieses Element gehört zu einer anderen Gruppe",
   },

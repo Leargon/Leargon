@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
+  Button,
   Collapse,
   List,
   ListItemButton,
@@ -10,9 +11,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChevronRight, ExpandMore } from '@mui/icons-material';
+import { ChevronRight, ExpandMore, UnfoldLess, UnfoldMore } from '@mui/icons-material';
 import { useGetGroupedOverview } from '../../api/generated/overview/overview';
 import { useLocale } from '../../context/LocaleContext';
+import { containsKey, resolveGroupOpen } from '../../utils/groupExpansion';
 import type {
   GroupedOverviewResponse,
   OverviewGroup,
@@ -39,6 +41,9 @@ interface GroupedTreeListProps {
  * parent belongs to a different owner, team or context — arrives with `matchesGroup: false` and is
  * shown greyed out and unselectable: it is there for orientation, and clicking it would navigate to
  * something the group does not actually contain.
+ *
+ * Groups start closed, so the panel opens as a short list of headings with counts instead of a list
+ * longer than the ungrouped one it replaced. `resolveGroupOpen` owns the exceptions to that.
  */
 const GroupedTreeList: React.FC<GroupedTreeListProps> = ({
   resourceType,
@@ -65,11 +70,45 @@ const GroupedTreeList: React.FC<GroupedTreeListProps> = ({
     .map((group) => ({ group, nodes: group.nodes.filter(matchesFilter) }))
     .filter(({ nodes }) => nodes.length > 0);
 
+  // Only headings the user has actually clicked appear here; everything else is derived, so there is
+  // no stored state to fall out of step with the data.
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+
+  // A group closed earlier must not stay closed through a later search and hide a match from it.
+  // Clearing on a groupBy change likewise means a new dimension starts from the default.
+  useEffect(() => setOverrides({}), [filter, groupBy]);
+
+  const groupId = (group: OverviewGroup): string => group.key ?? '__unassigned';
+
   const headingFor = (group: OverviewGroup): string => {
     const fallback = getLocalizedText(group.labels, group.key ?? '');
     // An enum value or the unassigned bucket names an i18n key the UI already translates; user content
     // arrives translated and has no key.
     return group.labelKey ? t(group.labelKey, { defaultValue: fallback }) : fallback;
+  };
+
+  const openById = useMemo(() => {
+    const resolved: Record<string, boolean> = {};
+    visibleGroups.forEach(({ group, nodes }) => {
+      resolved[groupId(group)] = resolveGroupOpen({
+        override: overrides[groupId(group)],
+        isFiltering: !!filter,
+        groupCount: visibleGroups.length,
+        containsSelection: containsKey(nodes, selectedKey),
+      });
+    });
+    return resolved;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleGroups, overrides, filter, selectedKey]);
+
+  const allOpen = visibleGroups.every(({ group }) => openById[groupId(group)]);
+
+  const toggleAll = () => {
+    const next: Record<string, boolean> = {};
+    visibleGroups.forEach(({ group }) => {
+      next[groupId(group)] = !allOpen;
+    });
+    setOverrides(next);
   };
 
   if (isLoading) {
@@ -86,42 +125,67 @@ const GroupedTreeList: React.FC<GroupedTreeListProps> = ({
 
   return (
     <>
-      {visibleGroups.map(({ group, nodes }) => (
-        <Box key={group.key ?? '__unassigned'} sx={{ mb: 0.5 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              px: 2,
-              py: 0.75,
-              fontWeight: 700,
-              letterSpacing: 0.5,
-              textTransform: 'uppercase',
-              color: 'text.secondary',
-              bgcolor: 'action.hover',
-              // The list panel is only 240px wide on a normal screen, so a long unit name wraps
-              // rather than being cut off.
-              wordBreak: 'break-word',
-            }}
+      {/* Pointless with a single group, which is always open anyway. */}
+      {visibleGroups.length > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 1, py: 0.5 }}>
+          <Button
+            size="small"
+            startIcon={allOpen ? <UnfoldLess fontSize="small" /> : <UnfoldMore fontSize="small" />}
+            onClick={toggleAll}
+            sx={{ fontSize: '0.7rem' }}
           >
-            {headingFor(group)} ({group.itemCount})
-          </Typography>
-          <List dense disablePadding>
-            {nodes.map((node) => (
-              <GroupedTreeItem
-                key={node.key}
-                node={node}
-                level={0}
-                selectedKey={selectedKey}
-                filter={filter}
-                icon={icon}
-                onSelect={onSelect}
-                matchesFilter={matchesFilter}
-              />
-            ))}
-          </List>
+            {allOpen ? t('groupBy.collapseAll') : t('groupBy.expandAll')}
+          </Button>
         </Box>
-      ))}
+      )}
+      {visibleGroups.map(({ group, nodes }) => {
+        const id = groupId(group);
+        const open = openById[id];
+        const heading = headingFor(group);
+        return (
+          <Box key={id} sx={{ mb: 0.5 }}>
+            <ListItemButton
+              onClick={() => setOverrides((prev) => ({ ...prev, [id]: !open }))}
+              aria-expanded={open}
+              aria-label={t(open ? 'groupBy.collapseGroup' : 'groupBy.expandGroup', { group: heading })}
+              sx={{ px: 2, py: 0.75, bgcolor: 'action.hover' }}
+            >
+              {open ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
+              <Typography
+                variant="caption"
+                sx={{
+                  ml: 0.5,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  textTransform: 'uppercase',
+                  color: 'text.secondary',
+                  // The list panel is only 240px wide on a normal screen, so a long unit name wraps
+                  // rather than being cut off.
+                  wordBreak: 'break-word',
+                }}
+              >
+                {heading} ({group.itemCount})
+              </Typography>
+            </ListItemButton>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <List dense disablePadding>
+                {nodes.map((node) => (
+                  <GroupedTreeItem
+                    key={node.key}
+                    node={node}
+                    level={0}
+                    selectedKey={selectedKey}
+                    filter={filter}
+                    icon={icon}
+                    onSelect={onSelect}
+                    matchesFilter={matchesFilter}
+                  />
+                ))}
+              </List>
+            </Collapse>
+          </Box>
+        );
+      })}
     </>
   );
 };

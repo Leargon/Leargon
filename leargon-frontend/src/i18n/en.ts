@@ -2334,6 +2334,10 @@ const en = {
     subtitle: "Business Capability Model — nested hierarchy view. Click any capability to open its detail panel.",
   },
   groupBy: {
+    expandAll: "Expand all",
+    collapseAll: "Collapse all",
+    expandGroup: "Show the items in {{group}}",
+    collapseGroup: "Hide the items in {{group}}",
     label: "Group by",
     contextOnly: "Shown for context — this item belongs to a different group",
   },
