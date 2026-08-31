@@ -1,16 +1,16 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.0"
-    id("com.google.devtools.ksp") version "2.3.9"
-    id("org.jetbrains.kotlin.plugin.allopen") version "2.4.0"
-    id("org.jetbrains.kotlin.plugin.jpa") version "2.4.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
+    id("com.google.devtools.ksp") version "2.3.11"
+    id("org.jetbrains.kotlin.plugin.allopen") version "2.4.10"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.4.10"
     id("groovy")                              // keep — needed for Spock tests
-    id("io.micronaut.application") version "5.0.0"
-    id("com.gradleup.shadow") version "9.4.2"
-    id("io.micronaut.openapi") version "5.0.0"
+    id("io.micronaut.application") version "5.0.2"
+    id("com.gradleup.shadow") version "9.6.1"
+    id("io.micronaut.openapi") version "5.0.2"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
     id("codenarc")
     id("de.aaschmid.cpd") version "3.5"
-    id("com.github.ben-manes.versions") version "0.54.0"
+    id("io.github.ben-manes.versions") version "0.61.0"
 }
 
 version = "1.0.0"
@@ -29,7 +29,7 @@ dependencies {
     implementation("io.micronaut.serde:micronaut-serde-jackson")
     // Micronaut 5's serde stack moved to Jackson 3 (tools.jackson.*); declare Jackson 2 explicitly
     // for the version-snapshot ObjectMapper used directly in BusinessEntityService/ProcessService/BusinessDomainService.
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
     implementation("io.micronaut:micronaut-management")
 
     // Security and JWT
@@ -40,17 +40,17 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.sql:micronaut-hibernate-jpa")
-    runtimeOnly("com.mysql:mysql-connector-j:9.7.0")
+    runtimeOnly("com.mysql:mysql-connector-j:26.7.0")
 
     // Database migrations
     implementation("io.micronaut.liquibase:micronaut-liquibase")
 
     // Validation
     implementation("io.micronaut.validation:micronaut-validation")
-    implementation("org.hibernate.validator:hibernate-validator:9.1.0.Final")
+    implementation("org.hibernate.validator:hibernate-validator:9.1.3.Final")
 
     // OpenAPI Generator dependencies
-    implementation("org.openapitools:jackson-databind-nullable:0.2.10")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.11")
 
     // Retry support (for deadlock mitigation)
     implementation("io.micronaut:micronaut-retry")
@@ -67,7 +67,7 @@ dependencies {
     // by micronaut-spring-bom → spring-framework-bom (resolves to 7.0.7). spring-core 7.0.7 in turn
     // brings real commons-logging transitively (Spring 7 dropped the spring-jcl shim), so no
     // separate commons-logging/spring-jcl declaration is needed.
-    implementation('org.springframework.security:spring-security-crypto:7.1.0')
+    implementation('org.springframework.security:spring-security-crypto:7.1.1')
     implementation('org.springframework:spring-core')
 
     runtimeOnly("ch.qos.logback:logback-classic")
@@ -87,15 +87,30 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:2.0.5")
     testImplementation("org.testcontainers:testcontainers-mysql:2.0.5")
     testImplementation("org.testcontainers:testcontainers-spock:2.0.5")
-    testRuntimeOnly("com.mysql:mysql-connector-j:9.7.0")
+    testRuntimeOnly("com.mysql:mysql-connector-j:26.7.0")
 }
 
-// Force vulnerable transitive dependencies to patched versions
-configurations.all {
+// The CVE force-overrides that used to live here are gone: the Micronaut 5.1 BOM already
+// resolves logback 1.5.37 (>= 1.5.34, closing GHSA-p47f-322f-whfh and GHSA-jhq6-gfmj-v8fx)
+// and commons-lang3 3.20.0 (CVE-2025-48924). The old block pinned logback to 1.5.32 and had
+// itself become the reason we were exposed - re-check every force pin below against the BOM
+// on each upgrade sweep and delete it once upstream has caught up.
+//
+// Hibernate is pinned to the 7.3 line. Micronaut 5.1 ships Hibernate 7.4.4, whose new
+// CollectionFetchPaginationQueryTransformer (absent from 7.3.x) builds derived-table column
+// aliases by concatenating the join qualifier onto the *already-rendered* column expression.
+// For the twelve entities mapped as @Column(name = "`key`") that yields the invalid alias
+// be1_0.d1_0_`key` — prefix outside the quotes. Confirmed broken on real MySQL 8.4, not just
+// H2: POST /business-entities returns 500 "You have an error in your SQL syntax ... near
+// '`key`,d1_0_names'". Still present in 7.4.7. Same defect family as HHH-20588 (fixed 7.4.3)
+// and HHH-20789 (open), both reported for @Formula rather than quoted names.
+// Renaming the column is not a fix: `key` is reserved in MySQL, so it has to stay quoted.
+// Re-test without this force on each new Hibernate release and drop it once upstream renders
+// quoted identifiers correctly again.
+configurations.configureEach {
     resolutionStrategy.force(
-        "org.apache.commons:commons-lang3:3.20.0",          // CVE-2025-48924
-        "ch.qos.logback:logback-core:1.5.32",               // CVE-2025-11226, CVE-2024-12798, CVE-2026-1225, CVE-2024-12801
-        "ch.qos.logback:logback-classic:1.5.32"             // keep in sync with logback-core
+        "org.hibernate.orm:hibernate-core:7.3.13.Final",
+        "org.hibernate.orm:hibernate-platform:7.3.13.Final"
     )
 }
 
@@ -106,7 +121,7 @@ configurations.matching { c ->
     c.name.startsWith('test') || c.name.startsWith('e2eTest')
 }.configureEach {
     resolutionStrategy {
-        force("org.apache.groovy:groovy:5.0.5")
+        force("org.apache.groovy:groovy:5.0.8")
         eachDependency { details ->
             if (details.requested.group == 'org.spockframework' && details.requested.name == 'spock-core') {
                 details.useVersion('2.4-groovy-5.0')
@@ -270,7 +285,7 @@ tasks.named('cpdCheck', de.aaschmid.gradle.plugins.cpd.Cpd) {
 }
 
 micronaut {
-    version = "5.0.2"
+    version = "5.1.2"
     runtime("netty")
     testRuntime("spock2")
     processing {
