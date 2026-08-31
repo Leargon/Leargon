@@ -31,6 +31,22 @@ const ALWAYS_VISIBLE_ITEMS: NavItem[] = [
   { labelKey: 'nav.help', path: '/help', icon: <HelpOutlined /> },
 ];
 
+/**
+ * Look an always-visible item up by path instead of by array index. Positional access silently
+ * drifts when an entry is inserted: adding 'nav.insights' at index 2 shifted every later item,
+ * so the sidebar rendered My to-dos under the /team-insights key, Insights under the /help key,
+ * and dropped Help entirely — leaving the Help page unreachable from the nav.
+ */
+const renderAlwaysVisible = (path: string) => {
+  const item = ALWAYS_VISIBLE_ITEMS.find((navItem) => navItem.path === path);
+  return item ? <NavItemButton key={path} item={item} /> : null;
+};
+
+/** Rendered at the top of the nav, above the core items. */
+const LEADING_ALWAYS_VISIBLE = ['/home'];
+/** Rendered below the core items, in this order. */
+const TRAILING_ALWAYS_VISIBLE = ['/my-tasks', '/team-insights', '/help'];
+
 const CORE_ITEMS: NavItem[] = [
   { labelKey: 'nav.dataOntology', path: '/entities', icon: <AccountTree /> },
   { labelKey: 'nav.domainModel', path: '/domains', icon: <Category /> },
@@ -179,14 +195,13 @@ const Sidebar: React.FC = () => {
       }}
     >
       <List component="nav" sx={{ px: 1, pt: 1 }}>
-        <NavItemButton key="/home" item={ALWAYS_VISIBLE_ITEMS[0]} />
+        {LEADING_ALWAYS_VISIBLE.map(renderAlwaysVisible)}
         {coreItems.length > 0 && <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />}
         {coreItems.map((item) => (
           <NavItemButton key={item.path} item={item} />
         ))}
         <Divider sx={{ borderColor: 'grey.800', mx: 0.5, my: 0.5 }} />
-        <NavItemButton key="/team-insights" item={ALWAYS_VISIBLE_ITEMS[1]} />
-        <NavItemButton key="/help" item={ALWAYS_VISIBLE_ITEMS[2]} />
+        {TRAILING_ALWAYS_VISIBLE.map(renderAlwaysVisible)}
       </List>
 
       {extraItems.length > 0 && (

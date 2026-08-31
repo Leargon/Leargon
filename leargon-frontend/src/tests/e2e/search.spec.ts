@@ -12,7 +12,7 @@ test.describe('Global Search', () => {
     await page.goto('/domains');
     await page.waitForLoadState('networkidle');
 
-    await page.getByPlaceholder('Search…').fill(name);
+    await page.getByPlaceholder('Search...').fill(name);
 
     const result = page.getByText(name, { exact: false }).first();
     await expect(result).toBeVisible({ timeout: 10_000 });
@@ -25,9 +25,9 @@ test.describe('Global Search', () => {
     await page.goto('/domains');
     await page.waitForLoadState('networkidle');
 
-    await page.getByPlaceholder('Search…').fill('a');
+    await page.getByPlaceholder('Search...').fill('a');
     // Still on /domains — no navigation, and the box keeps the typed value.
     await expect(page).toHaveURL(/\/domains$/);
-    await expect(page.getByPlaceholder('Search…')).toHaveValue('a');
+    await expect(page.getByPlaceholder('Search...')).toHaveValue('a');
   });
 });

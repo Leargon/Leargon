@@ -27,8 +27,15 @@ axiosInstance.interceptors.response.use(
     // Only redirect to /login on 401 from non-auth endpoints (session expired).
     // A 401 from the login/signup endpoints themselves means bad credentials — let the
     // component handle the error instead of triggering a full page reload.
+    //
+    // The token check is what stops an infinite reload loop on the public pages: LocaleProvider
+    // wraps the whole app, so /login also issues GET /locales, which is IS_AUTHENTICATED and
+    // answers 401. Without a session there is nothing to expire — redirecting would reload
+    // /login, re-issue the same request and loop forever. A 401 only means "session expired"
+    // if we actually held a token.
     const url = error.config?.url ?? '';
-    if (error.response?.status === 401 && !url.includes('/authentication/')) {
+    const hadSession = tokenStorage.getToken() !== null;
+    if (error.response?.status === 401 && !url.includes('/authentication/') && hadSession) {
       tokenStorage.clear();
       window.location.href = '/login';
     }
