@@ -102,48 +102,97 @@ open class DuplicateCandidateService(
             CreationPolicyService.BUSINESS_ENTITY -> {
                 val bcKey =
                     target.boundedContextKey
-                        ?: target.parentKey?.let { businessEntityRepository.findByKey(it).orElse(null)?.boundedContext?.key }
+                        ?: target.parentKey?.let {
+                            businessEntityRepository
+                                .findByKey(it)
+                                .orElse(null)
+                                ?.boundedContext
+                                ?.key
+                        }
                 businessEntityRepository.findAll().map { e ->
-                    val same = if (bcKey != null) e.boundedContext?.key == bcKey else e.boundedContext == null && e.parent?.key == target.parentKey
+                    val same =
+                        if (bcKey !=
+                            null
+                        ) {
+                            e.boundedContext?.key == bcKey
+                        } else {
+                            e.boundedContext == null && e.parent?.key == target.parentKey
+                        }
                     Existing(
                         e.key, e.names, same, e.boundedContext?.key, e.boundedContext?.names.orEmpty(),
                         elsewhereSuggestion =
-                            if (bcKey != null && e.boundedContext != null) DuplicateCandidateSuggestion.TRANSLATION_LINK else DuplicateCandidateSuggestion.NONE
+                            if (bcKey != null &&
+                                e.boundedContext != null
+                            ) {
+                                DuplicateCandidateSuggestion.TRANSLATION_LINK
+                            } else {
+                                DuplicateCandidateSuggestion.NONE
+                            }
                     )
                 }
             }
             CreationPolicyService.BUSINESS_PROCESS -> {
                 val bcKey =
                     target.boundedContextKey
-                        ?: target.parentKey?.let { processRepository.findByKey(it).orElse(null)?.boundedContext?.key }
+                        ?: target.parentKey?.let {
+                            processRepository
+                                .findByKey(it)
+                                .orElse(null)
+                                ?.boundedContext
+                                ?.key
+                        }
                 processRepository.findAll().map { p ->
-                    val same = if (bcKey != null) p.boundedContext?.key == bcKey else p.boundedContext == null && p.parent?.key == target.parentKey
+                    val same =
+                        if (bcKey !=
+                            null
+                        ) {
+                            p.boundedContext?.key == bcKey
+                        } else {
+                            p.boundedContext == null && p.parent?.key == target.parentKey
+                        }
                     Existing(
                         p.key, p.names, same, p.boundedContext?.key, p.boundedContext?.names.orEmpty(),
                         elsewhereSuggestion = DuplicateCandidateSuggestion.REUSE_OR_CALL
                     )
                 }
             }
-            CreationPolicyService.BUSINESS_DOMAIN ->
+            CreationPolicyService.BUSINESS_DOMAIN -> {
                 businessDomainRepository.findAll().map { d ->
                     Existing(d.key, d.names, d.parent?.key == target.parentKey, d.parent?.key, d.parent?.names.orEmpty())
                 }
-            CreationPolicyService.BOUNDED_CONTEXT ->
+            }
+            CreationPolicyService.BOUNDED_CONTEXT -> {
                 boundedContextRepository.findAll().map { bc ->
                     Existing(bc.key, bc.names, bc.domain?.key == target.domainKey, bc.domain?.key, bc.domain?.names.orEmpty())
                 }
-            CreationPolicyService.ORGANISATIONAL_UNIT ->
+            }
+            CreationPolicyService.ORGANISATIONAL_UNIT -> {
                 organisationalUnitRepository.findAll().map { u ->
                     val same = if (target.parentKeys.isEmpty()) u.parents.isEmpty() else u.parents.any { it.key in target.parentKeys }
                     Existing(u.key, u.names, same)
                 }
-            CreationPolicyService.CAPABILITY ->
+            }
+            CreationPolicyService.CAPABILITY -> {
                 capabilityRepository.findAll().map { c ->
-                    Existing(c.key, c.names, c.parent?.key == target.parentKey, c.parent?.key, c.parent?.names.orEmpty(), exactAlwaysBlocks = true)
+                    Existing(
+                        c.key,
+                        c.names,
+                        c.parent?.key == target.parentKey,
+                        c.parent?.key,
+                        c.parent?.names.orEmpty(),
+                        exactAlwaysBlocks = true
+                    )
                 }
-            CreationPolicyService.IT_SYSTEM -> itSystemRepository.findAll().map { Existing(it.key, it.names, true) }
-            CreationPolicyService.SERVICE_PROVIDER -> serviceProviderRepository.findAll().map { Existing(it.key, it.names, true) }
-            else -> emptyList()
+            }
+            CreationPolicyService.IT_SYSTEM -> {
+                itSystemRepository.findAll().map { Existing(it.key, it.names, true) }
+            }
+            CreationPolicyService.SERVICE_PROVIDER -> {
+                serviceProviderRepository.findAll().map { Existing(it.key, it.names, true) }
+            }
+            else -> {
+                emptyList()
+            }
         }
 
     companion object {

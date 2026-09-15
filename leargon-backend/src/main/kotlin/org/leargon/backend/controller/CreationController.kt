@@ -56,7 +56,9 @@ open class CreationController(
         ).requiredFields(creationRequirementService.requiredFields(itemType.value))
     }
 
-    override fun checkDuplicateCandidates(duplicateCheckRequest: org.leargon.backend.model.DuplicateCheckRequest): org.leargon.backend.model.DuplicateCheckResponse {
+    override fun checkDuplicateCandidates(
+        duplicateCheckRequest: org.leargon.backend.model.DuplicateCheckRequest
+    ): org.leargon.backend.model.DuplicateCheckResponse {
         getCurrentUser()
         val target =
             org.leargon.backend.service.CreationTarget(
@@ -68,12 +70,14 @@ open class CreationController(
                 owningUnitKey = duplicateCheckRequest.owningUnitKey
             )
         val candidates = duplicateCandidateService.candidates(target, duplicateCheckRequest.names.map { it.text })
-        return org.leargon.backend.model.DuplicateCheckResponse(candidates.any { it.blocking }, candidates)
+        return org.leargon.backend.model
+            .DuplicateCheckResponse(candidates.any { it.blocking }, candidates)
     }
 
     override fun acknowledgeCreationReview(recordId: Long): io.micronaut.http.HttpResponse<Void> {
         creationRecordService.acknowledge(recordId, getCurrentUser())
-        return io.micronaut.http.HttpResponse.noContent()
+        return io.micronaut.http.HttpResponse
+            .noContent()
     }
 
     private fun toRef(ref: CreationPolicyService.TargetRef): CreationTargetRef =

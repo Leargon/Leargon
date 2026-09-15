@@ -147,7 +147,9 @@ open class OrganisationalUnitService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = unit.names.find { it.locale == defaultLocale?.localeCode }?.text
         val unitRepo = organisationalUnitRepository
-        unit.key = org.leargon.backend.util.KeyAllocator.allocate(SlugUtil.slugify(defaultName)) { unitRepo.findByKey(it).isPresent }
+        unit.key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(SlugUtil.slugify(defaultName)) { unitRepo.findByKey(it).isPresent }
 
         if (request.parentKeys != null) {
             for (parentKey in request.parentKeys!!) {

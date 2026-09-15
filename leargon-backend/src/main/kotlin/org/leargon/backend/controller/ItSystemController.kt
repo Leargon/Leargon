@@ -31,7 +31,10 @@ open class ItSystemController(
 ) : ItSystemApi {
     override fun getAllItSystems(): List<ItSystemResponse> = itSystemService.getAll()
 
-    override fun getItSystem(key: String): ItSystemResponse = itSystemService.getByKey(key).canEdit(roleService.isEditorFor(getCurrentUser(), "GDPR"))
+    override fun getItSystem(key: String): ItSystemResponse =
+        itSystemService
+            .getByKey(key)
+            .canEdit(roleService.isEditorFor(getCurrentUser(), "GDPR"))
 
     override fun createItSystem(createItSystemRequest: CreateItSystemRequest): HttpResponse<ItSystemResponse> {
         creationPolicyService.require(

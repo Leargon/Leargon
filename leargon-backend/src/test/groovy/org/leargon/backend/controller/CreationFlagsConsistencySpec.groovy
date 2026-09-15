@@ -123,26 +123,26 @@ class CreationFlagsConsistencySpec extends Specification {
         def f = fixture()
         // container detail path → [child type → create request]
         def checks = [
-                ("/business-domains/${f.domain}")        : [
+                ('/business-domains/' + f.domain)        : [
                         BUSINESS_DOMAIN: ["/business-domains", { [names: names(), parentKey: f.domain] }],
                         BOUNDED_CONTEXT: ["/business-domains/${f.domain}/bounded-contexts", { [names: names()] }],
                 ],
-                ("/bounded-contexts/${f.billing}")      : [
+                ('/bounded-contexts/' + f.billing)      : [
                         BUSINESS_ENTITY : ["/business-entities", { [names: names(), boundedContextKey: f.billing] }],
                         BUSINESS_PROCESS: ["/processes", { [names: names(), boundedContextKey: f.billing] }],
                         DOMAIN_EVENT    : ["/domain-events", { [names: names(), publishingBoundedContextKey: f.billing] }],
                 ],
-                ("/business-entities/${f.entity}")      : [
+                ('/business-entities/' + f.entity)      : [
                         BUSINESS_ENTITY: ["/business-entities", { [names: names(), parentKey: f.entity] }],
                 ],
-                ("/processes/${f.process}")             : [
+                ('/processes/' + f.process)             : [
                         BUSINESS_PROCESS: ["/processes", { [names: names(), parentProcessKey: f.process] }],
                 ],
-                ("/organisational-units/${f.unit}")     : [
+                ('/organisational-units/' + f.unit)     : [
                         ORGANISATIONAL_UNIT: ["/organisational-units", { [names: names(), parentKeys: [f.unit]] }],
                         IT_SYSTEM          : ["/it-systems", { [names: names(), owningUnitKey: f.unit] }],
                 ],
-                ("/capabilities/${f.capability}")       : [
+                ('/capabilities/' + f.capability)       : [
                         CAPABILITY: ["/capabilities", { [names: names(), parentCapabilityKey: f.capability] }],
                 ],
         ]

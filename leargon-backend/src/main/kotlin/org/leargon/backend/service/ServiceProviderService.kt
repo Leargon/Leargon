@@ -76,7 +76,9 @@ open class ServiceProviderService(
             request.acknowledgedDuplicateKeys
         )
         val repo = serviceProviderRepository
-        sp.key = org.leargon.backend.util.KeyAllocator.allocate(slug) { repo.existsByKey(it) }
+        sp.key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(slug) { repo.existsByKey(it) }
 
         val saved = serviceProviderRepository.save(sp)
         return serviceProviderMapper.toServiceProviderResponse(saved)

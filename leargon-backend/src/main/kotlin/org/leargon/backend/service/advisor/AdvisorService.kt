@@ -134,7 +134,11 @@ open class AdvisorService(
             throw IllegalArgumentException("The advisor already reached a recommendation; no answer to ${it.questionCode} expected")
         }
 
-        val proposedNames = request.proposedNames.orEmpty().map { it.text }.filter { it.isNotBlank() }
+        val proposedNames =
+            request.proposedNames
+                .orEmpty()
+                .map { it.text }
+                .filter { it.isNotBlank() }
         val response =
             AdvisorEvaluateResponse(
                 if (outcome != null) AdvisorEvaluateResponseStatus.RECOMMENDATION else AdvisorEvaluateResponseStatus.QUESTION,
@@ -181,8 +185,13 @@ open class AdvisorService(
             } else {
                 emptyList()
             }
-        return AdvisorQuestion(question.code, AdvisorAnswerType.fromValue(question.answerType.name), question.options.map { it.code }, items)
-            .pickerItemType(type?.let { CreatableItemType.fromValue(it) })
+        return AdvisorQuestion(
+            question.code, AdvisorAnswerType.fromValue(question.answerType.name),
+            question.options.map {
+                it.code
+            },
+            items
+        ).pickerItemType(type?.let { CreatableItemType.fromValue(it) })
             // "Does it cease to exist when Order is deleted?" — questions refer to the item picked last.
             .params(pickedName?.let { mapOf("picked" to it) } ?: emptyMap())
     }
@@ -195,13 +204,55 @@ open class AdvisorService(
 
     private fun items(type: String?): List<Item> =
         when (type) {
-            CreationPolicyService.BUSINESS_ENTITY -> businessEntityRepository.findAll().map { Item(it.key, it.names, it.boundedContext?.names.orEmpty()) }
-            CreationPolicyService.BUSINESS_PROCESS -> processRepository.findAll().map { Item(it.key, it.names, it.boundedContext?.names.orEmpty()) }
-            CreationPolicyService.BUSINESS_DOMAIN -> businessDomainRepository.findAll().map { Item(it.key, it.names, it.parent?.names.orEmpty()) }
-            CreationPolicyService.BOUNDED_CONTEXT -> boundedContextRepository.findAll().map { Item(it.key, it.names, it.domain?.names.orEmpty()) }
-            CreationPolicyService.ORGANISATIONAL_UNIT -> organisationalUnitRepository.findAll().map { Item(it.key, it.names, emptyList()) }
-            CreationPolicyService.CAPABILITY -> capabilityRepository.findAll().map { Item(it.key, it.names, it.parent?.names.orEmpty()) }
-            else -> emptyList()
+            CreationPolicyService.BUSINESS_ENTITY -> {
+                businessEntityRepository.findAll().map {
+                    Item(
+                        it.key, it.names,
+                        it.boundedContext
+                            ?.names
+                            .orEmpty()
+                    )
+                }
+            }
+            CreationPolicyService.BUSINESS_PROCESS -> {
+                processRepository.findAll().map {
+                    Item(
+                        it.key, it.names,
+                        it.boundedContext
+                            ?.names
+                            .orEmpty()
+                    )
+                }
+            }
+            CreationPolicyService.BUSINESS_DOMAIN -> {
+                businessDomainRepository.findAll().map {
+                    Item(
+                        it.key, it.names,
+                        it.parent
+                            ?.names
+                            .orEmpty()
+                    )
+                }
+            }
+            CreationPolicyService.BOUNDED_CONTEXT -> {
+                boundedContextRepository.findAll().map {
+                    Item(
+                        it.key, it.names,
+                        it.domain
+                            ?.names
+                            .orEmpty()
+                    )
+                }
+            }
+            CreationPolicyService.ORGANISATIONAL_UNIT -> {
+                organisationalUnitRepository.findAll().map { Item(it.key, it.names, emptyList()) }
+            }
+            CreationPolicyService.CAPABILITY -> {
+                capabilityRepository.findAll().map { Item(it.key, it.names, it.parent?.names.orEmpty()) }
+            }
+            else -> {
+                emptyList()
+            }
         }
 
     /** All items of [type], each marked whether the user may create an [outcomeType] item there. */
@@ -226,12 +277,24 @@ open class AdvisorService(
         key: String
     ): CreationTarget =
         when {
-            pickedType == itemType && itemType == CreationPolicyService.ORGANISATIONAL_UNIT -> CreationTarget(itemType, parentKeys = listOf(key))
-            pickedType == itemType -> CreationTarget(itemType, parentKey = key)
-            pickedType == CreationPolicyService.BOUNDED_CONTEXT -> CreationTarget(itemType, boundedContextKey = key)
-            pickedType == CreationPolicyService.BUSINESS_DOMAIN -> CreationTarget(itemType, domainKey = key)
-            pickedType == CreationPolicyService.ORGANISATIONAL_UNIT -> CreationTarget(itemType, owningUnitKey = key)
-            else -> CreationTarget(itemType)
+            pickedType == itemType && itemType == CreationPolicyService.ORGANISATIONAL_UNIT -> {
+                CreationTarget(itemType, parentKeys = listOf(key))
+            }
+            pickedType == itemType -> {
+                CreationTarget(itemType, parentKey = key)
+            }
+            pickedType == CreationPolicyService.BOUNDED_CONTEXT -> {
+                CreationTarget(itemType, boundedContextKey = key)
+            }
+            pickedType == CreationPolicyService.BUSINESS_DOMAIN -> {
+                CreationTarget(itemType, domainKey = key)
+            }
+            pickedType == CreationPolicyService.ORGANISATIONAL_UNIT -> {
+                CreationTarget(itemType, owningUnitKey = key)
+            }
+            else -> {
+                CreationTarget(itemType)
+            }
         }
 
     // ── recommendation ────────────────────────────────────────────────────────────────────────────
@@ -251,7 +314,9 @@ open class AdvisorService(
 
         val target =
             when (outcome.placement) {
-                Placement.CHILD -> placementTarget(itemType, itemType, picked(outcome.placementFrom)!!)
+                Placement.CHILD -> {
+                    placementTarget(itemType, itemType, picked(outcome.placementFrom)!!)
+                }
                 Placement.NEW_ROOT -> {
                     val containerKey = picked(outcome.placementFrom)
                     if (containerKey != null) {
@@ -260,7 +325,9 @@ open class AdvisorService(
                         containerOf(itemType, picked(outcome.containerOf), dddDisabled)
                     }
                 }
-                Placement.TOP_LEVEL -> CreationTarget(itemType)
+                Placement.TOP_LEVEL -> {
+                    CreationTarget(itemType)
+                }
             }
         val relatedKey = picked(outcome.relatedFrom)
 
@@ -301,36 +368,73 @@ open class AdvisorService(
     ): CreationTarget {
         if (key == null) return CreationTarget(itemType)
         return when (itemType) {
-            CreationPolicyService.BUSINESS_ENTITY ->
+            CreationPolicyService.BUSINESS_ENTITY -> {
                 businessEntityRepository.findByKey(key).orElse(null).let { e ->
-                    if (dddDisabled) CreationTarget(itemType, owningUnitKey = e?.effectiveOwningUnit()?.key)
-                    else CreationTarget(itemType, boundedContextKey = e?.boundedContext?.key)
+                    if (dddDisabled) {
+                        CreationTarget(itemType, owningUnitKey = e?.effectiveOwningUnit()?.key)
+                    } else {
+                        CreationTarget(itemType, boundedContextKey = e?.boundedContext?.key)
+                    }
                 }
-            CreationPolicyService.BUSINESS_PROCESS ->
+            }
+            CreationPolicyService.BUSINESS_PROCESS -> {
                 processRepository.findByKey(key).orElse(null).let { p ->
-                    if (dddDisabled) CreationTarget(itemType, owningUnitKey = p?.effectiveOwningUnit()?.key)
-                    else CreationTarget(itemType, boundedContextKey = p?.boundedContext?.key)
+                    if (dddDisabled) {
+                        CreationTarget(itemType, owningUnitKey = p?.effectiveOwningUnit()?.key)
+                    } else {
+                        CreationTarget(itemType, boundedContextKey = p?.boundedContext?.key)
+                    }
                 }
-            else -> CreationTarget(itemType)
+            }
+            else -> {
+                CreationTarget(itemType)
+            }
         }
     }
 
     /** Who is responsible for the place a creation was refused at — the person to ask. */
     private fun responsibleOwner(target: CreationTarget): User? =
         when {
-            target.parentKey != null ->
+            target.parentKey != null -> {
                 when (target.itemType) {
-                    CreationPolicyService.BUSINESS_ENTITY -> businessEntityRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
-                    CreationPolicyService.BUSINESS_PROCESS -> processRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
-                    CreationPolicyService.BUSINESS_DOMAIN -> businessDomainRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
-                    CreationPolicyService.CAPABILITY -> capabilityRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
-                    else -> null
+                    CreationPolicyService.BUSINESS_ENTITY -> {
+                        businessEntityRepository
+                            .findByKey(target.parentKey)
+                            .orElse(null)
+                            ?.effectiveOwner()
+                    }
+                    CreationPolicyService.BUSINESS_PROCESS -> {
+                        processRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
+                    }
+                    CreationPolicyService.BUSINESS_DOMAIN -> {
+                        businessDomainRepository
+                            .findByKey(target.parentKey)
+                            .orElse(null)
+                            ?.effectiveOwner()
+                    }
+                    CreationPolicyService.CAPABILITY -> {
+                        capabilityRepository.findByKey(target.parentKey).orElse(null)?.effectiveOwner()
+                    }
+                    else -> {
+                        null
+                    }
                 }
-            target.parentKeys.isNotEmpty() -> organisationalUnitRepository.findByKey(target.parentKeys.first()).orElse(null)?.effectiveOwner()
-            target.boundedContextKey != null -> boundedContextRepository.findByKey(target.boundedContextKey).orElse(null)?.effectiveOwner()
-            target.domainKey != null -> businessDomainRepository.findByKey(target.domainKey).orElse(null)?.effectiveOwner()
-            target.owningUnitKey != null -> organisationalUnitRepository.findByKey(target.owningUnitKey).orElse(null)?.effectiveOwner()
-            else -> null
+            }
+            target.parentKeys.isNotEmpty() -> {
+                organisationalUnitRepository.findByKey(target.parentKeys.first()).orElse(null)?.effectiveOwner()
+            }
+            target.boundedContextKey != null -> {
+                boundedContextRepository.findByKey(target.boundedContextKey).orElse(null)?.effectiveOwner()
+            }
+            target.domainKey != null -> {
+                businessDomainRepository.findByKey(target.domainKey).orElse(null)?.effectiveOwner()
+            }
+            target.owningUnitKey != null -> {
+                organisationalUnitRepository.findByKey(target.owningUnitKey).orElse(null)?.effectiveOwner()
+            }
+            else -> {
+                null
+            }
         }
 
     // ── consequences ──────────────────────────────────────────────────────────────────────────────
@@ -420,7 +524,9 @@ open class AdvisorService(
                     }
                     mapOf("level" to (depth + 1).toString())
                 }
-                else -> emptyMap()
+                else -> {
+                    emptyMap()
+                }
             }
         return AdvisorConsequence(code, params)
     }

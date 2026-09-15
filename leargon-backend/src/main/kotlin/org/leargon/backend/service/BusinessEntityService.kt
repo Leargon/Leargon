@@ -231,7 +231,9 @@ open class BusinessEntityService(
             relationshipRequests.map { r ->
                 requireValidCardinality(r.firstCardinalityMinimum, r.firstCardinalityMaximum)
                 requireValidCardinality(r.secondCardinalityMinimum, r.secondCardinalityMaximum)
-                repo.findByKey(r.secondEntityKey).orElseThrow { ResourceNotFoundException("Related entity not found: ${r.secondEntityKey}") }
+                repo.findByKey(r.secondEntityKey).orElseThrow {
+                    ResourceNotFoundException("Related entity not found: ${r.secondEntityKey}")
+                }
             }
         // An implementation of a more general concept is linked to its interface(s) at creation.
         request.interfaces.orEmpty().distinct().forEach { interfaceKey ->
@@ -264,7 +266,11 @@ open class BusinessEntityService(
             relationship.firstCardinalityMaximum = r.firstCardinalityMaximum
             relationship.secondCardinalityMinimum = r.secondCardinalityMinimum
             relationship.secondCardinalityMaximum = r.secondCardinalityMaximum
-            relationship.descriptions = r.descriptions.orEmpty().map { LocalizedText(it.locale, it.text) }.toMutableList()
+            relationship.descriptions =
+                r.descriptions
+                    .orEmpty()
+                    .map { LocalizedText(it.locale, it.text) }
+                    .toMutableList()
             entity.relationshipsFirst.add(relationshipRepo.save(relationship))
         }
         createBusinessEntityVersion(entity, currentUser, "CREATE", "Initial creation")

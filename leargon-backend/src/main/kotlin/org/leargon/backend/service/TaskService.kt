@@ -525,7 +525,10 @@ open class TaskService(
 
         return root.children
             .flatMap { child -> child.purpose.orEmpty().filter { it.text.isNotBlank() } }
-            .groupBy({ it.locale }, { org.leargon.backend.util.NameMatching.normalize(it.text) })
+            .groupBy({ it.locale }, {
+                org.leargon.backend.util.NameMatching
+                    .normalize(it.text)
+            })
             .values
             .any { texts -> texts.toSet().size >= 2 }
     }

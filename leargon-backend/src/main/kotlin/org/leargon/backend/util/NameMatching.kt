@@ -56,7 +56,11 @@ object NameMatching {
     ): Match? = proposed.flatMap { p -> existing.mapNotNull { match(p, it) } }.maxByOrNull { it.score }
 
     private fun numbers(normalized: String): List<String> =
-        Regex("\\d+").findAll(normalized).map { it.value.trimStart('0').ifEmpty { "0" } }.toList().sorted()
+        Regex("\\d+")
+            .findAll(normalized)
+            .map { it.value.trimStart('0').ifEmpty { "0" } }
+            .toList()
+            .sorted()
 
     /**
      * Two names are similar only when their words pair up one-to-one (in any order) with each pair being

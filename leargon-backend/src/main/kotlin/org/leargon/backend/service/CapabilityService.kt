@@ -63,7 +63,9 @@ open class CapabilityService(
             request.acknowledgedDuplicateKeys
         )
         val repo = capabilityRepository
-        capability.key = org.leargon.backend.util.KeyAllocator.allocate(slug) { repo.existsByKey(it) }
+        capability.key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(slug) { repo.existsByKey(it) }
 
         if (request.parentCapabilityKey != null) {
             capability.parent =

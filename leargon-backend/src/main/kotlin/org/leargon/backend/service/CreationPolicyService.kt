@@ -111,7 +111,10 @@ open class CreationPolicyService(
         containerType: String,
         key: String
     ): List<org.leargon.backend.model.CreatableItemType> =
-        creatableChildTypes(user, containerType, key).map { org.leargon.backend.model.CreatableItemType.fromValue(it) }
+        creatableChildTypes(user, containerType, key).map {
+            org.leargon.backend.model.CreatableItemType
+                .fromValue(it)
+        }
 
     /** Like [decide] but throws [ForbiddenOperationException] when creation is not allowed. */
     @Transactional
@@ -136,17 +139,29 @@ open class CreationPolicyService(
     ): List<String> {
         val candidates =
             when (containerType) {
-                BUSINESS_DOMAIN -> listOf(CreationTarget(BUSINESS_DOMAIN, parentKey = key), CreationTarget(BOUNDED_CONTEXT, domainKey = key))
-                BOUNDED_CONTEXT ->
+                BUSINESS_DOMAIN -> {
+                    listOf(CreationTarget(BUSINESS_DOMAIN, parentKey = key), CreationTarget(BOUNDED_CONTEXT, domainKey = key))
+                }
+                BOUNDED_CONTEXT -> {
                     listOf(BUSINESS_ENTITY, BUSINESS_PROCESS, DOMAIN_EVENT, CONTEXT_RELATIONSHIP).map {
                         CreationTarget(it, boundedContextKey = key)
                     }
-                BUSINESS_ENTITY -> listOf(CreationTarget(BUSINESS_ENTITY, parentKey = key))
-                BUSINESS_PROCESS -> listOf(CreationTarget(BUSINESS_PROCESS, parentKey = key))
-                ORGANISATIONAL_UNIT ->
+                }
+                BUSINESS_ENTITY -> {
+                    listOf(CreationTarget(BUSINESS_ENTITY, parentKey = key))
+                }
+                BUSINESS_PROCESS -> {
+                    listOf(CreationTarget(BUSINESS_PROCESS, parentKey = key))
+                }
+                ORGANISATIONAL_UNIT -> {
                     listOf(CreationTarget(ORGANISATIONAL_UNIT, parentKeys = listOf(key)), CreationTarget(IT_SYSTEM, owningUnitKey = key))
-                CAPABILITY -> listOf(CreationTarget(CAPABILITY, parentKey = key))
-                else -> emptyList()
+                }
+                CAPABILITY -> {
+                    listOf(CreationTarget(CAPABILITY, parentKey = key))
+                }
+                else -> {
+                    emptyList()
+                }
             }
         return candidates.filter { decide(user, it).allowed }.map { it.itemType }.distinct()
     }
@@ -210,39 +225,57 @@ open class CreationPolicyService(
             }
 
         return when (itemType) {
-            BUSINESS_DOMAIN -> CreationTargets(false, false, parents = domainTargets())
-            BOUNDED_CONTEXT -> CreationTargets(false, false, domains = domainTargets())
-            BUSINESS_ENTITY ->
+            BUSINESS_DOMAIN -> {
+                CreationTargets(false, false, parents = domainTargets())
+            }
+            BOUNDED_CONTEXT -> {
+                CreationTargets(false, false, domains = domainTargets())
+            }
+            BUSINESS_ENTITY -> {
                 CreationTargets(
                     false,
                     false,
                     parents =
                         businessEntityRepository.findAll().mapNotNull { e ->
                             when {
-                                e.effectiveOwner()?.id == uid || e.effectiveSteward()?.id == uid -> TargetRef(e.key, e.names, CreationBasis.PARENT_OWNER)
-                                else -> e.boundedContext?.let { bcRealm(uid, it).basis }?.let { TargetRef(e.key, e.names, it) }
+                                e.effectiveOwner()?.id == uid || e.effectiveSteward()?.id == uid -> {
+                                    TargetRef(e.key, e.names, CreationBasis.PARENT_OWNER)
+                                }
+                                else -> {
+                                    e.boundedContext?.let { bcRealm(uid, it).basis }?.let { TargetRef(e.key, e.names, it) }
+                                }
                             }
                         },
                     boundedContexts = bcTargets(),
                     owningUnits = if (dddDisabled) unitTargets() else emptyList()
                 )
-            BUSINESS_PROCESS ->
+            }
+            BUSINESS_PROCESS -> {
                 CreationTargets(
                     false,
                     false,
                     parents =
                         processRepository.findAll().mapNotNull { p ->
                             when {
-                                p.effectiveOwner()?.id == uid || p.effectiveSteward()?.id == uid -> TargetRef(p.key, p.names, CreationBasis.PARENT_OWNER)
-                                else -> p.boundedContext?.let { bcRealm(uid, it).basis }?.let { TargetRef(p.key, p.names, it) }
+                                p.effectiveOwner()?.id == uid || p.effectiveSteward()?.id == uid -> {
+                                    TargetRef(p.key, p.names, CreationBasis.PARENT_OWNER)
+                                }
+                                else -> {
+                                    p.boundedContext?.let { bcRealm(uid, it).basis }?.let { TargetRef(p.key, p.names, it) }
+                                }
                             }
                         },
                     boundedContexts = bcTargets(),
                     owningUnits = if (dddDisabled) unitTargets() else emptyList()
                 )
-            DOMAIN_EVENT, CONTEXT_RELATIONSHIP -> CreationTargets(false, false, boundedContexts = bcTargets())
-            ORGANISATIONAL_UNIT -> CreationTargets(false, false, parents = unitTargets())
-            CAPABILITY ->
+            }
+            DOMAIN_EVENT, CONTEXT_RELATIONSHIP -> {
+                CreationTargets(false, false, boundedContexts = bcTargets())
+            }
+            ORGANISATIONAL_UNIT -> {
+                CreationTargets(false, false, parents = unitTargets())
+            }
+            CAPABILITY -> {
                 CreationTargets(
                     false,
                     false,
@@ -255,8 +288,13 @@ open class CreationPolicyService(
                             }
                         }
                 )
-            IT_SYSTEM -> CreationTargets(false, false, owningUnits = unitTargets())
-            else -> CreationTargets(false, false)
+            }
+            IT_SYSTEM -> {
+                CreationTargets(false, false, owningUnits = unitTargets())
+            }
+            else -> {
+                CreationTargets(false, false)
+            }
         }
     }
 
@@ -402,7 +440,9 @@ open class CreationPolicyService(
     ): CreationDecision =
         when {
             bc.effectiveOwner()?.id == uid -> CreationDecision(true, CreationBasis.BC_OWNER, BOUNDED_CONTEXT, bc.id)
-            bc.domain?.realmOwners()?.any { it.id == uid } == true -> CreationDecision(true, CreationBasis.DOMAIN_OWNER, BOUNDED_CONTEXT, bc.id)
+            bc.domain?.realmOwners()?.any {
+                it.id == uid
+            } == true -> CreationDecision(true, CreationBasis.DOMAIN_OWNER, BOUNDED_CONTEXT, bc.id)
             else -> DENIED
         }
 
@@ -416,7 +456,10 @@ open class CreationPolicyService(
             DENIED
         }
 
-    private fun findBc(key: String): BoundedContext = boundedContextRepository.findByKey(key).orElseThrow { notFound("BoundedContext", key) }
+    private fun findBc(key: String): BoundedContext =
+        boundedContextRepository.findByKey(key).orElseThrow {
+            notFound("BoundedContext", key)
+        }
 
     private fun findUnit(key: String): OrganisationalUnit =
         organisationalUnitRepository.findByKey(key).orElseThrow { notFound("OrganisationalUnit", key) }

@@ -174,7 +174,11 @@ object AdvisorRuleCatalog {
                                 listOf(
                                     OptionDef("one", outcome = "ROOT_WITH_RELATIONSHIP", relationship = RelationshipShape(0, 1, 1, 1)),
                                     OptionDef("many", outcome = "ROOT_WITH_RELATIONSHIP", relationship = RelationshipShape(0, null, 1, 1)),
-                                    OptionDef("manyToMany", outcome = "ROOT_WITH_RELATIONSHIP", relationship = RelationshipShape(0, null, 0, null)),
+                                    OptionDef(
+                                        "manyToMany",
+                                        outcome = "ROOT_WITH_RELATIONSHIP",
+                                        relationship = RelationshipShape(0, null, 0, null)
+                                    ),
                                 )
                         ),
                         QuestionDef(
@@ -184,8 +188,18 @@ object AdvisorRuleCatalog {
                             next = "entity.specialContextPick",
                             forPlacement = false
                         ),
-                        QuestionDef("entity.specialContextPick", AnswerType.ITEM_PICKER, pickerItemType = "BOUNDED_CONTEXT", outcome = "INTERFACE_IMPLEMENTATION"),
-                        QuestionDef("entity.contextPick", AnswerType.ITEM_PICKER, pickerItemType = "BOUNDED_CONTEXT", outcome = "NEW_ROOT_IN_CONTEXT"),
+                        QuestionDef(
+                            "entity.specialContextPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BOUNDED_CONTEXT",
+                            outcome = "INTERFACE_IMPLEMENTATION"
+                        ),
+                        QuestionDef(
+                            "entity.contextPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BOUNDED_CONTEXT",
+                            outcome = "NEW_ROOT_IN_CONTEXT"
+                        ),
                     ),
                 outcomes =
                     listOf(
@@ -203,7 +217,9 @@ object AdvisorRuleCatalog {
                         OutcomeDef(
                             "INTERFACE_IMPLEMENTATION", Placement.NEW_ROOT, listOf("specialisation"),
                             listOf("CROSS_CONTEXT_LINK", "RESULTING_EFFECTIVE_OWNER"),
-                            placementFrom = "entity.specialContextPick", connection = Connection.INTERFACE, relatedFrom = "entity.generalPick"
+                            placementFrom = "entity.specialContextPick",
+                            connection = Connection.INTERFACE,
+                            relatedFrom = "entity.generalPick"
                         ),
                         OutcomeDef(
                             "NEW_ROOT_IN_CONTEXT", Placement.NEW_ROOT, listOf("standaloneConcept"),
@@ -233,14 +249,29 @@ object AdvisorRuleCatalog {
                                     OptionDef("standalone", next = "process.contextPick"),
                                 )
                         ),
-                        QuestionDef("process.parentPick", AnswerType.ITEM_PICKER, pickerItemType = "BUSINESS_PROCESS", next = "process.ownPurpose"),
+                        QuestionDef(
+                            "process.parentPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BUSINESS_PROCESS",
+                            next = "process.ownPurpose"
+                        ),
                         QuestionDef(
                             "process.ownPurpose",
                             AnswerType.BOOLEAN,
                             options = yesNo(OptionDef(YES, outcome = "SEPARATE_ACTIVITY"), OptionDef(NO, outcome = "SUB_PROCESS"))
                         ),
-                        QuestionDef("process.reusedContextPick", AnswerType.ITEM_PICKER, pickerItemType = "BOUNDED_CONTEXT", outcome = "REUSABLE_PROCESS"),
-                        QuestionDef("process.contextPick", AnswerType.ITEM_PICKER, pickerItemType = "BOUNDED_CONTEXT", outcome = "NEW_ACTIVITY"),
+                        QuestionDef(
+                            "process.reusedContextPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BOUNDED_CONTEXT",
+                            outcome = "REUSABLE_PROCESS"
+                        ),
+                        QuestionDef(
+                            "process.contextPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BOUNDED_CONTEXT",
+                            outcome = "NEW_ACTIVITY"
+                        ),
                     ),
                 outcomes =
                     listOf(
@@ -286,7 +317,12 @@ object AdvisorRuleCatalog {
                                     OptionDef("newArea", outcome = "TOP_LEVEL_DOMAIN"),
                                 )
                         ),
-                        QuestionDef("domain.contextDomainPick", AnswerType.ITEM_PICKER, pickerItemType = "BUSINESS_DOMAIN", outcome = "BOUNDED_CONTEXT"),
+                        QuestionDef(
+                            "domain.contextDomainPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "BUSINESS_DOMAIN",
+                            outcome = "BOUNDED_CONTEXT"
+                        ),
                         QuestionDef("domain.parentPick", AnswerType.ITEM_PICKER, pickerItemType = "BUSINESS_DOMAIN", outcome = "SUBDOMAIN"),
                     ),
                 outcomes =
@@ -316,11 +352,22 @@ object AdvisorRuleCatalog {
                             AnswerType.BOOLEAN,
                             options = yesNo(OptionDef(YES, next = "unit.parentPick"), OptionDef(NO, outcome = "TOP_LEVEL_UNIT"))
                         ),
-                        QuestionDef("unit.parentPick", AnswerType.ITEM_PICKER, pickerItemType = "ORGANISATIONAL_UNIT", outcome = "SUB_UNIT"),
+                        QuestionDef(
+                            "unit.parentPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "ORGANISATIONAL_UNIT",
+                            outcome = "SUB_UNIT"
+                        ),
                     ),
                 outcomes =
                     listOf(
-                        OutcomeDef("SUB_UNIT", Placement.CHILD, listOf("reportingLine"), listOf("NOT_TRANSITIVE"), placementFrom = "unit.parentPick"),
+                        OutcomeDef(
+                            "SUB_UNIT",
+                            Placement.CHILD,
+                            listOf("reportingLine"),
+                            listOf("NOT_TRANSITIVE"),
+                            placementFrom = "unit.parentPick"
+                        ),
                         OutcomeDef("TOP_LEVEL_UNIT", Placement.TOP_LEVEL, listOf("independentUnit"), listOf("STRATEGIC_ITEM")),
                     )
             ),
@@ -338,12 +385,20 @@ object AdvisorRuleCatalog {
                             AnswerType.BOOLEAN,
                             options = yesNo(OptionDef(YES, next = "capability.parentPick"), OptionDef(NO, outcome = "L1_CAPABILITY"))
                         ),
-                        QuestionDef("capability.parentPick", AnswerType.ITEM_PICKER, pickerItemType = "CAPABILITY", outcome = "SUB_CAPABILITY"),
+                        QuestionDef(
+                            "capability.parentPick",
+                            AnswerType.ITEM_PICKER,
+                            pickerItemType = "CAPABILITY",
+                            outcome = "SUB_CAPABILITY"
+                        ),
                     ),
                 outcomes =
                     listOf(
                         OutcomeDef(
-                            "SUB_CAPABILITY", Placement.CHILD, listOf("refinement"), listOf("CAPABILITY_LEVEL", "RESULTING_EFFECTIVE_OWNER"),
+                            "SUB_CAPABILITY",
+                            Placement.CHILD,
+                            listOf("refinement"),
+                            listOf("CAPABILITY_LEVEL", "RESULTING_EFFECTIVE_OWNER"),
                             placementFrom = "capability.parentPick"
                         ),
                         OutcomeDef("L1_CAPABILITY", Placement.TOP_LEVEL, listOf("newCapabilityArea"), listOf("STRATEGIC_ITEM")),

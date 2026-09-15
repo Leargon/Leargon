@@ -99,13 +99,51 @@ open class CreationRecordService(
     open fun realmOwnerId(record: ItemCreationRecord): Long? {
         val id = record.realmId ?: return null
         return when (record.realmType) {
-            CreationPolicyService.BUSINESS_ENTITY -> businessEntityRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            CreationPolicyService.BUSINESS_PROCESS -> processRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            CreationPolicyService.BOUNDED_CONTEXT -> boundedContextRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            CreationPolicyService.BUSINESS_DOMAIN -> businessDomainRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            CreationPolicyService.ORGANISATIONAL_UNIT -> organisationalUnitRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            CreationPolicyService.CAPABILITY -> capabilityRepository.findById(id).orElse(null)?.effectiveOwner()?.id
-            else -> null
+            CreationPolicyService.BUSINESS_ENTITY -> {
+                businessEntityRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            CreationPolicyService.BUSINESS_PROCESS -> {
+                processRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            CreationPolicyService.BOUNDED_CONTEXT -> {
+                boundedContextRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            CreationPolicyService.BUSINESS_DOMAIN -> {
+                businessDomainRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            CreationPolicyService.ORGANISATIONAL_UNIT -> {
+                organisationalUnitRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            CreationPolicyService.CAPABILITY -> {
+                capabilityRepository
+                    .findById(id)
+                    .orElse(null)
+                    ?.effectiveOwner()
+                    ?.id
+            }
+            else -> {
+                null
+            }
         }
     }
 
@@ -114,32 +152,40 @@ open class CreationRecordService(
     open fun resolveItem(record: ItemCreationRecord): ResolvedItem? {
         val id = record.resourceId
         return when (record.resourceType) {
-            CreationPolicyService.BUSINESS_ENTITY ->
+            CreationPolicyService.BUSINESS_ENTITY -> {
                 businessEntityRepository.findById(id).orElse(null)?.let {
                     ResolvedItem(record.resourceType, TaskItemResourceType.ENTITY, it.key, it.names, it.updatedAt)
                 }
-            CreationPolicyService.BUSINESS_PROCESS ->
+            }
+            CreationPolicyService.BUSINESS_PROCESS -> {
                 processRepository.findById(id).orElse(null)?.let {
                     ResolvedItem(record.resourceType, TaskItemResourceType.PROCESS, it.key, it.names, it.updatedAt)
                 }
-            CreationPolicyService.BUSINESS_DOMAIN ->
+            }
+            CreationPolicyService.BUSINESS_DOMAIN -> {
                 businessDomainRepository.findById(id).orElse(null)?.let {
                     ResolvedItem(record.resourceType, TaskItemResourceType.DOMAIN, it.key, it.names, it.updatedAt)
                 }
+            }
             // Bounded contexts are shown on their domain's page.
-            CreationPolicyService.BOUNDED_CONTEXT ->
+            CreationPolicyService.BOUNDED_CONTEXT -> {
                 boundedContextRepository.findById(id).orElse(null)?.let { bc ->
                     bc.domain?.let { ResolvedItem(record.resourceType, TaskItemResourceType.DOMAIN, it.key, bc.names, bc.updatedAt) }
                 }
-            CreationPolicyService.ORGANISATIONAL_UNIT ->
+            }
+            CreationPolicyService.ORGANISATIONAL_UNIT -> {
                 organisationalUnitRepository.findById(id).orElse(null)?.let {
                     ResolvedItem(record.resourceType, TaskItemResourceType.ORG_UNIT, it.key, it.names, it.updatedAt)
                 }
-            CreationPolicyService.CAPABILITY ->
+            }
+            CreationPolicyService.CAPABILITY -> {
                 capabilityRepository.findById(id).orElse(null)?.let {
                     ResolvedItem(record.resourceType, TaskItemResourceType.CAPABILITY, it.key, it.names, it.updatedAt)
                 }
-            else -> null
+            }
+            else -> {
+                null
+            }
         }
     }
 
@@ -178,7 +224,10 @@ open class CreationRecordService(
     private fun parseJustification(json: String?): List<org.leargon.backend.model.LocalizedText> {
         if (json.isNullOrBlank()) return emptyList()
         val entries: List<Map<String, String>> = objectMapper.readValue(json, object : TypeReference<List<Map<String, String>>>() {})
-        return entries.map { org.leargon.backend.model.LocalizedText(it["locale"] ?: "", it["text"] ?: "") }
+        return entries.map {
+            org.leargon.backend.model
+                .LocalizedText(it["locale"] ?: "", it["text"] ?: "")
+        }
     }
 
     /** The saved item's id and the container it was placed in. */
@@ -187,7 +236,7 @@ open class CreationRecordService(
         key: String
     ): Placement? =
         when (itemType) {
-            CreationPolicyService.BUSINESS_ENTITY ->
+            CreationPolicyService.BUSINESS_ENTITY -> {
                 businessEntityRepository.findByKey(key).orElse(null)?.let { e ->
                     when {
                         e.parent != null -> Placement(e.id!!, CreationPolicyService.BUSINESS_ENTITY, e.parent!!.id)
@@ -196,7 +245,8 @@ open class CreationRecordService(
                         else -> Placement(e.id!!, null, null)
                     }
                 }
-            CreationPolicyService.BUSINESS_PROCESS ->
+            }
+            CreationPolicyService.BUSINESS_PROCESS -> {
                 processRepository.findByKey(key).orElse(null)?.let { p ->
                     when {
                         p.parent != null -> Placement(p.id!!, CreationPolicyService.BUSINESS_PROCESS, p.parent!!.id)
@@ -205,23 +255,30 @@ open class CreationRecordService(
                         else -> Placement(p.id!!, null, null)
                     }
                 }
-            CreationPolicyService.BUSINESS_DOMAIN ->
+            }
+            CreationPolicyService.BUSINESS_DOMAIN -> {
                 businessDomainRepository.findByKey(key).orElse(null)?.let { d ->
                     Placement(d.id!!, d.parent?.let { CreationPolicyService.BUSINESS_DOMAIN }, d.parent?.id)
                 }
-            CreationPolicyService.BOUNDED_CONTEXT ->
+            }
+            CreationPolicyService.BOUNDED_CONTEXT -> {
                 boundedContextRepository.findByKey(key).orElse(null)?.let { bc ->
                     Placement(bc.id!!, CreationPolicyService.BUSINESS_DOMAIN, bc.domain?.id)
                 }
-            CreationPolicyService.ORGANISATIONAL_UNIT ->
+            }
+            CreationPolicyService.ORGANISATIONAL_UNIT -> {
                 organisationalUnitRepository.findByKey(key).orElse(null)?.let { u ->
                     val parent = u.parents.firstOrNull()
                     Placement(u.id!!, parent?.let { CreationPolicyService.ORGANISATIONAL_UNIT }, parent?.id)
                 }
-            CreationPolicyService.CAPABILITY ->
+            }
+            CreationPolicyService.CAPABILITY -> {
                 capabilityRepository.findByKey(key).orElse(null)?.let { c ->
                     Placement(c.id!!, c.parent?.let { CreationPolicyService.CAPABILITY }, c.parent?.id)
                 }
-            else -> null
+            }
+            else -> {
+                null
+            }
         }
 }

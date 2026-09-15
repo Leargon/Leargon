@@ -67,7 +67,9 @@ open class ItSystemService(
             request.acknowledgedDuplicateKeys
         )
         val repo = itSystemRepository
-        val key = org.leargon.backend.util.KeyAllocator.allocate(slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')) { repo.existsByKey(it) }
+        val key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')) { repo.existsByKey(it) }
         val owningUnit =
             request.owningUnitKey?.let {
                 organisationalUnitRepository.findByKey(it).orElseThrow {
