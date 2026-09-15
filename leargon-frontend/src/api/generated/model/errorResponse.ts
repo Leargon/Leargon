@@ -16,6 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { DuplicateCandidate } from './duplicateCandidate.ts';
 
 export interface ErrorResponse {
   /**
@@ -31,4 +32,14 @@ export interface ErrorResponse {
   status?: number;
   /** Error timestamp */
   timestamp?: string;
+  /**
+     * For REQUIRED_AT_CREATION_MISSING — the configured field names the create request did not supply
+     * @nullable
+     */
+  missingFields?: string[] | null;
+  /**
+     * For DUPLICATE_CANDIDATES — the likely duplicates (blocking ones must be acknowledged)
+     * @nullable
+     */
+  duplicateCandidates?: DuplicateCandidate[] | null;
 }

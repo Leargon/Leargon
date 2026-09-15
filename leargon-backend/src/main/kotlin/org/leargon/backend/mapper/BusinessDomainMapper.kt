@@ -56,6 +56,8 @@ open class BusinessDomainMapper(
             .effectiveType(toBusinessDomainType(domain.getEffectiveType()))
             .visionStatement(LocalizedTextMapper.toModel(domain.visionStatement))
             .owningUnit(organisationalUnitMapper.toSummaryResponse(domain.owningUnit))
+            .owner(UserMapper.toUserSummary(domain.owner))
+            .effectiveOwner(UserMapper.toUserSummary(domain.effectiveOwner()))
             .subdomains(toBusinessDomainSummaryResponseArray(domain.children))
             .boundedContexts(BoundedContextMapper.toSummaryResponseList(domain.boundedContexts, defaultLocale))
             .classificationAssignments(ClassificationMapper.toClassificationAssignmentResponses(domain.classificationAssignments))
@@ -160,6 +162,10 @@ open class BusinessDomainMapper(
 
                 fieldName == "type" -> {
                     domain.type != null
+                }
+
+                fieldName == "owner" -> {
+                    domain.effectiveOwner() != null
                 }
 
                 fieldName.startsWith("visionStatement.") -> {

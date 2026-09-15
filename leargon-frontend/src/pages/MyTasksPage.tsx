@@ -9,6 +9,7 @@ import {
   useUndismissTask,
   getGetMyTasksQueryKey,
 } from '../api/generated/task/task';
+import { useAcknowledgeCreationReview } from '../api/generated/creation/creation';
 import { useAuth } from '../context/AuthContext';
 import { useLocale } from '../context/LocaleContext';
 import TaskList from '../components/tasks/TaskList';
@@ -53,6 +54,13 @@ const MyTasksPage: React.FC = () => {
     await invalidate();
   };
 
+  const acknowledge = useAcknowledgeCreationReview();
+  const handleAcknowledge = async (task: TaskItem) => {
+    if (!task.creationReview) return;
+    await acknowledge.mutateAsync({ recordId: task.creationReview.recordId });
+    await invalidate();
+  };
+
   return (
     <Box sx={{ p: 3, height: '100%', overflow: 'auto', maxWidth: 900 }}>
       <Box sx={{ mb: 3 }}>
@@ -80,6 +88,7 @@ const MyTasksPage: React.FC = () => {
             emptyMessage={t('tasks.noneRequired')}
             onDismiss={setToDismiss}
             onRestore={handleRestore}
+            onAcknowledge={handleAcknowledge}
           />
           <TaskList
             title={t('tasks.couldDo')}
@@ -89,6 +98,7 @@ const MyTasksPage: React.FC = () => {
             emptyMessage={t('tasks.noneRecommended')}
             onDismiss={setToDismiss}
             onRestore={handleRestore}
+            onAcknowledge={handleAcknowledge}
           />
           {dismissed.length > 0 && (
             <TaskList

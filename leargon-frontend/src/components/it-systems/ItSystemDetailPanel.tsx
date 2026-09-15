@@ -36,8 +36,6 @@ import { useGetAllOrganisationalUnits } from '../../api/generated/organisational
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -60,13 +58,12 @@ const ItSystemDetailPanel: React.FC<ItSystemDetailPanelProps> = ({ systemKey }) 
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { getLocalizedText, preferredLocale, localizedName } = useLocale();
-  const { user } = useAuth();
-  // IT systems are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
-  const canManage = canCreateRoot(user?.roles, 'IT_SYSTEM');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetItSystem(systemKey);
   const system = response?.data as ItSystemResponse | undefined;
+  // Edit/delete rights are computed by the backend (GDPR editor/lead or admin).
+  const canManage = system?.canEdit ?? false;
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];

@@ -25,4 +25,5 @@ export const TaskItemResourceType = {
   PROCESS: 'PROCESS',
   DOMAIN: 'DOMAIN',
   ORG_UNIT: 'ORG_UNIT',
+  CAPABILITY: 'CAPABILITY',
 } as const;

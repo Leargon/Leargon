@@ -1,5 +1,5 @@
 #### USER STORY 'Create domain event'
-**AS AN** admin or data owner\
+**AS AN** admin, a DDD editor/lead, or the owner of the publishing bounded context (or of its domain)\
 **IF** \
 **I WANT** to create a domain event by providing a name in at least one supported locale and assigning a publishing bounded context\
 **SO THAT** an asynchronous communication point is captured in the domain model

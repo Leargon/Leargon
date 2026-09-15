@@ -35,6 +35,13 @@ export interface CreateCapabilityRequest {
      */
   parentCapabilityKey?: string | null;
   /**
+     * Why this capability is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
+  /**
      * Key of the organisational unit that owns this capability
      * @nullable
      */

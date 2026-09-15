@@ -4,7 +4,6 @@ import io.micronaut.transaction.annotation.Transactional
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.ItSystem
 import org.leargon.backend.domain.LocalizedText
-import org.leargon.backend.exception.DuplicateResourceException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ItSystemMapper
 import org.leargon.backend.model.CreateItSystemRequest
@@ -53,15 +52,22 @@ open class ItSystemService(
         return itSystemMapper.toItSystemResponse(itSystem)
     }
 
+    @jakarta.inject.Inject
+    lateinit var duplicateCandidateService: DuplicateCandidateService
+
     @Transactional
     open fun create(request: CreateItSystemRequest): ItSystemResponse {
         val slug =
             request.names.firstOrNull { it.locale == defaultLocaleProvider.code() }?.text
                 ?: request.names.first().text
-        val key = slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
-        if (itSystemRepository.existsByKey(key)) {
-            throw DuplicateResourceException("IT system with key '$key' already exists")
-        }
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(CreationPolicyService.IT_SYSTEM, owningUnitKey = request.owningUnitKey),
+            request.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
+        val repo = itSystemRepository
+        val key = org.leargon.backend.util.KeyAllocator.allocate(slug.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')) { repo.existsByKey(it) }
         val owningUnit =
             request.owningUnitKey?.let {
                 organisationalUnitRepository.findByKey(it).orElseThrow {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -49,6 +49,7 @@ import {
   useGetBusinessDomainVersions,
   useGetAllBusinessDomains,
   useUpdateBusinessDomainOwningUnit,
+  useUpdateBusinessDomainOwner,
   useSetBusinessDomainFieldVerification,
 } from '../../api/generated/business-domain/business-domain';
 import FieldStatusIndicator from '../common/FieldStatusIndicator';
@@ -73,14 +74,17 @@ import {
   useCreateBoundedContext,
   useDeleteBoundedContext,
   useUpdateBoundedContextOwningTeam,
+  useUpdateBoundedContextOwner,
 } from '../../api/generated/bounded-context/bounded-context';
+import { useGetAssignableUsers } from '../../api/generated/administration/administration';
+import type { UserSummaryResponse } from '../../api/generated/model/userSummaryResponse';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useUpdateBusinessDomainVisionStatement } from '../../api/generated/business-domain/business-domain';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import type { CreatableItemType } from '../../api/generated/model/creatableItemType';
 import { useNavigation } from '../../context/NavigationContext';
 import { DOMAIN_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
@@ -153,15 +157,16 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const { perspective } = useNavigation();
   const sections = DOMAIN_SECTIONS_BY_PERSPECTIVE[perspective];
   const { t } = useTranslation();
-  // Domains (and their bounded contexts) are governed by DDD with no per-user owner/steward, so an admin
-  // or a DDD editor/lead manages them.
-  const canManage = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
-
   const { data: domainResponse, isLoading, error } = useGetBusinessDomainByKey(domainKey);
   const domain = domainResponse?.data as BusinessDomainResponse | undefined;
   // Per-field edit affordances come from the backend-computed editableFields (owner/steward/admin/DDD
   // editor), so the edit buttons match enforcement — the domain owner can now edit, not just verify.
   const canEditField = (fieldName: string): boolean => domain?.editableFields?.includes(fieldName) ?? false;
+  // Whoever may edit the domain at all (owner, steward, admin, DDD editor) sees its governance nudges.
+  const canManage = (domain?.editableFields?.length ?? 0) > 0;
+  // Creation inside the domain follows the backend creation policy (domain owner ⊃ bounded-context owner).
+  const canCreateIn = (itemType: CreatableItemType): boolean => domain?.creatableChildTypes?.includes(itemType) ?? false;
+  const canDeleteDomain = domain?.canDelete ?? false;
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
   const { data: versionsResponse } = useGetBusinessDomainVersions(domainKey);
@@ -196,6 +201,17 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
   const [addBcOpen, setAddBcOpen] = useState(false);
   const [addBcName, setAddBcName] = useState('');
   const [addBcError, setAddBcError] = useState('');
+  // Advisor hand-off: /domains/<key>?addContext=1 opens the "add bounded context" dialog.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (!searchParams.get('addContext')) return;
+    setAddBcName('');
+    setAddBcError('');
+    setAddBcOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('addContext');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [selectedBcKey, setSelectedBcKey] = useState<string | null>(null);
 
   const createBoundedContext = useCreateBoundedContext();
@@ -204,9 +220,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
 
   const { data: allOrgUnitsData } = useGetAllOrganisationalUnits();
   const allOrgUnits = (allOrgUnitsData?.data as OrganisationalUnitResponse[] | undefined) ?? [];
-  // Domain owner = business owner of the owning unit (verification is owner-only).
-  const domainOwnerUsername = allOrgUnits.find((u) => u.key === domain?.owningUnit?.key)?.businessOwner?.username;
-  const isOwner = !!user?.username && user.username === domainOwnerUsername;
+  // Domain owner = the backend-resolved effective owner (explicit owner, else owning unit, else parent domain).
+  const isOwner = !!user?.username && user.username === domain?.effectiveOwner?.username;
   const setFieldVerification = useSetBusinessDomainFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -517,6 +532,24 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     },
   });
 
+  // Inline edit for the explicit domain owner (null = inherit from owning unit / parent domain)
+  const updateDomainOwner = useUpdateBusinessDomainOwner();
+  const updateBcOwner = useUpdateBoundedContextOwner();
+  const { data: assignableUsersResponse } = useGetAssignableUsers();
+  const assignableUsers = (assignableUsersResponse?.data as UserSummaryResponse[] | undefined) ?? [];
+  const ownerEdit = useInlineEdit<string | null>({
+    onSave: async (val) => {
+      await updateDomainOwner.mutateAsync({ key: domainKey, data: { ownerUsername: val } });
+      invalidate();
+    },
+  });
+  const bcOwnerEdit = useInlineEdit<{ bcKey: string; ownerUsername: string | null }>({
+    onSave: async (val) => {
+      await updateBcOwner.mutateAsync({ key: val.bcKey, data: { ownerUsername: val.ownerUsername } });
+      invalidateBcs();
+    },
+  });
+
   // Cancel all edits when navigating to a different domain
   useEffect(() => {
     namesEdit.cancel();
@@ -525,6 +558,8 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
     classEdit.cancel();
     visionEdit.cancel();
     owningUnitEdit.cancel();
+    ownerEdit.cancel();
+    bcOwnerEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domainKey]);
 
@@ -579,14 +614,18 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
             <Chip icon={<WarningIcon fontSize="small" />} label={t('common.missing', { count: domain.missingMandatoryFields!.length })} size="small" color="warning" />
           )}
         </>}
-        actions={canManage ? (
+        actions={canCreateIn('BUSINESS_DOMAIN') || canDeleteDomain ? (
           <>
-            <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateSubdomainOpen(true)}>
-              {t('domain.addSubdomain')}
-            </Button>
-            <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
-              {t('common.delete')}
-            </Button>
+            {canCreateIn('BUSINESS_DOMAIN') && (
+              <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateSubdomainOpen(true)}>
+                {t('domain.addSubdomain')}
+              </Button>
+            )}
+            {canDeleteDomain && (
+              <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
+                {t('common.delete')}
+              </Button>
+            )}
           </>
         ) : undefined}
       />
@@ -611,7 +650,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       )}
 
       {/* Item 8: Empty bounded context — domain has no bounded contexts */}
-      {canManage && boundedContexts.length === 0 && (
+      {canCreateIn('BOUNDED_CONTEXT') && boundedContexts.length === 0 && (
         <NudgeBanner
           severity="info"
           title={t('nudge.domain.noBcTitle')}
@@ -910,13 +949,63 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
         </>
       )}
 
+      {sections.owningUnit && !isHidden('owner') && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          {/* Owner — explicit person, else inherited from the owning unit / parent domain */}
+          <SectionHeader
+            title={t('domain.owner')}
+            statusIndicator={renderStatus('owner')}
+            canEdit={canEditField('owner')}
+            isEditing={ownerEdit.isEditing}
+            onEdit={() => ownerEdit.startEdit(domain.owner?.username ?? null)}
+            onSave={ownerEdit.save}
+            onCancel={ownerEdit.cancel}
+            isSaving={ownerEdit.isSaving}
+          />
+          <Box sx={{ mb: 2 }} id="field-owner" data-testid="domain-owner">
+            {ownerEdit.isEditing ? (
+              <Box>
+                <Autocomplete
+                  options={assignableUsers}
+                  getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
+                  value={assignableUsers.find((u) => u.username === ownerEdit.editValue) || null}
+                  onChange={(_, newVal) => ownerEdit.setEditValue(newVal?.username ?? null)}
+                  renderInput={(params) => (
+                    <TextField {...params} size="small" placeholder={t('domain.searchOwner')} helperText={t('domain.ownerInheritHint')} sx={{ width: 350 }} />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.username === value.username}
+                  size="small"
+                />
+                {ownerEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{ownerEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Typography variant="body2" component="div">
+                {domain.effectiveOwner ? (
+                  <>
+                    <Chip label={`${domain.effectiveOwner.firstName} ${domain.effectiveOwner.lastName}`} size="small" />
+                    {!domain.owner && (
+                      <Typography component="span" variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+                        {t('domain.ownerInherited')}
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <span style={{ color: '#888' }}>{t('common.notSet')}</span>
+                )}
+              </Typography>
+            )}
+          </Box>
+        </>
+      )}
+
       {sections.boundedContexts && !isHidden('boundedContexts') && (<>
       <Divider sx={{ my: 2 }} />
 
       {/* Bounded Contexts */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2">{t('domain.boundedContexts')}</Typography>
-        {canManage && (
+        {canCreateIn('BOUNDED_CONTEXT') && (
           <Button size="small" startIcon={<Add />} onClick={() => { setAddBcName(''); setAddBcError(''); setAddBcOpen(true); }}>
             {t('domain.addBoundedContext')}
           </Button>
@@ -939,7 +1028,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                 variant={selectedBcKey === bc.key ? 'filled' : 'outlined'}
                 color={selectedBcKey === bc.key ? 'primary' : 'default'}
                 onClick={() => setSelectedBcKey(selectedBcKey === bc.key ? null : bc.key)}
-                onDelete={canManage ? async (e: React.MouseEvent) => {
+                onDelete={canDeleteDomain ? async (e: React.MouseEvent) => {
                   e.stopPropagation();
                   await deleteBoundedContext.mutateAsync({ key: bc.key });
                   if (selectedBcKey === bc.key) setSelectedBcKey(null);
@@ -1024,13 +1113,58 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
                       {t('boundedContext.noOwningTeam')}
                     </Typography>
                   )}
-                  {canManage && (
+                  {selectedBc?.editableFields?.includes('owningTeam') && (
                     <IconButton
                       size="small"
                       onClick={() => {
                         setOwningTeamEditValue(allOrgUnits.find((u) => u.key === selectedBc?.owningTeam?.key) ?? null);
                         setOwningTeamEditBcKey(selectedBcKey);
                       }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  )}
+                </>
+              )}
+            </Box>
+            {/* Owner — explicit person, else inherited from the owning team / domain */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }} data-testid="bc-owner">
+              <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 100 }}>
+                {t('boundedContext.owner')}:
+              </Typography>
+              {bcOwnerEdit.isEditing && bcOwnerEdit.editValue?.bcKey === selectedBcKey ? (
+                <>
+                  <Autocomplete
+                    size="small"
+                    options={assignableUsers}
+                    getOptionLabel={(u) => `${u.firstName} ${u.lastName}`}
+                    value={assignableUsers.find((u) => u.username === bcOwnerEdit.editValue?.ownerUsername) || null}
+                    onChange={(_e, val) => bcOwnerEdit.setEditValue({ bcKey: selectedBcKey, ownerUsername: val?.username ?? null })}
+                    renderInput={(params) => <TextField {...params} size="small" sx={{ minWidth: 200 }} />}
+                    isOptionEqualToValue={(a, b) => a.username === b.username}
+                  />
+                  <IconButton size="small" disabled={bcOwnerEdit.isSaving} onClick={() => bcOwnerEdit.save()}>
+                    <Check fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => bcOwnerEdit.cancel()}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  {selectedBc?.effectiveOwner ? (
+                    <Chip label={`${selectedBc.effectiveOwner.firstName} ${selectedBc.effectiveOwner.lastName}`} size="small" variant="outlined" />
+                  ) : (
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('common.notSet')}</Typography>
+                  )}
+                  {selectedBc?.effectiveOwner && !selectedBc.owner && (
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>{t('domain.ownerInherited')}</Typography>
+                  )}
+                  {selectedBc?.editableFields?.includes('owner') && (
+                    <IconButton
+                      size="small"
+                      aria-label={t('boundedContext.editOwner')}
+                      onClick={() => bcOwnerEdit.startEdit({ bcKey: selectedBcKey, ownerUsername: selectedBc.owner?.username ?? null })}
                     >
                       <Edit fontSize="small" />
                     </IconButton>
@@ -1212,7 +1346,7 @@ const DomainDetailPanel: React.FC<DomainDetailPanelProps> = ({ domainKey }) => {
       {/* Classifications */}
       <SectionHeader
         title={t('common.classifications')}
-        canEdit={canManage}
+        canEdit={canEditField('classification')}
         isEditing={classEdit.isEditing}
         onEdit={() =>
           classEdit.startEdit(

@@ -61,42 +61,8 @@ class RoleService(
     ): Boolean = scopesOf(user).let { it.isAdmin || methodology in it.leadMethodologies }
 
     /**
-     * Throws unless [user] may create a *root* (top-level) catalogue item governed by [methodology]:
-     * an administrator, or an EDITOR/LEAD of that methodology.
-     */
-    fun requireCreateRoot(
-        user: User,
-        methodology: String
-    ) {
-        if (!isEditorFor(user, methodology)) {
-            throw ForbiddenOperationException(
-                "Creating this item requires an administrator or a $methodology editor/lead role"
-            )
-        }
-    }
-
-    /**
-     * Throws unless [user] may create a *child* of a parent item governed by [methodology]: an
-     * administrator or EDITOR/LEAD of that methodology, or the owner or steward of the parent item.
-     */
-    fun requireCreateChild(
-        user: User,
-        methodology: String,
-        parentOwnerId: Long?,
-        parentStewardId: Long?
-    ) {
-        if (isEditorFor(user, methodology)) return
-        val uid = user.id
-        if (uid != null && (uid == parentOwnerId || uid == parentStewardId)) return
-        throw ForbiddenOperationException(
-            "Creating this item requires an administrator, a $methodology editor/lead, " +
-                "or ownership/stewardship of the parent item"
-        )
-    }
-
-    /**
      * Throws unless [user] is an administrator or an EDITOR/LEAD of [methodology]. Used to gate edit/delete
-     * (and create) of items that have no per-user owner/steward and are wholly governed by one methodology
+     * of items that have no per-user owner/steward and are wholly governed by one methodology
      * (e.g. service providers, IT systems, capabilities, domains, bounded contexts, context relationships,
      * domain events).
      */
@@ -121,14 +87,25 @@ class RoleService(
         ownerId: Long?,
         stewardId: Long?
     ) {
+        if (canDelete(user, entityType, ownerId, stewardId)) return
         val governing = GOVERNING_METHODOLOGY[entityType]
-        if (governing != null && isEditorFor(user, governing)) return
-        if (user.roles.contains(ROLE_ADMIN)) return
-        val uid = user.id
-        if (uid != null && (uid == ownerId || uid == stewardId)) return
         throw ForbiddenOperationException(
             "Deleting this item requires an administrator, a $governing editor/lead, or ownership/stewardship"
         )
+    }
+
+    /** The predicate [requireDelete] enforces — also backs the `canDelete` flag on detail responses. */
+    fun canDelete(
+        user: User,
+        entityType: String,
+        ownerId: Long?,
+        stewardId: Long?
+    ): Boolean {
+        val governing = GOVERNING_METHODOLOGY[entityType]
+        if (governing != null && isEditorFor(user, governing)) return true
+        if (user.roles.contains(ROLE_ADMIN)) return true
+        val uid = user.id
+        return uid != null && (uid == ownerId || uid == stewardId)
     }
 
     /**
@@ -211,14 +188,20 @@ class RoleService(
         const val ROLE_LEAD_PREFIX = "ROLE_LEAD_"
         const val ROLE_EDITOR_PREFIX = "ROLE_EDITOR_"
 
-        /** The methodology that governs each entity type's CORE fields and creation. */
+        /** The methodology that governs each item type's CORE fields and creation. */
         @JvmStatic
         val GOVERNING_METHODOLOGY =
             mapOf(
                 "BUSINESS_ENTITY" to "DATA_GOVERNANCE",
                 "BUSINESS_PROCESS" to "PROCESS_GOVERNANCE",
                 "BUSINESS_DOMAIN" to "DDD",
+                "BOUNDED_CONTEXT" to "DDD",
+                "DOMAIN_EVENT" to "DDD",
+                "CONTEXT_RELATIONSHIP" to "DDD",
                 "ORGANISATIONAL_UNIT" to "TEAM_TOPOLOGIES",
+                "CAPABILITY" to "BCM",
+                "IT_SYSTEM" to "GDPR",
+                "SERVICE_PROVIDER" to "GDPR",
             )
     }
 }

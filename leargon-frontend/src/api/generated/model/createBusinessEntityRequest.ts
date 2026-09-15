@@ -16,6 +16,8 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { ClassificationAssignmentRequest } from './classificationAssignmentRequest.ts';
+import type { CreateBusinessEntityRelationshipRequest } from './createBusinessEntityRelationshipRequest.ts';
 import type { EntityRole } from './entityRole.ts';
 import type { LocalizedText } from './localizedText.ts';
 
@@ -25,6 +27,11 @@ export interface CreateBusinessEntityRequest {
      * @minItems 1
      */
   names: LocalizedText[];
+  /**
+     * Relationships created together with the entity, the new entity being the first side — so a root entity and its relationship to an existing entity come into being atomically.
+     * @nullable
+     */
+  relationships?: CreateBusinessEntityRelationshipRequest[] | null;
   /** Descriptions for the entity */
   descriptions?: LocalizedText[];
   /**
@@ -37,6 +44,36 @@ export interface CreateBusinessEntityRequest {
      * @nullable
      */
   owningUnitKey?: string | null;
+  /**
+     * Bounded context the entity is placed in. A child entity inherits its parent's bounded context when omitted. The placement decides who may create the entity (see creation policy).
+     * @nullable
+     */
+  boundedContextKey?: string | null;
+  /**
+     * Username of the data steward, set atomically at creation
+     * @nullable
+     */
+  dataStewardUsername?: string | null;
+  /**
+     * Why this entity is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /**
+     * Keys of the blocking duplicate candidates the creator has reviewed
+     * @nullable
+     */
+  acknowledgedDuplicateKeys?: string[] | null;
+  /**
+     * Username of the technical custodian, set atomically at creation
+     * @nullable
+     */
+  technicalCustodianUsername?: string | null;
+  /**
+     * Classification values assigned atomically at creation (validated like the assignment endpoint)
+     * @nullable
+     */
+  classificationAssignments?: ClassificationAssignmentRequest[] | null;
   /**
      * Parent entity key (null for top-level entity)
      * @nullable

@@ -510,6 +510,10 @@ const fr = {
     "subdomains": "Sous-domaines",
     "searchParentDomain": "Rechercher un domaine parent...",
     "searchOwningUnit": "Rechercher une unité responsable...",
+    "owner": "Propriétaire",
+    "searchOwner": "Rechercher un propriétaire...",
+    "ownerInherited": "(hérité)",
+    "ownerInheritHint": "Laisser vide pour hériter le propriétaire de l'unité responsable ou du domaine parent",
     "addSubdomain": "Ajouter un sous-domaine",
     "deleteDomain": "Supprimer le domaine",
     "deleteDomainConfirm": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cela supprimera également tous les sous-domaines et désaffectera toutes les entités.",
@@ -529,6 +533,8 @@ const fr = {
     "domain": "Domaine",
     "owningTeam": "Équipe responsable",
     "noOwningTeam": "Aucune équipe assignée",
+    "owner": "Propriétaire",
+    "editOwner": "Modifier le propriétaire",
     "assignedEntities": "Entités assignées",
     "assignedProcesses": "Processus assignés",
     "noAssignedEntities": "Aucune entité assignée",
@@ -928,7 +934,166 @@ const fr = {
     "timeHours": "il y a {{count}} h",
     "timeDays": "il y a {{count}} j"
   },
+  "advisor": {
+    "launcher": "Vous ne savez pas où le placer ?",
+    "title": "Où cela se place-t-il ?",
+    "intro": "Répondez à quelques questions et obtenez une recommandation — y compris ce que ce choix implique pour la responsabilité et le registre des traitements.",
+    "nameLabel": "Nom de ce que vous ajoutez (facultatif)",
+    "back": "Retour",
+    "restart": "Recommencer",
+    "pickPlaceholder": "Rechercher…",
+    "notCreatable": "vous ne pouvez pas créer ici",
+    "recommendationTitle": "Recommandation",
+    "panelHint": "Répondez à quelques questions — une recommandation autorisée remplit le positionnement pour vous.",
+    "addContextThere": "Ajouter le contexte délimité à cet endroit",
+    "why": "Pourquoi",
+    "consequencesTitle": "Ce que cela implique",
+    "allowed": "Vous pouvez le créer à cet endroit.",
+    "notAllowed": "Vous ne pouvez pas le créer à cet endroit. Adressez-vous à {{owner}}, responsable de cet endroit.",
+    "notAllowedNoOwner": "Vous ne pouvez pas le créer à cet endroit. Adressez-vous à un éditeur de cette méthodologie.",
+    "createHere": "Le créer à cet endroit",
+    "connect": {
+      "RELATIONSHIP": "La relation est créée en même temps que l'objet.",
+      "INTERFACE": "Il sera créé comme implémentation du concept général.",
+      "CALLED_PROCESS": "Après la création, appelez-le depuis le processus englobant (activité d'appel)."
+    },
+    "duplicatesTitle": "Des éléments portant ce nom existent déjà",
+    "ruleSets": {
+      "ENTITY_PLACEMENT": "Objet métier",
+      "PROCESS_PLACEMENT": "Processus métier",
+      "DOMAIN_PLACEMENT": "Domaine ou contexte délimité",
+      "ORG_UNIT_PLACEMENT": "Unité organisationnelle",
+      "CAPABILITY_PLACEMENT": "Capacité"
+    },
+    "questions": {
+      "entity": {
+        "relation": "Le nouveau concept est-il lié à un objet métier existant ?",
+        "relatedPick": "À quel objet est-il lié ?",
+        "lifecycle": "Cesse-t-il d'exister lorsque « {{picked}} » est supprimé ?",
+        "identity": "Est-il identifié ou recherché pour lui-même, sans passer par « {{picked}} » ? (Une adresse se trouve directement ; une ligne de commande seulement via sa commande.)",
+        "responsibility": "A-t-il besoin de son propre propriétaire ou gestionnaire, ou de sa propre classification ou durée de conservation, différente de « {{picked}} » ?",
+        "cardinality": "Combien un « {{picked}} » peut-il en avoir ?",
+        "generalPick": "De quel concept plus général est-il une sorte ?",
+        "specialContextPick": "À quel contexte délimité l'objet spécialisé appartient-il ?",
+        "contextPick": "À quel contexte délimité appartient-il ?"
+      },
+      "process": {
+        "shape": "Quel est le lien de la nouvelle activité avec les processus existants ?",
+        "parentPick": "De quel processus est-ce une étape ?",
+        "ownPurpose": "A-t-il son propre déclencheur ou sa propre finalité (base légale), indépendamment de ce processus ?",
+        "reusedContextPick": "Quel contexte délimité possède le processus réutilisable ?",
+        "contextPick": "À quel contexte délimité le processus appartient-il ?"
+      },
+      "domain": {
+        "kind": "Qu'ajoutez-vous ?",
+        "contextDomainPick": "Dans quel domaine se trouve la frontière du modèle ?",
+        "parentPick": "De quel domaine est-ce un sous-ensemble ?"
+      },
+      "unit": {
+        "reportsTo": "La nouvelle unité rend-elle compte à une unité existante ?",
+        "parentPick": "À quelle unité rend-elle compte ?"
+      },
+      "capability": {
+        "refines": "S'agit-il d'une capacité plus spécifique au sein d'une capacité existante ?",
+        "parentPick": "Quelle capacité affine-t-elle ?"
+      }
+    },
+    "options": {
+      "yes": "Oui",
+      "no": "Non",
+      "entity": {
+        "relation": {
+          "connected": "Il est lié à un objet existant — il en fait partie ou il est en relation avec lui (p. ex. une ligne de commande d'une commande, une adresse d'un client)",
+          "kindOf": "C'est une sorte d'un concept plus général",
+          "standalone": "Il est autonome"
+        },
+        "cardinality": {
+          "one": "Au plus un — et il appartient à exactement un « {{picked}} »",
+          "many": "Plusieurs — chacun appartient à exactement un « {{picked}} »",
+          "manyToMany": "Plusieurs — et chacun peut être lié à plusieurs « {{picked}} »"
+        }
+      },
+      "process": {
+        "shape": {
+          "stepOf": "C'est une étape d'un processus plus large",
+          "reused": "Il est exécuté dans plusieurs processus",
+          "standalone": "Il est déclenché de manière autonome"
+        }
+      },
+      "domain": {
+        "kind": {
+          "modelBoundary": "Le modèle d'une équipe avec son propre langage (contexte délimité)",
+          "subArea": "Un sous-ensemble d'un domaine métier existant",
+          "newArea": "Un nouveau domaine d'activité"
+        }
+      }
+    },
+    "outcomes": {
+      "CHILD_AGGREGATE": "Le créer comme enfant de l'objet",
+      "ROOT_WITH_RELATIONSHIP": "Le créer comme nouvel objet de premier niveau avec une relation vers l'objet",
+      "INTERFACE_IMPLEMENTATION": "Le créer comme implémentation du concept général",
+      "NEW_ROOT_IN_CONTEXT": "Le créer comme objet de premier niveau du contexte délimité",
+      "SUB_PROCESS": "Le créer comme sous-processus",
+      "SEPARATE_ACTIVITY": "Le créer comme activité de traitement à part entière",
+      "REUSABLE_PROCESS": "Le créer comme processus réutilisable",
+      "NEW_ACTIVITY": "Le créer comme nouvelle activité de traitement",
+      "BOUNDED_CONTEXT": "Créer un contexte délimité dans le domaine",
+      "SUBDOMAIN": "Le créer comme sous-domaine",
+      "TOP_LEVEL_DOMAIN": "Créer un nouveau domaine de premier niveau",
+      "SUB_UNIT": "La créer comme sous-unité",
+      "TOP_LEVEL_UNIT": "Créer une nouvelle unité de premier niveau",
+      "SUB_CAPABILITY": "La créer comme sous-capacité",
+      "L1_CAPABILITY": "Créer une nouvelle capacité de premier niveau (L1)"
+    },
+    "rationales": {
+      "lifecycleBound": "Il ne peut exister sans l'autre objet.",
+      "independentLifecycle": "Il subsiste lorsque l'autre objet est supprimé : il ne peut donc pas en être l'enfant.",
+      "ownIdentity": "Il est identifié et recherché pour lui-même — c'est donc un objet à part entière.",
+      "noOwnIdentity": "On n'y accède jamais qu'à travers l'autre objet.",
+      "ownResponsibility": "Il a besoin de son propre propriétaire, gestionnaire, classification ou durée de conservation — un enfant partage ceux de son parent.",
+      "sharedResponsibility": "Sa propriété, sa classification et sa conservation sont celles de l'autre objet — c'est une partie d'agrégat.",
+      "specialisation": "C'est une spécialisation d'un concept général — c'est précisément ce qu'exprime un lien interface/implémentation.",
+      "standaloneConcept": "C'est un concept à part entière.",
+      "decompositionStep": "Il n'existe qu'en tant qu'étape du flux plus large.",
+      "ownPurpose": "Une finalité ou une base légale propre en fait une activité de traitement distincte.",
+      "reusedAcrossParents": "Utilisé par plusieurs processus, il doit exister une seule fois et être appelé par chacun.",
+      "independentActivity": "Il est déclenché et exécuté de manière autonome.",
+      "ownLanguage": "Un modèle avec son propre langage et sa propre équipe est un contexte délimité.",
+      "subArea": "Il restreint un domaine métier existant.",
+      "newBusinessArea": "C'est un nouveau domaine d'activité.",
+      "reportingLine": "Elle rend compte à une unité existante.",
+      "independentUnit": "Elle ne rend compte à aucune unité existante.",
+      "refinement": "Elle affine une capacité existante.",
+      "newCapabilityArea": "C'est un nouveau domaine de la carte des capacités."
+    },
+    "consequences": {
+      "ENTITY_ROLLS_UP_TO_ROOT": "Dans le registre des traitements, il est regroupé sous « {{root}} » comme une seule catégorie de données.",
+      "INHERITS_BOUNDED_CONTEXT": "Il se trouve dans le contexte délimité « {{context}} » de son parent.",
+      "RESULTING_EFFECTIVE_OWNER": "{{owner}} en sera responsable.",
+      "OWN_REGISTER_CATEGORY": "Dans le registre des traitements, il apparaît comme une catégorie de données à part entière.",
+      "RELATIONSHIP_CREATED": "Il est créé avec une relation vers « {{related}} » — vous pouvez ajuster la cardinalité dans l'assistant.",
+      "CROSS_CONTEXT_LINK": "Il relie « {{context}} » à « {{relatedContext}} » — pensez à documenter une relation de contexte.",
+      "REGISTER_ROLLS_INTO_ROOT": "Dans le registre des traitements, il fait partie de l'activité « {{root}} » et n'a pas de ligne propre.",
+      "DATA_FLOW_ROLLS_UP": "Son flux de données est regroupé dans « {{root}} ».",
+      "REGISTER_NEW_ACTIVITY": "Dans le registre des traitements, il devient une activité de traitement (ligne) à part entière.",
+      "CALL_FROM_PARENTS": "Appelez-le depuis chaque processus qui l'utilise au lieu de le copier.",
+      "INHERITS_OWNER": "Il hérite du propriétaire {{owner}} du domaine parent tant qu'aucun n'est défini.",
+      "STRATEGIC_ITEM": "Il s'agit d'une structure de premier niveau — seuls les éditeurs de la méthodologie peuvent la créer.",
+      "NOT_TRANSITIVE": "Être propriétaire de l'unité parente vous permet d'ajouter des sous-unités, mais pas du contenu dans leurs contextes délimités.",
+      "CAPABILITY_LEVEL": "Elle devient une capacité de niveau {{level}}."
+    }
+  },
   "wizard": {
+    "requiredFieldsHint": "Votre organisation exige ces champs avant qu'un élément puisse être créé : {{fields}}",
+    "requiredMissing": "Veuillez remplir les champs requis à la création : {{fields}}",
+    "duplicatesTitle": "Des éléments similaires existent déjà ici",
+    "duplicatesElsewhere": "Des éléments similaires existent ailleurs",
+    "duplicatesAcknowledge": "Il s'agit d'un autre concept — le créer quand même",
+    "duplicatesJustification": "En quoi est-il différent ?",
+    "duplicatesJustificationHelp": "Au moins 10 caractères. Le propriétaire qui examine le nouvel élément verra cette justification.",
+    "duplicateSuggestionTranslationLink": "même terme dans un autre contexte — envisagez plutôt un lien de traduction",
+    "duplicateSuggestionReuse": "envisagez de réutiliser ou d'appeler le processus existant",
+    "duplicatesBlocking": "Des doublons probables existent ici — examinez-les et justifiez le nouvel élément avant de le créer.",
     "back": "Retour",
     "skip": "Passer",
     "next": "Suivant",
@@ -1259,6 +1424,16 @@ const fr = {
       "stepPersonalData": "Données personnelles",
       "guidedPersonalDataText": "Cette entité contient-elle des données personnelles (RGPD art. 4 / nLPD) ? Laissez sans réponse en cas de doute. Si oui, indiquez si elle décrit une catégorie de personnes concernées ou une catégorie de données personnelles — cela alimente le registre des activités de traitement (art. 30). Les catégories particulières (art. 9) deviennent disponibles à l'étape suivante une fois que vous répondez oui.",
       "stepClassifications": "Classifications",
+      "guidedDecisionChildText": "Doit-il vraiment être un enfant de cet objet ? Un enfant partage le cycle de vie, l'identité et la responsabilité de son parent ; sinon il devient un objet distinct relié par une relation.",
+      "summaryInterface": "Implémente",
+      "stepRelationship": "Relation",
+      "guidedRelationshipText": "Un objet distinct relié par une relation — créée en même temps que l'objet. Cardinalité d'un côté : combien de ses objets sont liés à un objet de l'autre côté ; laissez le maximum vide pour « plusieurs ».",
+      "relationshipTo": "Relation vers « {{name}} »",
+      "createRelationship": "Créer cette relation",
+      "relationshipThisSide": "Cet objet",
+      "cardinalityMin": "Min",
+      "cardinalityMax": "Max (vide = plusieurs)",
+      "summaryRelationship": "Relation",
       "stepSummary": "Récapitulatif",
       "bcLabel": "Contexte délimité",
       "bcNone": "Aucun — assigner plus tard",
@@ -1292,6 +1467,11 @@ const fr = {
       "stepOwnership": "Responsabilité",
       "stepDataFlow": "Flux de données",
       "stepCompliance": "Conformité",
+      "stepPlacement": "Emplacement",
+      "bcLabel": "Contexte délimité",
+      "bcNone": "Aucun — à attribuer plus tard",
+      "guidedPlacementTitle": "Où se situe ce processus ?",
+      "guidedPlacementText": "Le contexte délimité rattache le processus à un domaine. Son propriétaire est responsable de tout ce qu'il contient et est informé lorsque vous y créez quelque chose. Seuls les contextes dans lesquels vous pouvez créer sont proposés.",
       "stepSummary": "Récapitulatif",
       "codeLabel": "Code du processus (optionnel)",
       "codeHelper": "Utilisé comme clé d'URL. Généré automatiquement à partir du nom si vide.",
@@ -2028,6 +2208,8 @@ const fr = {
   "tasks": {
     "ruleDescriptions": {
       "MISSING_MANDATORY_FIELD": "Crée une tâche par champ qu'un administrateur a configuré comme obligatoire mais qui n'a pas de valeur. Les champs concernés se règlent dans l'écran « Méthodologies ».",
+      "ROOT_PROCESS_DIVERGENT_PURPOSES": "Le registre des traitements comporte une ligne par processus racine. Cette racine traite des données personnelles mais ses sous-processus reposent sur des bases légales différentes ou poursuivent des finalités différentes — elle couvre peut-être plusieurs activités de traitement et pourrait être scindée.",
+      "REVIEW_REALM_CREATION": "Quelqu'un d'autre a créé un élément dans un domaine, un contexte délimité, une unité ou un élément dont vous êtes propriétaire. Vérifiez son emplacement — et, pour un doublon justifié, la justification — puis confirmez-le.",
       "MISSING_OWNER": "L'élément n'a pas de propriétaire, ni directement ni via son unité responsable. Affiché au gestionnaire, et aux administrateurs dans la vue par propriétaire, sous les éléments non attribués.",
       "MISSING_STEWARD": "Personne n'est désigné pour suivre l'élément au quotidien aux côtés de son propriétaire.",
       "NO_LEGAL_BASIS": "Le processus traite des données personnelles sans indiquer de base juridique.",
@@ -2060,6 +2242,9 @@ const fr = {
     "moreActions": "Autres actions",
     "dismiss": "Écarter",
     "restore": "Rétablir",
+    "acknowledge": "Confirmer",
+    "createdBy": "créé par {{name}}",
+    "creationJustification": "« {{text}} »",
     "dismissTitle": "Écarter cette tâche",
     "dismissExplanation": "Expliquez pourquoi « {{task}} » ne s’applique pas. Le motif est conservé comme trace d’audit et la tâche réapparaît si l’objet change.",
     "dismissReasonLabel": "Motif",
@@ -2104,9 +2289,12 @@ const fr = {
       "PROCESS": "processus",
       "DOMAIN": "domaine",
       "ORG_UNIT": "équipe",
+      "CAPABILITY": "capacité",
     },
     "rules": {
       "MISSING_MANDATORY_FIELD": "Renseigner un champ obligatoire",
+      "REVIEW_REALM_CREATION": "Examiner un nouvel élément créé dans votre périmètre",
+      "ROOT_PROCESS_DIVERGENT_PURPOSES": "Activité de traitement peut-être trop large",
       "MISSING_OWNER": "Désigner un responsable",
       "MISSING_STEWARD": "Désigner un intendant",
       "NO_LEGAL_BASIS": "Indiquer la base légale des données personnelles",
@@ -2160,6 +2348,8 @@ const fr = {
     "shown": "Affiché",
     "hidden": "Masqué",
     "mandatory": "Obligatoire",
+    "requiredAtCreation": "Requis à la création",
+    "requiredAtCreationHint": "La création est refusée si ce champ n'est pas fourni",
     "optional": "Facultatif",
     "area": {
       "DATA_GOVERNANCE": "les entités métier",

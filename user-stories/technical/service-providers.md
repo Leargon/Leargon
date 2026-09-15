@@ -1,5 +1,5 @@
 #### USER STORY 'Create service provider'
-**AS AN** admin\
+**AS AN** admin or GDPR editor/lead (service providers are a shared list, not part of any realm)\
 **IF** \
 **I WANT** to create a service provider by providing a name in at least one supported locale, its type, and optionally processing countries\
 **SO THAT** the provider is registered and can be linked to processes as a data processor or subcontractor

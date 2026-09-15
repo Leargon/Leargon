@@ -25,8 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useGetProcessTree } from '../../api/generated/process/process';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import type { ProcessTreeResponse } from '../../api/generated/model';
 
 interface ProcessListPanelProps {
@@ -41,8 +40,7 @@ const ProcessListPanel: React.FC<ProcessListPanelProps> = ({ selectedKey, onCrea
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_PROCESS');
+  const canCreate = useCanCreate('BUSINESS_PROCESS');
   const { data: treeResponse, isLoading } = useGetProcessTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as ProcessTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');

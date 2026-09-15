@@ -24,6 +24,8 @@ import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessDomainVersionRepository
 import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
+import org.leargon.backend.repository.UserRepository
+import org.leargon.backend.util.KeyAllocator
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -33,10 +35,12 @@ open class BusinessDomainService(
     private val boundedContextRepository: BoundedContextRepository,
     private val domainEventRepository: DomainEventRepository,
     private val organisationalUnitRepository: OrganisationalUnitRepository,
+    private val userRepository: UserRepository,
     private val localeService: LocaleService,
     private val businessDomainMapper: BusinessDomainMapper,
     private val fieldVerificationService: FieldVerificationService,
-    private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor
+    private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor,
+    private val duplicateCandidateService: DuplicateCandidateService
 ) {
     private val objectMapper = ObjectMapper()
 
@@ -71,7 +75,7 @@ open class BusinessDomainService(
         return m.toBusinessDomainResponse(getBusinessDomainByKey(key), currentUser)
     }
 
-    /** Owner (owning-unit business owner), steward, or admin may edit domain content. */
+    /** Effective owner, effective steward, or admin may edit domain content. */
     @ReadOnly
     open fun canEditDomain(
         key: String,
@@ -81,6 +85,20 @@ open class BusinessDomainService(
         val domain = getBusinessDomainByKey(key)
         val uid = currentUser.id
         return uid != null && (domain.effectiveOwner()?.id == uid || domain.effectiveSteward()?.id == uid)
+    }
+
+    /**
+     * Whether [currentUser] may (re)assign the explicit owner of the domain: admin, the domain's effective
+     * owner/steward, or the owner of any ancestor domain (delegation within the domain realm).
+     */
+    @ReadOnly
+    open fun canAssignDomainOwner(
+        key: String,
+        currentUser: User
+    ): Boolean {
+        if (canEditDomain(key, currentUser)) return true
+        val uid = currentUser.id ?: return false
+        return getBusinessDomainByKey(key).realmOwners().any { it.id == uid }
     }
 
     @ReadOnly
@@ -131,6 +149,10 @@ open class BusinessDomainService(
                     .orElseThrow { ResourceNotFoundException("OrganisationalUnit not found: ${request.owningUnitKey}") }
         }
 
+        if (request.ownerUsername != null) {
+            domain.owner = findUser(request.ownerUsername!!)
+        }
+
         domain.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
         if (request.descriptions != null) {
             domain.descriptions = request.descriptions!!.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -139,8 +161,15 @@ open class BusinessDomainService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = domain.names.find { it.locale == defaultLocale?.localeCode }?.text
         val slug = SlugUtil.slugify(defaultName)
-        domain.key = SlugUtil.buildKey(domain.parent?.key, slug)
+        val repo = businessDomainRepository
+        domain.key = KeyAllocator.allocate(SlugUtil.buildKey(domain.parent?.key, slug)) { repo.findByKey(it).isPresent }
 
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(CreationPolicyService.BUSINESS_DOMAIN, parentKey = request.parentKey),
+            domain.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         domain = businessDomainRepository.save(domain)
         createBusinessDomainVersion(domain, currentUser, "CREATE", "Initial creation")
         return domain
@@ -249,6 +278,25 @@ open class BusinessDomainService(
         createBusinessDomainVersion(domain, currentUser, "UPDATE", "Updated owning unit to ${owningUnitKey ?: "none"}")
         return domain
     }
+
+    @Retryable(attempts = "3", delay = "100ms")
+    @Transactional
+    open fun updateOwner(
+        domainKey: String,
+        ownerUsername: String?,
+        currentUser: User
+    ): BusinessDomain {
+        var domain = getBusinessDomainByKey(domainKey)
+        domain.owner = ownerUsername?.let { findUser(it) }
+        domain = businessDomainRepository.update(domain)
+        createBusinessDomainVersion(domain, currentUser, "UPDATE", "Updated owner to ${ownerUsername ?: "inherited"}")
+        return domain
+    }
+
+    private fun findUser(username: String): User =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow { ResourceNotFoundException("User not found: $username") }
 
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
@@ -390,7 +438,8 @@ open class BusinessDomainService(
                 "names" to domain.names.map { mapOf("locale" to it.locale, "text" to it.text) },
                 "descriptions" to domain.descriptions.map { mapOf("locale" to it.locale, "text" to it.text) },
                 "type" to domain.type,
-                "parentKey" to domain.parent?.key
+                "parentKey" to domain.parent?.key,
+                "ownerUsername" to domain.owner?.username
             )
 
         val version = BusinessDomainVersion()
@@ -406,7 +455,7 @@ open class BusinessDomainService(
         // Reconcile per-field verification status against the new values.
         val extractor = this.businessDomainFieldValueExtractor
         val fvs = this.fieldVerificationService
-        val owner = domain.owningUnit?.businessOwner
+        val owner = domain.effectiveOwner()
         val actorIsOwner = owner != null && owner.id == changedBy.id
         fvs.sync(
             "BUSINESS_DOMAIN",
@@ -426,7 +475,7 @@ open class BusinessDomainService(
         currentUser: User
     ): BusinessDomainResponse {
         val domain = getBusinessDomainByKey(domainKey)
-        val owner = domain.owningUnit?.businessOwner
+        val owner = domain.effectiveOwner()
         if (owner == null || owner.id != currentUser.id) {
             throw ForbiddenOperationException("Only the domain owner can set field verification status")
         }
@@ -440,7 +489,12 @@ open class BusinessDomainService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = domain.getName(defaultLocale?.localeCode ?: "en")
         val slug = SlugUtil.slugify(defaultName)
-        domain.key = SlugUtil.buildKey(domain.parent?.key, slug)
+        val repo = businessDomainRepository
+        val selfId = domain.id
+        domain.key =
+            KeyAllocator.allocate(SlugUtil.buildKey(domain.parent?.key, slug)) { candidate ->
+                repo.findByKey(candidate).map { it.id != selfId }.orElse(false)
+            }
         domain.children.forEach { child ->
             recomputeKeysForSubtree(child)
             businessDomainRepository.update(child)
@@ -524,6 +578,12 @@ open class BusinessDomainService(
             val currParent = current["parentKey"]
             if (prevParent != currParent) {
                 changes.add(FieldChange("parentKey", prevParent?.toString(), currParent?.toString()))
+            }
+
+            val prevOwner = previous["ownerUsername"]
+            val currOwner = current["ownerUsername"]
+            if (prevOwner != currOwner) {
+                changes.add(FieldChange("owner", prevOwner?.toString(), currOwner?.toString()))
             }
 
             val prevNames = (previous["names"] as? List<Map<*, *>>) ?: emptyList()

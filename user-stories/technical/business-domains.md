@@ -1,5 +1,5 @@
 #### USER STORY 'Create business domain'
-**AS AN** admin\
+**AS AN** admin or DDD editor/lead (top-level domain), or the owner of the parent domain (subdomain)\
 **IF** \
 **I WANT** to create a business domain by providing a name in at least one supported locale\
 **SO THAT** business entities and processes can be grouped under it
@@ -89,7 +89,7 @@
 **SO THAT** the strategic intent and purpose of the domain is documented and visible to all users
 
 #### USER STORY 'Create bounded context within domain'
-**AS AN** admin\
+**AS AN** admin, a DDD editor/lead, or the owner of the domain (or of one of its parent domains)\
 **IF** \
 **I WANT** to create a bounded context within a business domain\
 **SO THAT** an explicit service boundary is defined and entities can be assigned to it

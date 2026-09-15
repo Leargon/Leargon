@@ -1,5 +1,5 @@
 #### USER STORY 'Create IT system'
-**AS AN** admin\
+**AS AN** admin or GDPR editor/lead, or the business owner/steward of the unit that will own the system\
 **IF** \
 **I WANT** to create an IT system by providing a name in at least one supported locale, its type, and optionally a vendor name and system URL\
 **SO THAT** the system is registered in the IT landscape and can be linked to processes and organisational units

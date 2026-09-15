@@ -23,11 +23,14 @@ import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.SetFieldVerificationRequest
 import org.leargon.backend.model.UpdateBusinessDomainParentRequest
 import org.leargon.backend.model.UpdateBusinessDomainTypeRequest
+import org.leargon.backend.model.UpdateDomainOwnerRequest
 import org.leargon.backend.model.UpdateDomainOwningUnitRequest
 import org.leargon.backend.model.UpdateDomainVisionStatementRequest
 import org.leargon.backend.model.VersionDiffResponse
 import org.leargon.backend.service.BusinessDomainService
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.CreationPolicyService
+import org.leargon.backend.service.CreationTarget
 import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
@@ -39,14 +42,21 @@ open class BusinessDomainController(
     private val userService: UserService,
     private val securityService: SecurityService,
     private val businessDomainMapper: BusinessDomainMapper,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService,
+    private val creationRecordService: org.leargon.backend.service.CreationRecordService
 ) : BusinessDomainApi {
     override fun getAllBusinessDomains(): List<BusinessDomainResponse> = businessDomainService.getAllBusinessDomainsAsResponses()
 
     override fun getBusinessDomainTree(): List<BusinessDomainTreeResponse> = businessDomainService.getBusinessDomainTreeAsResponses()
 
-    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse =
-        businessDomainService.getBusinessDomainByKeyAsResponse(key, getCurrentUser())
+    override fun getBusinessDomainByKey(key: String): BusinessDomainResponse {
+        val user = getCurrentUser()
+        return businessDomainService
+            .getBusinessDomainByKeyAsResponse(key, user)
+            .creatableChildTypes(creationPolicyService.childTypes(user, CreationPolicyService.BUSINESS_DOMAIN, key))
+            .canDelete(roleService.isEditorFor(user, "DDD"))
+    }
 
     override fun setBusinessDomainFieldVerification(
         key: String,
@@ -71,9 +81,22 @@ open class BusinessDomainController(
         @Valid @Body createDomainRequest: CreateBusinessDomainRequest
     ): HttpResponse<BusinessDomainResponse> {
         val currentUser = getCurrentUser()
-        roleService.requireCreateRoot(currentUser, "DDD")
+        val decision =
+            creationPolicyService.require(
+                currentUser,
+                CreationTarget(CreationPolicyService.BUSINESS_DOMAIN, parentKey = createDomainRequest.parentKey)
+            )
         val domain = businessDomainService.createBusinessDomain(createDomainRequest, currentUser)
-        val response = businessDomainMapper.toBusinessDomainResponse(domain)
+        creationRecordService.recordCreation(
+            CreationPolicyService.BUSINESS_DOMAIN,
+            domain.key,
+            currentUser,
+            decision.basis,
+            createDomainRequest.duplicateJustification,
+            createDomainRequest.acknowledgedDuplicateKeys
+        )
+        // Map inside a read transaction: the ownership chain walks lazy parent/owner associations.
+        val response = businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
         return HttpResponse.status<BusinessDomainResponse>(HttpStatus.CREATED).body(response)
     }
 
@@ -90,8 +113,13 @@ open class BusinessDomainController(
     ): BusinessDomainResponse {
         val currentUser = getCurrentUser()
         requireDomainEdit(key, currentUser, "parent")
+        // Moving a domain places it under the new parent (or at top level): needs creation rights there.
+        creationPolicyService.require(
+            currentUser,
+            CreationTarget(CreationPolicyService.BUSINESS_DOMAIN, parentKey = updateBusinessDomainParentRequest.parentKey)
+        )
         val domain = businessDomainService.updateBusinessDomainParent(key, updateBusinessDomainParentRequest.parentKey, currentUser)
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun updateBusinessDomainVisionStatement(
@@ -106,7 +134,7 @@ open class BusinessDomainController(
                 updateDomainVisionStatementRequest.visionStatement,
                 currentUser
             )
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun updateBusinessDomainType(
@@ -116,7 +144,7 @@ open class BusinessDomainController(
         val currentUser = getCurrentUser()
         requireDomainEdit(key, currentUser, "type")
         val domain = businessDomainService.updateBusinessDomainType(key, updateBusinessDomainTypeRequest.type?.value, currentUser)
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun updateBusinessDomainNames(
@@ -126,7 +154,7 @@ open class BusinessDomainController(
         val currentUser = getCurrentUser()
         requireDomainEdit(key, currentUser, "names")
         val domain = businessDomainService.updateBusinessDomainNames(key, names, currentUser)
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun updateBusinessDomainDescriptions(
@@ -136,7 +164,7 @@ open class BusinessDomainController(
         val currentUser = getCurrentUser()
         requireDomainEdit(key, currentUser, "descriptions")
         val domain = businessDomainService.updateBusinessDomainDescriptions(key, descriptions, currentUser)
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun updateBusinessDomainOwningUnit(
@@ -146,7 +174,23 @@ open class BusinessDomainController(
         val currentUser = getCurrentUser()
         requireDomainEdit(key, currentUser, "owningUnit")
         val domain = businessDomainService.updateOwningUnit(key, updateDomainOwningUnitRequest.owningUnitKey, currentUser)
-        return businessDomainMapper.toBusinessDomainResponse(domain)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
+    }
+
+    override fun updateBusinessDomainOwner(
+        key: String,
+        @Valid @Body updateDomainOwnerRequest: UpdateDomainOwnerRequest
+    ): BusinessDomainResponse {
+        val currentUser = getCurrentUser()
+        if (!businessDomainService.canAssignDomainOwner(key, currentUser) &&
+            !roleService.canEditFieldByRole(currentUser, "BUSINESS_DOMAIN", "owner")
+        ) {
+            throw ForbiddenOperationException(
+                "Assigning the domain owner requires an admin, a DDD editor/lead, or ownership of the domain or a parent domain"
+            )
+        }
+        val domain = businessDomainService.updateOwner(key, updateDomainOwnerRequest.ownerUsername, currentUser)
+        return businessDomainService.getBusinessDomainByKeyAsResponse(domain.key, currentUser)
     }
 
     override fun getBusinessDomainVersions(key: String): List<BusinessDomainVersionResponse> = businessDomainService.getVersionHistory(key)

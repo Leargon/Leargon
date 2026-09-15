@@ -20,6 +20,7 @@ import type { BoundedContextSummaryResponse } from './boundedContextSummaryRespo
 import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse.ts';
 import type { BusinessDomainType } from './businessDomainType.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
@@ -69,6 +70,20 @@ export interface BusinessDomainResponse {
   visionStatement?: LocalizedText[] | null;
   /** Organisational unit responsible for this domain */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
+  /** Explicitly assigned accountable domain owner (null when inherited) */
+  owner?: UserSummaryResponse | null;
+  /** Resolved owner — explicit owner, else the owning unit's business owner, else the parent domain's effective owner */
+  effectiveOwner?: UserSummaryResponse | null;
+  /**
+     * Item types the current user may create inside this domain (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
+  /**
+     * Whether the current user may delete this domain (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canDelete?: boolean | null;
   /** Creation timestamp */
   createdAt: string;
   /** Last update timestamp */

@@ -5,11 +5,14 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
   Collapse,
   Divider,
+  FormControlLabel,
   Grid,
+  Tooltip,
   Switch,
   ToggleButton,
   ToggleButtonGroup,
@@ -139,11 +142,15 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
   const hasFields = displayDefs.length > 0;
 
   const [fieldStates, setFieldStates] = useState<Record<string, VisibilityState>>({});
+  // Mandatory fields may additionally be required at creation (backend refuses a create without them).
+  const [requiredAtCreation, setRequiredAtCreation] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const map: Record<string, VisibilityState> = {};
+    const required: Record<string, boolean> = {};
     for (const d of displayDefs) {
       const saved = allConfigurations.find((e) => e.entityType === d.entityType && e.fieldName === d.fieldName);
+      required[fieldKey(d.entityType, d.fieldName)] = saved?.visibility === 'SHOWN' && !!saved?.requiredAtCreation;
       if (d.localeGroup) {
         map[fieldKey(d.entityType, d.fieldName)] = saved?.visibility === 'HIDDEN' ? 'HIDDEN' : 'SHOWN';
       } else if (saved?.visibility === 'HIDDEN') {
@@ -155,15 +162,17 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
       }
     }
     setFieldStates(map);
+    setRequiredAtCreation(required);
   }, [allConfigurations, displayDefs]);
 
   const getState = (entityType: string, fieldName: string): VisibilityState =>
     fieldStates[fieldKey(entityType, fieldName)] ?? 'SHOWN';
 
-  const buildAndSave = async (states: Record<string, VisibilityState>) => {
+  const buildAndSave = async (states: Record<string, VisibilityState>, required: Record<string, boolean> = requiredAtCreation) => {
     const newEntries: FieldConfigurationEntry[] = [];
     for (const d of displayDefs) {
       const state = states[fieldKey(d.entityType, d.fieldName)] ?? 'SHOWN';
+      const isRequiredAtCreation = !!required[fieldKey(d.entityType, d.fieldName)] && !!d.creationCapable;
       if (state === 'HIDDEN') {
         newEntries.push({
           entityType: d.entityType,
@@ -179,6 +188,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
           visibility: 'SHOWN',
           section: d.section,
           maturityLevel: d.maturityLevel as FieldConfigurationEntryMaturityLevel,
+          requiredAtCreation: isRequiredAtCreation,
         });
       }
     }
@@ -188,8 +198,38 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
     await queryClient.invalidateQueries({ queryKey: getGetFieldConfigurationsQueryKey() });
   };
 
+  const handleRequiredChange = async (entityType: string, fieldName: string, checked: boolean) => {
+    const next = { ...requiredAtCreation, [fieldKey(entityType, fieldName)]: checked };
+    setRequiredAtCreation(next);
+    await buildAndSave(fieldStates, next);
+  };
+
+  /** The "Required at creation" checkbox, offered only on mandatory fields the create request carries. */
+  const renderRequiredAtCreation = (d: FieldConfigurationDefinition, state: VisibilityState) =>
+    state === 'MANDATORY' && d.creationCapable ? (
+      <Tooltip title={t('methodologyTab.requiredAtCreationHint')}>
+        <FormControlLabel
+          sx={{ mr: 1, '& .MuiFormControlLabel-label': { fontSize: '0.7rem' } }}
+          control={
+            <Checkbox
+              size="small"
+              checked={!!requiredAtCreation[fieldKey(d.entityType, d.fieldName)]}
+              onChange={(e) => handleRequiredChange(d.entityType, d.fieldName, e.target.checked)}
+              disabled={isSaving || isMethSaving}
+              slotProps={{ input: { 'aria-label': `${t('methodologyTab.requiredAtCreation')} ${d.fieldName}` } }}
+              data-testid={`required-at-creation-${d.fieldName}`}
+            />
+          }
+          label={t('methodologyTab.requiredAtCreation')}
+        />
+      </Tooltip>
+    ) : null;
+
   const handleStateChange = async (entityType: string, fieldName: string, newState: VisibilityState) => {
     const next = { ...fieldStates, [fieldKey(entityType, fieldName)]: newState };
+    const nextRequired = { ...requiredAtCreation };
+    // A field that is no longer mandatory can no longer be required at creation.
+    if (newState !== 'MANDATORY') nextRequired[fieldKey(entityType, fieldName)] = false;
     // Hiding a locale group resets all its per-locale entries to optional (SHOWN).
     if (newState === 'HIDDEN') {
       for (const d of displayDefs) {
@@ -199,11 +239,13 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
           localeGroupOf(d.fieldName) === fieldName
         ) {
           next[fieldKey(entityType, d.fieldName)] = 'SHOWN';
+          nextRequired[fieldKey(entityType, d.fieldName)] = false;
         }
       }
     }
     setFieldStates(next);
-    await buildAndSave(next);
+    setRequiredAtCreation(nextRequired);
+    await buildAndSave(next, nextRequired);
   };
 
   const handleApplyPreset = async (upToMaturity: 'BASIC' | 'ADVANCED' | 'EXPERT') => {
@@ -219,7 +261,9 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
       next[fieldKey(d.entityType, d.fieldName)] = fieldTier <= tierIndex ? 'SHOWN' : 'HIDDEN';
     }
     setFieldStates(next);
-    await buildAndSave(next);
+    // Presets make fields optional, so nothing in this card stays required at creation.
+    setRequiredAtCreation({});
+    await buildAndSave(next, {});
   };
 
   const byMaturity = useMemo(() => {
@@ -460,6 +504,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                                     <Typography variant="body2" color="text.secondary" sx={{ flex: 1, mr: 1 }}>
                                       {def.label}
                                     </Typography>
+                                    {renderRequiredAtCreation(def, localeState)}
                                     <ToggleButtonGroup
                                       value={localeState}
                                       exclusive
@@ -505,6 +550,7 @@ const MethodologyCard: React.FC<MethodologyCardProps> = ({
                               <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
                                 {getLocalizedText(field.labels, field.label)}
                               </Typography>
+                              {renderRequiredAtCreation(field, state)}
                               <ToggleButtonGroup
                                 value={state}
                                 exclusive

@@ -180,16 +180,15 @@ class Process {
 
     /**
      * The unit that answers for this process: its own, else the one owning its bounded context,
-     * else the one owning that context's domain. Public because the overview grouping buckets by it.
+     * else the one owning that context's domain (up the domain tree). Public because the overview
+     * grouping buckets by it.
      */
-    fun effectiveOwningUnit(): OrganisationalUnit? =
-        owningUnit
-            ?: boundedContext?.owningUnit
-            ?: boundedContext?.domain?.owningUnit
+    fun effectiveOwningUnit(): OrganisationalUnit? = owningUnit ?: boundedContext?.effectiveOwningUnit()
 
-    fun effectiveOwner(): User? = processOwner ?: effectiveOwningUnit()?.businessOwner
+    /** Explicit process owner, else the owning unit's business owner, else the bounded context's effective owner. */
+    fun effectiveOwner(): User? = processOwner ?: owningUnit?.businessOwner ?: boundedContext?.effectiveOwner()
 
-    fun effectiveSteward(): User? = processSteward ?: effectiveOwningUnit()?.businessSteward
+    fun effectiveSteward(): User? = processSteward ?: owningUnit?.businessSteward ?: boundedContext?.effectiveSteward()
 
     fun getName(locale: String): String = names.textForLocale(locale, key)
 

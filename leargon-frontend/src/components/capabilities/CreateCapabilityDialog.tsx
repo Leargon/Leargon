@@ -23,6 +23,8 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllCapabilities } from '../../api/generated/capability/capability';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import TranslationEditor from '../common/TranslationEditor';
+import AdvisorPanel from '../advisor/AdvisorPanel';
+import { useAdvisorDecision } from '../../hooks/useAdvisorDecision';
 import type { LocalizedText, SupportedLocaleResponse, CapabilityResponse, OrganisationalUnitResponse } from '../../api/generated/model';
 import { useLocale } from '../../context/LocaleContext';
 
@@ -49,6 +51,11 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
   const [owningUnitKey, setOwningUnitKey] = useState<string | null>(null);
   const [error, setError] = useState('');
 
+  // Advisor panel (L1 capability or a refinement): an allowed recommendation sets the parent capability.
+  const decision = useAdvisorDecision((prefill) => {
+    if (prefill) setParentKey(prefill.parentKey ?? null);
+  });
+
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode ?? 'en';
   const hasDefaultName = names.some((n) => n.locale === defaultLocale && n.text.trim());
 
@@ -56,6 +63,7 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
     setNames([]);
     setParentKey(null);
     setOwningUnitKey(null);
+    decision.reset();
     setError('');
     onClose();
   };
@@ -94,6 +102,9 @@ const CreateCapabilityDialog: React.FC<CreateCapabilityDialogProps> = ({ open, o
       <DialogTitle>{t('capabilityDialog.createTitle')}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <Box sx={{ mb: 2, mt: 1 }}>
+          <AdvisorPanel ruleSetCode="CAPABILITY_PLACEMENT" decision={decision} />
+        </Box>
         <TranslationEditor
           locales={locales}
           names={names}

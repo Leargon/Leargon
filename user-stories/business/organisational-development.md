@@ -27,3 +27,11 @@
 **IF** \
 **I WANT** to assign a business owner, business steward, and technical custodian to an organisational unit\
 **SO THAT** these roles are automatically resolved as the effective owner, steward, and custodian for all entities and processes in bounded contexts owned by this unit, without requiring explicit assignment on every item
+
+#### USER STORY 'Team autonomy in the catalogue'
+**AS A** head of a department\
+**IF** my department has teams below it\
+**I WANT** to be able to add teams under my department, but not to create content in the bounded contexts
+my teams own\
+**SO THAT** the org chart is maintained by the people who lead it while each team stays autonomous over its
+own model

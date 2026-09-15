@@ -14,6 +14,8 @@ import org.leargon.backend.model.UpdateItSystemLinkedProcessesRequest
 import org.leargon.backend.model.UpdateItSystemProcessingCountriesRequest
 import org.leargon.backend.model.UpdateItSystemRequest
 import org.leargon.backend.model.UpdateItSystemServiceProvidersRequest
+import org.leargon.backend.service.CreationPolicyService
+import org.leargon.backend.service.CreationTarget
 import org.leargon.backend.service.ItSystemService
 import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
@@ -24,14 +26,18 @@ open class ItSystemController(
     private val itSystemService: ItSystemService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService
 ) : ItSystemApi {
     override fun getAllItSystems(): List<ItSystemResponse> = itSystemService.getAll()
 
-    override fun getItSystem(key: String): ItSystemResponse = itSystemService.getByKey(key)
+    override fun getItSystem(key: String): ItSystemResponse = itSystemService.getByKey(key).canEdit(roleService.isEditorFor(getCurrentUser(), "GDPR"))
 
     override fun createItSystem(createItSystemRequest: CreateItSystemRequest): HttpResponse<ItSystemResponse> {
-        roleService.requireCreateRoot(getCurrentUser(), "GDPR")
+        creationPolicyService.require(
+            getCurrentUser(),
+            CreationTarget(CreationPolicyService.IT_SYSTEM, owningUnitKey = createItSystemRequest.owningUnitKey)
+        )
         return HttpResponse.created(itSystemService.create(createItSystemRequest))
     }
 

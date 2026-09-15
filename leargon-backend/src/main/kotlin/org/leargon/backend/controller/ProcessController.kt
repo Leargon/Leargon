@@ -61,13 +61,21 @@ open class ProcessController(
     private val processMapper: ProcessMapper,
     private val serviceProviderService: ServiceProviderService,
     private val dpiaService: DpiaService,
-    private val itSystemService: ItSystemService
+    private val itSystemService: ItSystemService,
+    private val creationPolicyService: org.leargon.backend.service.CreationPolicyService
 ) : ProcessApi {
     override fun getAllProcesses(): List<ProcessResponse> = processService.getAllProcessesAsResponses()
 
     override fun getProcessTree(): List<ProcessTreeResponse> = processService.getProcessTreeAsResponses()
 
-    override fun getProcessByKey(key: String): ProcessResponse = processService.getProcessByKeyAsResponse(key, getCurrentUser())
+    override fun getProcessByKey(key: String): ProcessResponse {
+        val user = getCurrentUser()
+        return processService
+            .getProcessByKeyAsResponse(key, user)
+            .creatableChildTypes(
+                creationPolicyService.childTypes(user, org.leargon.backend.service.CreationPolicyService.BUSINESS_PROCESS, key)
+            ).canDelete(processService.canDelete(key, user))
+    }
 
     override fun setProcessFieldVerification(
         key: String,
@@ -85,7 +93,8 @@ open class ProcessController(
     ): HttpResponse<ProcessResponse> {
         val currentUser = getCurrentUser()
         val process = processService.createProcess(createProcessRequest, currentUser)
-        val response = processMapper.toProcessResponse(process)
+        // Map inside a read transaction: the ownership chain walks lazy bounded-context/domain associations.
+        val response = processService.getProcessByKeyAsResponse(process.key, currentUser)
         return HttpResponse.status<ProcessResponse>(HttpStatus.CREATED).body(response)
     }
 

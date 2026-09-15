@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import {
   ArrowForward,
+  DoneAll,
   Error as ErrorIcon,
   Info,
   MoreVert,
@@ -31,6 +32,8 @@ interface TaskRowProps {
   showDivider: boolean;
   onDismiss: (task: TaskItem) => void;
   onRestore: (task: TaskItem) => void;
+  /** Closes a creation review (acknowledgeable tasks are not dismissed). */
+  onAcknowledge?: (task: TaskItem) => void;
 }
 
 const SEVERITY_ICON: Record<string, React.ReactNode> = {
@@ -46,7 +49,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 /** One to-do: what is missing, on which item, with a direct route to the field that fixes it. */
-const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onRestore }) => {
+const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onRestore, onAcknowledge }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
@@ -61,6 +64,10 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onResto
   const detail = task.fieldName
     ? t('tasks.fieldDetail', { field: getLocalizedText(task.fieldLabels, task.fieldName) })
     : undefined;
+  // Creation reviews say who created the item, and — for a justified duplicate — why.
+  const review = task.creationReview;
+  const creator = review?.createdBy ? `${review.createdBy.firstName} ${review.createdBy.lastName}` : undefined;
+  const justification = review?.duplicateJustification?.length ? getLocalizedText(review.duplicateJustification, '') : undefined;
 
   return (
     <>
@@ -87,6 +94,16 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onResto
               <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
                 <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>{name}</Typography>
                 {detail && <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>{detail}</Typography>}
+                {creator && (
+                  <Typography component="span" variant="caption" sx={{ color: 'text.secondary' }}>
+                    {t('tasks.createdBy', { name: creator })}
+                  </Typography>
+                )}
+                {justification && (
+                  <Typography component="span" variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                    {t('tasks.creationJustification', { text: justification })}
+                  </Typography>
+                )}
                 {task.dismissed && task.dismissedReason && (
                   <Typography component="span" variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
                     {t('tasks.dismissedBecause', { reason: task.dismissedReason })}
@@ -113,7 +130,17 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, showDivider, onDismiss, onResto
         </ListItemButton>
       </ListItem>
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-        {task.dismissed ? (
+        {task.acknowledgeable && onAcknowledge ? (
+          <MenuItem
+            onClick={() => {
+              setMenuAnchor(null);
+              onAcknowledge(task);
+            }}
+          >
+            <DoneAll fontSize="small" sx={{ mr: 1 }} />
+            {t('tasks.acknowledge')}
+          </MenuItem>
+        ) : task.dismissed ? (
           <MenuItem
             onClick={() => {
               setMenuAnchor(null);

@@ -70,3 +70,11 @@
 **IF** our organisation is still building its data landscape\
 **I WANT** to switch to-do rules off or mark them as optional, tier by tier\
 **SO THAT** owners are given an achievable list instead of every gap at once
+
+#### USER STORY 'Decentralised, guided catalogue growth'
+**AS A** data owner responsible for part of the business\
+**IF** a business object is missing in my area\
+**I WANT** to add it myself — guided on where it belongs, with the attributes my organisation requires and a
+warning when it already exists — while the owner of the area is informed\
+**SO THAT** the data catalogue grows where the knowledge is, without a central bottleneck and without
+unintended duplicates

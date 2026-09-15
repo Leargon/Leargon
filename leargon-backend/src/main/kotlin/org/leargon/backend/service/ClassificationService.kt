@@ -41,7 +41,8 @@ open class ClassificationService(
     private val businessDomainFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessDomainFieldValueExtractor,
     private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor,
     private val organisationalUnitFieldValueExtractor: org.leargon.backend.service.fieldvalue.OrganisationalUnitFieldValueExtractor,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val classificationAssignmentValidator: ClassificationAssignmentValidator
 ) {
     @Transactional
     open fun getClassifications(assignableTo: String?): List<ClassificationResponse> {
@@ -490,35 +491,7 @@ open class ClassificationService(
     private fun validateAssignments(
         assignments: List<ClassificationAssignmentRequest>,
         expectedAssignableTo: String
-    ) {
-        assignments.groupBy { it.classificationKey }.forEach { (classKey, group) ->
-            val classification =
-                classificationRepository
-                    .findByKey(classKey)
-                    .orElseThrow { ResourceNotFoundException("Classification not found: $classKey") }
-
-            if (classification.assignableTo != expectedAssignableTo) {
-                throw IllegalArgumentException(
-                    "Classification '$classKey' is not assignable to $expectedAssignableTo"
-                )
-            }
-
-            if (group.size > 1 && !classification.multiValue) {
-                throw IllegalArgumentException(
-                    "Classification '$classKey' is single-value: only one value can be assigned"
-                )
-            }
-
-            group.forEach { assignment ->
-                val value = classification.values.find { it.key == assignment.valueKey }
-                if (value == null) {
-                    throw ResourceNotFoundException(
-                        "Classification value '${assignment.valueKey}' not found in classification '$classKey'"
-                    )
-                }
-            }
-        }
-    }
+    ) = classificationAssignmentValidator.validate(assignments, expectedAssignableTo)
 
     private fun validateTranslations(
         translations: List<org.leargon.backend.model.LocalizedText>?,

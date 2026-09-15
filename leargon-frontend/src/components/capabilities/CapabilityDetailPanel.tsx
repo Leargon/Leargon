@@ -35,8 +35,6 @@ import { useGetAllCapabilities } from '../../api/generated/capability/capability
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
 import type {
@@ -56,15 +54,14 @@ const CapabilityDetailPanel: React.FC<CapabilityDetailPanelProps> = ({ capabilit
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { getLocalizedText, localizedName } = useLocale();
-  const { user } = useAuth();
-  // Capabilities are governed by BCM (no per-user owner/steward) — admin or a BCM editor/lead manages them.
-  const canManage = canCreateRoot(user?.roles, 'CAPABILITY');
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: response, isLoading, error } = useGetCapabilityByKey(capabilityKey, {
     query: { retry: false },
   });
   const capability = response?.data as CapabilityResponse | undefined;
+  // Edit/delete rights are computed by the backend (BCM editor/lead or admin).
+  const canManage = capability?.canEdit ?? false;
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];

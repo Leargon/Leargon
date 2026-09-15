@@ -27,6 +27,9 @@ object TaskRuleCatalog {
     const val WARNING = "WARNING"
     const val INFO = "INFO"
 
+    /** Raised for the owner of the container an item was created in by someone else; closed by acknowledging. */
+    const val REVIEW_REALM_CREATION = "REVIEW_REALM_CREATION"
+
     /** Tier order used by the presets and by the enabled-by-default rule. */
     val MATURITY_ORDER = listOf(BASIC, ADVANCED, EXPERT)
 
@@ -60,6 +63,33 @@ object TaskRuleCatalog {
                 maturityLevel = BASIC,
                 defaultPriority = REQUIRED,
                 severity = ERROR
+            ),
+            TaskRuleDef(
+                code = REVIEW_REALM_CREATION,
+                entityType = ALL_TYPES,
+                label = "Review a new item created in your area",
+                description =
+                    "Someone else created an item in a domain, bounded context, unit or item you own. Check its " +
+                        "placement — and, for a justified duplicate, the justification — then acknowledge it.",
+                section = "CORE",
+                methodology = null,
+                maturityLevel = BASIC,
+                defaultPriority = RECOMMENDED,
+                severity = INFO
+            ),
+            TaskRuleDef(
+                code = "ROOT_PROCESS_DIVERGENT_PURPOSES",
+                entityType = "BUSINESS_PROCESS",
+                label = "Processing activity may be drawn too coarse",
+                description =
+                    "The processing register emits one row per root process. This root handles personal data but " +
+                        "its sub-processes use different legal bases, or its direct sub-processes pursue different " +
+                        "purposes — it may span several processing activities and could be split.",
+                section = "GDPR",
+                methodology = "GDPR",
+                maturityLevel = ADVANCED,
+                defaultPriority = RECOMMENDED,
+                severity = WARNING
             ),
             TaskRuleDef(
                 code = "MISSING_OWNER",

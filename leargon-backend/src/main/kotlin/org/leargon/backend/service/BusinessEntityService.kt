@@ -30,6 +30,7 @@ import org.leargon.backend.repository.BusinessEntityVersionRepository
 import org.leargon.backend.repository.OrganisationalUnitRepository
 import org.leargon.backend.repository.TranslationLinkRepository
 import org.leargon.backend.repository.UserRepository
+import org.leargon.backend.util.KeyAllocator
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -47,9 +48,35 @@ open class BusinessEntityService(
     private val fieldVerificationService: FieldVerificationService,
     private val roleService: RoleService,
     private val businessEntityFieldValueExtractor: org.leargon.backend.service.fieldvalue.BusinessEntityFieldValueExtractor,
-    private val defaultLocaleProvider: DefaultLocaleProvider
+    private val defaultLocaleProvider: DefaultLocaleProvider,
+    private val creationPolicyService: CreationPolicyService,
+    private val classificationAssignmentValidator: ClassificationAssignmentValidator,
+    private val creationRequirementService: CreationRequirementService,
+    private val duplicateCandidateService: DuplicateCandidateService,
+    private val creationRecordService: CreationRecordService
 ) {
     private val objectMapper = ObjectMapper()
+
+    /**
+     * Moving an entity (reparent, bounded-context change, or owning-unit change while unplaced) is placing
+     * it somewhere new, so it needs creation rights at the destination — in addition to edit rights on the
+     * entity. This keeps an item from being moved into, or out of, someone else's realm unilaterally.
+     */
+    private fun requirePlacement(
+        currentUser: User,
+        parentKey: String?,
+        boundedContextKey: String?,
+        owningUnitKey: String?
+    ): CreationDecision =
+        creationPolicyService.require(
+            currentUser,
+            CreationTarget(
+                CreationPolicyService.BUSINESS_ENTITY,
+                parentKey = parentKey,
+                boundedContextKey = boundedContextKey,
+                owningUnitKey = owningUnitKey
+            )
+        )
 
     /**
      * Per-field edit gate. Owner/steward/admin may edit anything; a methodology-scoped EDITOR/LEAD may
@@ -102,6 +129,16 @@ open class BusinessEntityService(
         return m.toBusinessEntityResponse(getBusinessEntityByKey(key), currentUser)
     }
 
+    /** The delete predicate enforced by `deleteBusinessEntity`, for the `canDelete` detail flag. */
+    @ReadOnly
+    open fun canDelete(
+        key: String,
+        currentUser: User
+    ): Boolean {
+        val entity = getBusinessEntityByKey(key)
+        return roleService.canDelete(currentUser, "BUSINESS_ENTITY", entity.effectiveOwner()?.id, entity.effectiveSteward()?.id)
+    }
+
     open fun getBusinessEntityTree(): List<BusinessEntity> = businessEntityRepository.findByParentIsNull()
 
     @ReadOnly
@@ -115,19 +152,13 @@ open class BusinessEntityService(
     ): BusinessEntity {
         validateTranslations(request.names)
 
-        // Create gating: root entities need admin / DATA_GOVERNANCE editor-lead; a child may also be created
-        // by the parent entity's data owner or steward.
         val parent =
             request.parentKey?.let {
                 businessEntityRepository
                     .findByKey(it)
                     .orElseThrow { ResourceNotFoundException("Parent BusinessEntity not found") }
             }
-        if (parent != null) {
-            roleService.requireCreateChild(currentUser, "DATA_GOVERNANCE", parent.dataOwner?.id, parent.dataSteward?.id)
-        } else {
-            roleService.requireCreateRoot(currentUser, "DATA_GOVERNANCE")
-        }
+        val decision = requirePlacement(currentUser, request.parentKey, request.boundedContextKey, request.owningUnitKey)
 
         var entity = BusinessEntity()
         entity.createdBy = currentUser
@@ -143,6 +174,14 @@ open class BusinessEntityService(
 
         if (parent != null) {
             entity.parent = parent
+            // A child lives in its parent's bounded context unless placed elsewhere explicitly.
+            entity.boundedContext = parent.boundedContext
+        }
+        if (request.boundedContextKey != null) {
+            entity.boundedContext =
+                boundedContextRepository
+                    .findByKey(request.boundedContextKey!!)
+                    .orElseThrow { ResourceNotFoundException("Bounded context not found: ${request.boundedContextKey}") }
         }
 
         entity.names = request.names.map { input -> LocalizedText(input.locale, input.text) }.toMutableList()
@@ -160,13 +199,83 @@ open class BusinessEntityService(
                     .orElseThrow { ResourceNotFoundException("Owning unit not found") }
         }
 
+        // Everything the creation wizard collects is set atomically here: a realm owner may delegate the new
+        // entity to another owner, after which follow-up edits by the creator would no longer be permitted.
+        val users = userRepository
+        entity.dataSteward =
+            request.dataStewardUsername?.let {
+                users.findByUsername(it).orElseThrow { ResourceNotFoundException("Data steward user not found: $it") }
+            }
+        entity.technicalCustodian =
+            request.technicalCustodianUsername?.let {
+                users.findByUsername(it).orElseThrow { ResourceNotFoundException("Technical custodian user not found: $it") }
+            }
+        val assignments = request.classificationAssignments.orEmpty()
+        if (assignments.isNotEmpty()) {
+            entity.classificationAssignments = classificationAssignmentValidator.toAssignments(assignments, "BUSINESS_ENTITY")
+            // Art. 9 special categories imply personal data (same rule as the assignment endpoint).
+            if (entity.classificationAssignments.any { it.classificationKey == ClassificationService.SPECIAL_CATEGORIES_KEY }) {
+                entity.containsPersonalData = true
+            }
+        }
+
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = entity.names.find { it.locale == defaultLocale?.localeCode }?.text
         val slug = SlugUtil.slugify(defaultName)
-        entity.key = SlugUtil.buildKey(entity.parent?.key, slug)
+        val repo = businessEntityRepository
+        entity.key = KeyAllocator.allocate(SlugUtil.buildKey(entity.parent?.key, slug)) { repo.findByKey(it).isPresent }
 
+        // Relationships requested with the entity (new entity = first side), resolved before anything is saved.
+        val relationshipRequests = request.relationships.orEmpty()
+        val relatedEntities =
+            relationshipRequests.map { r ->
+                requireValidCardinality(r.firstCardinalityMinimum, r.firstCardinalityMaximum)
+                requireValidCardinality(r.secondCardinalityMinimum, r.secondCardinalityMaximum)
+                repo.findByKey(r.secondEntityKey).orElseThrow { ResourceNotFoundException("Related entity not found: ${r.secondEntityKey}") }
+            }
+        // An implementation of a more general concept is linked to its interface(s) at creation.
+        request.interfaces.orEmpty().distinct().forEach { interfaceKey ->
+            entity.interfaceEntities.add(
+                repo.findByKey(interfaceKey).orElseThrow { ResourceNotFoundException("Interface entity not found: $interfaceKey") }
+            )
+        }
+
+        creationRequirementService.requireComplete("BUSINESS_ENTITY", businessEntityMapper.presenceOf(entity))
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(
+                CreationPolicyService.BUSINESS_ENTITY,
+                parentKey = request.parentKey,
+                boundedContextKey = entity.boundedContext?.key,
+                owningUnitKey = request.owningUnitKey
+            ),
+            entity.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         entity = businessEntityRepository.save(entity)
+        // Created with the entity: the creator may have delegated ownership, after which a separate
+        // relationship request by them would be refused.
+        val relationshipRepo = businessEntityRelationshipRepository
+        relationshipRequests.zip(relatedEntities).forEach { (r, related) ->
+            val relationship = BusinessEntityRelationship()
+            relationship.firstBusinessEntity = entity
+            relationship.secondBusinessEntity = related
+            relationship.firstCardinalityMinimum = r.firstCardinalityMinimum
+            relationship.firstCardinalityMaximum = r.firstCardinalityMaximum
+            relationship.secondCardinalityMinimum = r.secondCardinalityMinimum
+            relationship.secondCardinalityMaximum = r.secondCardinalityMaximum
+            relationship.descriptions = r.descriptions.orEmpty().map { LocalizedText(it.locale, it.text) }.toMutableList()
+            entity.relationshipsFirst.add(relationshipRepo.save(relationship))
+        }
         createBusinessEntityVersion(entity, currentUser, "CREATE", "Initial creation")
+        creationRecordService.recordCreation(
+            CreationPolicyService.BUSINESS_ENTITY,
+            entity.key,
+            currentUser,
+            decision.basis,
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         return entity
     }
 
@@ -205,6 +314,7 @@ open class BusinessEntityService(
     ): BusinessEntity {
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "parent")
+        requirePlacement(currentUser, parentKey, entity.boundedContext?.key, entity.owningUnit?.key)
 
         if (parentKey != null) {
             if (parentKey == entityKey) {
@@ -530,6 +640,15 @@ open class BusinessEntityService(
 
     // --- Relationship CRUD ---
 
+    private fun requireValidCardinality(
+        minimum: Int?,
+        maximum: Int?
+    ) {
+        if (minimum == null || minimum < 0 || (maximum != null && (maximum < 1 || maximum < minimum))) {
+            throw IllegalArgumentException("Invalid cardinality $minimum..${maximum ?: "*"}")
+        }
+    }
+
     @Retryable(attempts = "3", delay = "100ms")
     @Transactional
     open fun createRelationship(
@@ -691,6 +810,11 @@ open class BusinessEntityService(
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "boundedContext")
+        // Assigning bounded contexts is DDD modelling: a DDD editor/lead may move entities between contexts;
+        // anyone else (realm owners included) needs creation rights at the destination.
+        if (!roleService.isEditorFor(currentUser, "DDD")) {
+            requirePlacement(currentUser, entity.parent?.key, boundedContextKey, entity.owningUnit?.key)
+        }
 
         val oldName = entity.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
 
@@ -726,6 +850,10 @@ open class BusinessEntityService(
     ): BusinessEntityResponse {
         var entity = getBusinessEntityByKey(entityKey)
         requireFieldEdit(entity, currentUser, "owningUnit")
+        // The owning unit is the entity's placement only while it has no parent and no bounded context.
+        if (entity.parent == null && entity.boundedContext == null) {
+            requirePlacement(currentUser, null, null, owningUnitKey)
+        }
 
         val oldName = entity.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
 
@@ -735,15 +863,7 @@ open class BusinessEntityService(
                     .findByKey(owningUnitKey)
                     .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
             } else {
-                val fallbackOwner =
-                    entity.dataOwner
-                        ?: entity.boundedContext
-                            ?.owningUnit
-                            ?.businessOwner
-                        ?: entity.boundedContext
-                            ?.domain
-                            ?.owningUnit
-                            ?.businessOwner
+                val fallbackOwner = entity.dataOwner ?: entity.boundedContext?.effectiveOwner()
                 if (fallbackOwner == null) {
                     throw IllegalArgumentException(
                         "Cannot remove owning unit: no direct data owner or bounded context owner exists as fallback"
@@ -781,7 +901,12 @@ open class BusinessEntityService(
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = entity.getName(defaultLocale?.localeCode ?: "en")
         val slug = SlugUtil.slugify(defaultName)
-        entity.key = SlugUtil.buildKey(entity.parent?.key, slug)
+        val repo = businessEntityRepository
+        val selfId = entity.id
+        entity.key =
+            KeyAllocator.allocate(SlugUtil.buildKey(entity.parent?.key, slug)) { candidate ->
+                repo.findByKey(candidate).map { it.id != selfId }.orElse(false)
+            }
         entity.children.forEach { child ->
             recomputeKeysForSubtree(child)
             businessEntityRepository.update(child)

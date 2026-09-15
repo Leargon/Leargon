@@ -59,6 +59,7 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_DOMAIN", "type", "Domain Type", "CORE", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "parent", "Parent Domain", "CORE", "BASIC", false),
             FieldDef("BUSINESS_DOMAIN", "owningUnit", "Owning Unit", "CORE", "BASIC", true),
+            FieldDef("BUSINESS_DOMAIN", "owner", "Owner", "CORE", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "visionStatement.{locale}", "Vision Statement", "STRATEGIC", "BASIC", true),
             FieldDef("BUSINESS_DOMAIN", "boundedContexts", "Bounded Contexts", "DDD", "ADVANCED", false),
             FieldDef("BUSINESS_DOMAIN", "contextRelationships", "Context Relationships", "DDD", "ADVANCED", false),
@@ -157,6 +158,7 @@ open class FieldConfigurationService(
                             "type",
                             "descriptions",
                             "owningUnit",
+                            "owner",
                             "section:DATA_GOVERNANCE",
                             "section:DDD",
                             "section:STRATEGIC",
@@ -263,8 +265,56 @@ open class FieldConfigurationService(
             .map { it.fieldName.substringBefore(".{") }
             .distinct()
 
+    /**
+     * Base field names the create request of each item type carries — only these can be required at
+     * creation (a required field the request cannot supply would make creation impossible).
+     */
+    private val creationCapableBases: Map<String, Set<String>> =
+        mapOf(
+            "BUSINESS_ENTITY" to
+                setOf(
+                    "names", "descriptions", "dataOwner", "dataSteward", "technicalCustodian", "boundedContext",
+                    "retentionPeriod", "classification",
+                ),
+            "BUSINESS_PROCESS" to
+                setOf(
+                    "names", "descriptions", "processType", "code", "processOwner", "processSteward", "technicalCustodian",
+                    "inputEntities", "outputEntities", "executingUnits", "legalBasis", "purpose", "boundedContext",
+                    "classification",
+                ),
+        )
+
+    fun isCreationCapable(
+        entityType: String,
+        fieldName: String
+    ): Boolean = creationCapableBases[entityType]?.contains(fieldName.substringBefore(".")) == true
+
+    /**
+     * Mandatory fields of [entityType] configured as required at creation, excluding fields of disabled
+     * methodologies (a disabled methodology's fields are never required).
+     */
+    @Transactional
+    open fun requiredAtCreation(
+        entityType: String,
+        disabledMethodologies: Set<String>
+    ): List<String> =
+        fieldConfigurationRepository
+            .findByEntityType(entityType)
+            .filter { it.requiredAtCreation && it.visibility == "SHOWN" }
+            .filter { !isFieldExcluded(entityType, it.fieldName.substringBefore("."), it.section, disabledMethodologies) }
+            .map { it.fieldName }
+
     @Transactional
     open fun replace(entries: List<FieldConfigurationEntry>): List<FieldConfigurationEntry> {
+        entries.filter { it.requiredAtCreation == true }.forEach { entry ->
+            val mandatory = entry.visibility != FieldConfigurationEntryVisibility.HIDDEN && entry.fieldName !in localeGroupBases
+            if (!mandatory || !isCreationCapable(entry.entityType, entry.fieldName)) {
+                throw IllegalArgumentException(
+                    "Field ${entry.entityType}.${entry.fieldName} can only be required at creation when it is mandatory " +
+                        "and supplied by the create request"
+                )
+            }
+        }
         // Locale group entries: only persist when HIDDEN (SHOWN means "not hidden", so omit)
         // Per-locale entries: only persist when SHOWN (= mandatory); HIDDEN is not valid for locales
         // If a group is HIDDEN, drop any per-locale mandatory entries for that group
@@ -303,6 +353,7 @@ open class FieldConfigurationService(
                 config.visibility = if (entry.visibility == FieldConfigurationEntryVisibility.HIDDEN) "HIDDEN" else "SHOWN"
                 config.section = entry.section ?: "CORE"
                 config.maturityLevel = entry.maturityLevel?.name ?: "BASIC"
+                config.requiredAtCreation = entry.requiredAtCreation == true
                 fieldConfigurationRepository.save(config)
             }
         return saved.map { toEntry(it) }
@@ -340,7 +391,10 @@ open class FieldConfigurationService(
         entries.forEach { entry ->
             if (!inScope(entry.entityType, entry.fieldName, entry.section)) {
                 val cur = currentByField[entry.entityType to entry.fieldName]
-                val changed = cur?.visibility != entry.visibility
+                // Both the visibility and the required-at-creation flag are governed settings.
+                val changed =
+                    cur?.visibility != entry.visibility ||
+                        (cur?.requiredAtCreation == true) != (entry.requiredAtCreation == true)
                 if (changed) {
                     throw ForbiddenOperationException(
                         "Not permitted to change field ${entry.entityType}.${entry.fieldName} (outside methodology scope)"
@@ -548,6 +602,7 @@ open class FieldConfigurationService(
             it.visibility = FieldConfigurationEntryVisibility.valueOf(config.visibility)
             it.section = config.section
             it.maturityLevel = FieldConfigurationEntryMaturityLevel.valueOf(config.maturityLevel)
+            it.requiredAtCreation = config.requiredAtCreation
         }
 
     /**
@@ -576,5 +631,6 @@ open class FieldConfigurationService(
         ).also {
             it.localeGroup = localeGroup
             it.labels = localeCodes.map { locale -> LocalizedText(locale, labelFor(locale)) }
+            it.creationCapable = mandatoryCapable && !localeGroup && isCreationCapable(def.entityType, fieldName)
         }
 }

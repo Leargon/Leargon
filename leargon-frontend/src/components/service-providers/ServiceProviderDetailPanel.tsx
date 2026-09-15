@@ -44,8 +44,6 @@ import {
 import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
 import { useTranslation } from 'react-i18next';
 import { useInlineEdit } from '../../hooks/useInlineEdit';
 import TranslationEditor from '../common/TranslationEditor';
@@ -67,13 +65,12 @@ const ServiceProviderDetailPanel: React.FC<ServiceProviderDetailPanelProps> = ({
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { getLocalizedText, preferredLocale, localizedName } = useLocale();
-  const { user } = useAuth();
-  // Service providers are governed by GDPR (no per-user owner/steward) — admin or a GDPR editor/lead manages them.
-  const canManage = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
   const countryOptions = getCountryOptions(preferredLocale ?? 'en');
 
   const { data: response, isLoading, error } = useGetServiceProvider(providerKey);
   const provider = response?.data;
+  // Edit/delete rights are computed by the backend (GDPR editor/lead or admin).
+  const canManage = provider?.canEdit ?? false;
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) ?? [];

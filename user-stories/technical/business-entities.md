@@ -1,5 +1,5 @@
 #### USER STORY 'Create business entity'
-**AS A** logged in user\
+**AS AN** admin or DATA_GOVERNANCE editor/lead (anywhere), the owner of the bounded context or domain the entity is placed in, or the effective owner/steward of the parent entity (child entity)\
 **IF** \
 **I WANT** to create a new business entity by providing a name in at least one supported locale\
 **SO THAT** the entity is registered in the data landscape, with me as the initial data owner
@@ -69,6 +69,23 @@
 **IF** the related entity exists\
 **I WANT** to create a typed relationship from this business entity to another, specifying cardinalities and an optional description\
 **SO THAT** the structural connections between data objects are documented
+
+#### USER STORY 'Create a root entity together with its relationship'
+**AS A** user who may create the entity at its place (see 'Create business entity')\
+**IF** the new entity is a root entity connected to an existing one (the advisor's "new root entity with a
+relationship" recommendation)\
+**I WANT** to send its relationships with the create request (`relationships`, the new entity being the first side)\
+**SO THAT** entity and relationship are created atomically — also when I delegate the new entity's ownership, after
+which a separate relationship request by me would be refused (403)\
+**Negative:** unknown related entity → 404, nothing created; impossible cardinality → 400; 409/403 on the entity
+creates no relationship
+
+#### USER STORY 'Create an implementation linked to its interface'
+**AS A** user who may create the entity at its place\
+**IF** the new entity is a kind of a more general concept (the advisor's interface/implementation outcome)\
+**I WANT** to send the interface key(s) with the create request (`interfaces`)\
+**SO THAT** the implementation is linked at creation, not in a separate request that delegation could refuse\
+**Negative:** unknown interface entity → 404
 
 #### USER STORY 'Update entity relationship'
 **AS A** data owner or admin\

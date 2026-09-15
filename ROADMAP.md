@@ -6,7 +6,6 @@
 | Feature                                       | Sessions | Weekly | Value | Score    |
 |-----------------------------------------------|----------|--------|-------|----------|
 | Catalogue insights                            | 3        | 30%    | 8/10  | **2.7**  |
-| Guided modeling advisor                       | 6        | 40%    | 9/10  | **1.5**  |
 | Catalogue quality rules                       | 3        | 30%    | 7/10  | **2.3**  |
 | Performance & scalability                     | 3        | 30%    | 7/10  | **2.3**  |
 | Impact analysis & domain coupling             | 4        | 40%    | 8/10  | **2.0**  |
@@ -36,7 +35,16 @@ longer listed here.)*
 
 ---
 
-## Guided modeling advisor
+## Guided modeling advisor — IMPLEMENTED (rule administration deferred)
+
+*Delivered together with decentralised creation: `AdvisorRuleCatalog` (code-defined rule sets
+ENTITY/PROCESS/DOMAIN/ORG_UNIT/CAPABILITY_PLACEMENT), stateless `POST /advisor/evaluate` returning the next
+question or a recommendation (outcome, rationale, live consequences such as the register roll-up and the
+resulting effective owner, `allowed` from `CreationPolicyService`, the responsible owner to ask, a wizard
+prefill and duplicate candidates), the "Not sure where this belongs?" launcher beside every New / Add-child
+action with hand-off into the prefilled wizard, and the `ROOT_PROCESS_DIVERGENT_PURPOSES` "activity drawn
+too coarse" to-do. See `user-stories/technical/modeling-advisor.md`. Only 'Administer the advisor decision
+rules' remains open.*
 
 *Addresses the core usability gap documented in `REVIEW-FINDINGS.md` Part D: the mechanics of
 nesting are easy (an "Add Child" button exists), but the **judgement** — when something should be
@@ -136,12 +144,29 @@ that item type, and on completion hands its recommendation straight into the cre
 the parent, placement, and connection type pre-filled\
 **SO THAT** the guidance flows directly into the action without re-entering anything
 
-#### USER STORY 'Administer the advisor decision rules'
+#### USER STORY 'Administer the advisor decision rules' — DEFERRED (v1 rules are code-defined)
 **AS AN** admin\
 **IF** my organisation's modelling conventions differ from the defaults\
 **I WANT** to view and adjust the advisor's decision rules and the wording of its explanations per
 methodology\
 **SO THAT** the guidance matches our house rules and stays maintainable as conventions evolve
+
+---
+
+## Decentralised, realm-based creation — IMPLEMENTED
+
+*Delivered: responsible people create inside their own realm without a central modelling team. A domain
+owner creates subdomains, bounded contexts and anything inside them; a bounded-context owner creates
+entities, processes, domain events and context relationships in their context; item owners add children;
+unit owners add sub-units (non-transitive into content) and IT systems; top-level and unplaced items stay
+with the governing methodology's editors/leads. Domains and bounded contexts gained an explicit owner with
+inherited fallback (owning unit → parent domain / domain). One decision point (`CreationPolicyService`)
+enforces every create and move and drives backend-computed UI flags (`creatableChildTypes`, `canDelete`,
+`canEdit`, `/creation/capabilities`, `/creation/targets`) — the frontend holds no permission logic.
+Creation is guarded by "required at creation" fields (422), duplicate prevention across locales (409 unless
+acknowledged and justified; same term in another context suggests a translation link), atomic create
+payloads, collision-free keys, and a "Review a new item created in your area" to-do for the owner, closed
+by acknowledging it. User stories: `user-stories/technical/creation-governance.md`.*
 
 ---
 

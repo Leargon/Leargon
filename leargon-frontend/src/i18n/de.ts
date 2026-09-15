@@ -510,6 +510,10 @@ const de = {
     "subdomains": "Unterdomänen",
     "searchParentDomain": "Übergeordnete Domäne suchen...",
     "searchOwningUnit": "Besitzende Einheit suchen...",
+    "owner": "Eigentümer",
+    "searchOwner": "Eigentümer suchen...",
+    "ownerInherited": "(geerbt)",
+    "ownerInheritHint": "Leer lassen, um den Eigentümer von der besitzenden Einheit oder der übergeordneten Domäne zu erben",
     "addSubdomain": "Unterdomäne hinzufügen",
     "deleteDomain": "Domäne löschen",
     "deleteDomainConfirm": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Dadurch werden auch alle Unterdomänen gelöscht und alle Entitäten aufgehoben.",
@@ -529,6 +533,8 @@ const de = {
     "domain": "Domäne",
     "owningTeam": "Zuständiges Team",
     "noOwningTeam": "Kein Team zugewiesen",
+    "owner": "Eigentümer",
+    "editOwner": "Eigentümer bearbeiten",
     "assignedEntities": "Zugewiesene Entitäten",
     "assignedProcesses": "Zugewiesene Prozesse",
     "noAssignedEntities": "Keine Entitäten zugewiesen",
@@ -928,7 +934,166 @@ const de = {
     "timeHours": "vor {{count}} Std.",
     "timeDays": "vor {{count}} Tag(en)"
   },
+  "advisor": {
+    "launcher": "Nicht sicher, wo das hingehört?",
+    "title": "Wo gehört das hin?",
+    "intro": "Beantworten Sie ein paar Fragen und erhalten Sie eine Empfehlung — inklusive der Folgen für Verantwortung und Verarbeitungsverzeichnis.",
+    "nameLabel": "Name dessen, was Sie hinzufügen (optional)",
+    "back": "Zurück",
+    "restart": "Neu beginnen",
+    "pickPlaceholder": "Suchen…",
+    "notCreatable": "hier dürfen Sie nicht erstellen",
+    "recommendationTitle": "Empfehlung",
+    "panelHint": "Beantworten Sie ein paar Fragen — eine zulässige Empfehlung übernimmt die Einordnung für Sie.",
+    "addContextThere": "Den Bounded Context dort anlegen",
+    "why": "Warum",
+    "consequencesTitle": "Was das bedeutet",
+    "allowed": "Sie dürfen es dort erstellen.",
+    "notAllowed": "Sie dürfen es dort nicht erstellen. Fragen Sie {{owner}}, die verantwortliche Person.",
+    "notAllowedNoOwner": "Sie dürfen es dort nicht erstellen. Fragen Sie eine Redakteurin oder einen Redakteur dieser Methodik.",
+    "createHere": "Dort erstellen",
+    "connect": {
+      "RELATIONSHIP": "Die Beziehung wird zusammen mit dem Objekt erstellt.",
+      "INTERFACE": "Es wird als Implementierung des allgemeinen Konzepts angelegt.",
+      "CALLED_PROCESS": "Rufen Sie es nach dem Erstellen aus dem übergeordneten Prozess auf (Aufrufaktivität)."
+    },
+    "duplicatesTitle": "Elemente mit diesem Namen gibt es bereits",
+    "ruleSets": {
+      "ENTITY_PLACEMENT": "Geschäftsobjekt",
+      "PROCESS_PLACEMENT": "Geschäftsprozess",
+      "DOMAIN_PLACEMENT": "Domäne oder Bounded Context",
+      "ORG_UNIT_PLACEMENT": "Organisationseinheit",
+      "CAPABILITY_PLACEMENT": "Fähigkeit"
+    },
+    "questions": {
+      "entity": {
+        "relation": "Ist das neue Konzept mit einem bestehenden Geschäftsobjekt verbunden?",
+        "relatedPick": "Mit welchem Objekt ist es verbunden?",
+        "lifecycle": "Hört es auf zu existieren, wenn „{{picked}}“ gelöscht wird?",
+        "identity": "Wird es für sich allein identifiziert oder gesucht, ohne den Weg über „{{picked}}“? (Eine Adresse findet man direkt; eine Auftragsposition nur über ihren Auftrag.)",
+        "responsibility": "Braucht es einen eigenen Eigentümer oder Steward oder eine eigene Klassifikation oder Aufbewahrung, abweichend von „{{picked}}“?",
+        "cardinality": "Wie viele davon kann ein „{{picked}}“ haben?",
+        "generalPick": "Von welchem allgemeineren Konzept ist es eine Art?",
+        "specialContextPick": "Zu welchem Bounded Context gehört das spezialisierte Objekt?",
+        "contextPick": "Zu welchem Bounded Context gehört es?"
+      },
+      "process": {
+        "shape": "Wie steht die neue Tätigkeit zu bestehenden Prozessen?",
+        "parentPick": "Von welchem Prozess ist es ein Schritt?",
+        "ownPurpose": "Hat es einen eigenen Auslöser oder Zweck (Rechtsgrundlage), unabhängig von diesem Prozess?",
+        "reusedContextPick": "Welcher Bounded Context besitzt den wiederverwendbaren Prozess?",
+        "contextPick": "Zu welchem Bounded Context gehört der Prozess?"
+      },
+      "domain": {
+        "kind": "Was fügen Sie hinzu?",
+        "contextDomainPick": "In welcher Domäne liegt die Modellgrenze?",
+        "parentPick": "Von welcher Domäne ist es ein Teilbereich?"
+      },
+      "unit": {
+        "reportsTo": "Berichtet die neue Einheit an eine bestehende Einheit?",
+        "parentPick": "An welche Einheit berichtet sie?"
+      },
+      "capability": {
+        "refines": "Ist es eine spezifischere Fähigkeit innerhalb einer bestehenden?",
+        "parentPick": "Welche Fähigkeit verfeinert sie?"
+      }
+    },
+    "options": {
+      "yes": "Ja",
+      "no": "Nein",
+      "entity": {
+        "relation": {
+          "connected": "Es ist mit einem bestehenden Objekt verbunden — als Teil davon oder in Beziehung dazu (z. B. eine Auftragsposition eines Auftrags, eine Adresse eines Kunden)",
+          "kindOf": "Es ist eine Art eines allgemeineren Konzepts",
+          "standalone": "Es steht für sich"
+        },
+        "cardinality": {
+          "one": "Höchstens eines — und es gehört zu genau einem „{{picked}}“",
+          "many": "Mehrere — jedes gehört zu genau einem „{{picked}}“",
+          "manyToMany": "Mehrere — und jedes kann zu mehreren „{{picked}}“ gehören"
+        }
+      },
+      "process": {
+        "shape": {
+          "stepOf": "Es ist ein Schritt eines größeren Prozesses",
+          "reused": "Es wird in mehreren Prozessen ausgeführt",
+          "standalone": "Es wird eigenständig ausgelöst"
+        }
+      },
+      "domain": {
+        "kind": {
+          "modelBoundary": "Das Modell eines Teams mit eigener Sprache (Bounded Context)",
+          "subArea": "Ein Teilbereich einer bestehenden Geschäftsdomäne",
+          "newArea": "Ein neuer Geschäftsbereich"
+        }
+      }
+    },
+    "outcomes": {
+      "CHILD_AGGREGATE": "Als Kind des Objekts erstellen",
+      "ROOT_WITH_RELATIONSHIP": "Als neues Objekt oberster Ebene mit einer Beziehung zum Objekt erstellen",
+      "INTERFACE_IMPLEMENTATION": "Als Implementierung des allgemeinen Konzepts erstellen",
+      "NEW_ROOT_IN_CONTEXT": "Als Objekt oberster Ebene des Bounded Context erstellen",
+      "SUB_PROCESS": "Als Teilprozess erstellen",
+      "SEPARATE_ACTIVITY": "Als eigene Bearbeitungstätigkeit erstellen",
+      "REUSABLE_PROCESS": "Als wiederverwendbaren Prozess erstellen",
+      "NEW_ACTIVITY": "Als neue Bearbeitungstätigkeit erstellen",
+      "BOUNDED_CONTEXT": "Einen Bounded Context in der Domäne erstellen",
+      "SUBDOMAIN": "Als Subdomäne erstellen",
+      "TOP_LEVEL_DOMAIN": "Eine neue Domäne oberster Ebene erstellen",
+      "SUB_UNIT": "Als untergeordnete Einheit erstellen",
+      "TOP_LEVEL_UNIT": "Eine neue Einheit oberster Ebene erstellen",
+      "SUB_CAPABILITY": "Als untergeordnete Fähigkeit erstellen",
+      "L1_CAPABILITY": "Eine neue Fähigkeit oberster Ebene (L1) erstellen"
+    },
+    "rationales": {
+      "lifecycleBound": "Es kann ohne das andere Objekt nicht existieren.",
+      "independentLifecycle": "Es lebt weiter, wenn das andere Objekt gelöscht wird — also kann es nicht dessen Kind sein.",
+      "ownIdentity": "Es wird für sich identifiziert und gesucht — das macht es zu einem eigenständigen Objekt.",
+      "noOwnIdentity": "Man erreicht es immer nur über das andere Objekt.",
+      "ownResponsibility": "Es braucht einen eigenen Eigentümer, Steward, eine eigene Klassifikation oder Aufbewahrung — ein Kind teilt die seines übergeordneten Objekts.",
+      "sharedResponsibility": "Eigentum, Klassifikation und Aufbewahrung sind die des anderen Objekts — es ist ein Teil des Aggregats.",
+      "specialisation": "Es ist eine Spezialisierung eines allgemeinen Konzepts — genau das drückt eine Schnittstellen-/Implementierungsverknüpfung aus.",
+      "standaloneConcept": "Es ist ein eigenständiges Konzept.",
+      "decompositionStep": "Es existiert nur als Schritt des größeren Ablaufs.",
+      "ownPurpose": "Ein eigener Zweck oder eine eigene Rechtsgrundlage macht es zu einer eigenen Bearbeitungstätigkeit.",
+      "reusedAcrossParents": "Da es von mehreren Prozessen genutzt wird, sollte es einmal existieren und von jedem aufgerufen werden.",
+      "independentActivity": "Es wird eigenständig ausgelöst und ausgeführt.",
+      "ownLanguage": "Ein Modell mit eigener Sprache und eigenem Team ist ein Bounded Context.",
+      "subArea": "Es grenzt eine bestehende Geschäftsdomäne ein.",
+      "newBusinessArea": "Es ist ein neuer Bereich des Geschäfts.",
+      "reportingLine": "Es berichtet an eine bestehende Einheit.",
+      "independentUnit": "Es berichtet an keine bestehende Einheit.",
+      "refinement": "Es verfeinert eine bestehende Fähigkeit.",
+      "newCapabilityArea": "Es ist ein neuer Bereich der Fähigkeitslandkarte."
+    },
+    "consequences": {
+      "ENTITY_ROLLS_UP_TO_ROOT": "Im Verarbeitungsverzeichnis wird es unter „{{root}}“ als eine Datenkategorie zusammengefasst.",
+      "INHERITS_BOUNDED_CONTEXT": "Es liegt im Bounded Context „{{context}}“ seines übergeordneten Objekts.",
+      "RESULTING_EFFECTIVE_OWNER": "{{owner}} wird dafür verantwortlich sein.",
+      "OWN_REGISTER_CATEGORY": "Im Verarbeitungsverzeichnis erscheint es als eigene Datenkategorie.",
+      "RELATIONSHIP_CREATED": "Es wird zusammen mit einer Beziehung zu „{{related}}“ erstellt — die Kardinalität können Sie im Assistenten anpassen.",
+      "CROSS_CONTEXT_LINK": "Es verbindet „{{context}}“ mit „{{relatedContext}}“ — dokumentieren Sie ggf. eine Kontextbeziehung.",
+      "REGISTER_ROLLS_INTO_ROOT": "Im Verarbeitungsverzeichnis gehört es zur Tätigkeit „{{root}}“ und ist keine eigene Zeile.",
+      "DATA_FLOW_ROLLS_UP": "Sein Datenfluss wird in „{{root}}“ zusammengefasst.",
+      "REGISTER_NEW_ACTIVITY": "Im Verarbeitungsverzeichnis wird es zu einer eigenen Bearbeitungstätigkeit (Zeile).",
+      "CALL_FROM_PARENTS": "Rufen Sie es aus jedem nutzenden Prozess auf, statt es zu kopieren.",
+      "INHERITS_OWNER": "Es erbt den Eigentümer {{owner}} von der übergeordneten Domäne, bis einer gesetzt wird.",
+      "STRATEGIC_ITEM": "Das ist Struktur oberster Ebene — nur Redakteure der Methodik dürfen sie erstellen.",
+      "NOT_TRANSITIVE": "Als Eigentümer der übergeordneten Einheit dürfen Sie Untereinheiten anlegen, aber keine Inhalte in deren Bounded Contexts.",
+      "CAPABILITY_LEVEL": "Es wird eine Fähigkeit der Ebene {{level}}."
+    }
+  },
   "wizard": {
+    "requiredFieldsHint": "Ihre Organisation verlangt diese Felder, bevor ein Element erstellt werden kann: {{fields}}",
+    "requiredMissing": "Bitte füllen Sie die bei der Erstellung erforderlichen Felder aus: {{fields}}",
+    "duplicatesTitle": "Hier gibt es bereits ähnliche Elemente",
+    "duplicatesElsewhere": "Ähnliche Elemente gibt es an anderer Stelle",
+    "duplicatesAcknowledge": "Das ist ein anderes Konzept — trotzdem erstellen",
+    "duplicatesJustification": "Worin unterscheidet es sich?",
+    "duplicatesJustificationHelp": "Mindestens 10 Zeichen. Der Eigentümer, der das neue Element prüft, sieht diese Begründung.",
+    "duplicateSuggestionTranslationLink": "gleicher Begriff in einem anderen Kontext — besser eine Übersetzungsverknüpfung anlegen",
+    "duplicateSuggestionReuse": "den bestehenden Prozess wiederverwenden oder aufrufen",
+    "duplicatesBlocking": "Hier gibt es vermutlich Duplikate — prüfen Sie sie und begründen Sie das neue Element vor der Erstellung.",
     "back": "Zurück",
     "skip": "Überspringen",
     "next": "Weiter",
@@ -1259,6 +1424,16 @@ const de = {
       "stepPersonalData": "Personenbezogene Daten",
       "guidedPersonalDataText": "Enthält diese Entität personenbezogene Daten (DSGVO Art. 4 / revDSG)? Lassen Sie es offen, wenn Sie unsicher sind. Falls ja, wählen Sie, ob sie eine Kategorie betroffener Personen oder eine Kategorie personenbezogener Daten beschreibt — dies steuert das Verzeichnis der Verarbeitungstätigkeiten (Art. 30). Besondere Kategorien (Art. 9) werden im nächsten Schritt verfügbar, sobald Sie mit Ja antworten.",
       "stepClassifications": "Klassifikationen",
+      "guidedDecisionChildText": "Soll es wirklich ein Kind dieses Objekts werden? Ein Kind teilt Lebenszyklus, Identität und Verantwortung seines übergeordneten Objekts; sonst wird es ein eigenes Objekt mit einer Beziehung.",
+      "summaryInterface": "Implementiert",
+      "stepRelationship": "Beziehung",
+      "guidedRelationshipText": "Ein eigenes Objekt, verbunden über eine Beziehung — sie wird zusammen mit dem Objekt erstellt. Kardinalität einer Seite: wie viele ihrer Objekte zu einem Objekt der anderen Seite gehören; Maximum leer lassen für „viele“.",
+      "relationshipTo": "Beziehung zu „{{name}}“",
+      "createRelationship": "Diese Beziehung erstellen",
+      "relationshipThisSide": "Dieses Objekt",
+      "cardinalityMin": "Min",
+      "cardinalityMax": "Max (leer = viele)",
+      "summaryRelationship": "Beziehung",
       "stepSummary": "Zusammenfassung",
       "bcLabel": "Bounded Context",
       "bcNone": "Keiner — später zuweisen",
@@ -1292,6 +1467,11 @@ const de = {
       "stepOwnership": "Verantwortung",
       "stepDataFlow": "Datenfluss",
       "stepCompliance": "Compliance",
+      "stepPlacement": "Einordnung",
+      "bcLabel": "Bounded Context",
+      "bcNone": "Keiner — später zuweisen",
+      "guidedPlacementTitle": "Wo gehört dieser Prozess hin?",
+      "guidedPlacementText": "Der Bounded Context ordnet den Prozess einer Domäne zu. Dessen Eigentümer ist für alles darin verantwortlich und wird informiert, wenn Sie dort etwas erstellen. Es werden nur Kontexte angeboten, in denen Sie erstellen dürfen.",
       "stepSummary": "Zusammenfassung",
       "codeLabel": "Prozesskennzeichen (optional)",
       "codeHelper": "Wird als URL-Schlüssel verwendet. Automatisch aus dem Namen generiert, wenn leer.",
@@ -2028,6 +2208,8 @@ const de = {
   "tasks": {
     "ruleDescriptions": {
       "MISSING_MANDATORY_FIELD": "Erzeugt eine Aufgabe je Feld, das eine Administratorin als Pflichtfeld konfiguriert hat, das aber keinen Wert hat. Welche Felder zählen, wird im Bildschirm „Methodiken“ gesteuert.",
+      "ROOT_PROCESS_DIVERGENT_PURPOSES": "Das Verarbeitungsverzeichnis enthält eine Zeile pro Wurzelprozess. Dieser Wurzelprozess verarbeitet Personendaten, seine Teilprozesse stützen sich aber auf unterschiedliche Rechtsgrundlagen oder verfolgen unterschiedliche Zwecke — er umfasst womöglich mehrere Bearbeitungstätigkeiten und sollte aufgeteilt werden.",
+      "REVIEW_REALM_CREATION": "Jemand anderes hat ein Element in einer Domäne, einem Bounded Context, einer Einheit oder einem Element erstellt, das Ihnen gehört. Prüfen Sie die Einordnung — und bei einem begründeten Duplikat die Begründung — und bestätigen Sie es.",
       "MISSING_OWNER": "Das Element hat keinen Eigentümer, weder direkt noch über seine verantwortliche Einheit. Wird dem Steward angezeigt sowie Administratoren in der Ansicht nach Eigentümer im Bereich „nicht zugewiesen“.",
       "MISSING_STEWARD": "Es ist niemand benannt, der sich neben dem Eigentümer täglich um das Element kümmert.",
       "NO_LEGAL_BASIS": "Der Prozess verarbeitet Personendaten, nennt aber keine Rechtsgrundlage.",
@@ -2060,6 +2242,9 @@ const de = {
     "moreActions": "Weitere Aktionen",
     "dismiss": "Zurückstellen",
     "restore": "Wiederherstellen",
+    "acknowledge": "Bestätigen",
+    "createdBy": "erstellt von {{name}}",
+    "creationJustification": "„{{text}}“",
     "dismissTitle": "Aufgabe zurückstellen",
     "dismissExplanation": "Begründen Sie, warum „{{task}}“ hier nicht zutrifft. Die Begründung wird protokolliert, und die Aufgabe erscheint erneut, sobald sich das Objekt ändert.",
     "dismissReasonLabel": "Begründung",
@@ -2104,9 +2289,12 @@ const de = {
       "PROCESS": "Prozess",
       "DOMAIN": "Domäne",
       "ORG_UNIT": "Team",
+      "CAPABILITY": "Fähigkeit",
     },
     "rules": {
       "MISSING_MANDATORY_FIELD": "Pflichtfeld ausfüllen",
+      "REVIEW_REALM_CREATION": "Neues Element in Ihrem Bereich prüfen",
+      "ROOT_PROCESS_DIVERGENT_PURPOSES": "Bearbeitungstätigkeit womöglich zu grob geschnitten",
       "MISSING_OWNER": "Verantwortliche Person zuweisen",
       "MISSING_STEWARD": "Betreuer zuweisen",
       "NO_LEGAL_BASIS": "Rechtsgrundlage für Personendaten erfassen",
@@ -2160,6 +2348,8 @@ const de = {
     "shown": "Sichtbar",
     "hidden": "Ausgeblendet",
     "mandatory": "Pflicht",
+    "requiredAtCreation": "Bei Erstellung erforderlich",
+    "requiredAtCreationHint": "Die Erstellung wird abgelehnt, wenn dieses Feld fehlt",
     "optional": "Optional",
     "area": {
       "DATA_GOVERNANCE": "Geschäftsobjekten",

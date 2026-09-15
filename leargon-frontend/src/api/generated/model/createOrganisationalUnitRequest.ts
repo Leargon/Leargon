@@ -20,6 +20,13 @@ import type { LocalizedText } from './localizedText.ts';
 
 export interface CreateOrganisationalUnitRequest {
   /**
+     * Why this unit is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
+  /**
      * Names for the organisational unit (at least one required)
      * @minItems 1
      */

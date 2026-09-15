@@ -15,8 +15,7 @@ import {
 import { Add, Search, CheckCircle, Warning, Business } from '@mui/icons-material';
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import { useTranslation } from 'react-i18next';
 import GroupedTreeList from '../common/GroupedTreeList';
 import { NO_GROUPING } from '../../hooks/useGroupByPreference';
@@ -34,8 +33,7 @@ const ServiceProviderListPanel: React.FC<ServiceProviderListPanelProps> = ({ sel
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'SERVICE_PROVIDER');
+  const canCreate = useCanCreate('SERVICE_PROVIDER');
   const { data: response, isLoading } = useGetAllServiceProviders({ query: { enabled: !isGrouped } });
   const providers = (response?.data as ServiceProviderResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');

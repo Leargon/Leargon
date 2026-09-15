@@ -28,4 +28,8 @@ class FieldConfiguration {
 
     @Column(name = "maturity_level", nullable = false, length = 10)
     var maturityLevel: String = "BASIC"
+
+    /** Only meaningful on a mandatory (SHOWN) row: the create endpoint rejects requests missing the field. */
+    @Column(name = "required_at_creation", nullable = false)
+    var requiredAtCreation: Boolean = false
 }

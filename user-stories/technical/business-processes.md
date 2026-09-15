@@ -1,5 +1,5 @@
 #### USER STORY 'Create business process'
-**AS A** logged in user\
+**AS AN** admin or PROCESS_GOVERNANCE editor/lead (anywhere), the owner of the bounded context or domain the process is placed in, or the effective owner/steward of the parent process (sub-process)\
 **IF** \
 **I WANT** to create a new business process by providing a name in at least one supported locale\
 **SO THAT** the process is registered in the data landscape, with me as the initial process owner

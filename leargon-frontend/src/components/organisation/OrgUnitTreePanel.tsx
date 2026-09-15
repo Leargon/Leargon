@@ -23,8 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useGetOrganisationalUnitTree } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import { useTranslation } from 'react-i18next';
 import GroupedTreeList from '../common/GroupedTreeList';
 import { NO_GROUPING } from '../../hooks/useGroupByPreference';
@@ -42,8 +41,7 @@ const OrgUnitTreePanel: React.FC<OrgUnitTreePanelProps> = ({ selectedKey, onCrea
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'ORGANISATIONAL_UNIT');
+  const canCreate = useCanCreate('ORGANISATIONAL_UNIT');
   const { data: treeResponse, isLoading } = useGetOrganisationalUnitTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as OrganisationalUnitTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');

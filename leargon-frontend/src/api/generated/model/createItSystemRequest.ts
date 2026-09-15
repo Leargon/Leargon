@@ -19,6 +19,13 @@
 import type { LocalizedText } from './localizedText.ts';
 
 export interface CreateItSystemRequest {
+  /**
+     * Why this IT system is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
   /** @minItems 1 */
   names: LocalizedText[];
   descriptions?: LocalizedText[];

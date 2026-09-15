@@ -16,6 +16,14 @@ const USERS = [
     password: 'ViewerPass123!',
     state: '.auth/viewer.json',
   },
+  {
+    // A plain ROLE_USER who owns domains / bounded contexts created for the realm-creation specs. Kept
+    // separate from e2eowner so realm ownership never leaks "New" buttons into the owner-persona specs.
+    email: 'e2e-realm@test.local',
+    username: 'e2erealm',
+    password: 'RealmPass123!',
+    state: '.auth/realm-owner.json',
+  },
 ];
 
 function writeStorageState(stateFile: string, accessToken: string, user: unknown): void {

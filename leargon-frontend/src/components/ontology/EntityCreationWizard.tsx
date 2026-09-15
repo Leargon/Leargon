@@ -18,18 +18,19 @@ import { useNavigate } from 'react-router-dom';
 import {
   useCreateBusinessEntity,
   getGetBusinessEntityTreeQueryKey,
-  useAssignBoundedContextToBusinessEntity,
-  useAssignClassificationsToEntity,
   useGetBusinessEntityByKey,
-  useUpdateBusinessEntityDataSteward,
-  useUpdateBusinessEntityTechnicalCustodian,
 } from '../../api/generated/business-entity/business-entity';
+import { useGetCreationTargets } from '../../api/generated/creation/creation';
+import type { CreationTargetsResponse } from '../../api/generated/model/creationTargetsResponse';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useAuth } from '../../context/AuthContext';
+import AdvisorPanel from '../advisor/AdvisorPanel';
+import { useAdvisorDecision } from '../../hooks/useAdvisorDecision';
 import type {
+  AdvisorRelationshipPrefill,
   LocalizedText,
   BusinessEntityResponse,
   SupportedLocaleResponse,
@@ -41,6 +42,12 @@ import type {
 import { ClassificationAssignableTo } from '../../api/generated/model';
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
+import RequiredAtCreationHint, { requiredAtCreationMissing, useFieldLabels } from '../common/RequiredAtCreationHint';
+import DuplicateCandidatesPanel, {
+  EMPTY_DUPLICATE_RESOLUTION,
+  isDuplicateConflict,
+  type DuplicateResolution,
+} from '../common/DuplicateCandidatesPanel';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useLocale } from '../../context/LocaleContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
@@ -54,6 +61,7 @@ interface BoundedContextOption {
 interface EntityCreationWizardProps {
   open: boolean;
   onClose: () => void;
+  /** Opened via "Add child": the entity the new one would be a child of — the first step checks whether it should be. */
   parentKey?: string;
 }
 
@@ -65,10 +73,10 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createEntity = useCreateBusinessEntity();
-  const assignBc = useAssignBoundedContextToBusinessEntity();
-  const assignClassifications = useAssignClassificationsToEntity();
-  const updateSteward = useUpdateBusinessEntityDataSteward();
-  const updateCustodian = useUpdateBusinessEntityTechnicalCustodian();
+  // Where the user may place a new entity — decided by the backend creation policy (realms included).
+  const { data: targetsResponse } = useGetCreationTargets({ itemType: 'BUSINESS_ENTITY' }, { query: { enabled: open } });
+  const targets = targetsResponse?.data as CreationTargetsResponse | undefined;
+  const fieldLabelsOf = useFieldLabels('BUSINESS_ENTITY');
 
   const isHidden = useWizardHiddenFields('BUSINESS_ENTITY');
 
@@ -84,21 +92,39 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     (c) => c.assignableTo === ClassificationAssignableTo.BUSINESS_ENTITY,
   );
 
-  const { data: parentEntityResponse } = useGetBusinessEntityByKey(parentKey!, {
-    query: { enabled: !!parentKey },
+  // Advisor panel (child of an entity, or a root entity with a relationship, …): an allowed recommendation sets
+  // the placement, the relationship or the interface link.
+  const decision = useAdvisorDecision((prefill) => {
+    setRelationship(prefill?.relationship ?? null);
+    setCreateRelationship(true);
+    setInterfaceKey(prefill?.connectionType === 'INTERFACE' ? prefill.relatedItemKey ?? null : null);
+    if (prefill?.boundedContextKey) setBoundedContextKey(prefill.boundedContextKey);
   });
-  const parentEntity = parentKey ? (parentEntityResponse?.data as any) : undefined;
+  const decided = decision.decided;
+  const effectiveParentKey = decided ? decided.parentKey ?? undefined : parentKey;
+
+  const { data: parentEntityResponse } = useGetBusinessEntityByKey(effectiveParentKey ?? '', {
+    query: { enabled: !!effectiveParentKey },
+  });
+  const parentEntity = effectiveParentKey ? (parentEntityResponse?.data as any) : undefined;
 
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
 
-  // Build flat list of bounded contexts from all domains
-  const bcOptions: BoundedContextOption[] = allDomains.flatMap((d: any) =>
-    (d.boundedContexts || []).map((bc: any) => ({
-      key: bc.key,
-      domainKey: d.key,
-      label: `${bc.name || bc.key} (${d.key})`,
-    })),
-  );
+  // Build flat list of bounded contexts from all domains, restricted to the user's creation targets unless
+  // they may create anywhere (admin / methodology editor).
+  const allowedBcKeys = targets && !targets.unrestricted ? new Set(targets.boundedContexts.map((b) => b.key)) : null;
+  const bcOptions: BoundedContextOption[] = allDomains
+    .flatMap((d: any) =>
+      (d.boundedContexts || []).map((bc: any) => ({
+        key: bc.key,
+        domainKey: d.key,
+        label: `${bc.name || bc.key} (${d.key})`,
+      })),
+    )
+    .filter((bc: BoundedContextOption) => !allowedBcKeys || allowedBcKeys.has(bc.key));
+  // "None" is only a valid choice for children (they inherit the parent's context) or for users who may
+  // create unplaced entities.
+  const canLeaveUnplaced = !!effectiveParentKey || !!decided?.owningUnitKey || !targets || targets.canCreateUnplaced;
 
   // Step 1 — Identity
   const [names, setNames] = useState<LocalizedText[]>([]);
@@ -122,6 +148,16 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     }
   }, [open, parentEntity?.dataOwner?.username, parentEntity?.dataSteward?.username, parentEntity?.technicalCustodian?.username, parentEntity?.boundedContext?.key, allUsers.length]);
 
+  // Step — Relationship (root entity with a relationship) / interface link (specialisation): both are created in
+  // the same request as the entity.
+  const [relationship, setRelationship] = useState<AdvisorRelationshipPrefill | null>(null);
+  const [createRelationship, setCreateRelationship] = useState(true);
+  const [interfaceKey, setInterfaceKey] = useState<string | null>(null);
+  const relatedKey = relationship?.relatedEntityKey ?? interfaceKey ?? '';
+  const { data: relatedEntityResponse } = useGetBusinessEntityByKey(relatedKey, { query: { enabled: !!relatedKey } });
+  const relatedEntity = relatedKey ? (relatedEntityResponse?.data as BusinessEntityResponse | undefined) : undefined;
+  const relatedName = relatedEntity ? getLocalizedText(relatedEntity.names, relatedEntity.key) : relatedKey;
+
   // Step 4 — Personal data (typed GDPR facts) + Classifications
   const [containsPersonalData, setContainsPersonalData] = useState<boolean | null>(null);
   const [entityRole, setEntityRole] = useState<string>('');
@@ -129,6 +165,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateResolution>(EMPTY_DUPLICATE_RESOLUTION);
 
   const hasDefaultName = names.some((n) => n.locale === defaultLocale && n.text.trim());
 
@@ -155,52 +192,54 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     setError(null);
     setIsSubmitting(true);
     try {
+      // One atomic request: once ownership is delegated, follow-up edits by the creator may be refused.
       const response = await createEntity.mutateAsync({
         data: {
           names: names.filter((n) => n.text.trim()),
           descriptions: descriptions.filter((d) => d.text.trim()),
           dataOwnerUsername: dataOwner?.username || user?.username || undefined,
-          parentKey: parentKey || null,
+          parentKey: effectiveParentKey || null,
+          boundedContextKey: boundedContextKey || undefined,
+          owningUnitKey: !boundedContextKey && decided?.owningUnitKey ? decided.owningUnitKey : undefined,
+          interfaces: interfaceKey ? [interfaceKey] : undefined,
+          dataStewardUsername: dataSteward?.username || undefined,
+          technicalCustodianUsername: technicalCustodian?.username || undefined,
+          classificationAssignments: assignments.length > 0 ? assignments : undefined,
+          acknowledgedDuplicateKeys: duplicates.acknowledgedKeys.length > 0 ? duplicates.acknowledgedKeys : undefined,
+          duplicateJustification: duplicates.justification.trim()
+            ? [{ locale: defaultLocale, text: duplicates.justification.trim() }]
+            : undefined,
           containsPersonalData: containsPersonalData,
           entityRole: (entityRole || undefined) as CreateBusinessEntityRequest['entityRole'],
+          relationships:
+            relationship && createRelationship
+              ? [
+                  {
+                    secondEntityKey: relationship.relatedEntityKey,
+                    firstCardinalityMinimum: relationship.firstCardinalityMinimum,
+                    firstCardinalityMaximum: relationship.firstCardinalityMaximum ?? null,
+                    secondCardinalityMinimum: relationship.secondCardinalityMinimum,
+                    secondCardinalityMaximum: relationship.secondCardinalityMaximum ?? null,
+                  },
+                ]
+              : undefined,
         },
       });
       const newEntity = response.data as BusinessEntityResponse;
-
-      if (boundedContextKey) {
-        await assignBc.mutateAsync({
-          key: newEntity.key,
-          data: { boundedContextKey },
-        });
-      }
-
-      if (assignments.length > 0) {
-        await assignClassifications.mutateAsync({
-          key: newEntity.key,
-          data: assignments,
-        });
-      }
-
-      if (dataSteward?.username) {
-        await updateSteward.mutateAsync({
-          key: newEntity.key,
-          data: { dataStewardUsername: dataSteward.username },
-        });
-      }
-
-      if (technicalCustodian?.username) {
-        await updateCustodian.mutateAsync({
-          key: newEntity.key,
-          data: { technicalCustodianUsername: technicalCustodian.username },
-        });
-      }
 
       queryClient.invalidateQueries({ queryKey: getGetBusinessEntityTreeQueryKey() });
       resetForm();
       onClose();
       navigate(`/entities/${newEntity.key}`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || t('wizard.entity.errorFailed'));
+      const missing = requiredAtCreationMissing(err);
+      setError(
+        missing
+          ? t('wizard.requiredMissing', { fields: fieldLabelsOf(missing).join(', ') })
+          : isDuplicateConflict(err)
+            ? t('wizard.duplicatesBlocking')
+            : err?.response?.data?.message || err?.message || t('wizard.entity.errorFailed'),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -216,6 +255,11 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     setContainsPersonalData(null);
     setEntityRole('');
     setAssignments([]);
+    setRelationship(null);
+    setCreateRelationship(true);
+    setInterfaceKey(null);
+    decision.reset();
+    setDuplicates(EMPTY_DUPLICATE_RESOLUTION);
     setError(null);
   };
 
@@ -241,11 +285,18 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {parentKey && (
+          <AdvisorPanel
+            ruleSetCode="ENTITY_PLACEMENT"
+            contextItemKey={parentKey}
+            decision={decision}
+            hint={parentKey ? t('wizard.entity.guidedDecisionChildText') : undefined}
+          />
+          <RequiredAtCreationHint entityType="BUSINESS_ENTITY" requiredFields={targets?.requiredFields} />
+          {effectiveParentKey && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              {t('wizard.entity.parentKeyDisplay', { key: parentKey })}
+              {t('wizard.entity.parentKeyDisplay', { key: effectiveParentKey })}
             </Typography>
           )}
           <TranslationEditor
@@ -254,6 +305,14 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
             descriptions={descriptions}
             onNamesChange={setNames}
             onDescriptionsChange={setDescriptions}
+          />
+          <DuplicateCandidatesPanel
+            itemType="BUSINESS_ENTITY"
+            names={names}
+            parentKey={effectiveParentKey}
+            boundedContextKey={boundedContextKey}
+            value={duplicates}
+            onChange={setDuplicates}
           />
         </Box>
       ),
@@ -281,12 +340,47 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
             onChange={(e: SelectChangeEvent) => setBoundedContextKey(e.target.value)}
             label={t('wizard.entity.bcLabel')}
           >
-            <MenuItem value=""><em>{t('wizard.entity.bcNone')}</em></MenuItem>
+            {canLeaveUnplaced && <MenuItem value=""><em>{t('wizard.entity.bcNone')}</em></MenuItem>}
             {bcOptions.map((bc) => (
               <MenuItem key={bc.key} value={bc.key}>{bc.label}</MenuItem>
             ))}
           </Select>
         </FormControl>
+      ),
+    },
+    !!relationship && {
+      id: 'relationship',
+      title: t('wizard.entity.stepRelationship'),
+      guidedExplanation: (
+        <Typography variant="body2">{t('wizard.entity.guidedRelationshipText')}</Typography>
+      ),
+      content: (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }} data-testid="wizard-relationship-step">
+          <FormControlLabel
+            control={<Checkbox checked={createRelationship} onChange={(e) => setCreateRelationship(e.target.checked)} />}
+            label={t('wizard.entity.relationshipTo', { name: relatedName })}
+          />
+          {createRelationship && (
+            <>
+              <CardinalityRow
+                label={t('wizard.entity.relationshipThisSide')}
+                minimum={relationship.firstCardinalityMinimum}
+                maximum={relationship.firstCardinalityMaximum}
+                onChange={(minimum, maximum) =>
+                  setRelationship({ ...relationship, firstCardinalityMinimum: minimum, firstCardinalityMaximum: maximum })
+                }
+              />
+              <CardinalityRow
+                label={relatedName}
+                minimum={relationship.secondCardinalityMinimum}
+                maximum={relationship.secondCardinalityMaximum}
+                onChange={(minimum, maximum) =>
+                  setRelationship({ ...relationship, secondCardinalityMinimum: minimum, secondCardinalityMaximum: maximum })
+                }
+              />
+            </>
+          )}
+        </Box>
       ),
     },
     {
@@ -439,8 +533,15 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <SummaryRow label={t('wizard.entity.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
-          <SummaryRow label={t('wizard.entity.summaryParent')} value={parentKey || '—'} />
+          <SummaryRow label={t('wizard.entity.summaryParent')} value={effectiveParentKey || '—'} />
+          {interfaceKey && <SummaryRow label={t('wizard.entity.summaryInterface')} value={relatedName} />}
           {!isHidden('boundedContext') && <SummaryRow label={t('wizard.entity.summaryBc')} value={boundedContextKey || '—'} />}
+          {relationship && createRelationship && (
+            <SummaryRow
+              label={t('wizard.entity.summaryRelationship')}
+              value={`${relatedName} [${relationship.secondCardinalityMinimum}..${relationship.secondCardinalityMaximum ?? '*'}] — [${relationship.firstCardinalityMinimum}..${relationship.firstCardinalityMaximum ?? '*'}]`}
+            />
+          )}
           <SummaryRow label={t('wizard.entity.summaryOwner')} value={dataOwner ? `${dataOwner.firstName} ${dataOwner.lastName}` : t('wizard.entity.summaryOwnerDefault', { username: user?.username || '' })} />
           {!isHidden('dataSteward') && <SummaryRow label={t('wizard.entity.summarySteward')} value={dataSteward ? `${dataSteward.firstName} ${dataSteward.lastName}` : '—'} />}
           {!isHidden('technicalCustodian') && <SummaryRow label={t('wizard.entity.summaryCustodian')} value={technicalCustodian ? `${technicalCustodian.firstName} ${technicalCustodian.lastName}` : '—'} />}
@@ -460,7 +561,7 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
     <WizardDialog
       open={open}
       onClose={handleClose}
-      title={parentKey ? t('wizard.entity.titleChild') : t('wizard.entity.title')}
+      title={effectiveParentKey ? t('wizard.entity.titleChild') : t('wizard.entity.title')}
       steps={steps}
       mode={mode}
       onFinish={handleFinish}
@@ -468,6 +569,37 @@ const EntityCreationWizard: React.FC<EntityCreationWizardProps> = ({ open, onClo
       error={error}
       canFinish={hasDefaultName}
     />
+  );
+};
+
+/** One side of the relationship: min and max (empty max = many). */
+const CardinalityRow: React.FC<{
+  label: string;
+  minimum: number;
+  maximum?: number | null;
+  onChange: (minimum: number, maximum: number | null) => void;
+}> = ({ label, minimum, maximum, onChange }) => {
+  const { t } = useTranslation();
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Typography variant="body2" sx={{ minWidth: 130, flexShrink: 0 }}>{label}</Typography>
+      <TextField
+        size="small"
+        type="number"
+        label={t('wizard.entity.cardinalityMin')}
+        value={minimum}
+        onChange={(e) => onChange(Math.max(0, parseInt(e.target.value, 10) || 0), maximum ?? null)}
+        sx={{ width: 100 }}
+      />
+      <TextField
+        size="small"
+        type="number"
+        label={t('wizard.entity.cardinalityMax')}
+        value={maximum ?? ''}
+        onChange={(e) => onChange(minimum, e.target.value === '' ? null : Math.max(1, parseInt(e.target.value, 10) || 1))}
+        sx={{ width: 160 }}
+      />
+    </Box>
   );
 };
 

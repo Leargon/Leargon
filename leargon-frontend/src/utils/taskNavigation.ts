@@ -12,6 +12,7 @@ const RESOURCE_TYPE_PATHS: Record<string, string> = {
   PROCESS: '/processes',
   DOMAIN: '/domains',
   ORG_UNIT: '/organisation',
+  CAPABILITY: '/capabilities',
 };
 
 /** Detail-panel tab index per methodology section, per resource type. Anything unlisted opens tab 0. */

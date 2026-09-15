@@ -38,6 +38,11 @@ class BusinessDomain {
     @JoinColumn(name = "owning_unit_id")
     var owningUnit: OrganisationalUnit? = null
 
+    /** Explicit accountable owner; when unset, ownership is inherited (see [effectiveOwner]). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    var owner: User? = null
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
@@ -87,9 +92,34 @@ class BusinessDomain {
 
     fun getEffectiveType(): String? = type ?: parent?.type
 
-    fun effectiveOwner(): User? = owningUnit?.businessOwner
+    /** This domain followed by its ancestors, nearest first (cycle-guarded). */
+    fun selfAndAncestors(): List<BusinessDomain> {
+        val chain = mutableListOf<BusinessDomain>()
+        var current: BusinessDomain? = this
+        while (current != null && chain.none { it === current }) {
+            chain.add(current)
+            current = current.parent
+        }
+        return chain
+    }
 
-    fun effectiveSteward(): User? = owningUnit?.businessSteward
+    /**
+     * The accountable owner: the explicit [owner], else the owning unit's business owner, else the
+     * parent domain's effective owner (walked up the domain tree).
+     */
+    fun effectiveOwner(): User? = selfAndAncestors().firstNotNullOfOrNull { it.owner ?: it.owningUnit?.businessOwner }
+
+    /** Domains carry no steward person: the owning unit's steward, inherited up the domain tree. */
+    fun effectiveSteward(): User? = selfAndAncestors().firstNotNullOfOrNull { it.owningUnit?.businessSteward }
+
+    /** The owning unit, inherited up the domain tree. */
+    fun effectiveOwningUnit(): OrganisationalUnit? = selfAndAncestors().firstNotNullOfOrNull { it.owningUnit }
+
+    /**
+     * Everyone whose realm contains this domain: the effective owner of this domain and of every
+     * ancestor domain. A parent-domain owner keeps creation rights in a subdomain that has its own owner.
+     */
+    fun realmOwners(): List<User> = selfAndAncestors().mapNotNull { it.effectiveOwner() }.distinctBy { it.id }
 
     fun getName(locale: String): String = names.textForLocale(locale, key)
 

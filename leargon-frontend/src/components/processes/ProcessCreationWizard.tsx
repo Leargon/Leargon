@@ -20,13 +20,12 @@ import {
   useCreateProcess,
   getGetAllProcessesQueryKey,
   getGetProcessTreeQueryKey,
-  useAssignExecutingUnits,
   useGetProcessByKey,
-  useUpdateProcessSteward,
-  useUpdateProcessTechnicalCustodian,
-  useUpdateProcessLegalBasis,
-  useUpdateProcessPurpose,
 } from '../../api/generated/process/process';
+import { useGetCreationTargets } from '../../api/generated/creation/creation';
+import { useGetAllBusinessDomains } from '../../api/generated/business-domain/business-domain';
+import type { CreationTargetsResponse } from '../../api/generated/model/creationTargetsResponse';
+import type { BusinessDomainResponse } from '../../api/generated/model/businessDomainResponse';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetAllBusinessEntities } from '../../api/generated/business-entity/business-entity';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
@@ -44,6 +43,14 @@ import type {
 } from '../../api/generated/model';
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
+import AdvisorPanel from '../advisor/AdvisorPanel';
+import { useAdvisorDecision } from '../../hooks/useAdvisorDecision';
+import RequiredAtCreationHint, { requiredAtCreationMissing, useFieldLabels } from '../common/RequiredAtCreationHint';
+import DuplicateCandidatesPanel, {
+  EMPTY_DUPLICATE_RESOLUTION,
+  isDuplicateConflict,
+  type DuplicateResolution,
+} from '../common/DuplicateCandidatesPanel';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
 import { useLocale } from '../../context/LocaleContext';
@@ -61,6 +68,7 @@ const PROCESS_TYPE_KEYS: Record<string, string> = {
 interface ProcessCreationWizardProps {
   open: boolean;
   onClose: () => void;
+  /** Opened via "Add sub-process": the process the new one would be a step of. */
   parentProcessKey?: string;
 }
 
@@ -72,11 +80,26 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createProcess = useCreateProcess();
-  const assignExecutingUnits = useAssignExecutingUnits();
-  const updateSteward = useUpdateProcessSteward();
-  const updateCustodian = useUpdateProcessTechnicalCustodian();
-  const updateLegalBasis = useUpdateProcessLegalBasis();
-  const updatePurpose = useUpdateProcessPurpose();
+  // Where the user may place a new process — decided by the backend creation policy (realms included).
+  const { data: targetsResponse } = useGetCreationTargets({ itemType: 'BUSINESS_PROCESS' }, { query: { enabled: open } });
+  const targets = targetsResponse?.data as CreationTargetsResponse | undefined;
+  const fieldLabelsOf = useFieldLabels('BUSINESS_PROCESS');
+  // Advisor panel (sub-process, own processing activity, reusable process, …): an allowed recommendation sets
+  // the parent and the bounded context.
+  const decision = useAdvisorDecision((prefill) => {
+    if (prefill?.boundedContextKey) setBoundedContextKey(prefill.boundedContextKey);
+  });
+  const decided = decision.decided;
+  const effectiveParentKey = decided ? decided.parentKey ?? undefined : parentProcessKey;
+  const { data: domainsResponse } = useGetAllBusinessDomains({ query: { enabled: open } });
+  const allDomains = (domainsResponse?.data as BusinessDomainResponse[] | undefined) || [];
+  const allowedBcKeys = targets && !targets.unrestricted ? new Set(targets.boundedContexts.map((b) => b.key)) : null;
+  const bcOptions = allDomains
+    .flatMap((d) => (d.boundedContexts || []).map((bc) => ({ key: bc.key, label: `${bc.name || bc.key} (${d.key})` })))
+    .filter((bc) => !allowedBcKeys || allowedBcKeys.has(bc.key));
+  // A sub-process inherits its parent's bounded context; a top-level process may stay unplaced only for
+  // users who may create unplaced processes.
+  const canLeaveUnplaced = !!decided?.owningUnitKey || !targets || targets.canCreateUnplaced;
 
   const { data: localesResponse } = useGetSupportedLocales();
   const locales = (localesResponse?.data as SupportedLocaleResponse[] | undefined) || [];
@@ -87,10 +110,10 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
   const { data: usersResponse } = useGetAssignableUsers();
   const allUsers = (usersResponse?.data as UserSummaryResponse[] | undefined) || [];
 
-  const { data: parentProcessResponse } = useGetProcessByKey(parentProcessKey!, {
-    query: { enabled: !!parentProcessKey && open },
+  const { data: parentProcessResponse } = useGetProcessByKey(effectiveParentKey ?? '', {
+    query: { enabled: !!effectiveParentKey && open },
   });
-  const parentProcess = parentProcessKey ? (parentProcessResponse?.data as ProcessResponse | undefined) : undefined;
+  const parentProcess = effectiveParentKey ? (parentProcessResponse?.data as ProcessResponse | undefined) : undefined;
 
   const isHidden = useWizardHiddenFields('BUSINESS_PROCESS');
 
@@ -101,6 +124,9 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
   const [descriptions, setDescriptions] = useState<LocalizedText[]>([]);
   const [code, setCode] = useState('');
   const [processType, setProcessType] = useState<string>('');
+
+  // Step — Placement (top-level processes only)
+  const [boundedContextKey, setBoundedContextKey] = useState('');
 
   // Step 2 — Ownership
   const [processOwner, setProcessOwner] = useState<UserSummaryResponse | null>(null);
@@ -118,6 +144,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateResolution>(EMPTY_DUPLICATE_RESOLUTION);
 
   const hasDefaultName = names.some((n) => n.locale === defaultLocale && n.text.trim());
 
@@ -146,6 +173,8 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     setError(null);
     setIsSubmitting(true);
     try {
+      // One atomic request: once ownership is delegated, follow-up edits by the creator may be refused.
+      const trimmedPurpose = purpose.trim();
       const response = await createProcess.mutateAsync({
         data: {
           names: names.filter((n) => n.text.trim()),
@@ -153,48 +182,23 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
           code: code.trim() || undefined,
           processType: (processType as ProcessType) || undefined,
           processOwnerUsername: processOwner?.username || undefined,
+          processStewardUsername: processSteward?.username || undefined,
+          technicalCustodianUsername: technicalCustodian?.username || undefined,
+          executingUnitKeys: executingUnitKeys.length > 0 ? executingUnitKeys : undefined,
           inputEntityKeys: inputEntityKeys.length > 0 ? inputEntityKeys : undefined,
           outputEntityKeys: outputEntityKeys.length > 0 ? outputEntityKeys : undefined,
-          parentProcessKey: parentProcessKey || null,
+          legalBasis: (legalBasis as LegalBasis) || undefined,
+          purpose: trimmedPurpose ? [{ locale: defaultLocale, text: trimmedPurpose }] : undefined,
+          boundedContextKey: !effectiveParentKey && boundedContextKey ? boundedContextKey : undefined,
+          owningUnitKey: !effectiveParentKey && !boundedContextKey && decided?.owningUnitKey ? decided.owningUnitKey : undefined,
+          parentProcessKey: effectiveParentKey || null,
+          acknowledgedDuplicateKeys: duplicates.acknowledgedKeys.length > 0 ? duplicates.acknowledgedKeys : undefined,
+          duplicateJustification: duplicates.justification.trim()
+            ? [{ locale: defaultLocale, text: duplicates.justification.trim() }]
+            : undefined,
         },
       });
       const newProcess = response.data as ProcessResponse;
-
-      if (executingUnitKeys.length > 0) {
-        await assignExecutingUnits.mutateAsync({
-          key: newProcess.key,
-          data: { keys: executingUnitKeys },
-        });
-      }
-
-      if (processSteward?.username) {
-        await updateSteward.mutateAsync({
-          key: newProcess.key,
-          data: { processStewardUsername: processSteward.username },
-        });
-      }
-
-      if (technicalCustodian?.username) {
-        await updateCustodian.mutateAsync({
-          key: newProcess.key,
-          data: { technicalCustodianUsername: technicalCustodian.username },
-        });
-      }
-
-      if (legalBasis) {
-        await updateLegalBasis.mutateAsync({
-          key: newProcess.key,
-          data: { legalBasis: legalBasis as LegalBasis },
-        });
-      }
-
-      const trimmedPurpose = purpose.trim();
-      if (trimmedPurpose) {
-        await updatePurpose.mutateAsync({
-          key: newProcess.key,
-          data: { purpose: [{ locale: defaultLocale, text: trimmedPurpose }] },
-        });
-      }
 
       queryClient.invalidateQueries({ queryKey: getGetAllProcessesQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetProcessTreeQueryKey() });
@@ -202,7 +206,14 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       onClose();
       navigate(`/processes/${newProcess.key}`);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || t('wizard.process.errorFailed'));
+      const missing = requiredAtCreationMissing(err);
+      setError(
+        missing
+          ? t('wizard.requiredMissing', { fields: fieldLabelsOf(missing).join(', ') })
+          : isDuplicateConflict(err)
+            ? t('wizard.duplicatesBlocking')
+            : err?.response?.data?.message || err?.message || t('wizard.process.errorFailed'),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -213,6 +224,8 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     setDescriptions([]);
     setCode('');
     setProcessType('');
+    setBoundedContextKey('');
+    setDuplicates(EMPTY_DUPLICATE_RESOLUTION);
     setProcessOwner(null);
     setProcessSteward(null);
     setTechnicalCustodian(null);
@@ -221,6 +234,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     setOutputEntityKeys([]);
     setLegalBasis('');
     setPurpose('');
+    decision.reset();
     setError(null);
   };
 
@@ -250,11 +264,13 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {parentProcessKey && (
+          <AdvisorPanel ruleSetCode="PROCESS_PLACEMENT" contextItemKey={parentProcessKey} decision={decision} />
+          <RequiredAtCreationHint entityType="BUSINESS_PROCESS" requiredFields={targets?.requiredFields} />
+          {effectiveParentKey && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              {t('wizard.process.parentKeyDisplay', { key: parentProcessKey })}
+              {t('wizard.process.parentKeyDisplay', { key: effectiveParentKey })}
             </Typography>
           )}
           <TranslationEditor
@@ -263,6 +279,14 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             descriptions={descriptions}
             onNamesChange={setNames}
             onDescriptionsChange={setDescriptions}
+          />
+          <DuplicateCandidatesPanel
+            itemType="BUSINESS_PROCESS"
+            names={names}
+            parentKey={effectiveParentKey}
+            boundedContextKey={effectiveParentKey ? undefined : boundedContextKey}
+            value={duplicates}
+            onChange={setDuplicates}
           />
           {!isHidden('code') && (
             <TextField
@@ -301,6 +325,33 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
             </>
           )}
         </Box>
+      ),
+    },
+    !effectiveParentKey && !isHidden('boundedContext') && {
+      id: 'placement',
+      title: t('wizard.process.stepPlacement'),
+      skippable: canLeaveUnplaced,
+      isValid: canLeaveUnplaced || !!boundedContextKey,
+      guidedExplanation: (
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>{t('wizard.process.guidedPlacementTitle')}</Typography>
+          <Typography variant="body2">{t('wizard.process.guidedPlacementText')}</Typography>
+        </Box>
+      ),
+      content: (
+        <FormControl size="small" fullWidth>
+          <InputLabel>{t('wizard.process.bcLabel')}</InputLabel>
+          <Select
+            value={boundedContextKey}
+            onChange={(e: SelectChangeEvent) => setBoundedContextKey(e.target.value)}
+            label={t('wizard.process.bcLabel')}
+          >
+            {canLeaveUnplaced && <MenuItem value=""><em>{t('wizard.process.bcNone')}</em></MenuItem>}
+            {bcOptions.map((bc) => (
+              <MenuItem key={bc.key} value={bc.key}>{bc.label}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       ),
     },
     {
@@ -513,8 +564,8 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
       title: t('wizard.process.stepSummary'),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {parentProcessKey && (
-            <SummaryRow label={t('wizard.process.summaryParent')} value={parentProcessKey} />
+          {effectiveParentKey && (
+            <SummaryRow label={t('wizard.process.summaryParent')} value={effectiveParentKey} />
           )}
           <SummaryRow label={t('wizard.process.summaryName')} value={names.find((n) => n.locale === defaultLocale)?.text || '—'} />
           {!isHidden('code') && <SummaryRow label={t('wizard.process.summaryCode')} value={code || t('wizard.process.summaryCodeAuto')} />}
@@ -536,7 +587,7 @@ const ProcessCreationWizard: React.FC<ProcessCreationWizardProps> = ({ open, onC
     <WizardDialog
       open={open}
       onClose={handleClose}
-      title={parentProcessKey ? t('wizard.process.titleSub') : t('wizard.process.title')}
+      title={effectiveParentKey ? t('wizard.process.titleSub') : t('wizard.process.title')}
       steps={steps}
       mode={mode}
       onFinish={handleFinish}

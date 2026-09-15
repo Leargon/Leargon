@@ -4,7 +4,6 @@ import jakarta.inject.Singleton
 import jakarta.transaction.Transactional
 import org.leargon.backend.domain.LocalizedText
 import org.leargon.backend.domain.ServiceProvider
-import org.leargon.backend.exception.DuplicateResourceException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.ServiceProviderMapper
 import org.leargon.backend.model.CreateServiceProviderRequest
@@ -51,6 +50,9 @@ open class ServiceProviderService(
         return mapper.toServiceProviderResponse(sp)
     }
 
+    @jakarta.inject.Inject
+    lateinit var duplicateCandidateService: DuplicateCandidateService
+
     @Transactional
     open fun create(request: CreateServiceProviderRequest): ServiceProviderResponse {
         validateServiceProviderIsoCodes(request.processingCountries)
@@ -67,10 +69,14 @@ open class ServiceProviderService(
                 ?: sp.names.firstOrNull()?.text
         val slug = SlugUtil.slugify(defaultName)
 
-        if (serviceProviderRepository.existsByKey(slug)) {
-            throw DuplicateResourceException("ServiceProvider with key '$slug' already exists")
-        }
-        sp.key = slug
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(CreationPolicyService.SERVICE_PROVIDER),
+            sp.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
+        val repo = serviceProviderRepository
+        sp.key = org.leargon.backend.util.KeyAllocator.allocate(slug) { repo.existsByKey(it) }
 
         val saved = serviceProviderRepository.save(sp)
         return serviceProviderMapper.toServiceProviderResponse(saved)
