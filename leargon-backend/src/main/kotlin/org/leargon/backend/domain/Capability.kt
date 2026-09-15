@@ -63,5 +63,23 @@ class Capability {
     @Column(name = "updated_at")
     var updatedAt: Instant? = null
 
+    /** This capability followed by its ancestors, nearest first (cycle-guarded). */
+    private fun selfAndAncestors(): List<Capability> {
+        val chain = mutableListOf<Capability>()
+        var current: Capability? = this
+        while (current != null && chain.none { it === current }) {
+            chain.add(current)
+            current = current.parent
+        }
+        return chain
+    }
+
+    /** The owning unit, inherited down the capability tree. */
+    fun effectiveOwningUnit(): OrganisationalUnit? = selfAndAncestors().firstNotNullOfOrNull { it.owningUnit }
+
+    fun effectiveOwner(): User? = selfAndAncestors().firstNotNullOfOrNull { it.owningUnit?.businessOwner }
+
+    fun effectiveSteward(): User? = selfAndAncestors().firstNotNullOfOrNull { it.owningUnit?.businessSteward }
+
     fun getName(locale: String): String = names.textForLocale(locale, key)
 }

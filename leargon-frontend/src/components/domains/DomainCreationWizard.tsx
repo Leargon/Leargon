@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -30,6 +31,8 @@ import type {
 } from '../../api/generated/model';
 import TranslationEditor from '../common/TranslationEditor';
 import WizardDialog from '../common/WizardDialog';
+import AdvisorPanel from '../advisor/AdvisorPanel';
+import { useAdvisorDecision } from '../../hooks/useAdvisorDecision';
 import { useWizardMode } from '../../context/WizardModeContext';
 import { useWizardHiddenFields } from '../../hooks/useWizardHiddenFields';
 import { useLocale } from '../../context/LocaleContext';
@@ -39,6 +42,7 @@ const DOMAIN_TYPE_VALUES = ['BUSINESS', 'GENERIC', 'SUPPORT', 'CORE'] as const;
 interface DomainCreationWizardProps {
   open: boolean;
   onClose: () => void;
+  /** Opened via "Add subdomain": the domain the new one would be a sub-area of. */
   parentKey?: string;
 }
 
@@ -92,6 +96,14 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasDefaultName = names.some((n) => n.locale === defaultLocale && n.text.trim());
+
+  // Advisor panel (new area, subdomain, or a team's model boundary): a recommended domain placement sets the
+  // parent; a recommended bounded context is added on its domain's page instead (see the panel's action).
+  const decision = useAdvisorDecision((prefill) => {
+    if (prefill?.itemType === 'BUSINESS_DOMAIN') setSelectedParentKey(prefill.parentKey ?? '');
+  });
+  const recommendedContextDomain =
+    decision.decided?.itemType === 'BOUNDED_CONTEXT' ? decision.decided.domainKey ?? decision.decided.parentKey : null;
 
   const handleFinish = async () => {
     if (!hasDefaultName) {
@@ -149,6 +161,7 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
     setVisionText('');
     setBcName('');
     setBcOwningTeamKey('');
+    decision.reset();
     setError(null);
   };
 
@@ -177,11 +190,31 @@ const DomainCreationWizard: React.FC<DomainCreationWizardProps> = ({ open, onClo
       ),
       content: (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {parentKey && (
+          <AdvisorPanel
+            ruleSetCode="DOMAIN_PLACEMENT"
+            contextItemKey={parentKey}
+            decision={decision}
+            action={
+              recommendedContextDomain ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => {
+                    handleClose();
+                    navigate(`/domains/${recommendedContextDomain}?addContext=1`);
+                  }}
+                  data-testid="advisor-add-context"
+                >
+                  {t('advisor.addContextThere')}
+                </Button>
+              ) : undefined
+            }
+          />
+          {selectedParentKey && (
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              {t('wizard.domain.parentKeyDisplay', { key: parentKey })}
+              {t('wizard.domain.parentKeyDisplay', { key: selectedParentKey })}
             </Typography>
           )}
           <TranslationEditor

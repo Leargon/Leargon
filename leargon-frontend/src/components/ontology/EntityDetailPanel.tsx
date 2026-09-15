@@ -78,7 +78,7 @@ import { useGetAllProcesses } from '../../api/generated/process/process';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
+import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { ENTITY_TABS_BY_PERSPECTIVE, ENTITY_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -97,8 +97,7 @@ import QualityRulesSection from './QualityRulesSection';
 import MissingFieldsBanner from '../common/MissingFieldsBanner';
 import NudgeBanner from '../common/NudgeBanner';
 import WhatNextBanner from '../common/WhatNextBanner';
-import EntityCreationWizard from './EntityCreationWizard';
-import type {
+import EntityCreationWizard from './EntityCreationWizard';import type {
   LocalizedText,
   ClassificationAssignmentRequest,
   BusinessEntityVersionResponse,
@@ -276,9 +275,9 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     });
     queryClient.invalidateQueries({ queryKey: getGetBusinessEntityByKeyQueryKey(entityKey) });
   };
-  // Lifecycle management of this entity (create a child under it, or delete it): an admin /
-  // DATA_GOVERNANCE editor-lead, or this entity's owner/steward.
-  const canManage = canCreateChild(user?.roles, 'BUSINESS_ENTITY', user?.username, entity?.dataOwner?.username, entity?.dataSteward?.username);
+  // Lifecycle affordances come from the backend creation/delete policy (realm ownership included).
+  const canAddChild = entity?.creatableChildTypes?.includes('BUSINESS_ENTITY') ?? false;
+  const canDelete = entity?.canDelete ?? false;
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
       await setFieldVerification.mutateAsync({ key: entityKey, data: { fieldName, status } });
@@ -543,12 +542,11 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           {dpia && <Chip label={t('entity.dpiaActive')} size="small" color="secondary" />}
         </>}
         actions={<>
-          {canManage && (
+          {canAddChild && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               {t('common.addChildEntity')}
             </Button>
-          )}
-          {canManage && (
+          )}          {canDelete && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               {t('common.delete')}
             </Button>

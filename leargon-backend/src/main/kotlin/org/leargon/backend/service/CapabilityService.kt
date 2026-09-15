@@ -5,7 +5,6 @@ import jakarta.transaction.Transactional
 import org.leargon.backend.domain.Capability
 import org.leargon.backend.domain.ClassificationAssignment
 import org.leargon.backend.domain.LocalizedText
-import org.leargon.backend.exception.DuplicateResourceException
 import org.leargon.backend.exception.ResourceNotFoundException
 import org.leargon.backend.mapper.CapabilityMapper
 import org.leargon.backend.model.CapabilityResponse
@@ -43,6 +42,9 @@ open class CapabilityService(
         return capabilityMapper.toCapabilityResponse(capability)
     }
 
+    @jakarta.inject.Inject
+    lateinit var duplicateCandidateService: DuplicateCandidateService
+
     @Transactional
     open fun create(request: CreateCapabilityRequest): CapabilityResponse {
         val capability = Capability()
@@ -54,11 +56,16 @@ open class CapabilityService(
             capability.names.find { it.locale == defaultLocale?.localeCode }?.text
                 ?: capability.names.firstOrNull()?.text
         val slug = SlugUtil.slugify(defaultName)
-
-        if (capabilityRepository.existsByKey(slug)) {
-            throw DuplicateResourceException("Capability with key '$slug' already exists")
-        }
-        capability.key = slug
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(CreationPolicyService.CAPABILITY, parentKey = request.parentCapabilityKey),
+            capability.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
+        val repo = capabilityRepository
+        capability.key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(slug) { repo.existsByKey(it) }
 
         if (request.parentCapabilityKey != null) {
             capability.parent =

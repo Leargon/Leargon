@@ -16,6 +16,8 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { ClassificationAssignmentRequest } from './classificationAssignmentRequest.ts';
+import type { LegalBasis } from './legalBasis.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { ProcessType } from './processType.ts';
 
@@ -43,6 +45,47 @@ export interface CreateProcessRequest {
      * @nullable
      */
   owningUnitKey?: string | null;
+  /**
+     * Bounded context the process is placed in. A sub-process inherits its parent's bounded context when omitted. The placement decides who may create the process (see creation policy).
+     * @nullable
+     */
+  boundedContextKey?: string | null;
+  /**
+     * Username of the process steward, set atomically at creation
+     * @nullable
+     */
+  processStewardUsername?: string | null;
+  /**
+     * Why this process is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /**
+     * Keys of the blocking duplicate candidates the creator has reviewed
+     * @nullable
+     */
+  acknowledgedDuplicateKeys?: string[] | null;
+  /**
+     * Username of the technical custodian, set atomically at creation
+     * @nullable
+     */
+  technicalCustodianUsername?: string | null;
+  /**
+     * Keys of the organisational units executing the process, set atomically at creation
+     * @nullable
+     */
+  executingUnitKeys?: string[] | null;
+  legalBasis?: LegalBasis | null;
+  /**
+     * Purpose of the processing (localised), set atomically at creation
+     * @nullable
+     */
+  purpose?: LocalizedText[] | null;
+  /**
+     * Classification values assigned atomically at creation (validated like the assignment endpoint)
+     * @nullable
+     */
+  classificationAssignments?: ClassificationAssignmentRequest[] | null;
   /** Keys of business entities to add as inputs */
   inputEntityKeys?: string[];
   /** Keys of business entities to add as outputs */

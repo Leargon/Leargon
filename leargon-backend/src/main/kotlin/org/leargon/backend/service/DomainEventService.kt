@@ -21,6 +21,7 @@ import org.leargon.backend.repository.DomainEventEntityLinkRepository
 import org.leargon.backend.repository.DomainEventProcessLinkRepository
 import org.leargon.backend.repository.DomainEventRepository
 import org.leargon.backend.repository.ProcessRepository
+import org.leargon.backend.util.KeyAllocator
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -33,7 +34,8 @@ open class DomainEventService(
     private val businessEntityRepository: BusinessEntityRepository,
     private val domainEventMapper: DomainEventMapper,
     private val roleService: RoleService,
-    private val defaultLocaleProvider: DefaultLocaleProvider
+    private val defaultLocaleProvider: DefaultLocaleProvider,
+    private val creationPolicyService: CreationPolicyService
 ) {
     /**
      * Managing a domain event requires an admin, a DDD editor/lead, or the owner/steward of the domain
@@ -80,7 +82,10 @@ open class DomainEventService(
             boundedContextRepository
                 .findByKey(request.publishingBoundedContextKey)
                 .orElseThrow { ResourceNotFoundException("BoundedContext not found: ${request.publishingBoundedContextKey}") }
-        requireManage(publishingBc, currentUser)
+        creationPolicyService.require(
+            currentUser,
+            CreationTarget(CreationPolicyService.DOMAIN_EVENT, boundedContextKey = request.publishingBoundedContextKey)
+        )
 
         val event = DomainEvent()
         event.publishingBoundedContext = publishingBc
@@ -91,7 +96,8 @@ open class DomainEventService(
         }
 
         val slug = SlugUtil.slugify(event.getName(defaultLocaleProvider.code()).ifBlank { "event" })
-        event.key = "${publishingBc.key}.$slug"
+        val repo = domainEventRepository
+        event.key = KeyAllocator.allocate("${publishingBc.key}.$slug") { repo.findByKey(it).isPresent }
 
         return domainEventRepository.save(event)
     }

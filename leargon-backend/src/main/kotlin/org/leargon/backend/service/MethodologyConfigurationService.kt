@@ -75,6 +75,7 @@ open class MethodologyConfigurationService(
                             "type",
                             "descriptions",
                             "owningUnit",
+                            "owner",
                             "section:DATA_GOVERNANCE",
                             "section:DDD",
                             "section:STRATEGIC",

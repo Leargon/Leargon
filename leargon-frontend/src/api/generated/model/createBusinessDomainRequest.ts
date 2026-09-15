@@ -38,4 +38,16 @@ export interface CreateBusinessDomainRequest {
      * @nullable
      */
   owningUnitKey?: string | null;
+  /**
+     * Username of the explicit domain owner (omit to inherit)
+     * @nullable
+     */
+  ownerUsername?: string | null;
+  /**
+     * Why this domain is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
 }

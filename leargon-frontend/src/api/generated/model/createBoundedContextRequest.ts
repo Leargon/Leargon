@@ -30,4 +30,16 @@ export interface CreateBoundedContextRequest {
      * @nullable
      */
   owningTeamKey?: string | null;
+  /**
+     * Username of the explicit bounded context owner (omit to inherit)
+     * @nullable
+     */
+  ownerUsername?: string | null;
+  /**
+     * Why this bounded context is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
 }

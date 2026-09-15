@@ -1,5 +1,5 @@
 #### USER STORY 'Create bounded context'
-**AS AN** admin\
+**AS AN** admin, a DDD editor/lead, or the owner of the domain (or of one of its parent domains)\
 **IF** \
 **I WANT** to create a bounded context by providing a name in at least one supported locale and assigning it to a business domain\
 **SO THAT** an explicit service boundary is defined within the domain and entities can be assigned to it

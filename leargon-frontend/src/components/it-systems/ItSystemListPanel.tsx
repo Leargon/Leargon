@@ -14,8 +14,7 @@ import {
 import { Add, Search, Storage } from '@mui/icons-material';
 import { useGetAllItSystems } from '../../api/generated/it-system/it-system';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import { useTranslation } from 'react-i18next';
 import GroupedTreeList from '../common/GroupedTreeList';
 import { NO_GROUPING } from '../../hooks/useGroupByPreference';
@@ -33,8 +32,7 @@ const ItSystemListPanel: React.FC<ItSystemListPanelProps> = ({ selectedKey, onCr
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'IT_SYSTEM');
+  const canCreate = useCanCreate('IT_SYSTEM');
   const { data: response, isLoading } = useGetAllItSystems({ query: { enabled: !isGrouped } });
   const systems = (response?.data as ItSystemResponse[] | undefined) ?? [];
   const [filter, setFilter] = useState('');

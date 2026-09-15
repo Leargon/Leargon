@@ -19,7 +19,8 @@ open class ContextRelationshipService(
     private val contextRelationshipMapper: ContextRelationshipMapper,
     private val boundedContextService: BoundedContextService,
     private val businessDomainService: BusinessDomainService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService
 ) {
     /**
      * Managing a context relationship requires an admin, a DDD editor/lead, or the owner/steward of one of
@@ -68,7 +69,14 @@ open class ContextRelationshipService(
     ): ContextRelationshipResponse {
         val upstream = boundedContextService.getByKey(request.upstreamBoundedContextKey)
         val downstream = boundedContextService.getByKey(request.downstreamBoundedContextKey)
-        requireManage(listOfNotNull(upstream.domain?.key, downstream.domain?.key).distinct(), currentUser)
+        creationPolicyService.require(
+            currentUser,
+            CreationTarget(
+                CreationPolicyService.CONTEXT_RELATIONSHIP,
+                boundedContextKey = upstream.key,
+                otherBoundedContextKey = downstream.key
+            )
+        )
         val rel =
             ContextRelationship().apply {
                 this.upstreamBoundedContext = upstream

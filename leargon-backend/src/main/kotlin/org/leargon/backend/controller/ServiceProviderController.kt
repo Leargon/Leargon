@@ -15,6 +15,8 @@ import org.leargon.backend.model.CreateServiceProviderRequest
 import org.leargon.backend.model.ServiceProviderResponse
 import org.leargon.backend.model.UpdateServiceProviderProcessLinksRequest
 import org.leargon.backend.model.UpdateServiceProviderRequest
+import org.leargon.backend.service.CreationPolicyService
+import org.leargon.backend.service.CreationTarget
 import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.ServiceProviderService
 import org.leargon.backend.service.UserService
@@ -25,16 +27,18 @@ open class ServiceProviderController(
     private val serviceProviderService: ServiceProviderService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService
 ) : ServiceProviderApi {
     override fun getAllServiceProviders(): List<ServiceProviderResponse> = serviceProviderService.getAll()
 
-    override fun getServiceProvider(key: String): ServiceProviderResponse = serviceProviderService.getByKey(key)
+    override fun getServiceProvider(key: String): ServiceProviderResponse =
+        serviceProviderService.getByKey(key).canEdit(roleService.isEditorFor(getCurrentUser(), "GDPR"))
 
     override fun createServiceProvider(
         @Valid @Body createServiceProviderRequest: CreateServiceProviderRequest
     ): HttpResponse<ServiceProviderResponse> {
-        roleService.requireCreateRoot(getCurrentUser(), "GDPR")
+        creationPolicyService.require(getCurrentUser(), CreationTarget(CreationPolicyService.SERVICE_PROVIDER))
         val response = serviceProviderService.create(createServiceProviderRequest)
         return HttpResponse.status<ServiceProviderResponse>(HttpStatus.CREATED).body(response)
     }

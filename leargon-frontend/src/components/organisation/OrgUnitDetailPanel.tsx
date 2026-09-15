@@ -73,7 +73,7 @@ import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import { useGetClassifications } from '../../api/generated/classification/classification';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canCreateChild, canCreateRoot } from '../../utils/roles';
+import { isEditorFor } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { ORG_UNIT_SECTIONS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -131,13 +131,13 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
   const isOwner = !!user?.username && user.username === unit?.businessOwner?.username;
   const isSteward = !!user?.username && user.username === unit?.businessSteward?.username;
   const hasBroadEdit = isAdmin || isOwner || isSteward;
-  // Lifecycle management of this unit (create a child under it, or delete it): an admin /
-  // TEAM_TOPOLOGIES editor-lead, or this unit's owner/steward.
-  const canManage = canCreateChild(user?.roles, 'ORGANISATIONAL_UNIT', user?.username, unit?.businessOwner?.username, unit?.businessSteward?.username);
+  // Lifecycle affordances come from the backend creation/delete policy (sub-units need rights on the parent).
+  const canAddChild = unit?.creatableChildTypes?.includes('ORGANISATIONAL_UNIT') ?? false;
+  const canDelete = unit?.canDelete ?? false;
   // Org-unit fields: owner/steward/admin or a TEAM_TOPOLOGIES editor/lead (the unit's governing methodology).
-  const canEditOrgUnit = hasBroadEdit || canCreateRoot(user?.roles, 'ORGANISATIONAL_UNIT');
+  const canEditOrgUnit = hasBroadEdit || isEditorFor(user?.roles, 'TEAM_TOPOLOGIES');
   // Assigning/unassigning a bounded context edits the bounded context (DDD), not the org unit.
-  const canAssignBc = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
+  const canAssignBc = isEditorFor(user?.roles, 'DDD');
   const setFieldVerification = useSetOrganisationalUnitFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -480,12 +480,12 @@ const OrgUnitDetailPanel: React.FC<OrgUnitDetailPanelProps> = ({ unitKey }) => {
           )}
         </>}
         actions={<>
-          {canManage && (
+          {canAddChild && (
             <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setCreateChildOpen(true)}>
               Add Child
             </Button>
           )}
-          {canManage && (
+          {canDelete && (
             <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)}>
               Delete
             </Button>

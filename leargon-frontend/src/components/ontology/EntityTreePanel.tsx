@@ -22,8 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useGetBusinessEntityTree } from '../../api/generated/business-entity/business-entity';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import type { BusinessEntityTreeResponse } from '../../api/generated/model';
 import GroupedTreeList from '../common/GroupedTreeList';
 import { NO_GROUPING } from '../../hooks/useGroupByPreference';
@@ -39,8 +38,7 @@ const EntityTreePanel: React.FC<EntityTreePanelProps> = ({ selectedKey, onCreate
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_ENTITY');
+  const canCreate = useCanCreate('BUSINESS_ENTITY');
   const isGrouped = groupBy !== NO_GROUPING;
   const { data: treeResponse, isLoading } = useGetBusinessEntityTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as BusinessEntityTreeResponse[] | undefined) || [];

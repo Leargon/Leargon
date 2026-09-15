@@ -30,4 +30,6 @@ export interface FieldConfigurationEntry {
   section?: string;
   /** Maturity level of the field */
   maturityLevel?: FieldConfigurationEntryMaturityLevel;
+  /** Only for mandatory (SHOWN) fields that are creation-capable: the create endpoint rejects a request that does not supply the field (422 REQUIRED_AT_CREATION_MISSING). */
+  requiredAtCreation?: boolean;
 }

@@ -20,6 +20,13 @@ import type { LocalizedText } from './localizedText.ts';
 import type { ServiceProviderType } from './serviceProviderType.ts';
 
 export interface CreateServiceProviderRequest {
+  /**
+     * Why this service provider is not a duplicate of the acknowledged candidates (localised)
+     * @nullable
+     */
+  duplicateJustification?: LocalizedText[] | null;
+  /** @nullable */
+  acknowledgedDuplicateKeys?: string[] | null;
   names: LocalizedText[];
   serviceProviderType?: ServiceProviderType;
   /** ISO 3166-1 alpha-2 country codes */

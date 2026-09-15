@@ -18,6 +18,7 @@
  */
 import type { BoundedContextResponseContextType } from './boundedContextResponseContextType.ts';
 import type { BusinessDomainSummaryResponse } from './businessDomainSummaryResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
 import type { UserSummaryResponse } from './userSummaryResponse.ts';
@@ -31,6 +32,20 @@ export interface BoundedContextResponse {
   domain: BusinessDomainSummaryResponse;
   createdBy?: UserSummaryResponse | null;
   owningTeam?: OrganisationalUnitSummaryResponse | null;
+  /** Explicitly assigned bounded context owner (null when inherited) */
+  owner?: UserSummaryResponse | null;
+  /** Resolved owner — explicit owner, else the owning team's business owner, else the domain's effective owner */
+  effectiveOwner?: UserSummaryResponse | null;
+  /**
+     * Item types the current user may create inside this bounded context (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
+  /**
+     * Fields of this bounded context the current user may edit (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  editableFields?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }

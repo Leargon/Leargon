@@ -16,6 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
+import type { CreationReviewInfo } from './creationReviewInfo.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { TaskItemPriority } from './taskItemPriority.ts';
 import type { TaskItemResourceType } from './taskItemResourceType.ts';
@@ -58,4 +59,10 @@ export interface TaskItem {
   dismissed: boolean;
   /** @nullable */
   dismissedReason?: string | null;
+  /**
+     * True for creation reviews, which are closed by acknowledging (not dismissing) them
+     * @nullable
+     */
+  acknowledgeable?: boolean | null;
+  creationReview?: CreationReviewInfo;
 }

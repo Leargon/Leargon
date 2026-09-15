@@ -27,6 +27,8 @@ class BusinessDomainFieldValueExtractor(
 
             fieldName == "owningUnit" -> entity.owningUnit?.key
 
+            fieldName == "owner" -> entity.owner?.username
+
             fieldName.startsWith("visionStatement.") -> FieldValueSupport.localized(entity.visionStatement, "visionStatement", fieldName)
 
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here

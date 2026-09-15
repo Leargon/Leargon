@@ -20,8 +20,7 @@ import { Add, Search, ExpandMore, ChevronRight, AccountTree } from '@mui/icons-m
 import { useGetAllCapabilities } from '../../api/generated/capability/capability';
 import { useGetAllOrganisationalUnits } from '../../api/generated/organisational-unit/organisational-unit';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import type { CapabilityResponse, CapabilitySummaryResponse, OrganisationalUnitResponse } from '../../api/generated/model';
 
 interface CapabilityListPanelProps {
@@ -36,8 +35,7 @@ const CapabilityListPanel: React.FC<CapabilityListPanelProps> = ({ selectedKey, 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText, localizedName } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'CAPABILITY');
+  const canCreate = useCanCreate('CAPABILITY');
   const { data: response, isLoading } = useGetAllCapabilities({ query: { enabled: !isGrouped } });
   const { data: unitsResponse } = useGetAllOrganisationalUnits();
   const capabilities = (response?.data as CapabilityResponse[] | undefined) ?? [];

@@ -26,8 +26,7 @@ import {
 } from '@mui/icons-material';
 import { useGetBusinessDomainTree } from '../../api/generated/business-domain/business-domain';
 import { useLocale } from '../../context/LocaleContext';
-import { useAuth } from '../../context/AuthContext';
-import { canCreateRoot } from '../../utils/roles';
+import { useCanCreate } from '../../hooks/useCreationCapabilities';
 import type { BusinessDomainTreeResponse } from '../../api/generated/model';
 
 interface DomainTreePanelProps {
@@ -42,8 +41,7 @@ const DomainTreePanel: React.FC<DomainTreePanelProps> = ({ selectedKey, onCreate
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { getLocalizedText } = useLocale();
-  const { user } = useAuth();
-  const canCreate = canCreateRoot(user?.roles, 'BUSINESS_DOMAIN');
+  const canCreate = useCanCreate('BUSINESS_DOMAIN');
   const { data: treeResponse, isLoading } = useGetBusinessDomainTree({ query: { enabled: !isGrouped } });
   const tree = (treeResponse?.data as BusinessDomainTreeResponse[] | undefined) || [];
   const [filter, setFilter] = useState('');

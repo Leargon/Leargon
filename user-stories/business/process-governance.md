@@ -57,3 +57,10 @@
 **IF** \
 **I WANT** to document the legal basis, purpose, security measures, and any cross-border transfers for a business process\
 **SO THAT** the process is included in a complete and audit-ready processing register
+
+#### USER STORY 'Right-sized processing activities'
+**AS A** process owner\
+**IF** I add a business activity\
+**I WANT** guidance on whether it is a step of an existing process or its own processing activity, and a
+nudge when a root process mixes different purposes or legal bases\
+**SO THAT** each root process is one meaningful row in the processing register

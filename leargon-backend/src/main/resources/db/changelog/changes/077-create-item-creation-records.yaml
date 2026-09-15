@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: 077-create-item-creation-records
+      author: leargon
+      comment: >-
+        Audit of how each catalogue item came into being — creator, the grant that allowed it (admin,
+        methodology editor, or which realm), the container it was placed in, and any duplicate
+        justification. Drives the "review new item" to-do for the container's owner; the acknowledgement
+        is stored here so it survives later edits (unlike a dismissal). Ids are plain columns: the record
+        must outlive the user or item it points at.
+      changes:
+        - createTable:
+            tableName: item_creation_records
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: resource_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: realm_type
+                  type: VARCHAR(30)
+              - column:
+                  name: realm_id
+                  type: BIGINT
+              - column:
+                  name: created_by_id
+                  type: BIGINT
+              - column:
+                  name: basis
+                  type: VARCHAR(30)
+              - column:
+                  name: duplicate_justification
+                  type: LONGTEXT
+              - column:
+                  name: acknowledged_candidate_keys
+                  type: LONGTEXT
+              - column:
+                  name: reviewed_by_id
+                  type: BIGINT
+              - column:
+                  name: reviewed_at
+                  type: DATETIME
+              - column:
+                  name: created_at
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: item_creation_records
+            indexName: idx_item_creation_record_resource
+            columns:
+              - column:
+                  name: resource_type
+              - column:
+                  name: resource_id
+        - createIndex:
+            tableName: item_creation_records
+            indexName: idx_item_creation_record_reviewed
+            columns:
+              - column:
+                  name: reviewed_at

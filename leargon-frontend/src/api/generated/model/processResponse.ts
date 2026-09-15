@@ -21,6 +21,7 @@ import type { BoundedContextSummaryResponse } from './boundedContextSummaryRespo
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { CapabilitySummaryResponse } from './capabilitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { CrossBorderTransferEntry } from './crossBorderTransferEntry.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
 import type { FrequencyPeriod } from './frequencyPeriod.ts';
@@ -37,6 +38,16 @@ import type { ValueStreamType } from './valueStreamType.ts';
 export interface ProcessResponse {
   /** Process key (slug of code or default locale name) */
   key: string;
+  /**
+     * Item types the current user may create under this process (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
+  /**
+     * Whether the current user may delete this process (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canDelete?: boolean | null;
   /**
      * Process code
      * @nullable

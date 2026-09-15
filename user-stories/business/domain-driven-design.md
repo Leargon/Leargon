@@ -39,3 +39,10 @@
 **IF** the same real-world concept exists under different names in different bounded contexts\
 **I WANT** to create translation links between entities in different bounded contexts and view the ubiquitous language glossary per domain\
 **SO THAT** cross-domain semantic equivalences are documented and language boundaries between contexts are explicit
+
+#### USER STORY 'Domain and bounded-context ownership'
+**AS A** domain owner\
+**IF** I am accountable for a business domain\
+**I WANT** to shape it myself — add subdomains and bounded contexts, delegate a context to its team, and
+have the team add the concepts of their model — while I am told about everything created in my domain\
+**SO THAT** the domain model is maintained by the people who own it, following DDD's team-per-context idea

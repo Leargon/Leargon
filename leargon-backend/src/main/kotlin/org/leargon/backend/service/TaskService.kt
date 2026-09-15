@@ -66,7 +66,8 @@ open class TaskService(
     private val businessEntityMapper: BusinessEntityMapper,
     private val processMapper: ProcessMapper,
     private val businessDomainMapper: BusinessDomainMapper,
-    private val organisationalUnitMapper: OrganisationalUnitMapper
+    private val organisationalUnitMapper: OrganisationalUnitMapper,
+    private val creationRecordService: CreationRecordService
 ) {
     /** One derived to-do, before it is filtered per user and rendered. */
     data class DerivedTask(
@@ -85,7 +86,9 @@ open class TaskService(
         val stewardId: Long?,
         val itemUpdatedAt: Instant?,
         /** True for rules only the owner can act on (verification is owner-only by design). */
-        val ownerOnly: Boolean = false
+        val ownerOnly: Boolean = false,
+        /** Set for creation reviews, which are acknowledged (by record id) instead of dismissed. */
+        val creationRecordId: Long? = null
     ) {
         val id: String get() = "$entityType:$resourceKey:$ruleCode:${fieldName ?: ""}"
     }
@@ -189,6 +192,9 @@ open class TaskService(
                 .flatMap { it.tasks }
                 .find { it.id == taskId }
                 ?: throw ResourceNotFoundException("Task not found: $taskId")
+        if (task.creationRecordId != null) {
+            throw IllegalArgumentException("A creation review is acknowledged, not dismissed")
+        }
         requireResponsible(task, userId)
 
         val repo = this.taskDismissalRepository
@@ -316,7 +322,43 @@ open class TaskService(
                 )
         }
 
+        rules[TaskRuleCatalog.REVIEW_REALM_CREATION]?.let { results += deriveCreationReviews(it) }
+
         return results
+    }
+
+    /**
+     * One review to-do per unreviewed creation made by someone other than the current owner of the
+     * container it was placed in. Resolved live: a change of ownership moves the review, and a deleted
+     * item or container drops it.
+     */
+    private fun deriveCreationReviews(rule: TaskRuleConfigurationService.EffectiveRule): List<ItemResult> {
+        val records = this.creationRecordService
+        return records.openReviews().mapNotNull { record ->
+            val ownerId = records.realmOwnerId(record) ?: return@mapNotNull null
+            if (ownerId == record.createdById) return@mapNotNull null
+            val item = records.resolveItem(record) ?: return@mapNotNull null
+            val task =
+                DerivedTask(
+                    entityType = item.entityType,
+                    resourceType = item.resourceType,
+                    resourceKey = item.key,
+                    names = item.names,
+                    ruleCode = TaskRuleCatalog.REVIEW_REALM_CREATION,
+                    priority = rule.priority,
+                    severity = rule.definition.severity,
+                    fieldName = null,
+                    fieldLabels = emptyList(),
+                    section = rule.definition.section,
+                    methodology = null,
+                    ownerId = ownerId,
+                    stewardId = null,
+                    itemUpdatedAt = item.updatedAt,
+                    ownerOnly = true,
+                    creationRecordId = record.id
+                )
+            ItemResult(ownerId, null, 1, listOf(task))
+        }
     }
 
     /**
@@ -449,6 +491,9 @@ open class TaskService(
             "DPIA_RECOMMENDED" -> {
                 if (handlesPersonalData) process.key !in dpiaProcessKeys else null
             }
+            "ROOT_PROCESS_DIVERGENT_PURPOSES" -> {
+                if (process.parent == null && handlesPersonalData) divergentPurposes(process) else null
+            }
             "NO_EXECUTING_UNIT" -> {
                 process.executingUnits.isEmpty()
             }
@@ -461,6 +506,32 @@ open class TaskService(
                 null
             }
         }
+
+    /**
+     * A root process likely spans several processing activities when its subtree uses two or more legal
+     * bases, or its direct sub-processes state different purposes (compared per locale, normalised).
+     */
+    private fun divergentPurposes(root: Process): Boolean {
+        val visited = mutableSetOf<String>()
+        val legalBases = mutableSetOf<String>()
+
+        fun walk(p: Process) {
+            if (!visited.add(p.key)) return
+            p.legalBasis?.takeIf { it.isNotBlank() }?.let { legalBases.add(it) }
+            p.children.forEach { walk(it) }
+        }
+        walk(root)
+        if (legalBases.size >= 2) return true
+
+        return root.children
+            .flatMap { child -> child.purpose.orEmpty().filter { it.text.isNotBlank() } }
+            .groupBy({ it.locale }, {
+                org.leargon.backend.util.NameMatching
+                    .normalize(it.text)
+            })
+            .values
+            .any { texts -> texts.toSet().size >= 2 }
+    }
 
     private fun domainRuleUnmet(
         ruleCode: String,
@@ -487,7 +558,7 @@ open class TaskService(
         when (entityType) {
             "BUSINESS_ENTITY" -> "dataOwner"
             "BUSINESS_PROCESS" -> "processOwner"
-            "BUSINESS_DOMAIN" -> "owningUnit"
+            "BUSINESS_DOMAIN" -> "owner"
             else -> "businessOwner"
         }
 
@@ -539,6 +610,8 @@ open class TaskService(
             .section(task.section)
             .methodology(task.methodology)
             .dismissedReason(dismissedReason)
+            .acknowledgeable(task.creationRecordId != null)
+            .creationReview(task.creationRecordId?.let { creationRecordService.reviewInfo(it) })
 
     private fun taskOrder(): Comparator<TaskItem> =
         compareBy<TaskItem> { if (it.priority == TaskItemPriority.REQUIRED) 0 else 1 }

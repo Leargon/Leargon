@@ -98,6 +98,9 @@ open class OrganisationalUnitService(
         return organisationalUnitMapper.toResponse(unit, executingProcesses)
     }
 
+    @jakarta.inject.Inject
+    lateinit var duplicateCandidateService: DuplicateCandidateService
+
     @Transactional
     open fun create(
         request: CreateOrganisationalUnitRequest,
@@ -143,7 +146,10 @@ open class OrganisationalUnitService(
 
         val defaultLocale = localeService.getDefaultLocale()
         val defaultName = unit.names.find { it.locale == defaultLocale?.localeCode }?.text
-        unit.key = SlugUtil.slugify(defaultName)
+        val unitRepo = organisationalUnitRepository
+        unit.key =
+            org.leargon.backend.util.KeyAllocator
+                .allocate(SlugUtil.slugify(defaultName)) { unitRepo.findByKey(it).isPresent }
 
         if (request.parentKeys != null) {
             for (parentKey in request.parentKeys!!) {
@@ -155,6 +161,12 @@ open class OrganisationalUnitService(
             }
         }
 
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(CreationPolicyService.ORGANISATIONAL_UNIT, parentKeys = request.parentKeys.orEmpty()),
+            unit.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         unit = organisationalUnitRepository.save(unit)
         syncFieldVerifications(unit, currentUser)
         return unit

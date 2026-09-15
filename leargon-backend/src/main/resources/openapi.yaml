@@ -1309,6 +1309,192 @@ paths:
           description: Domain or organisational unit not found
         '401':
           description: Not authenticated
+  /advisor/rule-sets:
+    get:
+      tags:
+      - Advisor
+      summary: The guided modelling advisor's decision trees
+      description: >-
+        Code-defined, deterministic decision trees (not an LLM). The frontend renders every question,
+        option, outcome, rationale and consequence from i18n keyed by its code.
+      operationId: getAdvisorRuleSets
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: All rule sets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdvisorRuleSet'
+        '401':
+          description: Not authenticated
+  /advisor/evaluate:
+    post:
+      tags:
+      - Advisor
+      summary: Evaluate the advisor for the answers given so far
+      description: >-
+        Stateless replay of the answers against the rule set. Returns the next question (with the items to
+        pick from, each marked whether the user may create there) or a recommendation with a wizard
+        prefill, whether the user may create there (else who is responsible), live consequences, and
+        duplicate candidates for the proposed name.
+      operationId: evaluateAdvisor
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvisorEvaluateRequest'
+      responses:
+        '200':
+          description: The next question or the recommendation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvisorEvaluateResponse'
+        '400':
+          description: An answer does not fit the question it is given for
+        '404':
+          description: Unknown rule set
+        '401':
+          description: Not authenticated
+  /creation/capabilities:
+    get:
+      tags:
+      - Creation
+      summary: What the current user may create
+      description: >-
+        For every catalogue item type, whether the current user may create it somewhere (inside a realm
+        they own, or at top level) and whether they may create it unplaced (admin / methodology editor).
+        Drives the "New" buttons, so the UI never re-implements the creation policy.
+      operationId: getCreationCapabilities
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Creation capabilities of the current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreationCapabilitiesResponse'
+        '401':
+          description: Not authenticated
+  /creation/reviews/{recordId}/acknowledge:
+    post:
+      tags:
+      - Creation
+      summary: Acknowledge a new item created in your area
+      description: >-
+        Closes the "review new item" to-do. Only the current owner of the container the item was created
+        in (or an admin) may acknowledge it. Unlike a dismissal, the acknowledgement survives later edits.
+      operationId: acknowledgeCreationReview
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: recordId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Acknowledged
+        '403':
+          description: Not the owner of the container the item was created in
+        '404':
+          description: Creation review not found
+        '401':
+          description: Not authenticated
+  /creation/duplicate-candidates:
+    post:
+      tags:
+      - Creation
+      summary: Preview likely duplicates of a new item
+      description: >-
+        Returns existing items whose names match the proposed names (all locales, normalised and fuzzy).
+        Matches in the same container block creation until acknowledged with a justification; matches
+        elsewhere are informational and may suggest a translation link or reuse.
+      operationId: checkDuplicateCandidates
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DuplicateCheckRequest'
+      responses:
+        '200':
+          description: Duplicate candidates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateCheckResponse'
+        '401':
+          description: Not authenticated
+  /creation/targets:
+    get:
+      tags:
+      - Creation
+      summary: Where the current user may create an item
+      description: Lists the realm containers (parents, bounded contexts, domains, owning units) the current user may create an item of the given type in.
+      operationId: getCreationTargets
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: itemType
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/CreatableItemType'
+      responses:
+        '200':
+          description: Creation targets for the item type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreationTargetsResponse'
+        '401':
+          description: Not authenticated
+  /business-domains/{key}/owner:
+    put:
+      tags:
+      - BusinessDomain
+      summary: Update the explicit domain owner
+      operationId: updateBusinessDomainOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainOwnerRequest'
+      responses:
+        '200':
+          description: Updated domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDomainResponse'
+        '403':
+          description: Requires an admin, a DDD editor/lead, or ownership of the domain or an ancestor domain
+        '404':
+          description: Domain or user not found
+        '401':
+          description: Not authenticated
   /business-domains/{key}/bounded-contexts:
     get:
       tags:
@@ -1516,6 +1702,39 @@ paths:
           description: Requires ROLE_ADMIN
         '404':
           description: Not found
+        '401':
+          description: Not authenticated
+  /bounded-contexts/{key}/owner:
+    put:
+      tags:
+      - BoundedContext
+      summary: Update the explicit bounded context owner
+      operationId: updateBoundedContextOwner
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBoundedContextOwnerRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoundedContextResponse'
+        '403':
+          description: Requires an admin, a DDD editor/lead, or ownership of the bounded context's domain
+        '404':
+          description: Bounded context or user not found
         '401':
           description: Not authenticated
   /business-entities/{key}/translation-links:
@@ -7437,6 +7656,24 @@ components:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
           nullable: true
           description: Organisational unit responsible for this domain
+        owner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Explicitly assigned accountable domain owner (null when inherited)
+        effectiveOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Resolved owner — explicit owner, else the owning unit's business owner, else the parent domain's effective owner
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create inside this domain (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
+        canDelete:
+          type: boolean
+          nullable: true
+          description: Whether the current user may delete this domain (backend-computed; null when not evaluated)
         createdAt:
           type: string
           format: date-time
@@ -7526,6 +7763,26 @@ components:
         owningTeam:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
           nullable: true
+        owner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Explicitly assigned bounded context owner (null when inherited)
+        effectiveOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+          description: Resolved owner — explicit owner, else the owning team's business owner, else the domain's effective owner
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create inside this bounded context (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
+        editableFields:
+          type: array
+          nullable: true
+          description: Fields of this bounded context the current user may edit (backend-computed; null when not evaluated)
+          items:
+            type: string
         createdAt:
           type: string
           format: date-time
@@ -7559,6 +7816,28 @@ components:
           type: string
           nullable: true
           description: Key of the organisational unit that owns this bounded context
+        ownerUsername:
+          type: string
+          nullable: true
+          description: Username of the explicit bounded context owner (omit to inherit)
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this bounded context is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
+    UpdateBoundedContextOwnerRequest:
+      type: object
+      properties:
+        ownerUsername:
+          type: string
+          nullable: true
+          description: Username of the new explicit owner, or null to fall back to the inherited owner
     UpdateBoundedContextNamesRequest:
       type: object
       required:
@@ -7724,6 +8003,16 @@ components:
           type: string
           description: BusinessEntity key (hierarchical slug)
           example: sales.retail.customer
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create under this entity (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
+        canDelete:
+          type: boolean
+          nullable: true
+          description: Whether the current user may delete this entity (backend-computed; null when not evaluated)
         owningUnit:
           $ref: '#/components/schemas/OrganisationalUnitSummaryResponse'
           nullable: true
@@ -8200,6 +8489,28 @@ components:
           type: string
           nullable: true
           description: Key of the organisational unit responsible for this domain
+        ownerUsername:
+          type: string
+          nullable: true
+          description: Username of the explicit domain owner (omit to inherit)
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this domain is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
+    UpdateDomainOwnerRequest:
+      type: object
+      properties:
+        ownerUsername:
+          type: string
+          nullable: true
+          description: Username of the new explicit owner, or null to fall back to the inherited owner
     CreateBusinessEntityRelationshipRequest:
       type: object
       required:
@@ -8240,6 +8551,14 @@ components:
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Names for the entity (at least one required)
+        relationships:
+          type: array
+          nullable: true
+          description: >
+            Relationships created together with the entity, the new entity being the first side — so a root entity
+            and its relationship to an existing entity come into being atomically.
+          items:
+            $ref: '#/components/schemas/CreateBusinessEntityRelationshipRequest'
         descriptions:
           type: array
           items:
@@ -8253,6 +8572,38 @@ components:
           type: string
           nullable: true
           description: Key of the organisational unit directly owning this entity
+        boundedContextKey:
+          type: string
+          nullable: true
+          description: >-
+            Bounded context the entity is placed in. A child entity inherits its parent's bounded context
+            when omitted. The placement decides who may create the entity (see creation policy).
+        dataStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the data steward, set atomically at creation
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this entity is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          description: Keys of the blocking duplicate candidates the creator has reviewed
+          items:
+            type: string
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the technical custodian, set atomically at creation
+        classificationAssignments:
+          type: array
+          nullable: true
+          description: Classification values assigned atomically at creation (validated like the assignment endpoint)
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentRequest'
         parentKey:
           type: string
           nullable: true
@@ -8354,6 +8705,52 @@ components:
           type: string
           nullable: true
           description: Key of the organisational unit directly owning this process
+        boundedContextKey:
+          type: string
+          nullable: true
+          description: >-
+            Bounded context the process is placed in. A sub-process inherits its parent's bounded context
+            when omitted. The placement decides who may create the process (see creation policy).
+        processStewardUsername:
+          type: string
+          nullable: true
+          description: Username of the process steward, set atomically at creation
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this process is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          description: Keys of the blocking duplicate candidates the creator has reviewed
+          items:
+            type: string
+        technicalCustodianUsername:
+          type: string
+          nullable: true
+          description: Username of the technical custodian, set atomically at creation
+        executingUnitKeys:
+          type: array
+          nullable: true
+          description: Keys of the organisational units executing the process, set atomically at creation
+          items:
+            type: string
+        legalBasis:
+          $ref: '#/components/schemas/LegalBasis'
+        purpose:
+          type: array
+          nullable: true
+          description: Purpose of the processing (localised), set atomically at creation
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        classificationAssignments:
+          type: array
+          nullable: true
+          description: Classification values assigned atomically at creation (validated like the assignment endpoint)
+          items:
+            $ref: '#/components/schemas/ClassificationAssignmentRequest'
         inputEntityKeys:
           type: array
           items:
@@ -8421,6 +8818,18 @@ components:
           format: date-time
           description: Error timestamp
           example: '2024-01-15T10:30:00Z'
+        missingFields:
+          type: array
+          nullable: true
+          description: For REQUIRED_AT_CREATION_MISSING — the configured field names the create request did not supply
+          items:
+            type: string
+        duplicateCandidates:
+          type: array
+          nullable: true
+          description: For DUPLICATE_CANDIDATES — the likely duplicates (blocking ones must be acknowledged)
+          items:
+            $ref: '#/components/schemas/DuplicateCandidate'
     FieldChange:
       type: object
       required:
@@ -8554,6 +8963,16 @@ components:
           type: string
           description: Organisational unit key
           example: engineering
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create inside this unit (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
+        canDelete:
+          type: boolean
+          nullable: true
+          description: Whether the current user may delete this unit (backend-computed; null when not evaluated)
         unitType:
           type: string
           nullable: true
@@ -8724,6 +9143,17 @@ components:
       required:
       - names
       properties:
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this unit is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
         names:
           type: array
           minItems: 1
@@ -8921,6 +9351,16 @@ components:
           type: string
           description: Process key (slug of code or default locale name)
           example: order-fulfillment
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create under this process (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
+        canDelete:
+          type: boolean
+          nullable: true
+          description: Whether the current user may delete this process (backend-computed; null when not evaluated)
         code:
           type: string
           nullable: true
@@ -10109,6 +10549,12 @@ components:
           enum: [BASIC, ADVANCED, EXPERT]
           default: BASIC
           description: Maturity level of the field
+        requiredAtCreation:
+          type: boolean
+          default: false
+          description: >-
+            Only for mandatory (SHOWN) fields that are creation-capable: the create endpoint rejects a request
+            that does not supply the field (422 REQUIRED_AT_CREATION_MISSING).
     FieldConfigurationDefinition:
       type: object
       required:
@@ -10148,6 +10594,10 @@ components:
         mandatoryCapable:
           type: boolean
           description: Whether this field can be configured as mandatory. When false the Mandatory option is not shown in the UI.
+          example: true
+        creationCapable:
+          type: boolean
+          description: Whether the create request carries this field, so it can be marked as required at creation.
           example: true
         localeGroup:
           type: boolean
@@ -10279,6 +10729,10 @@ components:
           type: string
           description: Service provider key
           example: aws-eu-west-1
+        canEdit:
+          type: boolean
+          nullable: true
+          description: Whether the current user may edit/delete this service provider (backend-computed; null when not evaluated)
         names:
           type: array
           items:
@@ -10369,6 +10823,17 @@ components:
       required:
       - names
       properties:
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this service provider is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
         names:
           type: array
           items:
@@ -10893,6 +11358,535 @@ components:
           type: string
         processCount:
           type: integer
+    AdvisorAnswerType:
+      type: string
+      enum: [SINGLE_CHOICE, BOOLEAN, ITEM_PICKER]
+    AdvisorPlacementType:
+      type: string
+      enum: [CHILD, NEW_ROOT, TOP_LEVEL]
+      description: Under a picked parent, into a picked container, or at top level
+    AdvisorConnectionType:
+      type: string
+      enum: [NONE, RELATIONSHIP, INTERFACE, CALLED_PROCESS]
+      description: How the new item is additionally connected to a picked item
+    AdvisorOptionDef:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+        next:
+          type: string
+          nullable: true
+        outcome:
+          type: string
+          nullable: true
+        rationaleCode:
+          type: string
+          nullable: true
+          description: Rationale this answer contributes to the recommendation
+    AdvisorQuestionDef:
+      type: object
+      required:
+      - code
+      - answerType
+      properties:
+        code:
+          type: string
+        answerType:
+          $ref: '#/components/schemas/AdvisorAnswerType'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorOptionDef'
+        pickerItemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        next:
+          type: string
+          nullable: true
+        outcome:
+          type: string
+          nullable: true
+    AdvisorOutcomeDef:
+      type: object
+      required:
+      - code
+      - placementType
+      - rationaleCodes
+      - consequenceCodes
+      properties:
+        code:
+          type: string
+        placementType:
+          $ref: '#/components/schemas/AdvisorPlacementType'
+        rationaleCodes:
+          type: array
+          items:
+            type: string
+        consequenceCodes:
+          type: array
+          items:
+            type: string
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        connectionType:
+          $ref: '#/components/schemas/AdvisorConnectionType'
+    AdvisorRuleSet:
+      type: object
+      required:
+      - code
+      - itemType
+      - rootQuestion
+      - questions
+      - outcomes
+      properties:
+        code:
+          type: string
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        rootQuestion:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorQuestionDef'
+        outcomes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorOutcomeDef'
+        methodology:
+          type: string
+          nullable: true
+    AdvisorAnswer:
+      type: object
+      required:
+      - questionCode
+      properties:
+        questionCode:
+          type: string
+        optionCode:
+          type: string
+          nullable: true
+        itemKey:
+          type: string
+          nullable: true
+    AdvisorEvaluateRequest:
+      type: object
+      required:
+      - ruleSetCode
+      - answers
+      properties:
+        ruleSetCode:
+          type: string
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorAnswer'
+        contextItemKey:
+          type: string
+          nullable: true
+          description: >
+            The item the user started from (e.g. "Add child" on Order). The server pre-answers the questions that
+            lead to it and every picker asking for an item of its type, so the tree starts with the questions about
+            that item. 400 when the key is not an item of the rule set's start type.
+        proposedNames:
+          type: array
+          nullable: true
+          description: The name the user intends to use, for the duplicate check at the recommended place
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    AdvisorPickerItem:
+      type: object
+      required:
+      - key
+      - names
+      - creatable
+      properties:
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        creatable:
+          type: boolean
+          description: The user may create the recommended item type at / under this item
+        containerNames:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    AdvisorQuestion:
+      type: object
+      required:
+      - code
+      - answerType
+      - options
+      - pickerItems
+      properties:
+        code:
+          type: string
+        answerType:
+          $ref: '#/components/schemas/AdvisorAnswerType'
+        options:
+          type: array
+          items:
+            type: string
+        pickerItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorPickerItem'
+        pickerItemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        params:
+          type: object
+          description: Values for the question text, e.g. `picked` — the name of the item picked last
+          additionalProperties:
+            type: string
+    AdvisorConsequence:
+      type: object
+      required:
+      - code
+      - params
+      properties:
+        code:
+          type: string
+        params:
+          type: object
+          additionalProperties:
+            type: string
+    AdvisorPrefill:
+      type: object
+      required:
+      - itemType
+      - connectionType
+      properties:
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        connectionType:
+          $ref: '#/components/schemas/AdvisorConnectionType'
+        parentKey:
+          type: string
+          nullable: true
+        boundedContextKey:
+          type: string
+          nullable: true
+        domainKey:
+          type: string
+          nullable: true
+        owningUnitKey:
+          type: string
+          nullable: true
+        relatedItemKey:
+          type: string
+          nullable: true
+        relationship:
+          $ref: '#/components/schemas/AdvisorRelationshipPrefill'
+    AdvisorRelationshipPrefill:
+      type: object
+      description: >
+        The relationship to create together with the new entity (the new entity is the first side). Cardinality
+        of a side = how many of that side's entities relate to one entity of the other side; maximum null = many.
+      required:
+      - relatedEntityKey
+      - firstCardinalityMinimum
+      - secondCardinalityMinimum
+      properties:
+        relatedEntityKey:
+          type: string
+        firstCardinalityMinimum:
+          type: integer
+        secondCardinalityMinimum:
+          type: integer
+        firstCardinalityMaximum:
+          type: integer
+          nullable: true
+        secondCardinalityMaximum:
+          type: integer
+          nullable: true
+    AdvisorRecommendation:
+      type: object
+      required:
+      - outcomeCode
+      - placementType
+      - rationaleCodes
+      - consequences
+      - allowed
+      - prefill
+      properties:
+        outcomeCode:
+          type: string
+        placementType:
+          $ref: '#/components/schemas/AdvisorPlacementType'
+        rationaleCodes:
+          type: array
+          items:
+            type: string
+        consequences:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdvisorConsequence'
+        allowed:
+          type: boolean
+          description: The creation policy lets the current user create at the recommended place
+        prefill:
+          $ref: '#/components/schemas/AdvisorPrefill'
+        basis:
+          $ref: '#/components/schemas/CreationBasis'
+        responsibleOwner:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+    AdvisorEvaluateResponse:
+      type: object
+      required:
+      - status
+      - answeredPath
+      - duplicateCandidates
+      properties:
+        status:
+          type: string
+          enum: [QUESTION, RECOMMENDATION]
+        answeredPath:
+          type: array
+          description: Codes of the questions answered so far, in order
+          items:
+            type: string
+        duplicateCandidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DuplicateCandidate'
+        question:
+          $ref: '#/components/schemas/AdvisorQuestion'
+        recommendation:
+          $ref: '#/components/schemas/AdvisorRecommendation'
+    CreationReviewInfo:
+      type: object
+      description: How an item came into being — shown to the owner who reviews it
+      required:
+      - recordId
+      properties:
+        recordId:
+          type: integer
+          format: int64
+        createdBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+        basis:
+          $ref: '#/components/schemas/CreationBasis'
+        duplicateJustification:
+          type: array
+          description: Why the creator considered the item not a duplicate (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedCandidateKeys:
+          type: array
+          description: Keys of the similar items the creator reviewed before creating it
+          items:
+            type: string
+    DuplicateCandidate:
+      type: object
+      required:
+      - itemType
+      - key
+      - names
+      - matchType
+      - score
+      - scope
+      - blocking
+      - suggestion
+      properties:
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        matchType:
+          type: string
+          enum: [EXACT, SIMILAR]
+        score:
+          type: number
+          format: double
+          description: Name similarity between 0 and 1 (1 = identical after normalisation)
+        scope:
+          type: string
+          enum: [SAME_CONTAINER, ELSEWHERE]
+          description: Whether the existing item lives in the same container the new item is placed in
+        blocking:
+          type: boolean
+          description: Creation is refused unless this candidate is acknowledged and the new item justified
+        suggestion:
+          type: string
+          enum: [NONE, TRANSLATION_LINK, REUSE_OR_CALL]
+          description: For non-blocking matches elsewhere — link the concepts (entities) or reuse the process instead
+        containerKey:
+          type: string
+          nullable: true
+        containerNames:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+    DuplicateCheckRequest:
+      type: object
+      required:
+      - itemType
+      - names
+      properties:
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        parentKey:
+          type: string
+          nullable: true
+        parentKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
+        boundedContextKey:
+          type: string
+          nullable: true
+        domainKey:
+          type: string
+          nullable: true
+        owningUnitKey:
+          type: string
+          nullable: true
+    DuplicateCheckResponse:
+      type: object
+      required:
+      - blocking
+      - candidates
+      properties:
+        blocking:
+          type: boolean
+          description: At least one candidate would block creation without justification
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DuplicateCandidate'
+    CreatableItemType:
+      type: string
+      description: Catalogue item types whose creation is governed by the creation policy
+      enum:
+      - BUSINESS_DOMAIN
+      - BOUNDED_CONTEXT
+      - BUSINESS_ENTITY
+      - BUSINESS_PROCESS
+      - DOMAIN_EVENT
+      - CONTEXT_RELATIONSHIP
+      - ORGANISATIONAL_UNIT
+      - CAPABILITY
+      - IT_SYSTEM
+      - SERVICE_PROVIDER
+    CreationBasis:
+      type: string
+      description: Why the current user may create at a place (admin, methodology editor, or which realm grants it)
+      enum:
+      - ADMIN
+      - METHODOLOGY_EDITOR
+      - DOMAIN_OWNER
+      - BC_OWNER
+      - PARENT_OWNER
+      - UNIT_OWNER
+      - CAPABILITY_OWNER
+    CreationCapability:
+      type: object
+      required:
+      - itemType
+      - canCreate
+      - canCreateUnplaced
+      properties:
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        canCreate:
+          type: boolean
+          description: >-
+            The user may create this item type from its list — at top level, or inside a realm container
+            they own (bounded context, domain, owning unit). Children of an owned item are created via the
+            parent's `creatableChildTypes` instead.
+        canCreateUnplaced:
+          type: boolean
+          description: The user may create this item type at top level / without a placement (admin or methodology editor)
+    CreationCapabilitiesResponse:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreationCapability'
+    CreationTargetRef:
+      type: object
+      required:
+      - key
+      - names
+      - basis
+      properties:
+        key:
+          type: string
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        basis:
+          $ref: '#/components/schemas/CreationBasis'
+    CreationTargetsResponse:
+      type: object
+      description: >-
+        Where the current user may create an item of the given type. When `unrestricted` is true the user
+        may create anywhere (admin / methodology editor) and the lists are left empty; otherwise the lists
+        enumerate the realm containers the user may create in.
+      required:
+      - itemType
+      - unrestricted
+      - canCreateUnplaced
+      - parents
+      - boundedContexts
+      - domains
+      - owningUnits
+      properties:
+        itemType:
+          $ref: '#/components/schemas/CreatableItemType'
+        unrestricted:
+          type: boolean
+        canCreateUnplaced:
+          type: boolean
+        parents:
+          type: array
+          description: Parent items of the same type the user may create children under
+          items:
+            $ref: '#/components/schemas/CreationTargetRef'
+        boundedContexts:
+          type: array
+          description: Bounded contexts the user may place the item in
+          items:
+            $ref: '#/components/schemas/CreationTargetRef'
+        domains:
+          type: array
+          description: Domains the user may create bounded contexts in
+          items:
+            $ref: '#/components/schemas/CreationTargetRef'
+        owningUnits:
+          type: array
+          description: Organisational units the item may be owned by (IT systems; entities/processes while DDD is disabled)
+          items:
+            $ref: '#/components/schemas/CreationTargetRef'
+        requiredFields:
+          type: array
+          description: Field names configured as required at creation for this item type (empty when none)
+          items:
+            type: string
     ContextMapperRelationshipType:
       type: string
       enum:
@@ -11252,6 +12246,10 @@ components:
         key:
           type: string
           description: IT system key
+        canEdit:
+          type: boolean
+          nullable: true
+          description: Whether the current user may edit/delete this IT system (backend-computed; null when not evaluated)
         names:
           type: array
           items:
@@ -11302,6 +12300,17 @@ components:
       required:
       - names
       properties:
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this IT system is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
         names:
           type: array
           minItems: 1
@@ -11451,6 +12460,16 @@ components:
           type: string
           description: Capability key
           example: customer-management
+        canEdit:
+          type: boolean
+          nullable: true
+          description: Whether the current user may edit/delete this capability (backend-computed; null when not evaluated)
+        creatableChildTypes:
+          type: array
+          nullable: true
+          description: Item types the current user may create under this capability (backend-computed; null when not evaluated)
+          items:
+            $ref: '#/components/schemas/CreatableItemType'
         names:
           type: array
           items:
@@ -11533,6 +12552,17 @@ components:
           type: string
           nullable: true
           description: Key of the parent capability (for creating child capabilities)
+        duplicateJustification:
+          type: array
+          nullable: true
+          description: Why this capability is not a duplicate of the acknowledged candidates (localised)
+          items:
+            $ref: '#/components/schemas/LocalizedText'
+        acknowledgedDuplicateKeys:
+          type: array
+          nullable: true
+          items:
+            type: string
         owningUnitKey:
           type: string
           nullable: true
@@ -11629,6 +12659,7 @@ components:
           - PROCESS
           - DOMAIN
           - ORG_UNIT
+          - CAPABILITY
         resourceKey:
           type: string
           description: Key of the catalogue item the task belongs to
@@ -11685,6 +12716,12 @@ components:
         dismissedReason:
           type: string
           nullable: true
+        acknowledgeable:
+          type: boolean
+          nullable: true
+          description: True for creation reviews, which are closed by acknowledging (not dismissing) them
+        creationReview:
+          $ref: '#/components/schemas/CreationReviewInfo'
     TaskSummary:
       type: object
       required:

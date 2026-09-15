@@ -12,10 +12,11 @@ interface TaskListProps {
   emptyMessage: string;
   onDismiss: (task: TaskItem) => void;
   onRestore: (task: TaskItem) => void;
+  onAcknowledge?: (task: TaskItem) => void;
 }
 
 /** A titled group of to-dos — "Should do", "Could do", or the dismissed pile. */
-const TaskList: React.FC<TaskListProps> = ({ title, subtitle, icon, tasks, emptyMessage, onDismiss, onRestore }) => {
+const TaskList: React.FC<TaskListProps> = ({ title, subtitle, icon, tasks, emptyMessage, onDismiss, onRestore, onAcknowledge }) => {
   const { t } = useTranslation();
 
   return (
@@ -44,6 +45,7 @@ const TaskList: React.FC<TaskListProps> = ({ title, subtitle, icon, tasks, empty
               showDivider={idx > 0}
               onDismiss={onDismiss}
               onRestore={onRestore}
+              onAcknowledge={onAcknowledge}
             />
           ))}
         </List>

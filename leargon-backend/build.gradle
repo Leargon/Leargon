@@ -285,7 +285,7 @@ tasks.named('cpdCheck', de.aaschmid.gradle.plugins.cpd.Cpd) {
 }
 
 micronaut {
-    version = "5.1.2"
+    version = "5.1.5"
     runtime("netty")
     testRuntime("spock2")
     processing {

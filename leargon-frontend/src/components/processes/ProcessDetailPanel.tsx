@@ -87,7 +87,7 @@ import {
 import { useGetAllServiceProviders } from '../../api/generated/service-provider/service-provider';
 import { useLocale } from '../../context/LocaleContext';
 import { useAuth } from '../../context/AuthContext';
-import { canEditEntityTypeByRole, canCreateChild } from '../../utils/roles';
+import { canEditEntityTypeByRole } from '../../utils/roles';
 import { useNavigation } from '../../context/NavigationContext';
 import { useMethodology } from '../../context/MethodologyContext';
 import { PROCESS_TABS_BY_PERSPECTIVE, PROCESS_FIELDS_BY_PERSPECTIVE } from '../../utils/perspectiveFilter';
@@ -223,7 +223,9 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
   const canEditField = (fieldName: string): boolean => process?.editableFields?.includes(fieldName) ?? false;
   // Lifecycle management of this process (create a sub-process, or delete it): an admin /
   // PROCESS_GOVERNANCE editor-lead, or this process's owner/steward.
-  const canManage = canCreateChild(user?.roles, 'BUSINESS_PROCESS', user?.username, process?.processOwner?.username, process?.processSteward?.username);
+  // Lifecycle affordances come from the backend creation/delete policy (realm ownership included).
+  const canAddSubProcess = process?.creatableChildTypes?.includes('BUSINESS_PROCESS') ?? false;
+  const canDelete = process?.canDelete ?? false;
   const setFieldVerification = useSetProcessFieldVerification();
   const onSetFieldStatus = async (fieldNames: string[], status: 'VERIFIED' | 'UNVERIFIED') => {
     for (const fieldName of fieldNames) {
@@ -589,13 +591,17 @@ const ProcessDetailPanel: React.FC<ProcessDetailPanelProps> = ({ processKey }) =
             <Chip icon={<WarningIcon fontSize="small" />} label={t('process.noEntityCoverage')} size="small" color="warning" />
           )}
         </>}
-        actions={canManage ? (<>
-          <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
-            {t('process.addSubProcess')}
-          </Button>
-          <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)} data-testid="delete-process-btn">
-            Delete
-          </Button>
+        actions={canAddSubProcess || canDelete ? (<>
+          {canAddSubProcess && (
+            <Button variant="outlined" size="small" startIcon={<Add />} onClick={() => setSubProcessWizardOpen(true)}>
+              {t('process.addSubProcess')}
+            </Button>
+          )}
+          {canDelete && (
+            <Button color="error" variant="outlined" size="small" startIcon={<Delete />} onClick={() => setDeleteDialogOpen(true)} data-testid="delete-process-btn">
+              Delete
+            </Button>
+          )}
         </>) : undefined}
       />
       <Box sx={{ flex: 1, overflow: 'auto', p: 3 }}>

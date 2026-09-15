@@ -43,3 +43,17 @@ to apply a maturity preset that enables a whole tier at once\
 **IF** an owner dismissed a to-do and the underlying item is later changed\
 **I WANT** the to-do to reappear automatically\
 **SO THAT** a dismissal cannot silently hide a gap that has since become relevant again
+
+#### USER STORY 'Review items others created in my area'
+**AS A** domain, bounded-context, unit or item owner\
+**IF** someone else created an item in a container I own\
+**I WANT** a REVIEW_REALM_CREATION to-do that I close by acknowledging (not dismissing) it\
+**SO THAT** I am aware of every addition to my area and the acknowledgement is auditable and permanent
+
+#### USER STORY 'Be nudged when a register activity is drawn too coarse'
+**AS A** data owner or admin\
+**IF** a root process that handles personal data rolls up sub-processes with different legal bases, or
+direct sub-processes pursuing different purposes\
+**I WANT** a ROOT_PROCESS_DIVERGENT_PURPOSES to-do suggesting the root may span several processing
+activities and could be split\
+**SO THAT** an over-broad root does not silently produce a meaningless, over-aggregated register row

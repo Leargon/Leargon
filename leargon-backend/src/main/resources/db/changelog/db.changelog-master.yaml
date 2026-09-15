@@ -149,3 +149,9 @@ databaseChangeLog:
       file: db/changelog/changes/073-create-task-rule-configurations-table.yaml
   - include:
       file: db/changelog/changes/074-localise-system-classification-descriptions.yaml
+  - include:
+      file: db/changelog/changes/075-add-domain-and-bc-owner.yaml
+  - include:
+      file: db/changelog/changes/076-add-field-config-required-at-creation.yaml
+  - include:
+      file: db/changelog/changes/077-create-item-creation-records.yaml

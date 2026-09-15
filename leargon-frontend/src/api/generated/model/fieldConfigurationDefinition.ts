@@ -34,6 +34,8 @@ export interface FieldConfigurationDefinition {
   maturityLevel: FieldConfigurationDefinitionMaturityLevel;
   /** Whether this field can be configured as mandatory. When false the Mandatory option is not shown in the UI. */
   mandatoryCapable: boolean;
+  /** Whether the create request carries this field, so it can be marked as required at creation. */
+  creationCapable?: boolean;
   /** True when this definition represents the show/hide control for all locales of a locale field (e.g. "names", "descriptions"). When true the field only supports SHOWN/HIDDEN visibility; mandatory is not applicable. Per-locale mandatory entries are separate definitions with localeGroup false. */
   localeGroup?: boolean;
 }

@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 075-add-domain-and-bc-owner
+      author: leargon
+      comment: >-
+        Explicit owner person on business domains and bounded contexts. Nullable and not backfilled:
+        when unset, the effective owner falls back to the owning unit's business owner and then up the
+        parent-domain chain, so existing data keeps resolving exactly as before.
+      changes:
+        - addColumn:
+            tableName: business_domains
+            columns:
+              - column:
+                  name: owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: business_domains
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_business_domain_owner
+            onDelete: SET NULL
+        - createIndex:
+            tableName: business_domains
+            indexName: idx_business_domain_owner
+            columns:
+              - column:
+                  name: owner_id
+        - addColumn:
+            tableName: bounded_contexts
+            columns:
+              - column:
+                  name: owner_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: bounded_contexts
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_bounded_context_owner
+            onDelete: SET NULL
+        - createIndex:
+            tableName: bounded_contexts
+            indexName: idx_bounded_context_owner
+            columns:
+              - column:
+                  name: owner_id

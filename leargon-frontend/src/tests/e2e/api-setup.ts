@@ -44,6 +44,27 @@ async function apiFetch(
 
 export const ADMIN = '.auth/admin.json';
 export const OWNER = '.auth/owner.json';
+export const VIEWER = '.auth/viewer.json';
+/** A plain ROLE_USER that owns domains / bounded contexts in the realm-creation specs. */
+export const REALM_OWNER = '.auth/realm-owner.json';
+export const REALM_OWNER_USERNAME = 'e2erealm';
+
+/** GETs [urlPath] as [stateFile] and returns the parsed JSON body. */
+export const apiGet = async <T = unknown>(urlPath: string, stateFile: string): Promise<T> => {
+  const res = await fetch(`${backendUrl()}${urlPath}`, { headers: { Authorization: `Bearer ${getToken(stateFile)}` } });
+  if (!res.ok) throw new Error(`GET ${urlPath} → ${res.status}: ${await res.text()}`);
+  return (await res.json()) as T;
+};
+
+/** Performs an API call as [stateFile] and returns only the HTTP status (for negative/permission checks). */
+export const apiStatus = async (urlPath: string, method: string, body: unknown, stateFile: string): Promise<number> => {
+  const res = await fetch(`${backendUrl()}${urlPath}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken(stateFile)}` },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  return res.status;
+};
 
 /** Username of the e2e owner persona (see auth-roles.setup.ts) — a plain ROLE_USER. */
 export const OWNER_USERNAME = 'e2eowner';
@@ -173,6 +194,27 @@ export const createBoundedContext = (
     'POST',
     { names: [{ locale: 'en', text: name }] },
     as,
+  );
+
+/** Creates (as admin) an entity placed in bounded context [boundedContextKey]. */
+export const createEntityInContext = (name: string, boundedContextKey: string): Promise<Record<string, unknown>> =>
+  apiFetch('/business-entities', 'POST', { names: [{ locale: 'en', text: name }], boundedContextKey }, ADMIN);
+
+/** Creates (as admin) a domain whose explicit owner is [ownerUsername]. */
+export const createDomainOwnedBy = (name: string, ownerUsername: string): Promise<Record<string, unknown>> =>
+  apiFetch('/business-domains', 'POST', { names: [{ locale: 'en', text: name }], ownerUsername }, ADMIN);
+
+/** Creates (as admin) a bounded context in [domainKey] whose explicit owner is [ownerUsername]. */
+export const createBoundedContextOwnedBy = (
+  domainKey: string,
+  name: string,
+  ownerUsername: string,
+): Promise<Record<string, unknown>> =>
+  apiFetch(
+    `/business-domains/${domainKey}/bounded-contexts`,
+    'POST',
+    { names: [{ locale: 'en', text: name }], ownerUsername },
+    ADMIN,
   );
 
 export const createItSystem = (

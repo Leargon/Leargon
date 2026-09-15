@@ -21,6 +21,7 @@ import type { BusinessDataQualityRuleResponse } from './businessDataQualityRuleR
 import type { BusinessEntityRelationshipResponse } from './businessEntityRelationshipResponse.ts';
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { EntityRole } from './entityRole.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
 import type { LocalizedText } from './localizedText.ts';
@@ -30,6 +31,16 @@ import type { UserSummaryResponse } from './userSummaryResponse.ts';
 export interface BusinessEntityResponse {
   /** BusinessEntity key (hierarchical slug) */
   key: string;
+  /**
+     * Item types the current user may create under this entity (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
+  /**
+     * Whether the current user may delete this entity (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canDelete?: boolean | null;
   /** Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship) */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Effective data owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set) */

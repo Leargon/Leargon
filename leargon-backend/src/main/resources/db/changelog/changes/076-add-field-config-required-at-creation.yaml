@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 076-add-field-config-required-at-creation
+      author: leargon
+      comment: >-
+        A mandatory field can additionally be required at creation: the create endpoint then rejects a
+        request that does not supply it (422), instead of only raising a to-do afterwards.
+      changes:
+        - addColumn:
+            tableName: field_configurations
+            columns:
+              - column:
+                  name: required_at_creation
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

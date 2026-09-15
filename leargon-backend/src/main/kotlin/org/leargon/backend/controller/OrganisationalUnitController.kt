@@ -32,6 +32,8 @@ import org.leargon.backend.model.UpdateOrgUnitTeamTopologyTypeRequest
 import org.leargon.backend.model.UpdateOrgUnitTechnicalCustodianRequest
 import org.leargon.backend.model.UpdateOrgUnitTypeRequest
 import org.leargon.backend.service.ClassificationService
+import org.leargon.backend.service.CreationPolicyService
+import org.leargon.backend.service.CreationTarget
 import org.leargon.backend.service.OrganisationalUnitService
 import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.ServiceProviderService
@@ -46,21 +48,42 @@ open class OrganisationalUnitController(
     private val securityService: SecurityService,
     private val organisationalUnitMapper: OrganisationalUnitMapper,
     private val serviceProviderService: ServiceProviderService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService,
+    private val creationRecordService: org.leargon.backend.service.CreationRecordService
 ) : OrganisationalUnitApi {
     override fun getAllOrganisationalUnits(): List<OrganisationalUnitResponse> = organisationalUnitService.getAllAsResponses()
 
     override fun getOrganisationalUnitTree(): List<OrganisationalUnitTreeResponse> = organisationalUnitService.getTreeAsResponses()
 
-    override fun getOrganisationalUnitByKey(key: String): OrganisationalUnitResponse = organisationalUnitService.getByKeyAsResponse(key)
+    override fun getOrganisationalUnitByKey(key: String): OrganisationalUnitResponse {
+        val user = getCurrentUser()
+        val unit = organisationalUnitService.getByKey(key)
+        return organisationalUnitService
+            .getByKeyAsResponse(key)
+            .creatableChildTypes(creationPolicyService.childTypes(user, CreationPolicyService.ORGANISATIONAL_UNIT, key))
+            .canDelete(roleService.canDelete(user, "ORGANISATIONAL_UNIT", unit.effectiveOwner()?.id, unit.effectiveSteward()?.id))
+    }
 
     override fun createOrganisationalUnit(
         @Valid @Body request: CreateOrganisationalUnitRequest
     ): HttpResponse<OrganisationalUnitResponse> {
         val currentUser = getCurrentUser()
-        checkCreatePermission(currentUser, request.parentKeys)
+        val decision =
+            creationPolicyService.require(
+                currentUser,
+                CreationTarget(CreationPolicyService.ORGANISATIONAL_UNIT, parentKeys = request.parentKeys.orEmpty())
+            )
 
         val unit = organisationalUnitService.create(request, currentUser)
+        creationRecordService.recordCreation(
+            CreationPolicyService.ORGANISATIONAL_UNIT,
+            unit.key,
+            currentUser,
+            decision.basis,
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         val response = organisationalUnitMapper.toResponse(unit)
         return HttpResponse.status<OrganisationalUnitResponse>(HttpStatus.CREATED).body(response)
     }
@@ -160,6 +183,7 @@ open class OrganisationalUnitController(
         val currentUser = getCurrentUser()
         val unit = organisationalUnitService.getByKey(key)
         checkEditPermission(unit, currentUser)
+        creationPolicyService.requireOrgUnitParents(currentUser, key, request.keys.orEmpty())
         return organisationalUnitService.updateParents(key, request.keys, currentUser)
     }
 
@@ -230,34 +254,6 @@ open class OrganisationalUnitController(
         return userService
             .findByEmail(email)
             .orElseThrow { ResourceNotFoundException("User not found") }
-    }
-
-    private fun checkCreatePermission(
-        currentUser: User,
-        parentKeys: List<String>?
-    ) {
-        // Admin or a TEAM_TOPOLOGIES editor/lead may create any org unit (root or child).
-        if (roleService.isEditorFor(currentUser, "TEAM_TOPOLOGIES")) return
-
-        if (parentKeys.isNullOrEmpty()) {
-            throw ForbiddenOperationException(
-                "Creating a root organisational unit requires an administrator or a TEAM_TOPOLOGIES editor/lead role"
-            )
-        }
-
-        // Otherwise the business owner or steward of a parent unit may create a child under it.
-        val ownsOrStewardsAnyParent =
-            parentKeys.any { parentKey ->
-                val parent = organisationalUnitService.getByKey(parentKey)
-                parent.businessOwner?.id == currentUser.id || parent.businessSteward?.id == currentUser.id
-            }
-
-        if (!ownsOrStewardsAnyParent) {
-            throw ForbiddenOperationException(
-                "Creating a child unit requires an administrator, a TEAM_TOPOLOGIES editor/lead, " +
-                    "or ownership/stewardship of a parent unit"
-            )
-        }
     }
 
     // Org units are governed by TEAM_TOPOLOGIES: editable by the business owner, effective steward, an admin,

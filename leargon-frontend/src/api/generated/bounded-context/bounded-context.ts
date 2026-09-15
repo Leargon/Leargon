@@ -40,6 +40,7 @@ import type {
   CreateBoundedContextRequest,
   UpdateBoundedContextDescriptionsRequest,
   UpdateBoundedContextNamesRequest,
+  UpdateBoundedContextOwnerRequest,
   UpdateBoundedContextOwningTeamRequest
 } from '../model';
 
@@ -235,8 +236,16 @@ export const createBoundedContext = async (key: string,
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
   };
 return customAxios<createBoundedContextResponse>(getCreateBoundedContextUrl(key),
   {
@@ -570,8 +579,16 @@ export const updateBoundedContextNames = async (key: string,
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
   };
 return customAxios<updateBoundedContextNamesResponse>(getUpdateBoundedContextNamesUrl(key),
   {
@@ -679,8 +696,16 @@ export const updateBoundedContextDescriptions = async (key: string,
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
   };
 return customAxios<updateBoundedContextDescriptionsResponse>(getUpdateBoundedContextDescriptionsUrl(key),
   {
@@ -788,8 +813,16 @@ export const updateBoundedContextOwningTeam = async (key: string,
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Array.isArray(h)) return Object.fromEntries(h);
-    return h;
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
   };
 return customAxios<updateBoundedContextOwningTeamResponse>(getUpdateBoundedContextOwningTeamUrl(key),
   {
@@ -850,4 +883,121 @@ export const useUpdateBoundedContextOwningTeam = <TError = void,
         TContext
       > => {
       return useMutation(getUpdateBoundedContextOwningTeamMutationOptions(options), queryClient);
+    }
+    export type updateBoundedContextOwnerResponse200 = {
+  data: BoundedContextResponse
+  status: 200
+}
+
+export type updateBoundedContextOwnerResponse401 = {
+  data: void
+  status: 401
+}
+
+export type updateBoundedContextOwnerResponse403 = {
+  data: void
+  status: 403
+}
+
+export type updateBoundedContextOwnerResponse404 = {
+  data: void
+  status: 404
+}
+
+export type updateBoundedContextOwnerResponseSuccess = (updateBoundedContextOwnerResponse200) & {
+  headers: Headers;
+};
+export type updateBoundedContextOwnerResponseError = (updateBoundedContextOwnerResponse401 | updateBoundedContextOwnerResponse403 | updateBoundedContextOwnerResponse404) & {
+  headers: Headers;
+};
+
+export type updateBoundedContextOwnerResponse = (updateBoundedContextOwnerResponseSuccess | updateBoundedContextOwnerResponseError)
+
+export const getUpdateBoundedContextOwnerUrl = (key: string,) => {
+
+
+
+
+  return `/bounded-contexts/${key}/owner`
+}
+
+/**
+ * @summary Update the explicit bounded context owner
+ */
+export const updateBoundedContextOwner = async (key: string,
+    updateBoundedContextOwnerRequest: UpdateBoundedContextOwnerRequest, options?: Parameters<typeof customAxios>[1]): Promise<updateBoundedContextOwnerResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customAxios<updateBoundedContextOwnerResponse>(getUpdateBoundedContextOwnerUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateBoundedContextOwnerRequest)
+  }
+);}
+
+
+
+
+
+export const getUpdateBoundedContextOwnerMutationKey = () => ['updateBoundedContextOwner'] as const;
+
+export const getUpdateBoundedContextOwnerMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwner>>, TError,UpdateBoundedContextOwnerMutationVariables, TContext>, request?: SecondParameter<typeof customAxios>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwner>>, TError,UpdateBoundedContextOwnerMutationVariables, TContext> => {
+
+const mutationKey = getUpdateBoundedContextOwnerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBoundedContextOwner>>, UpdateBoundedContextOwnerMutationVariables> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  updateBoundedContextOwner(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBoundedContextOwnerMutationResult = NonNullable<Awaited<ReturnType<typeof updateBoundedContextOwner>>>
+    export type UpdateBoundedContextOwnerMutationBody = UpdateBoundedContextOwnerRequest
+    export type UpdateBoundedContextOwnerMutationError = void
+    export type UpdateBoundedContextOwnerMutationVariables = {key: string;data: UpdateBoundedContextOwnerRequest}
+
+    /**
+ * @summary Update the explicit bounded context owner
+ */
+export const useUpdateBoundedContextOwner = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBoundedContextOwner>>, TError,UpdateBoundedContextOwnerMutationVariables, TContext>, request?: SecondParameter<typeof customAxios>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateBoundedContextOwner>>,
+        TError,
+        UpdateBoundedContextOwnerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateBoundedContextOwnerMutationOptions(options), queryClient);
     }

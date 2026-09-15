@@ -1,5 +1,5 @@
 #### USER STORY 'Create capability'
-**AS AN** admin\
+**AS AN** admin or BCM editor/lead (L1 capability), or the owner/steward of the parent capability's owning unit (sub-capability)\
 **IF** \
 **I WANT** to create a business capability by providing a name in at least one supported locale\
 **SO THAT** the capability is registered in the capability map and can be linked to processes and organisational units

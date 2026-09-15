@@ -17,6 +17,8 @@ import org.leargon.backend.model.CreateCapabilityRequest
 import org.leargon.backend.model.UpdateCapabilityProcessLinksRequest
 import org.leargon.backend.model.UpdateCapabilityRequest
 import org.leargon.backend.service.CapabilityService
+import org.leargon.backend.service.CreationPolicyService
+import org.leargon.backend.service.CreationTarget
 import org.leargon.backend.service.RoleService
 import org.leargon.backend.service.UserService
 
@@ -26,17 +28,38 @@ open class CapabilityController(
     private val capabilityService: CapabilityService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val roleService: RoleService
+    private val roleService: RoleService,
+    private val creationPolicyService: CreationPolicyService,
+    private val creationRecordService: org.leargon.backend.service.CreationRecordService
 ) : CapabilityApi {
     override fun getAllCapabilities(): List<CapabilityResponse> = capabilityService.getAll()
 
-    override fun getCapabilityByKey(key: String): CapabilityResponse = capabilityService.getByKey(key)
+    override fun getCapabilityByKey(key: String): CapabilityResponse {
+        val user = getCurrentUser()
+        return capabilityService
+            .getByKey(key)
+            .canEdit(roleService.isEditorFor(user, "BCM"))
+            .creatableChildTypes(creationPolicyService.childTypes(user, CreationPolicyService.CAPABILITY, key))
+    }
 
     override fun createCapability(
         @Valid @Body createCapabilityRequest: CreateCapabilityRequest
     ): HttpResponse<CapabilityResponse> {
-        roleService.requireCreateRoot(getCurrentUser(), "BCM")
+        val currentUser = getCurrentUser()
+        val decision =
+            creationPolicyService.require(
+                currentUser,
+                CreationTarget(CreationPolicyService.CAPABILITY, parentKey = createCapabilityRequest.parentCapabilityKey)
+            )
         val response = capabilityService.create(createCapabilityRequest)
+        creationRecordService.recordCreation(
+            CreationPolicyService.CAPABILITY,
+            response.key,
+            currentUser,
+            decision.basis,
+            createCapabilityRequest.duplicateJustification,
+            createCapabilityRequest.acknowledgedDuplicateKeys
+        )
         return HttpResponse.status<CapabilityResponse>(HttpStatus.CREATED).body(response)
     }
 

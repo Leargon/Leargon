@@ -36,6 +36,7 @@ import org.leargon.backend.repository.ProcessFlowNodeRepository
 import org.leargon.backend.repository.ProcessRepository
 import org.leargon.backend.repository.ProcessVersionRepository
 import org.leargon.backend.repository.UserRepository
+import org.leargon.backend.util.KeyAllocator
 import org.leargon.backend.util.SlugUtil
 
 @Singleton
@@ -56,9 +57,43 @@ open class ProcessService(
     private val fieldVerificationService: FieldVerificationService,
     private val roleService: RoleService,
     private val processFieldValueExtractor: org.leargon.backend.service.fieldvalue.ProcessFieldValueExtractor,
-    private val defaultLocaleProvider: DefaultLocaleProvider
+    private val defaultLocaleProvider: DefaultLocaleProvider,
+    private val creationPolicyService: CreationPolicyService,
+    private val classificationAssignmentValidator: ClassificationAssignmentValidator,
+    private val creationRequirementService: CreationRequirementService,
+    private val duplicateCandidateService: DuplicateCandidateService,
+    private val creationRecordService: CreationRecordService
 ) {
     private val objectMapper = ObjectMapper()
+
+    /**
+     * Moving a process (reparent, bounded-context change, or owning-unit change while unplaced) needs
+     * creation rights at the destination, in addition to edit rights on the process.
+     */
+    private fun requirePlacement(
+        currentUser: User,
+        parentKey: String?,
+        boundedContextKey: String?,
+        owningUnitKey: String?
+    ): CreationDecision =
+        creationPolicyService.require(
+            currentUser,
+            CreationTarget(
+                CreationPolicyService.BUSINESS_PROCESS,
+                parentKey = parentKey,
+                boundedContextKey = boundedContextKey,
+                owningUnitKey = owningUnitKey
+            )
+        )
+
+    /** Process keys are global (code or name slug), so collisions are resolved with a numeric suffix. */
+    private fun allocateProcessKey(
+        base: String,
+        selfId: Long?
+    ): String {
+        val repo = processRepository
+        return KeyAllocator.allocate(base) { candidate -> repo.findByKey(candidate).map { it.id != selfId }.orElse(false) }
+    }
 
     /**
      * Per-field edit gate. Owner/steward/admin may edit anything; a methodology-scoped EDITOR/LEAD may
@@ -95,6 +130,16 @@ open class ProcessService(
     @ReadOnly
     open fun getProcessByKeyAsResponse(key: String): ProcessResponse = processMapper.toProcessResponse(getProcessByKey(key))
 
+    /** The delete predicate enforced by `deleteProcess`, for the `canDelete` detail flag. */
+    @ReadOnly
+    open fun canDelete(
+        key: String,
+        currentUser: User
+    ): Boolean {
+        val process = getProcessByKey(key)
+        return roleService.canDelete(currentUser, "BUSINESS_PROCESS", process.effectiveOwner()?.id, process.effectiveSteward()?.id)
+    }
+
     /** Detail response including the current user's per-record [editableFields]. */
     @ReadOnly
     open fun getProcessByKeyAsResponse(
@@ -115,21 +160,13 @@ open class ProcessService(
             validateTranslations(request.descriptions, false)
         }
 
-        // Create gating: root processes need admin / PROCESS_GOVERNANCE editor-lead; a child (sub-process)
-        // may also be created by the parent process's owner or steward.
         val parentProcess =
             request.parentProcessKey?.let {
                 processRepository
                     .findByKey(it)
                     .orElseThrow { ResourceNotFoundException("Parent process not found: $it") }
             }
-        if (parentProcess != null) {
-            roleService.requireCreateChild(
-                currentUser, "PROCESS_GOVERNANCE", parentProcess.processOwner?.id, parentProcess.processSteward?.id
-            )
-        } else {
-            roleService.requireCreateRoot(currentUser, "PROCESS_GOVERNANCE")
-        }
+        val decision = requirePlacement(currentUser, request.parentProcessKey, request.boundedContextKey, request.owningUnitKey)
 
         var process = Process()
         process.createdBy = currentUser
@@ -159,15 +196,26 @@ open class ProcessService(
 
         val defaultLocale = localeService.getDefaultLocale()
         process.key =
-            if (!process.code.isNullOrBlank()) {
-                SlugUtil.slugify(process.code)
-            } else {
-                val defaultName = process.names.find { it.locale == defaultLocale?.localeCode }?.text
-                SlugUtil.slugify(defaultName)
-            }
+            allocateProcessKey(
+                if (!process.code.isNullOrBlank()) {
+                    SlugUtil.slugify(process.code)
+                } else {
+                    val defaultName = process.names.find { it.locale == defaultLocale?.localeCode }?.text
+                    SlugUtil.slugify(defaultName)
+                },
+                null
+            )
 
         if (parentProcess != null) {
             process.parent = parentProcess
+            // A sub-process lives in its parent's bounded context unless placed elsewhere explicitly.
+            process.boundedContext = parentProcess.boundedContext
+        }
+        if (request.boundedContextKey != null) {
+            process.boundedContext =
+                boundedContextRepository
+                    .findByKey(request.boundedContextKey!!)
+                    .orElseThrow { ResourceNotFoundException("Bounded context not found: ${request.boundedContextKey}") }
         }
 
         if (request.inputEntityKeys != null) {
@@ -197,8 +245,56 @@ open class ProcessService(
                     .orElseThrow { ResourceNotFoundException("Owning unit not found") }
         }
 
+        // Everything the creation wizard collects is set atomically here: a realm owner may delegate the new
+        // process to another owner, after which follow-up edits by the creator would no longer be permitted.
+        val users = userRepository
+        process.processSteward =
+            request.processStewardUsername?.let {
+                users.findByUsername(it).orElseThrow { ResourceNotFoundException("Process steward user not found: $it") }
+            }
+        process.technicalCustodian =
+            request.technicalCustodianUsername?.let {
+                users.findByUsername(it).orElseThrow { ResourceNotFoundException("Technical custodian user not found: $it") }
+            }
+        val units = organisationalUnitRepository
+        request.executingUnitKeys.orEmpty().forEach { unitKey ->
+            process.executingUnits.add(
+                units.findByKey(unitKey).orElseThrow { ResourceNotFoundException("Organisational unit not found: $unitKey") }
+            )
+        }
+        process.legalBasis = request.legalBasis?.value
+        val purpose = request.purpose.orEmpty()
+        if (purpose.isNotEmpty()) {
+            validateTranslations(purpose, false)
+            process.purpose = purpose.map { LocalizedText(it.locale, it.text) }.toMutableList()
+        }
+        val assignments = request.classificationAssignments.orEmpty()
+        if (assignments.isNotEmpty()) {
+            process.classificationAssignments = classificationAssignmentValidator.toAssignments(assignments, "BUSINESS_PROCESS")
+        }
+
+        creationRequirementService.requireComplete("BUSINESS_PROCESS", processMapper.presenceOf(process))
+        duplicateCandidateService.requireNoUnjustifiedDuplicates(
+            CreationTarget(
+                CreationPolicyService.BUSINESS_PROCESS,
+                parentKey = request.parentProcessKey,
+                boundedContextKey = process.boundedContext?.key,
+                owningUnitKey = request.owningUnitKey
+            ),
+            process.names.map { it.text },
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         process = processRepository.save(process)
         createProcessVersion(process, currentUser, "CREATE", "Initial creation")
+        creationRecordService.recordCreation(
+            CreationPolicyService.BUSINESS_PROCESS,
+            process.key,
+            currentUser,
+            decision.basis,
+            request.duplicateJustification,
+            request.acknowledgedDuplicateKeys
+        )
         return process
     }
 
@@ -219,7 +315,7 @@ open class ProcessService(
         if (process.code.isNullOrBlank()) {
             val defaultLocale = localeService.getDefaultLocale()
             val defaultName = process.names.find { it.locale == defaultLocale?.localeCode }?.text
-            process.key = SlugUtil.slugify(defaultName)
+            process.key = allocateProcessKey(SlugUtil.slugify(defaultName), process.id)
         }
 
         process.updatedBy = currentUser
@@ -496,6 +592,7 @@ open class ProcessService(
     ): ProcessResponse {
         var process = getProcessByKey(key)
         requireFieldEdit(process, currentUser, "parent")
+        requirePlacement(currentUser, parentKey, process.boundedContext?.key, process.owningUnit?.key)
 
         if (parentKey != null) {
             if (parentKey == key) throw IllegalArgumentException("A process cannot be its own parent")
@@ -696,6 +793,11 @@ open class ProcessService(
     ): ProcessResponse {
         var process = getProcessByKey(key)
         requireFieldEdit(process, currentUser, "boundedContext")
+        // Assigning bounded contexts is DDD modelling: a DDD editor/lead may move processes between contexts;
+        // anyone else (realm owners included) needs creation rights at the destination.
+        if (!roleService.isEditorFor(currentUser, "DDD")) {
+            requirePlacement(currentUser, process.parent?.key, boundedContextKey, process.owningUnit?.key)
+        }
 
         val oldName = process.boundedContext?.getName(defaultLocaleProvider.code()) ?: "none"
 
@@ -732,6 +834,10 @@ open class ProcessService(
     ): ProcessResponse {
         var process = getProcessByKey(key)
         requireFieldEdit(process, currentUser, "owningUnit")
+        // The owning unit is the process's placement only while it has no parent and no bounded context.
+        if (process.parent == null && process.boundedContext == null) {
+            requirePlacement(currentUser, null, null, owningUnitKey)
+        }
 
         val oldName = process.owningUnit?.getName(defaultLocaleProvider.code()) ?: "none"
 
@@ -741,15 +847,7 @@ open class ProcessService(
                     .findByKey(owningUnitKey)
                     .orElseThrow { ResourceNotFoundException("Organisational unit not found") }
             } else {
-                val fallbackOwner =
-                    process.processOwner
-                        ?: process.boundedContext
-                            ?.owningUnit
-                            ?.businessOwner
-                        ?: process.boundedContext
-                            ?.domain
-                            ?.owningUnit
-                            ?.businessOwner
+                val fallbackOwner = process.processOwner ?: process.boundedContext?.effectiveOwner()
                 if (fallbackOwner == null) {
                     throw IllegalArgumentException(
                         "Cannot remove owning unit: no direct process owner or bounded context owner exists as fallback"

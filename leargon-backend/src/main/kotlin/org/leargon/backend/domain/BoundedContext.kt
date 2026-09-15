@@ -44,6 +44,11 @@ class BoundedContext {
     @JoinColumn(name = "owning_unit_id")
     var owningUnit: OrganisationalUnit? = null
 
+    /** Explicit owner; when unset, ownership is inherited (see [effectiveOwner]). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    var owner: User? = null
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")
     var createdBy: User? = null
@@ -55,6 +60,17 @@ class BoundedContext {
     @DateUpdated
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
+
+    /** The explicit [owner], else the owning team's business owner, else the domain's effective owner. */
+    fun effectiveOwner(): User? = owner ?: owningUnit?.businessOwner ?: domain?.effectiveOwner()
+
+    /** Bounded contexts carry no steward person: the owning team's steward, else the domain's. */
+    fun effectiveSteward(): User? = owningUnit?.businessSteward ?: domain?.effectiveSteward()
+
+    fun effectiveOwningUnit(): OrganisationalUnit? = owningUnit ?: domain?.effectiveOwningUnit()
+
+    /** Everyone whose realm contains this bounded context: its effective owner plus the domain realm. */
+    fun realmOwners(): List<User> = (listOfNotNull(effectiveOwner()) + domain?.realmOwners().orEmpty()).distinctBy { it.id }
 
     fun getName(locale: String): String = names.textForLocale(locale, key)
 }

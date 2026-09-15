@@ -20,6 +20,8 @@ import {
 import { useGetAssignableUsers } from '../../api/generated/administration/administration';
 import { useGetSupportedLocales } from '../../api/generated/locale/locale';
 import TranslationEditor from '../common/TranslationEditor';
+import AdvisorPanel from '../advisor/AdvisorPanel';
+import { useAdvisorDecision } from '../../hooks/useAdvisorDecision';
 import type {
   LocalizedText,
   OrganisationalUnitResponse,
@@ -49,6 +51,10 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
   const [leadUsername, setLeadUsername] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Advisor panel (sub-unit or top-level unit): an allowed recommendation decides the parent.
+  const decision = useAdvisorDecision(() => {});
+  const effectiveParentKey = decision.decided ? decision.decided.parentKey ?? undefined : parentKey;
+
   const defaultLocale = locales.find((l) => l.isDefault)?.localeCode || 'en';
   const hasDefaultName = names.some((n) => n.locale === defaultLocale && n.text.trim());
 
@@ -66,7 +72,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
           descriptions: descriptions.filter((d) => d.text.trim()),
           unitType: unitType || undefined,
           businessOwnerUsername: leadUsername || undefined,
-          parentKeys: parentKey ? [parentKey] : undefined,
+          parentKeys: effectiveParentKey ? [effectiveParentKey] : undefined,
         },
       });
       queryClient.invalidateQueries({ queryKey: getGetOrganisationalUnitTreeQueryKey() });
@@ -84,6 +90,7 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
     setDescriptions([]);
     setUnitType('');
     setLeadUsername(null);
+    decision.reset();
     setError(null);
   };
 
@@ -94,9 +101,10 @@ const CreateOrgUnitDialog: React.FC<CreateOrgUnitDialogProps> = ({ open, onClose
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{parentKey ? t('orgUnitDialog.createChildTitle') : t('orgUnitDialog.createTitle')}</DialogTitle>
+      <DialogTitle>{effectiveParentKey ? t('orgUnitDialog.createChildTitle') : t('orgUnitDialog.createTitle')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+          <AdvisorPanel ruleSetCode="ORG_UNIT_PLACEMENT" contextItemKey={parentKey} decision={decision} />
           <TranslationEditor
             locales={locales}
             names={names}

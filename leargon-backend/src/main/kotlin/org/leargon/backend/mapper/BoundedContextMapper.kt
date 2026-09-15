@@ -30,6 +30,8 @@ open class BoundedContextMapper {
         response.descriptions = LocalizedTextMapper.toModel(bc.descriptions)
         response.createdBy = UserMapper.toUserSummary(bc.createdBy)
         response.owningTeam = organisationalUnitMapper.toSummaryResponse(bc.owningUnit)
+        response.owner = UserMapper.toUserSummary(bc.owner)
+        response.effectiveOwner = UserMapper.toUserSummary(bc.effectiveOwner())
         if (bc.contextType != null) {
             response.contextType = BoundedContextResponseContextType.fromValue(bc.contextType!!)
         }

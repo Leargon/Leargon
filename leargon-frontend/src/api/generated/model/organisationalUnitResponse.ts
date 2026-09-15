@@ -18,6 +18,7 @@
  */
 import type { BusinessEntitySummaryResponse } from './businessEntitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { FieldVerificationResponse } from './fieldVerificationResponse.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
@@ -29,6 +30,16 @@ import type { UserSummaryResponse } from './userSummaryResponse.ts';
 export interface OrganisationalUnitResponse {
   /** Organisational unit key */
   key: string;
+  /**
+     * Item types the current user may create inside this unit (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
+  /**
+     * Whether the current user may delete this unit (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canDelete?: boolean | null;
   /**
      * Type of organisational unit (freetext)
      * @nullable

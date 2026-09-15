@@ -24,6 +24,11 @@ import type { ServiceProviderSummaryResponse } from './serviceProviderSummaryRes
 export interface ItSystemResponse {
   /** IT system key */
   key: string;
+  /**
+     * Whether the current user may edit/delete this IT system (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canEdit?: boolean | null;
   names: LocalizedText[];
   descriptions: LocalizedText[];
   /**

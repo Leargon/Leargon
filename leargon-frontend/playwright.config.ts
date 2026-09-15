@@ -37,6 +37,7 @@ export default defineConfig({
         /methodology-settings\.spec\.ts/,
         /field-verification\.spec\.ts/,
         /tasks\.spec\.ts/,
+        /required-at-creation\.spec\.ts/,
       ],
     },
     // Config-mutating specs run AFTER the parallel bulk, chained so they never overlap each other or
@@ -61,6 +62,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: '.auth/admin.json' },
       dependencies: ['chromium-verification'],
       testMatch: /tasks\.spec\.ts/,
+      fullyParallel: false,
+    },
+    // Makes a field required at creation app-wide, so it must not overlap any spec that creates items.
+    {
+      name: 'chromium-required-at-creation',
+      use: { ...devices['Desktop Chrome'], storageState: '.auth/admin.json' },
+      dependencies: ['chromium-tasks'],
+      testMatch: /required-at-creation\.spec\.ts/,
       fullyParallel: false,
     },
   ],

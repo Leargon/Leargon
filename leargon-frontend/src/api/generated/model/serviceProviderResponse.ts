@@ -24,6 +24,11 @@ import type { ServiceProviderType } from './serviceProviderType.ts';
 export interface ServiceProviderResponse {
   /** Service provider key */
   key: string;
+  /**
+     * Whether the current user may edit/delete this service provider (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canEdit?: boolean | null;
   names: LocalizedText[];
   serviceProviderType: ServiceProviderType;
   /** List of ISO 3166-1 alpha-2 country codes where data is processed */

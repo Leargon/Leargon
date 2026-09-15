@@ -1,5 +1,5 @@
 #### USER STORY 'Create context relationship'
-**AS AN** admin\
+**AS AN** admin, a DDD editor/lead, or the owner of either bounded context (or of its domain)\
 **IF** two bounded contexts exist and are not already related\
 **I WANT** to create a directed relationship between two bounded contexts by specifying the relationship type (Partnership, Customer/Supplier, Shared Kernel, Open Host Service, Conformist, Anti-Corruption Layer, Published Language, Separate Ways)\
 **SO THAT** the integration topology between bounded contexts is explicitly modelled on the context map

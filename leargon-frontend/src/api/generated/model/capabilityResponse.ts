@@ -18,6 +18,7 @@
  */
 import type { CapabilitySummaryResponse } from './capabilitySummaryResponse.ts';
 import type { ClassificationAssignmentResponse } from './classificationAssignmentResponse.ts';
+import type { CreatableItemType } from './creatableItemType.ts';
 import type { LocalizedText } from './localizedText.ts';
 import type { OrganisationalUnitSummaryResponse } from './organisationalUnitSummaryResponse.ts';
 import type { ProcessSummaryResponse } from './processSummaryResponse.ts';
@@ -25,6 +26,16 @@ import type { ProcessSummaryResponse } from './processSummaryResponse.ts';
 export interface CapabilityResponse {
   /** Capability key */
   key: string;
+  /**
+     * Whether the current user may edit/delete this capability (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  canEdit?: boolean | null;
+  /**
+     * Item types the current user may create under this capability (backend-computed; null when not evaluated)
+     * @nullable
+     */
+  creatableChildTypes?: CreatableItemType[] | null;
   names: LocalizedText[];
   /** @nullable */
   descriptions?: LocalizedText[] | null;

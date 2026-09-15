@@ -108,6 +108,46 @@ open class IllegalArgumentExceptionHandler : ExceptionHandler<IllegalArgumentExc
 
 @Produces
 @Singleton
+@Requires(classes = [RequiredFieldsMissingException::class, ExceptionHandler::class])
+open class RequiredFieldsMissingExceptionHandler : ExceptionHandler<RequiredFieldsMissingException, HttpResponse<ErrorResponse>> {
+    override fun handle(
+        request: HttpRequest<*>,
+        exception: RequiredFieldsMissingException
+    ): HttpResponse<ErrorResponse> {
+        val error =
+            ErrorResponse()
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.code)
+                .errorCode(REQUIRED_AT_CREATION_MISSING)
+                .message(exception.message)
+                .missingFields(exception.missingFields)
+                .path(request.path)
+                .timestamp(ZonedDateTime.now())
+        return HttpResponse.status<ErrorResponse>(HttpStatus.UNPROCESSABLE_ENTITY).body(error)
+    }
+}
+
+@Produces
+@Singleton
+@Requires(classes = [DuplicateCandidatesException::class, ExceptionHandler::class])
+open class DuplicateCandidatesExceptionHandler : ExceptionHandler<DuplicateCandidatesException, HttpResponse<ErrorResponse>> {
+    override fun handle(
+        request: HttpRequest<*>,
+        exception: DuplicateCandidatesException
+    ): HttpResponse<ErrorResponse> {
+        val error =
+            ErrorResponse()
+                .status(HttpStatus.CONFLICT.code)
+                .errorCode(DUPLICATE_CANDIDATES)
+                .message(exception.message)
+                .duplicateCandidates(exception.candidates)
+                .path(request.path)
+                .timestamp(ZonedDateTime.now())
+        return HttpResponse.status<ErrorResponse>(HttpStatus.CONFLICT).body(error)
+    }
+}
+
+@Produces
+@Singleton
 @Requires(classes = [Exception::class, ExceptionHandler::class])
 open class GenericExceptionHandler : ExceptionHandler<Exception, HttpResponse<*>> {
     private val log = LoggerFactory.getLogger(GenericExceptionHandler::class.java)
@@ -139,3 +179,9 @@ const val GENERIC_CONFLICT: String = "GENERIC_CONFLICT"
 const val GENERIC_UNAUTHORIZED: String = "GENERIC_UNAUTHORIZED"
 const val GENERIC_BAD_REQUEST: String = "GENERIC_BAD_REQUEST"
 const val GENERIC_INTERNAL_ERROR: String = "GENERIC_INTERNAL_ERROR"
+
+/** A create request lacks fields configured as required at creation (422, see `missingFields`). */
+const val REQUIRED_AT_CREATION_MISSING: String = "REQUIRED_AT_CREATION_MISSING"
+
+/** Creation would add a likely duplicate without justification (409, see `duplicateCandidates`). */
+const val DUPLICATE_CANDIDATES: String = "DUPLICATE_CANDIDATES"

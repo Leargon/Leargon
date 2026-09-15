@@ -1,5 +1,5 @@
 #### USER STORY 'Create organisational unit'
-**AS AN** admin\
+**AS AN** admin or TEAM_TOPOLOGIES editor/lead (top-level unit), or the business owner/steward of every parent unit (sub-unit)\
 **IF** \
 **I WANT** to create a new organisational unit by providing a name in at least one supported locale\
 **SO THAT** the unit is registered in the organisational structure and can be assigned a lead and linked to processes

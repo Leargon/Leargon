@@ -45,12 +45,19 @@ open class BusinessEntityController(
     private val classificationService: ClassificationService,
     private val userService: UserService,
     private val securityService: SecurityService,
-    private val dpiaService: DpiaService
+    private val dpiaService: DpiaService,
+    private val creationPolicyService: org.leargon.backend.service.CreationPolicyService
 ) : BusinessEntityApi {
     override fun getAllBusinessEntities(): List<BusinessEntityResponse> = businessEntityService.getAllBusinessEntitiesAsResponses()
 
-    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse =
-        businessEntityService.getBusinessEntityByKeyAsResponse(key, getCurrentUser())
+    override fun getBusinessEntityByKey(key: String): BusinessEntityResponse {
+        val user = getCurrentUser()
+        return businessEntityService
+            .getBusinessEntityByKeyAsResponse(key, user)
+            .creatableChildTypes(
+                creationPolicyService.childTypes(user, org.leargon.backend.service.CreationPolicyService.BUSINESS_ENTITY, key)
+            ).canDelete(businessEntityService.canDelete(key, user))
+    }
 
     override fun getBusinessEntityTree(): List<BusinessEntityTreeResponse> = businessEntityService.getBusinessEntityTreeAsResponses()
 
