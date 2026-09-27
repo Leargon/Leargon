@@ -407,6 +407,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     },
   });
 
+  // Personal data (typed GDPR facts) inline edit. The flag and the role are edited as one value and
+  // saved together, which matches the endpoint — it takes both in a single request.
+  const personalDataEdit = useInlineEdit<{ contains: boolean | null; role: string | null }>({
+    onSave: async (val) => {
+      await savePersonalData(val.contains, val.role);
+    },
+  });
+
   // Cancel all edits when navigating to a different entity
   useEffect(() => {
     namesEdit.cancel();
@@ -419,6 +427,7 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
     classEdit.cancel();
     interfacesEdit.cancel();
     retentionEdit.cancel();
+    personalDataEdit.cancel();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityKey]);
 
@@ -1235,59 +1244,80 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
           v === true ? t('common.yes') : v === false ? t('common.no') : t('entity.personalDataNotSet');
         const roleLabel = (r?: string | null) =>
           r === 'DATA_SUBJECT' ? t('entity.roleDataSubject') : r === 'DATA_ATTRIBUTE' ? t('entity.roleDataAttribute') : t('common.none');
+        const edited = personalDataEdit.editValue;
         return (
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.containsPersonalData')}</Typography>
-            {canEditField('containsPersonalData') ? (
-              <Select
-                size="small"
-                sx={{ minWidth: 150 }}
-                value={entity.containsPersonalData === true ? 'yes' : entity.containsPersonalData === false ? 'no' : ''}
-                displayEmpty
-                onChange={(e: SelectChangeEvent) => {
-                  const v = e.target.value;
-                  savePersonalData(v === 'yes' ? true : v === 'no' ? false : null, entity.entityRole ?? null);
-                }}
-              >
-                <MenuItem value=""><em>{inheritedFrom ? yesNo(effectivePersonalData) : t('entity.personalDataNotSet')}</em></MenuItem>
-                <MenuItem value="yes">{t('common.yes')}</MenuItem>
-                <MenuItem value="no">{t('common.no')}</MenuItem>
-              </Select>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {yesNo(effectivePersonalData)}
-              </Typography>
-            )}
-            {inheritedFrom && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t('entity.personalDataInherited', { name: inheritedFrom })}
-              </Typography>
-            )}
-          </Box>
-          {effectivePersonalData === true && !isHidden('entityRole') && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.entityRole')}</Typography>
-              {canEditField('containsPersonalData') && !inheritedFrom ? (
+          <PropRow
+            fieldName="containsPersonalData"
+            highlighted={fieldMatches(focusedField, 'containsPersonalData')}
+            label={t('entity.containsPersonalData')}
+            statusIndicator={renderStatus('containsPersonalData', 'entityRole')}
+            canEdit={canEditField('containsPersonalData')}
+            isEditing={personalDataEdit.isEditing}
+            onEdit={() => personalDataEdit.startEdit({
+              contains: entity.containsPersonalData ?? null,
+              role: entity.entityRole ?? null,
+            })}
+            onSave={personalDataEdit.save}
+            onCancel={personalDataEdit.cancel}
+            isSaving={personalDataEdit.isSaving}
+            isMandatory={isMandatory('containsPersonalData')}
+          >
+            {personalDataEdit.isEditing ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Select
                   size="small"
                   sx={{ minWidth: 150 }}
-                  value={entity.entityRole ?? ''}
                   displayEmpty
-                  onChange={(e: SelectChangeEvent) => savePersonalData(entity.containsPersonalData ?? null, e.target.value || null)}
+                  value={edited?.contains === true ? 'yes' : edited?.contains === false ? 'no' : ''}
+                  onChange={(e: SelectChangeEvent) => {
+                    const v = e.target.value;
+                    personalDataEdit.setEditValue({
+                      contains: v === 'yes' ? true : v === 'no' ? false : null,
+                      role: edited?.role ?? null,
+                    });
+                  }}
                 >
-                  <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
-                  <MenuItem value="DATA_SUBJECT">{t('entity.roleDataSubject')}</MenuItem>
-                  <MenuItem value="DATA_ATTRIBUTE">{t('entity.roleDataAttribute')}</MenuItem>
+                  <MenuItem value=""><em>{t('entity.personalDataNotSet')}</em></MenuItem>
+                  <MenuItem value="yes">{t('common.yes')}</MenuItem>
+                  <MenuItem value="no">{t('common.no')}</MenuItem>
                 </Select>
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {roleLabel(entity.effectiveEntityRole)}
-                </Typography>
-              )}
-            </Box>
-          )}
-        </Box>
+                {edited?.contains === true && !isHidden('entityRole') && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.entityRole')}</Typography>
+                    <Select
+                      size="small"
+                      sx={{ minWidth: 150 }}
+                      displayEmpty
+                      value={edited?.role ?? ''}
+                      onChange={(e: SelectChangeEvent) =>
+                        personalDataEdit.setEditValue({ contains: edited?.contains ?? null, role: e.target.value || null })}
+                    >
+                      <MenuItem value=""><em>{t('common.none')}</em></MenuItem>
+                      <MenuItem value="DATA_SUBJECT">{t('entity.roleDataSubject')}</MenuItem>
+                      <MenuItem value="DATA_ATTRIBUTE">{t('entity.roleDataAttribute')}</MenuItem>
+                    </Select>
+                  </Box>
+                )}
+                {personalDataEdit.error && <Alert severity="error" sx={{ mt: 1 }}>{personalDataEdit.error}</Alert>}
+              </Box>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2">{yesNo(effectivePersonalData)}</Typography>
+                  {inheritedFrom && (
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {t('entity.personalDataInherited', { name: inheritedFrom })}
+                    </Typography>
+                  )}
+                </Box>
+                {effectivePersonalData === true && !isHidden('entityRole') && (
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {t('entity.entityRole')}: {roleLabel(entity.effectiveEntityRole)}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </PropRow>
         );
       })()}
 

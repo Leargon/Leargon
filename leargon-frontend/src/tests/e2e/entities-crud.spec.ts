@@ -121,14 +121,19 @@ test.describe('Business Entity CRUD — Owner', () => {
 
     await page.getByRole('button', { name: 'Governance', exact: true }).click();
 
-    // The flag is editable for the owner — it is offered as a select, not as static text.
-    const row = page.getByText('Contains personal data', { exact: true }).locator('..');
-    await row.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Yes', exact: true }).click();
+    // The row follows the panel's inline-edit idiom: nothing is editable until the pencil is clicked.
+    const row = page.locator('#field-containsPersonalData');
+    await expect(row).toBeVisible({ timeout: 10_000 });
+    await expect(row.getByRole('combobox')).toHaveCount(0);
 
-    // The answer sticks, and the dependent role row appears once the answer is "yes".
-    await expect(row.getByRole('combobox')).toHaveText('Yes', { timeout: 10_000 });
-    await expect(page.getByText('Data category role')).toBeVisible({ timeout: 10_000 });
+    await row.locator('button:has([data-testid="EditIcon"])').click();
+    await row.getByRole('combobox').first().click();
+    await page.getByRole('option', { name: 'Yes', exact: true }).click();
+    await row.locator('button:has([data-testid="CheckIcon"])').click();
+
+    // Saved: the row returns to read-only text carrying the new answer.
+    await expect(row.getByText('Yes', { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect(row.getByRole('combobox')).toHaveCount(0);
   });
 
   test('can change the data owner', async ({ page }) => {
@@ -207,9 +212,11 @@ test.describe('Business Entity CRUD — Viewer', () => {
 
     await page.getByRole('button', { name: 'Governance', exact: true }).click();
 
-    const row = page.getByText('Contains personal data', { exact: true }).locator('..');
+    const row = page.locator('#field-containsPersonalData');
     await expect(row).toBeVisible({ timeout: 10_000 });
+    // No select and no pencil: a viewer gets read-only text only.
     await expect(row.getByRole('combobox')).toHaveCount(0);
+    await expect(row.locator('button:has([data-testid="EditIcon"])')).toHaveCount(0);
   });
 
   test('cannot see the Delete button on entity detail', async ({ page }) => {
