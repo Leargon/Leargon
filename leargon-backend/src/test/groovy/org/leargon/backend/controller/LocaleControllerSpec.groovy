@@ -171,16 +171,31 @@ class LocaleControllerSpec extends Specification {
         sortOrders == sortOrders.sort()
     }
 
-    def "GET /locales should return 401 without authentication"() {
-        when: "getting locales without token"
-        client.toBlocking().exchange(
+    def "GET /locales should succeed without authentication"() {
+        when: "getting locales without a token"
+        // Deliberately anonymous: LocaleProvider wraps the whole SPA, so this is fetched on /login
+        // before anyone holds a token. A 401 here carries a WWW-Authenticate header, which browsers
+        // answer with their own native credential dialog on top of the sign-in form.
+        def response = client.toBlocking().exchange(
                 HttpRequest.GET("/locales"),
-                List
+                Argument.listOf(SupportedLocaleResponse)
         )
 
-        then: "unauthorized exception is thrown"
+        then: "the tenant's locales are readable, so the login page can localise itself"
+        response.status == HttpStatus.OK
+        response.body().any { it.localeCode == "en" }
+    }
+
+    def "POST /locales should still reject an anonymous caller"() {
+        when: "creating a locale without a token"
+        client.toBlocking().exchange(
+                HttpRequest.POST("/locales", [localeCode: "no", displayName: "Norsk"]),
+                SupportedLocaleResponse
+        )
+
+        then: "only reading is anonymous — every mutation stays admin-only"
         def exception = thrown(HttpClientResponseException)
-        exception.status == HttpStatus.UNAUTHORIZED
+        exception.status in [HttpStatus.UNAUTHORIZED, HttpStatus.FORBIDDEN]
     }
 
     // ===== POST /locales =====

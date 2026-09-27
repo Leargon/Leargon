@@ -30,6 +30,24 @@ class AuthenticationControllerSpec extends Specification {
         userRepository.deleteAll()
     }
 
+    def "supported locales are readable before sign-in so the login page can localise itself"() {
+        when: "an anonymous client lists locales"
+        def response = client.toBlocking().exchange(HttpRequest.GET("/locales"), String)
+
+        then: "it succeeds — the login page needs the tenant default before anyone has a token"
+        response.status == HttpStatus.OK
+    }
+
+    def "an unauthenticated request is rejected without a Basic challenge"() {
+        when: "requesting a secured endpoint with no token"
+        client.toBlocking().exchange(HttpRequest.GET("/business-entities"))
+
+        then: "it is a plain 401 — a WWW-Authenticate header makes browsers pop their own login dialog"
+        def e = thrown(HttpClientResponseException)
+        e.status == HttpStatus.UNAUTHORIZED
+        e.response.headers.get("WWW-Authenticate") == null
+    }
+
     def "POST /authentication/signup should create user and return JWT token"() {
         given: "a valid signup request"
         def request = new SignupRequest("newuser@example.com", "newuser", "password123", "New", "User")

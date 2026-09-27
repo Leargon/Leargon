@@ -16,6 +16,21 @@ test('login page renders the sign-in form', async ({ page }) => {
   await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible({ timeout: 10_000 });
 });
 
+test('the login page issues no unauthorised request', async ({ page }) => {
+  // A 401 here would carry a WWW-Authenticate header and make the browser show its own native
+  // credential dialog on top of the sign-in form. Playwright cannot observe that dialog, so assert
+  // on the traffic that causes it instead.
+  const unauthorised: string[] = [];
+  page.on('response', (res) => {
+    if (res.status() === 401) unauthorised.push(`${res.status()} ${res.url()}`);
+  });
+
+  await page.goto('/login');
+  await page.waitForLoadState('networkidle');
+
+  expect(unauthorised).toEqual([]);
+});
+
 test('login with valid credentials navigates to /home', async ({ page }) => {
   await page.goto('/login');
 
