@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 078-normalise-null-localized-json
+      author: leargon
+      comment: >-
+        Migration 061 wrote NULL for empty multilingual values ("an empty string is not valid JSON").
+        The matching Kotlin properties are declared non-null (MutableList<LocalizedText>), so
+        Hibernate writes null straight into the backing field, bypassing Kotlin's null-safety, and
+        the first direct call on the collection throws — in production this made
+        GET /processing-register return 500 on BusinessEntity.getRetentionPeriod().
+        Normalise every such column to an empty JSON array. Idempotent.
+
+        The criterion is "the Kotlin property is non-null", NOT "migration 061 touched it" — there
+        are two independent sources of these NULLs:
+          (a) migration 061's `CASE WHEN TRIM(col) = '' THEN NULL` (the first twelve below);
+          (b) a later addColumn that neither backfills nor adds NOT NULL, leaving NULL on every
+              pre-existing row — organisational_units.mission_statement (064). That is the same
+              crash waiting on the org-unit detail response and on GET /tasks.
+        Migration 058 shows the correct pattern for (b) and needs nothing here: it adds
+        it_systems.processing_countries nullable, backfills it with JSON_ARRAY(), then applies
+        addNotNullConstraint — so that column can never be NULL.
+
+        Deliberately NOT normalised: processes.purpose, processes.security_measures,
+        processes.activity_justification, processes.cross_border_transfers and
+        business_entities.storage_locations — those properties are nullable in Kotlin, so a NULL
+        cannot crash them. (service_providers.processing_countries is already NOT NULL.)
+      changes:
+        - sql:
+            dbms: mysql
+            sql: UPDATE business_entities SET retention_period = '[]' WHERE retention_period IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE business_domains SET vision_statement = '[]' WHERE vision_statement IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE context_relationships SET upstream_role = '[]' WHERE upstream_role IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE context_relationships SET downstream_role = '[]' WHERE downstream_role IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE context_relationships SET description = '[]' WHERE description IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE translation_links SET semantic_difference_note = '[]' WHERE semantic_difference_note IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE dpia SET risk_description = '[]' WHERE risk_description IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE dpia SET measures = '[]' WHERE measures IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE dpia SET fdpic_consultation_outcome = '[]' WHERE fdpic_consultation_outcome IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE business_data_quality_rules SET description = '[]' WHERE description IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE process_flow_node SET label = '[]' WHERE label IS NULL
+        - sql:
+            dbms: mysql
+            sql: UPDATE process_flow_track SET label = '[]' WHERE label IS NULL
+        # Source (b): a column added by a later migration with no backfill and no NOT NULL constraint.
+        - sql:
+            dbms: mysql
+            sql: UPDATE organisational_units SET mission_statement = '[]' WHERE mission_statement IS NULL

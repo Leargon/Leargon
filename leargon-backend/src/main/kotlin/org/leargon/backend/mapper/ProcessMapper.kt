@@ -50,7 +50,7 @@ open class ProcessMapper(
         val effectiveInputEntities = collectEffectiveEntities(process) { it.inputEntities }
         val effectiveOutputEntities = collectEffectiveEntities(process) { it.outputEntities }
         val allEffectiveEntities = (effectiveInputEntities + effectiveOutputEntities).distinctBy { it.key }
-        val containsPersonalData = allEffectiveEntities.any { it.containsPersonalData == true }
+        val containsPersonalData = allEffectiveEntities.any { it.effectiveContainsPersonalData() == true }
         val fvSvc = this.fieldVerificationService
         val fieldStatuses =
             if (methodologyConfigurationService.isVerificationEnabled("BUSINESS_PROCESS")) {
@@ -171,8 +171,9 @@ open class ProcessMapper(
 
         /**
          * Single source of truth for "does this process (effectively, including sub-processes)
-         * handle personal data?" — reads the typed [BusinessEntity.containsPersonalData] flag over
-         * the effective input+output entity roll-up. Used by the process response, the dashboard
+         * handle personal data?" — reads [BusinessEntity.effectiveContainsPersonalData] over the
+         * effective input+output entity roll-up, so an entity that inherits the answer from the
+         * interface it implements counts too. Used by the process response, the dashboard
          * (needs-attention + DPIA coverage) and the processing register so they never disagree.
          */
         @JvmStatic
@@ -180,7 +181,7 @@ open class ProcessMapper(
             val entities =
                 collectEffectiveEntities(process) { it.inputEntities } +
                     collectEffectiveEntities(process) { it.outputEntities }
-            return entities.any { it.containsPersonalData == true }
+            return entities.any { it.effectiveContainsPersonalData() == true }
         }
 
         @JvmStatic

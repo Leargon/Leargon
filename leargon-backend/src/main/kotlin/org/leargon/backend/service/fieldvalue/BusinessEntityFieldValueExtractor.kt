@@ -39,6 +39,12 @@ class BusinessEntityFieldValueExtractor(
 
             fieldName == "storageLocations" -> FieldValueSupport.keysOf(entity.storageLocations)
 
+            // Typed GDPR facts. The entity's own answer is what gets verified — an answer inherited
+            // from an interface is verified on that interface, not copied onto every implementation.
+            fieldName == "containsPersonalData" -> entity.containsPersonalData?.toString()
+
+            fieldName == "entityRole" -> entity.entityRole
+
             // Collection / relationship fields — tracked per-item via collectionItemValues(), not here
             fieldName == "qualityRules" -> null
 

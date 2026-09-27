@@ -105,6 +105,44 @@ describe('Business Entity E2E', () => {
     expect(res.status).toBe(403);
   });
 
+  it('inherits the personal-data answer from the interface entity it implements', async () => {
+    const iface = await client.post<BusinessEntityResponse>('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Natural Person Interface' }],
+      containsPersonalData: true,
+      entityRole: 'DATA_SUBJECT',
+    });
+
+    // The implementation gives no answer of its own — it must inherit the interface's.
+    const impl = await client.post<BusinessEntityResponse>('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Implementing Party' }],
+      interfaces: [iface.data.key],
+    });
+
+    const read = await client.get<BusinessEntityResponse>(`/business-entities/${impl.data.key}`);
+    expect(read.status).toBe(200);
+    expect(read.data.containsPersonalData).toBeNull();
+    expect(read.data.effectiveContainsPersonalData).toBe(true);
+    expect(read.data.effectiveEntityRole).toBe('DATA_SUBJECT');
+    expect(read.data.personalDataInheritedFromEntityKey).toBe(iface.data.key);
+  });
+
+  it('lets an own answer override the inherited one', async () => {
+    const iface = await client.post<BusinessEntityResponse>('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Override Interface' }],
+      containsPersonalData: true,
+    });
+    const impl = await client.post<BusinessEntityResponse>('/business-entities', {
+      names: [{ locale: 'en', text: 'FE Override Implementation' }],
+      interfaces: [iface.data.key],
+    });
+
+    await client.put(`/business-entities/${impl.data.key}/personal-data`, { containsPersonalData: false });
+
+    const read = await client.get<BusinessEntityResponse>(`/business-entities/${impl.data.key}`);
+    expect(read.data.effectiveContainsPersonalData).toBe(false);
+    expect(read.data.personalDataInheritedFromEntityKey).toBeNull();
+  });
+
   // =====================
   // READ
   // =====================

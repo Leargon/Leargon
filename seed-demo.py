@@ -328,10 +328,12 @@ classif_defs = [
             {'key': 'supporting', 'names': n4('Supporting',        'Unterstützend',     'Support',           'Di supporto',             'De apoyo')},
         ],
     },
-    # NOTE: Personal Data classification is a system classification (migration 038).
-    # It uses value keys 'personal-data--contains' / 'personal-data--not-contains'.
-    # Special Categories is also a system classification with keys 'special-categories--health' etc.
-    # We do NOT create these here; instead we reference them by their system keys below.
+    # NOTE: personal data is no longer a classification. It lives in the typed BusinessEntity
+    # fields containsPersonalData / entityRole (migration 070; the old 'personal-data'
+    # classification was deleted by migration 071) and is set further below through
+    # PUT /business-entities/{key}/personal-data.
+    # Special Categories IS still a system classification (seeded by SystemClassificationBootstrap)
+    # with keys 'special-categories--health' etc. We do NOT create it here, we reference its key.
     {
         'assignableTo': 'BUSINESS_PROCESS',
         'names': n4('Process Priority', 'Prozesspriorität', 'Priorite du processus', 'Priorita del processo', 'Prioridad del proceso'),
@@ -362,8 +364,8 @@ for cd in classif_defs:
 S   = classif_keys.get('Sensitivity',    'sensitivity')
 DC  = classif_keys.get('Data Criticality', 'data-criticality')
 PP  = classif_keys.get('Process Priority', 'process-priority')
-# System classifications (created by migration 038, not seeded)
-PD  = 'personal-data'   # system classification key
+# System classification (seeded by SystemClassificationBootstrap, not created here).
+# 'personal-data' is gone — migration 071 retired it in favour of the typed entity fields.
 SC  = 'special-categories'  # system classification key
 
 
@@ -1718,12 +1720,33 @@ assign('business-entities', ek('Applicant'),         [(S, 'C2'), (DC, 'supportin
 assign('business-entities', ek('Invoice'),           [(S, 'C3'), (DC, 'critical')])
 assign('business-entities', ek('Customer'),          [(S, 'C3'), (DC, 'critical')])
 assign('business-entities', ek('Natural Person'),    [(S, 'C3'), (DC, 'critical')])
-assign('business-entities', ek('Billing Address'),   [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
-assign('business-entities', ek('Shipping Address'),  [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
-assign('business-entities', ek('Full Name'),         [(S, 'C3'), (DC, 'important'), (PD, 'personal-data--contains')])
-assign('business-entities', ek('Employee'),          [(S, 'C4'), (DC, 'important'), (PD, 'personal-data--contains')])
-assign('business-entities', ek('Payment Transaction'),[(S, 'C4'), (DC, 'critical'), (PD, 'personal-data--contains')])
-assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important'), (PD, 'personal-data--contains'), (SC, 'special-categories--none')])
+assign('business-entities', ek('Billing Address'),   [(S, 'C3'), (DC, 'important')])
+assign('business-entities', ek('Shipping Address'),  [(S, 'C3'), (DC, 'important')])
+assign('business-entities', ek('Full Name'),         [(S, 'C3'), (DC, 'important')])
+assign('business-entities', ek('Employee'),          [(S, 'C4'), (DC, 'important')])
+assign('business-entities', ek('Payment Transaction'),[(S, 'C4'), (DC, 'critical')])
+assign('business-entities', ek('Date of Birth'),     [(S, 'C4'), (DC, 'important')])
+
+
+# ── Personal data (typed GDPR fields) ─────────────────────────────────────────
+# Categories of data subjects (Art. 30(1)(c)) vs categories of personal data. 'Natural Person' is
+# the interface the concrete party entities implement, so entities that implement it and give no
+# answer of their own inherit this one — which is what the processing register rolls up.
+def personal_data(en_name, contains, role=None):
+    payload = {'containsPersonalData': contains}
+    if role:
+        payload['entityRole'] = role
+    ok(f'{en_name}: personal data={contains}, role={role}',
+       api('PUT', f'/business-entities/{ek(en_name)}/personal-data', payload, T))
+
+
+print('  Personal data flags:')
+for pd_name in ['Natural Person', 'Customer', 'Employee', 'Applicant']:
+    personal_data(pd_name, True, 'DATA_SUBJECT')
+for pd_name in ['Billing Address', 'Shipping Address', 'Full Name', 'Date of Birth', 'Payment Transaction']:
+    personal_data(pd_name, True, 'DATA_ATTRIBUTE')
+for pd_name in ['Product', 'Product Category', 'Shopping Cart', 'Order Line Item', 'Parcel']:
+    personal_data(pd_name, False)
 
 print('  Process classifications:')
 for proc_en, prio in [

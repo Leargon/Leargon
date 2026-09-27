@@ -500,8 +500,14 @@ open class ExportService(
             val domainId = toCmlIdentifier(rootDomain.getName(locale))
             sb.appendLine("Domain $domainId {")
             val visionText =
-                rootDomain.visionStatement.find { it.locale == locale }?.text
-                    ?: rootDomain.visionStatement.firstOrNull()?.text
+                rootDomain.visionStatement
+                    .orEmpty()
+                    .find { it.locale == locale }
+                    ?.text
+                    ?: rootDomain.visionStatement
+                        .orEmpty()
+                        .firstOrNull()
+                        ?.text
             if (!visionText.isNullOrBlank()) {
                 sb.appendLine("  domainVisionStatement = \"${visionText.replace("\"", "\\\"")}\"")
             }
@@ -678,13 +684,33 @@ open class ExportService(
                     statusLabel,
                     initialRiskLabel,
                     riskLabel,
-                    dpia.measures.find { it.locale == locale }?.text ?: dpia.measures.firstOrNull()?.text ?: "",
-                    dpia.riskDescription.find { it.locale == locale }?.text ?: dpia.riskDescription.firstOrNull()?.text ?: "",
+                    dpia.measures
+                        .orEmpty()
+                        .find { it.locale == locale }
+                        ?.text
+                        ?: dpia.measures
+                            .orEmpty()
+                            .firstOrNull()
+                            ?.text ?: "",
+                    dpia.riskDescription
+                        .orEmpty()
+                        .find { it.locale == locale }
+                        ?.text
+                        ?: dpia.riskDescription
+                            .orEmpty()
+                            .firstOrNull()
+                            ?.text ?: "",
                     dpia.fdpicConsultationRequired?.let { if (it) "Yes" else "No" },
                     dpia.fdpicConsultationCompleted?.let { if (it) "Yes" else "No" },
                     fdpicDate,
-                    dpia.fdpicConsultationOutcome.find { it.locale == locale }?.text ?: dpia.fdpicConsultationOutcome.firstOrNull()?.text
-                        ?: "",
+                    dpia.fdpicConsultationOutcome
+                        .orEmpty()
+                        .find { it.locale == locale }
+                        ?.text
+                        ?: dpia.fdpicConsultationOutcome
+                            .orEmpty()
+                            .firstOrNull()
+                            ?.text ?: "",
                     triggeredBy,
                     createdAt
                 )

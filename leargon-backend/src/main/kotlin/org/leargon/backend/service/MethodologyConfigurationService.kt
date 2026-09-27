@@ -65,6 +65,7 @@ open class MethodologyConfigurationService(
                 ),
             "GDPR" to
                 mapOf(
+                    "BUSINESS_ENTITY" to listOf("section:GDPR"),
                     "BUSINESS_PROCESS" to listOf("section:GDPR"),
                 ),
             "DDD" to
