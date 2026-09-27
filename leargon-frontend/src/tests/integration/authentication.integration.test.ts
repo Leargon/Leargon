@@ -17,6 +17,16 @@ describe('Authentication E2E', () => {
     client = createClient(getBackendUrl());
   });
 
+  it('rejects an unauthenticated request without a Basic challenge', async () => {
+    // A WWW-Authenticate header makes the browser show its own native credential dialog on top of
+    // the login page. Guards against a future dependency bump reintroducing the challenge provider.
+    const anon = createClient(getBackendUrl());
+    const res = await anon.get('/business-entities');
+
+    expect(res.status).toBe(401);
+    expect(res.headers['www-authenticate']).toBeUndefined();
+  });
+
   // =====================
   // SIGNUP
   // =====================
