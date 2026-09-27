@@ -59,10 +59,22 @@ describe('Locale Management API', () => {
     expect(res.data.every((l) => l.isActive)).toBe(true);
   });
 
-  it('requires authentication to list locales', async () => {
+  it('lists locales without authentication so the login page can localise itself', async () => {
+    // Deliberately anonymous: LocaleProvider wraps the whole app, so this is fetched on /login
+    // before anyone has a token. A 401 here carries a WWW-Authenticate header, which browsers
+    // answer with their own native credential dialog on top of the sign-in form.
     const anon = createClient(getBackendUrl());
-    const res = await anon.get('/locales');
-    expect(res.status).toBe(401);
+    const res = await anon.get<SupportedLocaleResponse[]>('/locales');
+
+    expect(res.status).toBe(200);
+    expect(res.data.find((l) => l.localeCode === 'en')).toBeDefined();
+  });
+
+  it('still requires admin rights to change locales', async () => {
+    const anon = createClient(getBackendUrl());
+    const res = await anon.post('/locales', { localeCode: 'no', displayName: 'Norsk' });
+
+    expect([401, 403]).toContain(res.status);
   });
 
   // ─── CREATE ───────────────────────────────────────────────────────────────
