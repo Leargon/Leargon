@@ -15,6 +15,12 @@ import org.leargon.backend.service.LocaleService
 open class LocaleController(
     private val localeService: LocaleService
 ) : LocaleApi {
+    /**
+     * Anonymous on purpose: the login page needs the tenant's default locale before anyone has signed
+     * in, so that a German-only tenant does not get an English sign-in screen. Only locale codes and
+     * labels are exposed; every mutation below stays ROLE_ADMIN.
+     */
+    @Secured(SecurityRule.IS_ANONYMOUS)
     override fun getSupportedLocales(includeInactive: Boolean?): List<SupportedLocaleResponse> =
         if (includeInactive == true) {
             localeService.getAllLocalesAsResponses()

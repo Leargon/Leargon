@@ -20,6 +20,12 @@ micronaut:
     max-request-size: 10MB
   security:
     authentication: bearer
+    # A Basic challenge is wrong under bearer authentication. Micronaut Security otherwise registers
+    # BasicAuthWwwAuthenticateChallengeProvider and attaches `WWW-Authenticate: Basic` to every 401 —
+    # which browsers answer with their own native credential dialog, shown on top of our login page
+    # before anyone can sign in.
+    basic-auth:
+      enabled: false
     token:
       jwt:
         signatures:
