@@ -1226,8 +1226,16 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ px: 0, pt: 1, pb: 2 }}>
 
-      {/* Personal data (typed GDPR facts) */}
-      {!isHidden('containsPersonalData') && (
+      {/* Personal data (typed GDPR facts). The answer in force may be inherited from the interface
+          entity this one implements; the owner can still override it with an explicit answer. */}
+      {!isHidden('containsPersonalData') && (() => {
+        const inheritedFrom = entity.personalDataInheritedFromEntityKey;
+        const effectivePersonalData = entity.effectiveContainsPersonalData;
+        const yesNo = (v?: boolean | null) =>
+          v === true ? t('common.yes') : v === false ? t('common.no') : t('entity.personalDataNotSet');
+        const roleLabel = (r?: string | null) =>
+          r === 'DATA_SUBJECT' ? t('entity.roleDataSubject') : r === 'DATA_ATTRIBUTE' ? t('entity.roleDataAttribute') : t('common.none');
+        return (
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
             <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.containsPersonalData')}</Typography>
@@ -1242,20 +1250,25 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                   savePersonalData(v === 'yes' ? true : v === 'no' ? false : null, entity.entityRole ?? null);
                 }}
               >
-                <MenuItem value=""><em>{t('entity.personalDataNotSet')}</em></MenuItem>
+                <MenuItem value=""><em>{inheritedFrom ? yesNo(effectivePersonalData) : t('entity.personalDataNotSet')}</em></MenuItem>
                 <MenuItem value="yes">{t('common.yes')}</MenuItem>
                 <MenuItem value="no">{t('common.no')}</MenuItem>
               </Select>
             ) : (
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {entity.containsPersonalData === true ? t('common.yes') : entity.containsPersonalData === false ? t('common.no') : t('entity.personalDataNotSet')}
+                {yesNo(effectivePersonalData)}
+              </Typography>
+            )}
+            {inheritedFrom && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {t('entity.personalDataInherited', { name: inheritedFrom })}
               </Typography>
             )}
           </Box>
-          {entity.containsPersonalData === true && !isHidden('entityRole') && (
+          {effectivePersonalData === true && !isHidden('entityRole') && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" sx={{ minWidth: 120 }}>{t('entity.entityRole')}</Typography>
-              {canEditField('containsPersonalData') ? (
+              {canEditField('containsPersonalData') && !inheritedFrom ? (
                 <Select
                   size="small"
                   sx={{ minWidth: 150 }}
@@ -1269,13 +1282,14 @@ const EntityDetailPanel: React.FC<EntityDetailPanelProps> = ({ entityKey }) => {
                 </Select>
               ) : (
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {entity.entityRole === 'DATA_SUBJECT' ? t('entity.roleDataSubject') : entity.entityRole === 'DATA_ATTRIBUTE' ? t('entity.roleDataAttribute') : t('common.none')}
+                  {roleLabel(entity.effectiveEntityRole)}
                 </Typography>
               )}
             </Box>
           )}
         </Box>
-      )}
+        );
+      })()}
 
       {/* Classifications */}
       <SectionHeader title={t('common.classifications')} canEdit={canEditField('classification')} isEditing={classEdit.isEditing}

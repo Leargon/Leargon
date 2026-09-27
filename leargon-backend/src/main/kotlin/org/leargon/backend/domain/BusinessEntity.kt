@@ -162,6 +162,26 @@ class BusinessEntity {
 
     fun effectiveSteward(): User? = dataSteward ?: owningUnit?.businessSteward ?: boundedContext?.effectiveSteward()
 
+    /**
+     * Whether this entity contains personal data, falling back to the interfaces it implements when it
+     * has no own answer. Mirrors how `ClassificationMapper.computeEffectiveAssignments` inherits
+     * classifications over the very same link, so the typed flag and the classifications can never tell
+     * different stories: the entity's own answer always wins, and interfaces that disagree inherit nothing.
+     */
+    fun effectiveContainsPersonalData(): Boolean? = containsPersonalData ?: inheritedPersonalDataSource()?.containsPersonalData
+
+    /** The data-subject / data-attribute role, inherited from the interfaces on the same terms. */
+    fun effectiveEntityRole(): String? = entityRole ?: inheritedPersonalDataSource()?.entityRole
+
+    /** The interface this entity inherits its personal-data answer from, or null when it answers itself. */
+    fun personalDataInheritedFrom(): BusinessEntity? = if (containsPersonalData == null) inheritedPersonalDataSource() else null
+
+    private fun inheritedPersonalDataSource(): BusinessEntity? {
+        val answered = interfaceEntities.filter { it.containsPersonalData != null }
+        val first = answered.firstOrNull() ?: return null
+        return if (answered.all { it.containsPersonalData == first.containsPersonalData }) first else null
+    }
+
     fun getName(locale: String): String = names.textForLocale(locale, key)
 
     fun getDescription(locale: String): String = descriptions.textForLocale(locale, "")

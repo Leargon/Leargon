@@ -47,6 +47,8 @@ open class FieldConfigurationService(
             FieldDef("BUSINESS_ENTITY", "retentionPeriod.{locale}", "Retention Period", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "storageLocations", "Storage Locations", "DATA_GOVERNANCE", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "classification.{classKey}", "Classification", "DATA_GOVERNANCE", "BASIC", true),
+            FieldDef("BUSINESS_ENTITY", "containsPersonalData", "Contains Personal Data", "GDPR", "BASIC", true),
+            FieldDef("BUSINESS_ENTITY", "entityRole", "Data Category Role", "GDPR", "BASIC", true),
             FieldDef("BUSINESS_ENTITY", "qualityRules", "Data Quality Rules", "DATA_QUALITY", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "boundedContext", "Bounded Context", "DDD", "ADVANCED", true),
             FieldDef("BUSINESS_ENTITY", "interfaceEntities", "Interface Entities", "DATA_GOVERNANCE", "ADVANCED", false),
@@ -149,7 +151,11 @@ open class FieldConfigurationService(
                             "section:DATA_FLOW",
                         ),
                 ),
-            "GDPR" to mapOf("BUSINESS_PROCESS" to listOf("section:GDPR")),
+            "GDPR" to
+                mapOf(
+                    "BUSINESS_ENTITY" to listOf("section:GDPR"),
+                    "BUSINESS_PROCESS" to listOf("section:GDPR"),
+                ),
             "DDD" to
                 mapOf(
                     "BUSINESS_ENTITY" to listOf("section:DDD"),

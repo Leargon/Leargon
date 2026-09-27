@@ -115,6 +115,22 @@ test.describe('Business Entity CRUD — Owner', () => {
     await expect(page.getByRole('button', { name: 'New' })).not.toBeVisible();
   });
 
+  test('can change the personal-data flag on their entity', async ({ page }) => {
+    await page.goto(`/entities/${entityKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Governance', exact: true }).click();
+
+    // The flag is editable for the owner — it is offered as a select, not as static text.
+    const row = page.getByText('Contains personal data', { exact: true }).locator('..');
+    await row.getByRole('combobox').click();
+    await page.getByRole('option', { name: 'Yes', exact: true }).click();
+
+    // The answer sticks, and the dependent role row appears once the answer is "yes".
+    await expect(row.getByRole('combobox')).toHaveText('Yes', { timeout: 10_000 });
+    await expect(page.getByText('Data category role')).toBeVisible({ timeout: 10_000 });
+  });
+
   test('can change the data owner', async ({ page }) => {
     await page.goto(`/entities/${entityKey}`);
     await page.waitForLoadState('networkidle');
@@ -181,6 +197,19 @@ test.describe('Business Entity CRUD — Viewer', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(page.locator('button:has([data-testid="EditIcon"])')).not.toBeVisible();
+  });
+
+  test('sees the personal-data flag as read-only text, not a select', async ({ page }) => {
+    await markEntityPersonalData(entityKey, true, 'DATA_SUBJECT');
+
+    await page.goto(`/entities/${entityKey}`);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', { name: 'Governance', exact: true }).click();
+
+    const row = page.getByText('Contains personal data', { exact: true }).locator('..');
+    await expect(row).toBeVisible({ timeout: 10_000 });
+    await expect(row.getByRole('combobox')).toHaveCount(0);
   });
 
   test('cannot see the Delete button on entity detail', async ({ page }) => {

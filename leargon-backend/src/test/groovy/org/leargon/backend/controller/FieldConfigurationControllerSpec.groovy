@@ -405,6 +405,62 @@ class FieldConfigurationControllerSpec extends Specification {
         retentionDef.mandatoryCapable == true
     }
 
+    def "GET /administration/field-configurations/definitions: the typed GDPR entity fields are configurable"() {
+        given: "an admin token"
+        String token = createAdminToken()
+
+        when: "getting definitions"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/administration/field-configurations/definitions").bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        then: "containsPersonalData is offered for BUSINESS_ENTITY under the GDPR methodology"
+        def defs = response.body()
+        def pd = defs.find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "containsPersonalData" }
+        pd != null
+        pd.section == "GDPR"
+        pd.mandatoryCapable == true
+
+        and: "so is the data category role"
+        def role = defs.find { it.entityType == "BUSINESS_ENTITY" && it.fieldName == "entityRole" }
+        role != null
+        role.section == "GDPR"
+    }
+
+    def "hiding containsPersonalData hides it on the entity response and keeps it out of mandatoryFields"() {
+        given: "admin hides the personal-data flag"
+        String token = createAdminToken()
+
+        client.toBlocking().exchange(
+                HttpRequest.PUT("/administration/field-configurations",
+                        [[entityType: "BUSINESS_ENTITY", fieldName: "containsPersonalData",
+                          visibility: "HIDDEN", section: "GDPR", maturityLevel: "BASIC"]]
+                ).bearerAuth(token),
+                Argument.listOf(Map)
+        )
+
+        and: "a created entity"
+        def createResponse = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Customer")])
+                ).bearerAuth(token),
+                BusinessEntityResponse
+        )
+        def entityKey = createResponse.body().key
+
+        when: "getting the entity"
+        def response = client.toBlocking().exchange(
+                HttpRequest.GET("/business-entities/${entityKey}").bearerAuth(token),
+                BusinessEntityResponse
+        )
+
+        then: "the panel is told to hide it, and a hidden field is never mandatory"
+        response.body().hiddenFields?.contains("containsPersonalData")
+        !response.body().mandatoryFields?.contains("containsPersonalData")
+        !response.body().missingMandatoryFields?.contains("containsPersonalData")
+    }
+
     def "GET /administration/field-configurations/definitions is readable by any authenticated user"() {
         given: "a non-admin token"
         String token = createUserToken()

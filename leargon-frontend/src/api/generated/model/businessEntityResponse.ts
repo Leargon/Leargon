@@ -67,6 +67,17 @@ export interface BusinessEntityResponse {
      */
   containsPersonalData?: boolean | null;
   entityRole?: EntityRole;
+  /**
+     * The personal-data answer in force: this entity's own value, or the one inherited from the interface entity it implements when it has no own answer. Null = not answered anywhere. Interfaces that disagree inherit nothing.
+     * @nullable
+     */
+  effectiveContainsPersonalData?: boolean | null;
+  effectiveEntityRole?: EntityRole;
+  /**
+     * Key of the interface entity the personal-data answer is inherited from, or null when this entity answers for itself. Drives the read-only "inherited from X" display.
+     * @nullable
+     */
+  personalDataInheritedFromEntityKey?: string | null;
   interfacesEntities?: BusinessEntitySummaryResponse[];
   implementsEntities?: BusinessEntitySummaryResponse[];
   relationships?: BusinessEntityRelationshipResponse[];

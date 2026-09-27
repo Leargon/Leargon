@@ -82,6 +82,10 @@ open class BusinessEntityMapper(
             .retentionPeriod(LocalizedTextMapper.toModel(businessEntity.retentionPeriod))
             .containsPersonalData(businessEntity.containsPersonalData)
             .entityRole(businessEntity.entityRole?.let { runCatching { EntityRole.fromValue(it) }.getOrNull() })
+            .effectiveContainsPersonalData(businessEntity.effectiveContainsPersonalData())
+            .effectiveEntityRole(
+                businessEntity.effectiveEntityRole()?.let { runCatching { EntityRole.fromValue(it) }.getOrNull() },
+            ).personalDataInheritedFromEntityKey(businessEntity.personalDataInheritedFrom()?.key)
             .storageLocations(businessEntity.storageLocations.orEmpty())
             .derivedStorageLocations(computeDerivedStorageLocations(businessEntity))
             .missingMandatoryFields(fc.missing)
@@ -249,7 +253,7 @@ open class BusinessEntityMapper(
 
                 fieldName.startsWith("retentionPeriod.") -> {
                     val locale = fieldName.removePrefix("retentionPeriod.")
-                    businessEntity.retentionPeriod.any { it.locale == locale && it.text.isNotBlank() }
+                    businessEntity.retentionPeriod.orEmpty().any { it.locale == locale && it.text.isNotBlank() }
                 }
 
                 fieldName.startsWith("names.") -> {

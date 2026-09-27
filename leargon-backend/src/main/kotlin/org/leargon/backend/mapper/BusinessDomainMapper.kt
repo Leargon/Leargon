@@ -170,7 +170,7 @@ open class BusinessDomainMapper(
 
                 fieldName.startsWith("visionStatement.") -> {
                     val locale = fieldName.removePrefix("visionStatement.")
-                    domain.visionStatement.any { it.locale == locale && it.text.isNotBlank() }
+                    domain.visionStatement.orEmpty().any { it.locale == locale && it.text.isNotBlank() }
                 }
 
                 fieldName.startsWith("names.") -> {

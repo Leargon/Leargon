@@ -174,6 +174,7 @@ const de = {
     "pageTitle": "Daten-Ontologie",
     "containsPersonalData": "Enthält personenbezogene Daten",
     "personalDataNotSet": "Nicht beantwortet",
+    "personalDataInherited": "Geerbt von {{name}}",
     "entityRole": "Rolle der Datenkategorie",
     "roleDataSubject": "Kategorie betroffener Personen",
     "roleDataAttribute": "Kategorie personenbezogener Daten",

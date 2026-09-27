@@ -7,6 +7,7 @@ import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.SignupRequest
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -97,5 +98,58 @@ class ProcessingRegisterControllerSpec extends Specification {
         !row.personCategories.contains("CV Document")
         row.dataCategories.contains("CV Document")
         !row.dataCategories.contains("Candidate")
+    }
+
+    def "an implementation entity inherits the personal-data answer of the interface it implements"() {
+        given: "an abstract interface entity carrying the GDPR facts, and a concrete implementation with none"
+        String adminToken = token()
+        String processKey = createProcess(adminToken, "Screen Applicants")
+        String iface = createEntity(adminToken, "Natural Person", true, "DATA_SUBJECT")
+        String impl = createEntityImplementing(adminToken, "Applicant Record", iface)
+
+        and: "only the concrete entity is wired into the process, as a real model would be"
+        client.toBlocking().exchange(
+            HttpRequest.POST("/processes/${processKey}/inputs", [entityKey: impl]).bearerAuth(adminToken), Map)
+
+        when: "reading the processing register"
+        def rows = client.toBlocking().exchange(
+            HttpRequest.GET("/processing-register").bearerAuth(adminToken), Argument.listOf(Map)).body()
+
+        then: "the inherited answer reaches the register — the implementation counts as a data-subject category"
+        rows.size() == 1
+        rows[0].personCategories.contains("Applicant Record")
+    }
+
+    def "register still renders when an entity has a NULL retention period (rows left by migration 061)"() {
+        given: "a process with a personal-data entity"
+        String adminToken = token()
+        String processKey = createProcess(adminToken, "Send Invoice")
+        String entityKey = createEntity(adminToken, "Invoice", true, "DATA_ATTRIBUTE")
+        client.toBlocking().exchange(
+            HttpRequest.POST("/processes/${processKey}/inputs", [entityKey: entityKey]).bearerAuth(adminToken), Map)
+
+        and: "its retention_period column is NULL, exactly as migration 061 left empty values in production"
+        // Kotlin's generated setter rejects null, so write the backing field directly — which is
+        // precisely what Hibernate does when it reads a NULL JSON column into the non-null property.
+        def entity = businessEntityRepository.findByKey(entityKey).get()
+        def retentionField = BusinessEntity.getDeclaredField("retentionPeriod")
+        retentionField.accessible = true
+        retentionField.set(entity, null)
+        businessEntityRepository.update(entity)
+
+        when: "reading the processing register"
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/processing-register").bearerAuth(adminToken), Argument.listOf(Map))
+
+        then: "it renders instead of throwing a NullPointerException (regression: production 500)"
+        response.status == HttpStatus.OK
+        response.body().size() == 1
+    }
+
+    private String createEntityImplementing(String token, String name, String interfaceKey) {
+        client.toBlocking().exchange(
+            HttpRequest.POST("/business-entities",
+                [names: [[locale: "en", text: name]], interfaces: [interfaceKey]]).bearerAuth(token),
+            Map).body().key
     }
 }

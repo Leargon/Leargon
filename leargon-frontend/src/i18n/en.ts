@@ -186,6 +186,7 @@ const en = {
     pageTitle: 'Data Ontology',
     containsPersonalData: 'Contains personal data',
     personalDataNotSet: 'Not answered',
+    personalDataInherited: 'Inherited from {{name}}',
     entityRole: 'Data category role',
     roleDataSubject: 'Category of data subjects',
     roleDataAttribute: 'Category of personal data',

@@ -134,6 +134,46 @@ class EditableFieldsConsistencySpec extends Specification {
         putNamesStatus(key, owner.token) == 200
     }
 
+    private int putPersonalDataStatus(String key, String token) {
+        try {
+            def resp = client.toBlocking().exchange(
+                    HttpRequest.PUT("/business-entities/${key}/personal-data",
+                            [containsPersonalData: true, entityRole: "DATA_SUBJECT"]).bearerAuth(token),
+                    BusinessEntityResponse
+            )
+            return resp.status().code
+        } catch (HttpClientResponseException e) {
+            return e.status.code
+        }
+    }
+
+    def "containsPersonalData parity: in editableFields exactly when the personal-data PUT succeeds"() {
+        given: "an owner, a stranger, a GDPR editor and a DDD editor"
+        def owner = userWithToken("pd-owner@test.com", "pdowner", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")
+        def nonOwner = userWithToken("pd-other@test.com", "pdother", "ROLE_USER")
+        def gdprEditor = userWithToken("pd-gdpr@test.com", "pdgdpr", "ROLE_USER,ROLE_EDITOR_GDPR")
+        def dddEditor = userWithToken("pd-ddd@test.com", "pdddd", "ROLE_USER,ROLE_EDITOR_DDD")
+
+        def created = client.toBlocking().exchange(
+                HttpRequest.POST("/business-entities",
+                        new CreateBusinessEntityRequest([new LocalizedText("en", "Candidate")])).bearerAuth(owner.token),
+                BusinessEntityResponse
+        )
+        String key = created.body().key
+
+        expect: "the typed GDPR field is offered to the owner and to a GDPR editor, and to nobody else"
+        editableFields(key, owner.token).contains("containsPersonalData")
+        editableFields(key, gdprEditor.token).contains("containsPersonalData")
+        !editableFields(key, nonOwner.token).contains("containsPersonalData")
+        !editableFields(key, dddEditor.token).contains("containsPersonalData")
+
+        and: "enforcement agrees field-for-field"
+        putPersonalDataStatus(key, nonOwner.token) == 403
+        putPersonalDataStatus(key, dddEditor.token) == 403
+        putPersonalDataStatus(key, gdprEditor.token) == 200
+        putPersonalDataStatus(key, owner.token) == 200
+    }
+
     def "editableFields reflects methodology scope for a scoped editor (not owner)"() {
         given: "an owner creates an entity; a separate DDD-only editor (not owner) looks at it"
         def owner = userWithToken("sc-owner@test.com", "scowner", "ROLE_USER,ROLE_EDITOR_DATA_GOVERNANCE")

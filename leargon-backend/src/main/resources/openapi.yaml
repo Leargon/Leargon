@@ -8065,6 +8065,21 @@ components:
             null = not answered, true = yes, false = no.
         entityRole:
           $ref: '#/components/schemas/EntityRole'
+        effectiveContainsPersonalData:
+          type: boolean
+          nullable: true
+          description: >-
+            The personal-data answer in force: this entity's own value, or the one inherited from the
+            interface entity it implements when it has no own answer. Null = not answered anywhere.
+            Interfaces that disagree inherit nothing.
+        effectiveEntityRole:
+          $ref: '#/components/schemas/EntityRole'
+        personalDataInheritedFromEntityKey:
+          type: string
+          nullable: true
+          description: >-
+            Key of the interface entity the personal-data answer is inherited from, or null when this
+            entity answers for itself. Drives the read-only "inherited from X" display.
         interfacesEntities:
           type: array
           items:

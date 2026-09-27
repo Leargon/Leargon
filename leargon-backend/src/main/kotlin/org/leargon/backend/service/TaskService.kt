@@ -547,7 +547,7 @@ open class TaskService(
         unit: OrganisationalUnit
     ): Boolean? =
         when (ruleCode) {
-            "MISSING_MISSION_STATEMENT" -> unit.missionStatement.isEmpty()
+            "MISSING_MISSION_STATEMENT" -> unit.missionStatement.orEmpty().isEmpty()
             "MISSING_TOPOLOGY_TYPE" -> unit.teamTopologyType.isNullOrBlank()
             else -> null
         }

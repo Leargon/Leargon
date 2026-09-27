@@ -8,6 +8,7 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.leargon.backend.domain.OrganisationalUnit
 import org.leargon.backend.domain.SupportedLocale
 import org.leargon.backend.model.ClassificationAssignableTo
 import org.leargon.backend.model.ClassificationAssignmentRequest
@@ -1091,5 +1092,36 @@ class OrganisationalUnitControllerSpec extends Specification {
         then: "bad request is thrown"
         def exception = thrown(HttpClientResponseException)
         exception.status == HttpStatus.BAD_REQUEST
+    }
+
+    def "unit response and to-do list survive a NULL mission_statement (rows predating migration 064)"() {
+        given: "a unit"
+        String adminToken = createAdminToken()
+        def unitKey = createUnitAsAdmin(adminToken, "Legacy Unit")
+
+        and: "its mission_statement column is NULL, as migration 064 left every pre-existing row"
+        // Kotlin's generated setter rejects null, so write the backing field directly — which is
+        // precisely what Hibernate does when it reads a NULL JSON column into the non-null property.
+        def unit = organisationalUnitRepository.findAll().find { it.key == unitKey }
+        def missionField = OrganisationalUnit.getDeclaredField("missionStatement")
+        missionField.accessible = true
+        missionField.set(unit, null)
+        organisationalUnitRepository.update(unit)
+
+        when: "reading the unit detail and the to-do list, both of which touch missionStatement"
+        def unitResponse = client.toBlocking().exchange(
+                HttpRequest.GET("/organisational-units/${unitKey}").bearerAuth(adminToken),
+                OrganisationalUnitResponse
+        )
+        // Decoded as String on purpose: this test only cares that the endpoint does not blow up on a
+        // NULL mission_statement, so it must not be coupled to the shape of the /tasks payload.
+        def tasksResponse = client.toBlocking().exchange(
+                HttpRequest.GET("/tasks").bearerAuth(adminToken),
+                String
+        )
+
+        then: "both render instead of throwing — same NPE class that made /processing-register 500"
+        unitResponse.status == HttpStatus.OK
+        tasksResponse.status == HttpStatus.OK
     }
 }

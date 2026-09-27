@@ -146,7 +146,7 @@ open class OrganisationalUnitMapper(
 
                 fieldName.startsWith("missionStatement.") -> {
                     val locale = fieldName.removePrefix("missionStatement.")
-                    unit.missionStatement.any { it.locale == locale && !it.text.isNullOrBlank() }
+                    unit.missionStatement.orEmpty().any { it.locale == locale && !it.text.isNullOrBlank() }
                 }
 
                 fieldName.startsWith("classification.") -> {

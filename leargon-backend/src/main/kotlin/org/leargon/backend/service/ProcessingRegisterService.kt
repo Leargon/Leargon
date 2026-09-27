@@ -1,7 +1,7 @@
 package org.leargon.backend.service
 
+import io.micronaut.transaction.annotation.ReadOnly
 import jakarta.inject.Singleton
-import jakarta.transaction.Transactional
 import org.leargon.backend.domain.BusinessEntity
 import org.leargon.backend.domain.CrossBorderTransfer
 import org.leargon.backend.domain.Process
@@ -115,7 +115,7 @@ open class ProcessingRegisterService(
         return fc.missing?.takeIf { it.isNotEmpty() }
     }
 
-    @Transactional
+    @ReadOnly
     open fun getEntries(
         locale: String,
         currentUser: User
@@ -164,25 +164,33 @@ open class ProcessingRegisterService(
 
         // Categories of data subjects (Art. 30(1)(c)) — personal-data entities marked DATA_SUBJECT.
         val roleEntities =
-            allEntities.filter { it.containsPersonalData == true && it.entityRole == "DATA_SUBJECT" }
+            allEntities.filter { it.effectiveContainsPersonalData() == true && it.effectiveEntityRole() == "DATA_SUBJECT" }
         val personCategories =
             roleEntities.map { rootEntity(it) }.distinctBy { it.key }.joinToString("; ") { localizedName(it, locale) }
 
         // Categories of personal data — personal-data entities that are not data-subject categories.
         val personalDataEntities =
-            allEntities.filter { it.containsPersonalData == true && it.entityRole != "DATA_SUBJECT" }
+            allEntities.filter { it.effectiveContainsPersonalData() == true && it.effectiveEntityRole() != "DATA_SUBJECT" }
         val dataCategories =
             personalDataEntities
                 .map { rootEntity(it) }
                 .distinctBy { it.key }
                 .joinToString("; ") { localizedName(it, locale) }
 
-        val retentionEntities = allEntities.filter { it.retentionPeriod.isNotEmpty() }
+        // orEmpty(): migration 061 left NULL in these JSON columns for empty values, and Hibernate
+        // writes that null straight into the non-null Kotlin property (see migration 078).
+        val retentionEntities = allEntities.filter { it.retentionPeriod.orEmpty().isNotEmpty() }
         val retentionPeriods =
             retentionEntities.joinToString("; ") { e ->
                 val rp =
-                    e.retentionPeriod.find { it.locale == locale }?.text
-                        ?: e.retentionPeriod.firstOrNull()?.text ?: ""
+                    e.retentionPeriod
+                        .orEmpty()
+                        .find { it.locale == locale }
+                        ?.text
+                        ?: e.retentionPeriod
+                            .orEmpty()
+                            .firstOrNull()
+                            ?.text ?: ""
                 "${localizedName(e, locale)}: $rp"
             }
 
