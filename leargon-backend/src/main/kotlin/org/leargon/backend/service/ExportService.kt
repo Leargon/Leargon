@@ -3,6 +3,7 @@ package org.leargon.backend.service
 import jakarta.inject.Singleton
 import org.leargon.backend.domain.BusinessDataQualityRule
 import org.leargon.backend.domain.textForLocale
+import org.leargon.backend.model.ProcessingRegisterEntryResponse
 import org.leargon.backend.repository.BoundedContextRepository
 import org.leargon.backend.repository.BusinessDomainRepository
 import org.leargon.backend.repository.BusinessEntityRepository
@@ -13,6 +14,9 @@ import org.leargon.backend.repository.ServiceProviderRepository
 import org.leargon.backend.repository.UserRepository
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+
+/** A processing-register row paired with its depth in the process tree, for indentation. */
+private typealias IndentedEntry = Pair<ProcessingRegisterEntryResponse, Int>
 
 @Singleton
 open class ExportService(
@@ -294,15 +298,52 @@ open class ExportService(
             }
         }
 
+    /**
+     * Mirrors what the register screen shows: keep a row when it — or anything below it — involves
+     * personal data, keep the ancestors of every kept row so no sub-row is orphaned, and return the
+     * result depth-first (a root, then its kept children by name) paired with its depth, so the CSV
+     * reads as the tree does.
+     */
+    private fun personalDataSubtrees(entries: List<ProcessingRegisterEntryResponse>): List<IndentedEntry> {
+        val childrenByParent = entries.filter { it.parentKey != null }.groupBy { it.parentKey!! }
+        val keep = mutableSetOf<String>()
+
+        fun visit(entry: ProcessingRegisterEntryResponse): Boolean {
+            // Evaluate every child before deciding — a parent is kept whenever a descendant is.
+            val descendantKept =
+                childrenByParent[entry.key]
+                    .orEmpty()
+                    .map { visit(it) }
+                    .any { it }
+            val kept =
+                entry.personCategories.isNotBlank() || entry.dataCategories.isNotBlank() || descendantKept
+            if (kept) keep.add(entry.key)
+            return kept
+        }
+
+        val roots = entries.filter { it.parentKey == null }
+        roots.forEach { visit(it) }
+
+        val ordered = mutableListOf<IndentedEntry>()
+
+        fun emit(
+            entry: ProcessingRegisterEntryResponse,
+            depth: Int
+        ) {
+            if (entry.key !in keep) return
+            ordered.add(entry to depth)
+            childrenByParent[entry.key].orEmpty().sortedBy { it.name }.forEach { emit(it, depth + 1) }
+        }
+        roots.sortedBy { it.name }.forEach { emit(it, 0) }
+        return ordered
+    }
+
     @jakarta.transaction.Transactional
     open fun exportProcessingRegister(locale: String = "en"): String {
         val adminUser =
             userRepository.findAll().firstOrNull { it.roles.contains("ROLE_ADMIN") }
                 ?: userRepository.findAll().first()
-        val entries =
-            processingRegisterService
-                .getEntries(locale, adminUser)
-                .filter { it.personCategories.isNotBlank() || it.dataCategories.isNotBlank() }
+        val rows = personalDataSubtrees(processingRegisterService.getEntries(locale, adminUser))
 
         val exportDate = dateFormatter.format(java.time.LocalDate.now())
         val (titleLine, scopeLine, dateLine) =
@@ -338,13 +379,13 @@ open class ExportService(
         sb.appendLine(csvField(dateLine))
         sb.appendLine()
         sb.appendLine(csvRow(*processingRegisterHeaders(locale)))
-        for (entry in entries) {
+        for ((entry, depth) in rows) {
             sb.appendLine(
                 csvRow(
                     entry.lastModified,
                     entry.changedBy,
                     entry.department,
-                    entry.name,
+                    "    ".repeat(depth) + entry.name,
                     entry.responsible,
                     entry.euRepresentative,
                     entry.dpo,

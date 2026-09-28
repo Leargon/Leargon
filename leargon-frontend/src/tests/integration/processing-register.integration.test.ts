@@ -18,6 +18,8 @@ function getBackendUrl(): string {
 interface RegisterRow {
   key: string;
   name: string;
+  parentKey?: string | null;
+  hasChildren: boolean;
   personCategories: string;
   dataCategories: string;
   retentionPeriods: string;
@@ -101,6 +103,32 @@ describe('Processing Register API', () => {
     const row = res.data.find((r) => r.key === proc.key);
     expect(row).toBeDefined();
     expect(row!.personCategories).toContain('PReg Applicant Record');
+  });
+
+  it('returns sub-processes as their own rows so the register can be drilled into', async () => {
+    const parent = await createProcess(userClient, 'PReg Onboarding');
+    const child = await createProcess(userClient, 'PReg Issue Badge', { parentProcessKey: parent.key });
+    const badge = await createEntity(adminClient, 'PReg Badge Photo');
+    await adminClient.put(`/business-entities/${badge.key}/personal-data`, {
+      containsPersonalData: true,
+      entityRole: 'DATA_ATTRIBUTE',
+    });
+    await userClient.post(`/processes/${child.key}/inputs`, { entityKey: badge.key });
+
+    const res = await adminClient.get<RegisterRow[]>('/processing-register', { params: { locale: 'en' } });
+
+    const parentRow = res.data.find((r) => r.key === parent.key);
+    const childRow = res.data.find((r) => r.key === child.key);
+    expect(parentRow).toBeDefined();
+    expect(childRow).toBeDefined();
+    expect(parentRow!.hasChildren).toBe(true);
+    expect(parentRow!.parentKey ?? null).toBeNull();
+    expect(childRow!.parentKey).toBe(parent.key);
+    expect(childRow!.hasChildren).toBe(false);
+
+    // The root keeps the Art. 30 roll-up; the drill-down row reports the same fact as its own.
+    expect(parentRow!.dataCategories).toContain('PReg Badge Photo');
+    expect(childRow!.dataCategories).toContain('PReg Badge Photo');
   });
 
   it('requires authentication', async () => {
