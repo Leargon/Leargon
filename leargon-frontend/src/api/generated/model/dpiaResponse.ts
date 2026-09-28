@@ -24,16 +24,10 @@ import type { UserSummaryResponse } from './userSummaryResponse.ts';
 export interface DpiaResponse {
   key: string;
   status: DpiaStatus;
-  /**
-     * Risk description (localised)
-     * @nullable
-     */
-  riskDescription?: LocalizedText[] | null;
-  /**
-     * Measures to mitigate risks (localised)
-     * @nullable
-     */
-  measures?: LocalizedText[] | null;
+  /** Risk description (localised) */
+  riskDescription?: LocalizedText[];
+  /** Measures to mitigate risks (localised) */
+  measures?: LocalizedText[];
   initialRisk?: ResidualRisk | null;
   residualRisk?: ResidualRisk | null;
   /** @nullable */
@@ -42,11 +36,8 @@ export interface DpiaResponse {
   fdpicConsultationCompleted?: boolean | null;
   /** @nullable */
   fdpicConsultationDate?: string | null;
-  /**
-     * FDPIC consultation outcome (localised)
-     * @nullable
-     */
-  fdpicConsultationOutcome?: LocalizedText[] | null;
+  /** FDPIC consultation outcome (localised) */
+  fdpicConsultationOutcome?: LocalizedText[];
   triggeredBy: UserSummaryResponse;
   createdAt: string;
   /** @nullable */

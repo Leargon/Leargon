@@ -34,6 +34,5 @@ export interface TeamInteractionResponse {
      * @nullable
      */
   healthScore?: number | null;
-  /** @nullable */
-  notes?: LocalizedText[] | null;
+  notes?: LocalizedText[];
 }

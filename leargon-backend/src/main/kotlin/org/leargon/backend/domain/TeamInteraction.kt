@@ -44,8 +44,8 @@ class TeamInteraction {
     var healthScore: Int? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "notes", columnDefinition = "LONGTEXT")
-    var notes: MutableList<LocalizedText>? = null
+    @Column(name = "notes", columnDefinition = "LONGTEXT", nullable = false)
+    var notes: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

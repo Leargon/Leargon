@@ -7648,7 +7648,6 @@ components:
           description: Per-field verification status (VERIFIED/UNVERIFIED) with who/when; null if no field has a status yet
         visionStatement:
           type: array
-          nullable: true
           description: Vision statement for the domain (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -7965,7 +7964,6 @@ components:
           description: Relationship ID
         descriptions:
           type: array
-          nullable: true
           items:
             $ref: '#/components/schemas/LocalizedText'
         cardinality:
@@ -8098,7 +8096,6 @@ components:
             $ref: '#/components/schemas/ClassificationAssignmentResponse'
         retentionPeriod:
           type: array
-          nullable: true
           description: Retention period description for the entity (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -8278,7 +8275,6 @@ components:
             $ref: '#/components/schemas/LocalizedText'
         retentionPeriod:
           type: array
-          nullable: true
           description: Retention period or criteria for this entity (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -9016,7 +9012,6 @@ components:
             $ref: '#/components/schemas/LocalizedText'
         missionStatement:
           type: array
-          nullable: true
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: Team purpose / mission statement (localised, Team Topologies)
@@ -9294,7 +9289,6 @@ components:
           description: Current interaction health (1 = poor, 5 = healthy)
         notes:
           type: array
-          nullable: true
           items:
             $ref: '#/components/schemas/LocalizedText'
     CreateTeamInteractionRequest:
@@ -9387,13 +9381,11 @@ components:
           $ref: '#/components/schemas/LegalBasis'
         purpose:
           type: array
-          nullable: true
           description: Purpose of processing (Zweck der Bearbeitung) — localised
           items:
             $ref: '#/components/schemas/LocalizedText'
         securityMeasures:
           type: array
-          nullable: true
           description: Technical and organisational security measures (TOM) — localised
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -9535,7 +9527,6 @@ components:
           $ref: '#/components/schemas/ActivityType'
         activityJustification:
           type: array
-          nullable: true
           items:
             $ref: '#/components/schemas/LocalizedText'
           description: 'VSM: localised justification for the activity classification (the Lean value statement)'
@@ -9909,7 +9900,6 @@ components:
           $ref: '#/components/schemas/FlowNodeType'
         label:
           type: array
-          nullable: true
           description: Node label (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -9940,7 +9930,6 @@ components:
           type: integer
         label:
           type: array
-          nullable: true
           description: Track label (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -10950,13 +10939,11 @@ components:
             $ref: '#/components/schemas/LocalizedText'
         riskDescription:
           type: array
-          nullable: true
           description: Risk description (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
         measures:
           type: array
-          nullable: true
           description: Measures to mitigate risks (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -10986,13 +10973,11 @@ components:
           $ref: '#/components/schemas/DpiaStatus'
         riskDescription:
           type: array
-          nullable: true
           description: Risk description (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
         measures:
           type: array
-          nullable: true
           description: Measures to mitigate risks (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -11012,7 +10997,6 @@ components:
           nullable: true
         fdpicConsultationOutcome:
           type: array
-          nullable: true
           description: FDPIC consultation outcome (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -11933,19 +11917,16 @@ components:
           nullable: true
         upstreamRole:
           type: array
-          nullable: true
           description: Role of the upstream context (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
         downstreamRole:
           type: array
-          nullable: true
           description: Role of the downstream context (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
         description:
           type: array
-          nullable: true
           description: Description of the relationship (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -12037,7 +12018,6 @@ components:
           $ref: '#/components/schemas/BusinessEntitySummaryResponse'
         semanticDifferenceNote:
           type: array
-          nullable: true
           description: Semantic difference note (localised)
           items:
             $ref: '#/components/schemas/LocalizedText'
@@ -12491,7 +12471,6 @@ components:
             $ref: '#/components/schemas/LocalizedText'
         descriptions:
           type: array
-          nullable: true
           items:
             $ref: '#/components/schemas/LocalizedText'
         parent:
@@ -13270,13 +13249,11 @@ components:
           description: Processing countries derived from IT systems and data-processor service providers, semicolon-separated ISO codes
         purposeRaw:
           type: array
-          nullable: true
           description: Raw localised purpose values for inline editing
           items:
             $ref: '#/components/schemas/LocalizedText'
         securityMeasuresRaw:
           type: array
-          nullable: true
           description: Raw localised security measures values for inline editing
           items:
             $ref: '#/components/schemas/LocalizedText'

@@ -1,0 +1,112 @@
+databaseChangeLog:
+  - changeSet:
+      id: 079-unify-localised-text-columns
+      author: leargon
+      comment: >-
+        Make every column backing a List<LocalizedText> behave the same: NOT NULL with an empty JSON
+        array as its default. These are the localised strings users type, and they had drifted apart —
+        some columns NOT NULL (capabilities.names, classifications.names, service_providers.names),
+        most nullable, none with a default, and it_systems.names/descriptions nullable in the schema
+        despite being annotated nullable = false in JPA (Liquibase owns the DDL, so the annotation was
+        decorative).
+
+        That drift is not cosmetic. A non-null Kotlin property over a nullable column throws the
+        moment a NULL appears: it took GET /processing-register down (retention_period, left NULL by
+        migration 061) and remains latent wherever a later addColumn skipped the backfill
+        (organisational_units.mission_statement, migration 064).
+
+        Each column is backfilled BEFORE its constraint — the pattern migration 058 gets right and 064
+        omitted. Both steps are idempotent, so re-running changes nothing. MySQL 8.4 supports
+        expression defaults on TEXT/JSON (8.0.13+).
+
+        Columns whose Kotlin property is legitimately nullable are NOT touched here; this changeset is
+        exactly the set backing List<LocalizedText>.
+      changes:
+        # ── backfill: no localised column may hold NULL ────────────────────────────────
+        - sql:
+            dbms: mysql
+            sql: |
+              UPDATE bounded_contexts            SET names = '[]'                    WHERE names IS NULL;
+              UPDATE bounded_contexts            SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE business_data_quality_rules SET description = '[]'              WHERE description IS NULL;
+              UPDATE business_domains            SET names = '[]'                    WHERE names IS NULL;
+              UPDATE business_domains            SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE business_domains            SET vision_statement = '[]'         WHERE vision_statement IS NULL;
+              UPDATE business_entities           SET names = '[]'                    WHERE names IS NULL;
+              UPDATE business_entities           SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE business_entities           SET retention_period = '[]'         WHERE retention_period IS NULL;
+              UPDATE business_entity_relationships SET descriptions = '[]'           WHERE descriptions IS NULL;
+              UPDATE capabilities                SET names = '[]'                    WHERE names IS NULL;
+              UPDATE capabilities                SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE classifications             SET names = '[]'                    WHERE names IS NULL;
+              UPDATE classifications             SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE classification_values       SET names = '[]'                    WHERE names IS NULL;
+              UPDATE classification_values       SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE context_relationships       SET upstream_role = '[]'            WHERE upstream_role IS NULL;
+              UPDATE context_relationships       SET downstream_role = '[]'          WHERE downstream_role IS NULL;
+              UPDATE context_relationships       SET description = '[]'              WHERE description IS NULL;
+              UPDATE domain_events               SET names = '[]'                    WHERE names IS NULL;
+              UPDATE domain_events               SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE dpia                        SET risk_description = '[]'         WHERE risk_description IS NULL;
+              UPDATE dpia                        SET measures = '[]'                 WHERE measures IS NULL;
+              UPDATE dpia                        SET fdpic_consultation_outcome = '[]' WHERE fdpic_consultation_outcome IS NULL;
+              UPDATE it_systems                  SET names = '[]'                    WHERE names IS NULL;
+              UPDATE it_systems                  SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE organisational_units        SET names = '[]'                    WHERE names IS NULL;
+              UPDATE organisational_units        SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE organisational_units        SET mission_statement = '[]'        WHERE mission_statement IS NULL;
+              UPDATE process_flow_node           SET label = '[]'                    WHERE label IS NULL;
+              UPDATE process_flow_track          SET label = '[]'                    WHERE label IS NULL;
+              UPDATE processes                   SET names = '[]'                    WHERE names IS NULL;
+              UPDATE processes                   SET descriptions = '[]'             WHERE descriptions IS NULL;
+              UPDATE processes                   SET purpose = '[]'                  WHERE purpose IS NULL;
+              UPDATE processes                   SET security_measures = '[]'        WHERE security_measures IS NULL;
+              UPDATE processes                   SET activity_justification = '[]'   WHERE activity_justification IS NULL;
+              UPDATE service_providers           SET names = '[]'                    WHERE names IS NULL;
+              UPDATE team_interactions           SET notes = '[]'                    WHERE notes IS NULL;
+              UPDATE translation_links           SET semantic_difference_note = '[]' WHERE semantic_difference_note IS NULL;
+        # ── constrain: NOT NULL with an empty array as the default ─────────────────────
+        # MODIFY preserves each column's existing type (some JSON, some LONGTEXT) — deliberately not
+        # normalised here, since converting types on populated tables is the risky part and buys nothing.
+        - sql:
+            dbms: mysql
+            sql: |
+              ALTER TABLE bounded_contexts            MODIFY names LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE bounded_contexts            MODIFY descriptions LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_data_quality_rules MODIFY description LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_domains            MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_domains            MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_domains            MODIFY vision_statement LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_entities           MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_entities           MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_entities           MODIFY retention_period LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE business_entity_relationships MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE capabilities                MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE capabilities                MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE classifications             MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE classifications             MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE classification_values       MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE classification_values       MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE context_relationships       MODIFY upstream_role LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE context_relationships       MODIFY downstream_role LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE context_relationships       MODIFY description LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE domain_events               MODIFY names LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE domain_events               MODIFY descriptions LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE dpia                        MODIFY risk_description LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE dpia                        MODIFY measures LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE dpia                        MODIFY fdpic_consultation_outcome LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE it_systems                  MODIFY names LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE it_systems                  MODIFY descriptions LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE organisational_units        MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE organisational_units        MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE organisational_units        MODIFY mission_statement LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE process_flow_node           MODIFY label LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE process_flow_track          MODIFY label LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE processes                   MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE processes                   MODIFY descriptions JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE processes                   MODIFY purpose LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE processes                   MODIFY security_measures LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE processes                   MODIFY activity_justification LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE service_providers           MODIFY names JSON NOT NULL DEFAULT ('[]');
+              ALTER TABLE team_interactions           MODIFY notes LONGTEXT NOT NULL DEFAULT ('[]');
+              ALTER TABLE translation_links           MODIFY semantic_difference_note LONGTEXT NOT NULL DEFAULT ('[]');

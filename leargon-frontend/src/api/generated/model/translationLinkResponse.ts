@@ -23,11 +23,8 @@ import type { UserSummaryResponse } from './userSummaryResponse.ts';
 export interface TranslationLinkResponse {
   id: number;
   linkedEntity: BusinessEntitySummaryResponse;
-  /**
-     * Semantic difference note (localised)
-     * @nullable
-     */
-  semanticDifferenceNote?: LocalizedText[] | null;
+  /** Semantic difference note (localised) */
+  semanticDifferenceNote?: LocalizedText[];
   createdBy?: UserSummaryResponse | null;
   createdAt: string;
   updatedAt: string;

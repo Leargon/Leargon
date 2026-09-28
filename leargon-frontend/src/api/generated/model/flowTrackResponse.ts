@@ -23,10 +23,7 @@ export interface FlowTrackResponse {
   id: string;
   gatewayNodeId: string;
   trackIndex: number;
-  /**
-     * Track label (localised)
-     * @nullable
-     */
-  label?: LocalizedText[] | null;
+  /** Track label (localised) */
+  label?: LocalizedText[];
   nodes: FlowNodeResponse[];
 }

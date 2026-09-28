@@ -39,12 +39,12 @@ class Process {
     var legalBasis: String? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "purpose", columnDefinition = "LONGTEXT")
-    var purpose: MutableList<LocalizedText>? = null
+    @Column(name = "purpose", columnDefinition = "LONGTEXT", nullable = false)
+    var purpose: MutableList<LocalizedText> = mutableListOf()
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "security_measures", columnDefinition = "LONGTEXT")
-    var securityMeasures: MutableList<LocalizedText>? = null
+    @Column(name = "security_measures", columnDefinition = "LONGTEXT", nullable = false)
+    var securityMeasures: MutableList<LocalizedText> = mutableListOf()
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_owner_id", nullable = true)
@@ -156,8 +156,8 @@ class Process {
     var activityType: String? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "activity_justification", columnDefinition = "LONGTEXT")
-    var activityJustification: MutableList<LocalizedText>? = null
+    @Column(name = "activity_justification", columnDefinition = "LONGTEXT", nullable = false)
+    var activityJustification: MutableList<LocalizedText> = mutableListOf()
 
     @Column(name = "first_pass_yield")
     var firstPassYield: Double? = null

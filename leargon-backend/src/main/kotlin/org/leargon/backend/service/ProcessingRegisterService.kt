@@ -206,11 +206,11 @@ open class ProcessingRegisterService(
 
         val processingCountries = derivedProcessingCountries(process).joinToString("; ")
 
-        val purposeLocalized = process.purpose?.find { it.locale == locale }?.text
-        val purposes = purposeLocalized ?: process.purpose?.firstOrNull()?.text ?: ""
+        val purposeLocalized = process.purpose.find { it.locale == locale }?.text
+        val purposes = purposeLocalized ?: process.purpose.firstOrNull()?.text ?: ""
 
-        val secMeasuresLocalized = process.securityMeasures?.find { it.locale == locale }?.text
-        val securityMeasures = secMeasuresLocalized ?: process.securityMeasures?.firstOrNull()?.text ?: ""
+        val secMeasuresLocalized = process.securityMeasures.find { it.locale == locale }?.text
+        val securityMeasures = secMeasuresLocalized ?: process.securityMeasures.firstOrNull()?.text ?: ""
 
         val hasChildren = childKeysByParent.containsKey(process.key)
 
@@ -235,8 +235,8 @@ open class ProcessingRegisterService(
         ).processingCountries(processingCountries)
             .parentKey(process.parent?.key)
             .lastModified(lastModified)
-            .purposeRaw(process.purpose?.map { LocalizedText(it.locale, it.text) })
-            .securityMeasuresRaw(process.securityMeasures?.map { LocalizedText(it.locale, it.text) })
+            .purposeRaw(process.purpose.map { LocalizedText(it.locale, it.text) })
+            .securityMeasuresRaw(process.securityMeasures.map { LocalizedText(it.locale, it.text) })
             .missingMandatoryFields(missingFields(process))
     }
 }

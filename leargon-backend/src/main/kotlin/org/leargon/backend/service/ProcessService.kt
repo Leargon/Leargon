@@ -388,7 +388,8 @@ open class ProcessService(
                     org.leargon.backend.domain
                         .LocalizedText(it.locale, it.text)
                 }?.toMutableList()
-        process.purpose = domainPurpose
+        // The request may send null to clear the field; the domain always holds a list.
+        process.purpose = domainPurpose ?: mutableListOf()
         process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated purpose")
@@ -411,7 +412,8 @@ open class ProcessService(
                     org.leargon.backend.domain
                         .LocalizedText(it.locale, it.text)
                 }?.toMutableList()
-        process.securityMeasures = domainMeasures
+        // The request may send null to clear the field; the domain always holds a list.
+        process.securityMeasures = domainMeasures ?: mutableListOf()
         process.updatedBy = currentUser
         process = processRepository.update(process)
         createProcessVersion(process, currentUser, "UPDATE", "Updated security measures")
@@ -445,8 +447,9 @@ open class ProcessService(
         process.frequencyCount = request.frequencyCount
         process.frequencyPeriod = request.frequencyPeriod?.value
         process.activityType = request.activityType?.value
+        // The request may send null to clear the field; the domain always holds a list.
         process.activityJustification =
-            request.activityJustification?.map { LocalizedText(it.locale, it.text) }?.toMutableList()
+            request.activityJustification?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         process.firstPassYield = request.firstPassYield
         process.completionRate = request.completionRate
         process.updatedBy = currentUser

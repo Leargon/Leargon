@@ -37,16 +37,10 @@ export interface DpiaListItemResponse {
   linkedResourceName?: string | null;
   /** Linked process or entity name in every locale it is defined in */
   linkedResourceNames?: LocalizedText[];
-  /**
-     * Risk description (localised)
-     * @nullable
-     */
-  riskDescription?: LocalizedText[] | null;
-  /**
-     * Measures to mitigate risks (localised)
-     * @nullable
-     */
-  measures?: LocalizedText[] | null;
+  /** Risk description (localised) */
+  riskDescription?: LocalizedText[];
+  /** Measures to mitigate risks (localised) */
+  measures?: LocalizedText[];
   /** @nullable */
   fdpicConsultationRequired?: boolean | null;
   triggeredBy: UserSummaryResponse;

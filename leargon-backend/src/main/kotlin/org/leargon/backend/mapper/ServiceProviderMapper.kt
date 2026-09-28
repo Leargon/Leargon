@@ -44,7 +44,7 @@ open class ServiceProviderMapper(
                                 CrossBorderTransferMapper.toCrossBorderTransferEntry(it)
                             },
                         ).securityMeasures(
-                            process.securityMeasures?.takeIf { it.isNotEmpty() }?.textForLocale(defaultLocale, ""),
+                            process.securityMeasures.takeIf { it.isNotEmpty() }?.textForLocale(defaultLocale, ""),
                         ).securityMeasuresLocalized(LocalizedTextMapper.toModel(process.securityMeasures))
                 },
             )

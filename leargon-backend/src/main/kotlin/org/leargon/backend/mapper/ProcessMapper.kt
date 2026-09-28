@@ -86,8 +86,8 @@ open class ProcessMapper(
             .parentProcess(toProcessSummaryResponse(process.parent))
             .childProcesses(process.children.map { toProcessSummaryResponse(it)!! })
             .legalBasis(toLegalBasis(process.legalBasis))
-            .purpose(process.purpose?.let { LocalizedTextMapper.toModel(it) })
-            .securityMeasures(process.securityMeasures?.let { LocalizedTextMapper.toModel(it) })
+            .purpose(LocalizedTextMapper.toModel(process.purpose))
+            .securityMeasures(LocalizedTextMapper.toModel(process.securityMeasures))
             .crossBorderTransfers(process.crossBorderTransfers.orEmpty().map { CrossBorderTransferMapper.toCrossBorderTransferEntry(it) })
             .serviceProviders(process.serviceProviders.map { serviceProviderMapper.toServiceProviderSummaryResponse(it) })
             .capabilities(process.capabilities.map { capabilityMapper.toCapabilitySummaryResponse(it) })
@@ -100,7 +100,7 @@ open class ProcessMapper(
             .frequencyCount(process.frequencyCount)
             .frequencyPeriod(toFrequencyPeriod(process.frequencyPeriod))
             .activityType(toActivityType(process.activityType))
-            .activityJustification(process.activityJustification?.let { LocalizedTextMapper.toModel(it) })
+            .activityJustification(LocalizedTextMapper.toModel(process.activityJustification))
             .firstPassYield(process.firstPassYield)
             .completionRate(process.completionRate)
             .missingMandatoryFields(fc.missing)
@@ -301,12 +301,12 @@ open class ProcessMapper(
 
                 fieldName.startsWith("purpose.") -> {
                     val locale = fieldName.removePrefix("purpose.")
-                    process.purpose?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    process.purpose.any { it.locale == locale && !it.text.isNullOrBlank() }
                 }
 
                 fieldName.startsWith("securityMeasures.") -> {
                     val locale = fieldName.removePrefix("securityMeasures.")
-                    process.securityMeasures?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    process.securityMeasures.any { it.locale == locale && !it.text.isNullOrBlank() }
                 }
 
                 fieldName.startsWith("classification.") -> {
@@ -316,7 +316,7 @@ open class ProcessMapper(
 
                 fieldName.startsWith("activityJustification.") -> {
                     val locale = fieldName.removePrefix("activityJustification.")
-                    process.activityJustification?.any { it.locale == locale && !it.text.isNullOrBlank() } == true
+                    process.activityJustification.any { it.locale == locale && !it.text.isNullOrBlank() }
                 }
 
                 fieldName == "valueStreamType" -> {

@@ -82,11 +82,8 @@ export interface BusinessEntityResponse {
   implementsEntities?: BusinessEntitySummaryResponse[];
   relationships?: BusinessEntityRelationshipResponse[];
   classificationAssignments?: ClassificationAssignmentResponse[];
-  /**
-     * Retention period description for the entity (localised)
-     * @nullable
-     */
-  retentionPeriod?: LocalizedText[] | null;
+  /** Retention period description for the entity (localised) */
+  retentionPeriod?: LocalizedText[];
   /**
      * ISO 3166-1 alpha-2 country codes where this entity's data is stored (manually specified)
      * @nullable
