@@ -8,6 +8,7 @@ import org.leargon.backend.domain.Process
 import org.leargon.backend.domain.User
 import org.leargon.backend.mapper.ProcessMapper
 import org.leargon.backend.mapper.ProcessMapper.Companion.derivedProcessingCountries
+import org.leargon.backend.mapper.ProcessMapper.Companion.ownProcessingCountries
 import org.leargon.backend.model.LocalizedText
 import org.leargon.backend.model.ProcessingRegisterEntryResponse
 import org.leargon.backend.repository.OrganisationSettingsRepository
@@ -33,7 +34,10 @@ open class ProcessingRegisterService(
         return current
     }
 
-    private fun collectEffectiveTransfers(process: Process): List<CrossBorderTransfer> {
+    private fun collectEffectiveTransfers(
+        process: Process,
+        descend: Boolean
+    ): List<CrossBorderTransfer> {
         val seen = mutableSetOf<String>()
         val visitedProcesses = mutableSetOf<String>()
         val result = mutableListOf<CrossBorderTransfer>()
@@ -43,7 +47,7 @@ open class ProcessingRegisterService(
             p.crossBorderTransfers?.forEach { t ->
                 if (seen.add("${t.destinationCountry}:${t.safeguard}")) result.add(t)
             }
-            p.children.forEach { collect(it) }
+            if (descend) p.children.forEach { collect(it) }
         }
         collect(process)
         return result
@@ -131,11 +135,22 @@ open class ProcessingRegisterService(
                 .filter { it.parent != null }
                 .groupBy { it.parent!!.key }
 
-        // One row per *root* process — the Art. 30 / revDSG "processing activity". Sub-processes
-        // aggregate into their root's row (see roll-up helpers) rather than repeating as their own rows.
-        return allProcesses
-            .filter { it.parent == null }
-            .map { process -> buildEntry(process, locale, euRepresentative, dpo, homeCountry, currentUser, childKeysByParent) }
+        // A root process is the Art. 30 / revDSG "processing activity": its row rolls up everything
+        // its sub-processes touch. Sub-processes ship as rows of their own, linked by parentKey and
+        // carrying only their own contribution, so the UI can drill into a row without the same
+        // entities and transfers being repeated at every level.
+        return allProcesses.map { process ->
+            buildEntry(
+                process,
+                locale,
+                euRepresentative,
+                dpo,
+                homeCountry,
+                currentUser,
+                childKeysByParent,
+                rollUp = process.parent == null,
+            )
+        }
     }
 
     private fun buildEntry(
@@ -146,12 +161,19 @@ open class ProcessingRegisterService(
         homeCountry: String?,
         currentUser: User,
         childKeysByParent: Map<String, List<Process>>,
+        rollUp: Boolean,
     ): ProcessingRegisterEntryResponse {
+        // effectiveContainsPersonalData()/effectiveEntityRole() still apply either way — those
+        // resolve inheritance between *entities*, which a drill-down row must honour too.
         val allEntities =
-            (
-                ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
-                    ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
-            ).distinctBy { it.key }
+            if (rollUp) {
+                (
+                    ProcessMapper.collectEffectiveEntities(process) { it.inputEntities } +
+                        ProcessMapper.collectEffectiveEntities(process) { it.outputEntities }
+                ).distinctBy { it.key }
+            } else {
+                (process.inputEntities + process.outputEntities).distinctBy { it.key }
+            }
 
         val owningUnitNames = process.owningUnit?.names
         val lastModified = process.updatedAt?.atZone(ZoneOffset.UTC)?.format(dateFormatter)
@@ -200,17 +222,19 @@ open class ProcessingRegisterService(
             }
 
         val transfers =
-            collectEffectiveTransfers(process)
+            collectEffectiveTransfers(process, rollUp)
                 .filter { homeCountry == null || it.destinationCountry != homeCountry }
                 .joinToString("; ") { "${it.destinationCountry}: ${it.safeguard}" }
 
-        val processingCountries = derivedProcessingCountries(process).joinToString("; ")
+        val processingCountries =
+            (if (rollUp) derivedProcessingCountries(process) else ownProcessingCountries(process))
+                .joinToString("; ")
 
-        val purposeLocalized = process.purpose?.find { it.locale == locale }?.text
-        val purposes = purposeLocalized ?: process.purpose?.firstOrNull()?.text ?: ""
+        val purposeLocalized = process.purpose.find { it.locale == locale }?.text
+        val purposes = purposeLocalized ?: process.purpose.firstOrNull()?.text ?: ""
 
-        val secMeasuresLocalized = process.securityMeasures?.find { it.locale == locale }?.text
-        val securityMeasures = secMeasuresLocalized ?: process.securityMeasures?.firstOrNull()?.text ?: ""
+        val secMeasuresLocalized = process.securityMeasures.find { it.locale == locale }?.text
+        val securityMeasures = secMeasuresLocalized ?: process.securityMeasures.firstOrNull()?.text ?: ""
 
         val hasChildren = childKeysByParent.containsKey(process.key)
 
@@ -235,8 +259,8 @@ open class ProcessingRegisterService(
         ).processingCountries(processingCountries)
             .parentKey(process.parent?.key)
             .lastModified(lastModified)
-            .purposeRaw(process.purpose?.map { LocalizedText(it.locale, it.text) })
-            .securityMeasuresRaw(process.securityMeasures?.map { LocalizedText(it.locale, it.text) })
+            .purposeRaw(process.purpose.map { LocalizedText(it.locale, it.text) })
+            .securityMeasuresRaw(process.securityMeasures.map { LocalizedText(it.locale, it.text) })
             .missingMandatoryFields(missingFields(process))
     }
 }

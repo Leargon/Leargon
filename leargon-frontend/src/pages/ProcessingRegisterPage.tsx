@@ -42,13 +42,15 @@ interface ProcessRowProps {
   row: ProcessingRegisterEntryResponse;
   allRows: ProcessingRegisterEntryResponse[];
   level: number;
+  /** Search results are listed flat — every match is already a top-level row, so don't nest. */
+  flat: boolean;
   onSaved: () => void;
   locales: SupportedLocaleResponse[];
   t: ReturnType<typeof useTranslation>['t'];
 }
 
 const ProcessRow: React.FC<ProcessRowProps> = ({
-  row, allRows, level, onSaved, locales, t,
+  row, allRows, level, flat, onSaved, locales, t,
 }) => {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -60,7 +62,10 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
   const updatePurpose = useUpdateProcessPurpose();
   const updateSecurityMeasures = useUpdateProcessSecurityMeasures();
 
-  const children = allRows.filter((r) => r.parentKey === row.key);
+  const children = allRows
+    .filter((r) => r.parentKey === row.key)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const expandable = row.hasChildren && !flat && children.length > 0;
 
   const handlePurposeSave = useCallback(async () => {
     setSaving(true);
@@ -122,7 +127,7 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
         {/* 4. Bezeichnung der Bearbeitungstätigkeit */}
         <TableCell>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, pl: level * 3 }}>
-            {row.hasChildren ? (
+            {expandable ? (
               <IconButton size="small" onClick={() => setExpanded((v) => !v)} sx={{ p: 0.25 }}>
                 {expanded ? <ExpandMore fontSize="small" /> : <ChevronRight fontSize="small" />}
               </IconButton>
@@ -281,12 +286,13 @@ const ProcessRow: React.FC<ProcessRowProps> = ({
         </DialogActions>
       </Dialog>
 
-      {row.hasChildren && expanded && children.map((child) => (
+      {expandable && expanded && children.map((child) => (
         <ProcessRow
           key={child.key}
           row={child}
           allRows={allRows}
           level={level + 1}
+          flat={flat}
           onSaved={onSaved}
           locales={locales}
           t={t}
@@ -470,8 +476,9 @@ const ProcessingRegisterPage: React.FC = () => {
                 <ProcessRow
                   key={row.key}
                   row={row}
-                  allRows={entries}
+                  allRows={filteredAll}
                   level={0}
+                  flat={showFlat}
                   onSaved={invalidateRegister}
                   locales={locales}
                   t={t}

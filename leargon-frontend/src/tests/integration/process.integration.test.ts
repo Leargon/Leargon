@@ -618,7 +618,8 @@ describe('Process E2E', () => {
       purpose: null,
     });
     expect(res.status).toBe(200);
-    expect(res.data.purpose ?? null).toBeNull();
+    // Sending null still clears the field; the response now always carries an array, never null.
+    expect(res.data.purpose).toEqual([]);
   });
 
   // =====================
@@ -646,7 +647,8 @@ describe('Process E2E', () => {
       securityMeasures: null,
     });
     expect(res.status).toBe(200);
-    expect(res.data.securityMeasures ?? null).toBeNull();
+    // Sending null still clears the field; the response now always carries an array, never null.
+    expect(res.data.securityMeasures).toEqual([]);
   });
 
   // =====================

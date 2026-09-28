@@ -58,9 +58,6 @@ export interface BusinessEntitySummaryResponse {
   description?: string | null;
   /** Description in every locale it is defined in */
   descriptions?: LocalizedText[];
-  /**
-     * Retention period or criteria for this entity (localised)
-     * @nullable
-     */
-  retentionPeriod?: LocalizedText[] | null;
+  /** Retention period or criteria for this entity (localised) */
+  retentionPeriod?: LocalizedText[];
 }

@@ -54,11 +54,8 @@ export interface OrganisationalUnitResponse {
   createdBy: UserSummaryResponse;
   names: LocalizedText[];
   descriptions?: LocalizedText[];
-  /**
-     * Team purpose / mission statement (localised, Team Topologies)
-     * @nullable
-     */
-  missionStatement?: LocalizedText[] | null;
+  /** Team purpose / mission statement (localised, Team Topologies) */
+  missionStatement?: LocalizedText[];
   parents?: OrganisationalUnitSummaryResponse[];
   children?: OrganisationalUnitSummaryResponse[];
   /** Processes where this unit is set as an executing unit */

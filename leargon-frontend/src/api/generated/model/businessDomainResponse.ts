@@ -63,11 +63,8 @@ export interface BusinessDomainResponse {
      * @nullable
      */
   fieldStatuses?: FieldVerificationResponse[] | null;
-  /**
-     * Vision statement for the domain (localised)
-     * @nullable
-     */
-  visionStatement?: LocalizedText[] | null;
+  /** Vision statement for the domain (localised) */
+  visionStatement?: LocalizedText[];
   /** Organisational unit responsible for this domain */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Explicitly assigned accountable domain owner (null when inherited) */

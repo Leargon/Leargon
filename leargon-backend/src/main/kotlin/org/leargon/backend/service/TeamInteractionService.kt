@@ -63,7 +63,8 @@ open class TeamInteractionService(
         interaction.mode = request.mode.value
         interaction.duration = request.duration.value
         interaction.healthScore = request.healthScore
-        interaction.notes = request.notes?.map { LocalizedText(it.locale, it.text) }?.toMutableList()
+        // The request may omit notes; the domain always holds a list.
+        interaction.notes = request.notes?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         interaction.createdBy = currentUser
         val saved = teamInteractionRepository.save(interaction)
         return teamInteractionMapper.toResponse(getById(saved.id!!))
@@ -83,7 +84,8 @@ open class TeamInteractionService(
         request.mode?.let { interaction.mode = it.value }
         request.duration?.let { interaction.duration = it.value }
         interaction.healthScore = request.healthScore
-        interaction.notes = request.notes?.map { LocalizedText(it.locale, it.text) }?.toMutableList()
+        // Null clears the notes; the domain always holds a list.
+        interaction.notes = request.notes?.map { LocalizedText(it.locale, it.text) }?.toMutableList() ?: mutableListOf()
         teamInteractionRepository.update(interaction)
         return teamInteractionMapper.toResponse(getById(id))
     }

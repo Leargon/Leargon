@@ -71,7 +71,7 @@ class ProcessingRegisterControllerSpec extends Specification {
         key
     }
 
-    def "register emits one rolled-up row per root process and splits data subjects vs data categories"() {
+    def "register emits a rolled-up root row plus a drill-down row per sub-process"() {
         given: "a parent process with a child, and personal-data entities linked to the child"
         String adminToken = token()
         String parentKey = createProcess(adminToken, "Recruitment")
@@ -86,18 +86,47 @@ class ProcessingRegisterControllerSpec extends Specification {
             HttpRequest.GET("/processing-register").bearerAuth(adminToken), Argument.listOf(Map))
         def rows = resp.body()
 
-        then: "there is exactly one row — the root — and the child is not a separate row (B3)"
+        then: "both the root and the sub-process are rows, linked by parentKey so the UI can nest them"
         resp.status == HttpStatus.OK
-        rows.size() == 1
-        def row = rows[0]
-        row.key == parentKey
+        rows.size() == 2
+        def row = rows.find { it.key == parentKey }
+        def childRow = rows.find { it.key == childKey }
         row.hasChildren == true
+        row.parentKey == null
+        childRow.parentKey == parentKey
+        childRow.hasChildren == false
 
         and: "the child's entities roll up into the root row, split by entity role (B2)"
         row.personCategories.contains("Candidate")
         !row.personCategories.contains("CV Document")
         row.dataCategories.contains("CV Document")
         !row.dataCategories.contains("Candidate")
+
+        and: "the drill-down row carries the same facts, because they are the child's own"
+        childRow.personCategories.contains("Candidate")
+        childRow.dataCategories.contains("CV Document")
+    }
+
+    def "a sub-process row shows only its own entities, never a sibling's"() {
+        given: "two sub-processes under one root, only one of which touches personal data"
+        String adminToken = token()
+        String parentKey = createProcess(adminToken, "Hiring")
+        String withData = createProcess(adminToken, "Collect Application", parentKey)
+        String withoutData = createProcess(adminToken, "Publish Vacancy", parentKey)
+        String person = createEntity(adminToken, "Applicant", true, "DATA_SUBJECT")
+        client.toBlocking().exchange(HttpRequest.POST("/processes/${withData}/inputs", [entityKey: person]).bearerAuth(adminToken), Map)
+
+        when: "reading the processing register"
+        def rows = client.toBlocking().exchange(
+            HttpRequest.GET("/processing-register").bearerAuth(adminToken), Argument.listOf(Map)).body()
+
+        then: "the root still rolls the data up for the Art. 30 row"
+        rows.size() == 3
+        rows.find { it.key == parentKey }.personCategories.contains("Applicant")
+
+        and: "the sibling that touches nothing stays empty — no roll-up leaks sideways"
+        rows.find { it.key == withData }.personCategories.contains("Applicant")
+        rows.find { it.key == withoutData }.personCategories.isEmpty()
     }
 
     def "an implementation entity inherits the personal-data answer of the interface it implements"() {

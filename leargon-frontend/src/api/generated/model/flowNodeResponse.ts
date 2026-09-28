@@ -27,11 +27,8 @@ export interface FlowNodeResponse {
   trackId?: string | null;
   position: number;
   nodeType: FlowNodeType;
-  /**
-     * Node label (localised)
-     * @nullable
-     */
-  label?: LocalizedText[] | null;
+  /** Node label (localised) */
+  label?: LocalizedText[];
   /** @nullable */
   linkedProcessKey?: string | null;
   /** Computed by backend — true if the linked process has flow nodes beyond Start and End */

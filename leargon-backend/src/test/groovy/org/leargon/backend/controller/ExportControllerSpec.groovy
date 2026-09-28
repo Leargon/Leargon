@@ -75,8 +75,9 @@ class ExportControllerSpec extends Specification {
         resp.body().accessToken
     }
 
-    private String createProcess(String token, String name = "Test Process") {
+    private String createProcess(String token, String name = "Test Process", String parentKey = null) {
         def req = [names: [[locale: "en", text: name]]]
+        if (parentKey != null) req.parentProcessKey = parentKey
         def resp = client.toBlocking().exchange(
             HttpRequest.POST("/processes", req).bearerAuth(token), Map)
         resp.body().key
@@ -147,6 +148,37 @@ class ExportControllerSpec extends Specification {
         body.contains("Categories of Data Subjects")
         body.contains("Categories of Personal Data")
         body.contains("Export Test Process")
+    }
+
+    def "GET /export/processing-register indents sub-processes under their root, mirroring the register screen"() {
+        given: "a root process whose *sub*-process is the one touching personal data"
+        String adminToken = createAdminToken("admin5@export.com", "exportAdmin5")
+        String rootKey = createProcess(adminToken, "Employee Lifecycle")
+        String childKey = createProcess(adminToken, "Store Payslip", rootKey)
+        String entityKey = createBusinessEntity(adminToken, "Payslip")
+        def entity = businessEntityRepository.findByKey(entityKey).get()
+        entity.containsPersonalData = true
+        entity.entityRole = "DATA_ATTRIBUTE"
+        businessEntityRepository.update(entity)
+        client.toBlocking().exchange(
+            HttpRequest.POST("/processes/${childKey}/inputs", [entityKey: entityKey]).bearerAuth(adminToken), Map)
+
+        and: "a second root that touches no personal data at all"
+        createProcess(adminToken, "Order Stationery")
+
+        when:
+        def response = client.toBlocking().exchange(
+            HttpRequest.GET("/export/processing-register").bearerAuth(adminToken), String)
+
+        then: "the root is flush left and its sub-process is indented beneath it"
+        response.status == HttpStatus.OK
+        def body = response.body()
+        body.contains('"Employee Lifecycle"')
+        body.contains('"    Store Payslip"')
+        body.indexOf("Employee Lifecycle") < body.indexOf("Store Payslip")
+
+        and: "the root is kept only because its child qualifies, while the empty root is dropped"
+        !body.contains("Order Stationery")
     }
 
     def "GET /export/processing-register returns 401 without auth"() {

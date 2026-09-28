@@ -157,3 +157,5 @@ databaseChangeLog:
       file: db/changelog/changes/077-create-item-creation-records.yaml
   - include:
       file: db/changelog/changes/078-normalise-null-localized-json.yaml
+  - include:
+      file: db/changelog/changes/079-unify-localised-text-columns.yaml

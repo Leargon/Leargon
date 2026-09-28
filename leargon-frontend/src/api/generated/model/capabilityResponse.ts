@@ -37,8 +37,7 @@ export interface CapabilityResponse {
      */
   creatableChildTypes?: CreatableItemType[] | null;
   names: LocalizedText[];
-  /** @nullable */
-  descriptions?: LocalizedText[] | null;
+  descriptions?: LocalizedText[];
   parent?: CapabilitySummaryResponse | null;
   /** @nullable */
   children?: CapabilitySummaryResponse[] | null;

@@ -68,16 +68,10 @@ export interface ProcessingRegisterEntryResponse {
      * @nullable
      */
   processingCountries?: string | null;
-  /**
-     * Raw localised purpose values for inline editing
-     * @nullable
-     */
-  purposeRaw?: LocalizedText[] | null;
-  /**
-     * Raw localised security measures values for inline editing
-     * @nullable
-     */
-  securityMeasuresRaw?: LocalizedText[] | null;
+  /** Raw localised purpose values for inline editing */
+  purposeRaw?: LocalizedText[];
+  /** Raw localised security measures values for inline editing */
+  securityMeasuresRaw?: LocalizedText[];
   /**
      * Field names that are mandatory but not yet filled in
      * @nullable

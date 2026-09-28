@@ -26,21 +26,12 @@ export interface ContextRelationshipResponse {
   relationshipType: ContextMapperRelationshipType;
   upstreamBoundedContext?: BoundedContextSummaryResponse | null;
   downstreamBoundedContext?: BoundedContextSummaryResponse | null;
-  /**
-     * Role of the upstream context (localised)
-     * @nullable
-     */
-  upstreamRole?: LocalizedText[] | null;
-  /**
-     * Role of the downstream context (localised)
-     * @nullable
-     */
-  downstreamRole?: LocalizedText[] | null;
-  /**
-     * Description of the relationship (localised)
-     * @nullable
-     */
-  description?: LocalizedText[] | null;
+  /** Role of the upstream context (localised) */
+  upstreamRole?: LocalizedText[];
+  /** Role of the downstream context (localised) */
+  downstreamRole?: LocalizedText[];
+  /** Description of the relationship (localised) */
+  description?: LocalizedText[];
   createdBy?: UserSummaryResponse;
   createdAt?: string;
   updatedAt?: string;

@@ -55,16 +55,10 @@ export interface ProcessResponse {
   code?: string | null;
   processType?: ProcessType | null;
   legalBasis?: LegalBasis | null;
-  /**
-     * Purpose of processing (Zweck der Bearbeitung) — localised
-     * @nullable
-     */
-  purpose?: LocalizedText[] | null;
-  /**
-     * Technical and organisational security measures (TOM) — localised
-     * @nullable
-     */
-  securityMeasures?: LocalizedText[] | null;
+  /** Purpose of processing (Zweck der Bearbeitung) — localised */
+  purpose?: LocalizedText[];
+  /** Technical and organisational security measures (TOM) — localised */
+  securityMeasures?: LocalizedText[];
   /** Directly assigned owning organisational unit (overrides bounded context inheritance for stewardship) */
   owningUnit?: OrganisationalUnitSummaryResponse | null;
   /** Effective process owner (explicit override, or from owningUnit, or computed from bounded context owning unit; null if neither is set) */
@@ -149,11 +143,8 @@ export interface ProcessResponse {
   frequencyCount?: number | null;
   frequencyPeriod?: FrequencyPeriod | null;
   activityType?: ActivityType | null;
-  /**
-     * VSM: localised justification for the activity classification (the Lean value statement)
-     * @nullable
-     */
-  activityJustification?: LocalizedText[] | null;
+  /** VSM: localised justification for the activity classification (the Lean value statement) */
+  activityJustification?: LocalizedText[];
   /**
      * VSM: first pass yield (FPY) as a percentage 0–100
      * @minimum 0

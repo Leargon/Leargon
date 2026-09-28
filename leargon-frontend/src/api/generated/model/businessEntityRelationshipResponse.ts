@@ -22,8 +22,7 @@ import type { LocalizedText } from './localizedText.ts';
 export interface BusinessEntityRelationshipResponse {
   /** Relationship ID */
   id?: number;
-  /** @nullable */
-  descriptions?: LocalizedText[] | null;
+  descriptions?: LocalizedText[];
   /**
      * @minItems 2
      * @maxItems 2
