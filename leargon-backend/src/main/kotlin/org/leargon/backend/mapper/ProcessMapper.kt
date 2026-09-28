@@ -170,6 +170,21 @@ open class ProcessMapper(
         }
 
         /**
+         * The processing countries this process contributes by itself, ignoring sub-processes.
+         * The drill-down rows of the processing register show their own contribution only, while
+         * [derivedProcessingCountries] keeps rolling up for the Art. 30 row and the dashboard.
+         */
+        @JvmStatic
+        fun ownProcessingCountries(process: Process): List<String> {
+            val result = mutableSetOf<String>()
+            process.itSystems.forEach { result.addAll(it.processingCountries) }
+            process.serviceProviders
+                .filter { it.serviceProviderType == "DATA_PROCESSOR" }
+                .forEach { result.addAll(it.processingCountries) }
+            return result.sorted()
+        }
+
+        /**
          * Single source of truth for "does this process (effectively, including sub-processes)
          * handle personal data?" — reads [BusinessEntity.effectiveContainsPersonalData] over the
          * effective input+output entity roll-up, so an entity that inherits the answer from the

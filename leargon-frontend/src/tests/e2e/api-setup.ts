@@ -87,8 +87,14 @@ export const createEntity = (
 export const createProcess = (
   name: string,
   as = ADMIN,
+  parentProcessKey?: string,
 ): Promise<Record<string, unknown>> =>
-  apiFetch('/processes', 'POST', { names: [{ locale: 'en', text: name }] }, as);
+  apiFetch(
+    '/processes',
+    'POST',
+    { names: [{ locale: 'en', text: name }], ...(parentProcessKey ? { parentProcessKey } : {}) },
+    as,
+  );
 
 export const createOrgUnit = (
   name: string,
