@@ -18,8 +18,6 @@
  */
 
 export type GetSupportedLocalesParams = {
-/**
- * If true, return all locales including inactive ones
- */
-'include-inactive'?: boolean;
+  /** If true, return all locales including inactive ones */
+  'include-inactive'?: boolean;
 };

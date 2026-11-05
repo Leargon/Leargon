@@ -19,19 +19,17 @@
 import type { SearchResultType } from './searchResultType.ts';
 
 export type SearchParams = {
-/**
- * Search query (minimum 2 characters)
- * @minLength 2
- */
-q: string;
-/**
- * Filter by entity types (defaults to all types if omitted)
- */
-types?: SearchResultType[];
-/**
- * Maximum total number of results (default 20, max 50)
- * @minimum 1
- * @maximum 50
- */
-limit?: number;
+  /**
+   * Search query (minimum 2 characters)
+   * @minLength 2
+   */
+  q: string;
+  /** Filter by entity types (defaults to all types if omitted) */
+  types?: SearchResultType[];
+  /**
+   * Maximum total number of results (default 20, max 50)
+   * @minimum 1
+   * @maximum 50
+   */
+  limit?: number;
 };

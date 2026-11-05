@@ -18,8 +18,6 @@
  */
 
 export type GetGroupedOverviewParams = {
-/**
- * The grouping dimension, from `GET /overviews/{resourceType}/groupings`. Passing a dimension that is not available for this resource type is a 400.
- */
-groupBy: string;
+  /** The grouping dimension, from `GET /overviews/{resourceType}/groupings`. Passing a dimension that is not available for this resource type is a 400. */
+  groupBy: string;
 };
