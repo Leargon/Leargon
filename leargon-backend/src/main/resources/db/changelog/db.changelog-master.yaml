@@ -159,3 +159,5 @@ databaseChangeLog:
       file: db/changelog/changes/078-normalise-null-localized-json.yaml
   - include:
       file: db/changelog/changes/079-unify-localised-text-columns.yaml
+  - include:
+      file: db/changelog/changes/080-rescue-legacy-localised-text.yaml

@@ -24,7 +24,12 @@ Labels data assets by their access sensitivity level. Used for access control po
 ---
 
 ### Personal Data
-Flags entities that contain personal data. Required for GDPR Art. 30 / DSG Art. 12 processing register compliance.
+Flags entities that contain personal data.
+
+> **Informational only.** The processing register, the DPIA checks and the GDPR to-do rules read the typed
+> `containsPersonalData` / `entityRole` fields of a business entity (GDPR section), not this classification.
+> The former `personal-data` system classification was retired in migrations 070/071; a classification created
+> from this template is an ordinary tag.
 
 | Value | Meaning |
 |---|---|

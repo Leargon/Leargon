@@ -56,7 +56,10 @@ ghcr.io/leargon/leargon-frontend:<version>
 | `ADMIN_LAST_NAME` | | Last name shown for the fallback admin | `Administrator` |
 | `AZURE_TENANT_ID` | | Azure Entra ID tenant ID. Leave empty to disable Azure login. | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
 | `AZURE_CLIENT_ID` | | Azure Entra ID application (client) ID | `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
+| `CORS_ALLOWED_ORIGINS` | | Comma-separated origins allowed to call the API directly. Not needed when the browser only talks to the nginx proxy. | `http://localhost:3000,http://localhost:5173` (default) |
 | `MICRONAUT_ENVIRONMENTS` | | Active Micronaut environment profiles | `prod` |
+
+`DB_URL` / `DB_USERNAME` / `DB_PASSWORD` are accepted as shorter aliases for the three `DATASOURCES_DEFAULT_*` variables (they are the placeholders in `application.yml`; the `DATASOURCES_DEFAULT_*` form overrides them through Micronaut's environment mapping).
 
 ### Frontend (nginx)
 
@@ -106,6 +109,21 @@ Léargon uses **MySQL 8.4**. Schema migrations are managed by Liquibase and run 
 No manual schema setup is needed. The JDBC URL flag `createDatabaseIfNotExist=true` creates the database if it does not already exist.
 
 **Backup:** Use `mysqldump` or your cloud provider's managed backup service. The only stateful volume is `mysql-data` in Docker Compose.
+
+### Upgrading an existing installation
+
+Liquibase applies every pending changeset at the first start of the new version. CI only proves migrations against a **fresh** database, so for an upgrade:
+
+1. Take a backup.
+2. Rehearse the upgrade against a copy of the production database before rolling it out.
+
+Changesets that rewrite existing data rather than only adding structure:
+
+| Changesets | Effect |
+|---|---|
+| `061`–`063` | Wrap the formerly single-language governance texts (retention period, purpose, vision, …) into multilingual JSON |
+| `070`–`071` | Move personal-data facts from the `personal-data` / `entity-type` system classifications into typed entity columns, then retire those classifications (`special-categories` stays) |
+| `078`–`080` | Normalise every localised-text column to `NOT NULL DEFAULT '[]'` and rescue legacy values that were not valid JSON (blank strings, pre-061 plain text) |
 
 ---
 
