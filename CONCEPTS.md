@@ -1,8 +1,16 @@
 # Leargon — Core Concepts
 
-## 1. Three Frameworks, One Model
+## 1. Seven Methodologies, One Model
 
-Leargon unifies three distinct analytical frameworks inside a single data model. Each framework asks a different question about the organisation, yet they share the same underlying objects — domains, processes, entities, and teams — just viewed through a different lens.
+Leargon unifies seven methodologies inside a single data model: Data Governance, Process Governance, DSG/GDPR, Domain-Driven Design, Business Capability Modelling, Team Topologies and Lean / VSM. Each asks a different question about the organisation, yet they share the same underlying objects — domains, processes, entities, and teams — just viewed through a different lens. Each methodology can be switched on or off; a disabled methodology hides its fields, sections, to-do rules and navigation items everywhere (see `METHODOLOGY-FIELD-MAPPING.md`).
+
+### Data Governance
+
+Data Governance asks: *who is accountable for which data, and can it be trusted?* Every business entity has a data owner (accountable), a data steward (responsible, may edit) and a technical custodian, inherited from the owning unit when not set. It records retention periods, storage locations, classifications, interface/implementation structure, typed relationships with cardinalities, and data-quality rules. The owner verifies field values, and the owner to-do list surfaces gaps.
+
+### Process Governance
+
+Process Governance asks: *who is accountable for which process, and what data does it use?* Processes form a hierarchy with process owner, steward and custodian, a process type and code, input and output entities, executing org units, and a BPMN process diagram with called sub-processes.
 
 ### Domain-Driven Design (DDD)
 
@@ -14,11 +22,19 @@ BCM asks: *what must the organisation be able to do, independent of how it is st
 
 ### DSG/GDPR Compliance
 
-Swiss revDSG and EU GDPR impose obligations at the process level: every data-processing activity must declare a legal basis, a purpose, and technical/organisational measures. Sensitive entity categories (e.g. health data) must be identified. Data processors and cross-border transfers must be registered. DPIAs must be triggered for high-risk processing. Leargon models these requirements as first-class fields on processes and entities, and uses the **system classifications** (seeded at startup and locked from modification) to tag entities with `personal-data`, `special-categories`, and similar attributes. The Processing Register page directly renders Art. 30 GDPR / Art. 12 revDSG-required information.
+Swiss revDSG and EU GDPR impose obligations at the process level: every data-processing activity must declare a legal basis, a purpose, and technical/organisational measures. Sensitive entity categories (e.g. health data) must be identified. Data processors and cross-border transfers must be registered. DPIAs must be triggered for high-risk processing. Leargon models these requirements as first-class fields on processes and entities. Whether an entity holds personal data is a typed, tri-state field (`containsPersonalData`: yes / no / not answered) together with its `entityRole` (`DATA_SUBJECT` — the person the data is about — or `DATA_ATTRIBUTE`); both are inherited from interface entities when not answered on the entity itself. Only the `special-categories` system classification (seeded at startup, locked from modification) remains classification-based — the former `personal-data` and `entity-type` system classifications were retired by migrations 070/071. The Processing Register page directly renders Art. 30 GDPR / Art. 12 revDSG-required information.
+
+### Team Topologies
+
+Team Topologies asks: *which teams exist, what are they for, and how do they work together?* Each org unit has a multilingual mission statement and a team type (stream-aligned, platform, enabling, complicated-subsystem). Team interactions (collaboration, X-as-a-Service, facilitating) carry a duration and a health score, and are drawn in Team Topologies notation. Insights flag interaction anti-patterns, low-health interactions and cognitive load.
+
+### Lean / Value Stream Mapping
+
+Lean asks: *how efficiently does work flow, and where is the waste?* Processes carry a value-stream type (operational, enabling, business support), cycle, wait and changeover time, frequency, an activity type (value-adding, business-value-added, waste) with a justification, first-pass yield and completion rate. These are rolled up into value-stream summaries.
 
 ### How They Interweave
 
-The three frameworks share structural objects but use them for different purposes:
+The methodologies share structural objects but use them for different purposes:
 
 | Object          | DDD role                              | BCM role                 | DSG/GDPR role                    |
 |-----------------|---------------------------------------|--------------------------|----------------------------------|
@@ -26,9 +42,17 @@ The three frameworks share structural objects but use them for different purpose
 | Process         | Event producer/consumer               | Capability realisation   | Processing activity (Art. 30)    |
 | Data Entity     | Ubiquitous Language noun              | Capability data scope    | Personal data category           |
 | Org Unit        | Team owning a context                 | Capability owner         | Data controller / processor      |
-| Classification  | Domain tag                            | Maturity/criticality tag | Personal data / legal basis flag |
+| Classification  | Domain tag                            | Maturity/criticality tag | Special-category flag            |
 
-A process classified as `personal-data = personal-data--contains` is simultaneously a DDD *verb* (something that happens in a context), a BCM realisation (it fulfils a capability), and a GDPR processing activity that must appear in the register.
+| Object          | Data / Process Governance role               | Team Topologies role           | Lean / VSM role               |
+|-----------------|----------------------------------------------|--------------------------------|-------------------------------|
+| Bounded Context | Owner of the items placed in it              | Owned by a team (owning unit)  | —                             |
+| Process         | Owned activity with data inputs/outputs      | Executed by teams              | Value-stream step with timings |
+| Data Entity     | Owned, stewarded, quality-checked data asset | —                              | —                             |
+| Org Unit        | Owning unit; source of inherited ownership   | Team with mission, type, interactions | Executor of value-stream steps |
+| Classification  | Governance tag (e.g. confidentiality)        | —                              | —                             |
+
+A process that reads or writes an entity containing personal data is simultaneously a governed, owned activity, a DDD *verb* (something that happens in a context), a BCM realisation (it fulfils a capability), a GDPR processing activity that must appear in the register, work executed by a team, and a step in a value stream.
 
 ---
 
@@ -38,12 +62,14 @@ A process classified as `personal-data = personal-data--contains` is simultaneou
 erDiagram
     DOMAIN {
         string key
-        string type "BUSINESS | CORE | SUPPORTING | GENERIC"
+        string type "BUSINESS | CORE | SUPPORT | GENERIC"
         json names
         json descriptions
+        json visionStatement
     }
     DOMAIN ||--o{ DOMAIN : "parent_of (BUSINESS only at root)"
     DOMAIN }o--o| ORGANIZATIONAL-UNIT : "owned_by"
+    DOMAIN }o--o| USER : "owner"
     DOMAIN ||--o{ CLASSIFICATION-ASSIGNMENT : "classified_by"
 
     CAPABILITY {
@@ -59,13 +85,19 @@ erDiagram
     BOUNDED-CONTEXT {
         string key
         json names
+        string contextType
     }
     DOMAIN ||--o{ BOUNDED-CONTEXT : "isolates (non-BUSINESS domains only)"
+    BOUNDED-CONTEXT }o--o| ORGANIZATIONAL-UNIT : "owned_by"
+    BOUNDED-CONTEXT }o--o| USER : "owner"
 
     DATA-ENTITY {
         string key
         json names
         json descriptions
+        json retentionPeriod
+        boolean containsPersonalData "null = not answered"
+        string entityRole "DATA_SUBJECT | DATA_ATTRIBUTE"
     }
     DATA-ENTITY ||--o{ DATA-ENTITY : "parent_of"
     DATA-ENTITY }o--o| BOUNDED-CONTEXT : "assigned_to"
@@ -97,16 +129,27 @@ erDiagram
 
     ORGANIZATIONAL-UNIT {
         string key
+        json missionStatement
+        string teamTopologyType
         boolean isExternal
         string externalCompanyName
         string countryOfExecution
     }
-    ORGANIZATIONAL-UNIT ||--o{ ORGANIZATIONAL-UNIT : "parent_of"
+    ORGANIZATIONAL-UNIT }o--o{ ORGANIZATIONAL-UNIT : "parent_of (multi-parent)"
+    ORGANIZATIONAL-UNIT ||--o{ TEAM-INTERACTION : "interacts_with"
     ORGANIZATIONAL-UNIT }o--o| USER : "business_owner"
     ORGANIZATIONAL-UNIT }o--o| USER : "business_steward"
     ORGANIZATIONAL-UNIT }o--o| USER : "technical_custodian"
     ORGANIZATIONAL-UNIT }o--o| DATA-PROCESSOR : "linked_data_processor"
     ORGANIZATIONAL-UNIT ||--o{ CLASSIFICATION-ASSIGNMENT : "classified_by"
+
+    TEAM-INTERACTION {
+        string mode "COLLABORATION | X_AS_A_SERVICE | FACILITATING"
+        string duration
+        int healthScore
+        json notes
+    }
+    TEAM-INTERACTION }o--|| ORGANIZATIONAL-UNIT : "target"
 
     IT-SYSTEM {
         string key
@@ -147,7 +190,9 @@ Deleting a domain **cascades to all its Bounded Contexts** (which are owned excl
 
 ### Bounded Context
 
-Cannot be deleted independently; it is deleted when its parent domain is deleted.
+- Deleted together with its parent domain, or on its own by an **admin** (`DELETE /bounded-contexts/{key}`).
+- Domain events **published** by the context are deleted with it.
+- Entities and processes assigned to it survive with their `boundedContext` reference nulled out.
 
 ### Data Entity
 
@@ -211,7 +256,7 @@ Deleting a classification (or a value within it) triggers an explicit cleanup pa
 | Org Unit → Data Processor                        | `organisational_unit.linked_data_processor_id` FK            |
 | Context → Context relationship                   | `bounded_context_relationship` table                         |
 
-### Computed (derived at query time or in the frontend)
+### Computed (derived by the backend at query time)
 
 | Derived view                            | How derived                                                                                                              |
 |-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
@@ -219,7 +264,9 @@ Deleting a classification (or a value within it) triggers an explicit cleanup pa
 | Capability's org units                  | Union of all executing units across all processes that realise the capability                                            |
 | IT system's data entities               | Union of input/output entities of all processes that use the IT system                                                   |
 | IT system's org units                   | Union of executing units of all processes that use the IT system                                                         |
-| "Handles personal data" on process      | Process has a `personal-data = personal-data--contains` classification assignment                                        |
+| Entity's effective personal-data status | Own `containsPersonalData` / `entityRole`, else inherited from its interface entities when they all agree               |
+| "Handles personal data" on process      | Any effective input or output entity (sub-process data included) has effective `containsPersonalData = true`             |
+| Effective owner / steward / owning unit | Inherited through the ownership chain (see *Computed (Inherited) Ownership*)                                             |
 | Ubiquitous Language per Bounded Context | All entities assigned to that context (nouns), all processes assigned (verbs), all events published or consumed (events) |
 | Processing Register completeness        | Ratio of filled mandatory fields vs total mandatory fields per process                                                   |
 | Conway's Law misalignment               | Processes where the executing org unit's bounded context differs from the process's bounded context                      |
@@ -232,7 +279,7 @@ Deleting a classification (or a value within it) triggers an explicit cleanup pa
 
 Focuses on accountability and compliance evidence:
 
-- **Personal data classification** — which entities carry personal data or special categories (via system classifications)
+- **Personal data** — which entities carry personal data (typed `containsPersonalData` + `entityRole` fields) and which hold special categories (the `special-categories` system classification)
 - **Legal basis per process** — Consent, Contract, Legal Obligation, Vital Interest, Public Task, Legitimate Interest
 - **Purpose per process** — free-text description of the processing purpose
 - **DPIA** — triggered on high-risk processes; tracks risk description, mitigation measures, residual risk, and completion status
@@ -268,75 +315,60 @@ Focuses on data quality and stewardship:
 - **Technical custodian** — inheritable from org unit if not explicitly set
 - **Classifications** — flexible tagging system (assignable to entity, process, domain, or org unit); system classifications are locked and seeded for compliance
 - **Quality rules** — per-bounded-context rules with severity (MUST / SHOULD / MAY) describing data quality expectations
-- **Mandatory fields** — configurable per entity type; completeness computed and surfaced in the Processing Register
+- **Mandatory fields** — configurable per entity type; completeness computed and surfaced in the Processing Register and on the owner's to-do list
+- **Field verification** — the owner marks individual field values VERIFIED; any edit by someone else flips the field back to UNVERIFIED
+- **Owner to-do list** — governance tasks derived from live data and routed to each item's effective owner and steward (see §10)
 
-### OrgDev Perspective
+### OrgDev / Team Topologies Perspective
 
 Focuses on team structure and process responsibility:
 
-- **Org unit tree** — hierarchical organisational structure with lead user, steward, and technical custodian
-- **Process execution load** — how many processes each org unit executes (Conway analytics)
-- **Bottleneck teams** — teams executing processes across 3 or more distinct domains
+- **Org unit tree** — hierarchical (multi-parent) organisational structure with business owner, steward, and technical custodian; shown as a hierarchical or a container org chart
+- **Mission & team type** — each unit has a multilingual mission statement and a Team Topologies type (stream-aligned, platform, enabling, complicated-subsystem)
+- **Team interactions** — collaboration / X-as-a-Service / facilitating interactions with duration and health score, drawn in Team Topologies notation; anti-patterns and low-health interactions are flagged
+- **Process execution load & cognitive load** — how many processes and domains each org unit carries
+- **Bottleneck teams** — teams executing processes across 3 or more distinct bounded contexts
 - **Wrongly placed teams** — teams where no single domain accounts for 60% or more of their processes
 - **Split domains** — domains whose processes are spread across 3 or more distinct org units
 
+### Lean / VSM Perspective
+
+Focuses on flow efficiency of processes:
+
+- **Value stream type** (operational / enabling / business support) and per-step **cycle time**, **wait time**, changeover time and frequency
+- **Activity type** (value-adding / business-value-added / waste) with a multilingual justification
+- **First-pass yield** and **completion rate**, rolled up into value-stream summaries
+
 ---
 
-## 6. UI Field Visibility by Perspective
+## 6. What Decides What a User Sees
 
-The frontend filters which fields and tabs are shown based on the active perspective. The goal is to present only the information relevant to the user's current analytical frame, reducing noise.
+Three independent mechanisms shape the UI. None of them is a frontend rule: each is computed by the backend and only rendered by the frontend.
 
-### Entity detail panel — tabs
+### Methodology enablement
 
-| Tab           | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---------------|:--------:|:----------:|:---:|:------:|:---:|
-| Compliance    |    ✓     |     ✓      |  —  |   —    |  —  |
-| Relationships |    —     |     ✓      |  ✓  |   ✓    |  —  |
-| Governance    |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Lineage       |    —     |     ✓      |  ✓  |   —    |  —  |
+Each of the seven methodologies (`DATA_GOVERNANCE`, `PROCESS_GOVERNANCE`, `GDPR`, `DDD`, `BCM`, `TEAM_TOPOLOGIES`, `LEAN`) can be switched off under **Settings → Methodologies**. A disabled methodology hides its fields on every detail panel and wizard, removes its sections from Field Configuration, removes its to-do rules, and hides its navigation items (e.g. disabling `GDPR` hides the Processing Register, DPIA Register, IT Systems and Service Providers). The full field ↔ methodology mapping is in [METHODOLOGY-FIELD-MAPPING.md](METHODOLOGY-FIELD-MAPPING.md).
 
-### Entity detail panel — core fields
+### Field configuration
 
-| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---------------------|:--------:|:----------:|:---:|:------:|:---:|
-| Data Owner          |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Data Steward        |    —     |     ✓      |  —  |   —    |  —  |
-| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
-| Parent Entity       |    —     |     ✓      |  ✓  |   —    |  —  |
-| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
-| Retention Period    |    ✓     |     ✓      |  —  |   —    |  —  |
+Per entity type and field, an admin (or the lead of the field's methodology) sets visibility (`SHOWN` / `HIDDEN`), whether the field is **mandatory**, and whether it is **required at creation**. Detail responses carry `mandatoryFields`, `missingMandatoryFields` and `hiddenFields`; panels hide `HIDDEN` fields, wizards drop steps whose fields are all hidden, and the missing-fields banner groups the gaps by methodology section. A hidden field is never mandatory. Maturity presets (Basic / Advanced / Expert) apply a whole tier in one click.
 
-### Process detail panel — tabs
+### The "Current view" switcher
 
-| Tab          | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|--------------|:--------:|:----------:|:---:|:------:|:---:|
-| Data & Teams |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Compliance   |    ✓     |     ✓      |  —  |   —    |  —  |
-| Governance   |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
+The top bar offers a view switcher — **Compliance**, **Architecture**, **Operations**, **Admin/Governance** — stored as the user's `preferredRole` (a temporary override can be set for the session). It is a lens, not a permission:
 
-### Process detail panel — core fields
+| View         | Extra sidebar items                                            | Team Insights sections shown                                                       |
+|--------------|----------------------------------------------------------------|------------------------------------------------------------------------------------|
+| Compliance   | Processing Register, Service Providers, DPIA Register, IT Systems | —                                                                               |
+| Architecture | Ubiquitous Language, Context Map, Event Flow                   | Split domains, Conway's-Law alignment, bottleneck / wrongly placed teams, cognitive load, team-interaction anti-patterns and health alerts |
+| Operations   | Capabilities, IT Systems                                       | Org-unit process load, bottleneck / wrongly placed teams, cognitive load, team-interaction anti-patterns and health alerts |
+| Admin        | Processing Register, Service Providers, DPIA Register, Capabilities | User ownership workload                                                       |
 
-| Field               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|---------------------|:--------:|:----------:|:---:|:------:|:---:|
-| Process Owner       |    ✓     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Process Steward     |    —     |     ✓      |  —  |   —    |  —  |
-| Technical Custodian |    —     |     ✓      |  —  |   —    |  —  |
-| Code                |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Process Type        |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Legal Basis         |    ✓     |     ✓      |  —  |   —    |  —  |
-| Bounded Context     |    —     |     ✓      |  ✓  |   —    |  —  |
+Home, My to-dos, Team Insights, Help and the four core catalogues (Entities, Domains, Processes, Organisation) are always in the sidebar. Detail panels show the same tabs and fields in every view; field visibility is governed solely by methodology enablement and field configuration.
 
-### Domain detail panel — sections
+### Overview groupings
 
-| Section               | DSG/GDPR | Governance | DDD | OrgDev | BCM |
-|-----------------------|:--------:|:----------:|:---:|:------:|:---:|
-| Domain Type           |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Parent Domain         |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Vision Statement      |    —     |     ✓      |  ✓  |   ✓    |  ✓  |
-| Owning Unit           |    —     |     ✓      |  —  |   ✓    |  ✓  |
-| Bounded Contexts      |    —     |     ✓      |  ✓  |   —    |  —  |
-| Context Relationships |    —     |     ✓      |  ✓  |   —    |  —  |
-| Classifications       |    ✓     |     ✓      |  —  |   —    |  —  |
+Every catalogue list (entities, processes, domains, org units, capabilities, IT systems, service providers) can be grouped by a dimension offered by `GET /overviews/{resourceType}/groupings` — e.g. owner, owning unit, bounded context, domain, process type, unit type, team-topology type, vendor, processing country. `GET /overviews/{resourceType}?groupBy=…` returns the grouped subtrees, with each group expandable. Dimensions backed by a disabled methodology or a hidden field are not offered.
 
 ---
 
@@ -406,7 +438,7 @@ Rule: "the Delete button is not rendered for a viewer"
 
 ## 8. Roles, Ownership, and RBAC
 
-Leargon has two layers of access control: **system-level roles** (coarse-grained) and **entity-level ownership** (fine-grained). They are checked independently and both enforced server-side; the frontend mirrors them in UI only.
+Leargon has two layers of access control: **system-level roles** (coarse-grained) and **entity-level ownership** (fine-grained), plus a **realm** concept that lets owners create inside their own area. All of it is enforced server-side; the frontend renders backend-computed permission flags and holds no permission logic of its own.
 
 ---
 
@@ -416,12 +448,12 @@ System roles are stored as a comma-separated string in the `User.roles` column. 
 
 | Role              | Scope           | Meaning                                                                                                                                                                                                                    |
 |-------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ROLE_USER`       | global          | Every authenticated user. Reads everything. Cannot create *root* catalogue items by role alone (see *Creating Objects*), but may create children of items it owns/stewards, and becomes the owner of whatever it creates.   |
+| `ROLE_USER`       | global          | Every authenticated user. Reads everything. Cannot create *top-level* catalogue items by role alone, but may create inside its own realm (see *Creating Objects*) and becomes the owner of whatever it creates.   |
 | `ROLE_ADMIN`      | global          | Full administrative access: edit any object regardless of ownership, manage users, and configure the system.                                                                                                               |
 | `ROLE_EDITOR_<M>` | one methodology | May edit any field that belongs to methodology `<M>`, on any object, regardless of ownership. Treated as a non-owner — edits flip the field to `UNVERIFIED` and verification is not granted (see *Edit vs. Verify*).       |
 | `ROLE_LEAD_<M>`   | one methodology | Everything `ROLE_EDITOR_<M>` can do **plus** managing `<M>`'s configuration — enabling/disabling the methodology and setting field visibility/mandatory for its fields. A lead implies the editor role for the same `<M>`. |
 
-`<M>` is one of the six methodologies — `DATA_GOVERNANCE`, `PROCESS_GOVERNANCE`, `GDPR`, `DDD`, `BCM`, `TEAM_TOPOLOGIES` — so tokens look like `ROLE_LEAD_GDPR` or `ROLE_EDITOR_DDD`. The token grammar is `^ROLE_(USER|ADMIN|(LEAD|EDITOR)_<METHODOLOGY>)$`; scoped tokens are validated server-side against the known methodology keys (`RoleService`).
+`<M>` is one of the seven methodologies — `DATA_GOVERNANCE`, `PROCESS_GOVERNANCE`, `GDPR`, `DDD`, `BCM`, `TEAM_TOPOLOGIES`, `LEAN` — so tokens look like `ROLE_LEAD_GDPR` or `ROLE_EDITOR_DDD`. The token grammar is `^ROLE_(USER|ADMIN|(LEAD|EDITOR)_<METHODOLOGY>)$`; scoped tokens are validated server-side against the known methodology keys (`RoleService`).
 
 Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In practice all admins have both, but code checks are explicit (`roles.contains("ROLE_ADMIN")`).
 
@@ -443,17 +475,19 @@ Roles are not hierarchical — `ROLE_ADMIN` does not imply `ROLE_USER`. In pract
 
 Each content object carries named ownership fields that confer edit permission on that specific object only. These are **not global roles**.
 
-| Object type         | Primary owner field                        | Secondary fields                        |
-|---------------------|--------------------------------------------|-----------------------------------------|
-| Business Entity     | `dataOwner`                                | `dataSteward`, `technicalCustodian`     |
-| Process             | `processOwner`                             | `processSteward`, `technicalCustodian`  |
-| Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian` |
+| Object type         | Primary owner field                        | Secondary fields                           |
+|---------------------|--------------------------------------------|--------------------------------------------|
+| Business Entity     | `dataOwner`                                | `dataSteward`, `technicalCustodian`        |
+| Process             | `processOwner`                             | `processSteward`, `technicalCustodian`     |
+| Organisational Unit | `businessOwner` (**required**, never null) | `businessSteward`, `technicalCustodian`    |
+| Business Domain     | `owner`                                    | — (steward inherited from the owning unit) |
+| Bounded Context     | `owner`                                    | — (steward inherited from the owning unit) |
 
-The creator of an object is set as its primary owner at creation time (see *Creating Objects* for who may create what).
+The creator of an entity, process or org unit is set as its primary owner at creation time.
 
 **Stewards grant edit rights.** The *effective steward* of an object (`dataSteward` / `processSteward` / `businessSteward`, falling back to the owning unit's `businessSteward`) can edit it exactly like the owner — with one exception: a steward **cannot verify fields**, and because a steward is not the owner, every field they change flips to `UNVERIFIED` (see *Edit vs. Verify*). `technicalCustodian` remains informational and confers no edit permission.
 
-Business **Domains** are the exception: they have no per-object owner/steward edit gate and remain **admin-only** to edit.
+**Domains** are edited by their effective owner or steward, an admin, or a `DDD` editor/lead. The domain owner may also manage the domain's context relationships and domain events. Deleting a domain stays with admins and `DDD` editors/leads.
 
 Reassigning the owner/steward fields themselves is an `ROLE_ADMIN` action — except that, since those fields are mapped to the `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE` methodologies, an editor/lead for the relevant methodology can also set them via the single-field endpoints.
 
@@ -461,21 +495,27 @@ Reassigning the owner/steward fields themselves is an `ROLE_ADMIN` action — ex
 
 ### Computed (Inherited) Ownership
 
-If a Business Entity or Process has no explicit owner (or steward) set, the system derives one from the object's position in the domain model:
+If an object has no explicit owner (or steward) set, the system derives one from the object's position in the model:
 
 ```
-effective owning unit = explicit owningUnit ?? boundedContext.owningUnit ?? boundedContext.domain.owningUnit
-effective owner       = explicit owner   ?? effectiveOwningUnit.businessOwner
-effective steward     = explicit steward ?? effectiveOwningUnit.businessSteward
+domain:           effective owner = first non-null (owner ?? owningUnit.businessOwner) up the parent-domain chain
+bounded context:  effective owner = owner ?? owningUnit.businessOwner ?? domain.effectiveOwner
+
+entity / process:
+  effective owning unit = explicit owningUnit ?? boundedContext.owningUnit ?? boundedContext.domain.owningUnit
+  effective owner       = explicit owner   ?? effectiveOwningUnit.businessOwner
+  effective steward     = explicit steward ?? effectiveOwningUnit.businessSteward
 ```
 
-The computed owner/steward are treated identically to explicit ones for permission checks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
+The computed owner/steward are treated identically to explicit ones for permission checks and for routing to-do tasks. Clearing an explicit owner is only permitted when a computed owner already exists (so the object never becomes ownerless).
 
 ---
 
-### Creating Objects
+### Creating Objects — Realm-Based
 
-Creating a top-level ("root") catalogue item requires an **admin** or an **`ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>`** for the methodology that governs that item type:
+Creation is decentralised: responsible people create inside their own **realm** without a central modelling team. `CreationPolicyService` is the single decision point for every create *and* every move (re-parenting, changing bounded context or owning unit).
+
+**Global grants** — an admin, or an `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` of the item type's governing methodology, may create anywhere, including top-level and unplaced items:
 
 | Item type                                                              | Governing methodology `<M>` |
 |------------------------------------------------------------------------|-----------------------------|
@@ -486,11 +526,27 @@ Creating a top-level ("root") catalogue item requires an **admin** or an **`ROLE
 | Business Domain, Bounded Context, Context Relationship, Domain Event   | `DDD`                       |
 | Organisational Unit                                                    | `TEAM_TOPOLOGIES`           |
 
-A plain `ROLE_USER` with no scoped role therefore cannot create root items. For the **hierarchical** types (entity, process, org unit) a **child** may additionally be created by the **owner or steward of the parent** — so an owner can build out their own sub-tree without holding a methodology role. The creator becomes the new object's owner.
+**Realm grants** — CREATE only; editing the new item is governed by its own ownership afterwards:
+
+| Realm           | Who                                                         | May create                                                                                                   |
+|-----------------|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| Domain          | Effective owner of the domain or any ancestor domain        | Subdomains, bounded contexts, and everything a bounded-context owner may create in them                      |
+| Bounded context | Effective owner of the context                              | Entities and processes in the context, domain events it publishes, context relationships (own side)          |
+| Item            | Effective owner/steward of an entity, process or capability | Its children                                                                                                 |
+| Org unit        | Business owner/steward of the unit                          | Sub-units (not transitive into content), IT systems the unit owns; entities/processes it owns only while `DDD` is disabled |
+
+A sub-unit needs rights on *every* requested parent, so nobody can pull a foreign unit under their own to widen their realm. Moving an entity or process to another bounded context needs creation rights at the destination (`DDD` editors/leads are exempt — assigning contexts is DDD work).
 
 Configuration items — classifications, supported locales, users — remain **admin-only** to create.
 
-Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; the frontend mirrors it with `canCreateRoot` / `canCreateChild` (the "New" button is hidden when not permitted).
+**Guard rails at creation:**
+
+- **Required at creation** — fields configured as *required at creation* must be supplied, otherwise the create endpoint answers `422 REQUIRED_AT_CREATION_MISSING`.
+- **Duplicate prevention** — `DuplicateCandidateService` compares the proposed names (all locales, camelCase-aware word matching) with existing items. A likely duplicate in the same container is rejected with `409` unless the user acknowledges the candidates and gives a justification; the same term in another bounded context is suggested as a translation link instead. `GET /creation/duplicate-candidates` lets the wizard warn before submitting.
+- **Atomic create** — an entity can be created together with its parent, bounded context, interfaces and a first relationship in one request.
+- **Realm-owner review** — every realm-based creation writes an `item_creation_records` row (who, under which grant, any duplicate justification). The realm owner gets a *Review a new item created in your area* to-do (`REVIEW_REALM_CREATION`), closed by `POST /creation/reviews/{recordId}/acknowledge`.
+
+The UI never decides on its own: `GET /creation/capabilities` (what the user may create at all), `GET /creation/targets` (where), and the `creatableChildTypes`, `canEdit` and `canDelete` flags on detail responses are all derived from the same policy.
 
 ---
 
@@ -499,8 +555,8 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 | Operation                                       | `ROLE_USER` (no role) | Effective steward | `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` | Owner | `ROLE_ADMIN`       |
 |-------------------------------------------------|:---------------------:|:-----------------:|:-----------------------------------:|:-----:|:------------------:|
 | Read any object                                 |           ✓           |         ✓         |                  ✓                  |   ✓   |         ✓          |
-| Create a *root* item (becomes owner)            |           ✗           |         ✗         |           ✓ (item's `<M>`)³         |   —   |         ✓          |
-| Create a *child* of a parent item (becomes owner)|          ✗           |  ✓ (of parent)    |           ✓ (item's `<M>`)³         | ✓ (of parent) |    ✓       |
+| Create a *top-level* item (becomes owner)       |           ✗           |         ✗         |           ✓ (item's `<M>`)³         |   —   |         ✓          |
+| Create inside a realm (becomes owner)⁴          |           ✗           |  ✓ (of parent / unit) |       ✓ (item's `<M>`)³         | ✓ (of domain / BC / parent / unit) | ✓ |
 | Edit a field                                    |           ✗           |   ✓ (any field)   |   ✓ (fields of `<M>`; CORE via governing)¹ |   ✓   |     ✓          |
 | Verify / unverify a field                       |           ✗           |         ✗         |                  ✗                  |   ✓   |         ✗          |
 | Delete an object                                |           ✗           |         ✓         |          ✓ (governing `<M>`)³        |   ✓   |         ✓          |
@@ -511,9 +567,10 @@ Enforced server-side by `RoleService.requireCreateRoot` / `requireCreateChild`; 
 
 ¹ A field's methodology is resolved from the field-configuration inventory (see `METHODOLOGY-FIELD-MAPPING.md`). **CORE fields** belong to no methodology (e.g. the name); they are editable by an editor/lead of the entity type's *governing* methodology (³) — so a `DATA_GOVERNANCE` editor may rename a business entity. **Classifications** and **data-quality rules** are `DATA_GOVERNANCE` fields and follow the same rule via their own endpoints. As a non-owner, every such edit lands the affected field `UNVERIFIED` (see *Edit vs. Verify*). The bulk whole-object update endpoint stays owner/steward/admin-only.
 ² Owner/steward fields are themselves mapped to `DATA_GOVERNANCE` / `PROCESS_GOVERNANCE`, so an editor/lead for that methodology can set them.
+⁴ See the realm table in *Creating Objects*.
 ³ The item's governing methodology — see *Creating Objects* above (Entity → `DATA_GOVERNANCE`, Process → `PROCESS_GOVERNANCE`, Service Provider/IT System → `GDPR`, Capability → `BCM`, Domain/Bounded Context/Context Relationship/Domain Event → `DDD`, Org Unit → `TEAM_TOPOLOGIES`).
 
-**Edit & Delete apply to every item type**, gated identically to create: an admin, the object's owner/effective steward (where the type has them), or an editor/lead of the type's governing methodology (³). This includes the **methodology-owned items that have no per-user owner/steward** — Business Domains, Bounded Contexts, Context Relationships, Domain Events (all `DDD`), Capabilities (`BCM`), Service Providers and IT Systems (`GDPR`) — which are managed by an admin **or** a `<M>` editor/lead. Delete is still subject to dependency checks (e.g. a process with sub-processes can't be deleted).
+**Edit & Delete apply to every item type**, gated identically to create: an admin, the object's owner/effective steward (where the type has them), or an editor/lead of the type's governing methodology (³). This includes the **methodology-owned items that have no per-user owner/steward** — Business Domains, Bounded Contexts, Context Relationships, Domain Events (all `DDD`), Capabilities (`BCM`), Service Providers and IT Systems (`GDPR`) — which are managed by an admin **or** a `<M>` editor/lead. Delete is still subject to dependency checks (e.g. a process with sub-processes can't be deleted). Exception: deleting a bounded context on its own is currently **admin-only** (`BoundedContextService.delete`).
 
 **Read access is global**: all authenticated users can see all objects. There is no row-level visibility restriction.
 
@@ -539,23 +596,78 @@ No failed-login lockout mechanism exists.
 
 ---
 
-### Frontend Role Checks
+### Frontend Permission Flags
 
-The frontend derives its edit/verify affordances from the JWT roles and the fetched entity. The edit gate is intentionally **coarse** — it decides what controls to show; the backend re-validates every mutation and returns 403:
+The frontend does not re-derive permissions. Responses carry backend-computed flags, derived from the same predicates the mutation endpoints enforce:
 
-```typescript
-const isAdmin   = user?.roles?.includes('ROLE_ADMIN') ?? false;
-const isOwner   = user?.username === entity?.dataOwner?.username;
-const isSteward = user?.username === entity?.dataSteward?.username;
-// coarse: owner, steward, admin, or any scoped editor/lead relevant to this entity type
-const canEdit   = isAdmin || isOwner || isSteward
-                || canEditEntityTypeByRole(user?.roles, 'BUSINESS_ENTITY');
-const canVerify = isOwner;   // verification stays owner-only
-```
+| Flag                                          | Where                                | Derived from                                                         |
+|-----------------------------------------------|--------------------------------------|----------------------------------------------------------------------|
+| `editableFields`                              | Entity, process and domain responses | `RoleService.canEditField` (admin / owner / steward / scoped editor) per inventory field |
+| `canEdit`, `canDelete`                        | Detail responses                     | Ownership + governing-methodology role                               |
+| `creatableChildTypes`                         | Detail responses                     | `CreationPolicyService`                                              |
+| `/creation/capabilities`, `/creation/targets` | Standalone endpoints                 | `CreationPolicyService`                                              |
 
-`src/utils/roles.ts` mirrors the backend `RoleService` (`getRoleScopes`, `isLeadFor`, `isEditorFor`, `canEditEntityTypeByRole`, …). These checks are **UI convenience only**.
+Panels gate each edit control on `editableFields.includes(field)`; `EditableFieldsConsistencySpec` locks the parity between the flag and the per-field endpoint (200 vs. 403). Verification stays owner-only. `src/utils/roles.ts` remains for navigation-level decisions (admin-only settings, lead-scoped configuration screens).
 
 Route-level guards:
 - `ProtectedRoute` — redirects unauthenticated users to `/login`.
 - `AdminRoute` — redirects non-admin users; used for the user-management and other admin-only settings.
-- The methodology and field-configuration settings screens are reachable by a methodology **lead** (not just admins) and are filtered to the lead's methodologies; the backend enforces the per-methodology scope.
+- The methodology, field-configuration and to-do-rule settings screens are reachable by a methodology **lead** (not just admins) and are filtered to the lead's methodologies; the backend enforces the per-methodology scope.
+
+---
+
+## 9. Multilingual Text
+
+Every text a user types — names, descriptions, vision and mission statements, retention period, purpose, security measures, activity justification, interaction notes, quality-rule descriptions, … — is a `List<LocalizedText>` (`{ locale, text }`), stored as a JSON array in the owning row. There is exactly **one representation**:
+
+- The domain property is non-null; "not filled in" is the **empty list**, never `null`.
+- Every backing column is `NOT NULL DEFAULT ('[]')` (migration 079); migration 080 rescues legacy values that were not valid JSON (blank strings, pre-061 plain text).
+- Responses always carry an array. Requests may send `null` or `[]` to clear a field; the update replaces the whole set of locales.
+- Locale codes are validated by `LocaleService` against the active `SupportedLocale` rows.
+- Reading resolves the reader's locale, falls back to any non-blank translation, and summaries of referenced items (owning unit, parent, …) carry the full `names` list so clients render the reader's own language. Server-side text that has no user locale (exports, labels) uses the tenant default locale (`DefaultLocaleProvider`), never a hard-coded `en`.
+- Field labels, task-rule texts and error codes (`ErrorResponse.errorCode`) are localised too; the UI ships en/de/fr resources with enforced key parity.
+
+A reflection guard in the test suite fails if a new localised field is declared nullable.
+
+---
+
+## 10. Owner To-Do List
+
+`GET /tasks` derives each user's governance to-do list from live catalogue data — nothing is stored except dismissals and configuration. `TaskService` walks every entity, process, domain and org unit and raises a task for each enabled rule in `TaskRuleCatalog` that the item fails. A task lands on the list of the item's **effective owner and effective steward** (inherited ownership included).
+
+| Rule                                    | Methodology        | What it flags                                                         |
+|-----------------------------------------|--------------------|-----------------------------------------------------------------------|
+| `MISSING_MANDATORY_FIELD`               | —                  | A mandatory field (field configuration) without a value               |
+| `REVIEW_REALM_CREATION`                 | —                  | Someone created an item in your realm; acknowledge it                 |
+| `MISSING_OWNER`, `MISSING_STEWARD`      | —                  | Ownership gaps                                                        |
+| `UNVERIFIED_FIELD`                      | —                  | Field values the owner has not verified                               |
+| `NO_LEGAL_BASIS`, `MISSING_PURPOSE`     | `GDPR`             | A process handling personal data without legal basis / purpose        |
+| `DPIA_RECOMMENDED`, `DPIA_IN_PROGRESS`  | `GDPR`             | A DPIA is recommended for the process, or one is still open           |
+| `ROOT_PROCESS_DIVERGENT_PURPOSES`       | `GDPR`             | A register activity drawn too coarsely (sub-processes with different purposes) |
+| `NO_EXECUTING_UNIT`, `NO_ENTITY_COVERAGE` | `PROCESS_GOVERNANCE` | Processes without executing team / without data                    |
+| `ENTITY_NO_BOUNDED_CONTEXT`, `DOMAIN_NO_BOUNDED_CONTEXT` | `DDD` | Unplaced entities, domains without contexts                         |
+| `MISSING_MISSION_STATEMENT`, `MISSING_TOPOLOGY_TYPE` | `TEAM_TOPOLOGIES` | Org units without mission / team type                         |
+
+Three independent gates decide whether a rule fires:
+
+1. **Rule configuration** — `GET/PUT /administration/task-rules` (+ `/definitions`). A rule can be switched off or downgraded from `REQUIRED` ("should do") to `RECOMMENDED` ("could do"). Without saved configuration only BASIC-tier rules run, so a new installation starts with a short list; **Settings → To-do rules** offers *Starting out / Growing / Mature* presets. Editable by an admin or a lead of the rule's methodology.
+2. **Methodology** — a rule whose methodology is disabled never fires.
+3. **Field configuration** — `MISSING_MANDATORY_FIELD` uses the same `FieldConfigurationService.compute()` as the detail responses, so the to-do list and `missingMandatoryFields` never disagree, and hidden fields raise nothing.
+
+Task ids are deterministic (`<entityType>:<key>:<ruleCode>:<fieldName>`). `POST/DELETE /tasks/{taskId}/dismissal` records a dismissal with a mandatory reason; the dismissal snapshots the item's `updatedAt` and is **ignored once the item changes**, so a stale dismissal cannot hide a regression. `GET /tasks/by-owner` (admin) aggregates open tasks per owner, with a bucket for items nobody owns.
+
+Frontend: the **My to-dos** page (`/my-tasks`), a summary card on the home page, and per-item nudges in the detail panels (`useItemTasks`, `WhatNextBanner`) that render from the same backend rules. Each task links to its item and focuses the affected field.
+
+---
+
+## 11. Guided Modeling Advisor
+
+When creating something, the hard question is often *where it belongs*: a child of an existing entity, or a new top-level entity with a relationship? A sub-process or a new process? A new domain or a bounded context? The advisor answers this with **deterministic, explainable decision trees** — not an LLM.
+
+- `AdvisorRuleCatalog` defines one rule set per item type (`ENTITY_PLACEMENT`, `PROCESS_PLACEMENT`, `DOMAIN_PLACEMENT`, `ORG_UNIT_PLACEMENT`, `CAPABILITY_PLACEMENT`). Each is a tree of typed questions (choices or item pickers) leading to an outcome with a rationale and its downstream consequences.
+- `GET /advisor/rule-sets` returns the trees; `POST /advisor/evaluate` replays a user's answers statelessly, so the same answers always give the same recommendation. The outcome also says whether the user is **allowed** to create there (via `CreationPolicyService`) and, if so, prefills the wizard — parent, bounded context, interface, or a first relationship with its cardinality.
+- For entities the main fork is *child vs. new root entity with relationship*: a child only if it shares lifecycle, identity and responsibility with its parent; otherwise the cardinality question decides the relationship.
+- Started from an item ("Add child", "Add sub-process"), the tree is pre-answered from that context.
+- In the UI the advisor is a collapsed panel at the top of every creation wizard/dialog; it evaluates only when expanded and shows the applied outcome in its header. All texts come from i18n, keyed by question/option/outcome code.
+
+Advisor rules are code-defined in v1; administering them is a deferred roadmap item.

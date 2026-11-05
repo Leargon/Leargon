@@ -83,7 +83,8 @@ Frontend starts at: http://localhost:5173 and proxies `/api/*` to the backend au
 
 1. Open http://localhost:3000 (Docker Compose) or http://localhost:5173 (local dev).
 2. Click **Sign In** and log in with the admin credentials.
-3. The setup wizard runs on first login and guides you through creating your first domain, entity, and process.
+3. On the fallback admin's first login the setup wizard asks for the supported languages (the first active locale becomes the default) and the methodologies to enable.
+4. Create users (or let them sign in with Azure Entra ID) and grant methodology-scoped `ROLE_EDITOR_<M>` / `ROLE_LEAD_<M>` roles under **Settings → Users**. Owners of domains, bounded contexts and org units can then create inside their own area — see [CONCEPTS.md](CONCEPTS.md#creating-objects--realm-based).
 
 ---
 
@@ -91,18 +92,30 @@ Frontend starts at: http://localhost:5173 and proxies `/api/*` to the backend au
 
 | Page | URL | Purpose |
 |---|---|---|
-| Home | `/home` | Governance maturity overview and your responsibilities |
-| Domains | `/domains` | Business domain hierarchy, bounded contexts, and DDD context map |
+| Home | `/home` | Governance maturity overview, your responsibilities and open to-dos |
+| My to-dos | `/my-tasks` | Governance tasks for the items you own or steward |
+| Domains | `/domains` | Business domain hierarchy, bounded contexts, context relationships, domain events |
 | Entities | `/entities` | Data entity catalogue (ontology) |
-| Processes | `/processes` | Business process catalogue |
-| Organisation | `/organisation` | Organisational unit tree and team assignments |
+| Processes | `/processes` | Business process catalogue with BPMN diagrams and Lean/VSM metrics |
+| Organisation | `/organisation` | Organisational unit tree, team types and team interactions |
 | Capabilities | `/capabilities` | Business capability map and IT system support |
-| Compliance | `/compliance` | Processing register (Art. 30 GDPR / Art. 12 revDSG) |
+| Processing Register | `/compliance` | Art. 30 GDPR / Art. 12 revDSG register with CSV export |
+| DPIA Register | `/dpia` | Data protection impact assessments |
 | IT Systems | `/it-systems` | IT system catalogue linked to processes and capabilities |
 | Service Providers | `/service-providers` | Data processor register with DPA tracking |
-| Settings — Users | `/settings/users` | User management (admin only) |
-| Settings — Locales | `/settings/locales` | Supported display languages |
-| Settings — Classifications | `/settings/classifications` | Taxonomy management |
+| Ubiquitous Language | `/ubiquitous-language` | Nouns, verbs and events per bounded context |
+| Insights | `/team-insights` | Conway's-Law, bottleneck, cognitive-load and team-interaction analytics |
+| Diagrams | `/diagrams/entities`, `/diagrams/processes`, `/diagrams/organisation`, `/diagrams/context-map`, `/diagrams/event-flow`, `/diagrams/capability-map`, `/diagrams/strategic-map` | Entity map, process landscape, org chart, context map, event flow, capability and strategic maps |
+| Help | `/help` | In-app guide |
+| Settings — Users | `/settings/users` | User management and role assignment (admin only) |
+| Settings — Locales | `/settings/locales` | Supported languages (admin only) |
+| Settings — Classifications | `/settings/classifications` | Taxonomy management (admin only) |
+| Settings — Methodologies | `/settings/methodologies` | Enable methodologies, configure field visibility / mandatory / required-at-creation (admin or methodology lead) |
+| Settings — To-do rules | `/settings/task-rules` | Enable and prioritise to-do rules, maturity presets (admin or methodology lead) |
+| Settings — Organisation | `/settings/organisation` | Organisation-wide settings such as home country and default org-chart view (admin only) |
+
+Which pages appear in the sidebar depends on the enabled methodologies and on the **Current view**
+(Compliance / Architecture / Operations / Admin) chosen in the top bar — see [CONCEPTS.md](CONCEPTS.md#6-what-decides-what-a-user-sees).
 
 ---
 

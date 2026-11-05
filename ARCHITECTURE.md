@@ -43,9 +43,9 @@ C4Container
   Person(admin, "Administrator")
 
   System_Boundary(leargon, "Léargon") {
-    Container(frontend, "Web App", "React 19 / TypeScript / Vite", "Single-page application served by nginx. Provides the data catalogue UI, process diagrams, user management, and settings screens.")
-    Container(backend, "REST API", "Kotlin 2.4 / Micronaut 5.0 / JVM 25", "Stateless HTTP API. Enforces business rules, authentication (local JWT + Azure), multilingual data, versioning, and classification logic.")
-    ContainerDb(db, "Database", "MySQL 8.4", "Stores users, business entities, domains, processes, org units, classifications, version history, and supported locales.")
+    Container(frontend, "Web App", "React 19 / TypeScript / Vite", "Single-page application served by nginx. Renders the catalogues, diagrams, registers, to-do list and settings; holds no business or permission logic (renders backend-computed flags).")
+    Container(backend, "REST API", "Kotlin 2.4 / Micronaut 5.0 / JVM 25", "Stateless HTTP API. Enforces every business and permission rule (roles, ownership, realm-based creation), authentication (local JWT + Azure), multilingual data, versioning, field configuration, and derives the owner to-do list and advisor recommendations.")
+    ContainerDb(db, "Database", "MySQL 8.4", "Stores users, the catalogue (entities, domains, bounded contexts, processes, org units, capabilities, IT systems, service providers), classifications, configuration, version history, verifications, dismissals, creation records, and supported locales.")
   }
 
   System_Ext(azure, "Azure Entra ID", "JWKS endpoint for RS256 token validation")
@@ -75,12 +75,12 @@ C4Component
   Container_Boundary(api, "REST API — Micronaut 5.0 / Kotlin 2.4") {
 
     Component(sec, "Security Layer", "Micronaut Security / Kotlin", "UserPasswordAuthenticationProvider (BCrypt), AzureTokenValidator (RS256/JWKS), PasswordEncoder (BCrypt-12)")
-    Component(ctrl, "Controllers (24)", "Micronaut @Controller / Kotlin", "AuthenticationController, BusinessDomainController, BusinessEntityController, ProcessController, ClassificationController, OrganisationalUnitController, CapabilityController, DomainEventController, BoundedContextController, ContextRelationshipController, ItSystemController, ServiceProviderController, DpiaController, ProcessingRegisterController, ExportController, AnalyticsController, DashboardController, SearchController, UserController, AdministrationController, LocaleController, SetupController, TranslationLinkController, BusinessDataQualityRuleController (implement OpenAPI-generated interfaces)")
-    Component(svc, "Services (33)", "Micronaut @Singleton / Kotlin", "Business logic: AuthenticationService, AzureAuthService, BusinessDomainService, BusinessEntityService, ProcessService, ProcessDiagramService, ClassificationService, OrganisationalUnitService, CapabilityService, DomainEventService, ItSystemService, ServiceProviderService, DpiaService, ExportService, FieldConfigurationService, MethodologyConfigurationService, UserService, LocaleService, SetupService, …")
-    Component(mapper, "Mappers (19)", "Kotlin @Singleton", "Hand-written Domain ↔ DTO converters: BusinessDomainMapper, BusinessEntityMapper, ProcessMapper, ClassificationMapper, OrganisationalUnitMapper, CapabilityMapper, DomainEventMapper, ItSystemMapper, ServiceProviderMapper, UserMapper, LocalizedTextMapper, ProcessDiagramMapper, …")
-    Component(repo, "Repositories (28)", "Micronaut Data JPA", "JpaRepository interfaces: BusinessEntityRepository, BusinessDomainRepository, ProcessRepository, ClassificationRepository, OrganisationalUnitRepository, CapabilityRepository, DomainEventRepository, ItSystemRepository, ServiceProviderRepository, DpiaRepository, UserRepository, plus version / relationship repositories")
-    Component(domain, "Domain Entities (28)", "JPA @Entity / Kotlin", "BusinessEntity, BusinessDomain, Process, OrganisationalUnit, Classification, ClassificationValue, Capability, DomainEvent, BoundedContext, ContextRelationship, ItSystem, ServiceProvider, Dpia, User, SupportedLocale, plus version and relationship entities")
-    Component(bootstrap, "Bootstrap", "Micronaut @EventListener", "AdministratorUserBootstrap — creates / updates fallback admin user at startup from env vars")
+    Component(ctrl, "Controllers (29)", "Micronaut @Controller / Kotlin", "Implement the OpenAPI-generated interfaces: Authentication, BusinessDomain, BoundedContext, ContextRelationship, DomainEvent, BusinessEntity, BusinessDataQualityRule, TranslationLink, Process, Classification, OrganisationalUnit, TeamTopology, Capability, ItSystem, ServiceProvider, Dpia, ProcessingRegister, Export, Analytics, Dashboard, Overview, Search, Task, Creation, Advisor, User, Administration, Locale, Setup")
+    Component(svc, "Services (54)", "Micronaut @Singleton / Kotlin", "Catalogue services (BusinessEntity, BusinessDomain, BoundedContext, Process, OrganisationalUnit, Capability, ItSystem, ServiceProvider, DomainEvent, Classification, Dpia, …); governance: RoleService, CreationPolicyService, CreationRequirementService, DuplicateCandidateService, CreationRecordService, FieldConfigurationService, MethodologyConfigurationService, FieldVerificationService, TaskService + TaskRuleCatalog, AdvisorService + AdvisorRuleCatalog; views: AnalyticsService, TeamInteractionService, OverviewGroupingService, ProcessingRegisterService, ExportService, BpmnExportService, SearchService; i18n: LocaleService, DefaultLocaleProvider, FieldLabelService")
+    Component(mapper, "Mappers (21)", "Kotlin @Singleton", "Hand-written Domain ↔ DTO converters (BusinessEntityMapper, ProcessMapper, OrganisationalUnitMapper, BusinessDomainMapper, SummaryMappers, LocalizedTextMapper, …); compute mandatory/missing/hidden/editable field flags")
+    Component(repo, "Repositories (32)", "Micronaut Data JPA", "JpaRepository interfaces with @Join fetch plans for every traversed association")
+    Component(domain, "Domain Entities (36)", "JPA @Entity / Kotlin", "BusinessEntity, BusinessDomain, BoundedContext, Process, OrganisationalUnit, TeamInteraction, Capability, DomainEvent, ContextRelationship, ItSystem, ServiceProvider, Dpia, Classification, FieldConfiguration, FieldVerification, TaskDismissal, TaskRuleConfiguration, ItemCreationRecord, OrganisationSettings, User, SupportedLocale, plus version, link and flow entities")
+    Component(bootstrap, "Bootstrap", "Micronaut @EventListener", "AdministratorUserBootstrap (fallback admin from env vars), SystemClassificationBootstrap (seeds the locked special-categories classification), FieldVerificationBackfillBootstrap")
   }
 
   Rel(frontend, ctrl, "HTTP requests", "JSON / Bearer JWT")
@@ -165,34 +165,28 @@ C4Dynamic
 
 ```mermaid
 C4Dynamic
-  title "Create Business Entity — representing logged in user interacting with the system"
+  title "Create Business Entity — realm-checked, guarded, audited"
 
-  Person(owner, "DATA_GOVERNANCE editor/lead or admin (becomes data owner)")
+  Person(owner, "Bounded-context owner, DATA_GOVERNANCE editor/lead, or admin (becomes data owner)")
   Container(fe, "Web App", "React 19 SPA")
-  Container(api, "REST API", "Micronaut / Kotlin")
   Component(ctrl, "BusinessEntityController", "Micronaut @Controller")
   Component(svc, "BusinessEntityService", "@Transactional")
-  Component(mapper, "BusinessEntityMapper", "@Singleton")
-  Component(repo, "BusinessEntityRepository", "Micronaut Data JPA")
-  Component(verRepo, "BusinessEntityVersionRepository", "Micronaut Data JPA")
+  Component(policy, "CreationPolicyService", "@Singleton")
+  Component(guards, "CreationRequirementService + DuplicateCandidateService", "@Singleton")
+  Component(repo, "Repositories", "Micronaut Data JPA")
+  Component(record, "CreationRecordService", "@Singleton")
   ContainerDb(db, "MySQL 8.4")
 
-  RelIndex(1, owner, fe, "Fill in business entity form, click Save")
-  RelIndex(2, fe, api, "POST /business-entities {name, description, ...}")
-  RelIndex(3, api, ctrl, "createBusinessEntity(request)")
-  RelIndex(4, ctrl, svc, "createBusinessEntity(request, user)")
-  RelIndex(5, svc, mapper, "fromRequest(request)")
-  RelIndex(6, mapper, svc, "BusinessEntity domain object")
-  RelIndex(7, svc, repo, "save(entity)")
-  RelIndex(8, repo, db, "INSERT business_entities")
-  RelIndex(9, db, repo, "Persisted entity with ID")
-  RelIndex(10, svc, verRepo, "save(version snapshot)")
-  RelIndex(11, verRepo, db, "INSERT business_entity_versions (JSON snapshot)")
-  RelIndex(12, svc, mapper, "toBusinessEntityResponse(entity)")
-  RelIndex(13, mapper, ctrl, "BusinessEntityResponse DTO")
-  RelIndex(14, ctrl, api, "201 Created")
-  RelIndex(15, api, fe, "BusinessEntityResponse JSON")
-  RelIndex(16, fe, owner, "Entity shown in catalogue")
+  RelIndex(1, owner, fe, "Answer the advisor, fill in the wizard, click Create")
+  RelIndex(2, fe, ctrl, "POST /business-entities {names, boundedContextKey, relationships, ...}")
+  RelIndex(3, ctrl, svc, "createBusinessEntityAsResponse(request, user)")
+  RelIndex(4, svc, policy, "require(BUSINESS_ENTITY, placement, user) — 403 if outside the user's realm")
+  RelIndex(5, svc, guards, "required-at-creation fields (422), unjustified duplicates (409)")
+  RelIndex(6, svc, repo, "save entity, requested relationships, version snapshot")
+  RelIndex(7, repo, db, "INSERT business_entities, business_entity_relationships, business_entity_versions")
+  RelIndex(8, svc, record, "recordCreation(grant, justification) — raises the realm owner's review to-do")
+  RelIndex(9, record, db, "INSERT item_creation_records")
+  RelIndex(10, ctrl, fe, "201 Created — BusinessEntityResponse incl. editableFields, creatableChildTypes")
 ```
 
 ---
