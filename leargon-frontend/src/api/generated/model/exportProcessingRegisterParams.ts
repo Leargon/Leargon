@@ -18,8 +18,6 @@
  */
 
 export type ExportProcessingRegisterParams = {
-/**
- * Locale code for localised names
- */
-locale?: string;
+  /** Locale code for localised names */
+  locale?: string;
 };

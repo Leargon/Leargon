@@ -18,8 +18,6 @@
  */
 
 export type GetLocalizedBusinessDomainParams = {
-/**
- * Locale code (e.g., 'en', 'de'). Defaults to user's preferred language.
- */
-locale?: string;
+  /** Locale code (e.g., 'en', 'de'). Defaults to user's preferred language. */
+  locale?: string;
 };

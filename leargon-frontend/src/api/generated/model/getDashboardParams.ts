@@ -18,8 +18,6 @@
  */
 
 export type GetDashboardParams = {
-/**
- * Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale.
- */
-locale?: string;
+  /** Locale code (e.g., 'en', 'de'). Defaults to the tenant default locale. */
+  locale?: string;
 };

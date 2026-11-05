@@ -19,5 +19,5 @@
 import type { ClassificationAssignableTo } from './classificationAssignableTo.ts';
 
 export type GetClassificationsParams = {
-'assignable-to'?: ClassificationAssignableTo;
+  'assignable-to'?: ClassificationAssignableTo;
 };

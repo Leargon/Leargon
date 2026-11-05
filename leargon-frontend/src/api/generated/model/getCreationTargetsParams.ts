@@ -19,5 +19,5 @@
 import type { CreatableItemType } from './creatableItemType.ts';
 
 export type GetCreationTargetsParams = {
-itemType: CreatableItemType;
+  itemType: CreatableItemType;
 };

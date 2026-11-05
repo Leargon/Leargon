@@ -18,8 +18,6 @@
  */
 
 export type GetMyTasksParams = {
-/**
- * When true, dismissed tasks are included with dismissed=true instead of being omitted
- */
-includeDismissed?: boolean;
+  /** When true, dismissed tasks are included with dismissed=true instead of being omitted */
+  includeDismissed?: boolean;
 };
